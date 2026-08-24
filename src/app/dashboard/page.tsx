@@ -11,11 +11,10 @@ export default async function StudentDashboardPage() {
   if (!session || session.role !== 'student') redirect('/login')
 
   const data = await getStudentData(session.userId)
-  if (!data) redirect('/login')
 
   return (
-    <PortalLayout role="student" userName={data.user.name}>
-      <StudentDashboard data={data} />
+    <PortalLayout role="student" userName={data?.user?.name || session.name || 'Student'}>
+      <StudentDashboard data={data as any} />
     </PortalLayout>
   )
 }

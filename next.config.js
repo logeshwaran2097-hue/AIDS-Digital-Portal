@@ -9,6 +9,9 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    outputFileTracingIncludes: {
+      '/**': ['./prisma/dev.db', './prisma/schema.prisma'],
+    },
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
