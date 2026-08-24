@@ -3,9 +3,11 @@ import { cookies } from 'next/headers'
 import { prisma } from './prisma'
 import { hashOTP, verifyOTP, generateOTP } from './utils'
 
+const DEFAULT_SECRET = 'your-super-secret-key-change-in-production-min-32-chars'
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || 'your-super-secret-key-change-in-production-min-32-chars'
+  process.env.NEXTAUTH_SECRET || DEFAULT_SECRET
 )
+const JWT_FALLBACK_SECRET = new TextEncoder().encode(DEFAULT_SECRET)
 
 const JWT_EXPIRY = '7d'
 const OTP_EXPIRY_MINUTES = parseInt(process.env.OTP_EXPIRY_MINUTES || '5')
@@ -30,19 +32,32 @@ export async function createToken(payload: JWTPayload): Promise<string> {
 }
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
+  if (!token) return null
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     return payload as unknown as JWTPayload
   } catch {
-    return null
+    try {
+      const { payload } = await jwtVerify(token, JWT_FALLBACK_SECRET)
+      return payload as unknown as JWTPayload
+    } catch {
+      return null
+    }
   }
 }
 
 export async function getSession(): Promise<JWTPayload | null> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('auth-token')?.value
-  if (!token) return null
-  return verifyToken(token)
+  try {
+    const cookieStore = await cookies()
+    const token =
+      cookieStore.get('auth-token')?.value ||
+      cookieStore.get('__Secure-auth-token')?.value ||
+      cookieStore.get('authToken')?.value
+    if (!token) return null
+    return verifyToken(token)
+  } catch {
+    return null
+  }
 }
 
 export async function setAuthCookie(token: string) {

@@ -91,7 +91,9 @@ export default function LoginPage() {
         faculty: '/faculty-dashboard',
         hod: '/hod-dashboard',
       }
-      setTimeout(() => router.push(dashboardMap[selectedRole]), 500)
+      setTimeout(() => {
+        window.location.href = dashboardMap[selectedRole]
+      }, 300)
     } catch {
       toast.error('Something went wrong. Please try again.')
     } finally {
@@ -144,7 +146,9 @@ export default function LoginPage() {
         return
       }
       toast.success('Admin login successful!')
-      setTimeout(() => router.push('/admin/dashboard'), 400)
+      setTimeout(() => {
+        window.location.href = '/admin/dashboard'
+      }, 300)
     } catch {
       toast.error('Something went wrong. Please try again.')
     } finally {
