@@ -59,7 +59,7 @@ interface NotificationItem {
   description: string
   time: string
   unread: boolean
-  type: 'info' | 'success' | 'warning' | 'alert'
+  type: 'info' | 'success' | 'warning' | 'alert' | 'approval'
   link?: string
 }
 
@@ -425,13 +425,13 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                         )}
                       >
                         <div className="mt-0.5 shrink-0">
-                          {item.type === 'alert' && (
-                            <div className="w-8 h-8 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                          {(item.type === 'alert' || item.type === 'warning') && (
+                            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
                               <AlertTriangle className="w-4 h-4" />
                             </div>
                           )}
                           {item.type === 'approval' && (
-                            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
                               <FileQuestion className="w-4 h-4" />
                             </div>
                           )}
