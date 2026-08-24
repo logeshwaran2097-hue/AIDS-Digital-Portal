@@ -379,10 +379,9 @@ export async function sendAdminOTP(email: string) {
 
 export async function verifyAdminOTP(email: string, otp: string, challenge?: string) {
   const normalizedEmail = email.toLowerCase().trim()
-  const isMasterOtp = otp === '123456' || otp === '000000'
   const isChallengeValid = verifyOTPChallenge(challenge, normalizedEmail, otp)
 
-  let isOtpValid = isMasterOtp || isChallengeValid
+  let isOtpValid = isChallengeValid
 
   if (!isOtpValid) {
     try {

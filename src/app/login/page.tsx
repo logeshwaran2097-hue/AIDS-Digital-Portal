@@ -102,6 +102,10 @@ export default function LoginPage() {
   }
 
   const handleSendOTP = async () => {
+    if (!email) {
+      toast.error('Please enter your admin email address')
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/admin', {
@@ -157,69 +161,70 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-navy">
-      <div className="absolute inset-0 bg-grid-pattern opacity-30" aria-hidden="true" />
-      <div className="relative z-10 min-h-screen flex flex-col lg:flex-row">
-        {/* Left brand panel */}
-        <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-navy via-[#0A2A5E] to-royal p-10">
-          <div className="max-w-md text-center space-y-6">
-            <div className="flex items-center justify-center">
-              <div className="p-3 rounded-full bg-white shadow-2xl ring-4 ring-white/30">
-                <Image src="/college-emblem.png" alt="V.S.B. Engineering College Official Emblem" width={130} height={130} className="rounded-full object-contain drop-shadow-md" priority />
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-white">Artificial Intelligence &amp; Data Science</h1>
-            <p className="text-lg text-gray-200">V.S.B. Engineering College, Karur, Tamil Nadu, India</p>
-            <div className="flex items-center gap-3 justify-center">
-              <span className="inline-block rounded-full bg-gold/20 px-4 py-1.5 text-sm font-semibold text-gold">Academic Portal</span>
-              <span className="inline-block rounded-full bg-cyan/20 px-4 py-1.5 text-sm font-semibold text-cyan">AI Powered</span>
-            </div>
+    <div className="min-h-screen flex flex-col justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#071A3D] text-[#F4C430] mb-4 shadow-xl border-2 border-[#F4C430]/30 p-2">
+            <Image
+              src="/logo.jpg"
+              alt="VSB Logo"
+              width={70}
+              height={70}
+              className="rounded-full object-cover"
+              priority
+            />
           </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#071A3D] tracking-tight">
+            V.S.B. ENGINEERING COLLEGE
+          </h2>
+          <p className="mt-1 text-sm font-semibold text-[#1455D9] tracking-wide uppercase">
+            Department of Artificial Intelligence &amp; Data Science
+          </p>
+          <p className="mt-1 text-xs text-gray-500 font-medium">
+            Academic Management &amp; Digital Portal
+          </p>
         </div>
 
-        {/* Right login panel */}
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-gray-200">
-            <div className="flex items-center justify-center gap-3.5 mb-6">
-              <Image src="/college-emblem.png" alt="V.S.B. Official Emblem" width={52} height={52} className="rounded-full object-contain shadow-sm" />
-              <div>
-                <h2 className="text-lg font-bold text-navy leading-tight">V.S.B. Engineering College</h2>
-                <p className="text-xs text-royal font-semibold">AI &amp; DS Digital Portal</p>
+        <div className="mt-8 bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-gray-100">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                Select Your Role
+              </label>
+              <div className="grid grid-cols-4 gap-2">
+                {roles.map((role) => (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRole(role.id)
+                      setRegisterNumber('')
+                      setDateOfBirth('')
+                      setFacultyId('')
+                      setEmail('')
+                      setOtpSent(false)
+                      setOtp('')
+                    }}
+                    className={cn(
+                      'flex flex-col items-center gap-1 rounded-xl p-2.5 text-xs transition-all duration-200 cursor-pointer font-medium',
+                      selectedRole === role.id
+                        ? 'bg-[#071A3D] text-white ring-2 ring-[#071A3D] shadow-md'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                    )}
+                  >
+                    <span className="text-xl leading-none" aria-hidden="true">{role.icon}</span>
+                    <span className="font-semibold">{role.label}</span>
+                  </button>
+                ))}
               </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 mb-6" role="tablist" aria-label="Select your role">
-              {roles.map((role) => (
-                <button
-                  key={role.id}
-                  role="tab"
-                  aria-selected={selectedRole === role.id}
-                  aria-label={`Login as ${role.label}`}
-                  onClick={() => {
-                    setSelectedRole(role.id)
-                    setOtpSent(false)
-                    setOtp('')
-                  }}
-                  className={cn(
-                    'flex flex-col items-center gap-1 rounded-lg p-2 text-xs transition-all duration-200',
-                    selectedRole === role.id
-                      ? 'bg-royal text-white border-2 border-royal'
-                      : 'bg-gray-50 text-gray-600 border-2 border-transparent hover:bg-gray-100'
-                  )}
-                >
-                  <span className="text-xl leading-none" aria-hidden="true">{role.icon}</span>
-                  <span className="font-medium">{role.label}</span>
-                </button>
-              ))}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {selectedRole === 'student' && (
                 <>
-                  <h3 className="text-lg font-semibold text-navy mb-2">Student Login</h3>
+                  <h3 className="text-base font-bold text-[#071A3D] mb-2">Student Authentication</h3>
                   <Input
                     label="Register Number"
-                    placeholder="e.g. 23AD001"
                     value={registerNumber}
                     onChange={(e) => setRegisterNumber(e.target.value)}
                     required
@@ -228,14 +233,13 @@ export default function LoginPage() {
                   <Input
                     label="Date of Birth"
                     type="text"
-                    placeholder="DD/MM/YYYY"
                     value={dateOfBirth}
                     onChange={(e) => setDateOfBirth(e.target.value)}
                     required
                     autoComplete="bday"
-                    hint="Enter your date of birth in DD/MM/YYYY format"
+                    hint="Format: DD/MM/YYYY"
                   />
-                  <Button type="submit" className="w-full" size="lg" loading={loading}>
+                  <Button type="submit" className="w-full font-bold" size="lg" loading={loading}>
                     Login to Student Portal
                   </Button>
                 </>
@@ -243,10 +247,9 @@ export default function LoginPage() {
 
               {selectedRole === 'faculty' && (
                 <>
-                  <h3 className="text-lg font-semibold text-navy mb-2">Faculty Login</h3>
+                  <h3 className="text-base font-bold text-[#071A3D] mb-2">Faculty Authentication</h3>
                   <Input
                     label="Faculty ID"
-                    placeholder="e.g. FAC-001"
                     value={facultyId}
                     onChange={(e) => setFacultyId(e.target.value)}
                     required
@@ -255,14 +258,13 @@ export default function LoginPage() {
                   <Input
                     label="Date of Birth"
                     type="text"
-                    placeholder="DD/MM/YYYY"
                     value={dateOfBirth}
                     onChange={(e) => setDateOfBirth(e.target.value)}
                     required
                     autoComplete="bday"
-                    hint="Enter your date of birth in DD/MM/YYYY format"
+                    hint="Format: DD/MM/YYYY"
                   />
-                  <Button type="submit" className="w-full" size="lg" loading={loading}>
+                  <Button type="submit" className="w-full font-bold" size="lg" loading={loading}>
                     Login to Faculty Portal
                   </Button>
                 </>
@@ -270,10 +272,9 @@ export default function LoginPage() {
 
               {selectedRole === 'hod' && (
                 <>
-                  <h3 className="text-lg font-semibold text-navy mb-2">HOD Login</h3>
+                  <h3 className="text-base font-bold text-[#071A3D] mb-2">HOD Authentication</h3>
                   <Input
                     label="Faculty ID"
-                    placeholder="e.g. HOD-001"
                     value={facultyId}
                     onChange={(e) => setFacultyId(e.target.value)}
                     required
@@ -282,14 +283,13 @@ export default function LoginPage() {
                   <Input
                     label="Date of Birth"
                     type="text"
-                    placeholder="DD/MM/YYYY"
                     value={dateOfBirth}
                     onChange={(e) => setDateOfBirth(e.target.value)}
                     required
                     autoComplete="bday"
-                    hint="Enter your date of birth in DD/MM/YYYY format"
+                    hint="Format: DD/MM/YYYY"
                   />
-                  <Button type="submit" className="w-full" size="lg" loading={loading}>
+                  <Button type="submit" className="w-full font-bold" size="lg" loading={loading}>
                     Login to HOD Portal
                   </Button>
                 </>
@@ -297,22 +297,21 @@ export default function LoginPage() {
 
               {selectedRole === 'admin' && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-navy mb-2">Admin Login</h3>
+                  <h3 className="text-base font-bold text-[#071A3D] mb-2">Administrator Authentication</h3>
                   {!otpSent ? (
                     <>
-                      <p className="text-sm text-gray-500 mb-4">
-                        You will receive a secure OTP on your registered email address.
+                      <p className="text-xs text-gray-500 mb-3">
+                        Enter your registered institutional email to receive a secure 2FA OTP.
                       </p>
                       <Input
-                        label="Admin Email"
+                        label="Admin Email Address"
                         type="email"
-                        placeholder="admin@vsb.edu.in"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoComplete="email"
                       />
-                      <Button type="button" className="w-full" size="lg" onClick={handleSendOTP} loading={loading}>
+                      <Button type="button" className="w-full font-bold" size="lg" onClick={handleSendOTP} loading={loading}>
                         Send OTP
                       </Button>
                     </>
@@ -374,16 +373,6 @@ export default function LoginPage() {
                 </div>
               )}
             </form>
-
-            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-              <a
-                href="/quick-login"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-xs font-bold text-[#1455D9] transition-colors"
-              >
-                <span>⚡ 1-Click Role-Based Direct Launcher</span>
-                <span>→</span>
-              </a>
-            </div>
           </div>
         </div>
       </div>
