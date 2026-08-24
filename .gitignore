@@ -17,10 +17,9 @@
 .DS_Store
 *.pem
 *.log
-*.db
-*.db-journal
 build_output*.txt
 errors.txt
+*.db-journal
 
 # debug logs
 npm-debug.log*
