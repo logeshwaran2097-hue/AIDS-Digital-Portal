@@ -1,8 +1,7 @@
-import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
-import { AdminAcademicsView } from './components/AdminAcademicsView'
+import { AdminAcademicsView, SubjectItem } from './components/AdminAcademicsView'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,11 +9,14 @@ export default async function AdminAcademicsPage() {
   const session = await requireRoleSession(['admin'])
 
   const [resourceCount, questionPaperCount] = await Promise.all([
-    prisma.resource.count().catch(() => 45),
-    prisma.questionPaper.count().catch(() => 30),
+    prisma.resource.count().catch(() => 0),
+    prisma.questionPaper.count().catch(() => 0),
   ])
 
   const adminUser = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
+
+  // Subjects are managed via the Academics UI below — starts empty until admin enters them
+  const subjects: SubjectItem[] = []
 
   return (
     <PortalLayout role="admin" userName={adminUser?.name || session.name || 'Administrator'}>
@@ -22,6 +24,7 @@ export default async function AdminAcademicsPage() {
         <AdminAcademicsView
           totalResources={resourceCount}
           totalQuestionPapers={questionPaperCount}
+          initialSubjects={subjects}
         />
       </div>
     </PortalLayout>

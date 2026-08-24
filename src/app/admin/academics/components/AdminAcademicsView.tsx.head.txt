@@ -1,0 +1,36 @@
+﻿'use client'
+
+import React, { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import {
+  BookOpen,
+  Plus,
+  Edit2,
+  Trash2,
+  Download,
+  Eye,
+  X,
+  Search,
+  CheckCircle2,
+  Layers,
+  GraduationCap,
+  Sparkles,
+  FileText,
+  Clock,
+  Award,
+} from 'lucide-react'
+import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+
+export interface SubjectItem {
+  id: string
+  code: string
+  name: string
+  credits: number
+  category: string
+  facultyInCharge: string
+  semester: number
+  description?: string | null
+  units: { number: number; title: string; hours: number }[]
+}
+
