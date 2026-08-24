@@ -4,7 +4,7 @@ import * as React from 'react'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   LogOut,
@@ -58,113 +58,90 @@ interface NotificationItem {
   title: string
   description: string
   time: string
-  type: 'alert' | 'info' | 'success' | 'approval'
   unread: boolean
+  type: 'info' | 'success' | 'warning' | 'alert'
+  link?: string
 }
 
 const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {
-  hod: [
+  student: [
     {
       id: '1',
-      title: 'Question Paper Approval Pending',
-      description: 'Dr. S. Karthik uploaded AD2301 (Machine Learning) IAT-1 paper for HOD approval.',
-      time: '10 min ago',
-      type: 'approval',
+      title: 'Unit 3 Study Material Uploaded',
+      description: 'Dr. S. Karthik uploaded Deep Learning Unit 3 notes and problem sets.',
+      time: '10 mins ago',
       unread: true,
+      type: 'info',
+      link: '/dashboard/study',
     },
     {
       id: '2',
-      title: 'Attendance Defaulter Warning (<75%)',
-      description: '3 students in Semester 5 (Section A) have attendance below the 75% university norm.',
+      title: 'CIA 1 Attendance Warning',
+      description: 'Your overall attendance is 87.4%. Keep it above 75% for Anna University eligibility.',
       time: '1 hour ago',
-      type: 'alert',
       unread: true,
+      type: 'warning',
+      link: '/dashboard/attendance',
     },
     {
       id: '3',
-      title: 'Faculty Course Allocation',
-      description: 'All 7 curriculum courses for Odd Semester 2025-26 successfully mapped.',
-      time: '3 hours ago',
-      type: 'success',
-      unread: false,
-    },
-    {
-      id: '4',
       title: 'National AI Hackathon 2026',
-      description: 'Department sponsored hackathon event scheduled for next month.',
-      time: 'Yesterday',
-      type: 'info',
+      description: 'Registration opens for Smart India Hackathon internal round. Last date Feb 28.',
+      time: '2 hours ago',
       unread: false,
+      type: 'success',
+      link: '/dashboard/events',
     },
   ],
   faculty: [
     {
-      id: '1',
-      title: 'Government Attendance Register Locked',
-      description: 'Hour 2 attendance for AD2301 submitted to Anna University portal.',
-      time: '25 min ago',
-      type: 'success',
+      id: 'f1',
+      title: 'Attendance Register Due',
+      description: 'Submit today’s 4th hour Artificial Intelligence attendance before 4:30 PM.',
+      time: '15 mins ago',
       unread: true,
+      type: 'warning',
+      link: '/faculty-dashboard/attendance',
     },
     {
-      id: '2',
-      title: 'Internal Assessment Test Timetable',
-      description: 'IAT-1 examination dates published by HOD office starting next Monday.',
-      time: '2 hours ago',
-      type: 'info',
-      unread: true,
-    },
-    {
-      id: '3',
-      title: 'Student On-Duty (OD) Request',
-      description: 'K. Aishwarya (23AD001) requested OD for National Symposium participation.',
-      time: 'Yesterday',
-      type: 'approval',
+      id: 'f2',
+      title: 'Anna University Question Bank',
+      description: 'Submit 2 sets of Nov/Dec 2025 question papers for Department review.',
+      time: '3 hours ago',
       unread: false,
+      type: 'info',
+      link: '/faculty-dashboard/question-papers',
     },
   ],
-  student: [
+  hod: [
     {
-      id: '1',
-      title: 'New Study Resource Uploaded',
-      description: 'Dr. S. Karthik uploaded Unit 4 Supervised Learning lecture slides.',
-      time: '15 min ago',
-      type: 'info',
+      id: 'h1',
+      title: 'CIA-1 Moderation Pending',
+      description: '3 faculty members submitted Question Papers awaiting HOD approval.',
+      time: '20 mins ago',
       unread: true,
+      type: 'warning',
+      link: '/hod-dashboard/question-papers',
     },
     {
-      id: '2',
-      title: 'Model Exam Question Papers Available',
-      description: 'Previous year question papers for Deep Learning (AD2305) are published.',
+      id: 'h2',
+      title: 'Department NIRF Data Audit',
+      description: 'Quarterly academic and placement data ready for review.',
       time: '2 hours ago',
-      type: 'success',
-      unread: true,
-    },
-    {
-      id: '3',
-      title: 'Attendance Standing Update',
-      description: 'Your current aggregate attendance stands at 92.5% (Eligible for exams).',
-      time: 'Yesterday',
-      type: 'success',
       unread: false,
+      type: 'info',
+      link: '/hod-dashboard/reports',
     },
   ],
   admin: [
     {
-      id: '1',
-      title: 'New User Registration',
-      description: 'Faculty account created for Dr. M. Sowmya (AI & DS Dept).',
-      time: '30 min ago',
-      type: 'info',
-      unread: true,
-    },
-    {
-      id: '2',
-      title: 'System Backup Completed',
-      description: 'Daily database snapshot and SQLite transaction logs archived successfully.',
-      time: '4 hours ago',
-      type: 'success',
+      id: 'a1',
+      title: 'Database Backup Completed',
+      description: 'Nightly SQLite cloud replica synchronized successfully.',
+      time: '5 mins ago',
       unread: false,
+      type: 'success',
+      link: '/admin/activity-logs',
     },
   ],
 }
@@ -179,6 +156,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   )
   const notificationRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+  const router = useRouter()
   const resolvedNavItems = navItems || navItemsMap[role] || []
   const roleBadge = roleBadgeMap[role] || roleBadgeMap.student
 
@@ -202,6 +180,17 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
       : role === 'admin'
       ? '/admin/profile'
       : '/dashboard/profile'
+
+  // Eagerly prefetch all portal nav routes in parallel for instant 0ms switching
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      resolvedNavItems.forEach((item) => {
+        try {
+          router.prefetch(item.href)
+        } catch {}
+      })
+    }
+  }, [resolvedNavItems, router])
 
   // Close drawer and stop navigation progress on route change
   useEffect(() => {
