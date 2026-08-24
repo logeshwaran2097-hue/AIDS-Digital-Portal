@@ -172,6 +172,8 @@ const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {
 export function PortalLayout({ role, userName, userEmail, navItems, children }: PortalLayoutProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [activePath, setActivePath] = useState('')
   const [notifications, setNotifications] = useState<NotificationItem[]>(
     DEFAULT_NOTIFICATIONS[role] || DEFAULT_NOTIFICATIONS.student
   )
@@ -201,10 +203,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
       ? '/admin/profile'
       : '/dashboard/profile'
 
-  // Close drawer and notification on route change
+  // Close drawer and stop navigation progress on route change
   useEffect(() => {
     setIsDrawerOpen(false)
     setIsNotificationOpen(false)
+    setIsNavigating(false)
+    setActivePath(pathname)
   }, [pathname])
 
   // Click outside to close notification dropdown
@@ -222,8 +226,20 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
   }
 
+  const handleNavClick = (href: string) => {
+    setIsDrawerOpen(false)
+    if (pathname !== href) {
+      setActivePath(href)
+      setIsNavigating(true)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-[#f8fafd] text-[#071A3D]">
+    <div className="min-h-screen bg-[#f8fafd] text-[#071A3D] relative">
+      {/* Top Instant Navigation Progress Bar */}
+      {isNavigating && (
+        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430] animate-pulse" />
+      )}
       {/* Mobile Drawer Overlay */}
       {isDrawerOpen && (
         <div
@@ -290,6 +306,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         {/* Navigation Link Items */}
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1" aria-label="Main navigation" style={{ scrollbarWidth: 'thin' }}>
           {resolvedNavItems.map((item) => {
+            const current = activePath || pathname
             const isRootDashboard =
               item.href === '/dashboard' ||
               item.href === '/faculty-dashboard' ||
@@ -297,15 +314,16 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               item.href === '/admin' ||
               item.href === '/admin/dashboard'
             const isActive = isRootDashboard
-              ? pathname === item.href
-              : pathname === item.href || pathname.startsWith(item.href + '/')
+              ? current === item.href
+              : current === item.href || current.startsWith(item.href + '/')
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setIsDrawerOpen(false)}
+                prefetch={true}
+                onClick={() => handleNavClick(item.href)}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer',
+                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer',
                   isActive
                     ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/30'
                     : 'text-gray-300 hover:bg-white/10 hover:text-white'
@@ -501,9 +519,11 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
       >
         <Link
           href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'}
+          prefetch={true}
+          onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
-            pathname === '/dashboard' || pathname === '/faculty-dashboard' || pathname === '/hod-dashboard' || pathname === '/admin/dashboard'
+            (activePath || pathname) === '/dashboard' || (activePath || pathname) === '/faculty-dashboard' || (activePath || pathname) === '/hod-dashboard' || (activePath || pathname) === '/admin/dashboard'
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
           )}
@@ -513,9 +533,11 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         </Link>
         <Link
           href={role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects'}
+          prefetch={true}
+          onClick={() => handleNavClick(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
-            pathname.includes('subjects') || pathname.includes('academics') || pathname.includes('courses')
+            (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('courses')
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
           )}
@@ -525,9 +547,11 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         </Link>
         <Link
           href={role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects'}
+          prefetch={true}
+          onClick={() => handleNavClick(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
-            pathname.includes('projects') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
+            (activePath || pathname).includes('projects') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <FolderOpen className="h-5 w-5" />
@@ -535,9 +559,11 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         </Link>
         <Link
           href={profileHref}
+          prefetch={true}
+          onClick={() => handleNavClick(profileHref)}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
-            pathname.includes('profile') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
+            (activePath || pathname).includes('profile') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <UserIcon className="h-5 w-5" />
