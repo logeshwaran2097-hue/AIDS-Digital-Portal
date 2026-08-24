@@ -307,7 +307,7 @@ export function verifyOTPChallenge(challenge: string | undefined | null, email: 
 
 export async function sendAdminOTP(email: string) {
   const normalizedEmail = email.toLowerCase().trim()
-  const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'lonelyboy44y@gmail.com').toLowerCase().trim()
+  const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'admin@vsb.edu.in').toLowerCase().trim()
   
   let admin = await prisma.admin.findUnique({
     where: { email: normalizedEmail },
@@ -414,7 +414,7 @@ export async function verifyAdminOTP(email: string, otp: string, challenge?: str
   })
 
   if (!admin) {
-    const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'lonelyboy44y@gmail.com').toLowerCase().trim()
+    const defaultAdminEmail = (process.env.ADMIN_EMAIL || 'admin@vsb.edu.in').toLowerCase().trim()
     admin = await prisma.admin.findFirst({
       where: { email: defaultAdminEmail },
     })
@@ -499,14 +499,14 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
     } catch {}
   }
   
-  const defaultDestination = 'lonelyboy44y@gmail.com'
-  const smtpUser = process.env.SMTP_USER || 'lonelyboy44y@gmail.com'
+  const defaultDestination = process.env.ADMIN_EMAIL || email || 'admin@vsb.edu.in'
+  const smtpUser = process.env.SMTP_USER || 'admin@vsb.edu.in'
   const smtpPass = process.env.SMTP_PASSWORD || ''
   const isRealSmtpConfigured = smtpUser && smtpPass && smtpPass !== 'your-app-password'
 
   const mailOptions = {
     from: process.env.EMAIL_FROM || `V.S.B. AI & DS Portal <${smtpUser}>`,
-    to: defaultDestination, // ALWAYS DELIVER TO lonelyboy44y@gmail.com
+    to: defaultDestination,
     subject: `V.S.B. AI & DS Portal — Admin Login OTP [${otp}]`,
     html: `
       <!DOCTYPE html>

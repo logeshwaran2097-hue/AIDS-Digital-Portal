@@ -72,7 +72,7 @@ export function AdminSettingsView() {
           heading: '2. SMTP OTP & SECURITY PROTOCOLS',
           body: [
             'SMTP Host: smtp.gmail.com (SSL Port 465, IPv4 Enforced)',
-            'Primary Security Dispatch Inbox: lonelyboy44y@gmail.com',
+            'Primary Security Dispatch Inbox: admin@vsb.edu.in',
             'Authentication Encryption: JWT Cryptographic Tokens (HTTP-Only SameSite Cookies)',
             '2-Factor Authentication (2FA): Mandatory for Super Administrator Accounts',
           ],
@@ -179,7 +179,7 @@ export function AdminSettingsView() {
             </div>
             <div className="flex justify-between py-1.5">
               <span className="text-gray-500">Default Dispatch Inbox:</span>
-              <span className="font-mono font-bold text-[#1455D9]">lonelyboy44y@gmail.com</span>
+              <span className="font-mono font-bold text-[#1455D9]">admin@vsb.edu.in</span>
             </div>
             <div className="flex justify-between py-1.5">
               <span className="text-gray-500">Connection Health:</span>

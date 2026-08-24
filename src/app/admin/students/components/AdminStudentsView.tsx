@@ -92,8 +92,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           ],
         },
         {
-          heading: '2. ENROLLED STUDENTS BATCH LIST (SAMPLE / EXCERPT)',
-          body: filteredStudents.slice(0, 30).map(
+          heading: '2. ENROLLED STUDENTS BATCH LIST',
+          body: filteredStudents.map(
             (s, idx) =>
               `${idx + 1}. [${s.registerNumber}] ${s.name} — Year ${s.year}, Sem ${s.semester}, Sec ${s.section} (${s.status.toUpperCase()})`
           ),

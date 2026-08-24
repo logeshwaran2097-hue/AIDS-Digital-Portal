@@ -68,7 +68,7 @@ export function AdminProfileView({ initialProfile }: { initialProfile: AdminProf
           body: [
             `Full Name: ${profile.name}`,
             `Official Email: ${profile.email}`,
-            `Primary 2FA Security Mailbox: lonelyboy44y@gmail.com`,
+            `Primary 2FA Security Mailbox: ${profile.email}`,
             `Contact Phone: ${formData.phone}`,
             `Institutional Office: ${formData.department}, VSBEC Karur`,
             'Security Clearance: Tier-0 Super Administrator (Full Root Authority)',
@@ -226,7 +226,7 @@ export function AdminProfileView({ initialProfile }: { initialProfile: AdminProf
 
             <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
               <p className="text-gray-400 font-bold uppercase text-[10px]">2FA Email OTP Dispatch</p>
-              <p className="font-bold text-sm text-[#1455D9] font-mono">lonelyboy44y@gmail.com</p>
+              <p className="font-bold text-sm text-[#1455D9] font-mono">{profile.email}</p>
               <p className="text-[11px] text-green-700 font-bold flex items-center gap-1">
                 <Check className="w-3.5 h-3.5" /> Gmail SSL Gateway Active
               </p>

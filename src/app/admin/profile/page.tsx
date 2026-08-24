@@ -13,8 +13,8 @@ export default async function AdminProfilePage() {
 
   const profileData: AdminProfileData = {
     id: session.userId,
-    name: adminUser?.name || 'System Administrator',
-    email: session.email || 'lonelyboy44y@gmail.com',
+    name: adminUser?.name || session.name || 'System Administrator',
+    email: session.email || 'admin@vsb.edu.in',
     role: 'Super Administrator',
     phone: '+91 94433 12345',
     department: 'Department of Artificial Intelligence & Data Science',
