@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     
     if (body.otp) {
       const { email, otp } = verifyOTPSchema.parse(body)
-      const result = await verifyAdminOTP(email, otp)
+      const challenge = request.cookies.get('otp-challenge')?.value || body.challenge
+      const result = await verifyAdminOTP(email, otp, challenge)
 
       if (!result.success || !result.user || !result.token) {
         return NextResponse.json(
@@ -44,6 +45,9 @@ export async function POST(request: NextRequest) {
         path: '/',
       })
 
+      // Clean up the OTP challenge cookie
+      response.cookies.delete('otp-challenge')
+
       return response
     } else {
       const { email } = sendOTPSchema.parse(body)
@@ -56,7 +60,23 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      return NextResponse.json({ success: true, message: result.message })
+      const response = NextResponse.json({ 
+        success: true, 
+        message: result.message,
+        challenge: result.challenge 
+      })
+
+      if (result.challenge) {
+        response.cookies.set('otp-challenge', result.challenge, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 15, // 15 minutes
+          path: '/',
+        })
+      }
+
+      return response
     }
   } catch (error) {
     if (error instanceof z.ZodError) {

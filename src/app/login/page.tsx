@@ -43,6 +43,7 @@ export default function LoginPage() {
   const [facultyId, setFacultyId] = React.useState('')
   const [email, setEmail] = React.useState('')
   const [otp, setOtp] = React.useState('')
+  const [challenge, setChallenge] = React.useState('')
   const [otpSent, setOtpSent] = React.useState(false)
   const [otpCooldown, setOtpCooldown] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
@@ -111,6 +112,9 @@ export default function LoginPage() {
         toast.error(data.message || 'Unable to send OTP')
         return
       }
+      if (data.challenge) {
+        setChallenge(data.challenge)
+      }
       setOtpSent(true)
       toast.success(data.message || 'OTP sent to your registered email.')
       setOtpCooldown(60)
@@ -132,7 +136,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: codeToVerify }),
+        body: JSON.stringify({ email, otp: codeToVerify, challenge }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
