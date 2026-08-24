@@ -6,8 +6,30 @@ import { HODQuestionPapersView } from './components/HODQuestionPapersView'
 export const dynamic = 'force-dynamic'
 
 const FALLBACK_QP = [
-  { id: 'qp1', title: 'AD2301 Machine Learning - IAT 1 Question Paper', subjectCode: 'AD2301', subjectName: 'Machine Learning', semester: 5, year: 2025, examType: 'IAT-1', facultyName: 'Dr. S. Karthik', status: 'approved', createdAt: new Date('2025-09-20') },
-  { id: 'qp2', title: 'AD2302 Deep Learning Architectures - Model Exam Paper', subjectCode: 'AD2302', subjectName: 'Deep Learning', semester: 5, year: 2025, examType: 'Model Exam', facultyName: 'Mrs. R. Priya', status: 'approved', createdAt: new Date('2025-10-15') },
+  {
+    id: 'qp1',
+    examType: 'IAT-1',
+    academicYear: '2025-2026',
+    semester: 5,
+    year: 3,
+    fileName: 'AD2301-Machine-Learning-IAT1.pdf',
+    fileUrl: '#',
+    status: 'approved',
+    uploadedByName: 'Dr. S. Karthik',
+    createdAt: new Date('2025-09-20'),
+  },
+  {
+    id: 'qp2',
+    examType: 'Model Exam',
+    academicYear: '2025-2026',
+    semester: 5,
+    year: 3,
+    fileName: 'AD2302-Deep-Learning-Model.pdf',
+    fileUrl: '#',
+    status: 'approved',
+    uploadedByName: 'Mrs. R. Priya',
+    createdAt: new Date('2025-10-15'),
+  },
 ]
 
 export default async function HODQuestionPapersPage() {
@@ -17,7 +39,7 @@ export default async function HODQuestionPapersPage() {
     orderBy: { createdAt: 'desc' },
   }).catch(() => [])
 
-  const papers = dbPapers.length > 0 ? dbPapers : FALLBACK_QP
+  const papers: any[] = dbPapers.length > 0 ? dbPapers : FALLBACK_QP
 
   return (
     <PortalLayout role="hod" userName={session.name || 'Head of Department'}>

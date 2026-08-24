@@ -6,29 +6,45 @@ import { AdminNotificationsView, NotificationRecord } from './components/AdminNo
 export const dynamic = 'force-dynamic'
 
 const FALLBACK_NOTIFICATIONS: NotificationRecord[] = [
-  { id: 'n1', title: 'System-wide Nightly Backup Completed', message: 'Automated snapshot backup and transaction sync completed successfully.', type: 'info', targetRole: 'all', priority: 'low', sentAt: '2026-02-23', status: 'sent' },
-  { id: 'n2', title: 'Semester 5 CIA-1 Marks Moderation Request', message: 'Department moderation committee meeting scheduled for 3:00 PM tomorrow.', type: 'alert', targetRole: 'faculty', priority: 'high', sentAt: '2026-02-22', status: 'sent' },
+  {
+    id: 'n1',
+    title: 'System-wide Automated Backup Completed',
+    message: 'Automated snapshot backup and transaction sync completed successfully.',
+    target: 'ALL',
+    createdByName: 'System Administrator',
+    status: 'SENT',
+    createdAt: '2026-02-23',
+  },
+  {
+    id: 'n2',
+    title: 'Semester 5 CIA-1 Marks Moderation Request',
+    message: 'Department moderation committee meeting scheduled for 3:00 PM tomorrow.',
+    target: 'FACULTY',
+    createdByName: 'System Administrator',
+    status: 'SENT',
+    createdAt: '2026-02-22',
+  },
 ]
 
 export default async function AdminNotificationsPage() {
   const session = await requireRoleSession(['admin'])
 
-  const dbNotifications = await prisma.notification.findMany({
-    orderBy: { createdAt: 'desc' },
-  }).catch(() => [])
+  const [dbNotifications, adminUser] = await Promise.all([
+    prisma.notification.findMany({
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => []),
+    prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+  ])
 
-  const notificationsList: NotificationRecord[] = dbNotifications.length > 0 ? dbNotifications.map((n) => ({
+  const notificationsList: NotificationRecord[] = dbNotifications.length > 0 ? dbNotifications.map((n: any) => ({
     id: n.id,
     title: n.title,
     message: n.message,
-    type: n.type || 'info',
-    targetRole: n.targetRole || 'all',
-    priority: n.priority || 'medium',
-    sentAt: n.createdAt ? n.createdAt.toISOString().split('T')[0] : '2026-02-23',
-    status: 'sent',
+    target: n.target || n.targetRole || 'ALL',
+    createdByName: n.createdByName || 'Administrator',
+    status: n.status || 'SENT',
+    createdAt: n.createdAt ? (typeof n.createdAt === 'string' ? n.createdAt : n.createdAt.toISOString().split('T')[0]) : '2026-02-23',
   })) : FALLBACK_NOTIFICATIONS
-
-  const adminUser = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
   return (
     <PortalLayout role="admin" userName={adminUser?.name || session.name || 'Administrator'}>

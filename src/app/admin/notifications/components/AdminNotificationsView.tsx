@@ -34,12 +34,12 @@ export interface NotificationRecord {
 
 export function AdminNotificationsView({
   initialNotifications,
-  facultyList,
-  studentList,
+  facultyList = [],
+  studentList = [],
 }: {
   initialNotifications: NotificationRecord[]
-  facultyList: { id: string; name: string; facultyId: string }[]
-  studentList: { id: string; name: string; registerNumber: string }[]
+  facultyList?: { id: string; name: string; facultyId: string }[]
+  studentList?: { id: string; name: string; registerNumber: string }[]
 }) {
   const [notifications, setNotifications] = useState<NotificationRecord[]>(initialNotifications)
   const [searchQuery, setSearchQuery] = useState('')

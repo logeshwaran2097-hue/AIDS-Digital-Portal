@@ -34,12 +34,12 @@ export interface AnnouncementRecord {
 
 export function AdminAnnouncementsView({
   initialAnnouncements,
-  facultyList,
-  studentList,
+  facultyList = [],
+  studentList = [],
 }: {
   initialAnnouncements: AnnouncementRecord[]
-  facultyList: { id: string; name: string; facultyId: string }[]
-  studentList: { id: string; name: string; registerNumber: string }[]
+  facultyList?: { id: string; name: string; facultyId: string }[]
+  studentList?: { id: string; name: string; registerNumber: string }[]
 }) {
   const [announcements, setAnnouncements] = useState<AnnouncementRecord[]>(initialAnnouncements)
   const [searchQuery, setSearchQuery] = useState('')
