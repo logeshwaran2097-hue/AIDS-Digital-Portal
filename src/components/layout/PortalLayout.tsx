@@ -294,7 +294,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               item.href === '/dashboard' ||
               item.href === '/faculty-dashboard' ||
               item.href === '/hod-dashboard' ||
-              item.href === '/admin'
+              item.href === '/admin' ||
+              item.href === '/admin/dashboard'
             const isActive = isRootDashboard
               ? pathname === item.href
               : pathname === item.href || pathname.startsWith(item.href + '/')
@@ -302,8 +303,9 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setIsDrawerOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200',
+                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer',
                   isActive
                     ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/30'
                     : 'text-gray-300 hover:bg-white/10 hover:text-white'
