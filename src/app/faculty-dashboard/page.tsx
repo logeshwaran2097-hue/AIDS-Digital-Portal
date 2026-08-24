@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyDashboardView } from './components/FacultyDashboardView'
@@ -7,8 +7,7 @@ import { FacultyDashboardView } from './components/FacultyDashboardView'
 export const dynamic = 'force-dynamic'
 
 export default async function FacultyDashboardPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'faculty') redirect('/login')
+  const session = await requireRoleSession(['faculty'])
 
   const faculty = (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
     (await prisma.faculty.findUnique({ where: { facultyId: session.facultyId || 'FAC-001' } }).catch(() => null))

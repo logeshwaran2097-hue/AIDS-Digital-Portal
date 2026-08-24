@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { Bell, Send, CheckCircle2, AlertTriangle, FileQuestion, Sparkles, Filter } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
@@ -8,8 +8,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 export const dynamic = 'force-dynamic'
 
 export default async function HODNotificationsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'hod') redirect('/login')
+  const session = await requireRoleSession(['hod'])
 
   const alerts = [
     {

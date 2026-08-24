@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminAchievementsView, AchievementRecord } from './components/AdminAchievementsView'
@@ -7,8 +7,7 @@ import { AdminAchievementsView, AchievementRecord } from './components/AdminAchi
 export const dynamic = 'force-dynamic'
 
 export default async function AdminAchievementsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const dbAchievements = await prisma.achievement.findMany({
     orderBy: { date: 'desc' },

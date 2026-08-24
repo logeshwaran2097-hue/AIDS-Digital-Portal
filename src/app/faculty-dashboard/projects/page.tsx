@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyProjectsView, FacultyProjectItem } from './components/FacultyProjectsView'
@@ -7,8 +7,7 @@ import { FacultyProjectsView, FacultyProjectItem } from './components/FacultyPro
 export const dynamic = 'force-dynamic'
 
 export default async function FacultyProjectsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'faculty') redirect('/login')
+  const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   const projectsFromDb = await prisma.project.findMany({

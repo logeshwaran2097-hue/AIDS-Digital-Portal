@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { prisma } from './prisma'
 import { hashOTP, verifyOTP, generateOTP } from './utils'
 
@@ -58,6 +59,39 @@ export async function getSession(): Promise<JWTPayload | null> {
   } catch {
     return null
   }
+}
+
+export async function requireRoleSession(allowedRoles: string[]): Promise<JWTPayload> {
+  const session = await getSession()
+  if (!session) {
+    redirect('/login')
+  }
+
+  // Super admins and admins have universal access
+  if (session.role === 'admin' || session.role === 'super_admin') {
+    return session
+  }
+
+  // HOD can view HOD, faculty, and student portals
+  if (session.role === 'hod' && (allowedRoles.includes('hod') || allowedRoles.includes('faculty') || allowedRoles.includes('student'))) {
+    return session
+  }
+
+  // Faculty can view faculty and student portals
+  if (session.role === 'faculty' && (allowedRoles.includes('faculty') || allowedRoles.includes('student'))) {
+    return session
+  }
+
+  // Check if role is directly permitted
+  if (allowedRoles.includes(session.role)) {
+    return session
+  }
+
+  // Gracefully redirect to the user's own home dashboard instead of kicking them to login
+  if (session.role === 'hod') redirect('/hod-dashboard')
+  if (session.role === 'faculty') redirect('/faculty-dashboard')
+  if (session.role === 'admin' || session.role === 'super_admin') redirect('/admin/dashboard')
+  redirect('/dashboard')
 }
 
 export async function setAuthCookie(token: string) {

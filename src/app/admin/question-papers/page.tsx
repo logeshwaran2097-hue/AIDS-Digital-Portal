@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminQuestionPapersView, QPRecord } from './components/AdminQuestionPapersView'
@@ -7,8 +7,7 @@ import { AdminQuestionPapersView, QPRecord } from './components/AdminQuestionPap
 export const dynamic = 'force-dynamic'
 
 export default async function AdminQuestionPapersPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const dbPapers = await prisma.questionPaper.findMany({
     orderBy: { createdAt: 'desc' },

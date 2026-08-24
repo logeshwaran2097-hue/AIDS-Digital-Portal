@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminProjectsView, ProjectRecord } from './components/AdminProjectsView'
@@ -7,8 +7,7 @@ import { AdminProjectsView, ProjectRecord } from './components/AdminProjectsView
 export const dynamic = 'force-dynamic'
 
 export default async function AdminProjectsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const dbProjects = await prisma.project.findMany({
     orderBy: { createdAt: 'desc' },

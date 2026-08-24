@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminActivityLogsView, LogRecord } from './components/AdminActivityLogsView'
@@ -7,8 +7,7 @@ import { AdminActivityLogsView, LogRecord } from './components/AdminActivityLogs
 export const dynamic = 'force-dynamic'
 
 export default async function AdminActivityLogsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const dbLogs = await prisma.auditLog.findMany({
     orderBy: { createdAt: 'desc' },

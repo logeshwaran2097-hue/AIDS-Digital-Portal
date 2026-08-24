@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { User, Mail, Phone, Building2, Award, Calendar, ShieldCheck, CheckCircle2 } from 'lucide-react'
@@ -9,8 +9,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 export const dynamic = 'force-dynamic'
 
 export default async function HODProfilePage() {
-  const session = await getSession()
-  if (!session || session.role !== 'hod') redirect('/login')
+  const session = await requireRoleSession(['hod'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   const hodRecord = await prisma.hOD.findUnique({ where: { userId: session.userId } })

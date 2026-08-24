@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import StudyDetailsView from './components/StudyDetailsView'
@@ -7,8 +7,7 @@ import StudyDetailsView from './components/StudyDetailsView'
 export const dynamic = 'force-dynamic'
 
 export default async function StudyPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'student') redirect('/login')
+  const session = await requireRoleSession(['student'])
 
   const student = (await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
     (await prisma.student.findUnique({ where: { registerNumber: session.registerNumber || '23AD001' } }).catch(() => null)) || {

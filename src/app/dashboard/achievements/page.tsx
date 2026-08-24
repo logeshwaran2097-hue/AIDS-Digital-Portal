@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -10,8 +10,7 @@ import { Trophy, Award, Calendar, ExternalLink, Star, Users, Medal } from 'lucid
 export const dynamic = 'force-dynamic'
 
 export default async function AchievementsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'student') redirect('/login')
+  const session = await requireRoleSession(['student'])
 
   const achievements = await prisma.achievement.findMany({
     orderBy: { date: 'desc' },

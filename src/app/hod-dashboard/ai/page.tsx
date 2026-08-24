@@ -1,13 +1,12 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AIChatbot } from '@/components/AIChatbot'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Page() {
-  const session = await getSession()
-  if (!session || session.role !== 'hod') redirect('/login')
+  const session = await requireRoleSession(['hod'])
 
   return (
     <PortalLayout role="hod" userName={session.name || 'hod'}>

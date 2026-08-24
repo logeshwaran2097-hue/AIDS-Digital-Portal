@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminAdminsView, AdminUserRecord } from './components/AdminAdminsView'
@@ -7,8 +7,7 @@ import { AdminAdminsView, AdminUserRecord } from './components/AdminAdminsView'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminAdminsPage() {
-  const session = await getSession()
-  if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const dbAdmins = await prisma.admin.findMany({
     orderBy: { createdAt: 'asc' },

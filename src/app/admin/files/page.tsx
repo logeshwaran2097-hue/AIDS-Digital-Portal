@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminFilesView, FileItem } from './components/AdminFilesView'
@@ -7,8 +7,7 @@ import { AdminFilesView, FileItem } from './components/AdminFilesView'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminFilesPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const dbFiles = await prisma.fileRecord.findMany({
     orderBy: { createdAt: 'desc' },

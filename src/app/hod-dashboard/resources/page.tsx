@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { Database, CheckCircle2, XCircle, Download, FileText, Clock, User, Filter } from 'lucide-react'
@@ -10,8 +10,7 @@ import { formatDate } from '@/lib/utils'
 export const dynamic = 'force-dynamic'
 
 export default async function HODResourcesPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'hod') redirect('/login')
+  const session = await requireRoleSession(['hod'])
 
   const resources = await prisma.resource.findMany({
     orderBy: { createdAt: 'desc' },

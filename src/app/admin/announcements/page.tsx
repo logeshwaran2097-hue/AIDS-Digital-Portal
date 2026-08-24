@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminAnnouncementsView, AnnouncementRecord } from './components/AdminAnnouncementsView'
@@ -7,8 +7,7 @@ import { AdminAnnouncementsView, AnnouncementRecord } from './components/AdminAn
 export const dynamic = 'force-dynamic'
 
 export default async function AdminAnnouncementsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const [dbAnnouncements, dbFaculty, dbStudents, dbUsers] = await prisma.$transaction([
     prisma.announcement.findMany({ orderBy: { createdAt: 'desc' } }),

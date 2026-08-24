@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminReportsView } from './components/AdminReportsView'
@@ -7,8 +7,7 @@ import { AdminReportsView } from './components/AdminReportsView'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminReportsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const [studentCount, facultyCount, subjectCount, projectCount, eventCount, achievementCount] =
     await prisma.$transaction([

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyEventsView, FacultyEventItem } from './components/FacultyEventsView'
@@ -7,8 +7,7 @@ import { FacultyEventsView, FacultyEventItem } from './components/FacultyEventsV
 export const dynamic = 'force-dynamic'
 
 export default async function FacultyEventsPage() {
-  const session = await getSession()
-  if (!session || session.role !== 'faculty') redirect('/login')
+  const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   const eventsFromDb = await prisma.event.findMany({

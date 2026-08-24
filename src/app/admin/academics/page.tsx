@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth'
+import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminAcademicsView } from './components/AdminAcademicsView'
@@ -7,8 +7,7 @@ import { AdminAcademicsView } from './components/AdminAcademicsView'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminAcademicsPage() {
-  const session = await getSession()
-  if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) redirect('/login')
+  const session = await requireRoleSession(['admin'])
 
   const [resourceCount, questionPaperCount] = await Promise.all([
     prisma.resource.count().catch(() => 45),
