@@ -8,11 +8,11 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminAdminsPage() {
   const session = await getSession()
-  if (!session || session.role !== 'admin') redirect('/login')
+  if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) redirect('/login')
 
   const dbAdmins = await prisma.admin.findMany({
     orderBy: { createdAt: 'asc' },
-  })
+  }).catch(() => [])
 
   const adminList: AdminUserRecord[] = dbAdmins.map((a) => ({
     id: a.id,
@@ -20,13 +20,13 @@ export default async function AdminAdminsPage() {
     email: a.email,
     role: a.role,
     status: a.status,
-    createdAt: a.createdAt.toISOString().split('T')[0],
+    createdAt: a.createdAt ? a.createdAt.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
   }))
 
-  const adminUser = await prisma.user.findUnique({ where: { id: session.userId } })
+  const adminUser = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
   return (
-    <PortalLayout role="admin" userName={adminUser?.name || 'Administrator'}>
+    <PortalLayout role="admin" userName={adminUser?.name || session.name || 'Administrator'}>
       <div className="py-2 animate-fade-in">
         <AdminAdminsView initialAdmins={adminList} />
       </div>

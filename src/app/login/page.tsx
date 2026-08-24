@@ -374,6 +374,16 @@ export default function LoginPage() {
                 </div>
               )}
             </form>
+
+            <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+              <a
+                href="/quick-login"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-xs font-bold text-[#1455D9] transition-colors"
+              >
+                <span>⚡ 1-Click Role-Based Direct Launcher</span>
+                <span>→</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
