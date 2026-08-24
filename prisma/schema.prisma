@@ -1,0 +1,499 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  phone        String?
+  role         String   @default("student")
+  status       String   @default("active")
+  profileImage String?
+  passwordHash String?
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+  @@index([status])
+}
+
+model Student {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  registerNumber String   @unique
+  dateOfBirth    DateTime
+  department     String
+  year           Int
+  semester       Int
+  section        String
+
+  @@index([registerNumber])
+  @@index([department])
+  @@index([year])
+  @@index([semester])
+  @@index([section])
+}
+
+model Faculty {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  facultyId      String   @unique
+  dateOfBirth    DateTime
+  designation    String
+  qualification  String
+  experience     Int
+  specialization String
+  subjects       String   @default("[]")
+
+  @@index([facultyId])
+  @@index([designation])
+}
+
+model HOD {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  facultyId     String   @unique
+  dateOfBirth   DateTime
+  department    String
+  designation   String
+  qualification String
+  experience    Int
+
+  @@index([facultyId])
+  @@index([department])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  name      String
+  email     String   @unique
+  role      String   @default("super_admin")
+  status    String   @default("active")
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model AcademicYear {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Year {
+  id             String   @id @default(cuid())
+  name           String
+  academicYearId String
+
+  @@unique([name, academicYearId])
+  @@index([academicYearId])
+}
+
+model Semester {
+  id     String   @id @default(cuid())
+  name   String
+  number Int
+  yearId String
+
+  @@unique([number, yearId])
+  @@index([yearId])
+}
+
+model Subject {
+  id             String   @id @default(cuid())
+  code           String
+  name           String
+  credits        Int
+  description    String?
+  yearId         String?
+  semesterId     String?
+  academicYearId String
+
+  @@unique([code, academicYearId])
+  @@index([yearId])
+  @@index([semesterId])
+  @@index([academicYearId])
+}
+
+model Syllabus {
+  id        String   @id @default(cuid())
+  subjectId String   @unique
+  content   String
+  version   Int      @default(1)
+  status    String   @default("draft")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model Unit {
+  id        String   @id @default(cuid())
+  subjectId String
+  number    Int
+  title     String
+  topics    String   @default("[]")
+  order     Int      @default(0)
+
+  @@unique([subjectId, number])
+  @@index([subjectId])
+}
+
+model Resource {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  fileName      String
+  fileType      String
+  fileSize      Int
+  fileUrl       String
+  subjectId     String?
+  uploadedById  String
+  uploadedByName String?
+  status        String   @default("pending")
+  resourceType  String
+  semester      Int?
+  academicYear  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([uploadedById])
+  @@index([status])
+}
+
+model Note {
+  id             String   @id @default(cuid())
+  title          String
+  content        String?
+  fileUrl        String?
+  subjectId      String
+  unitId         String?
+  uploadedById   String?
+  uploaderName   String?
+  status         String   @default("published")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([status])
+}
+
+model LabManual {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  fileUrl          String?
+  subjectId        String
+  experimentNumber Int
+  experimentName   String
+  uploadedById     String?
+  uploadedByName   String?
+  status           String   @default("published")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([status])
+}
+
+model ImportantQuestion {
+  id              String   @id @default(cuid())
+  question        String
+  subjectId       String
+  unitId          String?
+  marks           Int?
+  frequency       String?
+  uploadedById    String?
+  uploadedByName  String?
+  status          String   @default("published")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([status])
+}
+
+model QuestionPaper {
+  id               String   @id @default(cuid())
+  subjectId        String
+  examType         String
+  academicYear     String
+  year             Int
+  semester         Int
+  section          String?
+  classPercentage  Float?
+  studentsAppeared Int?
+  studentsPassed   Int?
+  fileName         String
+  fileType         String
+  fileSize         Int
+  fileUrl          String
+  uploadedById     String?
+  uploadedByName   String?
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([subjectId])
+  @@index([examType])
+  @@index([academicYear])
+  @@index([year])
+  @@index([semester])
+  @@index([status])
+}
+
+model Project {
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  problemStatement String?
+  proposedSolution String?
+  technologies     String   @default("[]")
+  dataset          String?
+  results          String?
+  futureScope      String?
+  documentation    String?
+  domain           String
+  year             Int
+  status           String   @default("proposed")
+  guideName        String?
+  guideEmail       String?
+  adminCreatedById String?
+  teamMembers      String   @default("[]")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+  @@index([year])
+  @@index([domain])
+}
+
+model Event {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  category         String
+  date             DateTime
+  time             String
+  venue            String
+  posterUrl        String?
+  registrationUrl  String?
+  registrationInfo String?
+  createdByName    String?
+  status           String   @default("published")
+  isPublished      Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([category])
+  @@index([date])
+  @@index([status])
+}
+
+model Announcement {
+  id             String    @id @default(cuid())
+  title          String
+  content        String
+  category       String
+  target         String
+  targetYear     Int?
+  targetSemester Int?
+  attachmentUrl  String?
+  createdByName  String?
+  isPublished    Boolean   @default(true)
+  publishedAt    DateTime?
+  scheduledAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([category])
+  @@index([target])
+  @@index([isPublished])
+}
+
+model Notification {
+  id            String    @id @default(cuid())
+  title         String
+  message       String
+  target        String
+  targetIds     String    @default("[]")
+  attachmentUrl String?
+  createdByName String?
+  status        String    @default("draft")
+  scheduledAt   DateTime?
+  publishedAt   DateTime?
+  readBy        String    @default("[]")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([target])
+  @@index([status])
+}
+
+model Achievement {
+  id             String   @id @default(cuid())
+  title          String
+  description    String
+  category       String
+  recipientType  String
+  recipientName  String?
+  eventName      String?
+  awardName      String?
+  certificateUrl String?
+  date           DateTime
+  approvedByName String?
+  status         String   @default("pending")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([category])
+  @@index([status])
+}
+
+model OTP {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  userName String?
+  action   String
+  module   String
+  details  String?
+  ipAddress String?
+  status   String   @default("success")
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([module])
+  @@index([createdAt])
+}
+
+model FileRecord {
+  id             String   @id @default(cuid())
+  fileName       String
+  originalName   String
+  fileType       String
+  fileSize       Int
+  fileUrl        String
+  module         String
+  relatedId      String?
+  uploadedByName String?
+  createdAt      DateTime @default(now())
+
+  @@index([module])
+  @@index([relatedId])
+}
+
+model SystemSettings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AIAssistantConfig {
+  id             String   @id @default(cuid())
+  isEnabled      Boolean  @default(true)
+  welcomeMessage String   @default("Welcome to V.S.B. AI & DS Assistant! How can I help you today?")
+  departmentFAQ  String?
+  knowledgeBase  String?
+  apiProvider    String   @default("mock")
+  apiKey         String?
+  maxTokens      Int      @default(2000)
+  temperature    Float    @default(0.7)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ClassAdvisor {
+  id           String   @id @default(cuid())
+  facultyId    String
+  facultyName  String
+  year         Int
+  section      String
+  semester     Int
+  academicYear String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([year, section, semester, academicYear])
+  @@index([facultyId])
+  @@index([year, section])
+}
+
+model AttendanceSession {
+  id            String   @id @default(cuid())
+  sessionType   String   @default("subject")  // 'morning' | 'subject'
+  subjectCode   String?
+  subjectName   String?
+  year          Int
+  section       String
+  semester      Int
+  academicYear  String
+  hour          String?  // e.g. 'Hour 1 (09:00 - 09:50)'
+  periodType    String   @default("Theory")  // Theory | Practical | Tutorial
+  date          String
+  takenByFacultyId String
+  takenByName   String
+  isLocked      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  records       AttendanceRecord[]
+
+  @@unique([sessionType, subjectCode, year, section, semester, date, hour])
+  @@index([date])
+  @@index([year, section])
+  @@index([takenByFacultyId])
+  @@index([sessionType])
+}
+
+model AttendanceRecord {
+  id                  String   @id @default(cuid())
+  sessionId           String
+  session             AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  studentId           String
+  registerNumber      String
+  studentName         String
+  gender              String   @default("M")
+  status              String   @default("P")  // P | A | OD | ML | L
+  remarks             String   @default("")
+  cumulativeAttendance Float   @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([sessionId, studentId])
+  @@index([sessionId])
+  @@index([studentId])
+  @@index([registerNumber])
+  @@index([status])
+}

@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #071A3D;
+  --royal: #1455D9;
+  --bright: #2878E8;
+  --gold: #F4C430;
+  --cyan: #22C7E8;
+  --white: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f8fafc;
+  color: #071A3D;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* =========================================================
+   🌙 MIDNIGHT NAVY THEME OVERRIDES
+   ========================================================= */
+html.midnight body {
+  background-color: #030a1a !important;
+  color: #e2e8f0 !important;
+}
+
+html.midnight .bg-white {
+  background-color: #07142e !important;
+  color: #f1f5f9 !important;
+}
+
+html.midnight .bg-gray-50,
+html.midnight .bg-gray-50\/70,
+html.midnight .bg-gray-50\/80,
+html.midnight .bg-gray-50\/60 {
+  background-color: #0a1b3d !important;
+  color: #e2e8f0 !important;
+}
+
+html.midnight .border-gray-200,
+html.midnight .border-gray-200\/80,
+html.midnight .border-gray-200\/90,
+html.midnight .border-gray-100 {
+  border-color: #142852 !important;
+}
+
+html.midnight .text-\[\#071A3D\] {
+  color: #f1f5f9 !important;
+}
+
+html.midnight .text-gray-700,
+html.midnight .text-gray-800 {
+  color: #cbd5e1 !important;
+}
+
+html.midnight .text-gray-600,
+html.midnight .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+html.midnight .text-gray-400 {
+  color: #64748b !important;
+}
+
+html.midnight input,
+html.midnight select,
+html.midnight textarea {
+  background-color: #0a1b3d !important;
+  color: #f1f5f9 !important;
+  border-color: #142852 !important;
+}
+
+html.midnight input::placeholder,
+html.midnight textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* Focus states for accessibility */
+*:focus-visible {
+  outline: 2px solid #1455D9;
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: #1455D9;
+  color: #ffffff;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.midnight ::-webkit-scrollbar-track {
+  background: #07142e;
+}
+html.midnight ::-webkit-scrollbar-thumb {
+  background: #142852;
+}
+html.midnight ::-webkit-scrollbar-thumb:hover {
+  background: #1e3a8a;
+}
+
+/* Custom utilities */
+@layer utilities {
+  .text-gradient-navy-blue {
+    background: linear-gradient(135deg, #0a1a3d 0%, #1455d9 50%, #2878e8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-grid-pattern {
+    background-image: linear-gradient(rgba(20, 85, 217, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 85, 217, 0.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

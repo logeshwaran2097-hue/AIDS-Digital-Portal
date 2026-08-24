@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "in.edu.vsb.aidsportal",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:7D:0F:52:AB:E7:F4:D3:21:49:03:E5:67:E6:0B:4D:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD"
+      ]
+    }
+  }
+]
