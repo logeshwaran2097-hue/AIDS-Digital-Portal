@@ -5,11 +5,6 @@ import { AdminFilesView, FileItem } from './components/AdminFilesView'
 
 export const dynamic = 'force-dynamic'
 
-const FALLBACK_FILES: FileItem[] = [
-  { id: 'f1', fileName: 'AD2301-Unit-3-Deep-Learning.pdf', originalName: 'Unit-3-Deep-Learning-Notes.pdf', fileType: 'application/pdf', fileSize: 4200000, fileUrl: '#', module: 'Study Resources', uploadedByName: 'Dr. S. Karthik', createdAt: '2026-02-24' },
-  { id: 'f2', fileName: 'CIA-1-Question-Paper-Set-A.pdf', originalName: 'CIA-1-Model-Question-Paper.pdf', fileType: 'application/pdf', fileSize: 1800000, fileUrl: '#', module: 'Question Papers', uploadedByName: 'Mrs. R. Priya', createdAt: '2026-02-23' },
-]
-
 export default async function AdminFilesPage() {
   const session = await requireRoleSession(['admin'])
 
@@ -17,7 +12,7 @@ export default async function AdminFilesPage() {
     orderBy: { createdAt: 'desc' },
   }).catch(() => [])
 
-  const filesList: FileItem[] = dbFiles.length > 0 ? dbFiles.map((f) => ({
+  const filesList: FileItem[] = dbFiles.map((f) => ({
     id: f.id,
     fileName: f.fileName,
     originalName: f.originalName,
@@ -26,8 +21,8 @@ export default async function AdminFilesPage() {
     fileUrl: f.fileUrl,
     module: f.module,
     uploadedByName: f.uploadedByName || 'System Administrator',
-    createdAt: f.createdAt ? f.createdAt.toISOString().split('T')[0] : '2026-02-24',
-  })) : FALLBACK_FILES
+    createdAt: f.createdAt ? f.createdAt.toISOString().split('T')[0] : '',
+  }))
 
   const adminUser = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 

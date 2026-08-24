@@ -2,41 +2,39 @@ import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyProjectsView, FacultyProjectItem } from './components/FacultyProjectsView'
-import { FALLBACK_PROJECTS } from '@/lib/projectData'
 
 export const dynamic = 'force-dynamic'
 
 export default async function FacultyProjectsPage() {
   const session = await requireRoleSession(['faculty'])
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
-  const projectsFromDb = await prisma.project.findMany({
+  const dbProjects = await prisma.project.findMany({
     orderBy: { createdAt: 'desc' },
   }).catch(() => [])
 
-  const sourceProjects = projectsFromDb.length > 0 ? projectsFromDb : FALLBACK_PROJECTS
-
-  const mappedProjects: FacultyProjectItem[] = sourceProjects.map((p) => ({
+  const projectsList: FacultyProjectItem[] = dbProjects.map((p) => ({
     id: p.id,
     title: p.title,
     description: p.description,
     problemStatement: p.problemStatement,
     proposedSolution: p.proposedSolution,
-    technologies: p.technologies,
-    domain: p.domain,
-    year: p.year,
-    status: p.status,
-    guideName: p.guideName || 'Dr. S. Karthik (Professor)',
-    guideEmail: (p as any).guideEmail || 'karthik.ai@vsb.edu.in',
-    teamMembers: p.teamMembers,
-    results: (p as any).results || null,
-    createdAt: p.createdAt,
+    technologies: p.technologies || 'Python, PyTorch',
+    domain: p.domain || 'AI & Data Science',
+    year: p.year || 3,
+    status: p.status || 'Active',
+    guideName: p.guideName || 'Faculty Guide',
+    guideEmail: p.guideEmail || null,
+    teamMembers: p.teamMembers || 'Student Team',
+    results: p.results || null,
+    createdAt: p.createdAt || new Date(),
   }))
+
+  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
   return (
     <PortalLayout role="faculty" userName={user?.name || session.name || 'Faculty'}>
       <div className="py-2 animate-fade-in">
-        <FacultyProjectsView initialProjects={mappedProjects} />
+        <FacultyProjectsView initialProjects={projectsList} />
       </div>
     </PortalLayout>
   )
