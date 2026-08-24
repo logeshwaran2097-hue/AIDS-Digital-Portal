@@ -164,13 +164,13 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#071A3D] text-[#F4C430] mb-4 shadow-xl border-2 border-[#F4C430]/30 p-2">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white mb-4 shadow-xl border-4 border-[#F4C430]/40 p-1">
             <Image
-              src="/logo.jpg"
-              alt="VSB Logo"
-              width={70}
-              height={70}
-              className="rounded-full object-cover"
+              src="/college-emblem.png"
+              alt="V.S.B. Engineering College Official Emblem"
+              width={88}
+              height={88}
+              className="w-full h-full object-contain rounded-full"
               priority
             />
           </div>
