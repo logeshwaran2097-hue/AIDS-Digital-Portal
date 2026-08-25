@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -29,10 +31,10 @@ export async function POST(request: Request) {
     const announcement = await prisma.announcement.create({
       data: {
         title: body.title,
-        content: body.content,
+        content: body.content || '',
         category: body.category || 'Academic',
         target: body.target || 'All Students',
-        createdByName: body.createdByName || 'Dr. S. Karthik',
+        createdByName: body.createdByName || 'Administrator',
         isPublished: true,
       },
     })
@@ -40,5 +42,28 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Announcements API error:', error)
     return NextResponse.json({ success: false, message: 'Failed to create announcement' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const clearAll = searchParams.get('clearAll')
+
+    if (clearAll === 'true') {
+      await prisma.announcement.deleteMany({})
+      return NextResponse.json({ success: true, message: 'All announcements cleared' })
+    }
+
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Missing announcement ID' }, { status: 400 })
+    }
+
+    await prisma.announcement.delete({ where: { id } })
+    return NextResponse.json({ success: true, message: 'Announcement deleted successfully' })
+  } catch (error) {
+    console.error('Delete announcement error:', error)
+    return NextResponse.json({ success: false, message: 'Failed to delete announcement' }, { status: 500 })
   }
 }

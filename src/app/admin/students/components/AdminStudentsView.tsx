@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/Badge'
 import {
   GraduationCap,
   Search,
-  Filter,
   Download,
   Plus,
   Edit2,
@@ -20,6 +19,8 @@ import {
   Layers,
   Sparkles,
   UserCheck,
+  AlertTriangle,
+  RotateCcw,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
@@ -41,6 +42,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [searchQuery, setSearchQuery] = useState('')
   const [yearFilter, setYearFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -61,20 +63,20 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     status: 'active',
   })
 
-  // Filter students
-  const filteredStudents = students.filter((s) => {
+  // Filter students based on search and filters
+  const filteredStudents = students.filter((student) => {
     const matchesSearch =
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.registerNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.email.toLowerCase().includes(searchQuery.toLowerCase())
+      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.registerNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesYear = yearFilter === 'ALL' || s.year.toString() === yearFilter
-    const matchesStatus = statusFilter === 'ALL' || s.status.toLowerCase() === statusFilter.toLowerCase()
+    const matchesYear = yearFilter === 'ALL' || student.year === Number(yearFilter)
+    const matchesStatus =
+      statusFilter === 'ALL' || student.status.toLowerCase() === statusFilter.toLowerCase()
 
     return matchesSearch && matchesYear && matchesStatus
   })
 
-  // PDF Export
   const handleExportPDF = () => {
     generateAndDownloadPDF({
       title: 'DEPARTMENT OF AI & DS — OFFICIAL STUDENT ROSTER',
@@ -88,7 +90,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             `Total Enrolled Students: ${students.length} Registered Candidates`,
             `Department: Artificial Intelligence & Data Science (AI & DS)`,
             `Active Academic Regulations: Anna University Regulation 2021 (Autonomous)`,
-            `Batch Strength: Year II (Sem 4) - 68 Students`,
           ],
         },
         {
@@ -103,69 +104,141 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     })
   }
 
-  // Handle Add Student Submit
-  const handleAddSubmit = (e: React.FormEvent) => {
+  // Handle Add Student Submit with Real Database Save
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.registerNumber || !formData.name || !formData.email) {
       alert('Please fill in Register Number, Name, and Email')
       return
     }
 
-    const newStudent: StudentRecord = {
-      id: 'stud_' + Date.now(),
-      registerNumber: formData.registerNumber.toUpperCase(),
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone || '+91 98765 43210',
-      dateOfBirth: formData.dateOfBirth,
-      year: Number(formData.year),
-      semester: Number(formData.semester),
-      section: formData.section,
-      status: formData.status,
-    }
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      const result = await res.json()
 
-    setStudents([newStudent, ...students])
-    setIsAddModalOpen(false)
-    setFormData({
-      registerNumber: '',
-      name: '',
-      email: '',
-      phone: '',
-      dateOfBirth: '2006-08-15',
-      year: 2,
-      semester: 4,
-      section: 'A',
-      status: 'active',
-    })
+      if (result.success && result.student) {
+        setStudents([result.student, ...students])
+        setIsAddModalOpen(false)
+        setFormData({
+          registerNumber: '',
+          name: '',
+          email: '',
+          phone: '',
+          dateOfBirth: '2006-08-15',
+          year: 2,
+          semester: 4,
+          section: 'A',
+          status: 'active',
+        })
+        alert('Student successfully registered and saved to database!')
+      } else {
+        alert(result.message || 'Failed to add student')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Network error adding student. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  // Handle Edit Student Submit
-  const handleEditSubmit = (e: React.FormEvent) => {
+  // Handle Edit Student Submit with Real Database Save
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedStudent) return
 
-    setStudents(
-      students.map((s) =>
-        s.id === selectedStudent.id
-          ? {
-              ...s,
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              year: Number(formData.year),
-              semester: Number(formData.semester),
-              section: formData.section,
-              status: formData.status,
-            }
-          : s
-      )
-    )
-    setIsEditModalOpen(false)
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/students', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedStudent.id,
+          ...formData,
+        }),
+      })
+      const result = await res.json()
+
+      if (result.success) {
+        setStudents(
+          students.map((s) =>
+            s.id === selectedStudent.id
+              ? {
+                  ...s,
+                  name: formData.name,
+                  email: formData.email,
+                  phone: formData.phone,
+                  year: Number(formData.year),
+                  semester: Number(formData.semester),
+                  section: formData.section,
+                  status: formData.status,
+                }
+              : s
+          )
+        )
+        setIsEditModalOpen(false)
+        alert('Student record updated successfully in database!')
+      } else {
+        alert(result.message || 'Failed to update student')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Network error updating student.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to remove this student record from the directory?')) {
-      setStudents(students.filter((s) => s.id !== id))
+  // Handle Delete with Real Database Delete
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${name}" from the database?`)) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/students?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      })
+      const result = await res.json()
+      if (result.success) {
+        setStudents(students.filter((s) => s.id !== id))
+      } else {
+        alert(result.message || 'Failed to delete student')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error deleting student record.')
+    }
+  }
+
+  // Clear all mock/sample students
+  const handleClearAllStudents = async () => {
+    if (!confirm('Are you sure you want to delete ALL student records from the database? This will clear all mock data so you can enter real students.')) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/students?clearAll=true', {
+        method: 'DELETE',
+      })
+      const result = await res.json()
+      if (result.success) {
+        setStudents([])
+        alert('All mock student records have been permanently cleared! You can now add your real students.')
+      } else {
+        alert(result.message || 'Failed to clear students')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Error clearing student records.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -182,11 +255,24 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Student Enrollment &amp; Directory</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Comprehensive management of {students.length} enrolled undergraduate candidates
+            {students.length > 0
+              ? `Real-time management of ${students.length} enrolled student records`
+              : 'Directory is ready for real student entries'}
           </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center flex-wrap gap-3 shrink-0">
+          {students.length > 0 && (
+            <button
+              onClick={handleClearAllStudents}
+              disabled={isLoading}
+              className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:text-white"
+              title="Delete all sample students from database"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" /> Clear Mock Data
+            </button>
+          )}
+
           <button
             onClick={handleExportPDF}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
@@ -270,107 +356,123 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         </div>
       </div>
 
-      {/* Students Data Table */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
-              <tr>
-                <th className="px-4 py-3.5">#</th>
-                <th className="px-4 py-3.5">Register No</th>
-                <th className="px-4 py-3.5">Student Name</th>
-                <th className="px-4 py-3.5">Contact Details</th>
-                <th className="px-4 py-3.5 text-center">Year / Sem</th>
-                <th className="px-4 py-3.5 text-center">Section</th>
-                <th className="px-4 py-3.5 text-center">Status</th>
-                <th className="px-4 py-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 font-medium">
-              {filteredStudents.length === 0 ? (
+      {/* Students Data Table / Empty State */}
+      {students.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center shadow-xs">
+          <GraduationCap className="w-12 h-12 text-blue-300 mx-auto mb-3" />
+          <h3 className="font-bold text-base text-[#071A3D] mb-1">No Students Registered Yet</h3>
+          <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
+            All sample records have been removed. Click below to add your actual students into the database.
+          </p>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-6 py-3 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
+          >
+            <Plus className="w-4 h-4" /> + Add First Real Student
+          </button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
                 <tr>
-                  <td colSpan={8} className="text-center py-10 text-gray-400">
-                    No matching student records found.
-                  </td>
+                  <th className="px-4 py-3.5">#</th>
+                  <th className="px-4 py-3.5">Register No</th>
+                  <th className="px-4 py-3.5">Student Name</th>
+                  <th className="px-4 py-3.5">Contact Details</th>
+                  <th className="px-4 py-3.5 text-center">Year / Sem</th>
+                  <th className="px-4 py-3.5 text-center">Section</th>
+                  <th className="px-4 py-3.5 text-center">Status</th>
+                  <th className="px-4 py-3.5 text-right">Actions</th>
                 </tr>
-              ) : (
-                filteredStudents.map((s, idx) => (
-                  <tr key={s.id} className="hover:bg-blue-50/40 transition-colors">
-                    <td className="px-4 py-3 text-gray-400 font-mono text-[11px]">{idx + 1}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-[#1455D9]">{s.registerNumber}</td>
-                    <td className="px-4 py-3 font-bold text-[#071A3D]">{s.name}</td>
-                    <td className="px-4 py-3 text-gray-500">
-                      <div className="flex flex-col text-[11px]">
-                        <span>{s.email}</span>
-                        {s.phone && <span className="text-gray-400">{s.phone}</span>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200">
-                        Yr {s.year} / S{s.semester}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center font-bold text-[#071A3D]">Sec {s.section}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                          s.status.toLowerCase() === 'active'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {s.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => {
-                            setSelectedStudent(s)
-                            setIsViewModalOpen(true)
-                          }}
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                          title="View Student Dossier"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedStudent(s)
-                            setFormData({
-                              registerNumber: s.registerNumber,
-                              name: s.name,
-                              email: s.email,
-                              phone: s.phone || '',
-                              dateOfBirth: s.dateOfBirth || '2006-08-15',
-                              year: s.year,
-                              semester: s.semester,
-                              section: s.section,
-                              status: s.status,
-                            })
-                            setIsEditModalOpen(true)
-                          }}
-                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
-                          title="Edit Student Info"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(s.id)}
-                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                          title="Delete Record"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100 font-medium">
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-10 text-gray-400">
+                      No matching student records found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredStudents.map((s, idx) => (
+                    <tr key={s.id} className="hover:bg-blue-50/40 transition-colors">
+                      <td className="px-4 py-3 text-gray-400 font-mono text-[11px]">{idx + 1}</td>
+                      <td className="px-4 py-3 font-mono font-bold text-[#1455D9]">{s.registerNumber}</td>
+                      <td className="px-4 py-3 font-bold text-[#071A3D]">{s.name}</td>
+                      <td className="px-4 py-3 text-gray-500">
+                        <div className="flex flex-col text-[11px]">
+                          <span>{s.email}</span>
+                          {s.phone && <span className="text-gray-400">{s.phone}</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200">
+                          Yr {s.year} / S{s.semester}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center font-bold text-[#071A3D]">Sec {s.section}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            s.status.toLowerCase() === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          {s.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedStudent(s)
+                              setIsViewModalOpen(true)
+                            }}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                            title="View Student Dossier"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedStudent(s)
+                              setFormData({
+                                registerNumber: s.registerNumber,
+                                name: s.name,
+                                email: s.email,
+                                phone: s.phone || '',
+                                dateOfBirth: s.dateOfBirth || '2006-08-15',
+                                year: s.year,
+                                semester: s.semester,
+                                section: s.section,
+                                status: s.status,
+                              })
+                              setIsEditModalOpen(true)
+                            }}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                            title="Edit Record"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(s.id, s.name)}
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                            title="Delete Student Record"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* MODAL: ADD STUDENT */}
       {isAddModalOpen && (
@@ -378,12 +480,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Add New Student Candidate</h3>
-                <p className="text-xs text-gray-500">Department of AI &amp; DS Enrollment</p>
+                <h3 className="text-lg font-black text-[#071A3D]">Register Real Student Candidate</h3>
+                <p className="text-xs text-gray-500">Records will be saved directly into the database</p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -396,10 +498,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 23AD069"
+                    placeholder="e.g. 23AD001"
                     value={formData.registerNumber}
-                    onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono font-bold uppercase"
+                    onChange={(e) =>
+                      setFormData({ ...formData, registerNumber: e.target.value.toUpperCase() })
+                    }
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
                 <div>
@@ -407,7 +511,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     required
-                    placeholder="e.g. S. Vignesh"
+                    placeholder="e.g. K. Aishwarya"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -417,13 +521,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Email Address *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Institutional Email *</label>
                   <input
                     type="email"
                     required
-                    placeholder="student@vsb.edu.in"
+                    placeholder="e.g. 23ad001@vsb.edu.in"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
@@ -431,7 +535,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
                   <input
                     type="text"
-                    placeholder="+91 98765 43210"
+                    placeholder="e.g. +91 90252 10001"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -441,16 +545,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Year</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
                   <select
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value={1}>Year I</option>
-                    <option value={2}>Year II</option>
-                    <option value={3}>Year III</option>
-                    <option value={4}>Year IV</option>
+                    <option value={1}>Year 1</option>
+                    <option value={2}>Year 2</option>
+                    <option value={3}>Year 3</option>
+                    <option value={4}>Year 4</option>
                   </select>
                 </div>
                 <div>
@@ -460,14 +564,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value={1}>Sem 1</option>
-                    <option value={2}>Sem 2</option>
-                    <option value={3}>Sem 3</option>
-                    <option value={4}>Sem 4</option>
-                    <option value={5}>Sem 5</option>
-                    <option value={6}>Sem 6</option>
-                    <option value={7}>Sem 7</option>
-                    <option value={8}>Sem 8</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Sem {sem}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -477,109 +578,22 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
+                    <option value="A">Sec A</option>
+                    <option value="B">Sec B</option>
+                    <option value="C">Sec C</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md"
-                >
-                  Save &amp; Enroll Student
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: EDIT STUDENT */}
-      {isEditModalOpen && selectedStudent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Edit Student Information</h3>
-                <p className="text-xs text-gray-500 font-mono">Reg No: {selectedStudent.registerNumber}</p>
-              </div>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Email Address</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
                   <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
-                  <input
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value={1}>Year I</option>
-                    <option value={2}>Year II</option>
-                    <option value={3}>Year III</option>
-                    <option value={4}>Year IV</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
-                  <select
-                    value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value={1}>Sem 1</option>
-                    <option value={2}>Sem 2</option>
-                    <option value={3}>Sem 3</option>
-                    <option value={4}>Sem 4</option>
-                  </select>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Status</label>
@@ -597,6 +611,134 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 <button
                   type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2"
+                >
+                  {isLoading ? 'Saving...' : 'Save Student to Database'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDIT STUDENT */}
+      {isEditModalOpen && selectedStudent && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-lg font-black text-[#071A3D]">Edit Student Record</h3>
+                <p className="text-xs text-[#1455D9] font-mono font-bold">
+                  {selectedStudent.registerNumber}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Student Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Institutional Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <select
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value={1}>Year 1</option>
+                    <option value={2}>Year 2</option>
+                    <option value={3}>Year 3</option>
+                    <option value={4}>Year 4</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
+                  <select
+                    value={formData.semester}
+                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Sem {sem}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Section</label>
+                  <select
+                    value={formData.section}
+                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="A">Sec A</option>
+                    <option value="B">Sec B</option>
+                    <option value="C">Sec C</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
                   onClick={() => setIsEditModalOpen(false)}
                   className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
                 >
@@ -604,9 +746,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </button>
                 <button
                   type="submit"
+                  disabled={isLoading}
                   className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md"
                 >
-                  Update Information
+                  {isLoading ? 'Updating...' : 'Save Changes'}
                 </button>
               </div>
             </form>
@@ -620,60 +763,62 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Student Dossier</h3>
-                <p className="text-xs text-gray-500">Verified Academic Record</p>
+                <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
+                  {selectedStudent.registerNumber}
+                </span>
+                <h3 className="text-lg font-black text-[#071A3D] mt-1">{selectedStudent.name}</h3>
               </div>
               <button
                 onClick={() => setIsViewModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4 text-xs">
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-2xl border border-blue-100">
-                <div className="w-12 h-12 rounded-xl bg-[#1455D9] text-white flex items-center justify-center font-black text-lg">
-                  {selectedStudent.name.charAt(0)}
+            <div className="space-y-3 text-xs">
+              <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Department:</span>
+                  <span className="font-bold text-[#071A3D]">AI &amp; DS</span>
                 </div>
-                <div>
-                  <h4 className="font-bold text-sm text-[#071A3D]">{selectedStudent.name}</h4>
-                  <p className="font-mono text-xs text-[#1455D9] font-bold">{selectedStudent.registerNumber}</p>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Academic Standing:</span>
+                  <span className="font-bold text-[#071A3D]">
+                    Year {selectedStudent.year} · Sem {selectedStudent.semester} · Sec{' '}
+                    {selectedStudent.section}
+                  </span>
                 </div>
-              </div>
-
-              <div className="space-y-2 divide-y divide-gray-100">
-                <div className="flex justify-between py-1.5">
-                  <span className="text-gray-500">Degree &amp; Branch:</span>
-                  <span className="font-bold text-[#071A3D]">B.Tech AI &amp; DS</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-gray-500">Current Semester:</span>
-                  <span className="font-bold text-[#071A3D]">Year {selectedStudent.year} / Sem {selectedStudent.semester}</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-gray-500">Section Allocation:</span>
-                  <span className="font-bold text-[#071A3D]">Section {selectedStudent.section}</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-gray-500">Official Email:</span>
-                  <span className="font-mono text-[#071A3D]">{selectedStudent.email}</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-gray-500">Phone Contact:</span>
-                  <span className="font-mono text-[#071A3D]">{selectedStudent.phone || '+91 98765 43210'}</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-gray-500">Enrollment Status:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Status:</span>
                   <span className="font-bold text-green-700 uppercase">{selectedStudent.status}</span>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Mail className="w-4 h-4 text-[#1455D9]" />
+                  <span>{selectedStudent.email}</span>
+                </div>
+                {selectedStudent.phone && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-4 h-4 text-[#1455D9]" />
+                    <span>{selectedStudent.phone}</span>
+                  </div>
+                )}
+                {selectedStudent.dateOfBirth && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="w-4 h-4 text-[#1455D9]" />
+                    <span>Date of Birth: {selectedStudent.dateOfBirth}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-3 border-t flex justify-end">
               <button
                 onClick={() => setIsViewModalOpen(false)}
-                className="w-full py-2.5 rounded-xl bg-[#071A3D] text-white font-bold text-xs hover:bg-[#0a2a5e]"
+                className="px-5 py-2.5 rounded-xl bg-[#071A3D] text-white font-bold cursor-pointer"
               >
                 Close Dossier
               </button>

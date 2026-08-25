@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from './prisma'
 import { hashOTP, verifyOTP, generateOTP } from './utils'
+import { VSB_LOGO_BASE64 } from './logoBase64'
 
 const DEFAULT_SECRET = 'your-super-secret-key-change-in-production-min-32-chars'
 const JWT_SECRET = new TextEncoder().encode(
@@ -514,24 +515,27 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #071A3D 0%, #1455D9 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-          <h1 style="color: #FFFFFF; margin: 0; font-size: 24px; font-weight: 700;">V.S.B. Engineering College</h1>
-          <p style="color: #F4C430; margin: 8px 0 0; font-size: 14px;">Artificial Intelligence & Data Science Department</p>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto; padding: 0;">
+        <div style="background: linear-gradient(135deg, #071A3D 0%, #1455D9 100%); padding: 28px 32px; border-radius: 16px 16px 0 0; text-align: center; margin: 0; position: relative;">
+          <img src="${VSB_LOGO_BASE64}" alt="V.S.B. Engineering College Logo" style="max-height: 40px; margin-bottom: 12px;">
+          <h1 style="color: #FFFFFF; margin: 0; font-size: 26px; font-weight: 700;">V.S.B. Engineering College</h1>
+          <p style="color: #F4C430; margin: 4px 0 0; font-size: 13px; font-weight: 500;">Artificial Intelligence & Data Science Department</p>
         </div>
-        <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
-          <h2 style="color: #071A3D; margin: 0 0 16px; font-size: 20px;">Admin Login Verification</h2>
-          <p style="margin: 0 0 16px;">Dear <strong>${name}</strong>,</p>
-          <p style="margin: 0 0 10px;">A login request was initiated on the Admin Portal for account: <strong>${email}</strong>.</p>
+        <div style="border-top: 4px solid #071A3D; background: linear-gradient(135deg, #f8f9fa 0%, #e2e8f0 100%); padding: 32px; border-radius: 0 0 16px 16px; margin: 0; position: relative;">
+          <h2 style="color: #071A3D; margin: 0 0 20px; font-size: 22px; font-weight: 600; letter-spacing: -0.5px;">Admin Login Verification</h2>
+          <p style="margin: 0 0 20px;">Dear <strong>${name}</strong>,</p>
+          <p style="margin: 0 0 16px;">A login request was initiated on the Admin Portal for account: <strong>${email}</strong>.</p>
           <p style="margin: 0 0 24px;">Please use the following 6-digit One-Time Password (OTP) to complete sign-in:</p>
-          <div style="background: #f0f9ff; border: 2px solid #1455D9; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0;">
-            <span style="font-size: 32px; font-weight: 700; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', monospace;">${otp}</span>
+          <div style="background: #ffffff; border: 2px solid #1455D9; border-radius: 10px; padding: 24px; text-align: center; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <span style="font-size: 36px; font-weight: 700; color: #071A3D; letter-spacing: 6px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
           </div>
-          <p style="margin: 0 0 16px; font-size: 14px; color: #6b7280;"><strong>This OTP will expire in ${OTP_EXPIRY_MINUTES} minutes.</strong></p>
-          <p style="margin: 0 0 16px; font-size: 14px; color: #6b7280;">If you did not request this OTP, please ignore this email or contact the system administrator immediately.</p>
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
-          <p style="margin: 0; font-size: 12px; color: #9ca3af;">V.S.B. Engineering College, Karur, Tamil Nadu, India</p>
-          <p style="margin: 8px 0 0; font-size: 12px; color: #9ca3af;">This is an automated message. Please do not reply.</p>
+          <p style="margin: 0 0 20px; font-size: 13px; color: #6b7280;"><strong>This OTP will expire in ${OTP_EXPIRY_MINUTES} minutes.</strong></p>
+          <p style="margin: 0 0 20px; font-size: 13px; color: #6b7280;">If you did not request this OTP, please ignore this email or contact the system administrator immediately.</p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 28px 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; font-size: 12px; color: #9ca3af;">V.S.B. Engineering College, Karur, Tamil Nadu, India</p>
+            <p style="margin: 0; font-size: 12px; color: #9ca3af;">This is an automated message. Please do not reply.</p>
+          </div>
         </div>
       </body>
       </html>

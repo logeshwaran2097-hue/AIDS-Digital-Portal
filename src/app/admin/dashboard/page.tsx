@@ -14,17 +14,17 @@ export default async function AdminDashboardPage() {
     subjectCount, resourceCount, questionPaperCount,
     projectCount, eventCount, announcementCount, achievementCount
   ] = await Promise.all([
-    prisma.student.count().catch(() => 120),
-    prisma.faculty.count().catch(() => 12),
-    prisma.hOD.count().catch(() => 1),
-    prisma.admin.count().catch(() => 2),
-    prisma.subject.count().catch(() => 24),
-    prisma.resource.count().catch(() => 45),
-    prisma.questionPaper.count().catch(() => 30),
-    prisma.project.count().catch(() => 35),
-    prisma.event.count().catch(() => 8),
-    prisma.announcement.count().catch(() => 15),
-    prisma.achievement.count().catch(() => 22),
+    prisma.student.count().catch(() => 0),
+    prisma.faculty.count().catch(() => 0),
+    prisma.hOD.count().catch(() => 0),
+    prisma.admin.count().catch(() => 1),
+    prisma.subject.count().catch(() => 0),
+    prisma.resource.count().catch(() => 0),
+    prisma.questionPaper.count().catch(() => 0),
+    prisma.project.count().catch(() => 0),
+    prisma.event.count().catch(() => 0),
+    prisma.announcement.count().catch(() => 0),
+    prisma.achievement.count().catch(() => 0),
   ])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
