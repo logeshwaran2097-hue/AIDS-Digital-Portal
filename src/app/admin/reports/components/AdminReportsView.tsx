@@ -47,60 +47,22 @@ export interface StudentAttendanceRecord {
   status: 'ELIGIBLE' | 'SHORTAGE'
 }
 
-// Realistic Student Cohort Across All 4 Academic Years
-const COMPREHENSIVE_STUDENTS: StudentAttendanceRecord[] = [
-  // YEAR I (Sem 1 & 2 - Batch 2025-2029)
-  { regNo: '24AD001', name: 'Ananya S', year: 1, semester: 2, section: 'A', workingDays: 48, presentDays: 45, odDays: 1, mlDays: 1, absentDays: 1, percentage: 97.9, cgpa: 9.15, status: 'ELIGIBLE' },
-  { regNo: '24AD002', name: 'Bala Murali K', year: 1, semester: 2, section: 'A', workingDays: 48, presentDays: 31, odDays: 0, mlDays: 2, absentDays: 15, percentage: 68.8, cgpa: 6.80, status: 'SHORTAGE' },
-  { regNo: '24AD003', name: 'Chandran P', year: 1, semester: 2, section: 'A', workingDays: 48, presentDays: 41, odDays: 2, mlDays: 1, absentDays: 4, percentage: 91.7, cgpa: 8.55, status: 'ELIGIBLE' },
-  { regNo: '24AD004', name: 'Divya Bharathi V', year: 1, semester: 2, section: 'B', workingDays: 48, presentDays: 34, odDays: 1, mlDays: 1, absentDays: 12, percentage: 75.0, cgpa: 7.40, status: 'ELIGIBLE' },
-  { regNo: '24AD005', name: 'Elango R', year: 1, semester: 2, section: 'B', workingDays: 48, presentDays: 31, odDays: 0, mlDays: 0, absentDays: 17, percentage: 64.6, cgpa: 6.50, status: 'SHORTAGE' },
-  { regNo: '24AD006', name: 'Faritha Banu M', year: 1, semester: 2, section: 'B', workingDays: 48, presentDays: 47, odDays: 0, mlDays: 0, absentDays: 1, percentage: 97.9, cgpa: 9.40, status: 'ELIGIBLE' },
-  { regNo: '24AD007', name: 'Gowtham N', year: 1, semester: 2, section: 'A', workingDays: 48, presentDays: 42, odDays: 2, mlDays: 1, absentDays: 3, percentage: 93.8, cgpa: 8.70, status: 'ELIGIBLE' },
-  { regNo: '24AD008', name: 'Hema Latha K', year: 1, semester: 2, section: 'B', workingDays: 48, presentDays: 44, odDays: 1, mlDays: 1, absentDays: 2, percentage: 95.8, cgpa: 9.05, status: 'ELIGIBLE' },
-
-  // YEAR II (Sem 3 & 4 - Batch 2024-2028)
-  { regNo: '23AD009', name: 'Pradeep S', year: 2, semester: 4, section: 'A', workingDays: 48, presentDays: 31, odDays: 0, mlDays: 0, absentDays: 17, percentage: 64.6, cgpa: 6.90, status: 'SHORTAGE' },
-  { regNo: '23AD007', name: 'Manoj Kumar P', year: 2, semester: 4, section: 'B', workingDays: 48, presentDays: 33, odDays: 1, mlDays: 1, absentDays: 13, percentage: 72.9, cgpa: 7.20, status: 'SHORTAGE' },
-  { regNo: '23AD006', name: 'Lavanya M', year: 2, semester: 4, section: 'B', workingDays: 48, presentDays: 36, odDays: 0, mlDays: 2, absentDays: 10, percentage: 79.2, cgpa: 7.85, status: 'ELIGIBLE' },
-  { regNo: '23AD010', name: 'Raghavan T', year: 2, semester: 4, section: 'B', workingDays: 48, presentDays: 39, odDays: 2, mlDays: 1, absentDays: 6, percentage: 87.5, cgpa: 8.40, status: 'ELIGIBLE' },
-  { regNo: '23AD002', name: 'Deepak R', year: 2, semester: 4, section: 'A', workingDays: 48, presentDays: 42, odDays: 0, mlDays: 1, absentDays: 5, percentage: 89.6, cgpa: 8.95, status: 'ELIGIBLE' },
-  { regNo: '23AD004', name: 'Harini S', year: 2, semester: 4, section: 'A', workingDays: 48, presentDays: 39, odDays: 3, mlDays: 2, absentDays: 4, percentage: 91.7, cgpa: 9.10, status: 'ELIGIBLE' },
-  { regNo: '23AD003', name: 'Gokulnath M', year: 2, semester: 4, section: 'A', workingDays: 48, presentDays: 43, odDays: 1, mlDays: 1, absentDays: 3, percentage: 93.8, cgpa: 8.76, status: 'ELIGIBLE' },
-  { regNo: '23AD001', name: 'Aishwarya K', year: 2, semester: 4, section: 'A', workingDays: 48, presentDays: 44, odDays: 2, mlDays: 1, absentDays: 1, percentage: 97.9, cgpa: 9.42, status: 'ELIGIBLE' },
-  { regNo: '23AD005', name: 'Karthik V', year: 2, semester: 4, section: 'B', workingDays: 48, presentDays: 47, odDays: 0, mlDays: 0, absentDays: 1, percentage: 97.9, cgpa: 9.25, status: 'ELIGIBLE' },
-  { regNo: '23AD008', name: 'Nivetha R', year: 2, semester: 4, section: 'A', workingDays: 48, presentDays: 48, odDays: 0, mlDays: 0, absentDays: 0, percentage: 100.0, cgpa: 9.60, status: 'ELIGIBLE' },
-
-  // YEAR III (Sem 5 & 6 - Batch 2023-2027)
-  { regNo: '22AD001', name: 'Sanjay Kumar M', year: 3, semester: 6, section: 'A', workingDays: 48, presentDays: 40, odDays: 2, mlDays: 2, absentDays: 4, percentage: 91.7, cgpa: 8.90, status: 'ELIGIBLE' },
-  { regNo: '22AD002', name: 'Swetha B', year: 3, semester: 6, section: 'A', workingDays: 48, presentDays: 45, odDays: 1, mlDays: 1, absentDays: 1, percentage: 97.9, cgpa: 9.35, status: 'ELIGIBLE' },
-  { regNo: '22AD003', name: 'Tharun Prasad S', year: 3, semester: 6, section: 'B', workingDays: 48, presentDays: 31, odDays: 1, mlDays: 1, absentDays: 15, percentage: 68.8, cgpa: 6.95, status: 'SHORTAGE' },
-  { regNo: '22AD004', name: 'Uma Maheshwari G', year: 3, semester: 6, section: 'B', workingDays: 48, presentDays: 42, odDays: 2, mlDays: 2, absentDays: 2, percentage: 95.8, cgpa: 9.10, status: 'ELIGIBLE' },
-  { regNo: '22AD005', name: 'Varun K', year: 3, semester: 6, section: 'A', workingDays: 48, presentDays: 41, odDays: 3, mlDays: 0, absentDays: 4, percentage: 91.7, cgpa: 8.80, status: 'ELIGIBLE' },
-  { regNo: '22AD006', name: 'Yamini R', year: 3, semester: 6, section: 'B', workingDays: 48, presentDays: 32, odDays: 1, mlDays: 1, absentDays: 14, percentage: 70.8, cgpa: 7.10, status: 'SHORTAGE' },
-
-  // YEAR IV (Sem 7 & 8 - Batch 2022-2026)
-  { regNo: '21AD001', name: 'Vigneshwaran K', year: 4, semester: 8, section: 'A', workingDays: 48, presentDays: 42, odDays: 2, mlDays: 2, absentDays: 2, percentage: 95.8, cgpa: 8.80, status: 'ELIGIBLE' },
-  { regNo: '21AD002', name: 'Yogesh R', year: 4, semester: 8, section: 'A', workingDays: 48, presentDays: 32, odDays: 2, mlDays: 1, absentDays: 13, percentage: 72.9, cgpa: 7.15, status: 'SHORTAGE' },
-  { regNo: '21AD003', name: 'Zeenath Fathima A', year: 4, semester: 8, section: 'B', workingDays: 48, presentDays: 45, odDays: 1, mlDays: 1, absentDays: 1, percentage: 97.9, cgpa: 9.50, status: 'ELIGIBLE' },
-  { regNo: '21AD004', name: 'Akash M', year: 4, semester: 8, section: 'B', workingDays: 48, presentDays: 43, odDays: 3, mlDays: 0, absentDays: 2, percentage: 95.8, cgpa: 9.20, status: 'ELIGIBLE' },
-  { regNo: '21AD005', name: 'Bhuvaneshwari P', year: 4, semester: 8, section: 'A', workingDays: 48, presentDays: 30, odDays: 2, mlDays: 2, absentDays: 14, percentage: 70.8, cgpa: 7.00, status: 'SHORTAGE' },
-]
-
 export function AdminReportsView({
-  studentCount,
-  facultyCount,
-  subjectCount,
-  projectCount,
-  eventCount,
-  achievementCount,
+  studentCount = 0,
+  facultyCount = 0,
+  subjectCount = 0,
+  projectCount = 0,
+  eventCount = 0,
+  achievementCount = 0,
+  initialStudents = [],
 }: {
-  studentCount: number
-  facultyCount: number
-  subjectCount: number
-  projectCount: number
-  eventCount: number
-  achievementCount: number
+  studentCount?: number
+  facultyCount?: number
+  subjectCount?: number
+  projectCount?: number
+  eventCount?: number
+  achievementCount?: number
+  initialStudents?: StudentAttendanceRecord[]
 }) {
   // Filters State
   const [selectedYear, setSelectedYear] = useState<number | 'ALL'>('ALL')
@@ -161,7 +123,7 @@ export function AdminReportsView({
 
   // Filtered Students (ALWAYS ABSENTS FIRST)
   const filteredStudents = useMemo(() => {
-    return COMPREHENSIVE_STUDENTS.filter((s) => {
+    return (initialStudents || []).filter((s) => {
       const matchesYear = selectedYear === 'ALL' || s.year === selectedYear
       const matchesSemester = selectedSemester === 'ALL' || s.semester === selectedSemester
       const matchesSection = selectedSection === 'ALL' || s.section === selectedSection
@@ -177,7 +139,7 @@ export function AdminReportsView({
 
       return matchesYear && matchesSemester && matchesSection && matchesSearch && matchesStatus
     }).sort((a, b) => b.absentDays - a.absentDays || a.percentage - b.percentage)
-  }, [selectedYear, selectedSemester, selectedSection, statusFilter, searchQuery])
+  }, [initialStudents, selectedYear, selectedSemester, selectedSection, statusFilter, searchQuery])
 
   // Summary Metrics
   const summary = useMemo(() => {
@@ -755,7 +717,7 @@ export function AdminReportsView({
               <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-1 inline-block ${
                 selectedYear === 'ALL' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
               }`}>
-                {COMPREHENSIVE_STUDENTS.length} Students
+                {(initialStudents || []).length} Students
               </span>
             </button>
 
@@ -766,7 +728,7 @@ export function AdminReportsView({
               { year: 4, name: 'Year IV', label: '4th Year (Senior)', sems: [7, 8] },
             ].map((y) => {
               const isSelected = selectedYear === y.year
-              const yCount = COMPREHENSIVE_STUDENTS.filter((s) => s.year === y.year).length
+              const yCount = (initialStudents || []).filter((s) => s.year === y.year).length
               return (
                 <button
                   key={y.year}
@@ -847,7 +809,7 @@ export function AdminReportsView({
                 onChange={(e) => setStatusFilter(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-gray-200 font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9] shadow-2xs"
               >
-                <option value="ALL">All Candidates ({COMPREHENSIVE_STUDENTS.length})</option>
+                <option value="ALL">All Candidates ({(initialStudents || []).length})</option>
                 <option value="SHORTAGE">🚨 Shortage Only (&lt; 75%)</option>
                 <option value="ELIGIBLE">✓ Eligible Students (&ge; 75%)</option>
                 <option value="OD_ONLY">🏖️ On-Duty (OD) Claimants</option>
@@ -925,52 +887,61 @@ export function AdminReportsView({
               </div>
 
               <div className="space-y-2.5">
-                {filteredStudents.map((s, idx) => (
-                  <div
-                    key={s.regNo}
-                    className="p-3.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-gray-400 w-5">{idx + 1}.</span>
-                        <span className="font-mono font-bold text-[#1455D9]">{s.regNo}</span>
-                        <span className="font-bold text-[#071A3D]">{s.name}</span>
-                        <span className="text-[10px] text-gray-500">({s.section})</span>
+                {filteredStudents.length > 0 ? (
+                  filteredStudents.map((s, idx) => (
+                    <div
+                      key={s.regNo}
+                      className="p-3.5 bg-white rounded-xl border border-gray-200/80 shadow-2xs space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-400 w-5">{idx + 1}.</span>
+                          <span className="font-mono font-bold text-[#1455D9]">{s.regNo}</span>
+                          <span className="font-bold text-[#071A3D]">{s.name}</span>
+                          <span className="text-[10px] text-gray-500">({s.section})</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[11px] text-gray-500 font-mono">
+                            {s.presentDays}P + {s.odDays}OD + {s.mlDays}ML ·{' '}
+                            <span className="font-bold text-rose-600">{s.absentDays} Absents</span>
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-md font-mono text-xs font-black ${
+                              s.percentage >= 75 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-600 text-white'
+                            }`}
+                          >
+                            {s.percentage}%
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[11px] text-gray-500 font-mono">
-                          {s.presentDays}P + {s.odDays}OD + {s.mlDays}ML ·{' '}
-                          <span className="font-bold text-rose-600">{s.absentDays} Absents</span>
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded-md font-mono text-xs font-black ${
-                            s.percentage >= 75 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-600 text-white'
-                          }`}
-                        >
-                          {s.percentage}%
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* Progress Bar with 75% Cutoff Indicator */}
-                    <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          s.percentage >= 75
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
-                            : 'bg-gradient-to-r from-rose-500 to-red-600'
-                        }`}
-                        style={{ width: `${s.percentage}%` }}
-                      />
-                      {/* 75% line */}
-                      <div
-                        className="absolute top-0 bottom-0 w-0.5 bg-red-600 z-10 opacity-70"
-                        style={{ left: '75%' }}
-                        title="75% Cutoff Line"
-                      />
+                      {/* Progress Bar with 75% Cutoff Indicator */}
+                      <div className="relative h-3 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            s.percentage >= 75
+                              ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                              : 'bg-gradient-to-r from-rose-500 to-red-600'
+                          }`}
+                          style={{ width: `${s.percentage}%` }}
+                        />
+                        {/* 75% line */}
+                        <div
+                          className="absolute top-0 bottom-0 w-0.5 bg-red-600 z-10 opacity-70"
+                          style={{ left: '75%' }}
+                          title="75% Cutoff Line"
+                        />
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center bg-white rounded-2xl border border-gray-200 text-gray-400 space-y-1">
+                    <p className="font-bold text-xs text-gray-600">No student attendance records recorded yet.</p>
+                    <p className="text-[11px] text-gray-400">
+                      Enrolled students and real-time attendance markings from faculty will automatically populate live charts here.
+                    </p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
