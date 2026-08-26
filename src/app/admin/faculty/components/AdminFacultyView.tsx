@@ -108,24 +108,24 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [classStudents, setClassStudents] = useState<StudentInClass[]>([])
   const [loadingClassData, setLoadingClassData] = useState(false)
 
-  // Form state
+  // Form state - Clean default empty values
   const [formData, setFormData] = useState({
     facultyId: '',
     name: '',
     email: '',
     phone: '',
     password: 'vsb@123',
-    dateOfBirth: '1988-06-15',
+    dateOfBirth: '',
     designation: 'Assistant Professor',
-    qualification: 'M.E., Ph.D.',
-    experience: 5,
-    specialization: 'Artificial Intelligence & Machine Learning',
-    subjects: '["AD2301", "AD2302"]',
-    advisorBatch: 'Year II - Sem 4 - Sec A',
+    qualification: '',
+    experience: '' as any,
+    specialization: '',
+    subjects: '',
+    advisorBatch: '',
     advisorYear: 2,
     advisorSem: 4,
     advisorSec: 'A',
-    facultyType: 'both',
+    facultyType: 'advisor', // 'advisor', 'subject_handler', or 'both'
     status: 'active',
   })
 
@@ -330,18 +330,20 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // Handle Add Faculty Submit
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.facultyId.trim() || !formData.name.trim() || !formData.password.trim()) {
-      alert('Please fill in Faculty ID, Full Name, and Initial Password.')
+    if (!formData.facultyId.trim() || !formData.name.trim()) {
+      alert('Please fill in Faculty ID and Full Name.')
       return
     }
 
     setIsLoading(true)
     try {
       let subjectsArr: string[] = []
-      try {
-        subjectsArr = JSON.parse(formData.subjects)
-      } catch {
-        subjectsArr = formData.subjects.split(',').map((s) => s.trim()).filter(Boolean)
+      if (formData.subjects.trim()) {
+        try {
+          subjectsArr = JSON.parse(formData.subjects)
+        } catch {
+          subjectsArr = formData.subjects.split(',').map((s) => s.trim()).filter(Boolean)
+        }
       }
 
       const res = await fetch('/api/faculty', {
@@ -349,6 +351,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          email: formData.email.trim() || `${formData.facultyId.toLowerCase()}@vsb.edu.in`,
+          password: formData.password.trim() || 'vsb@123',
+          experience: Number(formData.experience) || 1,
           subjects: subjectsArr,
         }),
       })
@@ -363,17 +368,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           email: '',
           phone: '',
           password: 'vsb@123',
-          dateOfBirth: '1988-06-15',
+          dateOfBirth: '',
           designation: 'Assistant Professor',
-          qualification: 'M.E., Ph.D.',
-          experience: 5,
-          specialization: 'Artificial Intelligence & Machine Learning',
-          subjects: '["AD2301", "AD2302"]',
-          advisorBatch: 'Year II - Sem 4 - Sec A',
+          qualification: '',
+          experience: '',
+          specialization: '',
+          subjects: '',
+          advisorBatch: '',
           advisorYear: 2,
           advisorSem: 4,
           advisorSec: 'A',
-          facultyType: 'both',
+          facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
           status: 'active',
         })
         alert('Faculty member successfully registered in database!')
@@ -396,10 +401,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     setIsLoading(true)
     try {
       let subjectsArr: string[] = []
-      try {
-        subjectsArr = JSON.parse(formData.subjects)
-      } catch {
-        subjectsArr = formData.subjects.split(',').map((s) => s.trim()).filter(Boolean)
+      if (formData.subjects.trim()) {
+        try {
+          subjectsArr = JSON.parse(formData.subjects)
+        } catch {
+          subjectsArr = formData.subjects.split(',').map((s) => s.trim()).filter(Boolean)
+        }
       }
 
       const res = await fetch('/api/faculty', {
@@ -408,6 +415,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         body: JSON.stringify({
           ...formData,
           facultyId: selectedFaculty.facultyId,
+          experience: Number(formData.experience) || 1,
           subjects: subjectsArr,
         }),
       })
@@ -424,7 +432,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   phone: formData.phone,
                   designation: formData.designation,
                   qualification: formData.qualification,
-                  experience: Number(formData.experience),
+                  experience: Number(formData.experience) || 1,
                   specialization: formData.specialization,
                   subjects: subjectsArr,
                   advisorBatch: formData.advisorBatch,
@@ -501,17 +509,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           <button
             onClick={() => {
               setFormData({
-                facultyId: `FAC${Math.floor(100 + Math.random() * 900)}`,
+                facultyId: '',
                 name: '',
                 email: '',
                 phone: '',
                 password: 'vsb@123',
-                dateOfBirth: '1988-06-15',
+                dateOfBirth: '',
                 designation: 'Assistant Professor',
-                qualification: 'M.E., Ph.D.',
-                experience: 5,
-                specialization: 'Artificial Intelligence & Machine Learning',
-                subjects: '["AD2301", "AD2302"]',
+                qualification: '',
+                experience: '',
+                specialization: '',
+                subjects: '',
                 advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
                 advisorYear: 2,
                 advisorSem: 4,
@@ -766,6 +774,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <th className="px-4 py-3.5">#</th>
                 <th className="px-4 py-3.5">Faculty ID &amp; Name</th>
                 <th className="px-4 py-3.5">Assigned Class &amp; Section</th>
+                <th className="px-4 py-3.5">Role Type</th>
                 <th className="px-4 py-3.5">Designation &amp; Qualification</th>
                 <th className="px-4 py-3.5">Advisory Contact</th>
                 <th className="px-4 py-3.5 text-center">Class Dossier</th>
@@ -775,7 +784,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <tbody className="divide-y divide-gray-100 font-medium">
               {advisorsList.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-gray-400">
+                  <td colSpan={8} className="text-center py-12 text-gray-400">
                     <UserCheck className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="font-bold text-gray-600">No Class Advisors Found</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to assign a class advisor.</p>
@@ -810,11 +819,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </td>
 
                     <td className="px-4 py-3.5">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#1455D9] border border-blue-200">
+                        {advisor.facultyType === 'both' ? 'Advisor & Faculty' : 'Class Advisor'}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3.5">
                       <span className="font-bold text-gray-800 block">
                         {advisor.designation}
                       </span>
                       <span className="text-gray-500 text-[11px]">
-                        {advisor.qualification} ({advisor.experience} Yrs Exp)
+                        {advisor.qualification || 'M.E. / Ph.D.'} {advisor.experience ? `(${advisor.experience} Yrs Exp)` : ''}
                       </span>
                     </td>
 
@@ -859,12 +874,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               email: advisor.email,
                               phone: advisor.phone || '',
                               password: '',
-                              dateOfBirth: advisor.dateOfBirth || '1988-06-15',
+                              dateOfBirth: advisor.dateOfBirth || '',
                               designation: advisor.designation,
-                              qualification: advisor.qualification,
-                              experience: advisor.experience,
-                              specialization: advisor.specialization,
-                              subjects: JSON.stringify(subjs),
+                              qualification: advisor.qualification || '',
+                              experience: advisor.experience || '',
+                              specialization: advisor.specialization || '',
+                              subjects: subjs.join(', '),
                               advisorBatch: advisor.advisorBatch || 'Year II - Sem 4 - Sec A',
                               advisorYear: advisor.advisorYear || 2,
                               advisorSem: advisor.advisorSem || 4,
@@ -907,6 +922,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <th className="px-4 py-3.5">#</th>
                 <th className="px-4 py-3.5">Faculty &amp; ID</th>
                 <th className="px-4 py-3.5">Handled Courses &amp; Subjects</th>
+                <th className="px-4 py-3.5">Role Type</th>
                 <th className="px-4 py-3.5">Specialization Domain</th>
                 <th className="px-4 py-3.5">Designation &amp; Experience</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
@@ -915,7 +931,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <tbody className="divide-y divide-gray-100 font-medium">
               {handlersList.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-400">
+                  <td colSpan={7} className="text-center py-12 text-gray-400">
                     <BookMarked className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="font-bold text-gray-600">No Subject Handlers Found</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subjects.</p>
@@ -961,16 +977,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </td>
 
                       <td className="px-4 py-3.5">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                          {handler.facultyType === 'both' ? 'Advisor & Faculty' : 'Subject Faculty'}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3.5">
                         <span className="font-bold text-gray-800 block">
                           {handler.specialization || 'AI & Machine Learning'}
                         </span>
-                        <span className="text-[11px] text-gray-500">{handler.qualification}</span>
+                        <span className="text-[11px] text-gray-500">{handler.qualification || 'M.E. / Ph.D.'}</span>
                       </td>
 
                       <td className="px-4 py-3.5">
                         <span className="font-bold text-[#071A3D] block">{handler.designation}</span>
                         <span className="text-green-700 font-bold text-[11px]">
-                          {handler.experience}+ Years Academic Exp
+                          {handler.experience ? `${handler.experience}+ Years Exp` : 'Faculty'}
                         </span>
                       </td>
 
@@ -985,12 +1007,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 email: handler.email,
                                 phone: handler.phone || '',
                                 password: '',
-                                dateOfBirth: handler.dateOfBirth || '1988-06-15',
+                                dateOfBirth: handler.dateOfBirth || '',
                                 designation: handler.designation,
-                                qualification: handler.qualification,
-                                experience: handler.experience,
-                                specialization: handler.specialization,
-                                subjects: JSON.stringify(subjs),
+                                qualification: handler.qualification || '',
+                                experience: handler.experience || '',
+                                specialization: handler.specialization || '',
+                                subjects: subjs.join(', '),
                                 advisorBatch: handler.advisorBatch || '',
                                 advisorYear: handler.advisorYear || 2,
                                 advisorSem: handler.advisorSem || 4,
@@ -1389,7 +1411,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: REGISTER REAL FACULTY PROFESSOR (IDENTICAL TO STUDENT MODAL) */}
+      {/* MODAL: REGISTER REAL FACULTY PROFESSOR */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -1410,20 +1432,73 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
 
             <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
+              {/* Role / Type Selector: Advisor, Subject Faculty, or Both */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1.5">
+                  Faculty Role / Designation Allocation *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'advisor' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'advisor'
+                        ? 'bg-blue-50 border-[#1455D9] text-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    <span>Class Advisor</span>
+                    <span className="text-[10px] font-normal text-gray-400">Class In-Charge</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'subject_handler' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'subject_handler'
+                        ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <BookMarked className="w-4 h-4" />
+                    <span>Subject Faculty</span>
+                    <span className="text-[10px] font-normal text-gray-400">Course Teacher</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'both' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'both'
+                        ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-xs ring-2 ring-amber-500/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Advisor &amp; Faculty</span>
+                    <span className="text-[10px] font-normal text-gray-400">Both Duties</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Faculty ID *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. FAC001"
+                    placeholder="e.g. FAC101"
                     value={formData.facultyId}
                     onChange={(e) => setFormData({ ...formData, facultyId: e.target.value.toUpperCase() })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#1455D9]"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Full Name *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
                   <input
                     type="text"
                     required
@@ -1509,95 +1584,124 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <label className="block font-bold text-[#071A3D] mb-1">Experience (Yrs)</label>
                   <input
                     type="number"
-                    min={1}
+                    placeholder="e.g. 5"
                     value={formData.experience}
-                    onChange={(e) => setFormData({ ...formData, experience: Number(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
               </div>
 
-              {/* Class Advisor Assignment Fields */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
-                  <select
-                    value={formData.advisorSem}
-                    onChange={(e) => {
-                      const sem = Number(e.target.value)
-                      const yr = Math.ceil(sem / 2)
-                      setFormData({
-                        ...formData,
-                        advisorSem: sem,
-                        advisorYear: yr,
-                        advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
-                      })
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                      <option key={sem} value={sem}>
-                        Semester {sem} (Year {Math.ceil(sem / 2)})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
-                  <select
-                    value={formData.advisorYear}
-                    onChange={(e) => {
-                      const y = Number(e.target.value)
-                      setFormData({
-                        ...formData,
-                        advisorYear: y,
-                        advisorSem: (y * 2) - 1,
-                        advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
-                      })
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value={1}>Year 1 (Freshman)</option>
-                    <option value={2}>Year 2 (Sophomore)</option>
-                    <option value={3}>Year 3 (Junior)</option>
-                    <option value={4}>Year 4 (Senior)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Section</label>
-                  <select
-                    value={formData.advisorSec}
-                    onChange={(e) => {
-                      const sec = e.target.value
-                      setFormData({
-                        ...formData,
-                        advisorSec: sec,
-                        advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
-                      })
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
-                    <option value="D">Section D</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Handled Course Codes */}
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Handled Course Codes</label>
+                <label className="block font-bold text-[#071A3D] mb-1">Specialization Domain</label>
                 <input
                   type="text"
-                  placeholder="e.g. AD2301, AD2302, AD2305"
-                  value={formData.subjects}
-                  onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                  placeholder="e.g. Artificial Intelligence & Machine Learning"
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200"
                 />
               </div>
+
+              {/* Class Advisor Assignment Fields (Shown when advisor or both) */}
+              {(formData.facultyType === 'advisor' || formData.facultyType === 'both') && (
+                <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 animate-fade-in">
+                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
+                    Class Advisor Allocation:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester (1 - 8)</label>
+                      <select
+                        value={formData.advisorSem}
+                        onChange={(e) => {
+                          const sem = Number(e.target.value)
+                          const yr = Math.ceil(sem / 2)
+                          setFormData({
+                            ...formData,
+                            advisorSem: sem,
+                            advisorYear: yr,
+                            advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                          <option key={sem} value={sem}>
+                            Semester {sem} (Year {Math.ceil(sem / 2)})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Academic Year</label>
+                      <select
+                        value={formData.advisorYear}
+                        onChange={(e) => {
+                          const y = Number(e.target.value)
+                          setFormData({
+                            ...formData,
+                            advisorYear: y,
+                            advisorSem: (y * 2) - 1,
+                            advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
+                      >
+                        <option value={1}>Year 1 (Freshman)</option>
+                        <option value={2}>Year 2 (Sophomore)</option>
+                        <option value={3}>Year 3 (Junior)</option>
+                        <option value={4}>Year 4 (Senior)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Section</label>
+                      <select
+                        value={formData.advisorSec}
+                        onChange={(e) => {
+                          const sec = e.target.value
+                          setFormData({
+                            ...formData,
+                            advisorSec: sec,
+                            advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
+                      >
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                        <option value="D">Section D</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Handled Course Codes (Shown when subject_handler or both) */}
+              {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2 animate-fade-in">
+                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                    <BookMarked className="w-4 h-4 text-purple-700" />
+                    Subject Handler Courses:
+                  </span>
+                  <div>
+                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">
+                      Handled Course Codes (Comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. AD2301, AD2302, AD2305"
+                      value={formData.subjects}
+                      onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Status</label>
@@ -1652,12 +1756,66 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
 
             <form onSubmit={handleEditSubmit} className="space-y-3.5 text-xs">
+              {/* Role / Type Selector in Edit */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1.5">
+                  Faculty Role / Designation Allocation *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'advisor' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'advisor'
+                        ? 'bg-blue-50 border-[#1455D9] text-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    <span>Class Advisor</span>
+                    <span className="text-[10px] font-normal text-gray-400">Class In-Charge</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'subject_handler' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'subject_handler'
+                        ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <BookMarked className="w-4 h-4" />
+                    <span>Subject Faculty</span>
+                    <span className="text-[10px] font-normal text-gray-400">Course Teacher</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'both' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'both'
+                        ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-xs ring-2 ring-amber-500/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Advisor &amp; Faculty</span>
+                    <span className="text-[10px] font-normal text-gray-400">Both Duties</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
                   <input
                     type="text"
                     required
+                    placeholder="e.g. Dr. S. Karthik"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
@@ -1667,6 +1825,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <label className="block font-bold text-[#071A3D] mb-1">Institutional Email</label>
                   <input
                     type="email"
+                    placeholder="e.g. karthik@vsb.edu.in"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
@@ -1679,6 +1838,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
                   <input
                     type="text"
+                    placeholder="e.g. +91 98421 12345"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
@@ -1713,6 +1873,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <label className="block font-bold text-[#071A3D] mb-1">Qualification</label>
                   <input
                     type="text"
+                    placeholder="e.g. M.E., Ph.D."
                     value={formData.qualification}
                     onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
@@ -1722,98 +1883,126 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <label className="block font-bold text-[#071A3D] mb-1">Experience (Yrs)</label>
                   <input
                     type="number"
+                    placeholder="e.g. 5"
                     value={formData.experience}
-                    onChange={(e) => setFormData({ ...formData, experience: Number(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
               </div>
 
-              {/* Class Advisor Assignment */}
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
-                  <select
-                    value={formData.advisorSem}
-                    onChange={(e) => {
-                      const sem = Number(e.target.value)
-                      const yr = Math.ceil(sem / 2)
-                      setFormData({
-                        ...formData,
-                        advisorSem: sem,
-                        advisorYear: yr,
-                        advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
-                      })
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9]"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                      <option key={s} value={s}>Semester {s} (Year {Math.ceil(s / 2)})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
-                  <select
-                    value={formData.advisorYear}
-                    onChange={(e) => {
-                      const y = Number(e.target.value)
-                      setFormData({
-                        ...formData,
-                        advisorYear: y,
-                        advisorSem: (y * 2) - 1,
-                        advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
-                      })
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
-                  >
-                    <option value={1}>Year 1</option>
-                    <option value={2}>Year 2</option>
-                    <option value={3}>Year 3</option>
-                    <option value={4}>Year 4</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Section</label>
-                  <select
-                    value={formData.advisorSec}
-                    onChange={(e) => {
-                      const sec = e.target.value
-                      setFormData({
-                        ...formData,
-                        advisorSec: sec,
-                        advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
-                      })
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
-                  >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
-                    <option value="D">Section D</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Handled Course Codes */}
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Handled Courses</label>
+                <label className="block font-bold text-[#071A3D] mb-1">Specialization Domain</label>
                 <input
                   type="text"
-                  value={formData.subjects}
-                  onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                  placeholder="e.g. Artificial Intelligence & Machine Learning"
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200"
                 />
               </div>
+
+              {/* Class Advisor Assignment */}
+              {(formData.facultyType === 'advisor' || formData.facultyType === 'both') && (
+                <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 animate-fade-in">
+                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
+                    Class Advisor Allocation:
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester (1 - 8)</label>
+                      <select
+                        value={formData.advisorSem}
+                        onChange={(e) => {
+                          const sem = Number(e.target.value)
+                          const yr = Math.ceil(sem / 2)
+                          setFormData({
+                            ...formData,
+                            advisorSem: sem,
+                            advisorYear: yr,
+                            advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                          <option key={s} value={s}>Semester {s} (Year {Math.ceil(s / 2)})</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Academic Year</label>
+                      <select
+                        value={formData.advisorYear}
+                        onChange={(e) => {
+                          const y = Number(e.target.value)
+                          setFormData({
+                            ...formData,
+                            advisorYear: y,
+                            advisorSem: (y * 2) - 1,
+                            advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
+                      >
+                        <option value={1}>Year 1</option>
+                        <option value={2}>Year 2</option>
+                        <option value={3}>Year 3</option>
+                        <option value={4}>Year 4</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Section</label>
+                      <select
+                        value={formData.advisorSec}
+                        onChange={(e) => {
+                          const sec = e.target.value
+                          setFormData({
+                            ...formData,
+                            advisorSec: sec,
+                            advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
+                      >
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                        <option value="D">Section D</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Handled Course Codes */}
+              {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2 animate-fade-in">
+                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                    <BookMarked className="w-4 h-4 text-purple-700" />
+                    Handled Courses:
+                  </span>
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="e.g. AD2301, AD2302, AD2305"
+                      value={formData.subjects}
+                      onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Status</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200"
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
