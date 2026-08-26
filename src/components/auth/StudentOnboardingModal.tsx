@@ -12,11 +12,13 @@ import {
   AlertCircle,
   ArrowRight,
   ArrowLeft,
-  KeyRound,
   Sparkles,
   Phone,
   Calendar,
   Building,
+  Check,
+  GraduationCap,
+  KeyRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { toast } from '@/components/ui/Toast'
@@ -42,14 +44,17 @@ export function StudentOnboardingModal({
   onComplete,
   initialData,
 }: StudentOnboardingModalProps) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  // Step 1: Check/Edit Admin Details -> Step 2: Email OTP & Set Password -> Step 3: Success
+  const [step, setStep] = useState<1 | 2 | 3>(1)
 
-  // Step 1: Profile fields
+  // Step 1: Profile details (Admin-entered, student can verify or edit if wrong)
   const [name, setName] = useState(initialData.name || '')
   const [phone, setPhone] = useState(initialData.phone || '')
-  const [dateOfBirth, setDateOfBirth] = useState(initialData.dateOfBirth || '2005-01-01')
+  const [dateOfBirth, setDateOfBirth] = useState(
+    initialData.dateOfBirth || '2005-01-01'
+  )
 
-  // Step 2: Email & OTP
+  // Step 2: Email & OTP Verification + New Password
   const [email, setEmail] = useState(
     initialData.email && !initialData.email.includes('@student.vsb.edu.in')
       ? initialData.email
@@ -57,10 +62,8 @@ export function StudentOnboardingModal({
   )
   const [otp, setOtp] = useState('')
   const [otpSent, setOtpSent] = useState(false)
-  const [otpVerified, setOtpVerified] = useState(false)
   const [otpCooldown, setOtpCooldown] = useState(0)
 
-  // Step 3: Password setup
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -76,7 +79,7 @@ export function StudentOnboardingModal({
 
   if (!isOpen) return null
 
-  // Handler: Send OTP to Email
+  // Handler: Send 6-Digit OTP to Email
   const handleSendOtp = async () => {
     if (!email || !email.includes('@')) {
       toast.error('Please enter a valid email address.')
@@ -107,42 +110,24 @@ export function StudentOnboardingModal({
     }
   }
 
-  // Handler: Verify OTP Code
-  const handleVerifyOtp = async () => {
-    if (!otp || otp.trim().length !== 6) {
-      toast.error('Please enter the 6-digit OTP code.')
+  // Handler: Verify OTP, Set New Password, and Open Student Dashboard
+  const handleVerifyAndComplete = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!email || !email.includes('@')) {
+      toast.error('Please enter a valid email address.')
       return
     }
 
-    setLoading(true)
-    try {
-      const res = await fetch('/api/auth/student/verify-email-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), otp: otp.trim() }),
-      })
-
-      const data = await res.json()
-      if (!res.ok || !data.success) {
-        toast.error(data.message || 'Invalid or expired OTP.')
-        return
-      }
-
-      setOtpVerified(true)
-      toast.success('Email verified successfully! Now set your new password.')
-      setTimeout(() => {
-        setStep(3)
-      }, 500)
-    } catch {
-      toast.error('Verification failed. Please try again.')
-    } finally {
-      setLoading(false)
+    if (!otpSent) {
+      toast.error('Please click "Send OTP" to receive your verification code.')
+      return
     }
-  }
 
-  // Handler: Complete Onboarding & Save Password
-  const handleCompleteSetup = async (e: React.FormEvent) => {
-    e.preventDefault()
+    if (!otp || otp.trim().length !== 6) {
+      toast.error('Please enter the 6-digit OTP sent to your email.')
+      return
+    }
 
     if (!newPassword || newPassword.length < 6) {
       toast.error('New password must be at least 6 characters long.')
@@ -154,47 +139,41 @@ export function StudentOnboardingModal({
       return
     }
 
-    if (!otpVerified) {
-      toast.error('Please complete email OTP verification first.')
-      setStep(2)
-      return
-    }
-
     setLoading(true)
     try {
       const res = await fetch('/api/auth/student/complete-onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          phone,
+          name: name.trim(),
+          phone: phone.trim(),
           dateOfBirth,
           email: email.trim(),
           otp: otp.trim(),
-          newPassword,
+          newPassword: newPassword.trim(),
         }),
       })
 
       const data = await res.json()
       if (!res.ok || !data.success) {
-        toast.error(data.message || 'Failed to complete setup.')
+        toast.error(data.message || 'Failed to verify OTP or set password.')
         return
       }
 
-      setStep(4)
-      toast.success('Security setup complete! Welcome to your student portal.')
+      setStep(3)
+      toast.success('Email verified & password updated! Opening your student portal...')
       setTimeout(() => {
         onComplete(data.user)
-      }, 1500)
+      }, 1200)
     } catch {
-      toast.error('Error saving your new password. Please try again.')
+      toast.error('Error completing verification. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#071A3D]/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-[#071A3D]/85 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-gray-100 space-y-6 animate-scale-up relative overflow-hidden">
         {/* Decorative Top Gradient */}
         <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430]" />
@@ -203,51 +182,52 @@ export function StudentOnboardingModal({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="p-2 rounded-xl bg-blue-50 text-[#1455D9] border border-blue-200/60 font-black text-xs">
+              <span className="p-2 rounded-xl bg-blue-50 text-[#1455D9] border border-blue-200/60 font-black text-xs font-mono">
                 {initialData.registerNumber}
               </span>
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                First-Time Setup
+              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                First-Time Student Onboarding
               </span>
             </div>
             <span className="text-xs font-bold text-[#1455D9]">
-              Step {step} of 3
+              Step {step} of 2
             </span>
           </div>
 
           <h2 className="text-xl sm:text-2xl font-black text-[#071A3D]">
-            {step === 1 && '1. Verify & Update Your Details'}
-            {step === 2 && '2. Email & OTP Verification'}
-            {step === 3 && '3. Set Your Permanent Password'}
-            {step === 4 && 'Setup Completed Successfully!'}
+            {step === 1 && '1. Check & Confirm Your Details'}
+            {step === 2 && '2. Email OTP Verification & Password Setup'}
+            {step === 3 && 'Verification Complete!'}
           </h2>
 
-          <p className="text-xs text-gray-500 font-medium leading-relaxed">
-            {step === 1 && 'Please review and update your student dossier before activating your digital account.'}
-            {step === 2 && 'Enter your active email address to receive a secure 6-digit OTP verification code.'}
-            {step === 3 && 'Create a strong, permanent password that you will use for future logins with your Register Number.'}
-            {step === 4 && 'Your security setup has been verified and saved to the institutional database.'}
+          <p className="text-xs text-gray-600 font-medium leading-relaxed">
+            {step === 1 &&
+              'Please check the details entered by administration. If any detail is incorrect, you can edit your name, phone number, or date of birth below.'}
+            {step === 2 &&
+              'Enter your email address to receive your 6-digit OTP. Verify the OTP and set your permanent password to unlock your portal.'}
+            {step === 3 &&
+              'Your details have been verified and your new password is saved. Redirecting to your dashboard...'}
           </p>
 
           {/* Progress Bar */}
           <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-gradient-to-r from-[#1455D9] to-[#22C7E8] h-full transition-all duration-300"
-              style={{ width: `${(step / 3) * 100}%` }}
+              style={{ width: step === 1 ? '50%' : '100%' }}
             />
           </div>
         </div>
 
-        {/* STEP 1: REVIEW & EDIT PROFILE DETAILS */}
+        {/* STEP 1: CHECK & EDIT ADMIN DETAILS */}
         {step === 1 && (
           <div className="space-y-4">
-            <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Department:</span>
+            <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 font-medium">Department:</span>
                 <span className="font-bold text-[#071A3D]">{initialData.department || 'AI & DS'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Academic Standing:</span>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 font-medium">Academic Standing:</span>
                 <span className="font-bold text-[#1455D9]">
                   Year {initialData.year} · Semester {initialData.semester} · Section {initialData.section}
                 </span>
@@ -256,9 +236,12 @@ export function StudentOnboardingModal({
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">
-                  Full Name (as per college records) *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-[#071A3D]">
+                    Student Full Name *
+                  </label>
+                  <span className="text-[10px] text-gray-400">Editable if incorrect</span>
+                </div>
                 <div className="relative">
                   <User className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                   <input
@@ -266,7 +249,7 @@ export function StudentOnboardingModal({
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold text-[#071A3D]"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-bold text-[#071A3D]"
                     placeholder="Your Full Name"
                   />
                 </div>
@@ -274,32 +257,34 @@ export function StudentOnboardingModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Phone Number
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-[#071A3D]">Phone Number</label>
+                    <span className="text-[10px] text-gray-400">Editable</span>
+                  </div>
                   <div className="relative">
                     <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                     <input
                       type="text"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold"
                       placeholder="+91 98765 43210"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Date of Birth
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-[#071A3D]">Date of Birth</label>
+                    <span className="text-[10px] text-gray-400">Editable</span>
+                  </div>
                   <div className="relative">
                     <Calendar className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
                     <input
                       type="date"
                       value={dateOfBirth}
                       onChange={(e) => setDateOfBirth(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold"
                     />
                   </div>
                 </div>
@@ -316,23 +301,24 @@ export function StudentOnboardingModal({
                   }
                   setStep(2)
                 }}
-                className="font-bold flex items-center gap-2"
+                className="font-bold flex items-center gap-2 bg-[#1455D9] text-white"
                 size="lg"
               >
-                Proceed to Email Verification
+                Confirm Details &amp; Proceed to Email Verification
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* STEP 2: EMAIL & OTP VERIFICATION */}
+        {/* STEP 2: EMAIL OTP VERIFICATION & PASSWORD SETUP */}
         {step === 2 && (
-          <div className="space-y-4">
+          <form onSubmit={handleVerifyAndComplete} className="space-y-4">
             <div className="space-y-3 text-xs">
+              {/* Email Input */}
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">
-                  Institutional or Personal Email Address *
+                  Enter Your Email Address for OTP *
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -340,58 +326,98 @@ export function StudentOnboardingModal({
                     <input
                       type="email"
                       required
-                      disabled={otpVerified}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold text-[#071A3D] disabled:bg-gray-100"
-                      placeholder="e.g. student@gmail.com or 23ad001@vsb.edu.in"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold text-[#071A3D]"
+                      placeholder="e.g. yourname@gmail.com or 23ad001@vsb.edu.in"
                     />
                   </div>
                   <Button
                     type="button"
                     onClick={handleSendOtp}
-                    disabled={loading || otpCooldown > 0 || otpVerified}
+                    disabled={loading || otpCooldown > 0}
                     variant="outline"
-                    className="font-bold shrink-0 text-xs"
+                    className="font-bold shrink-0 text-xs border-blue-200 text-[#1455D9] hover:bg-blue-50"
                   >
-                    {otpCooldown > 0 ? `Resend in ${otpCooldown}s` : otpSent ? 'Resend OTP' : 'Send OTP'}
+                    {otpCooldown > 0
+                      ? `Resend in ${otpCooldown}s`
+                      : otpSent
+                      ? 'Resend OTP'
+                      : 'Send OTP'}
                   </Button>
                 </div>
               </div>
 
-              {otpSent && !otpVerified && (
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/70 space-y-3 animate-fade-in">
+              {/* 6-Digit OTP Box */}
+              {otpSent && (
+                <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-[#071A3D]">Enter 6-Digit Email OTP:</span>
-                    <span className="text-[11px] text-amber-700 font-medium">Check spam/inbox</span>
+                    <span className="text-[11px] text-amber-700 font-medium">Sent to {email}</span>
                   </div>
 
                   <input
                     type="text"
                     maxLength={6}
+                    required
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                    className="w-full text-center tracking-[8px] font-mono text-xl font-black py-2.5 rounded-xl border-2 border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1455D9]"
+                    className="w-full text-center tracking-[8px] font-mono text-xl font-black py-2 rounded-xl border-2 border-amber-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1455D9]"
                     placeholder="••••••"
                     autoFocus
                   />
-
-                  <Button
-                    type="button"
-                    onClick={handleVerifyOtp}
-                    loading={loading}
-                    className="w-full font-bold bg-[#1455D9] text-white"
-                  >
-                    Verify OTP Code
-                  </Button>
                 </div>
               )}
 
-              {otpVerified && (
-                <div className="p-3.5 rounded-2xl bg-green-50 border border-green-200 flex items-center gap-2 text-green-700 font-bold text-xs">
-                  <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
-                  <span>Email verified successfully: {email}</span>
+              {/* Set New Permanent Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    New Permanent Password *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold text-[#071A3D]"
+                      placeholder="Min 6 chars"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
+
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Confirm New Password *
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold text-[#071A3D]"
+                      placeholder="Confirm password"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-[11px] text-red-500 font-bold">Passwords do not match.</p>
               )}
             </div>
 
@@ -399,93 +425,10 @@ export function StudentOnboardingModal({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="text-xs font-bold text-gray-500 hover:text-[#071A3D] flex items-center gap-1"
+                className="text-xs font-bold text-gray-500 hover:text-[#071A3D] flex items-center gap-1 cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Back to Details
-              </button>
-
-              {otpVerified && (
-                <Button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="font-bold flex items-center gap-2"
-                  size="lg"
-                >
-                  Proceed to Password Setup
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: SET NEW PERMANENT PASSWORD */}
-        {step === 3 && (
-          <form onSubmit={handleCompleteSetup} className="space-y-4">
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">
-                  Create New Permanent Password *
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold text-[#071A3D]"
-                    placeholder="At least 6 characters"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">
-                  Confirm New Password *
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1455D9] text-xs font-semibold text-[#071A3D]"
-                    placeholder="Re-enter your password"
-                  />
-                </div>
-                {newPassword && confirmPassword && newPassword !== confirmPassword && (
-                  <p className="text-[11px] text-red-500 font-bold mt-1">Passwords do not match.</p>
-                )}
-              </div>
-
-              <div className="p-3 rounded-xl bg-gray-50 border border-gray-200/80 text-[11px] text-gray-600 space-y-1">
-                <p className="font-bold text-[#071A3D]">🔐 Security Notice:</p>
-                <p>After saving, you can log in directly using your <strong>Register Number ({initialData.registerNumber})</strong> and this new password.</p>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="text-xs font-bold text-gray-500 hover:text-[#071A3D] flex items-center gap-1"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                Back to Email
               </button>
 
               <Button
@@ -495,23 +438,23 @@ export function StudentOnboardingModal({
                 size="lg"
               >
                 <ShieldCheck className="w-4 h-4" />
-                Save Password &amp; Enter Portal
+                Verify OTP, Save &amp; Enter Portal
               </Button>
             </div>
           </form>
         )}
 
-        {/* STEP 4: SUCCESS */}
-        {step === 4 && (
+        {/* STEP 3: SUCCESS & DASHBOARD UNLOCKED */}
+        {step === 3 && (
           <div className="py-6 text-center space-y-4 animate-scale-up">
             <div className="w-16 h-16 rounded-full bg-green-100 border-2 border-green-500 text-green-600 flex items-center justify-center mx-auto shadow-lg">
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-black text-[#071A3D]">
-              Setup Successfully Completed!
+              Verification Completed Successfully!
             </h3>
             <p className="text-xs text-gray-600 max-w-sm mx-auto">
-              Your institutional email has been verified and your permanent password is active. Unlocking your portal now...
+              Your details and email have been verified, and your permanent password is active. Opening your student portal now...
             </p>
           </div>
         )}
