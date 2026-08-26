@@ -26,6 +26,7 @@ import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
 export interface StudentRecord {
   id: string
+  userId?: string
   registerNumber: string
   name: string
   email: string
@@ -34,6 +35,7 @@ export interface StudentRecord {
   year: number
   semester: number
   section: string
+  batch?: string | null
   status: string
 }
 
@@ -62,6 +64,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     dateOfBirth: '2006-08-15',
     year: 2,
     semester: 4,
+    batch: '2024 - 2028',
     section: 'A',
     status: 'active',
   })
@@ -154,6 +157,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           dateOfBirth: '',
           year: 2,
           semester: 4,
+          batch: '2024 - 2028',
           section: 'A',
           status: 'active',
         })
@@ -632,9 +636,14 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200">
-                          Yr {s.year} / S{s.semester}
-                        </span>
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200">
+                            Yr {s.year} / S{s.semester}
+                          </span>
+                          <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
+                            {s.batch || (s.year === 1 ? '2025-2029' : s.year === 2 ? '2024-2028' : s.year === 3 ? '2023-2027' : '2022-2026')}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center font-bold text-[#071A3D]">Sec {s.section}</td>
                       <td className="px-4 py-3 text-center">
@@ -662,6 +671,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           </button>
                           <button
                             onClick={() => {
+                              const defaultBatches: Record<number, string> = {
+                                1: '2025 - 2029',
+                                2: '2024 - 2028',
+                                3: '2023 - 2027',
+                                4: '2022 - 2026',
+                              }
                               setSelectedStudent(s)
                               setFormData({
                                 registerNumber: s.registerNumber,
@@ -671,6 +686,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 dateOfBirth: s.dateOfBirth || '2006-08-15',
                                 year: s.year,
                                 semester: s.semester,
+                                batch: s.batch || defaultBatches[s.year] || '2024 - 2028',
                                 section: s.section,
                                 status: s.status,
                                 password: '',
@@ -757,7 +773,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
-                  <p className="text-[10px] text-gray-400 mt-1">Student can verify during first login.</p>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
@@ -771,7 +786,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
                   />
-                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Student will use this temporary password for their first login &amp; verification.</p>
                 </div>
               </div>
 
@@ -797,39 +811,73 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-2 sm:gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
                   <select
                     value={formData.semester}
                     onChange={(e) => {
                       const sem = Number(e.target.value)
-                      setFormData({ ...formData, semester: sem, year: Math.ceil(sem / 2) })
+                      const y = Math.ceil(sem / 2)
+                      const defaultBatches: Record<number, string> = {
+                        1: '2025 - 2029',
+                        2: '2024 - 2028',
+                        3: '2023 - 2027',
+                        4: '2022 - 2026',
+                      }
+                      setFormData({
+                        ...formData,
+                        semester: sem,
+                        year: y,
+                        batch: defaultBatches[y] || '2024 - 2028',
+                      })
                     }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                       <option key={sem} value={sem}>
-                        Semester {sem} (Year {Math.ceil(sem / 2)})
+                        Sem {sem}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Year</label>
                   <select
                     value={formData.year}
                     onChange={(e) => {
                       const y = Number(e.target.value)
-                      setFormData({ ...formData, year: y, semester: (y * 2) - 1 })
+                      const defaultBatches: Record<number, string> = {
+                        1: '2025 - 2029',
+                        2: '2024 - 2028',
+                        3: '2023 - 2027',
+                        4: '2022 - 2026',
+                      }
+                      setFormData({
+                        ...formData,
+                        year: y,
+                        semester: (y * 2) - 1,
+                        batch: defaultBatches[y] || '2024 - 2028',
+                      })
                     }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value={1}>Year 1 (Freshman)</option>
-                    <option value={2}>Year 2 (Sophomore)</option>
-                    <option value={3}>Year 3 (Junior)</option>
-                    <option value={4}>Year 4 (Senior)</option>
+                    <option value={1}>Year 1</option>
+                    <option value={2}>Year 2</option>
+                    <option value={3}>Year 3</option>
+                    <option value={4}>Year 4</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 2024 - 2028"
+                    value={formData.batch}
+                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-purple-200 bg-purple-50/20 font-bold text-purple-700 focus:outline-none focus:border-[#1455D9]"
+                  />
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Section</label>
@@ -838,10 +886,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
-                    <option value="D">Section D</option>
+                    <option value="A">Sec A</option>
+                    <option value="B">Sec B</option>
+                    <option value="C">Sec C</option>
+                    <option value="D">Sec D</option>
                   </select>
                 </div>
               </div>
@@ -869,9 +917,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
                 >
-                  {isLoading ? 'Saving...' : 'Save Student to Database'}
+                  {isLoading ? 'Registering...' : 'Register Student'}
                 </button>
               </div>
             </form>
@@ -886,9 +934,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Edit Student Record</h3>
-                <p className="text-xs text-[#1455D9] font-mono font-bold">
-                  {selectedStudent.registerNumber}
-                </p>
+                <p className="text-xs text-gray-500">Update cohort, academic batch, and student credentials</p>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
@@ -899,35 +945,47 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             </div>
 
             <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Student Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Institutional Email</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Register Number *</label>
                   <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    type="text"
+                    required
+                    value={formData.registerNumber}
+                    onChange={(e) =>
+                      setFormData({ ...formData, registerNumber: e.target.value.toUpperCase() })
+                    }
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Reset Password <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
-                  </label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Full Name *</label>
                   <input
                     type="text"
-                    placeholder="Enter new password"
-                    value={formData.password || ''}
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Reset Password (Optional)</label>
+                  <input
+                    type="password"
+                    placeholder="Leave blank to keep unchanged"
+                    value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
@@ -955,39 +1013,73 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-2 sm:gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
                   <select
                     value={formData.semester}
                     onChange={(e) => {
                       const sem = Number(e.target.value)
-                      setFormData({ ...formData, semester: sem, year: Math.ceil(sem / 2) })
+                      const y = Math.ceil(sem / 2)
+                      const defaultBatches: Record<number, string> = {
+                        1: '2025 - 2029',
+                        2: '2024 - 2028',
+                        3: '2023 - 2027',
+                        4: '2022 - 2026',
+                      }
+                      setFormData({
+                        ...formData,
+                        semester: sem,
+                        year: y,
+                        batch: defaultBatches[y] || '2024 - 2028',
+                      })
                     }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                       <option key={sem} value={sem}>
-                        Semester {sem} (Year {Math.ceil(sem / 2)})
+                        Sem {sem}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Year</label>
                   <select
                     value={formData.year}
                     onChange={(e) => {
                       const y = Number(e.target.value)
-                      setFormData({ ...formData, year: y, semester: (y * 2) - 1 })
+                      const defaultBatches: Record<number, string> = {
+                        1: '2025 - 2029',
+                        2: '2024 - 2028',
+                        3: '2023 - 2027',
+                        4: '2022 - 2026',
+                      }
+                      setFormData({
+                        ...formData,
+                        year: y,
+                        semester: (y * 2) - 1,
+                        batch: defaultBatches[y] || '2024 - 2028',
+                      })
                     }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value={1}>Year 1 (Freshman)</option>
-                    <option value={2}>Year 2 (Sophomore)</option>
-                    <option value={3}>Year 3 (Junior)</option>
-                    <option value={4}>Year 4 (Senior)</option>
+                    <option value={1}>Year 1</option>
+                    <option value={2}>Year 2</option>
+                    <option value={3}>Year 3</option>
+                    <option value={4}>Year 4</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 2024 - 2028"
+                    value={formData.batch}
+                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-purple-200 bg-purple-50/20 font-bold text-purple-700 focus:outline-none focus:border-[#1455D9]"
+                  />
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Section</label>
@@ -996,10 +1088,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value="A">Section A</option>
-                    <option value="B">Section B</option>
-                    <option value="C">Section C</option>
-                    <option value="D">Section D</option>
+                    <option value="A">Sec A</option>
+                    <option value="B">Sec B</option>
+                    <option value="C">Sec C</option>
+                    <option value="D">Sec D</option>
                   </select>
                 </div>
               </div>

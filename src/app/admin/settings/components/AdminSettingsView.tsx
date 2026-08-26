@@ -72,6 +72,14 @@ export function AdminSettingsView() {
   const [minAttendancePct, setMinAttendancePct] = useState(75.0)
   const [condonationLimitPct, setCondonationLimitPct] = useState(65.0)
 
+  // Academic Cohort Batches (Admin Configurable)
+  const [batches, setBatches] = useState({
+    year1: '2025 - 2029',
+    year2: '2024 - 2028',
+    year3: '2023 - 2027',
+    year4: '2022 - 2026',
+  })
+
   // Individual Monthly Working Days Breakdown
   const [monthlyWorkingDays, setMonthlyWorkingDays] = useState<Array<{ id: string; month: string; days: number }>>([
     { id: 'm1', month: 'January', days: 18 },
@@ -1014,6 +1022,64 @@ export function AdminSettingsView() {
                       <span className="font-black text-amber-900 text-sm">%</span>
                     </div>
                     <p className="text-[10px] text-amber-700 font-bold">Permitted with medical / HOD sanction</p>
+                  </div>
+                </div>
+
+                {/* Academic Batches Configuration Block */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/70 border-2 border-indigo-200 space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="block font-black text-[#071A3D] text-[11px] uppercase tracking-wider">
+                        🎓 Academic Batches (Admin Configured Cohorts)
+                      </span>
+                      <p className="text-[10px] text-gray-500">Configure active 4-year student batches across all student &amp; admin portals</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
+                      <label className="block text-[10px] font-black text-indigo-700 uppercase">Year I (Freshman)</label>
+                      <input
+                        type="text"
+                        value={batches.year1}
+                        onChange={(e) => setBatches({ ...batches, year1: e.target.value })}
+                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                      <span className="text-[9px] text-gray-400">Semesters 1 &amp; 2</span>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
+                      <label className="block text-[10px] font-black text-purple-700 uppercase">Year II (Sophomore)</label>
+                      <input
+                        type="text"
+                        value={batches.year2}
+                        onChange={(e) => setBatches({ ...batches, year2: e.target.value })}
+                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                      <span className="text-[9px] text-purple-600 font-medium">Semesters 3 &amp; 4</span>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
+                      <label className="block text-[10px] font-black text-blue-700 uppercase">Year III (Junior)</label>
+                      <input
+                        type="text"
+                        value={batches.year3}
+                        onChange={(e) => setBatches({ ...batches, year3: e.target.value })}
+                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                      <span className="text-[9px] text-blue-600 font-medium">Semesters 5 &amp; 6</span>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
+                      <label className="block text-[10px] font-black text-emerald-700 uppercase">Year IV (Senior)</label>
+                      <input
+                        type="text"
+                        value={batches.year4}
+                        onChange={(e) => setBatches({ ...batches, year4: e.target.value })}
+                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                      <span className="text-[9px] text-emerald-600 font-medium">Semesters 7 &amp; 8</span>
+                    </div>
                   </div>
                 </div>
 
