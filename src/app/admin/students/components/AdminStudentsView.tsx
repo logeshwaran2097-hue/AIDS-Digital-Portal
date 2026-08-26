@@ -42,6 +42,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [searchQuery, setSearchQuery] = useState('')
   const [yearFilter, setYearFilter] = useState('ALL')
   const [semFilter, setSemFilter] = useState('ALL')
+  const [sectionFilter, setSectionFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -86,10 +87,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
     const matchesYear = yearFilter === 'ALL' || student.year === Number(yearFilter)
     const matchesSem = semFilter === 'ALL' || student.semester === Number(semFilter)
+    const matchesSection = sectionFilter === 'ALL' || student.section.toUpperCase() === sectionFilter.toUpperCase()
     const matchesStatus =
       statusFilter === 'ALL' || student.status.toLowerCase() === statusFilter.toLowerCase()
 
-    return matchesSearch && matchesYear && matchesSem && matchesStatus
+    return matchesSearch && matchesYear && matchesSem && matchesSection && matchesStatus
   })
 
   const getSemCount = (semNumber: number) => {
@@ -544,6 +546,22 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             </select>
           </div>
 
+          {/* Step 3: Section Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Section:</span>
+            <select
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All 4 Sections (A - D)</option>
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+              <option value="C">Section C</option>
+              <option value="D">Section D</option>
+            </select>
+          </div>
+
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-black uppercase text-gray-400">Status:</span>
             <select
@@ -823,6 +841,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="A">Section A</option>
                     <option value="B">Section B</option>
                     <option value="C">Section C</option>
+                    <option value="D">Section D</option>
                   </select>
                 </div>
               </div>
@@ -980,6 +999,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="A">Section A</option>
                     <option value="B">Section B</option>
                     <option value="C">Section C</option>
+                    <option value="D">Section D</option>
                   </select>
                 </div>
               </div>

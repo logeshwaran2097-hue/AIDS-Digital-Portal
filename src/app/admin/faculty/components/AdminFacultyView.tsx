@@ -1422,6 +1422,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       <option value="A">Section A</option>
                       <option value="B">Section B</option>
                       <option value="C">Section C</option>
+                      <option value="D">Section D</option>
                     </select>
                   </div>
                 </div>
@@ -1610,6 +1611,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       <option value="A">Section A</option>
                       <option value="B">Section B</option>
                       <option value="C">Section C</option>
+                      <option value="D">Section D</option>
                     </select>
                   </div>
                 </div>
