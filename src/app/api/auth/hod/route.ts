@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         phone: result.user.phone,
         role: 'hod',
         facultyId: result.hod?.facultyId,
-        mustChangePassword: result.user.mustChangePassword ?? false,
+        mustChangePassword: Boolean((result.user as any)?.mustChangePassword),
         qualification: result.hod?.qualification,
         experience: result.hod?.experience,
         dateOfBirth: result.hod?.dateOfBirth ? result.hod.dateOfBirth.toISOString().split('T')[0] : null,
