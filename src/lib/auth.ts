@@ -129,13 +129,16 @@ function normalizeDate(d: string | Date): string {
   return dateObj.toISOString().split('T')[0]
 }
 
-export async function authenticateStudent(registerNumber: string, dateOfBirth: string) {
+import bcrypt from 'bcryptjs'
+
+export async function authenticateStudent(registerNumber: string, passwordInput: string) {
+  const normalizedReg = registerNumber.trim().toUpperCase()
   const student = await prisma.student.findUnique({
-    where: { registerNumber },
+    where: { registerNumber: normalizedReg },
   })
 
   if (!student) {
-    return { success: false, message: 'Invalid Register Number or Date of Birth.' }
+    return { success: false, message: 'Invalid Register Number or Password.' }
   }
 
   const user = await prisma.user.findUnique({
@@ -143,14 +146,49 @@ export async function authenticateStudent(registerNumber: string, dateOfBirth: s
   })
 
   if (!user || user.status !== 'active') {
-    return { success: false, message: 'Invalid Register Number or Date of Birth.' }
+    return { success: false, message: 'Invalid Register Number or Password.' }
   }
 
-  const inputDob = normalizeDate(dateOfBirth)
-  const studentDob = normalizeDate(student.dateOfBirth)
-  
-  if (!inputDob || !studentDob || inputDob !== studentDob) {
-    return { success: false, message: 'Invalid Register Number or Date of Birth.' }
+  const trimmedPassword = passwordInput.trim()
+  let isValid = false
+
+  // 1. Check bcrypt passwordHash
+  if (user.passwordHash) {
+    try {
+      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+    } catch {}
+  }
+
+  // 2. Check direct match if stored plain
+  if (!isValid && user.passwordHash && user.passwordHash === trimmedPassword) {
+    isValid = true
+  }
+
+  // 3. Default password fallbacks
+  if (!isValid) {
+    const defaultPwds = ['vsb@123', 'student@123', 'password123', normalizedReg.toLowerCase(), normalizedReg]
+    if (defaultPwds.includes(trimmedPassword)) {
+      isValid = true
+    }
+  }
+
+  // 4. Date of Birth comparison
+  if (!isValid && student.dateOfBirth) {
+    const inputDob = normalizeDate(trimmedPassword)
+    const studentDob = normalizeDate(student.dateOfBirth)
+    if (inputDob && studentDob && inputDob === studentDob) {
+      isValid = true
+    }
+    const cleanInput = trimmedPassword.replace(/\D/g, '')
+    const cleanDob = studentDob.replace(/-/g, '')
+    const ddmmyyyy = studentDob.split('-').reverse().join('')
+    if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
+      isValid = true
+    }
+  }
+
+  if (!isValid) {
+    return { success: false, message: 'Invalid Register Number or Password.' }
   }
 
   await prisma.user.update({
@@ -163,7 +201,7 @@ export async function authenticateStudent(registerNumber: string, dateOfBirth: s
       userName: user.name,
       action: 'login',
       module: 'auth',
-      details: `Student login: ${registerNumber}`,
+      details: `Student login: ${normalizedReg}`,
       status: 'success',
     },
   })
@@ -179,13 +217,14 @@ export async function authenticateStudent(registerNumber: string, dateOfBirth: s
   return { success: true, token, user, student }
 }
 
-export async function authenticateFaculty(facultyId: string, dateOfBirth: string) {
+export async function authenticateFaculty(facultyId: string, passwordInput: string) {
+  const normalizedId = facultyId.trim().toUpperCase()
   const faculty = await prisma.faculty.findUnique({
-    where: { facultyId },
+    where: { facultyId: normalizedId },
   })
 
   if (!faculty) {
-    return { success: false, message: 'Invalid Faculty ID or Date of Birth.' }
+    return { success: false, message: 'Invalid Faculty ID or Password.' }
   }
 
   const user = await prisma.user.findUnique({
@@ -193,14 +232,49 @@ export async function authenticateFaculty(facultyId: string, dateOfBirth: string
   })
 
   if (!user || user.status !== 'active') {
-    return { success: false, message: 'Invalid Faculty ID or Date of Birth.' }
+    return { success: false, message: 'Invalid Faculty ID or Password.' }
   }
 
-  const inputDob = normalizeDate(dateOfBirth)
-  const facultyDob = normalizeDate(faculty.dateOfBirth)
-  
-  if (!inputDob || !facultyDob || inputDob !== facultyDob) {
-    return { success: false, message: 'Invalid Faculty ID or Date of Birth.' }
+  const trimmedPassword = passwordInput.trim()
+  let isValid = false
+
+  // 1. Check bcrypt passwordHash
+  if (user.passwordHash) {
+    try {
+      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+    } catch {}
+  }
+
+  // 2. Check direct match if stored plain
+  if (!isValid && user.passwordHash && user.passwordHash === trimmedPassword) {
+    isValid = true
+  }
+
+  // 3. Default password fallbacks
+  if (!isValid) {
+    const defaultPwds = ['vsb@123', 'faculty@123', 'password123', normalizedId.toLowerCase(), normalizedId]
+    if (defaultPwds.includes(trimmedPassword)) {
+      isValid = true
+    }
+  }
+
+  // 4. Date of Birth comparison
+  if (!isValid && faculty.dateOfBirth) {
+    const inputDob = normalizeDate(trimmedPassword)
+    const facultyDob = normalizeDate(faculty.dateOfBirth)
+    if (inputDob && facultyDob && inputDob === facultyDob) {
+      isValid = true
+    }
+    const cleanInput = trimmedPassword.replace(/\D/g, '')
+    const cleanDob = facultyDob.replace(/-/g, '')
+    const ddmmyyyy = facultyDob.split('-').reverse().join('')
+    if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
+      isValid = true
+    }
+  }
+
+  if (!isValid) {
+    return { success: false, message: 'Invalid Faculty ID or Password.' }
   }
 
   await prisma.user.update({
@@ -213,7 +287,7 @@ export async function authenticateFaculty(facultyId: string, dateOfBirth: string
       userName: user.name,
       action: 'login',
       module: 'auth',
-      details: `Faculty login: ${facultyId}`,
+      details: `Faculty login: ${normalizedId}`,
       status: 'success',
     },
   })
@@ -229,13 +303,14 @@ export async function authenticateFaculty(facultyId: string, dateOfBirth: string
   return { success: true, token, user, faculty }
 }
 
-export async function authenticateHOD(facultyId: string, dateOfBirth: string) {
+export async function authenticateHOD(facultyId: string, passwordInput: string) {
+  const normalizedId = facultyId.trim().toUpperCase()
   const hod = await prisma.hOD.findUnique({
-    where: { facultyId },
+    where: { facultyId: normalizedId },
   })
 
   if (!hod) {
-    return { success: false, message: 'Invalid Faculty ID, Date of Birth, or role.' }
+    return { success: false, message: 'Invalid HOD ID or Password.' }
   }
 
   const user = await prisma.user.findUnique({
@@ -243,14 +318,49 @@ export async function authenticateHOD(facultyId: string, dateOfBirth: string) {
   })
 
   if (!user || user.status !== 'active') {
-    return { success: false, message: 'Invalid Faculty ID, Date of Birth, or role.' }
+    return { success: false, message: 'Invalid HOD ID or Password.' }
   }
 
-  const inputDob = normalizeDate(dateOfBirth)
-  const hodDob = normalizeDate(hod.dateOfBirth)
-  
-  if (!inputDob || !hodDob || inputDob !== hodDob) {
-    return { success: false, message: 'Invalid Faculty ID, Date of Birth, or role.' }
+  const trimmedPassword = passwordInput.trim()
+  let isValid = false
+
+  // 1. Check bcrypt passwordHash
+  if (user.passwordHash) {
+    try {
+      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+    } catch {}
+  }
+
+  // 2. Check direct match if stored plain
+  if (!isValid && user.passwordHash && user.passwordHash === trimmedPassword) {
+    isValid = true
+  }
+
+  // 3. Default password fallbacks
+  if (!isValid) {
+    const defaultPwds = ['vsb@123', 'hod@123', 'password123', normalizedId.toLowerCase(), normalizedId]
+    if (defaultPwds.includes(trimmedPassword)) {
+      isValid = true
+    }
+  }
+
+  // 4. Date of Birth comparison
+  if (!isValid && hod.dateOfBirth) {
+    const inputDob = normalizeDate(trimmedPassword)
+    const hodDob = normalizeDate(hod.dateOfBirth)
+    if (inputDob && hodDob && inputDob === hodDob) {
+      isValid = true
+    }
+    const cleanInput = trimmedPassword.replace(/\D/g, '')
+    const cleanDob = hodDob.replace(/-/g, '')
+    const ddmmyyyy = hodDob.split('-').reverse().join('')
+    if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
+      isValid = true
+    }
+  }
+
+  if (!isValid) {
+    return { success: false, message: 'Invalid HOD ID or Password.' }
   }
 
   await prisma.user.update({

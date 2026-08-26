@@ -4,15 +4,17 @@ import { z } from 'zod'
 
 const loginSchema = z.object({
   registerNumber: z.string().min(1, 'Register Number is required'),
-  dateOfBirth: z.string().min(1, 'Date of Birth is required'),
+  password: z.string().optional(),
+  dateOfBirth: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { registerNumber, dateOfBirth } = loginSchema.parse(body)
+    const { registerNumber, password, dateOfBirth } = loginSchema.parse(body)
+    const passwordOrDob = password || dateOfBirth || ''
 
-    const result = await authenticateStudent(registerNumber, dateOfBirth)
+    const result = await authenticateStudent(registerNumber, passwordOrDob)
 
     if (!result.success || !result.user || !result.token) {
       return NextResponse.json(

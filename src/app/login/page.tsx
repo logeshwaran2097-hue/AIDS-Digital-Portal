@@ -9,6 +9,8 @@ import { OTPInput } from '@/components/ui/OTPInput'
 import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
 
+import { Eye, EyeOff, Lock, User as UserIcon } from 'lucide-react'
+
 const roles = [
   {
     id: 'student',
@@ -39,7 +41,8 @@ const roles = [
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState('student')
   const [registerNumber, setRegisterNumber] = React.useState('')
-  const [dateOfBirth, setDateOfBirth] = React.useState('')
+  const [password, setPassword] = React.useState('')
+  const [showPassword, setShowPassword] = React.useState(false)
   const [facultyId, setFacultyId] = React.useState('')
   const [email, setEmail] = React.useState('')
   const [otp, setOtp] = React.useState('')
@@ -64,13 +67,13 @@ export default function LoginPage() {
 
       if (selectedRole === 'student') {
         endpoint = '/api/auth/student'
-        payload = { registerNumber, dateOfBirth }
+        payload = { registerNumber, password }
       } else if (selectedRole === 'faculty') {
         endpoint = '/api/auth/faculty'
-        payload = { facultyId, dateOfBirth }
+        payload = { facultyId, password }
       } else if (selectedRole === 'hod') {
         endpoint = '/api/auth/hod'
-        payload = { facultyId, dateOfBirth }
+        payload = { facultyId, password }
       }
 
       const res = await fetch(endpoint, {
@@ -81,7 +84,7 @@ export default function LoginPage() {
 
       const data = await res.json()
       if (!res.ok || !data.success) {
-        toast.error(data.message || 'Login failed')
+        toast.error(data.message || 'Login failed. Please check your credentials.')
         return
       }
 
@@ -199,7 +202,8 @@ export default function LoginPage() {
                     onClick={() => {
                       setSelectedRole(role.id)
                       setRegisterNumber('')
-                      setDateOfBirth('')
+                      setPassword('')
+                      setShowPassword(false)
                       setFacultyId('')
                       setEmail('')
                       setOtpSent(false)
@@ -222,24 +226,43 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {selectedRole === 'student' && (
                 <>
-                  <h3 className="text-base font-bold text-[#071A3D] mb-2">Student Authentication</h3>
+                  <h3 className="text-base font-bold text-[#071A3D] mb-2 flex items-center gap-2">
+                    <UserIcon className="w-4 h-4 text-[#1455D9]" />
+                    Student Authentication
+                  </h3>
                   <Input
                     label="Register Number"
+                    placeholder="e.g. 922522AD001"
                     value={registerNumber}
                     onChange={(e) => setRegisterNumber(e.target.value)}
                     required
                     autoComplete="username"
                   />
-                  <Input
-                    label="Date of Birth"
-                    type="text"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    required
-                    autoComplete="bday"
-                    hint="Format: DD/MM/YYYY"
-                  />
-                  <Button type="submit" className="w-full font-bold" size="lg" loading={loading}>
+                  <div>
+                    <label className="block text-sm font-medium text-[#071A3D] mb-1.5">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                        className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-[#071A3D] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1455D9] focus:border-transparent transition-all duration-200 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full font-bold mt-2" size="lg" loading={loading}>
                     Login to Student Portal
                   </Button>
                 </>
@@ -247,24 +270,43 @@ export default function LoginPage() {
 
               {selectedRole === 'faculty' && (
                 <>
-                  <h3 className="text-base font-bold text-[#071A3D] mb-2">Faculty Authentication</h3>
+                  <h3 className="text-base font-bold text-[#071A3D] mb-2 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-[#1455D9]" />
+                    Faculty Authentication
+                  </h3>
                   <Input
                     label="Faculty ID"
+                    placeholder="e.g. FAC001"
                     value={facultyId}
                     onChange={(e) => setFacultyId(e.target.value)}
                     required
                     autoComplete="username"
                   />
-                  <Input
-                    label="Date of Birth"
-                    type="text"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    required
-                    autoComplete="bday"
-                    hint="Format: DD/MM/YYYY"
-                  />
-                  <Button type="submit" className="w-full font-bold" size="lg" loading={loading}>
+                  <div>
+                    <label className="block text-sm font-medium text-[#071A3D] mb-1.5">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                        className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-[#071A3D] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1455D9] focus:border-transparent transition-all duration-200 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full font-bold mt-2" size="lg" loading={loading}>
                     Login to Faculty Portal
                   </Button>
                 </>
@@ -272,24 +314,43 @@ export default function LoginPage() {
 
               {selectedRole === 'hod' && (
                 <>
-                  <h3 className="text-base font-bold text-[#071A3D] mb-2">HOD Authentication</h3>
+                  <h3 className="text-base font-bold text-[#071A3D] mb-2 flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-[#1455D9]" />
+                    HOD Authentication
+                  </h3>
                   <Input
                     label="Faculty ID"
+                    placeholder="e.g. HOD001"
                     value={facultyId}
                     onChange={(e) => setFacultyId(e.target.value)}
                     required
                     autoComplete="username"
                   />
-                  <Input
-                    label="Date of Birth"
-                    type="text"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    required
-                    autoComplete="bday"
-                    hint="Format: DD/MM/YYYY"
-                  />
-                  <Button type="submit" className="w-full font-bold" size="lg" loading={loading}>
+                  <div>
+                    <label className="block text-sm font-medium text-[#071A3D] mb-1.5">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                        className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-[#071A3D] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1455D9] focus:border-transparent transition-all duration-200 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                        tabIndex={-1}
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full font-bold mt-2" size="lg" loading={loading}>
                     Login to HOD Portal
                   </Button>
                 </>
