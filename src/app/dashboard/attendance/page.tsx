@@ -18,14 +18,14 @@ export default async function StudentAttendancePage() {
   }
 
   const student = (await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (await prisma.student.findUnique({ where: { registerNumber: session.registerNumber || '92252524185' } }).catch(() => null)) || {
+    (await prisma.student.findUnique({ where: { registerNumber: session.registerNumber || '922525243103' } }).catch(() => null)) || {
       id: 'student-default',
       userId: session.userId,
-      registerNumber: session.registerNumber || '92252524185',
-      dateOfBirth: new Date('2004-05-15'),
+      registerNumber: session.registerNumber || '922525243103',
+      dateOfBirth: new Date('2006-02-09'),
       department: 'Artificial Intelligence & Data Science',
       year: 2,
-      semester: 3,
+      semester: 4,
       section: 'A',
     }
 

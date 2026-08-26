@@ -36,10 +36,14 @@ export function StudentProjectsView({
   projects,
   activeBatch = '2024 - 2028',
   batchLabel = 'II Year (Semester 4)',
+  studentName = 'Logeshwaran G',
+  registerNumber = '922525243103',
 }: {
   projects: ProjectRecord[]
   activeBatch?: string
   batchLabel?: string
+  studentName?: string
+  registerNumber?: string
 }) {
   const [projectsList, setProjectsList] = useState<ProjectRecord[]>(projects)
   const [selectedDomain, setSelectedDomain] = useState<string>('ALL')
@@ -48,11 +52,15 @@ export function StudentProjectsView({
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const defaultMemberText = registerNumber
+    ? `${studentName} (${registerNumber})`
+    : studentName
+
   const [formData, setFormData] = useState({
     title: '',
     domain: 'Computer Vision & Deep Learning',
     technologies: 'Python, PyTorch, FastAPI',
-    teamMembers: 'Logeshwaran G (92252524185)',
+    teamMembers: defaultMemberText,
     description: '',
     problemStatement: '',
     proposedSolution: '',

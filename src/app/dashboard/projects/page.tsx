@@ -17,14 +17,11 @@ export default async function StudentProjectsPage() {
   ])
 
   const studentYear = student?.year || 2
-  const studentSem = student?.semester || 3
+  const studentSem = student?.semester || 4
+  const realRegNo = student?.registerNumber || session.registerNumber || ''
+  const realName = user?.name || session.name || 'Student'
   
   // Calculate dynamic batch based on student year
-  // In current academic term:
-  // Year 4 -> Batch 2022 - 2026
-  // Year 3 -> Batch 2023 - 2027
-  // Year 2 -> Batch 2024 - 2028
-  // Year 1 -> Batch 2025 - 2029
   const startYear = 2026 - studentYear
   const endYear = startYear + 4
   const activeBatch = `${startYear} - ${endYear}`
@@ -32,12 +29,14 @@ export default async function StudentProjectsPage() {
   const batchLabel = `${romanYear} Year (Semester ${studentSem})`
 
   return (
-    <PortalLayout role="student" userName={user?.name || session.name || 'Student'}>
+    <PortalLayout role="student" userName={realName}>
       <div className="py-2 animate-fade-in">
         <StudentProjectsView
           projects={dbProjects}
           activeBatch={activeBatch}
           batchLabel={batchLabel}
+          studentName={realName}
+          registerNumber={realRegNo}
         />
       </div>
     </PortalLayout>
