@@ -54,6 +54,10 @@ model Faculty {
   experience     Int
   specialization String
   subjects       String   @default("[]")
+  subjectName    String?
+  classDay       String?
+  classPeriod    String?
+  classTime      String?
   advisorBatch   String?
   advisorYear    Int?
   advisorSem     Int?

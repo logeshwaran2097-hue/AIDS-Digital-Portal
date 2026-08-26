@@ -49,6 +49,10 @@ export interface FacultyRecord {
   experience: number
   specialization: string
   subjects: string[] | string
+  subjectName?: string | null
+  classDay?: string | null
+  classPeriod?: string | null
+  classTime?: string | null
   advisorBatch?: string | null
   advisorYear?: number | null
   advisorSem?: number | null
@@ -69,13 +73,24 @@ interface StudentInClass {
 }
 
 const DEFAULT_SUBJECT_HANDLERS = [
-  { code: 'AD2301', name: 'Data Structures & Algorithms', credits: 4, handler: 'Dr. S. Karthik', hours: 45 },
-  { code: 'AD2302', name: 'Database Management Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 40 },
-  { code: 'AD2303', name: 'Discrete Mathematics', credits: 4, handler: 'Mr. S. Arun', hours: 45 },
-  { code: 'AD2304', name: 'Operating Systems & System Software', credits: 3, handler: 'Mrs. R. Priya', hours: 38 },
-  { code: 'AD2305', name: 'Machine Learning Foundations', credits: 4, handler: 'Dr. S. Karthik', hours: 45 },
-  { code: 'AD2306', name: 'Artificial Intelligence & Expert Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 36 },
-  { code: 'AD2307', name: 'Data Science Tools & Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30 },
+  { code: 'AD2301', name: 'Data Structures & Algorithms', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Wed, Fri', period: 'Period 1', time: '09:00 AM - 09:50 AM' },
+  { code: 'AD2302', name: 'Database Management Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 40, day: 'Tue, Thu', period: 'Period 2', time: '09:50 AM - 10:40 AM' },
+  { code: 'AD2303', name: 'Discrete Mathematics', credits: 4, handler: 'Mr. S. Arun', hours: 45, day: 'Mon, Wed', period: 'Period 3', time: '11:00 AM - 11:50 AM' },
+  { code: 'AD2304', name: 'Operating Systems & System Software', credits: 3, handler: 'Mrs. R. Priya', hours: 38, day: 'Tue, Fri', period: 'Period 4', time: '11:50 AM - 12:40 PM' },
+  { code: 'AD2305', name: 'Machine Learning Foundations', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Thu', period: 'Period 5', time: '01:40 PM - 02:30 PM' },
+  { code: 'AD2306', name: 'Artificial Intelligence & Expert Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 36, day: 'Wed, Fri', period: 'Period 6', time: '02:30 PM - 03:20 PM' },
+  { code: 'AD2307', name: 'Data Science Tools & Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Thursday', period: 'Period 5 - 7', time: '01:40 PM - 04:20 PM' },
+]
+
+const PERIOD_TIME_PRESETS = [
+  { period: 'Period 1', time: '09:00 AM - 09:50 AM' },
+  { period: 'Period 2', time: '09:50 AM - 10:40 AM' },
+  { period: 'Period 3', time: '11:00 AM - 11:50 AM' },
+  { period: 'Period 4', time: '11:50 AM - 12:40 PM' },
+  { period: 'Period 5', time: '01:40 PM - 02:30 PM' },
+  { period: 'Period 6', time: '02:30 PM - 03:20 PM' },
+  { period: 'Period 7', time: '03:30 PM - 04:20 PM' },
+  { period: 'Lab Session (P5-P7)', time: '01:40 PM - 04:20 PM' },
 ]
 
 const DEFAULT_TIMETABLE = [
@@ -94,7 +109,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [yearFilter, setYearFilter] = useState('ALL')
   const [sectionFilter, setSectionFilter] = useState('ALL')
   const [designationFilter, setDesignationFilter] = useState('ALL')
-  const [statusFilter, setStatusFilter] = useState('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
   // Modals
@@ -108,25 +122,28 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [classStudents, setClassStudents] = useState<StudentInClass[]>([])
   const [loadingClassData, setLoadingClassData] = useState(false)
 
-  // Form state - Clean default empty values
+  // Form state - Clean default empty values without status
   const [formData, setFormData] = useState({
     facultyId: '',
     name: '',
     email: '',
     phone: '',
-    password: 'vsb@123',
+    password: '',
     dateOfBirth: '',
     designation: 'Assistant Professor',
     qualification: '',
     experience: '' as any,
     specialization: '',
     subjects: '',
+    subjectName: '',
+    classDay: 'Monday, Wednesday, Friday',
+    classPeriod: 'Period 1',
+    classTime: '09:00 AM - 09:50 AM',
     advisorBatch: '',
     advisorYear: 2,
     advisorSem: 4,
     advisorSec: 'A',
     facultyType: 'advisor', // 'advisor', 'subject_handler', or 'both'
-    status: 'active',
   })
 
   // Normalize subjects array helper
@@ -220,12 +237,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         f.advisorSec?.toUpperCase() === sectionFilter.toUpperCase() ||
         (f.advisorBatch && f.advisorBatch.includes(`Sec ${sectionFilter}`))
 
-      const matchesStatus =
-        statusFilter === 'ALL' || f.status.toLowerCase() === statusFilter.toLowerCase()
-
-      return matchesSearch && matchesYear && matchesSection && matchesStatus
+      return matchesSearch && matchesYear && matchesSection
     })
-  }, [facultyList, searchQuery, yearFilter, sectionFilter, statusFilter])
+  }, [facultyList, searchQuery, yearFilter, sectionFilter])
 
   // Filtered lists for Subject Handlers
   const handlersList = useMemo(() => {
@@ -233,6 +247,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       const subjs = getSubjectsList(f.subjects)
       const isHandler =
         subjs.length > 0 ||
+        f.subjectName ||
         f.facultyType === 'subject_handler' ||
         f.facultyType === 'both' ||
         !f.facultyType
@@ -241,6 +256,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       const matchesSearch =
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         f.facultyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (f.subjectName && f.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         f.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
         subjs.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -248,12 +264,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         designationFilter === 'ALL' ||
         f.designation.toLowerCase().includes(designationFilter.toLowerCase())
 
-      const matchesStatus =
-        statusFilter === 'ALL' || f.status.toLowerCase() === statusFilter.toLowerCase()
-
-      return matchesSearch && matchesDesignation && matchesStatus
+      return matchesSearch && matchesDesignation
     })
-  }, [facultyList, searchQuery, designationFilter, statusFilter])
+  }, [facultyList, searchQuery, designationFilter])
 
   // PDF Export
   const handleExportPDF = () => {
@@ -261,27 +274,31 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     generateAndDownloadPDF({
       title: isAdvisors
         ? 'DEPARTMENT OF AI & DS — CLASS ADVISORS DIRECTORY'
-        : 'DEPARTMENT OF AI & DS — SUBJECT HANDLERS & COURSE DIRECTORY',
+        : 'DEPARTMENT OF AI & DS — SUBJECT HANDLERS & TIMINGS DIRECTORY',
       subtitle: 'V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026',
       author: 'Office of the Department Administrator',
-      category: isAdvisors ? 'Class In-Charges & Mentors' : 'Course Instructors',
+      category: isAdvisors ? 'Class In-Charges & Mentors' : 'Course Instructors & Schedules',
       sections: [
         {
           heading: isAdvisors ? '1. CLASS ADVISORS SUMMARY' : '1. COURSE INSTRUCTORS SUMMARY',
           body: [
             `Total Faculty Count: ${facultyList.length} Faculty Members`,
-            `Active View: ${isAdvisors ? 'Class Mentors & Batch Advisors' : 'Subject Handlers & Course Allocations'}`,
+            `Active View: ${isAdvisors ? 'Class Mentors & Batch Advisors' : 'Subject Handlers, Timing & Period Allocations'}`,
             `Department: Artificial Intelligence & Data Science (AI & DS)`,
           ],
         },
         {
-          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : '2. SUBJECT HANDLERS ALLOCATION',
+          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : '2. SUBJECT HANDLERS & TIMETABLE ALLOCATION',
           body: (isAdvisors ? advisorsList : handlersList).map((f, idx) => {
             if (isAdvisors) {
               return `${idx + 1}. [${f.facultyId}] ${f.name} — ${f.designation} | Assigned Batch: ${f.advisorBatch || 'Year II (Sec A)'} | Contact: ${f.email}`
             } else {
-              const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2301, AD2302'
-              return `${idx + 1}. [${f.facultyId}] ${f.name} — ${f.designation} (${f.specialization}) | Courses Handled: [${subjs}]`
+              const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2301'
+              const sName = f.subjectName || 'Artificial Intelligence'
+              const sDay = f.classDay || 'Mon, Wed, Fri'
+              const sPeriod = f.classPeriod || 'Period 1'
+              const sTime = f.classTime || '09:00 AM - 09:50 AM'
+              return `${idx + 1}. [${f.facultyId}] ${f.name} — ${sName} [${subjs}] | Day: ${sDay} | Period: ${sPeriod} (${sTime}) | ${f.designation}`
             }
           }),
         },
@@ -312,7 +329,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         {
           heading: '2. SEMESTER COURSES & SUBJECT HANDLERS',
           body: DEFAULT_SUBJECT_HANDLERS.map(
-            (s, i) => `${i + 1}. [${s.code}] ${s.name} (${s.credits} Credits) — Handled by: ${s.handler}`
+            (s, i) => `${i + 1}. [${s.code}] ${s.name} (${s.credits} Credits) — Handled by: ${s.handler} | ${s.day} (${s.period}, ${s.time})`
           ),
         },
         {
@@ -355,6 +372,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           password: formData.password.trim() || 'vsb@123',
           experience: Number(formData.experience) || 1,
           subjects: subjectsArr,
+          subjectName: formData.subjectName.trim() || null,
+          classDay: formData.classDay || null,
+          classPeriod: formData.classPeriod || null,
+          classTime: formData.classTime || null,
         }),
       })
       const result = await res.json()
@@ -367,19 +388,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           name: '',
           email: '',
           phone: '',
-          password: 'vsb@123',
+          password: '',
           dateOfBirth: '',
           designation: 'Assistant Professor',
           qualification: '',
           experience: '',
           specialization: '',
           subjects: '',
-          advisorBatch: '',
+          subjectName: '',
+          classDay: 'Monday, Wednesday, Friday',
+          classPeriod: 'Period 1',
+          classTime: '09:00 AM - 09:50 AM',
+          advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
           advisorYear: 2,
           advisorSem: 4,
           advisorSec: 'A',
           facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
-          status: 'active',
         })
         alert('Faculty member successfully registered in database!')
       } else {
@@ -417,6 +441,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           facultyId: selectedFaculty.facultyId,
           experience: Number(formData.experience) || 1,
           subjects: subjectsArr,
+          subjectName: formData.subjectName.trim() || null,
+          classDay: formData.classDay || null,
+          classPeriod: formData.classPeriod || null,
+          classTime: formData.classTime || null,
         }),
       })
       const result = await res.json()
@@ -435,12 +463,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   experience: Number(formData.experience) || 1,
                   specialization: formData.specialization,
                   subjects: subjectsArr,
+                  subjectName: formData.subjectName,
+                  classDay: formData.classDay,
+                  classPeriod: formData.classPeriod,
+                  classTime: formData.classTime,
                   advisorBatch: formData.advisorBatch,
                   advisorYear: formData.advisorYear,
                   advisorSem: formData.advisorSem,
                   advisorSec: formData.advisorSec,
                   facultyType: formData.facultyType,
-                  status: formData.status,
                 }
               : f
           )
@@ -484,7 +515,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
-      {/* Header Banner - Identical to Student page */}
+      {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -495,7 +526,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; Cadre</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Directorate is ready for real faculty entries · Divided into <strong>Class Advisors</strong> and <strong>Subject Handlers</strong>
+            Separated into dedicated pages for <strong>Class Advisors</strong> and <strong>Subject Handlers (with Schedule &amp; Timings)</strong>
           </p>
         </div>
 
@@ -513,19 +544,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 name: '',
                 email: '',
                 phone: '',
-                password: 'vsb@123',
+                password: '',
                 dateOfBirth: '',
                 designation: 'Assistant Professor',
                 qualification: '',
                 experience: '',
                 specialization: '',
                 subjects: '',
+                subjectName: '',
+                classDay: 'Monday, Wednesday, Friday',
+                classPeriod: 'Period 1',
+                classTime: '09:00 AM - 09:50 AM',
                 advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
                 advisorYear: 2,
                 advisorSem: 4,
                 advisorSec: 'A',
                 facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
-                status: 'active',
               })
               setIsAddModalOpen(true)
             }}
@@ -536,7 +570,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         </div>
       </div>
 
-      {/* STEP 1: CHOOSE FACULTY CADRE / VIEW (Class Advisors vs Subject Handlers) */}
+      {/* STEP 1: CHOOSE FACULTY CADRE / VIEW */}
       <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-xs space-y-4">
         <div>
           <div className="flex items-center justify-between gap-2 mb-2.5">
@@ -599,7 +633,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
                 <div>
                   <h4 className="font-black text-sm text-[#071A3D]">Page 2: Subject Handlers</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Curriculum Course Instructors &amp; Subject Teachers</p>
+                  <p className="text-[11px] text-gray-500 font-medium">Curriculum Courses, Class Days, Periods &amp; Time Schedules</p>
                 </div>
               </div>
               <span className={cn(
@@ -612,7 +646,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           </div>
         </div>
 
-        {/* STEP 2: Choose Academic Year / Batch Filter (When viewing Class Advisors) */}
+        {/* STEP 2: Filter by Academic Batch (When viewing Class Advisors) */}
         {activeTab === 'advisors' && (
           <div className="border-t border-gray-100 pt-3">
             <div className="flex items-center justify-between gap-2 mb-2.5">
@@ -670,7 +704,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         )}
       </div>
 
-      {/* Metrics Row - Identical 4 KPI Cards to Student page */}
+      {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Total Faculty</p>
@@ -694,7 +728,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         </div>
       </div>
 
-      {/* Filter & Search Bar - Identical to Student page */}
+      {/* Filter & Search Bar */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -703,7 +737,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             placeholder={
               activeTab === 'advisors'
                 ? 'Search advisors by name, ID, or batch...'
-                : 'Search handlers by name, ID, or course code...'
+                : 'Search handlers by name, ID, subject name, or code...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -727,35 +761,23 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </select>
           </div>
 
-          {/* Section Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black uppercase text-gray-400">Section:</span>
-            <select
-              value={sectionFilter}
-              onChange={(e) => setSectionFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
-            >
-              <option value="ALL">All 4 Sections (A - D)</option>
-              <option value="A">Section A</option>
-              <option value="B">Section B</option>
-              <option value="C">Section C</option>
-              <option value="D">Section D</option>
-            </select>
-          </div>
-
-          {/* Status Filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black uppercase text-gray-400">Status:</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
-            >
-              <option value="ALL">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+          {/* Section Filter (Only for Advisors) */}
+          {activeTab === 'advisors' && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-black uppercase text-gray-400">Section:</span>
+              <select
+                value={sectionFilter}
+                onChange={(e) => setSectionFilter(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+              >
+                <option value="ALL">All 4 Sections (A - D)</option>
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+                <option value="C">Section C</option>
+                <option value="D">Section D</option>
+              </select>
+            </div>
+          )}
 
           <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
             Showing {activeTab === 'advisors' ? advisorsList.length : handlersList.length} of {facultyList.length}
@@ -880,12 +902,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               experience: advisor.experience || '',
                               specialization: advisor.specialization || '',
                               subjects: subjs.join(', '),
+                              subjectName: advisor.subjectName || '',
+                              classDay: advisor.classDay || 'Monday, Wednesday, Friday',
+                              classPeriod: advisor.classPeriod || 'Period 1',
+                              classTime: advisor.classTime || '09:00 AM - 09:50 AM',
                               advisorBatch: advisor.advisorBatch || 'Year II - Sem 4 - Sec A',
                               advisorYear: advisor.advisorYear || 2,
                               advisorSem: advisor.advisorSem || 4,
                               advisorSec: advisor.advisorSec || 'A',
                               facultyType: advisor.facultyType || 'advisor',
-                              status: advisor.status,
                             })
                             setIsEditModalOpen(true)
                           }}
@@ -912,7 +937,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================= */}
-      {/* PAGE 2: SUBJECT HANDLERS TABLE */}
+      {/* PAGE 2: SUBJECT HANDLERS TABLE (WITH DAY, PERIOD & TIMINGS) */}
       {/* ========================================================= */}
       {activeTab === 'handlers' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
@@ -920,11 +945,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
               <tr>
                 <th className="px-4 py-3.5">#</th>
-                <th className="px-4 py-3.5">Faculty &amp; ID</th>
-                <th className="px-4 py-3.5">Handled Courses &amp; Subjects</th>
-                <th className="px-4 py-3.5">Role Type</th>
-                <th className="px-4 py-3.5">Specialization Domain</th>
-                <th className="px-4 py-3.5">Designation &amp; Experience</th>
+                <th className="px-4 py-3.5">Faculty ID &amp; Name</th>
+                <th className="px-4 py-3.5">Subject Name &amp; Course Code</th>
+                <th className="px-4 py-3.5">Class Day &amp; Schedule</th>
+                <th className="px-4 py-3.5">Class Period &amp; Time Slot</th>
+                <th className="px-4 py-3.5">Designation</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -934,12 +959,18 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <td colSpan={7} className="text-center py-12 text-gray-400">
                     <BookMarked className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="font-bold text-gray-600">No Subject Handlers Found</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subjects.</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subject name and timings.</p>
                   </td>
                 </tr>
               ) : (
                 handlersList.map((handler, idx) => {
                   const subjs = getSubjectsList(handler.subjects)
+                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Course: ${subjs.join(', ')}` : 'Machine Learning Foundations')
+                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2305'
+                  const dayDisplay = handler.classDay || 'Mon, Wed, Fri'
+                  const periodDisplay = handler.classPeriod || 'Period 1'
+                  const timeDisplay = handler.classTime || '09:00 AM - 09:50 AM'
+
                   return (
                     <tr key={handler.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
@@ -959,40 +990,43 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         </div>
                       </td>
 
+                      {/* Subject Name & Course Code */}
                       <td className="px-4 py-3.5">
-                        <div className="flex flex-wrap gap-1.5">
-                          {subjs.length > 0 ? (
-                            subjs.map((s, i) => (
-                              <span
-                                key={i}
-                                className="px-2.5 py-1 rounded-xl bg-blue-50 text-[#1455D9] font-mono font-bold border border-blue-200/60"
-                              >
-                                {s}
-                              </span>
-                            ))
-                          ) : (
-                            <span className="text-gray-400 italic">No courses assigned yet</span>
-                          )}
+                        <div>
+                          <span className="font-bold text-[#071A3D] block text-sm">
+                            {subjectDisplayName}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-[#1455D9] font-mono font-bold border border-blue-200/60 text-[10px] inline-block mt-0.5">
+                            Code: {codeDisplay}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Class Day */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                          <Calendar className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                          <span>{dayDisplay}</span>
+                        </div>
+                      </td>
+
+                      {/* Period & Time of Classes */}
+                      <td className="px-4 py-3.5">
+                        <div>
+                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[11px] inline-flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {periodDisplay}
+                          </span>
+                          <span className="text-[11px] text-gray-500 font-mono font-semibold block mt-0.5">
+                            {timeDisplay}
+                          </span>
                         </div>
                       </td>
 
                       <td className="px-4 py-3.5">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                          {handler.facultyType === 'both' ? 'Advisor & Faculty' : 'Subject Faculty'}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <span className="font-bold text-gray-800 block">
-                          {handler.specialization || 'AI & Machine Learning'}
-                        </span>
-                        <span className="text-[11px] text-gray-500">{handler.qualification || 'M.E. / Ph.D.'}</span>
-                      </td>
-
-                      <td className="px-4 py-3.5">
                         <span className="font-bold text-[#071A3D] block">{handler.designation}</span>
-                        <span className="text-green-700 font-bold text-[11px]">
-                          {handler.experience ? `${handler.experience}+ Years Exp` : 'Faculty'}
+                        <span className="text-gray-500 text-[11px]">
+                          {handler.qualification || 'M.E. / Ph.D.'}
                         </span>
                       </td>
 
@@ -1013,17 +1047,20 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 experience: handler.experience || '',
                                 specialization: handler.specialization || '',
                                 subjects: subjs.join(', '),
+                                subjectName: handler.subjectName || '',
+                                classDay: handler.classDay || 'Monday, Wednesday, Friday',
+                                classPeriod: handler.classPeriod || 'Period 1',
+                                classTime: handler.classTime || '09:00 AM - 09:50 AM',
                                 advisorBatch: handler.advisorBatch || '',
                                 advisorYear: handler.advisorYear || 2,
                                 advisorSem: handler.advisorSem || 4,
                                 advisorSec: handler.advisorSec || 'A',
                                 facultyType: handler.facultyType || 'subject_handler',
-                                status: handler.status,
                               })
                               setIsEditModalOpen(true)
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                            title="Edit Course Allocation"
+                            title="Edit Subject & Schedule"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
@@ -1046,7 +1083,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================================= */}
-      {/* FULL-SCREEN CLASS DOSSIER MODAL (EVERYTHING ABOUT THEIR PARTICULAR CLASS) */}
+      {/* FULL-SCREEN CLASS DOSSIER MODAL */}
       {/* ========================================================================= */}
       {selectedAdvisorDossier && (
         <div className="fixed inset-0 z-50 bg-[#071A3D]/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
@@ -1257,9 +1294,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           <span className="text-[11px] text-gray-500 font-bold">{subj.credits} Credits · {subj.hours} Hours</span>
                         </div>
                         <h5 className="font-black text-sm text-[#071A3D]">{subj.name}</h5>
-                        <div className="pt-2 border-t flex items-center justify-between text-xs">
-                          <span className="text-gray-500 font-medium">Subject Handler:</span>
-                          <span className="font-bold text-[#1455D9]">{subj.handler}</span>
+                        <div className="pt-2 border-t space-y-1 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-500 font-medium">Subject Handler:</span>
+                            <span className="font-bold text-[#1455D9]">{subj.handler}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-gray-500">
+                            <span>Class Schedule:</span>
+                            <span className="font-medium text-gray-700">{subj.day} ({subj.period}, {subj.time})</span>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1415,7 +1458,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">
@@ -1435,7 +1478,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               {/* Role / Type Selector: Advisor, Subject Faculty, or Both */}
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1.5">
-                  Faculty Role / Designation Allocation *
+                  Faculty Role / Allocation Type *
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -1525,7 +1568,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <label className="block font-bold text-[#071A3D] mb-1">Initial Password *</label>
                   <input
                     type="text"
-                    required
                     placeholder="Default: vsb@123"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -1681,39 +1723,103 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Handled Course Codes (Shown when subject_handler or both) */}
+              {/* Subject Handler Schedule & Details (Shown when subject_handler or both) */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2 animate-fade-in">
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
                   <span className="font-black text-[#071A3D] flex items-center gap-1.5">
                     <BookMarked className="w-4 h-4 text-purple-700" />
-                    Subject Handler Courses:
+                    Subject Details, Day, Period &amp; Time:
                   </span>
-                  <div>
-                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">
-                      Handled Course Codes (Comma-separated)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. AD2301, AD2302, AD2305"
-                      value={formData.subjects}
-                      onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
-                    />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Subject Name *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Machine Learning Foundations"
+                        value={formData.subjectName}
+                        onChange={(e) => setFormData({ ...formData, subjectName: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Course Code (e.g. AD2305)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. AD2305"
+                        value={formData.subjects}
+                        onChange={(e) => setFormData({ ...formData, subjects: e.target.value.toUpperCase() })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Class Day(s)
+                      </label>
+                      <select
+                        value={formData.classDay}
+                        onChange={(e) => setFormData({ ...formData, classDay: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-gray-800"
+                      >
+                        <option value="Monday, Wednesday, Friday">Mon, Wed, Fri</option>
+                        <option value="Tuesday, Thursday">Tue, Thu</option>
+                        <option value="Monday, Wednesday">Mon, Wed</option>
+                        <option value="Tuesday, Friday">Tue, Fri</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Period of Classes
+                      </label>
+                      <select
+                        value={formData.classPeriod}
+                        onChange={(e) => {
+                          const p = e.target.value
+                          const matched = PERIOD_TIME_PRESETS.find((pt) => pt.period === p)
+                          setFormData({
+                            ...formData,
+                            classPeriod: p,
+                            classTime: matched ? matched.time : formData.classTime,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-purple-700"
+                      >
+                        {PERIOD_TIME_PRESETS.map((pt) => (
+                          <option key={pt.period} value={pt.period}>
+                            {pt.period}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Time of Classes
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 09:00 AM - 09:50 AM"
+                        value={formData.classTime}
+                        onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-gray-800"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 <button
@@ -1741,7 +1847,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       {/* ========================================================= */}
       {isEditModalOpen && selectedFaculty && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Edit Faculty Record</h3>
@@ -1759,7 +1865,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               {/* Role / Type Selector in Edit */}
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1.5">
-                  Faculty Role / Designation Allocation *
+                  Faculty Role / Allocation Type *
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -1978,36 +2084,103 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Handled Course Codes */}
+              {/* Subject Handler Schedule & Details */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2 animate-fade-in">
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
                   <span className="font-black text-[#071A3D] flex items-center gap-1.5">
                     <BookMarked className="w-4 h-4 text-purple-700" />
-                    Handled Courses:
+                    Subject Details, Day, Period &amp; Time:
                   </span>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="e.g. AD2301, AD2302, AD2305"
-                      value={formData.subjects}
-                      onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
-                    />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Subject Name *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Machine Learning Foundations"
+                        value={formData.subjectName}
+                        onChange={(e) => setFormData({ ...formData, subjectName: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Course Code (e.g. AD2305)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. AD2305"
+                        value={formData.subjects}
+                        onChange={(e) => setFormData({ ...formData, subjects: e.target.value.toUpperCase() })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Class Day(s)
+                      </label>
+                      <select
+                        value={formData.classDay}
+                        onChange={(e) => setFormData({ ...formData, classDay: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-gray-800"
+                      >
+                        <option value="Monday, Wednesday, Friday">Mon, Wed, Fri</option>
+                        <option value="Tuesday, Thursday">Tue, Thu</option>
+                        <option value="Monday, Wednesday">Mon, Wed</option>
+                        <option value="Tuesday, Friday">Tue, Fri</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Period of Classes
+                      </label>
+                      <select
+                        value={formData.classPeriod}
+                        onChange={(e) => {
+                          const p = e.target.value
+                          const matched = PERIOD_TIME_PRESETS.find((pt) => pt.period === p)
+                          setFormData({
+                            ...formData,
+                            classPeriod: p,
+                            classTime: matched ? matched.time : formData.classTime,
+                          })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-purple-700"
+                      >
+                        {PERIOD_TIME_PRESETS.map((pt) => (
+                          <option key={pt.period} value={pt.period}>
+                            {pt.period}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Time of Classes
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 09:00 AM - 09:50 AM"
+                        value={formData.classTime}
+                        onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-gray-800"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t">
                 <button
