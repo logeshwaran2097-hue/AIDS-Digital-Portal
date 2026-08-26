@@ -87,20 +87,21 @@ export async function POST(request: Request) {
       status = 'active',
     } = data
 
-    if (!name || !email) {
+    if (!name?.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Name and Email are required' },
+        { success: false, message: 'Faculty Name is required' },
         { status: 400 }
       )
     }
 
-    const fid = facultyId?.trim().toUpperCase() || 'FAC' + Math.floor(100 + Math.random() * 900)
+    const fid = facultyId?.trim().toUpperCase() || 'FAC' + Math.floor(1000 + Math.random() * 9000)
+    const institutionalEmail = (email && email.trim()) ? email.trim().toLowerCase() : `${fid.toLowerCase()}@vsb.edu.in`
     const initialPwd = password?.trim() || 'vsb@123'
     const passwordHash = await bcrypt.hash(initialPwd, 10)
 
     // Upsert User
     const user = await prisma.user.upsert({
-      where: { email: email.trim().toLowerCase() },
+      where: { email: institutionalEmail },
       update: {
         name: name.trim(),
         phone: phone || null,
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
         passwordHash,
       },
       create: {
-        email: email.trim().toLowerCase(),
+        email: institutionalEmail,
         name: name.trim(),
         phone: phone || null,
         role: 'faculty',

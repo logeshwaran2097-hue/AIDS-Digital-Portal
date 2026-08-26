@@ -131,7 +131,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [classStudents, setClassStudents] = useState<StudentInClass[]>([])
   const [loadingClassData, setLoadingClassData] = useState(false)
 
-  // Form state - Clean default empty values without status
+  // Form state - Clean default empty values without status or manual facultyId
   const [formData, setFormData] = useState({
     facultyId: '',
     name: '',
@@ -276,7 +276,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
       const matchesSearch =
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        f.facultyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (f.advisorBatch && f.advisorBatch.toLowerCase().includes(searchQuery.toLowerCase()))
 
       const matchesYear =
@@ -307,7 +306,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
       const matchesSearch =
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        f.facultyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (f.subjectName && f.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (f.classDay && f.classDay.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (f.classPeriod && f.classPeriod.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -345,14 +343,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : '2. SUBJECT HANDLERS & TIMETABLE ALLOCATION',
           body: (isAdvisors ? advisorsList : handlersList).map((f, idx) => {
             if (isAdvisors) {
-              return `${idx + 1}. [${f.facultyId}] ${f.name} — ${f.designation} | Assigned Batch: ${f.advisorBatch || 'Year II (Sec A)'} | Contact: ${f.email}`
+              return `${idx + 1}. ${f.name} — ${f.designation} | Assigned Batch: ${f.advisorBatch || 'Year II (Sec A)'} | Contact: ${f.email}`
             } else {
               const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2301'
               const sName = f.subjectName || 'Artificial Intelligence'
               const sDay = f.classDay || 'Mon, Wed, Fri'
               const sPeriod = f.classPeriod || 'Period 1'
               const sTime = f.classTime || '09:00 AM - 09:50 AM'
-              return `${idx + 1}. [${f.facultyId}] ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
+              return `${idx + 1}. ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
             }
           }),
         },
@@ -366,7 +364,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     if (!selectedAdvisorDossier) return
     generateAndDownloadPDF({
       title: `CLASS DOSSIER: ${selectedAdvisorDossier.advisorBatch || 'Year II - Sem 4 - Sec A'}`,
-      subtitle: `Class Advisor: ${selectedAdvisorDossier.name} (${selectedAdvisorDossier.facultyId}) · Department of AI & DS`,
+      subtitle: `Class Advisor: ${selectedAdvisorDossier.name} · Department of AI & DS`,
       author: 'Class Advisory Mentorship Record',
       category: 'Official Class Details & Student Roster',
       sections: [
@@ -401,8 +399,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // Handle Add Faculty Submit
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.facultyId.trim() || !formData.name.trim()) {
-      alert('Please fill in Faculty ID and Full Name.')
+    if (!formData.name.trim()) {
+      alert('Please fill in Faculty Name.')
       return
     }
 
@@ -422,7 +420,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          email: formData.email.trim() || `${formData.facultyId.toLowerCase()}@vsb.edu.in`,
           password: formData.password.trim() || 'vsb@123',
           experience: Number(formData.experience) || 1,
           subjects: subjectsArr,
@@ -800,7 +797,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             type="text"
             placeholder={
               activeTab === 'advisors'
-                ? 'Search advisors by name, ID, or batch...'
+                ? 'Search advisors by name or batch...'
                 : 'Search handlers by name, subject name, days, period, or code...'
             }
             value={searchQuery}
@@ -858,7 +855,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
               <tr>
                 <th className="px-4 py-3.5">#</th>
-                <th className="px-4 py-3.5">Faculty ID &amp; Name</th>
+                <th className="px-4 py-3.5">Faculty Name</th>
                 <th className="px-4 py-3.5">Assigned Class &amp; Section</th>
                 <th className="px-4 py-3.5">Role Type</th>
                 <th className="px-4 py-3.5">Designation &amp; Qualification</th>
@@ -889,8 +886,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           <span className="font-bold text-[#071A3D] text-sm block">
                             {advisor.name}
                           </span>
-                          <span className="font-mono text-[11px] text-[#1455D9] font-bold">
-                            {advisor.facultyId}
+                          <span className="text-[11px] text-gray-500 font-medium">
+                            {advisor.designation}
                           </span>
                         </div>
                       </div>
@@ -912,10 +909,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
                     <td className="px-4 py-3.5">
                       <span className="font-bold text-gray-800 block">
-                        {advisor.designation}
+                        {advisor.qualification || 'M.E. / Ph.D.'}
                       </span>
                       <span className="text-gray-500 text-[11px]">
-                        {advisor.qualification || 'M.E. / Ph.D.'} {advisor.experience ? `(${advisor.experience} Yrs Exp)` : ''}
+                        {advisor.experience ? `${advisor.experience} Yrs Experience` : 'AI & DS Faculty'}
                       </span>
                     </td>
 
@@ -1009,7 +1006,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
               <tr>
                 <th className="px-4 py-3.5">#</th>
-                <th className="px-4 py-3.5">Faculty ID &amp; Name</th>
+                <th className="px-4 py-3.5">Faculty Name</th>
                 <th className="px-4 py-3.5">Subject Name &amp; Course Code</th>
                 <th className="px-4 py-3.5">Class Days (Multiple)</th>
                 <th className="px-4 py-3.5">Class Periods &amp; Time Slots</th>
@@ -1047,8 +1044,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             <span className="font-bold text-[#071A3D] text-sm block">
                               {handler.name}
                             </span>
-                            <span className="font-mono text-[11px] text-[#1455D9] font-bold">
-                              {handler.facultyId}
+                            <span className="text-[11px] text-gray-500 font-medium">
+                              {handler.designation}
                             </span>
                           </div>
                         </div>
@@ -1193,7 +1190,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-gray-200">
                     <span className="flex items-center gap-1.5 font-bold text-white">
                       <UserCheck className="w-4 h-4 text-[#22C7E8]" />
-                      Advisor: {selectedAdvisorDossier.name} ({selectedAdvisorDossier.facultyId})
+                      Advisor: {selectedAdvisorDossier.name}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-[#22C7E8]" />
@@ -1606,29 +1603,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Faculty ID *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. FAC101"
-                    value={formData.facultyId}
-                    onChange={(e) => setFormData({ ...formData, facultyId: e.target.value.toUpperCase() })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#1455D9]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Dr. S. Karthik"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
-                  />
-                </div>
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dr. S. Karthik"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -1911,7 +1895,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 3. CALCULATED TIME SLOTS (EDITABLE) */}
+                  {/* 3. CALCULATED TIME SLOTS */}
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
                       Combined Time of Classes (Auto-calculated from periods):
@@ -1965,7 +1949,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Edit Faculty Record</h3>
-                <p className="text-xs text-[#1455D9] font-mono font-bold">{selectedFaculty.facultyId}</p>
+                <p className="text-xs text-[#1455D9] font-bold">{selectedFaculty.name}</p>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
@@ -2029,18 +2013,19 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               </div>
 
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dr. S. Karthik"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Dr. S. Karthik"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
-                  />
-                </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Institutional Email</label>
                   <input
@@ -2051,9 +2036,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
                   <input
@@ -2061,15 +2043,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     placeholder="e.g. +91 98421 12345"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
