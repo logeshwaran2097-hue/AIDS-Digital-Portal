@@ -664,7 +664,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
 
       {/* Mobile Bottom 4-Tab Navigation Bar */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 grid grid-cols-4 py-2 px-1 shadow-lg"
+        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 grid grid-cols-4 py-2 px-1 pb-safe shadow-lg"
         aria-label="Bottom mobile navigation"
       >
         <Link

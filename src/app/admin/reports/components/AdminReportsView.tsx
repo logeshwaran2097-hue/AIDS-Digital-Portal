@@ -592,25 +592,25 @@ export function AdminReportsView({
         </div>
 
         {/* Legend Box with 5 Categories (Category B is Absents (A)) */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 bg-gray-50/80 p-3.5 rounded-2xl border border-gray-100 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 bg-gray-50/80 p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 text-xs">
           {verticalBarCategories.map((cat, idx) => (
-            <div key={idx} className="flex items-center gap-2">
+            <div key={idx} className="flex items-center gap-1.5">
               <span
-                className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs"
+                className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full shrink-0 shadow-2xs"
                 style={{ backgroundColor: cat.color }}
               />
-              <span className="font-bold text-gray-800 text-[11px] whitespace-nowrap">
+              <span className="font-bold text-gray-800 text-[10px] sm:text-[11px] truncate">
                 {cat.label}: <strong>{cat.short}</strong>
               </span>
             </div>
           ))}
         </div>
 
-        {/* Canvas Column Bar Chart with Dynamic Y-Axis */}
-        <div className="relative pt-6 pb-2 px-2 bg-white rounded-2xl border border-gray-100">
-          <div className="flex items-end gap-3 h-80 pl-12 pr-4 pb-8 relative border-b-2 border-l-2 border-gray-300">
+        {/* Canvas Column Bar Chart with Dynamic Y-Axis - Mobile Optimized */}
+        <div className="relative pt-4 pb-1 px-1 sm:px-2 bg-white rounded-2xl border border-gray-100 overflow-x-auto">
+          <div className="flex items-end gap-1.5 sm:gap-3 h-72 sm:h-80 pl-8 sm:pl-12 pr-2 sm:pr-4 pb-7 sm:pb-8 relative border-b-2 border-l-2 border-gray-300 min-w-[290px]">
             {/* Dynamic Y-Axis Tick Numbers */}
-            <div className="absolute left-0 top-0 bottom-8 w-12 flex flex-col justify-between items-end pr-2.5 text-[11px] font-mono text-gray-400 font-bold select-none">
+            <div className="absolute left-0 top-0 bottom-7 sm:bottom-8 w-8 sm:w-12 flex flex-col justify-between items-end pr-1 sm:pr-2.5 text-[9px] sm:text-[11px] font-mono text-gray-400 font-bold select-none">
               {dynamicYTicks.map((tick) => (
                 <span key={tick} className="leading-none">
                   {tick}
@@ -619,29 +619,29 @@ export function AdminReportsView({
             </div>
 
             {/* Horizontal Reference Grid Lines */}
-            <div className="absolute left-12 right-4 top-0 bottom-8 flex flex-col justify-between pointer-events-none">
+            <div className="absolute left-8 sm:left-12 right-2 sm:right-4 top-0 bottom-7 sm:bottom-8 flex flex-col justify-between pointer-events-none">
               {dynamicYTicks.map((tick) => (
                 <div key={tick} className="w-full border-b border-gray-100" />
               ))}
             </div>
 
             {/* 5 Solid Vertical Columns */}
-            <div className="w-full h-full flex items-end justify-between gap-3 sm:gap-8 relative z-10">
+            <div className="w-full h-full flex items-end justify-between gap-1.5 sm:gap-6 md:gap-8 relative z-10">
               {verticalBarCategories.map((cat, idx) => {
                 const heightPct = Math.min(100, Math.max(3, (cat.value / chartMaxY) * 100))
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group">
                     {/* Value Badge above Column */}
                     <span
-                      className="text-xs sm:text-sm font-black mb-1.5 font-mono transition-transform group-hover:scale-110"
+                      className="text-[9px] sm:text-xs md:text-sm font-black mb-1 font-mono transition-transform group-hover:scale-110 text-center leading-none whitespace-nowrap"
                       style={{ color: cat.color }}
                     >
-                      {cat.value} {chartMode === 'students' ? 'Students' : 'Days'}
+                      {cat.value} {chartMode === 'students' ? 'Stud' : 'Days'}
                     </span>
 
                     {/* The Solid Vertical Column Bar */}
                     <div
-                      className="w-full rounded-t-sm transition-all duration-700 shadow-sm group-hover:brightness-110 cursor-pointer"
+                      className="w-full rounded-t-sm transition-all duration-700 shadow-xs group-hover:brightness-110 cursor-pointer"
                       style={{
                         height: `${heightPct}%`,
                         backgroundColor: cat.color,
@@ -650,7 +650,7 @@ export function AdminReportsView({
                     />
 
                     {/* Bottom Category Label (Clearly says Absents (A)) */}
-                    <span className="text-[11px] sm:text-xs font-black text-gray-800 mt-2.5 text-center truncate max-w-full">
+                    <span className="text-[9px] sm:text-xs font-black text-gray-800 mt-1.5 text-center leading-tight line-clamp-2 max-w-full">
                       {cat.short}
                     </span>
                   </div>
@@ -700,13 +700,13 @@ export function AdminReportsView({
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
             <button
               onClick={() => {
                 setSelectedYear('ALL')
                 setSelectedSemester('ALL')
               }}
-              className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+              className={`col-span-2 sm:col-span-1 p-3 rounded-2xl border text-center transition-all cursor-pointer ${
                 selectedYear === 'ALL'
                   ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-md ring-2 ring-[#071A3D]/20'
                   : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
