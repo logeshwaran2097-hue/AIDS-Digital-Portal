@@ -43,6 +43,7 @@ export interface FacultyRecord {
   name: string
   email: string
   phone?: string | null
+  dateOfBirth?: string | null
   designation: string
   qualification: string
   experience: number
@@ -91,7 +92,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [facultyList, setFacultyList] = useState<FacultyRecord[]>(initialFaculty)
   const [searchQuery, setSearchQuery] = useState('')
   const [yearFilter, setYearFilter] = useState('ALL')
+  const [sectionFilter, setSectionFilter] = useState('ALL')
   const [designationFilter, setDesignationFilter] = useState('ALL')
+  const [statusFilter, setStatusFilter] = useState('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
   // Modals
@@ -112,6 +115,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     email: '',
     phone: '',
     password: 'vsb@123',
+    dateOfBirth: '1988-06-15',
     designation: 'Assistant Professor',
     qualification: 'M.E., Ph.D.',
     experience: 5,
@@ -191,7 +195,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       .finally(() => setLoadingClassData(false))
   }, [selectedAdvisorDossier])
 
-  // Filtered lists for each tab
+  // Filtered lists for Class Advisors
   const advisorsList = useMemo(() => {
     return facultyList.filter((f) => {
       const isAdvisor =
@@ -211,10 +215,19 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         String(f.advisorYear) === yearFilter ||
         (f.advisorBatch && f.advisorBatch.includes(`Year ${yearFilter}`))
 
-      return matchesSearch && matchesYear
-    })
-  }, [facultyList, searchQuery, yearFilter])
+      const matchesSection =
+        sectionFilter === 'ALL' ||
+        f.advisorSec?.toUpperCase() === sectionFilter.toUpperCase() ||
+        (f.advisorBatch && f.advisorBatch.includes(`Sec ${sectionFilter}`))
 
+      const matchesStatus =
+        statusFilter === 'ALL' || f.status.toLowerCase() === statusFilter.toLowerCase()
+
+      return matchesSearch && matchesYear && matchesSection && matchesStatus
+    })
+  }, [facultyList, searchQuery, yearFilter, sectionFilter, statusFilter])
+
+  // Filtered lists for Subject Handlers
   const handlersList = useMemo(() => {
     return facultyList.filter((f) => {
       const subjs = getSubjectsList(f.subjects)
@@ -235,9 +248,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         designationFilter === 'ALL' ||
         f.designation.toLowerCase().includes(designationFilter.toLowerCase())
 
-      return matchesSearch && matchesDesignation
+      const matchesStatus =
+        statusFilter === 'ALL' || f.status.toLowerCase() === statusFilter.toLowerCase()
+
+      return matchesSearch && matchesDesignation && matchesStatus
     })
-  }, [facultyList, searchQuery, designationFilter])
+  }, [facultyList, searchQuery, designationFilter, statusFilter])
 
   // PDF Export
   const handleExportPDF = () => {
@@ -314,8 +330,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // Handle Add Faculty Submit
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name.trim() || !formData.email.trim()) {
-      alert('Please fill in Faculty Name and Email.')
+    if (!formData.facultyId.trim() || !formData.name.trim() || !formData.password.trim()) {
+      alert('Please fill in Faculty ID, Full Name, and Initial Password.')
       return
     }
 
@@ -347,6 +363,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           email: '',
           phone: '',
           password: 'vsb@123',
+          dateOfBirth: '1988-06-15',
           designation: 'Assistant Professor',
           qualification: 'M.E., Ph.D.',
           experience: 5,
@@ -359,7 +376,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           facultyType: 'both',
           status: 'active',
         })
-        alert('Faculty successfully registered in database!')
+        alert('Faculty member successfully registered in database!')
       } else {
         alert(result.message || 'Failed to register faculty')
       }
@@ -459,18 +476,18 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
-      {/* Header Banner */}
+      {/* Header Banner - Identical to Student page */}
       <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Faculty Directorate
+              Faculty Records Administration
             </span>
             <span className="text-xs text-gray-300 font-medium">· Department of AI &amp; DS</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Faculty Management &amp; Cadre</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; Cadre</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Separated into dedicated pages for <strong>Class Advisors</strong> (with full Class Details) and <strong>Subject Handlers</strong>
+            Directorate is ready for real faculty entries · Divided into <strong>Class Advisors</strong> and <strong>Subject Handlers</strong>
           </p>
         </div>
 
@@ -489,6 +506,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 email: '',
                 phone: '',
                 password: 'vsb@123',
+                dateOfBirth: '1988-06-15',
                 designation: 'Assistant Professor',
                 qualification: 'M.E., Ph.D.',
                 experience: 5,
@@ -505,223 +523,490 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             }}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            {activeTab === 'advisors' ? 'Assign New Class Advisor' : 'Add Subject Handler'}
+            <Plus className="w-4 h-4" /> + Add New Faculty
           </button>
         </div>
       </div>
 
-      {/* TWO PRIMARY PAGES / TABS: CLASS ADVISORS vs SUBJECT HANDLERS */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-2">
-        <div className="flex items-center gap-2 bg-gray-100/80 p-1.5 rounded-2xl border border-gray-200">
-          <button
-            onClick={() => setActiveTab('advisors')}
-            className={cn(
-              'px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
-              activeTab === 'advisors'
-                ? 'bg-[#1455D9] text-white shadow-md'
-                : 'text-gray-600 hover:text-[#071A3D] hover:bg-white/60'
-            )}
-          >
-            <UserCheck className="w-4 h-4" />
-            Page 1: Class Advisors (Mentors)
-            <span
-              className={cn(
-                'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
-                activeTab === 'advisors' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
-              )}
-            >
-              {advisorsList.length}
+      {/* STEP 1: CHOOSE FACULTY CADRE / VIEW (Class Advisors vs Subject Handlers) */}
+      <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-xs space-y-4">
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#1455D9] text-white text-[11px] font-black flex items-center justify-center">1</span>
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
+                Step 1: Choose Faculty Cadre / Division
+              </h3>
+            </div>
+            <span className="text-[11px] font-bold text-gray-400">
+              Select division to manage specific allocations
             </span>
-          </button>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('handlers')}
-            className={cn(
-              'px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
-              activeTab === 'handlers'
-                ? 'bg-[#1455D9] text-white shadow-md'
-                : 'text-gray-600 hover:text-[#071A3D] hover:bg-white/60'
-            )}
-          >
-            <BookMarked className="w-4 h-4" />
-            Page 2: Subject Handlers (Course Instructors)
-            <span
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => setActiveTab('advisors')}
               className={cn(
-                'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
-                activeTab === 'handlers' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                'flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer text-left',
+                activeTab === 'advisors'
+                  ? 'border-[#1455D9] bg-blue-50/50 shadow-sm ring-2 ring-[#1455D9]/20'
+                  : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
               )}
             >
-              {handlersList.length}
-            </span>
-          </button>
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'w-10 h-10 rounded-xl flex items-center justify-center font-black',
+                  activeTab === 'advisors' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600'
+                )}>
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm text-[#071A3D]">Page 1: Class Advisors</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Batch Mentors, Section In-charges &amp; Class Dossier</p>
+                </div>
+              </div>
+              <span className={cn(
+                'px-2.5 py-1 rounded-xl text-xs font-black font-mono',
+                activeTab === 'advisors' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-700'
+              )}>
+                {advisorsList.length} Active
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('handlers')}
+              className={cn(
+                'flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer text-left',
+                activeTab === 'handlers'
+                  ? 'border-[#1455D9] bg-purple-50/50 shadow-sm ring-2 ring-[#1455D9]/20'
+                  : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'w-10 h-10 rounded-xl flex items-center justify-center font-black',
+                  activeTab === 'handlers' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                )}>
+                  <BookMarked className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm text-[#071A3D]">Page 2: Subject Handlers</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Curriculum Course Instructors &amp; Subject Teachers</p>
+                </div>
+              </div>
+              <span className={cn(
+                'px-2.5 py-1 rounded-xl text-xs font-black font-mono',
+                activeTab === 'handlers' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700'
+              )}>
+                {handlersList.length} Active
+              </span>
+            </button>
+          </div>
         </div>
 
-        {/* Quick Search */}
-        <div className="relative min-w-[240px]">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        {/* STEP 2: Choose Academic Year / Batch Filter (When viewing Class Advisors) */}
+        {activeTab === 'advisors' && (
+          <div className="border-t border-gray-100 pt-3">
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-[#F4C430] text-[#071A3D] text-[11px] font-black flex items-center justify-center">2</span>
+                <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
+                  Step 2: Filter by Academic Batch (Years I - IV)
+                </h3>
+              </div>
+              {yearFilter !== 'ALL' && (
+                <button
+                  onClick={() => setYearFilter('ALL')}
+                  className="text-[11px] font-bold text-[#1455D9] hover:underline cursor-pointer"
+                >
+                  Clear Year Filter
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {[
+                { val: 'ALL', label: 'All 4 Years', sub: 'All Batches' },
+                { val: '1', label: 'Year I', sub: 'Freshman' },
+                { val: '2', label: 'Year II', sub: 'Sophomore' },
+                { val: '3', label: 'Year III', sub: 'Junior' },
+                { val: '4', label: 'Year IV', sub: 'Senior' },
+              ].map((b) => {
+                const isSelected = yearFilter === b.val
+                const count = facultyList.filter(
+                  (f) => b.val === 'ALL' || String(f.advisorYear) === b.val
+                ).length
+                return (
+                  <button
+                    key={b.val}
+                    onClick={() => setYearFilter(b.val)}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between',
+                      isSelected
+                        ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-sm ring-2 ring-[#071A3D]/20'
+                        : 'bg-gray-50/80 hover:bg-blue-50/50 border-gray-200 text-[#071A3D]'
+                    )}
+                  >
+                    <span className="text-xs font-black block">{b.label}</span>
+                    <span className={cn(
+                      'text-[10px] font-bold block mt-0.5',
+                      isSelected ? 'text-[#F4C430]' : 'text-gray-500'
+                    )}>
+                      {b.sub} · {count} Advisors
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Metrics Row - Identical 4 KPI Cards to Student page */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Total Faculty</p>
+          <p className="text-2xl font-black text-[#071A3D] mt-0.5">{facultyList.length}</p>
+          <p className="text-[10px] text-[#1455D9] font-medium mt-1">Teaching &amp; Advisory Staff</p>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Class Advisors</p>
+          <p className="text-2xl font-black text-green-700 mt-0.5">{advisorsList.length}</p>
+          <p className="text-[10px] text-green-700 font-medium mt-1">4 Years · Sections A - D</p>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Subject Handlers</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">{handlersList.length}</p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">Curriculum Courses Taught</p>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Department</p>
+          <p className="text-2xl font-black text-amber-700 mt-0.5">B.Tech AI &amp; DS</p>
+          <p className="text-[10px] text-amber-700 font-medium mt-1">Anna University · Reg 2021</p>
+        </div>
+      </div>
+
+      {/* Filter & Search Bar - Identical to Student page */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder={
               activeTab === 'advisors'
-                ? 'Search advisors by name or batch...'
-                : 'Search handlers by name or course code...'
+                ? 'Search advisors by name, ID, or batch...'
+                : 'Search handlers by name, ID, or course code...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs bg-white rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20 font-medium"
           />
+        </div>
+
+        <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto">
+          {/* Cadre Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Cadre:</span>
+            <select
+              value={designationFilter}
+              onChange={(e) => setDesignationFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All Cadres</option>
+              <option value="Professor">Professors</option>
+              <option value="Associate">Associate Prof</option>
+              <option value="Assistant">Assistant Prof</option>
+            </select>
+          </div>
+
+          {/* Section Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Section:</span>
+            <select
+              value={sectionFilter}
+              onChange={(e) => setSectionFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All 4 Sections (A - D)</option>
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+              <option value="C">Section C</option>
+              <option value="D">Section D</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
+            Showing {activeTab === 'advisors' ? advisorsList.length : handlersList.length} of {facultyList.length}
+          </span>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* PAGE 1: CLASS ADVISORS VIEW */}
+      {/* PAGE 1: CLASS ADVISORS TABLE */}
       {/* ========================================================= */}
       {activeTab === 'advisors' && (
-        <div className="space-y-5 animate-fade-in">
-          {/* Quick Year Filter for Advisors */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs font-bold text-gray-500 mr-1">Filter Batch:</span>
-            {[
-              { label: 'All Batches', val: 'ALL' },
-              { label: 'Year I (Freshman)', val: '1' },
-              { label: 'Year II (Sophomore)', val: '2' },
-              { label: 'Year III (Junior)', val: '3' },
-              { label: 'Year IV (Senior)', val: '4' },
-            ].map((b) => (
-              <button
-                key={b.val}
-                onClick={() => setYearFilter(b.val)}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer',
-                  yearFilter === b.val
-                    ? 'bg-[#071A3D] text-white shadow-xs'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                )}
-              >
-                {b.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Advisors Table */}
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-blue-50/60 border-b border-gray-200 text-[#071A3D]">
-                  <th className="p-4 font-black">Faculty ID &amp; Name</th>
-                  <th className="p-4 font-black">Assigned Class &amp; Section</th>
-                  <th className="p-4 font-black">Designation &amp; Qualification</th>
-                  <th className="p-4 font-black">Advisory Contact</th>
-                  <th className="p-4 font-black text-center">Class Dossier</th>
-                  <th className="p-4 font-black text-right">Actions</th>
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
+              <tr>
+                <th className="px-4 py-3.5">#</th>
+                <th className="px-4 py-3.5">Faculty ID &amp; Name</th>
+                <th className="px-4 py-3.5">Assigned Class &amp; Section</th>
+                <th className="px-4 py-3.5">Designation &amp; Qualification</th>
+                <th className="px-4 py-3.5">Advisory Contact</th>
+                <th className="px-4 py-3.5 text-center">Class Dossier</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 font-medium">
+              {advisorsList.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-gray-400">
+                    <UserCheck className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="font-bold text-gray-600">No Class Advisors Found</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to assign a class advisor.</p>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {advisorsList.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-400">
-                      No Class Advisors found matching your filter.
+              ) : (
+                advisorsList.map((advisor, idx) => (
+                  <tr key={advisor.id} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-[#1455D9]/10 text-[#1455D9] font-black text-sm flex items-center justify-center border border-[#1455D9]/20">
+                          {advisor.name.charAt(0)}
+                        </div>
+                        <div>
+                          <span className="font-bold text-[#071A3D] text-sm block">
+                            {advisor.name}
+                          </span>
+                          <span className="font-mono text-[11px] text-[#1455D9] font-bold">
+                            {advisor.facultyId}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-3.5">
+                      <span className="px-3 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold border border-purple-200 inline-flex items-center gap-1.5">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        {advisor.advisorBatch ||
+                          `Year ${advisor.advisorYear || 2} · Sem ${advisor.advisorSem || 4} (Sec ${advisor.advisorSec || 'A'})`}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3.5">
+                      <span className="font-bold text-gray-800 block">
+                        {advisor.designation}
+                      </span>
+                      <span className="text-gray-500 text-[11px]">
+                        {advisor.qualification} ({advisor.experience} Yrs Exp)
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3.5">
+                      <div className="space-y-0.5 text-[11px] text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Mail className="w-3 h-3 text-[#1455D9]" />
+                          <span>{advisor.email}</span>
+                        </div>
+                        {advisor.phone && (
+                          <div className="flex items-center gap-1">
+                            <Phone className="w-3 h-3 text-[#1455D9]" />
+                            <span>{advisor.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Class Details Dossier Button */}
+                    <td className="px-4 py-3.5 text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedAdvisorDossier(advisor)
+                          setDossierTab('students')
+                        }}
+                        className="px-3.5 py-1.5 rounded-xl bg-[#1455D9]/10 hover:bg-[#1455D9] text-[#1455D9] hover:text-white font-black text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer border border-[#1455D9]/30 shadow-2xs"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        View Class Details
+                      </button>
+                    </td>
+
+                    <td className="px-4 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => {
+                            setSelectedFaculty(advisor)
+                            const subjs = getSubjectsList(advisor.subjects)
+                            setFormData({
+                              facultyId: advisor.facultyId,
+                              name: advisor.name,
+                              email: advisor.email,
+                              phone: advisor.phone || '',
+                              password: '',
+                              dateOfBirth: advisor.dateOfBirth || '1988-06-15',
+                              designation: advisor.designation,
+                              qualification: advisor.qualification,
+                              experience: advisor.experience,
+                              specialization: advisor.specialization,
+                              subjects: JSON.stringify(subjs),
+                              advisorBatch: advisor.advisorBatch || 'Year II - Sem 4 - Sec A',
+                              advisorYear: advisor.advisorYear || 2,
+                              advisorSem: advisor.advisorSem || 4,
+                              advisorSec: advisor.advisorSec || 'A',
+                              facultyType: advisor.facultyType || 'advisor',
+                              status: advisor.status,
+                            })
+                            setIsEditModalOpen(true)
+                          }}
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                          title="Edit Advisor Allocation"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(advisor.id, advisor.name)}
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Remove Faculty"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  advisorsList.map((advisor) => (
-                    <tr key={advisor.id} className="hover:bg-blue-50/30 transition-colors">
-                      <td className="p-4">
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* PAGE 2: SUBJECT HANDLERS TABLE */}
+      {/* ========================================================= */}
+      {activeTab === 'handlers' && (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
+              <tr>
+                <th className="px-4 py-3.5">#</th>
+                <th className="px-4 py-3.5">Faculty &amp; ID</th>
+                <th className="px-4 py-3.5">Handled Courses &amp; Subjects</th>
+                <th className="px-4 py-3.5">Specialization Domain</th>
+                <th className="px-4 py-3.5">Designation &amp; Experience</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 font-medium">
+              {handlersList.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-12 text-gray-400">
+                    <BookMarked className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="font-bold text-gray-600">No Subject Handlers Found</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subjects.</p>
+                  </td>
+                </tr>
+              ) : (
+                handlersList.map((handler, idx) => {
+                  const subjs = getSubjectsList(handler.subjects)
+                  return (
+                    <tr key={handler.id} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
+                      <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-[#1455D9]/10 text-[#1455D9] font-black text-sm flex items-center justify-center border border-[#1455D9]/20">
-                            {advisor.name.charAt(0)}
+                          <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-black text-sm flex items-center justify-center border border-purple-200">
+                            {handler.name.charAt(0)}
                           </div>
                           <div>
                             <span className="font-bold text-[#071A3D] text-sm block">
-                              {advisor.name}
+                              {handler.name}
                             </span>
                             <span className="font-mono text-[11px] text-[#1455D9] font-bold">
-                              {advisor.facultyId}
+                              {handler.facultyId}
                             </span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="p-4">
-                        <span className="px-3 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold border border-purple-200 inline-flex items-center gap-1.5">
-                          <GraduationCap className="w-3.5 h-3.5" />
-                          {advisor.advisorBatch ||
-                            `Year ${advisor.advisorYear || 2} · Sem ${advisor.advisorSem || 4} (${advisor.advisorSec || 'Sec A'})`}
-                        </span>
-                      </td>
-
-                      <td className="p-4">
-                        <span className="font-bold text-gray-800 block">
-                          {advisor.designation}
-                        </span>
-                        <span className="text-gray-500 text-[11px]">
-                          {advisor.qualification} ({advisor.experience} Yrs Exp)
-                        </span>
-                      </td>
-
-                      <td className="p-4">
-                        <div className="space-y-0.5 text-[11px] text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Mail className="w-3 h-3 text-[#1455D9]" />
-                            <span>{advisor.email}</span>
-                          </div>
-                          {advisor.phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-[#1455D9]" />
-                              <span>{advisor.phone}</span>
-                            </div>
+                      <td className="px-4 py-3.5">
+                        <div className="flex flex-wrap gap-1.5">
+                          {subjs.length > 0 ? (
+                            subjs.map((s, i) => (
+                              <span
+                                key={i}
+                                className="px-2.5 py-1 rounded-xl bg-blue-50 text-[#1455D9] font-mono font-bold border border-blue-200/60"
+                              >
+                                {s}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-gray-400 italic">No courses assigned yet</span>
                           )}
                         </div>
                       </td>
 
-                      {/* Class Details Dossier Button */}
-                      <td className="p-4 text-center">
-                        <button
-                          onClick={() => {
-                            setSelectedAdvisorDossier(advisor)
-                            setDossierTab('students')
-                          }}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#1455D9]/10 hover:bg-[#1455D9] text-[#1455D9] hover:text-white font-black text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer border border-[#1455D9]/30 shadow-2xs"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          View Class Details
-                        </button>
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-gray-800 block">
+                          {handler.specialization || 'AI & Machine Learning'}
+                        </span>
+                        <span className="text-[11px] text-gray-500">{handler.qualification}</span>
                       </td>
 
-                      <td className="p-4 text-right">
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-[#071A3D] block">{handler.designation}</span>
+                        <span className="text-green-700 font-bold text-[11px]">
+                          {handler.experience}+ Years Academic Exp
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => {
-                              setSelectedFaculty(advisor)
-                              const subjs = getSubjectsList(advisor.subjects)
+                              setSelectedFaculty(handler)
                               setFormData({
-                                facultyId: advisor.facultyId,
-                                name: advisor.name,
-                                email: advisor.email,
-                                phone: advisor.phone || '',
+                                facultyId: handler.facultyId,
+                                name: handler.name,
+                                email: handler.email,
+                                phone: handler.phone || '',
                                 password: '',
-                                designation: advisor.designation,
-                                qualification: advisor.qualification,
-                                experience: advisor.experience,
-                                specialization: advisor.specialization,
+                                dateOfBirth: handler.dateOfBirth || '1988-06-15',
+                                designation: handler.designation,
+                                qualification: handler.qualification,
+                                experience: handler.experience,
+                                specialization: handler.specialization,
                                 subjects: JSON.stringify(subjs),
-                                advisorBatch: advisor.advisorBatch || 'Year II - Sem 4 - Sec A',
-                                advisorYear: advisor.advisorYear || 2,
-                                advisorSem: advisor.advisorSem || 4,
-                                advisorSec: advisor.advisorSec || 'A',
-                                facultyType: advisor.facultyType || 'advisor',
-                                status: advisor.status,
+                                advisorBatch: handler.advisorBatch || '',
+                                advisorYear: handler.advisorYear || 2,
+                                advisorSem: handler.advisorSem || 4,
+                                advisorSec: handler.advisorSec || 'A',
+                                facultyType: handler.facultyType || 'subject_handler',
+                                status: handler.status,
                               })
                               setIsEditModalOpen(true)
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                            title="Edit Advisor Allocation"
+                            title="Edit Course Allocation"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(advisor.id, advisor.name)}
+                            onClick={() => handleDelete(handler.id, handler.name)}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                             title="Remove Faculty"
                           >
@@ -730,160 +1015,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* PAGE 2: SUBJECT HANDLERS VIEW */}
-      {/* ========================================================= */}
-      {activeTab === 'handlers' && (
-        <div className="space-y-5 animate-fade-in">
-          {/* Designation Filter */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs font-bold text-gray-500 mr-1">Designation:</span>
-            {[
-              { label: 'All Cadres', val: 'ALL' },
-              { label: 'Professors', val: 'Professor' },
-              { label: 'Associate Professors', val: 'Associate' },
-              { label: 'Assistant Professors', val: 'Assistant' },
-            ].map((d) => (
-              <button
-                key={d.val}
-                onClick={() => setDesignationFilter(d.val)}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer',
-                  designationFilter === d.val
-                    ? 'bg-[#071A3D] text-white shadow-xs'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-                )}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Subject Handlers Table */}
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-xs overflow-hidden">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-blue-50/60 border-b border-gray-200 text-[#071A3D]">
-                  <th className="p-4 font-black">Faculty &amp; ID</th>
-                  <th className="p-4 font-black">Handled Courses &amp; Subjects</th>
-                  <th className="p-4 font-black">Specialization Domain</th>
-                  <th className="p-4 font-black">Designation &amp; Experience</th>
-                  <th className="p-4 font-black text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {handlersList.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-8 text-center text-gray-400">
-                      No Subject Handlers found matching your search.
-                    </td>
-                  </tr>
-                ) : (
-                  handlersList.map((handler) => {
-                    const subjs = getSubjectsList(handler.subjects)
-                    return (
-                      <tr key={handler.id} className="hover:bg-blue-50/30 transition-colors">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-black text-sm flex items-center justify-center border border-purple-200">
-                              {handler.name.charAt(0)}
-                            </div>
-                            <div>
-                              <span className="font-bold text-[#071A3D] text-sm block">
-                                {handler.name}
-                              </span>
-                              <span className="font-mono text-[11px] text-[#1455D9] font-bold">
-                                {handler.facultyId}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="p-4">
-                          <div className="flex flex-wrap gap-1.5">
-                            {subjs.length > 0 ? (
-                              subjs.map((s, idx) => (
-                                <span
-                                  key={idx}
-                                  className="px-2.5 py-1 rounded-xl bg-blue-50 text-[#1455D9] font-mono font-bold border border-blue-200/60"
-                                >
-                                  {s}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-gray-400 italic">No courses assigned yet</span>
-                            )}
-                          </div>
-                        </td>
-
-                        <td className="p-4">
-                          <span className="font-bold text-gray-800 block">
-                            {handler.specialization || 'AI & Machine Learning'}
-                          </span>
-                          <span className="text-[11px] text-gray-500">{handler.qualification}</span>
-                        </td>
-
-                        <td className="p-4">
-                          <span className="font-bold text-[#071A3D] block">{handler.designation}</span>
-                          <span className="text-green-700 font-bold text-[11px]">
-                            {handler.experience}+ Years Academic Exp
-                          </span>
-                        </td>
-
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => {
-                                setSelectedFaculty(handler)
-                                setFormData({
-                                  facultyId: handler.facultyId,
-                                  name: handler.name,
-                                  email: handler.email,
-                                  phone: handler.phone || '',
-                                  password: '',
-                                  designation: handler.designation,
-                                  qualification: handler.qualification,
-                                  experience: handler.experience,
-                                  specialization: handler.specialization,
-                                  subjects: JSON.stringify(subjs),
-                                  advisorBatch: handler.advisorBatch || '',
-                                  advisorYear: handler.advisorYear || 2,
-                                  advisorSem: handler.advisorSem || 4,
-                                  advisorSec: handler.advisorSec || 'A',
-                                  facultyType: handler.facultyType || 'subject_handler',
-                                  status: handler.status,
-                                })
-                                setIsEditModalOpen(true)
-                              }}
-                              className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                              title="Edit Course Allocation"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(handler.id, handler.name)}
-                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                              title="Remove Faculty"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -1252,16 +1388,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* MODAL: ADD FACULTY / ADVISOR / SUBJECT HANDLER */}
-      {/* ========================================================= */}
+      {/* ========================================================================= */}
+      {/* MODAL: REGISTER REAL FACULTY PROFESSOR (IDENTICAL TO STUDENT MODAL) */}
+      {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">
-                  {activeTab === 'advisors' ? 'Assign New Class Advisor' : 'Add Subject Handler'}
+                  Register Real Faculty Professor
                 </h3>
                 <p className="text-xs text-gray-500">Record will be saved directly into institutional database</p>
               </div>
@@ -1280,13 +1416,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <input
                     type="text"
                     required
+                    placeholder="e.g. FAC001"
                     value={formData.facultyId}
                     onChange={(e) => setFormData({ ...formData, facultyId: e.target.value.toUpperCase() })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#1455D9]"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Full Name *</label>
                   <input
                     type="text"
                     required
@@ -1300,10 +1437,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Faculty Institutional Email *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Institutional Email <span className="text-gray-400 font-normal">(Optional)</span></label>
                   <input
                     type="email"
-                    required
                     placeholder="e.g. karthik@vsb.edu.in"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -1311,13 +1447,36 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Initial Login Password *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Initial Password *</label>
                   <input
                     type="text"
                     required
+                    placeholder="Default: vsb@123"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 font-mono font-bold text-[#071A3D]"
+                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. +91 98421 12345"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
               </div>
@@ -1359,97 +1518,100 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </div>
 
               {/* Class Advisor Assignment Fields */}
-              <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
-                <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                  Class Advisor Assignment (Page 1):
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Year</label>
-                    <select
-                      value={formData.advisorYear}
-                      onChange={(e) => {
-                        const y = Number(e.target.value)
-                        setFormData({
-                          ...formData,
-                          advisorYear: y,
-                          advisorSem: (y * 2) - 1,
-                          advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
-                        })
-                      }}
-                      className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-xs"
-                    >
-                      <option value={1}>Year 1 (Freshman)</option>
-                      <option value={2}>Year 2 (Sophomore)</option>
-                      <option value={3}>Year 3 (Junior)</option>
-                      <option value={4}>Year 4 (Senior)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester</label>
-                    <select
-                      value={formData.advisorSem}
-                      onChange={(e) => {
-                        const s = Number(e.target.value)
-                        setFormData({
-                          ...formData,
-                          advisorSem: s,
-                          advisorBatch: `Year ${formData.advisorYear} - Sem ${s} - Sec ${formData.advisorSec}`,
-                        })
-                      }}
-                      className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-xs"
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                        <option key={s} value={s}>Semester {s}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Section</label>
-                    <select
-                      value={formData.advisorSec}
-                      onChange={(e) => {
-                        const sec = e.target.value
-                        setFormData({
-                          ...formData,
-                          advisorSec: sec,
-                          advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
-                        })
-                      }}
-                      className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-xs"
-                    >
-                      <option value="A">Section A</option>
-                      <option value="B">Section B</option>
-                      <option value="C">Section C</option>
-                      <option value="D">Section D</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Subject Handler Assignment Fields */}
-              <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-100 space-y-2">
-                <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                  <BookMarked className="w-4 h-4 text-purple-700" />
-                  Subject Handler Courses (Page 2):
-                </span>
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-600 text-[11px] mb-0.5">
-                    Course Codes Handled (Comma-separated or JSON)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. AD2301, AD2302, AD2305"
-                    value={formData.subjects}
-                    onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
-                  />
-                  <p className="text-[10px] text-gray-400 mt-1">Example: AD2301 (Data Structures), AD2305 (Machine Learning)</p>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
+                  <select
+                    value={formData.advisorSem}
+                    onChange={(e) => {
+                      const sem = Number(e.target.value)
+                      const yr = Math.ceil(sem / 2)
+                      setFormData({
+                        ...formData,
+                        advisorSem: sem,
+                        advisorYear: yr,
+                        advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                      })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Semester {sem} (Year {Math.ceil(sem / 2)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <select
+                    value={formData.advisorYear}
+                    onChange={(e) => {
+                      const y = Number(e.target.value)
+                      setFormData({
+                        ...formData,
+                        advisorYear: y,
+                        advisorSem: (y * 2) - 1,
+                        advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
+                      })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value={1}>Year 1 (Freshman)</option>
+                    <option value={2}>Year 2 (Sophomore)</option>
+                    <option value={3}>Year 3 (Junior)</option>
+                    <option value={4}>Year 4 (Senior)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Section</label>
+                  <select
+                    value={formData.advisorSec}
+                    onChange={(e) => {
+                      const sec = e.target.value
+                      setFormData({
+                        ...formData,
+                        advisorSec: sec,
+                        advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
+                      })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="A">Section A</option>
+                    <option value="B">Section B</option>
+                    <option value="C">Section C</option>
+                    <option value="D">Section D</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t">
+              {/* Handled Course Codes */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Handled Course Codes</label>
+                <input
+                  type="text"
+                  placeholder="e.g. AD2301, AD2302, AD2305"
+                  value={formData.subjects}
+                  onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
@@ -1462,7 +1624,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   disabled={isLoading}
                   className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2"
                 >
-                  {isLoading ? 'Saving...' : 'Save Faculty Member'}
+                  {isLoading ? 'Saving...' : 'Save Faculty to Database'}
                 </button>
               </div>
             </form>
@@ -1471,14 +1633,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================= */}
-      {/* MODAL: EDIT FACULTY / ADVISOR / SUBJECT HANDLER */}
+      {/* MODAL: EDIT FACULTY PROFESSOR */}
       {/* ========================================================= */}
       {isEditModalOpen && selectedFaculty && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Edit Faculty &amp; Role Allocation</h3>
+                <h3 className="text-lg font-black text-[#071A3D]">Edit Faculty Record</h3>
                 <p className="text-xs text-[#1455D9] font-mono font-bold">{selectedFaculty.facultyId}</p>
               </div>
               <button
@@ -1505,9 +1667,29 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <label className="block font-bold text-[#071A3D] mb-1">Institutional Email</label>
                   <input
                     type="email"
-                    required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
@@ -1548,92 +1730,94 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </div>
 
               {/* Class Advisor Assignment */}
-              <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
-                <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                  <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                  Class Advisor Allocation:
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Year</label>
-                    <select
-                      value={formData.advisorYear}
-                      onChange={(e) => {
-                        const y = Number(e.target.value)
-                        setFormData({
-                          ...formData,
-                          advisorYear: y,
-                          advisorSem: (y * 2) - 1,
-                          advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
-                        })
-                      }}
-                      className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-xs"
-                    >
-                      <option value={1}>Year 1</option>
-                      <option value={2}>Year 2</option>
-                      <option value={3}>Year 3</option>
-                      <option value={4}>Year 4</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester</label>
-                    <select
-                      value={formData.advisorSem}
-                      onChange={(e) => {
-                        const s = Number(e.target.value)
-                        setFormData({
-                          ...formData,
-                          advisorSem: s,
-                          advisorBatch: `Year ${formData.advisorYear} - Sem ${s} - Sec ${formData.advisorSec}`,
-                        })
-                      }}
-                      className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-xs"
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                        <option key={s} value={s}>Semester {s}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Section</label>
-                    <select
-                      value={formData.advisorSec}
-                      onChange={(e) => {
-                        const sec = e.target.value
-                        setFormData({
-                          ...formData,
-                          advisorSec: sec,
-                          advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
-                        })
-                      }}
-                      className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-xs"
-                    >
-                      <option value="A">Section A</option>
-                      <option value="B">Section B</option>
-                      <option value="C">Section C</option>
-                      <option value="D">Section D</option>
-                    </select>
-                  </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
+                  <select
+                    value={formData.advisorSem}
+                    onChange={(e) => {
+                      const sem = Number(e.target.value)
+                      const yr = Math.ceil(sem / 2)
+                      setFormData({
+                        ...formData,
+                        advisorSem: sem,
+                        advisorYear: yr,
+                        advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                      })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9]"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={s}>Semester {s} (Year {Math.ceil(s / 2)})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <select
+                    value={formData.advisorYear}
+                    onChange={(e) => {
+                      const y = Number(e.target.value)
+                      setFormData({
+                        ...formData,
+                        advisorYear: y,
+                        advisorSem: (y * 2) - 1,
+                        advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
+                      })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  >
+                    <option value={1}>Year 1</option>
+                    <option value={2}>Year 2</option>
+                    <option value={3}>Year 3</option>
+                    <option value={4}>Year 4</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Section</label>
+                  <select
+                    value={formData.advisorSec}
+                    onChange={(e) => {
+                      const sec = e.target.value
+                      setFormData({
+                        ...formData,
+                        advisorSec: sec,
+                        advisorBatch: `Year ${formData.advisorYear} - Sem ${formData.advisorSem} - Sec ${sec}`,
+                      })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  >
+                    <option value="A">Section A</option>
+                    <option value="B">Section B</option>
+                    <option value="C">Section C</option>
+                    <option value="D">Section D</option>
+                  </select>
                 </div>
               </div>
 
-              {/* Subject Handler Assignment */}
-              <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-100 space-y-2">
-                <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                  <BookMarked className="w-4 h-4 text-purple-700" />
-                  Subject Handler Courses:
-                </span>
-                <div>
-                  <label className="block font-bold text-gray-600 text-[11px] mb-0.5">
-                    Course Codes Handled
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.subjects}
-                    onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
-                  />
-                </div>
+              {/* Handled Course Codes */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Handled Courses</label>
+                <input
+                  type="text"
+                  value={formData.subjects}
+                  onChange={(e) => setFormData({ ...formData, subjects: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t">

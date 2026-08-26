@@ -33,7 +33,12 @@ export default async function AdminFacultyPage() {
       qualification: f.qualification || 'M.Tech / Ph.D.',
       experience: f.experience || 5,
       specialization: f.specialization || 'Artificial Intelligence',
-      subjects: f.subjects || 'AI & DS Core Subjects',
+      subjects: f.subjects || '["AD2301", "AD2302"]',
+      advisorBatch: f.advisorBatch || 'Year II - Sem 4 - Sec A',
+      advisorYear: f.advisorYear || 2,
+      advisorSem: f.advisorSem || 4,
+      advisorSec: f.advisorSec || 'A',
+      facultyType: f.facultyType || 'both',
       status: user?.status || 'active',
     }
   })
