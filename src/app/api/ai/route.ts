@@ -140,16 +140,19 @@ async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string;
           const name = u?.name || 'Faculty'
           const email = u?.email || 'N/A'
 
+          const subjectName = (f as any).subjectName || ''
+          const advisorBatch = (f as any).advisorBatch || ''
+
           if (
             cleanKeywords.length === 0 ||
             name.toLowerCase().includes(cleanKeywords) ||
             f.facultyId.toLowerCase().includes(cleanKeywords) ||
             f.specialization.toLowerCase().includes(cleanKeywords) ||
-            (f.subjectName && f.subjectName.toLowerCase().includes(cleanKeywords)) ||
-            (f.advisorBatch && f.advisorBatch.toLowerCase().includes(cleanKeywords))
+            (subjectName && subjectName.toLowerCase().includes(cleanKeywords)) ||
+            (advisorBatch && advisorBatch.toLowerCase().includes(cleanKeywords))
           ) {
             matchingFaculty.push(
-              `• **${name}** (${f.facultyId}) — ${f.designation}\n  - **Specialization:** ${f.specialization}\n  - **Handling Course:** ${f.subjectName || 'Assigned Subjects'}\n  - **Class Advisor:** ${f.advisorBatch || 'General Staff'}\n  - **Contact:** ${email}`
+              `• **${name}** (${f.facultyId}) — ${f.designation}\n  - **Specialization:** ${f.specialization}\n  - **Handling Course:** ${subjectName || 'Assigned Subjects'}\n  - **Class Advisor:** ${advisorBatch || 'General Staff'}\n  - **Contact:** ${email}`
             )
           }
         }
