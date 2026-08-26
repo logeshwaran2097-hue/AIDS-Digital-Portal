@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -26,6 +26,8 @@ import {
   Lock,
   ArrowRight,
   Sparkles,
+  RefreshCw,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -46,6 +48,9 @@ export interface AdminDashboardData {
 }
 
 export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
+  const [isSeeding, setIsSeeding] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
+
   const handleDownloadSystemReport = () => {
     generateAndDownloadPDF({
       title: 'ENTERPRISE SYSTEM INFRASTRUCTURE & AUDIT REPORT',
@@ -77,7 +82,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
         {
           heading: '3. SYSTEM HEALTH & ENCRYPTION PROTOCOLS',
           body: [
-            'Runtime Environment: Next.js 15.2.1 (App Router) + Node.js',
+            'Runtime Environment: Next.js 14.2.5 (App Router) + Node.js',
             'Database Engine: SQLite with Prisma ORM Connection Pool',
             'Authentication Architecture: JWT Cryptographic Tokens (HTTP-Only SameSite Cookies)',
             'Report Engine: Client-Side High-Fidelity Vector PDF Engine with Institutional Emblem',
@@ -87,6 +92,52 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
       ],
       fileName: 'VSB_System_Audit_Report_2026',
     })
+  }
+
+  const handleSeedBaseline = async () => {
+    if (!confirm('Would you like to populate baseline records (HOD, Faculty across Semesters 1-8, Students, and Circulars)?')) {
+      return
+    }
+
+    setIsSeeding(true)
+    try {
+      const res = await fetch('/api/admin/seed-mock-data', { method: 'POST' })
+      const result = await res.json()
+      if (result.success) {
+        alert(result.message || 'Baseline records seeded successfully!')
+        window.location.reload()
+      } else {
+        alert(result.message || 'Failed to seed baseline data')
+      }
+    } catch {
+      alert('Network error while populating baseline data.')
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
+  const handleClearAll = async () => {
+    if (!confirm('Are you sure you want to clean all non-admin mock/sample data? Admin accounts will remain safe.')) {
+      return
+    }
+
+    setIsClearing(true)
+    try {
+      const res = await fetch('/api/admin/clean-mock-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: 'all' }),
+      })
+      const result = await res.json()
+      if (result.success) {
+        alert('Database cleared to pure state.')
+        window.location.reload()
+      }
+    } catch {
+      alert('Error clearing data.')
+    } finally {
+      setIsClearing(false)
+    }
   }
 
   const managementTiles = [
@@ -105,11 +156,11 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
   ]
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pt-1">
       {/* Hero Banner */}
       <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Super Admin Command Center
             </span>
@@ -121,12 +172,34 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           </p>
         </div>
 
-        <button
-          onClick={handleDownloadSystemReport}
-          className="px-5 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
-        >
-          <Download className="w-4 h-4" /> Export System Audit (PDF)
-        </button>
+        <div className="flex items-center flex-wrap gap-2.5 shrink-0">
+          {data.studentCount === 0 && (
+            <button
+              onClick={handleSeedBaseline}
+              disabled={isSeeding}
+              className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
+            >
+              <Sparkles className="w-4 h-4" /> {isSeeding ? 'Populating...' : 'Seed Baseline Data'}
+            </button>
+          )}
+
+          {data.studentCount > 0 && (
+            <button
+              onClick={handleClearAll}
+              disabled={isClearing}
+              className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:text-white"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" /> Clean Sample Data
+            </button>
+          )}
+
+          <button
+            onClick={handleDownloadSystemReport}
+            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
+          >
+            <Download className="w-4 h-4" /> Export System Audit (PDF)
+          </button>
+        </div>
       </div>
 
       {/* System Infrastructure Health Strip */}
@@ -137,7 +210,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           </div>
           <div>
             <p className="text-[10px] text-gray-400 font-bold uppercase">App Runtime</p>
-            <p className="text-sm font-bold text-[#071A3D]">Next.js 15.2.1</p>
+            <p className="text-sm font-bold text-[#071A3D]">Next.js 14.2.5</p>
           </div>
         </div>
 
@@ -175,38 +248,40 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
       {/* Centralized Management Directory */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black text-[#071A3D]">Centralized Administrative Directory</h2>
-          <span className="text-xs text-gray-400">12 Primary Modules</span>
+          <div>
+            <h2 className="text-lg font-black text-[#071A3D]">Centralized Administrative Directory</h2>
+            <p className="text-xs text-gray-500 font-medium">Real-time live database counts connected to SQLite &amp; Prisma</p>
+          </div>
+          <span className="text-xs text-gray-400 font-mono font-bold">12 Primary Modules</span>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {managementTiles.map((t, idx) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {managementTiles.map((tile, idx) => (
             <Link
               key={idx}
-              href={t.href}
-              className="p-5 rounded-3xl bg-white border border-gray-200 hover:border-[#1455D9]/40 hover:shadow-xl transition-all duration-200 group flex flex-col justify-between"
+              href={tile.href}
+              className="bg-white p-5 rounded-3xl border border-gray-200 hover:border-[#1455D9] transition-all duration-200 hover:shadow-md group flex flex-col justify-between"
             >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className={cn('w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-xs', t.color)}>
-                    {t.icon}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={cn('w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-xs', tile.color)}>
+                    {tile.icon}
                   </div>
-                  <span className="text-xs font-black text-[#071A3D] px-2.5 py-1 rounded-xl bg-gray-50 border">
-                    {t.count}
-                  </span>
+                  <div>
+                    <h3 className="font-bold text-sm text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
+                      {tile.title}
+                    </h3>
+                    <p className="text-[11px] text-gray-400 font-medium">{tile.desc}</p>
+                  </div>
                 </div>
-
-                <div>
-                  <h3 className="font-bold text-sm text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
-                    {t.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">{t.desc}</p>
-                </div>
+                <span className="text-xs font-mono font-black px-2.5 py-1 rounded-xl bg-gray-50 border border-gray-200 text-[#071A3D] group-hover:bg-blue-50 group-hover:text-[#1455D9] group-hover:border-blue-200 transition-colors">
+                  {tile.count}
+                </span>
               </div>
 
               <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#1455D9]">
                 <span>Manage Module</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
           ))}
