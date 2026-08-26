@@ -307,18 +307,11 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
 
   const handleNavClick = (href: string) => {
     setIsDrawerOpen(false)
-    if (pathname !== href) {
-      setActivePath(href)
-      setIsNavigating(true)
-    }
+    setActivePath(href)
   }
 
   return (
     <div className="min-h-screen bg-[#f8fafd] text-[#071A3D] relative">
-      {/* Top Instant Navigation Progress Bar */}
-      {isNavigating && (
-        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430] animate-pulse" />
-      )}
       {/* Mobile Drawer Overlay */}
       {isDrawerOpen && (
         <div
@@ -442,6 +435,16 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                 href={item.href}
                 prefetch={true}
                 data-active={isActive ? 'true' : 'false'}
+                onMouseEnter={() => {
+                  try {
+                    router.prefetch(item.href)
+                  } catch {}
+                }}
+                onMouseDown={() => {
+                  try {
+                    router.prefetch(item.href)
+                  } catch {}
+                }}
                 onClick={() => handleNavClick(item.href)}
                 style={isActive ? { backgroundColor: accentColor, boxShadow: `0 4px 14px ${accentColor}60` } : {}}
                 className={cn(
@@ -667,6 +670,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         <Link
           href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'}
           prefetch={true}
+          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
+          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
@@ -681,6 +686,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         <Link
           href={role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects'}
           prefetch={true}
+          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
+          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
@@ -695,6 +702,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         <Link
           href={role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects'}
           prefetch={true}
+          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects') } catch {} }}
+          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
@@ -707,6 +716,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         <Link
           href={profileHref}
           prefetch={true}
+          onMouseEnter={() => { try { router.prefetch(profileHref) } catch {} }}
+          onMouseDown={() => { try { router.prefetch(profileHref) } catch {} }}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
