@@ -16,8 +16,15 @@ import {
   Users,
   Building,
   Sparkles,
+  GraduationCap,
+  Briefcase,
+  UserCheck,
+  FlaskConical,
+  Layers,
+  Calendar,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { cn } from '@/lib/utils'
 
 export interface AnnouncementRecord {
   id: string
@@ -31,6 +38,42 @@ export interface AnnouncementRecord {
   createdAt: string
 }
 
+export const TARGET_AUDIENCE_OPTIONS = [
+  {
+    group: 'General Broad Audience',
+    options: [
+      { value: 'ALL', label: 'All Students & Faculty', icon: 'users' },
+      { value: 'students', label: 'All Students (Years 1 to 4)', icon: 'graduation' },
+      { value: 'faculty', label: 'All Faculty & Instructors', icon: 'briefcase' },
+      { value: 'hod', label: 'Head of Department (HOD)', icon: 'award' },
+      { value: 'advisors', label: 'Class Advisors Only', icon: 'user-check' },
+      { value: 'lab_handlers', label: 'Lab Instructors & Subject Handlers', icon: 'flask' },
+    ],
+  },
+  {
+    group: 'By Academic Year (Years I – IV)',
+    options: [
+      { value: 'year1', label: 'Year 1 Students (Freshman · Sem 1 & 2)', icon: 'calendar' },
+      { value: 'year2', label: 'Year 2 Students (Sophomore · Sem 3 & 4)', icon: 'calendar' },
+      { value: 'year3', label: 'Year 3 Students (Junior · Sem 5 & 6)', icon: 'calendar' },
+      { value: 'year4', label: 'Year 4 Students (Senior · Sem 7 & 8)', icon: 'calendar' },
+    ],
+  },
+  {
+    group: 'By Individual Semester (Semesters 1 – 8)',
+    options: [
+      { value: 'sem1', label: 'Semester 1 Students (Year 1 - Odd)', icon: 'layers' },
+      { value: 'sem2', label: 'Semester 2 Students (Year 1 - Even)', icon: 'layers' },
+      { value: 'sem3', label: 'Semester 3 Students (Year 2 - Odd)', icon: 'layers' },
+      { value: 'sem4', label: 'Semester 4 Students (Year 2 - Even)', icon: 'layers' },
+      { value: 'sem5', label: 'Semester 5 Students (Year 3 - Odd)', icon: 'layers' },
+      { value: 'sem6', label: 'Semester 6 Students (Year 3 - Even)', icon: 'layers' },
+      { value: 'sem7', label: 'Semester 7 Students (Year 4 - Odd)', icon: 'layers' },
+      { value: 'sem8', label: 'Semester 8 Students (Year 4 - Even)', icon: 'layers' },
+    ],
+  },
+]
+
 export function AdminAnnouncementsView({
   initialAnnouncements,
   studentList = [],
@@ -43,6 +86,7 @@ export function AdminAnnouncementsView({
   const [announcements, setAnnouncements] = useState<AnnouncementRecord[]>(initialAnnouncements)
   const [searchQuery, setSearchQuery] = useState('')
   const [targetFilter, setTargetFilter] = useState('ALL')
+  const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -56,12 +100,38 @@ export function AdminAnnouncementsView({
 
   const filteredAnnouncements = announcements.filter((a) => {
     const matchesTarget = targetFilter === 'ALL' || a.target === targetFilter
+    const matchesCategory = categoryFilter === 'ALL' || a.category === categoryFilter
     const matchesSearch =
       a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      a.category.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesTarget && matchesSearch
+      a.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.target.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesTarget && matchesCategory && matchesSearch
   })
+
+  const getAudienceLabel = (target: string): string => {
+    for (const grp of TARGET_AUDIENCE_OPTIONS) {
+      const found = grp.options.find((o) => o.value === target || o.value.toLowerCase() === target.toLowerCase())
+      if (found) return found.label
+    }
+    if (target === 'ALL') return 'All Students & Faculty'
+    if (target === 'students') return 'All Students'
+    if (target === 'faculty') return 'All Faculty'
+    return target
+  }
+
+  const getAudienceBadgeStyle = (target: string) => {
+    const t = target.toLowerCase()
+    if (t === 'all') return 'bg-blue-50 text-[#1455D9] border-blue-200'
+    if (t === 'students') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    if (t === 'faculty') return 'bg-purple-50 text-purple-700 border-purple-200'
+    if (t === 'hod') return 'bg-amber-50 text-amber-800 border-amber-300'
+    if (t === 'advisors') return 'bg-indigo-50 text-indigo-700 border-indigo-200'
+    if (t === 'lab_handlers') return 'bg-rose-50 text-rose-700 border-rose-200'
+    if (t.startsWith('year')) return 'bg-teal-50 text-teal-800 border-teal-200'
+    if (t.startsWith('sem')) return 'bg-cyan-50 text-cyan-800 border-cyan-200'
+    return 'bg-gray-50 text-gray-700 border-gray-200'
+  }
 
   const handleExportAllPDF = () => {
     generateAndDownloadPDF({
@@ -75,13 +145,14 @@ export function AdminAnnouncementsView({
           body: [
             `Total Published Notices: ${announcements.length} Official Circulars`,
             'Authorizing Body: Department of AI & DS Administration',
+            'Audience Targeting: All 8 Semesters, Academic Years I - IV, Class Advisors, Lab Handlers, and Leadership',
           ],
         },
         {
           heading: '2. DIGEST OF ACTIVE NOTICES',
           body: announcements.map(
             (a, idx) =>
-              `${idx + 1}. [${a.category}] ${a.title} — Target: ${a.target.toUpperCase()} | Date: ${a.createdAt}\n${a.content}`
+              `${idx + 1}. [${a.category}] ${a.title} — Target: ${getAudienceLabel(a.target)} | Date: ${a.createdAt}\n${a.content}`
           ),
         },
       ],
@@ -100,7 +171,7 @@ export function AdminAnnouncementsView({
           heading: `SUBJECT: ${ann.title.toUpperCase()}`,
           body: [
             ann.content,
-            `Target Audience: ${ann.target.toUpperCase()} ${ann.targetSpecific ? `(${ann.targetSpecific})` : ''}`,
+            `Target Audience: ${getAudienceLabel(ann.target)} ${ann.targetSpecific ? `(${ann.targetSpecific})` : ''}`,
             `Date of Issue: ${ann.createdAt}`,
             `Authorized Authority: ${ann.createdByName}`,
           ],
@@ -156,7 +227,7 @@ export function AdminAnnouncementsView({
           target: 'ALL',
           targetSpecific: '',
         })
-        alert('Circular dispatched and saved to database!')
+        alert('Circular dispatched and saved to database successfully!')
       } else {
         alert(result.message || 'Failed to dispatch circular')
       }
@@ -213,13 +284,11 @@ export function AdminAnnouncementsView({
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Department Communications
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Multi-Target Broadcast</span>
+            <span className="text-xs text-gray-300 font-medium">· Multi-Target Broadcast across 8 Semesters</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Official Circulars &amp; Notices</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            {announcements.length > 0
-              ? `Real-time management of ${announcements.length} departmental announcements`
-              : 'Announcement board is ready for real circulars'}
+            Broadcast official notices to all students, faculty, HOD, specific academic years (1 - 4), or individual semesters (1 - 8)
           </p>
         </div>
 
@@ -237,7 +306,7 @@ export function AdminAnnouncementsView({
             onClick={handleExportAllPDF}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
           >
-            <Download className="w-4 h-4" /> Export All (PDF)
+            <Download className="w-4 h-4 text-[#F4C430]" /> Export All (PDF)
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -254,26 +323,53 @@ export function AdminAnnouncementsView({
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search circulars, subject, keyword..."
+            placeholder="Search circulars, subject, target..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20 font-medium"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <select
-            value={targetFilter}
-            onChange={(e) => setTargetFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
-          >
-            <option value="ALL">All Audiences</option>
-            <option value="students">Students Only</option>
-            <option value="faculty">Faculty Only</option>
-          </select>
+        <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto">
+          {/* Target Audience Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Audience:</span>
+            <select
+              value={targetFilter}
+              onChange={(e) => setTargetFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All Audiences</option>
+              {TARGET_AUDIENCE_OPTIONS.map((grp) => (
+                <optgroup key={grp.group} label={grp.group}>
+                  {grp.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
 
-          <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200">
-            Showing {filteredAnnouncements.length} Notices
+          {/* Category Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Category:</span>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All Categories</option>
+              <option value="ACADEMIC">Academic / Exam</option>
+              <option value="PLACEMENT">Placement &amp; Training</option>
+              <option value="SYMPOSIUM">Events &amp; Symposiums</option>
+              <option value="GENERAL">General Notice</option>
+            </select>
+          </div>
+
+          <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
+            Showing {filteredAnnouncements.length} of {announcements.length} Notices
           </span>
         </div>
       </div>
@@ -281,10 +377,10 @@ export function AdminAnnouncementsView({
       {/* Announcements List / Empty State */}
       {filteredAnnouncements.length === 0 ? (
         <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center shadow-xs">
-          <Megaphone className="w-12 h-12 text-amber-300 mx-auto mb-3" />
+          <Megaphone className="w-12 h-12 text-amber-400 mx-auto mb-3" />
           <h3 className="font-bold text-base text-[#071A3D] mb-1">No Announcements Published Yet</h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
-            Click &ldquo;+ Issue New Circular&rdquo; to publish notices and instructions.
+            Click &ldquo;+ Issue New Circular&rdquo; to publish notices and instructions to any of the 8 semesters or target groups.
           </p>
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -298,64 +394,72 @@ export function AdminAnnouncementsView({
           {filteredAnnouncements.map((a) => (
             <div
               key={a.id}
-              className="p-5 rounded-3xl bg-white border border-gray-200 hover:border-[#1455D9]/40 hover:shadow-lg transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              className="bg-white rounded-3xl border border-gray-200 p-5 sm:p-6 shadow-xs hover:border-[#1455D9] transition-all space-y-3 relative group"
             >
-              <div className="space-y-1.5 max-w-3xl">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                      a.category === 'ACADEMIC'
-                        ? 'bg-blue-100 text-[#1455D9]'
-                        : a.category === 'PLACEMENT'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-purple-100 text-purple-800'
-                    }`}
-                  >
-                    {a.category}
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 font-mono text-[10px] font-bold uppercase">
-                    Target: {a.target}
-                  </span>
-                  <span className="text-[11px] text-gray-400 font-medium">{a.createdAt}</span>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-[#1455D9] border border-blue-200">
+                      {a.category}
+                    </span>
+                    <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-black border', getAudienceBadgeStyle(a.target))}>
+                      Target: {getAudienceLabel(a.target)}
+                    </span>
+                    <span className="text-xs text-gray-400 font-mono font-medium">
+                      {a.createdAt}
+                    </span>
+                  </div>
+                  <h3 className="font-black text-base text-[#071A3D]">{a.title}</h3>
                 </div>
 
-                <h3 className="text-base font-bold text-[#071A3D]">{a.title}</h3>
-                <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-line">{a.content}</p>
-
-                <p className="text-[11px] text-gray-400 font-medium">Issued by: {a.createdByName}</p>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleDownloadCircular(a)}
+                    className="p-2 rounded-xl text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors border border-gray-100 cursor-pointer"
+                    title="Download Circular (PDF)"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(a.id)}
+                    className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors border border-gray-100 cursor-pointer"
+                    title="Delete Notice"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0">
-                <button
-                  onClick={() => handleDownloadCircular(a)}
-                  className="px-3.5 py-2 rounded-xl bg-blue-50 text-[#1455D9] hover:bg-blue-100 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" /> Stamped Circular (PDF)
-                </button>
+              <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50/60 p-3.5 rounded-2xl border border-gray-100 font-medium">
+                {a.content}
+              </p>
 
-                <button
-                  onClick={() => handleDelete(a.id)}
-                  className="p-2 rounded-xl text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                  title="Delete Notice"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+              <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1 font-medium">
+                <span>Authorized by: <strong className="text-gray-600">{a.createdByName || 'System Administrator'}</strong></span>
+                <span className="font-mono">Official Circular · V.S.B. AI &amp; DS</span>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* MODAL: BROADCAST NOTICE */}
+      {/* ========================================================================= */}
+      {/* MODAL: ISSUE OFFICIAL CIRCULAR WITH COMPREHENSIVE TARGET AUDIENCES */}
+      {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Issue Official Department Circular</h3>
-                <p className="text-xs text-gray-500">Instant Broadcast &amp; Database Save</p>
+                <h3 className="text-lg font-black text-[#071A3D]">
+                  Issue Official Department Circular
+                </h3>
+                <p className="text-xs text-gray-500">Instant multi-target broadcast across all 8 semesters</p>
               </div>
-              <button onClick={() => setIsAddModalOpen(false)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -369,21 +473,27 @@ export function AdminAnnouncementsView({
                   placeholder="e.g. Schedule for Anna University End-Semester Practical Examinations"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Target Audience</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Target Audience *</label>
                   <select
                     value={formData.target}
                     onChange={(e) => setFormData({ ...formData, target: e.target.value, targetSpecific: '' })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D] bg-white"
                   >
-                    <option value="ALL">All Students &amp; Faculty</option>
-                    <option value="students">All Students</option>
-                    <option value="faculty">All Faculty</option>
+                    {TARGET_AUDIENCE_OPTIONS.map((grp) => (
+                      <optgroup key={grp.group} label={grp.group}>
+                        {grp.options.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
 
@@ -392,7 +502,7 @@ export function AdminAnnouncementsView({
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D] bg-white"
                   >
                     <option value="ACADEMIC">Academic / Exam</option>
                     <option value="PLACEMENT">Placement &amp; Training</option>
@@ -400,6 +510,12 @@ export function AdminAnnouncementsView({
                     <option value="GENERAL">General Notice</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Target Summary preview */}
+              <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-[#1455D9] flex items-center justify-between text-[11px] font-bold">
+                <span>Broadcast Recipient:</span>
+                <span className="font-extrabold">{getAudienceLabel(formData.target)}</span>
               </div>
 
               <div>
@@ -410,7 +526,7 @@ export function AdminAnnouncementsView({
                   placeholder="Detailed instructions, dates, deadlines and compliance notes..."
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
                 />
               </div>
 
