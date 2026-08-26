@@ -48,13 +48,268 @@ export const ALL_SEMESTERS_LABS = {
   ],
 }
 
-// Dynamic Knowledge Base Query Engine using real database records & institutional curriculum
+// Universal Real-Time Database Query Engine
 async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string; suggestions: string[] }> {
-  const q = query.toLowerCase().trim()
+  const rawQ = query.trim()
+  const q = rawQ.toLowerCase()
 
   try {
     // -------------------------------------------------------------------------
-    // 1. SPECIFIC LABS / PRACTICALS (2nd Year, 3rd Year, 4th Year, 1st Year, All Semesters)
+    // 1. LIVE STUDENT LOOKUP (Search by Register Number, Name, Year/Sem)
+    // -------------------------------------------------------------------------
+    if (
+      q.includes('student') ||
+      q.includes('register') ||
+      q.includes('reg') ||
+      /\d{4,}/.test(q) || // contains number like 922522AD001
+      q.includes('roster')
+    ) {
+      // Find matching students in live SQLite DB
+      const cleanKeywords = q.replace(/student|who is|details of|about|find|search|is|the|tell me/gi, '').trim()
+
+      const students = await prisma.student.findMany({
+        where: cleanKeywords.length > 1
+          ? {
+              OR: [
+                { registerNumber: { contains: cleanKeywords } },
+                { section: { contains: cleanKeywords } },
+              ],
+            }
+          : undefined,
+        take: 10,
+      })
+
+      // Also search users
+      const studentUsers = await prisma.user.findMany({
+        where: {
+          role: 'student',
+          ...(cleanKeywords.length > 1 ? { name: { contains: cleanKeywords } } : {}),
+        },
+        take: 10,
+      })
+
+      if (students.length > 0 || studentUsers.length > 0) {
+        // Collect detailed info
+        const allStudentDetails = []
+        for (const s of students) {
+          const u = await prisma.user.findUnique({ where: { id: s.userId } }).catch(() => null)
+          allStudentDetails.push(
+            `• **${s.registerNumber}** — ${u?.name || 'Student'} | Year ${s.year} (Sem ${s.semester}) · Sec ${s.section} | Email: ${u?.email || 'N/A'}`
+          )
+        }
+
+        if (allStudentDetails.length > 0) {
+          return {
+            answer: `🎓 **Live Database Student Records (${allStudentDetails.length} found):**\n\n${allStudentDetails.join('\n')}\n\n*Manage and view complete student records in **Students Roster**.*`,
+            suggestions: ['Faculty directorate?', 'HOD leadership?', 'Academic calendar?'],
+          }
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 2. LIVE FACULTY LOOKUP (Search by Faculty ID, Name, Subject, Advisor)
+    // -------------------------------------------------------------------------
+    if (
+      q.includes('faculty') ||
+      q.includes('teacher') ||
+      q.includes('professor') ||
+      q.includes('mentor') ||
+      q.includes('advisor') ||
+      q.includes('handler') ||
+      q.includes('dr.') ||
+      q.includes('mr.') ||
+      q.includes('mrs.') ||
+      q.includes('fac')
+    ) {
+      const cleanKeywords = q.replace(/faculty|teacher|professor|advisor|who is|details of|about|find|dr\.|mr\.|mrs\./gi, '').trim()
+
+      const facultyList = await prisma.faculty.findMany({
+        take: 15,
+      })
+      const facultyUsers = await prisma.user.findMany({
+        where: { role: 'faculty' },
+        take: 15,
+      })
+
+      if (facultyList.length > 0 || facultyUsers.length > 0) {
+        const matchingFaculty = []
+
+        for (const f of facultyList) {
+          const u = facultyUsers.find((user) => user.id === f.userId)
+          const name = u?.name || 'Faculty'
+          const email = u?.email || 'N/A'
+
+          if (
+            cleanKeywords.length === 0 ||
+            name.toLowerCase().includes(cleanKeywords) ||
+            f.facultyId.toLowerCase().includes(cleanKeywords) ||
+            f.specialization.toLowerCase().includes(cleanKeywords) ||
+            (f.subjectName && f.subjectName.toLowerCase().includes(cleanKeywords)) ||
+            (f.advisorBatch && f.advisorBatch.toLowerCase().includes(cleanKeywords))
+          ) {
+            matchingFaculty.push(
+              `• **${name}** (${f.facultyId}) — ${f.designation}\n  - **Specialization:** ${f.specialization}\n  - **Handling Course:** ${f.subjectName || 'Assigned Subjects'}\n  - **Class Advisor:** ${f.advisorBatch || 'General Staff'}\n  - **Contact:** ${email}`
+            )
+          }
+        }
+
+        if (matchingFaculty.length > 0) {
+          return {
+            answer: `👨‍🏫 **Live Faculty Directorate Records (${matchingFaculty.length} staff):**\n\n${matchingFaculty.join('\n\n')}\n\n*Full profiles and schedules can be viewed under **Faculty Directorate**.*`,
+            suggestions: ['HOD leadership?', 'Labs for 2nd year?', 'Daily bell timings?'],
+          }
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. LIVE HOD LOOKUP (Head of Department)
+    // -------------------------------------------------------------------------
+    if (q.includes('hod') || q.includes('head') || q.includes('leadership') || q.includes('department head')) {
+      const hodRecords = await prisma.hOD.findMany()
+      const hodUsers = await prisma.user.findMany({ where: { role: 'hod' } })
+
+      if (hodRecords.length > 0 || hodUsers.length > 0) {
+        const hodDetails = []
+        for (const h of hodRecords) {
+          const u = hodUsers.find((user) => user.id === h.userId)
+          hodDetails.push(
+            `• **${u?.name || 'Prof. Dr. V. Sundar'}** (${h.facultyId})\n  - **Designation:** ${h.designation}\n  - **Qualification:** ${h.qualification} (${h.experience} Years Exp)\n  - **Department:** ${h.department}\n  - **Email:** ${u?.email || 'hod.ai@vsb.edu.in'}\n  - **Phone:** ${u?.phone || '+91 94431 87654'}`
+          )
+        }
+
+        return {
+          answer: `👑 **Head of Department (HOD) — Live Record:**\n\n${hodDetails.join('\n\n')}\n\n*Main Office: Administrative Block - Department of AI & DS.*`,
+          suggestions: ['Faculty directorate?', 'Who are the administrators?', 'Academic calendar?'],
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. LIVE ANNOUNCEMENTS / CIRCULARS LOOKUP
+    // -------------------------------------------------------------------------
+    if (
+      q.includes('announcement') ||
+      q.includes('circular') ||
+      q.includes('notice') ||
+      q.includes('news') ||
+      q.includes('broadcast') ||
+      q.includes('update')
+    ) {
+      const announcements = await prisma.announcement.findMany({
+        where: { isPublished: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      })
+
+      if (announcements.length > 0) {
+        const list = announcements.map(
+          (a, i) =>
+            `${i + 1}. **[${a.category}] ${a.title}**\n   Target: *${a.target}* | Authorized: *${a.createdByName}*\n   ${a.content}`
+        )
+
+        return {
+          answer: `📢 **Latest Official Department Circulars (${announcements.length} active notices):**\n\n${list.join('\n\n')}\n\n*Download official circular PDFs in the **Announcements** section.*`,
+          suggestions: ['Academic calendar?', 'Labs for 2nd year?', 'Daily bell timings?'],
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. LIVE EVENTS & HACKATHONS LOOKUP
+    // -------------------------------------------------------------------------
+    if (
+      q.includes('event') ||
+      q.includes('hackathon') ||
+      q.includes('symposium') ||
+      q.includes('workshop') ||
+      q.includes('seminar')
+    ) {
+      const events = await prisma.event.findMany({
+        orderBy: { date: 'asc' },
+        take: 6,
+      })
+
+      if (events.length > 0) {
+        const list = events.map(
+          (e, i) =>
+            `• **${e.name}** (${e.category || 'Technical'})\n  - Date: ${new Date(e.date).toLocaleDateString()} | Venue: ${e.venue}\n  - ${e.description}`
+        )
+
+        return {
+          answer: `🎉 **Scheduled Department Events & Symposia (${events.length} programs):**\n\n${list.join('\n\n')}\n\n*Register directly under **Events & Symposia**!*`,
+          suggestions: ['Academic calendar?', 'Capstone projects?', 'Labs for 2nd year?'],
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 6. LIVE CAPSTONE PROJECTS LOOKUP
+    // -------------------------------------------------------------------------
+    if (q.includes('project') || q.includes('capstone') || q.includes('mini project') || q.includes('prototype')) {
+      const projects = await prisma.project.findMany({
+        take: 6,
+        orderBy: { createdAt: 'desc' },
+      })
+
+      if (projects.length > 0) {
+        const list = projects.map(
+          (p) =>
+            `• **${p.title}**\n  - Domain: ${p.domain} | Status: *${p.status}*\n  - Guide: ${p.guideName || 'Faculty Guide'}\n  - ${p.description}`
+        )
+
+        return {
+          answer: `🚀 **Active Department Capstone Projects (${projects.length} teams):**\n\n${list.join('\n\n')}\n\n*Submit project reports and code repositories under **Capstone Projects**.*`,
+          suggestions: ['Submit project?', 'Faculty directorate?', 'Study resources?'],
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. LIVE STUDY RESOURCES & E-BOOKS LOOKUP
+    // -------------------------------------------------------------------------
+    if (q.includes('resource') || q.includes('book') || q.includes('notes') || q.includes('material') || q.includes('pdf')) {
+      const resources = await prisma.resource.findMany({
+        take: 8,
+        orderBy: { createdAt: 'desc' },
+      })
+
+      if (resources.length > 0) {
+        const list = resources.map(
+          (r) => `• **${r.name}** (${r.fileType}) · Subject ID: *${r.subjectId || 'General AI & DS'}*`
+        )
+
+        return {
+          answer: `📚 **Live Digital Study Resources (${resources.length} files available):**\n\n${list.join('\n')}\n\n*Instant 1-click downloads are available under **Study Resources**.*`,
+          suggestions: ['Question papers?', 'Labs for 2nd year?', 'Daily bell timings?'],
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. LIVE QUESTION PAPERS BANK LOOKUP
+    // -------------------------------------------------------------------------
+    if (q.includes('question') || q.includes('paper') || q.includes('exam') || q.includes('iat') || q.includes('model')) {
+      const papers = await prisma.questionPaper.findMany({
+        take: 8,
+        orderBy: { createdAt: 'desc' },
+      })
+
+      if (papers.length > 0) {
+        const list = papers.map(
+          (p) => `• **${p.fileName}** — ${p.examType} | Year ${p.year} (Sem ${p.semester})`
+        )
+
+        return {
+          answer: `📝 **Examination Question Papers Bank (${papers.length} sets uploaded):**\n\n${list.join('\n')}\n\n*Download full question sets under **Question Papers**.*`,
+          suggestions: ['Study resources?', 'Academic calendar?', 'Labs for 2nd year?'],
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. SPECIFIC LABS / PRACTICALS (2nd Year, 3rd Year, 4th Year, 1st Year, All Semesters)
     // -------------------------------------------------------------------------
     const isLabQuery = q.includes('lab') || q.includes('practical') || q.includes('workshop') || q.includes('training')
 
@@ -153,7 +408,7 @@ async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string;
     }
 
     // -------------------------------------------------------------------------
-    // 2. DAILY SCHEDULE, TIMETABLE & BELL TIMINGS (8 PERIODS)
+    // 10. DAILY SCHEDULE, TIMETABLE & BELL TIMINGS (8 PERIODS)
     // -------------------------------------------------------------------------
     if (
       q.includes('timetable') ||
@@ -195,234 +450,76 @@ async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string;
     }
 
     // -------------------------------------------------------------------------
-    // 3. SUBJECTS / COURSES / SYLLABUS
+    // 11. GENERAL / FUZZY DATABASE SEARCH
     // -------------------------------------------------------------------------
-    if (q.includes('subject') || q.includes('course') || q.includes('syllabus') || q.includes('curriculum')) {
-      const subjects = await prisma.subject.findMany({
-        take: 20,
-        orderBy: { code: 'asc' },
-      })
+    const keywords = q.split(/\s+/).filter((w) => w.length > 2)
+    if (keywords.length > 0) {
+      const searchTerms = keywords.join(' ')
 
-      if (subjects.length === 0) {
+      const [matchedUsers, matchedAnnouncements, matchedEvents, matchedProjects] = await Promise.all([
+        prisma.user.findMany({
+          where: {
+            OR: [
+              { name: { contains: searchTerms } },
+              { email: { contains: searchTerms } },
+            ],
+          },
+          take: 5,
+        }).catch(() => []),
+        prisma.announcement.findMany({
+          where: {
+            OR: [
+              { title: { contains: searchTerms } },
+              { content: { contains: searchTerms } },
+            ],
+          },
+          take: 3,
+        }).catch(() => []),
+        prisma.event.findMany({
+          where: {
+            OR: [
+              { name: { contains: searchTerms } },
+              { description: { contains: searchTerms } },
+            ],
+          },
+          take: 3,
+        }).catch(() => []),
+        prisma.project.findMany({
+          where: {
+            OR: [
+              { title: { contains: searchTerms } },
+              { domain: { contains: searchTerms } },
+            ],
+          },
+          take: 3,
+        }).catch(() => []),
+      ])
+
+      const searchResults: string[] = []
+
+      if (matchedUsers.length > 0) {
+        searchResults.push(`**Users & Directorate Matches:**\n` + matchedUsers.map((u) => `• **${u.name}** (${u.role.toUpperCase()}) — ${u.email}`).join('\n'))
+      }
+      if (matchedAnnouncements.length > 0) {
+        searchResults.push(`**Circulars Matches:**\n` + matchedAnnouncements.map((a) => `• **${a.title}** (${a.category}) — ${a.content.slice(0, 100)}...`).join('\n'))
+      }
+      if (matchedEvents.length > 0) {
+        searchResults.push(`**Events Matches:**\n` + matchedEvents.map((e) => `• **${e.name}** at ${e.venue} (${new Date(e.date).toLocaleDateString()})`).join('\n'))
+      }
+      if (matchedProjects.length > 0) {
+        searchResults.push(`**Capstone Project Matches:**\n` + matchedProjects.map((p) => `• **${p.title}** (${p.domain}) — Status: ${p.status}`).join('\n'))
+      }
+
+      if (searchResults.length > 0) {
         return {
-          answer: `📚 **Department Curricular Scheme (Regulation 2021 Autonomous):**
-
-The AI & DS curriculum spans **8 Semesters** across Mathematics, Artificial Intelligence, Machine Learning, Deep Learning, Cloud Systems, Big Data, and Distributed Computing.
-
-Core subjects include:
-• **AD2301** - Object Oriented Programming in Java & C++
-• **AD2302** - Database Management Systems & NoSQL
-• **AD2401** - Machine Learning Algorithms & Neural Nets
-• **AD2501** - Deep Learning Architectures & PyTorch
-• **AD2601** - Natural Language Processing & Large Language Models
-
-*Download complete course syllabi under **Study Resources** and **Academics**.*`,
-          suggestions: ['Labs for 2nd year?', 'Labs for 3rd year?', 'Daily bell timings?'],
+          answer: `🔍 **Live Database Search Results for "${rawQ}":**\n\n${searchResults.join('\n\n')}`,
+          suggestions: ['Labs for 2nd year?', 'Faculty directorate?', 'Academic calendar?'],
         }
       }
-
-      const list = subjects
-        .map((s) => `• **${s.code}** - ${s.name} (${s.credits} Credits)`)
-        .join('\n')
-
-      return {
-        answer: `📚 **Core Academic Subjects (${subjects.length} registered):**\n\n${list}\n\nYou can download complete course packs and syllabi under **Study Resources**!`,
-        suggestions: ['Labs for 2nd year?', 'Question papers?', 'Daily bell timings?'],
-      }
     }
 
     // -------------------------------------------------------------------------
-    // 4. FACULTY / TEACHERS / DIRECTORATE
-    // -------------------------------------------------------------------------
-    if (q.includes('faculty') || q.includes('teacher') || q.includes('professor') || q.includes('mentor') || q.includes('advisor')) {
-      const facultyMembers = await prisma.faculty.findMany({
-        take: 20,
-      })
-      const facultyUsers = await prisma.user.findMany({
-        where: { role: 'faculty' },
-        select: { name: true, email: true, phone: true },
-      })
-
-      if (facultyMembers.length === 0 && facultyUsers.length === 0) {
-        return {
-          answer: `👨‍🏫 **Faculty Directorate (AI & DS Department):**
-
-Faculty professors, Class Advisors (Semesters 1 to 8), and Laboratory Instructors manage all academic and practical coursework.
-
-Staff roles:
-• **Class Advisors:** Assigned across Years 1 to 4 / Semesters 1 to 8
-• **Laboratory Handlers:** Handling OOP, DBMS, DSA, Machine Learning, Cloud, and Deep Learning practicals
-• **Faculty Mentors:** Continuous academic counseling & project guidance
-
-*View and manage faculty records under **Faculty Directorate**.*`,
-          suggestions: ['Who is the HOD?', 'Labs for 2nd year?', 'Who are the administrators?'],
-        }
-      }
-
-      const list = (facultyUsers.length > 0 ? facultyUsers : facultyMembers)
-        .map((f: any) => `• **${f.name || 'Faculty Member'}** - ${f.designation || 'Faculty'} (${f.email || 'Dept of AI & DS'})`)
-        .join('\n')
-
-      return {
-        answer: `👨‍🏫 **AI & DS Department Faculty Directorate:**\n\n${list}\n\nConnect directly with staff via the **Faculty Directorate** directory!`,
-        suggestions: ['HOD leadership?', 'Labs for 2nd year?', 'Daily bell timings?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 5. HOD / LEADERSHIP
-    // -------------------------------------------------------------------------
-    if (q.includes('hod') || q.includes('head') || q.includes('leadership') || q.includes('department head')) {
-      const hodUsers = await prisma.user.findMany({
-        where: { role: 'hod' },
-        select: { name: true, email: true, phone: true },
-      })
-
-      if (hodUsers.length === 0) {
-        return {
-          answer: `👑 **Head of Department (HOD) Leadership:**
-
-• **Department:** Artificial Intelligence & Data Science (AI & DS)
-• **Authority:** Academic, laboratory allocations, examination endorsements & student affairs.
-• **Office Location:** Main Administrative Block - AI & DS Department
-
-*Appoint or view the HOD profile under **HOD Leadership** in the admin sidebar.*`,
-          suggestions: ['Who are the administrators?', 'Faculty directorate?', 'Academic calendar?'],
-        }
-      }
-
-      const list = hodUsers
-        .map((h) => `• **${h.name}** - Head of Department (${h.email})`)
-        .join('\n')
-
-      return {
-        answer: `👑 **Department Leadership:**\n\n${list}\n\nOffice: Main Administrative Block - AI & DS Department`,
-        suggestions: ['Faculty directorate?', 'Who are the administrators?', 'Academic calendar?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 6. ADMINISTRATORS / GOVERNANCE
-    // -------------------------------------------------------------------------
-    if (q.includes('admin') || q.includes('administrator') || q.includes('super admin') || q.includes('governance')) {
-      const adminUsers = await prisma.user.findMany({
-        where: { role: 'admin' },
-        select: { name: true, email: true },
-      })
-
-      const list = adminUsers
-        .map((a) => `• **${a.name}** (${a.email}) - Tier-0 Root Super Administrator`)
-        .join('\n')
-
-      return {
-        answer: `🛡️ **Portal Governance & Administration:**\n\n${list || '• System Administrator (Tier-0 Super Admin)'}\n\nSuper Admin controls system settings, database management, and role-based permissions under **System Settings**.`,
-        suggestions: ['System settings?', 'Faculty directorate?', 'Academic calendar?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 7. EVENTS / HACKATHONS / SYMPOSIA
-    // -------------------------------------------------------------------------
-    if (q.includes('event') || q.includes('hackathon') || q.includes('workshop') || q.includes('symposium') || q.includes('seminar')) {
-      const events = await prisma.event.findMany({
-        take: 10,
-        orderBy: { date: 'asc' },
-      })
-
-      if (events.length === 0) {
-        return {
-          answer: `📅 **Events & Symposia:**\n\nThere are currently **no upcoming events or symposia scheduled** in the portal database.\n\nFaculty and coordinators can schedule new events under **Events & Symposia**.`,
-          suggestions: ['Academic calendar?', 'Student projects?', 'Study resources?'],
-        }
-      }
-
-      const list = events
-        .map((e) => `• **${e.name}** (${new Date(e.date).toLocaleDateString()}) - ${e.venue}`)
-        .join('\n')
-
-      return {
-        answer: `📅 **Scheduled Department Events:**\n\n${list}\n\nStudents can register directly under the **Events & Symposia** tab!`,
-        suggestions: ['How to register?', 'Student projects?', 'Academic calendar?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 8. PROJECTS / CAPSTONE REPOSITORIES
-    // -------------------------------------------------------------------------
-    if (q.includes('project') || q.includes('capstone') || q.includes('mini project') || q.includes('research')) {
-      const projects = await prisma.project.findMany({
-        take: 10,
-      })
-
-      if (projects.length === 0) {
-        return {
-          answer: `🚀 **Capstone Projects Repository:**\n\nStudent capstone projects are structured across **Year 3 Mini Projects (AD2614)**, **Year 4 Phase I (AD2711)**, and **Year 4 Phase II (AD2811)**.\n\nStudents and faculty guides can submit proposals and code repositories under **Capstone Projects**.`,
-          suggestions: ['Submit a project?', 'Faculty directorate?', 'Study resources?'],
-        }
-      }
-
-      const list = projects
-        .map((p) => `• **${p.title}** (${p.domain}) - Status: ${p.status}`)
-        .join('\n')
-
-      return {
-        answer: `🚀 **Department Capstone Projects:**\n\n${list}\n\nExplore project documentation and source code under **Capstone Projects**!`,
-        suggestions: ['Submit proposal?', 'Faculty guides?', 'Study resources?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 9. QUESTION PAPERS / PAST PAPERS / IAT
-    // -------------------------------------------------------------------------
-    if (q.includes('question') || q.includes('paper') || q.includes('exam') || q.includes('iat') || q.includes('test')) {
-      const papers = await prisma.questionPaper.findMany({
-        take: 10,
-      })
-
-      if (papers.length === 0) {
-        return {
-          answer: `📝 **Examination Question Papers:**\n\nQuestion paper archives cover IAT-1, IAT-2, Model Exams, and Anna University End-Semester examinations across all 8 semesters.\n\nFaculty can upload verified question papers under **Question Papers**.`,
-          suggestions: ['Academic calendar?', 'Study resources?', 'Attendance criteria?'],
-        }
-      }
-
-      const list = papers
-        .map((p) => `• **${p.fileName}** (${p.examType} - Year ${p.year})`)
-        .join('\n')
-
-      return {
-        answer: `📝 **Question Paper Archives:**\n\n${list}\n\nDownload full question sets under **Question Papers**!`,
-        suggestions: ['Study resources?', 'Academic calendar?', 'Subjects offered?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 10. STUDY RESOURCES / NOTES / BOOKS
-    // -------------------------------------------------------------------------
-    if (q.includes('resource') || q.includes('book') || q.includes('note') || q.includes('download') || q.includes('pdf') || q.includes('material')) {
-      const resources = await prisma.resource.findMany({
-        take: 10,
-      })
-
-      if (resources.length === 0) {
-        return {
-          answer: `📚 **Digital Study Resources:**\n\nStandard textbooks, lecture slide decks, lab manuals, and question banks are organized under **Study Resources** for all 8 Semesters.`,
-          suggestions: ['Question papers?', 'Academic calendar?', 'Labs for 2nd year?'],
-        }
-      }
-
-      const list = resources
-        .map((r) => `• **${r.name}** (${r.fileType})`)
-        .join('\n')
-
-      return {
-        answer: `📚 **Available Study Resources:**\n\n${list}\n\n1-click downloads are available under **Study Resources**!`,
-        suggestions: ['Question papers?', 'Academic calendar?', 'Subjects offered?'],
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 11. ATTENDANCE REGULATIONS & POLICIES
+    // 12. ATTENDANCE REGULATIONS & POLICIES
     // -------------------------------------------------------------------------
     if (q.includes('attend') || q.includes('leave') || q.includes('od') || q.includes('condonation') || q.includes('percent')) {
       return {
@@ -432,7 +529,7 @@ Staff roles:
     }
 
     // -------------------------------------------------------------------------
-    // 12. WORKING DAYS / ACADEMIC CALENDAR
+    // 13. WORKING DAYS / ACADEMIC CALENDAR
     // -------------------------------------------------------------------------
     if (q.includes('calendar') || q.includes('working day') || q.includes('regulation') || q.includes('term')) {
       return {
@@ -442,7 +539,7 @@ Staff roles:
     }
 
     // -------------------------------------------------------------------------
-    // 13. INSTITUTIONAL IDENTITY / ADDRESS / CONTACT
+    // 14. INSTITUTIONAL IDENTITY / ADDRESS / CONTACT
     // -------------------------------------------------------------------------
     if (q.includes('college') || q.includes('address') || q.includes('contact') || q.includes('phone') || q.includes('location') || q.includes('vsb')) {
       return {
@@ -455,18 +552,20 @@ Staff roles:
   }
 
   // ---------------------------------------------------------------------------
-  // 14. DEFAULT WELCOME / OVERVIEW
+  // 15. DEFAULT WELCOME / OVERVIEW
   // ---------------------------------------------------------------------------
   return {
     answer: `👋 Welcome to the **V.S.B. AI & DS Portal Assistant**!
 
 I provide real-time information directly from the live institutional database:
+• 🎓 **Live Student Records & Class Rosters**
+• 👨‍🏫 **Faculty Directorate & Class Advisors**
+• 👑 **Head of Department (HOD) Leadership**
+• 📢 **Official Circulars & Broadcast Notices**
 • 🔬 **8 Semesters Practical Laboratories & Timetables**
 • ⏰ **8 Periods Daily Bell Timings (09:15 AM - 04:30 PM)**
 • 📚 **Curricular Subjects & Syllabus (Regulation 2021)**
-• 👨‍🏫 **Faculty Directorate & HOD Leadership**
 • 📅 **Events, Symposia & Academic Calendar**
-• 📝 **IAT & Semester Question Papers**
 • 📋 **Attendance Regulations (75% Minimum)**
 
 How can I help you today?`,
