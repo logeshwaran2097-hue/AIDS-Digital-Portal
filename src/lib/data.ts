@@ -155,7 +155,7 @@ export async function getFacultyData(userId: string) {
         subjectName: 'Machine Learning Foundations',
         classDay: 'Monday, Wednesday, Friday',
         classPeriod: 'Period 1',
-        classTime: '09:00 AM - 09:50 AM',
+        classTime: '09:15 AM - 10:00 AM',
         advisorBatch: 'Year II - Sem 4 - Sec A',
         advisorYear: 2,
         advisorSem: 4,

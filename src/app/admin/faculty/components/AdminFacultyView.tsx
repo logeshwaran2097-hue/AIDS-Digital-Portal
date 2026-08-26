@@ -35,6 +35,8 @@ import {
   MessageSquare,
   Check,
   FlaskConical,
+  Coffee,
+  Utensils,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { cn } from '@/lib/utils'
@@ -75,28 +77,28 @@ interface StudentInClass {
 }
 
 const DEFAULT_SUBJECT_HANDLERS = [
-  { code: 'AD2301', name: 'Data Structures & Algorithms', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Wed, Fri', period: 'Period 1', time: '09:00 AM - 09:50 AM' },
-  { code: 'AD2302', name: 'Database Management Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 40, day: 'Tue, Thu', period: 'Period 2, Period 4', time: '09:50 AM - 10:40 AM, 11:45 AM - 12:35 PM' },
-  { code: 'AD2303', name: 'Discrete Mathematics', credits: 4, handler: 'Mr. S. Arun', hours: 45, day: 'Mon, Wed', period: 'Period 3', time: '10:55 AM - 11:45 AM' },
-  { code: 'AD2304', name: 'Operating Systems & System Software', credits: 3, handler: 'Mrs. R. Priya', hours: 38, day: 'Tue, Fri', period: 'Period 4, Period 8', time: '11:45 AM - 12:35 PM, 04:05 PM - 04:55 PM' },
-  { code: 'AD2305', name: 'Machine Learning Foundations', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Thu', period: 'Period 2, Period 5', time: '09:50 AM - 10:40 AM, 01:25 PM - 02:15 PM' },
-  { code: 'AD2306', name: 'Artificial Intelligence & Expert Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 36, day: 'Wed, Fri', period: 'Period 6, Period 7', time: '02:15 PM - 03:05 PM, 03:15 PM - 04:05 PM' },
-  { code: 'AD2307', name: 'Data Science Tools & Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Thu', period: 'Lab Session (AN)', time: '01:25 PM - 04:05 PM' },
+  { code: 'AD2301', name: 'Data Structures & Algorithms', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Wed, Fri', period: 'Period 1', time: '09:15 AM - 10:00 AM' },
+  { code: 'AD2302', name: 'Database Management Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 40, day: 'Tue, Thu', period: 'Period 2, Period 4', time: '10:00 AM - 10:45 AM, 11:45 AM - 12:30 PM' },
+  { code: 'AD2303', name: 'Discrete Mathematics', credits: 4, handler: 'Mr. S. Arun', hours: 45, day: 'Mon, Wed', period: 'Period 3', time: '11:00 AM - 11:45 AM' },
+  { code: 'AD2304', name: 'Operating Systems & System Software', credits: 3, handler: 'Mrs. R. Priya', hours: 38, day: 'Tue, Fri', period: 'Period 4, Period 8', time: '11:45 AM - 12:30 PM, 03:50 PM - 04:30 PM' },
+  { code: 'AD2305', name: 'Machine Learning Foundations', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Thu', period: 'Period 2, Period 5', time: '10:00 AM - 10:45 AM, 01:20 PM - 02:05 PM' },
+  { code: 'AD2306', name: 'Artificial Intelligence & Expert Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 36, day: 'Wed, Fri', period: 'Period 6, Period 7', time: '02:05 PM - 02:50 PM, 03:05 PM - 03:50 PM' },
+  { code: 'AD2307', name: 'Data Science Tools & Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Thu', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
 ]
 
-// All 8 Periods + Dedicated Lab Sessions
+// Exact 8 Periods & Institutional Bell Timings
 const PERIOD_LIST = [
-  { id: 'P1', name: 'Period 1', time: '09:00 AM - 09:50 AM', isLab: false },
-  { id: 'P2', name: 'Period 2', time: '09:50 AM - 10:40 AM', isLab: false },
-  { id: 'P3', name: 'Period 3', time: '10:55 AM - 11:45 AM', isLab: false },
-  { id: 'P4', name: 'Period 4', time: '11:45 AM - 12:35 PM', isLab: false },
-  { id: 'P5', name: 'Period 5', time: '01:25 PM - 02:15 PM', isLab: false },
-  { id: 'P6', name: 'Period 6', time: '02:15 PM - 03:05 PM', isLab: false },
-  { id: 'P7', name: 'Period 7', time: '03:15 PM - 04:05 PM', isLab: false },
-  { id: 'P8', name: 'Period 8', time: '04:05 PM - 04:55 PM', isLab: false },
-  { id: 'LAB_FN', name: 'Lab Session (FN)', time: '09:00 AM - 12:35 PM', isLab: true },
-  { id: 'LAB_AN', name: 'Lab Session (AN)', time: '01:25 PM - 04:05 PM', isLab: true },
-  { id: 'LAB_FULL', name: 'Lab Session (P5-P8)', time: '01:25 PM - 04:55 PM', isLab: true },
+  { id: 'P1', name: 'Period 1', time: '09:15 AM - 10:00 AM', isLab: false },
+  { id: 'P2', name: 'Period 2', time: '10:00 AM - 10:45 AM', isLab: false },
+  { id: 'P3', name: 'Period 3', time: '11:00 AM - 11:45 AM', isLab: false },
+  { id: 'P4', name: 'Period 4', time: '11:45 AM - 12:30 PM', isLab: false },
+  { id: 'P5', name: 'Period 5', time: '01:20 PM - 02:05 PM', isLab: false },
+  { id: 'P6', name: 'Period 6', time: '02:05 PM - 02:50 PM', isLab: false },
+  { id: 'P7', name: 'Period 7', time: '03:05 PM - 03:50 PM', isLab: false },
+  { id: 'P8', name: 'Period 8', time: '03:50 PM - 04:30 PM', isLab: false },
+  { id: 'LAB_FN', name: 'Lab Session (FN)', time: '09:15 AM - 12:30 PM', isLab: true },
+  { id: 'LAB_AN', name: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM', isLab: true },
+  { id: 'LAB_FULL', name: 'Lab Session (P5-P8)', time: '01:20 PM - 04:30 PM', isLab: true },
 ]
 
 const DAYS_OF_WEEK = [
@@ -153,7 +155,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     subjectName: '',
     classDay: 'Mon, Wed, Fri',
     classPeriod: 'Period 1',
-    classTime: '09:00 AM - 09:50 AM',
+    classTime: '09:15 AM - 10:00 AM',
     advisorBatch: '',
     advisorYear: 2,
     advisorSem: 4,
@@ -355,7 +357,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               const sName = f.subjectName || 'Artificial Intelligence'
               const sDay = f.classDay || 'Mon, Wed, Fri'
               const sPeriod = f.classPeriod || 'Period 1'
-              const sTime = f.classTime || '09:00 AM - 09:50 AM'
+              const sTime = f.classTime || '09:15 AM - 10:00 AM'
               return `${idx + 1}. ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
             }
           }),
@@ -455,7 +457,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           subjectName: '',
           classDay: 'Mon, Wed, Fri',
           classPeriod: 'Period 1',
-          classTime: '09:00 AM - 09:50 AM',
+          classTime: '09:15 AM - 10:00 AM',
           advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
           advisorYear: 2,
           advisorSem: 4,
@@ -593,7 +595,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; Cadre</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Separated into dedicated pages for <strong>Class Advisors</strong> and <strong>Subject Handlers (8 Periods &amp; Lab Sessions)</strong>
+            Separated into dedicated pages for <strong>Class Advisors</strong> and <strong>Subject Handlers (8 Periods: 09:15 AM – 04:30 PM &amp; Labs)</strong>
           </p>
         </div>
 
@@ -621,7 +623,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 subjectName: '',
                 classDay: 'Mon, Wed, Fri',
                 classPeriod: 'Period 1',
-                classTime: '09:00 AM - 09:50 AM',
+                classTime: '09:15 AM - 10:00 AM',
                 advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
                 advisorYear: 2,
                 advisorSem: 4,
@@ -700,7 +702,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
                 <div>
                   <h4 className="font-black text-sm text-[#071A3D]">Page 2: Subject Handlers</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">8 Periods, Lab Sessions, Multi-Day Schedules &amp; Timings</p>
+                  <p className="text-[11px] text-gray-500 font-medium">8 Periods (09:15 AM - 04:30 PM), Lab Slots, Schedules &amp; Timings</p>
                 </div>
               </div>
               <span className={cn(
@@ -771,6 +773,31 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         )}
       </div>
 
+      {/* Institutional Bell Schedule & Break Times Summary Bar */}
+      <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-amber-50 rounded-2xl p-3.5 border border-blue-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 font-black text-[#071A3D]">
+          <Clock className="w-4 h-4 text-[#1455D9]" />
+          <span>Official Daily Schedule (8 Periods):</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5 font-bold">
+          <span className="px-2.5 py-1 rounded-xl bg-white border border-gray-200 text-[#071A3D] shadow-2xs">
+            🌅 Morning: 09:15 AM - 12:30 PM (P1 - P4)
+          </span>
+          <span className="px-2.5 py-1 rounded-xl bg-amber-100/80 text-amber-900 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+            <Coffee className="w-3 h-3 text-amber-700" /> Morning Tea: 10:45 - 11:00 AM
+          </span>
+          <span className="px-2.5 py-1 rounded-xl bg-amber-100/80 text-amber-900 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+            <Utensils className="w-3 h-3 text-amber-700" /> Lunch: 12:30 - 01:20 PM
+          </span>
+          <span className="px-2.5 py-1 rounded-xl bg-white border border-gray-200 text-[#071A3D] shadow-2xs">
+            🌇 Afternoon: 01:20 PM - 04:30 PM (P5 - P8)
+          </span>
+          <span className="px-2.5 py-1 rounded-xl bg-amber-100/80 text-amber-900 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+            <Coffee className="w-3 h-3 text-amber-700" /> Evening Tea: 02:50 - 03:05 PM
+          </span>
+        </div>
+      </div>
+
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
@@ -789,9 +816,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           <p className="text-[10px] text-purple-700 font-medium mt-1">Curriculum &amp; Lab Sessions</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Department</p>
-          <p className="text-2xl font-black text-amber-700 mt-0.5">B.Tech AI &amp; DS</p>
-          <p className="text-[10px] text-amber-700 font-medium mt-1">8 Periods &amp; Practical Labs</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Daily Matrix</p>
+          <p className="text-2xl font-black text-amber-700 mt-0.5">8 Periods</p>
+          <p className="text-[10px] text-amber-700 font-medium mt-1">09:15 AM - 04:30 PM &amp; Labs</p>
         </div>
       </div>
 
@@ -804,7 +831,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             placeholder={
               activeTab === 'advisors'
                 ? 'Search advisors by name or batch...'
-                : 'Search handlers by name, subject name, days, period, or lab...'
+                : 'Search handlers by name, subject, days, period, or lab...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -972,7 +999,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               subjectName: advisor.subjectName || '',
                               classDay: advisor.classDay || 'Mon, Wed, Fri',
                               classPeriod: advisor.classPeriod || 'Period 1',
-                              classTime: advisor.classTime || '09:00 AM - 09:50 AM',
+                              classTime: advisor.classTime || '09:15 AM - 10:00 AM',
                               advisorBatch: advisor.advisorBatch || 'Year II - Sem 4 - Sec A',
                               advisorYear: advisor.advisorYear || 2,
                               advisorSem: advisor.advisorSem || 4,
@@ -1036,7 +1063,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2305'
                   const dayList = handler.classDay ? handler.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Mon', 'Wed', 'Fri']
                   const periodList = handler.classPeriod ? handler.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Period 1']
-                  const timeDisplay = handler.classTime || '09:00 AM - 09:50 AM'
+                  const timeDisplay = handler.classTime || '09:15 AM - 10:00 AM'
 
                   return (
                     <tr key={handler.id} className="hover:bg-blue-50/30 transition-colors">
@@ -1139,7 +1166,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 subjectName: handler.subjectName || '',
                                 classDay: handler.classDay || 'Mon, Wed, Fri',
                                 classPeriod: handler.classPeriod || 'Period 1',
-                                classTime: handler.classTime || '09:00 AM - 09:50 AM',
+                                classTime: handler.classTime || '09:15 AM - 10:00 AM',
                                 advisorBatch: handler.advisorBatch || '',
                                 advisorYear: handler.advisorYear || 2,
                                 advisorSem: handler.advisorSem || 4,
@@ -1260,7 +1287,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 { id: 'students', label: '1. Student Roll Roster', icon: <Users className="w-3.5 h-3.5" />, count: classStudents.length },
                 { id: 'handlers', label: '2. Subjects & Handlers', icon: <BookMarked className="w-3.5 h-3.5" />, count: DEFAULT_SUBJECT_HANDLERS.length },
                 { id: 'attendance', label: '3. Defaulters Watch (<75%)', icon: <AlertTriangle className="w-3.5 h-3.5" />, count: classStudents.filter((s) => s.attendancePercent < 75).length },
-                { id: 'timetable', label: '4. Class Timetable (8 Periods & Labs)', icon: <Clock className="w-3.5 h-3.5" /> },
+                { id: 'timetable', label: '4. Class Timetable (8 Periods & Breaks)', icon: <Clock className="w-3.5 h-3.5" /> },
                 { id: 'notices', label: '5. Class Notices', icon: <MessageSquare className="w-3.5 h-3.5" /> },
               ].map((t) => (
                 <button
@@ -1446,12 +1473,21 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* TAB 4: TIMETABLE (8 FULL PERIODS) */}
+              {/* TAB 4: TIMETABLE (8 FULL PERIODS & BREAKS) */}
               {dossierTab === 'timetable' && (
                 <div className="space-y-4 animate-fade-in">
-                  <div>
-                    <h4 className="font-black text-sm text-[#071A3D]">Weekly Class Timetable &amp; Schedule (8 Periods &amp; Labs)</h4>
-                    <p className="text-gray-500 text-[11px]">Room 204, AI Block · Mon – Fri (09:00 AM – 04:55 PM)</p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="font-black text-sm text-[#071A3D]">Weekly Class Timetable &amp; Schedule (8 Periods &amp; Break Slots)</h4>
+                      <p className="text-gray-500 text-[11px]">Room 204, AI Block · Mon – Fri (09:15 AM – 04:30 PM)</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-xl">
+                      <span>🍵 Morning: 10:45-11:00</span>
+                      <span>•</span>
+                      <span>🍱 Lunch: 12:30-01:20</span>
+                      <span>•</span>
+                      <span>☕ Evening: 02:50-03:05</span>
+                    </div>
                   </div>
 
                   <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs overflow-x-auto">
@@ -1459,14 +1495,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       <thead>
                         <tr className="bg-blue-50/60 border-b border-gray-200 text-[#071A3D] font-bold">
                           <th className="p-2.5">Day</th>
-                          <th className="p-2.5">P1 (09:00-09:50)</th>
-                          <th className="p-2.5">P2 (09:50-10:40)</th>
-                          <th className="p-2.5">P3 (10:55-11:45)</th>
-                          <th className="p-2.5">P4 (11:45-12:35)</th>
-                          <th className="p-2.5">P5 (01:25-02:15)</th>
-                          <th className="p-2.5">P6 (02:15-03:05)</th>
-                          <th className="p-2.5">P7 (03:15-04:05)</th>
-                          <th className="p-2.5">P8 (04:05-04:55)</th>
+                          <th className="p-2.5">P1 (09:15-10:00)</th>
+                          <th className="p-2.5">P2 (10:00-10:45)</th>
+                          <th className="p-2.5 bg-amber-50/70 text-amber-900 border-x border-amber-200 text-center text-[10px]">Morning Tea</th>
+                          <th className="p-2.5">P3 (11:00-11:45)</th>
+                          <th className="p-2.5">P4 (11:45-12:30)</th>
+                          <th className="p-2.5 bg-amber-50/70 text-amber-900 border-x border-amber-200 text-center text-[10px]">Lunch Break</th>
+                          <th className="p-2.5">P5 (01:20-02:05)</th>
+                          <th className="p-2.5">P6 (02:05-02:50)</th>
+                          <th className="p-2.5 bg-amber-50/70 text-amber-900 border-x border-amber-200 text-center text-[10px]">Evening Tea</th>
+                          <th className="p-2.5">P7 (03:05-03:50)</th>
+                          <th className="p-2.5">P8 (03:50-04:30)</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 font-medium">
@@ -1475,10 +1514,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             <td className="p-2.5 font-bold text-[#1455D9]">{row.day}</td>
                             <td className="p-2.5">{row.p1}</td>
                             <td className="p-2.5">{row.p2}</td>
+                            <td className="p-2.5 bg-amber-50/30 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">10:45-11:00</td>
                             <td className="p-2.5">{row.p3}</td>
                             <td className="p-2.5">{row.p4}</td>
+                            <td className="p-2.5 bg-amber-50/30 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">12:30-01:20</td>
                             <td className="p-2.5">{row.p5}</td>
                             <td className="p-2.5">{row.p6}</td>
+                            <td className="p-2.5 bg-amber-50/30 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">02:50-03:05</td>
                             <td className="p-2.5">{row.p7}</td>
                             <td className="p-2.5">{row.p8}</td>
                           </tr>
@@ -1814,7 +1856,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Subject Details &amp; Timetable (8 Periods &amp; Labs):
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Multiple Choice Enabled
+                      Exact Bell Timings
                     </span>
                   </div>
 
@@ -1873,7 +1915,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 2. 8 REGULAR PERIODS (P1 - P8) */}
+                  {/* 2. 8 REGULAR PERIODS WITH EXACT TIMINGS */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block font-bold text-gray-700 text-[11px]">
@@ -1905,7 +1947,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             </div>
                             <span className={cn(
                               'text-[9px] font-mono mt-0.5',
-                              isSelected ? 'text-purple-200' : 'text-gray-400'
+                              isSelected ? 'text-purple-200' : 'text-gray-500'
                             )}>
                               {p.time}
                             </span>
@@ -1919,7 +1961,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center gap-1.5">
                       <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
-                      Laboratory / Practical Sessions:
+                      Laboratory &amp; Practical Sessions:
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
                       {PERIOD_LIST.filter(p => p.isLab).map((p) => {
@@ -1959,7 +2001,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 09:00 AM - 09:50 AM, 11:45 AM - 12:35 PM"
+                      placeholder="e.g. 09:15 AM - 10:00 AM, 11:45 AM - 12:30 PM"
                       value={formData.classTime}
                       onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
@@ -2237,7 +2279,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Subject Details &amp; Timetable (8 Periods &amp; Labs):
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Multiple Choice Enabled
+                      Exact Bell Timings
                     </span>
                   </div>
 
@@ -2296,7 +2338,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 2. 8 REGULAR PERIODS (P1 - P8) */}
+                  {/* 2. 8 REGULAR PERIODS WITH EXACT TIMINGS */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <label className="block font-bold text-gray-700 text-[11px]">
@@ -2328,7 +2370,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             </div>
                             <span className={cn(
                               'text-[9px] font-mono mt-0.5',
-                              isSelected ? 'text-purple-200' : 'text-gray-400'
+                              isSelected ? 'text-purple-200' : 'text-gray-500'
                             )}>
                               {p.time}
                             </span>
@@ -2342,7 +2384,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center gap-1.5">
                       <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
-                      Laboratory / Practical Sessions:
+                      Laboratory &amp; Practical Sessions:
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
                       {PERIOD_LIST.filter(p => p.isLab).map((p) => {
@@ -2382,7 +2424,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 09:00 AM - 09:50 AM, 11:45 AM - 12:35 PM"
+                      placeholder="e.g. 09:15 AM - 10:00 AM, 11:45 AM - 12:30 PM"
                       value={formData.classTime}
                       onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
