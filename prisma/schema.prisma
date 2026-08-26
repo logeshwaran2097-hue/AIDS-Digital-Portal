@@ -54,9 +54,17 @@ model Faculty {
   experience     Int
   specialization String
   subjects       String   @default("[]")
+  advisorBatch   String?
+  advisorYear    Int?
+  advisorSem     Int?
+  advisorSec     String?
+  facultyType    String   @default("both")
 
   @@index([facultyId])
   @@index([designation])
+  @@index([advisorYear])
+  @@index([advisorSem])
+  @@index([advisorSec])
 }
 
 model HOD {

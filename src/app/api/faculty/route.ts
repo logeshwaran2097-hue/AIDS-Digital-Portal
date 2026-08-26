@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,6 +37,11 @@ export async function GET(request: Request) {
         experience: f.experience,
         specialization: f.specialization,
         subjects: subjectsArr,
+        advisorBatch: f.advisorBatch || null,
+        advisorYear: f.advisorYear || null,
+        advisorSem: f.advisorSem || null,
+        advisorSec: f.advisorSec || null,
+        facultyType: f.facultyType || 'both',
         status: u?.status || 'active',
       }
     })
@@ -58,11 +64,17 @@ export async function POST(request: Request) {
       name,
       email,
       phone,
+      password,
       designation = 'Assistant Professor',
       qualification = 'M.E. / M.Tech / Ph.D.',
       experience = 5,
       specialization = 'Artificial Intelligence',
       subjects = [],
+      advisorBatch,
+      advisorYear,
+      advisorSem,
+      advisorSec,
+      facultyType = 'both',
       status = 'active',
     } = data
 
@@ -74,6 +86,8 @@ export async function POST(request: Request) {
     }
 
     const fid = facultyId?.trim().toUpperCase() || 'FAC' + Math.floor(100 + Math.random() * 900)
+    const initialPwd = password?.trim() || 'vsb@123'
+    const passwordHash = await bcrypt.hash(initialPwd, 10)
 
     // Upsert User
     const user = await prisma.user.upsert({
@@ -83,6 +97,7 @@ export async function POST(request: Request) {
         phone: phone || null,
         role: 'faculty',
         status: status || 'active',
+        passwordHash,
       },
       create: {
         email: email.trim().toLowerCase(),
@@ -90,8 +105,13 @@ export async function POST(request: Request) {
         phone: phone || null,
         role: 'faculty',
         status: status || 'active',
+        passwordHash,
+        emailVerified: true,
       },
     })
+
+    // Prepare subjects string
+    const subjectsStr = typeof subjects === 'string' ? subjects : JSON.stringify(subjects)
 
     // Upsert Faculty
     const faculty = await prisma.faculty.upsert({
@@ -102,7 +122,12 @@ export async function POST(request: Request) {
         qualification,
         experience: Number(experience) || 1,
         specialization,
-        subjects: typeof subjects === 'string' ? subjects : JSON.stringify(subjects),
+        subjects: subjectsStr,
+        advisorBatch: advisorBatch || null,
+        advisorYear: advisorYear ? Number(advisorYear) : null,
+        advisorSem: advisorSem ? Number(advisorSem) : null,
+        advisorSec: advisorSec || null,
+        facultyType: facultyType || 'both',
       },
       create: {
         userId: user.id,
@@ -112,9 +137,21 @@ export async function POST(request: Request) {
         qualification,
         experience: Number(experience) || 1,
         specialization,
-        subjects: typeof subjects === 'string' ? subjects : JSON.stringify(subjects),
+        subjects: subjectsStr,
+        advisorBatch: advisorBatch || null,
+        advisorYear: advisorYear ? Number(advisorYear) : null,
+        advisorSem: advisorSem ? Number(advisorSem) : null,
+        advisorSec: advisorSec || null,
+        facultyType: facultyType || 'both',
       },
     })
+
+    let subjectsArr: string[] = []
+    try {
+      subjectsArr = JSON.parse(faculty.subjects)
+    } catch {
+      subjectsArr = []
+    }
 
     return NextResponse.json({
       success: true,
@@ -128,6 +165,12 @@ export async function POST(request: Request) {
         qualification: faculty.qualification,
         experience: faculty.experience,
         specialization: faculty.specialization,
+        subjects: subjectsArr,
+        advisorBatch: faculty.advisorBatch,
+        advisorYear: faculty.advisorYear,
+        advisorSem: faculty.advisorSem,
+        advisorSec: faculty.advisorSec,
+        facultyType: faculty.facultyType,
         status: user.status,
       },
       message: 'Faculty registered successfully in database',
@@ -173,7 +216,7 @@ export async function DELETE(request: Request) {
       await prisma.faculty.delete({ where: { id: faculty.id } }).catch(() => null)
       await prisma.user.delete({ where: { id: userId } }).catch(() => null)
     } else {
-      await prisma.user.delete({ where: { id } }).catch(() => null)
+      await prisma.user.delete({ where: { id: id } }).catch(() => null)
     }
 
     return NextResponse.json({

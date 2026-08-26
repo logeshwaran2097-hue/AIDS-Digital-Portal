@@ -19,6 +19,9 @@ import {
   Phone,
   Award,
   Clock,
+  UserCheck,
+  BookMarked,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -31,6 +34,11 @@ interface FacultyDetail {
   experience: number
   specialization: string
   subjects: string
+  advisorBatch?: string | null
+  advisorYear?: number | null
+  advisorSem?: number | null
+  advisorSec?: string | null
+  facultyType?: string
 }
 
 interface FacultyUser {
@@ -56,13 +64,28 @@ const AVATAR_GRADIENTS = [
 ]
 
 export default function FacultyList({ users, details }: { users: FacultyUser[]; details: FacultyDetail[] }) {
+  // Two distinct views: 'advisors' (Class Advisors) and 'handlers' (Subject Handlers)
+  const [activeTab, setActiveTab] = useState<'advisors' | 'handlers'>('advisors')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedDesignation, setSelectedDesignation] = useState('ALL')
   const [contactFaculty, setContactFaculty] = useState<FacultyUser | null>(null)
 
   const detailByUser = new Map(details.map((d) => [d.userId, d]))
 
-  const filteredUsers = useMemo(() => {
+  // Separate list of Class Advisors
+  const advisorUsers = useMemo(() => {
+    return users.filter((u) => {
+      const d = detailByUser.get(u.id)
+      const matchesSearch =
+        u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (d?.advisorBatch && d.advisorBatch.toLowerCase().includes(searchQuery.toLowerCase()))
+
+      return matchesSearch
+    })
+  }, [users, details, searchQuery])
+
+  // Separate list of Subject Handlers
+  const handlerUsers = useMemo(() => {
     return users.filter((u) => {
       const d = detailByUser.get(u.id)
       const matchesSearch =
@@ -71,13 +94,11 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
         (d?.specialization && d.specialization.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (d?.subjects && d.subjects.toLowerCase().includes(searchQuery.toLowerCase()))
 
-      const matchesDesignation =
-        selectedDesignation === 'ALL' ||
-        (d?.designation && d.designation.toLowerCase().includes(selectedDesignation.toLowerCase()))
-
-      return matchesSearch && matchesDesignation
+      return matchesSearch
     })
-  }, [users, details, searchQuery, selectedDesignation])
+  }, [users, details, searchQuery])
+
+  const displayedUsers = activeTab === 'advisors' ? advisorUsers : handlerUsers
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -92,7 +113,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Teaching Faculty &amp; Mentors</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Meet your professors, course instructors, research mentors &amp; lab guides
+            View your dedicated <strong>Class Advisors</strong> and <strong>Course Subject Handlers</strong>
           </p>
         </div>
 
@@ -104,28 +125,50 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
+      {/* TWO PRIMARY PAGES: CLASS ADVISORS vs SUBJECT HANDLERS */}
       <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
-          {[
-            { l: 'All Faculty', v: 'ALL' },
-            { l: 'Professors', v: 'Professor' },
-            { l: 'Associate Prof', v: 'Associate' },
-            { l: 'Assistant Prof', v: 'Assistant' },
-          ].map((tab) => (
-            <button
-              key={tab.v}
-              onClick={() => setSelectedDesignation(tab.v)}
+        <div className="flex items-center gap-2 bg-gray-100/80 p-1 rounded-2xl border border-gray-200">
+          <button
+            onClick={() => setActiveTab('advisors')}
+            className={cn(
+              'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
+              activeTab === 'advisors'
+                ? 'bg-[#1455D9] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#071A3D]'
+            )}
+          >
+            <UserCheck className="w-4 h-4" />
+            Page 1: Class Advisors (Mentors)
+            <span
               className={cn(
-                'px-3.5 py-1.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shrink-0',
-                selectedDesignation === tab.v
-                  ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20 scale-105'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#071A3D]'
+                'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
+                activeTab === 'advisors' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
               )}
             >
-              {tab.l}
-            </button>
-          ))}
+              {advisorUsers.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('handlers')}
+            className={cn(
+              'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
+              activeTab === 'handlers'
+                ? 'bg-[#1455D9] text-white shadow-md'
+                : 'text-gray-600 hover:text-[#071A3D]'
+            )}
+          >
+            <BookMarked className="w-4 h-4" />
+            Page 2: Subject Handlers (Courses)
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
+                activeTab === 'handlers' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+              )}
+            >
+              {handlerUsers.length}
+            </span>
+          </button>
         </div>
 
         <div className="relative min-w-[260px]">
@@ -134,18 +177,26 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search faculty name, subject or skill..."
-            className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9]/20"
+            placeholder={
+              activeTab === 'advisors'
+                ? 'Search advisors by name or batch...'
+                : 'Search handlers by name or subject code...'
+            }
+            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9]/20"
           />
         </div>
       </div>
 
       {/* Faculty Cards Grid */}
-      {filteredUsers.length === 0 ? (
-        <EmptyState title="No faculty found" description="Try adjusting your search query or designation filter." icon="👨‍🏫" />
+      {displayedUsers.length === 0 ? (
+        <EmptyState
+          title={`No ${activeTab === 'advisors' ? 'Class Advisors' : 'Subject Handlers'} found`}
+          description="Try adjusting your search query."
+          icon="👨‍🏫"
+        />
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
-          {filteredUsers.map((u, idx) => {
+          {displayedUsers.map((u, idx) => {
             const d = detailByUser.get(u.id)
             const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]
             const initials = u.name
@@ -171,7 +222,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
                 key={u.id}
                 className="rounded-3xl border-gray-200 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
               >
-                <CardContent className="p-6 space-y-5">
+                <CardContent className="p-6 space-y-4">
                   {/* Top Profile Bar */}
                   <div className="flex items-start gap-4">
                     <div
@@ -205,45 +256,60 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
                     </div>
                   </div>
 
+                  {/* Class Advisor Badge / Subject Handled Badge */}
+                  {activeTab === 'advisors' ? (
+                    <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200/60 flex items-center justify-between text-xs">
+                      <span className="font-bold text-[#1455D9] flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4" />
+                        Assigned Class Advisor:
+                      </span>
+                      <span className="font-black text-[#071A3D]">
+                        {d?.advisorBatch || 'Year II · Sem 4 · Sec A'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-2xl bg-purple-50/80 border border-purple-200/60 space-y-1.5 text-xs">
+                      <span className="font-bold text-purple-800 flex items-center gap-1.5">
+                        <BookMarked className="w-4 h-4" />
+                        Courses &amp; Subjects Handled:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {subjectsArray.length > 0 ? (
+                          subjectsArray.map((code, i) => (
+                            <span
+                              key={i}
+                              className="px-2.5 py-0.5 rounded-lg bg-white text-[#1455D9] text-[11px] font-mono font-black border border-purple-200 shadow-2xs"
+                            >
+                              {code}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-gray-500 text-[11px]">Core AI Curriculum</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Highlights Grid */}
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100">
+                    <div className="p-2.5 rounded-2xl bg-gray-50/80 border border-gray-100">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                        Teaching Experience
+                        Experience
                       </span>
                       <p className="font-black text-[#071A3D] mt-0.5">
                         {d?.experience || 8}+ Years
                       </p>
                     </div>
 
-                    <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100">
+                    <div className="p-2.5 rounded-2xl bg-gray-50/80 border border-gray-100">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                        Domain Specialization
+                        Specialization
                       </span>
                       <p className="font-bold text-purple-700 truncate mt-0.5">
-                        {d?.specialization || 'AI & Machine Learning'}
+                        {d?.specialization || 'AI & ML'}
                       </p>
                     </div>
                   </div>
-
-                  {/* Allocated Course Badges */}
-                  {subjectsArray.length > 0 && (
-                    <div className="space-y-1.5 pt-1">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
-                        Courses Handled:
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {subjectsArray.map((code, i) => (
-                          <span
-                            key={i}
-                            className="px-2.5 py-1 rounded-xl bg-blue-50 text-[#1455D9] text-[11px] font-mono font-black border border-blue-200/60"
-                          >
-                            {code}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Contact Action Footer */}
                   <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
@@ -258,7 +324,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
 
                     <button
                       onClick={() => setContactFaculty(u)}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0"
+                      className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
                     >
                       <Send className="w-3 h-3" /> Contact
                     </button>
@@ -279,7 +345,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
                 <h3 className="text-base font-bold text-[#071A3D]">Connect with {contactFaculty.name}</h3>
                 <p className="text-xs text-gray-500">{contactFaculty.email}</p>
               </div>
-              <button onClick={() => setContactFaculty(null)} className="p-1 text-gray-400 hover:text-gray-700">✕</button>
+              <button onClick={() => setContactFaculty(null)} className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer">✕</button>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -301,13 +367,13 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
             </div>
 
             <div className="pt-3 border-t flex justify-end gap-2">
-              <button onClick={() => setContactFaculty(null)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Cancel</button>
+              <button onClick={() => setContactFaculty(null)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold cursor-pointer">Cancel</button>
               <button
                 onClick={() => {
                   alert(`Message sent to ${contactFaculty.name}! The professor will reply to your registered student email.`)
                   setContactFaculty(null)
                 }}
-                className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5]"
+                className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5] cursor-pointer"
               >
                 Send Message
               </button>

@@ -152,12 +152,17 @@ export async function getFacultyData(userId: string) {
         experience: 10,
         specialization: 'Deep Learning & NLP',
         subjects: '["AD2301", "AD2302", "AD2303"]',
+        advisorBatch: 'Year II - Sem 4 - Sec A',
+        advisorYear: 2,
+        advisorSem: 4,
+        advisorSec: 'A',
+        facultyType: 'both',
       }
     }
 
     let subjectCodes: string[] = []
     try {
-      subjectCodes = JSON.parse(faculty.subjects || '[]') as string[]
+      subjectCodes = JSON.parse(faculty?.subjects || '[]') as string[]
     } catch {}
 
     const [subjects, students, resources, questionPapers, projects, events, announcements, notifications] =
@@ -201,6 +206,11 @@ export async function getFacultyData(userId: string) {
         experience: 10,
         specialization: 'Deep Learning & NLP',
         subjects: '["AD2301", "AD2302"]',
+        advisorBatch: 'Year II - Sem 4 - Sec A',
+        advisorYear: 2,
+        advisorSem: 4,
+        advisorSec: 'A',
+        facultyType: 'both',
       },
       subjects: [],
       students: [],
