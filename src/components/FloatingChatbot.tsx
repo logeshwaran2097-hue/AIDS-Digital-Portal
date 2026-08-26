@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { MessageSquare, X, Minimize2, Maximize2, Trash2, Send, Sparkles, Bot, Check, RefreshCw } from 'lucide-react'
+import { MessageSquare, X, Minimize2, Maximize2, Trash2, Send, Sparkles, Bot, Check, RefreshCw, Minus } from 'lucide-react'
 
 interface ChatMessage {
   id: string
@@ -13,12 +13,12 @@ interface ChatMessage {
 }
 
 const QUICK_PROMPTS = [
-  { icon: '📅', text: 'Upcoming events & hackathons' },
-  { icon: '📚', text: 'What subjects are offered?' },
-  { icon: '📊', text: 'Placement statistics' },
-  { icon: '👨‍🏫', text: 'Faculty details' },
-  { icon: '📝', text: 'Question papers' },
-  { icon: '🚀', text: 'Student projects' },
+  { icon: '📅', text: 'Academic calendar & working days' },
+  { icon: '📚', text: 'Curricular subjects catalog' },
+  { icon: '👨‍🏫', text: 'Faculty directorate' },
+  { icon: '📋', text: 'Attendance regulations' },
+  { icon: '🏛️', text: 'Institutional identity & accreditation' },
+  { icon: '🛡️', text: 'Portal governance & administrators' },
 ]
 
 function getTime() {
@@ -30,7 +30,7 @@ function FormattedMessage({ content }: { content: string }) {
   const lines = content.split('\n')
 
   return (
-    <div className="space-y-1.5 text-xs leading-relaxed">
+    <div className="space-y-1.5 text-xs sm:text-sm leading-relaxed">
       {lines.map((line, idx) => {
         const trimmed = line.trim()
         if (!trimmed) return <div key={idx} className="h-1" />
@@ -55,7 +55,7 @@ function FormattedMessage({ content }: { content: string }) {
         if (isBullet) {
           return (
             <div key={idx} className="flex items-start gap-1.5 pl-0.5 text-gray-700">
-              <span className="text-[#1455D9] font-black text-xs leading-none mt-0.5">•</span>
+              <span className="text-[#1455D9] font-black text-xs leading-none mt-1">•</span>
               <div className="flex-1">{renderedLine}</div>
             </div>
           )
@@ -70,6 +70,7 @@ function FormattedMessage({ content }: { content: string }) {
 export function FloatingChatbot() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [isMaximized, setIsMaximized] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -82,14 +83,14 @@ export function FloatingChatbot() {
     setMessages([
       {
         id: 'welcome',
-        text: "👋 Hi! I'm your V.S.B. AI & DS Assistant.\n\nAsk me anything about subjects, syllabus, exams, faculty, placements, or events!",
+        text: "👋 Hi! I'm your V.S.B. AI & DS Portal Assistant.\n\nI provide real-time information directly from the live database about academic calendars, subjects, attendance rules, faculty directorate, and portal governance!",
         sender: 'bot',
         time: getTime(),
         suggestions: [
-          'Upcoming events & hackathons',
-          'What subjects are offered?',
-          'Placement statistics',
-          'Faculty details',
+          'Academic calendar & working days',
+          'Curricular subjects catalog',
+          'Faculty directorate',
+          'Attendance regulations',
         ],
       },
     ])
@@ -177,7 +178,7 @@ export function FloatingChatbot() {
         text: 'Chat cleared! 🧹 How can I help you today?',
         sender: 'bot',
         time: getTime(),
-        suggestions: ['Upcoming events & hackathons', 'What subjects are offered?', 'Placement statistics'],
+        suggestions: ['Academic calendar & working days', 'Curricular subjects catalog', 'Faculty directorate'],
       },
     ])
   }
@@ -189,7 +190,11 @@ export function FloatingChatbot() {
         <div
           className={cn(
             'bg-white rounded-3xl shadow-2xl border border-gray-200/90 flex flex-col overflow-hidden mb-4 transition-all duration-300 origin-bottom-right animate-in fade-in zoom-in-95',
-            isMinimized ? 'w-80 h-14' : 'w-[calc(100vw-2rem)] sm:w-[420px] h-[70vh] sm:h-[570px] max-h-[85vh]'
+            isMinimized
+              ? 'w-80 h-14'
+              : isMaximized
+              ? 'w-[calc(100vw-2rem)] sm:w-[92vw] md:w-[760px] lg:w-[920px] h-[85vh] max-h-[88vh]'
+              : 'w-[calc(100vw-2rem)] sm:w-[440px] h-[70vh] sm:h-[580px] max-h-[85vh]'
           )}
           style={{
             boxShadow: '0 20px 40px -15px rgba(7, 26, 61, 0.35), 0 0 20px rgba(34, 199, 232, 0.2)',
@@ -220,13 +225,30 @@ export function FloatingChatbot() {
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               )}
+              {/* Minimize / Collapse to Title Bar */}
               <button
-                onClick={() => setIsMinimized(!isMinimized)}
-                title={isMinimized ? 'Expand' : 'Minimize'}
+                onClick={() => {
+                  setIsMinimized(!isMinimized)
+                  if (!isMinimized) setIsMaximized(false)
+                }}
+                title={isMinimized ? 'Expand Window' : 'Minimize to bar'}
                 className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
               >
-                {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
+                {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minus className="w-3.5 h-3.5" />}
               </button>
+
+              {/* True Maximize / Full Size Toggle */}
+              {!isMinimized && (
+                <button
+                  onClick={() => setIsMaximized(!isMaximized)}
+                  title={isMaximized ? 'Restore normal size' : 'Maximize to large window'}
+                  className="p-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
+                >
+                  {isMaximized ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                </button>
+              )}
+
+              {/* Close */}
               <button
                 onClick={() => setIsOpen(false)}
                 title="Close chat"
@@ -351,7 +373,7 @@ export function FloatingChatbot() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask about events, subjects, exams, faculty..."
+                  placeholder="Type your question about subjects, syllabus, exams, faculty..."
                   className="flex-1 px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs text-[#071A3D] focus:outline-none focus:ring-2 focus:ring-[#1455D9]/20 focus:bg-white placeholder:text-gray-400 transition-all font-medium"
                 />
                 <button

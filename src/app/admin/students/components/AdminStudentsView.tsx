@@ -41,6 +41,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [students, setStudents] = useState<StudentRecord[]>(initialStudents)
   const [searchQuery, setSearchQuery] = useState('')
   const [yearFilter, setYearFilter] = useState('ALL')
+  const [semFilter, setSemFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -63,6 +64,18 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     status: 'active',
   })
 
+  // 8 Semesters Definition
+  const allSemesters = [
+    { sem: 1, year: 1, yearName: 'Year I', label: 'Semester 1', tag: 'Freshman - Odd' },
+    { sem: 2, year: 1, yearName: 'Year I', label: 'Semester 2', tag: 'Freshman - Even' },
+    { sem: 3, year: 2, yearName: 'Year II', label: 'Semester 3', tag: 'Sophomore - Odd' },
+    { sem: 4, year: 2, yearName: 'Year II', label: 'Semester 4', tag: 'Sophomore - Even' },
+    { sem: 5, year: 3, yearName: 'Year III', label: 'Semester 5', tag: 'Junior - Odd' },
+    { sem: 6, year: 3, yearName: 'Year III', label: 'Semester 6', tag: 'Junior - Even' },
+    { sem: 7, year: 4, yearName: 'Year IV', label: 'Semester 7', tag: 'Senior - Odd' },
+    { sem: 8, year: 4, yearName: 'Year IV', label: 'Semester 8', tag: 'Final Year - Capstone' },
+  ]
+
   // Filter students based on search and filters
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -71,11 +84,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       student.email.toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesYear = yearFilter === 'ALL' || student.year === Number(yearFilter)
+    const matchesSem = semFilter === 'ALL' || student.semester === Number(semFilter)
     const matchesStatus =
       statusFilter === 'ALL' || student.status.toLowerCase() === statusFilter.toLowerCase()
 
-    return matchesSearch && matchesYear && matchesStatus
+    return matchesSearch && matchesYear && matchesSem && matchesStatus
   })
+
+  const getSemCount = (semNumber: number) => {
+    return students.filter((s) => s.semester === semNumber).length
+  }
 
   const handleExportPDF = () => {
     generateAndDownloadPDF({
@@ -288,12 +306,153 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         </div>
       </div>
 
+      {/* Two-Step Hierarchical Year -> Semester Academic Navigation */}
+      <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm space-y-4">
+        {/* STEP 1: Select Academic Year */}
+        <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#1455D9] text-white text-[11px] font-black flex items-center justify-center">1</span>
+              <h2 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
+                Step 1: Choose Academic Year
+              </h2>
+            </div>
+            <span className="text-[11px] font-semibold text-gray-500">
+              {yearFilter === 'ALL' ? 'Browsing across all 4 Academic Years' : `Selected: Year ${yearFilter}`}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            <button
+              onClick={() => {
+                setYearFilter('ALL')
+                setSemFilter('ALL')
+              }}
+              className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                yearFilter === 'ALL'
+                  ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-md ring-2 ring-[#071A3D]/30'
+                  : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
+              }`}
+            >
+              <span className="text-[10px] font-extrabold uppercase block opacity-80">All 4 Years</span>
+              <p className="text-xs font-black mt-0.5">All Years</p>
+              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-1 inline-block ${
+                yearFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                {students.length} Total
+              </span>
+            </button>
+
+            {[
+              { year: 1, name: 'Year I', label: '1st Year (Freshman)', sems: [1, 2] },
+              { year: 2, name: 'Year II', label: '2nd Year (Sophomore)', sems: [3, 4] },
+              { year: 3, name: 'Year III', label: '3rd Year (Junior)', sems: [5, 6] },
+              { year: 4, name: 'Year IV', label: '4th Year (Senior)', sems: [7, 8] },
+            ].map((y) => {
+              const isSelected = yearFilter === String(y.year)
+              const yCount = students.filter((s) => s.year === y.year).length
+              return (
+                <button
+                  key={y.year}
+                  onClick={() => {
+                    setYearFilter(String(y.year))
+                    setSemFilter('ALL')
+                  }}
+                  className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-gradient-to-b from-[#1455D9] to-[#0A2A5E] text-white border-[#1455D9] shadow-md ring-2 ring-[#1455D9]/30 scale-101'
+                      : 'bg-gray-50 hover:bg-blue-50/60 border-gray-200 text-gray-700'
+                  }`}
+                >
+                  <span className={`text-[10px] font-extrabold uppercase block ${
+                    isSelected ? 'text-blue-200' : 'text-gray-400'
+                  }`}>
+                    {y.name}
+                  </span>
+                  <p className="text-xs font-black mt-0.5">{y.label}</p>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-1 inline-block ${
+                    isSelected ? 'bg-[#F4C430] text-[#071A3D]' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {yCount} {yCount === 1 ? 'Student' : 'Students'}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* STEP 2: Choose Semester within Selected Year */}
+        <div className="border-t border-gray-100 pt-3">
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#F4C430] text-[#071A3D] text-[11px] font-black flex items-center justify-center">2</span>
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
+                Step 2: Choose Semester {yearFilter !== 'ALL' ? `(Year ${yearFilter})` : '(All 8 Semesters)'}
+              </h3>
+            </div>
+            {semFilter !== 'ALL' && (
+              <button
+                onClick={() => setSemFilter('ALL')}
+                className="text-[11px] font-bold text-[#1455D9] hover:underline cursor-pointer"
+              >
+                Clear Semester Filter
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSemFilter('ALL')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                semFilter === 'ALL'
+                  ? 'bg-[#1455D9] text-white shadow-xs'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              {yearFilter === 'ALL' ? 'All 8 Semesters' : `All Semesters in Year ${yearFilter}`}
+            </button>
+
+            {allSemesters
+              .filter((s) => yearFilter === 'ALL' || s.year === Number(yearFilter))
+              .map((s) => {
+                const count = getSemCount(s.sem)
+                const isSelected = semFilter === String(s.sem)
+                return (
+                  <button
+                    key={s.sem}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSemFilter('ALL')
+                      } else {
+                        setSemFilter(String(s.sem))
+                        setYearFilter(String(s.year))
+                      }
+                    }}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer border ${
+                      isSelected
+                        ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-sm ring-2 ring-[#071A3D]/20'
+                        : 'bg-white hover:bg-blue-50 border-gray-200 text-[#071A3D]'
+                    }`}
+                  >
+                    <span>{s.label} ({s.yearName})</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      isSelected ? 'bg-[#F4C430] text-[#071A3D]' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+          </div>
+        </div>
+      </div>
+
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Total Enrolled</p>
           <p className="text-2xl font-black text-[#071A3D] mt-0.5">{students.length}</p>
-          <p className="text-[10px] text-[#1455D9] font-medium mt-1">Batch 2023 - 2027</p>
+          <p className="text-[10px] text-[#1455D9] font-medium mt-1">4 Years · 8 Semesters</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Active Status</p>
@@ -303,14 +462,22 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           <p className="text-[10px] text-green-700 font-medium mt-1">100% Attendance Eligible</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Current Year / Sem</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">Year II / Sem 4</p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">Regulation 2021</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Active Filter</p>
+          <p className="text-lg font-black text-purple-700 mt-0.5">
+            {yearFilter === 'ALL' && semFilter === 'ALL'
+              ? 'All Years & Sems'
+              : semFilter !== 'ALL'
+                ? `Sem ${semFilter} (Year ${Math.ceil(Number(semFilter) / 2)})`
+                : `Year ${yearFilter} (All Sems)`}
+          </p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">
+            Matching {filteredStudents.length} Students
+          </p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Department</p>
           <p className="text-2xl font-black text-amber-700 mt-0.5">B.Tech AI &amp; DS</p>
-          <p className="text-[10px] text-amber-700 font-medium mt-1">Anna University</p>
+          <p className="text-[10px] text-amber-700 font-medium mt-1">Anna University · Reg 2021</p>
         </div>
       </div>
 
@@ -327,28 +494,66 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           />
         </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
-          <select
-            value={yearFilter}
-            onChange={(e) => setYearFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
-          >
-            <option value="ALL">All Academic Years</option>
-            <option value="1">Year I</option>
-            <option value="2">Year II (Current)</option>
-            <option value="3">Year III</option>
-            <option value="4">Year IV</option>
-          </select>
+        <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto">
+          {/* Step 1: Academic Year Dropdown */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Year:</span>
+            <select
+              value={yearFilter}
+              onChange={(e) => {
+                const val = e.target.value
+                setYearFilter(val)
+                setSemFilter('ALL')
+              }}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All Years (I - IV)</option>
+              <option value="1">Year I (Freshman)</option>
+              <option value="2">Year II (Sophomore)</option>
+              <option value="3">Year III (Junior)</option>
+              <option value="4">Year IV (Senior)</option>
+            </select>
+          </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
-          >
-            <option value="ALL">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+          {/* Step 2: Cascading Semester Dropdown */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Semester:</span>
+            <select
+              value={semFilter}
+              onChange={(e) => {
+                const val = e.target.value
+                setSemFilter(val)
+                if (val !== 'ALL') {
+                  setYearFilter(String(Math.ceil(Number(val) / 2)))
+                }
+              }}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#1455D9] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">
+                {yearFilter === 'ALL' ? 'All 8 Semesters' : `All Sems in Year ${yearFilter}`}
+              </option>
+              {allSemesters
+                .filter((s) => yearFilter === 'ALL' || s.year === Number(yearFilter))
+                .map((s) => (
+                  <option key={s.sem} value={s.sem}>
+                    {s.label} ({s.yearName})
+                  </option>
+                ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
 
           <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
             Showing {filteredStudents.length} of {students.length}
@@ -545,30 +750,36 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value={1}>Year 1</option>
-                    <option value={2}>Year 2</option>
-                    <option value={3}>Year 3</option>
-                    <option value={4}>Year 4</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
                   <select
                     value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    onChange={(e) => {
+                      const sem = Number(e.target.value)
+                      setFormData({ ...formData, semester: sem, year: Math.ceil(sem / 2) })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                       <option key={sem} value={sem}>
-                        Sem {sem}
+                        Semester {sem} (Year {Math.ceil(sem / 2)})
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <select
+                    value={formData.year}
+                    onChange={(e) => {
+                      const y = Number(e.target.value)
+                      setFormData({ ...formData, year: y, semester: (y * 2) - 1 })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value={1}>Year 1 (Freshman)</option>
+                    <option value={2}>Year 2 (Sophomore)</option>
+                    <option value={3}>Year 3 (Junior)</option>
+                    <option value={4}>Year 4 (Senior)</option>
                   </select>
                 </div>
                 <div>
@@ -578,9 +789,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value="A">Sec A</option>
-                    <option value="B">Sec B</option>
-                    <option value="C">Sec C</option>
+                    <option value="A">Section A</option>
+                    <option value="B">Section B</option>
+                    <option value="C">Section C</option>
                   </select>
                 </div>
               </div>
@@ -684,30 +895,36 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value={1}>Year 1</option>
-                    <option value={2}>Year 2</option>
-                    <option value={3}>Year 3</option>
-                    <option value={4}>Year 4</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester (1 - 8)</label>
                   <select
                     value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    onChange={(e) => {
+                      const sem = Number(e.target.value)
+                      setFormData({ ...formData, semester: sem, year: Math.ceil(sem / 2) })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                       <option key={sem} value={sem}>
-                        Sem {sem}
+                        Semester {sem} (Year {Math.ceil(sem / 2)})
                       </option>
                     ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <select
+                    value={formData.year}
+                    onChange={(e) => {
+                      const y = Number(e.target.value)
+                      setFormData({ ...formData, year: y, semester: (y * 2) - 1 })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value={1}>Year 1 (Freshman)</option>
+                    <option value={2}>Year 2 (Sophomore)</option>
+                    <option value={3}>Year 3 (Junior)</option>
+                    <option value={4}>Year 4 (Senior)</option>
                   </select>
                 </div>
                 <div>
@@ -717,9 +934,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, section: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value="A">Sec A</option>
-                    <option value="B">Sec B</option>
-                    <option value="C">Sec C</option>
+                    <option value="A">Section A</option>
+                    <option value="B">Section B</option>
+                    <option value="C">Section C</option>
                   </select>
                 </div>
               </div>

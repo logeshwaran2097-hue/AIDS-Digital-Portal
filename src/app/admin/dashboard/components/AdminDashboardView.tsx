@@ -90,14 +90,14 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
   }
 
   const managementTiles = [
-    { title: 'Student Accounts', count: data.studentCount, href: '/admin/students', icon: <GraduationCap className="w-5 h-5" />, color: 'bg-[#1455D9]', desc: 'Manage 68 enrolled student records' },
-    { title: 'Faculty Members', count: data.facultyCount, href: '/admin/faculty', icon: <Users className="w-5 h-5" />, color: 'bg-purple-600', desc: 'Manage 4 professors & course allocations' },
+    { title: 'Student Accounts', count: data.studentCount, href: '/admin/students', icon: <GraduationCap className="w-5 h-5" />, color: 'bg-[#1455D9]', desc: 'Enrolled student accounts & bio-data' },
+    { title: 'Faculty Members', count: data.facultyCount, href: '/admin/faculty', icon: <Users className="w-5 h-5" />, color: 'bg-purple-600', desc: 'Faculty professors & course allocations' },
     { title: 'HOD Administration', count: data.hodCount, href: '/admin/hod', icon: <ShieldCheck className="w-5 h-5" />, color: 'bg-indigo-600', desc: 'Department Head credentials & jurisdiction' },
     { title: 'Super Admins', count: data.adminCount, href: '/admin/admins', icon: <Lock className="w-5 h-5" />, color: 'bg-rose-600', desc: 'System operators & root access control' },
     { title: 'Curricular Subjects', count: data.subjectCount, href: '/admin/academics', icon: <BookOpen className="w-5 h-5" />, color: 'bg-amber-600', desc: 'Regulation 2021 curriculum & syllabus' },
     { title: 'Digital Resources', count: data.resourceCount, href: '/admin/resources', icon: <Database className="w-5 h-5" />, color: 'bg-emerald-600', desc: 'E-books, standard textbooks & lecture packs' },
     { title: 'Question Papers Bank', count: data.questionPaperCount, href: '/admin/question-papers', icon: <FileQuestion className="w-5 h-5" />, color: 'bg-cyan-600', desc: 'IAT-1, IAT-2 & Anna University past papers' },
-    { title: 'Capstone Projects', count: data.projectCount, href: '/admin/projects', icon: <FolderOpen className="w-5 h-5" />, color: 'bg-blue-600', desc: '6 research teams & innovation prototypes' },
+    { title: 'Capstone Projects', count: data.projectCount, href: '/admin/projects', icon: <FolderOpen className="w-5 h-5" />, color: 'bg-blue-600', desc: 'Capstone research teams & prototypes' },
     { title: 'Events & Symposiums', count: data.eventCount, href: '/admin/events', icon: <CalendarDays className="w-5 h-5" />, color: 'bg-fuchsia-600', desc: 'National Hackathons & technical workshops' },
     { title: 'Circulars & Notices', count: data.announcementCount, href: '/admin/announcements', icon: <Megaphone className="w-5 h-5" />, color: 'bg-orange-600', desc: 'Broadcast notices to students & staff' },
     { title: 'System Activity Logs', count: 'Audit Log', href: '/admin/activity-logs', icon: <Activity className="w-5 h-5" />, color: 'bg-slate-700', desc: 'Real-time security logins & CRUD events' },

@@ -155,9 +155,85 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
     DEFAULT_NOTIFICATIONS[role] || DEFAULT_NOTIFICATIONS.student
   )
   const notificationRef = useRef<HTMLDivElement>(null)
+  const navContainerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
   const router = useRouter()
-  const resolvedNavItems = navItems || navItemsMap[role] || []
+  const [accentColor, setAccentColor] = useState('#1455D9')
+  const [visibleMenuMap, setVisibleMenuMap] = useState<Record<string, boolean>>({})
+  const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
+
+  const updatePortalState = () => {
+    try {
+      const cached = localStorage.getItem('vsb-portal-config')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        if (parsed.accentColor) setAccentColor(parsed.accentColor)
+        if (parsed.menus && Array.isArray(parsed.menus)) {
+          const map: Record<string, boolean> = {}
+          const meta: Record<string, { label?: string; badgeText?: string; badgeColor?: string }> = {}
+          parsed.menus.forEach((m: any) => {
+            map[m.id] = m.visible
+            meta[m.id] = {
+              label: m.label,
+              badgeText: m.badgeText,
+              badgeColor: m.badgeColor,
+            }
+          })
+          setVisibleMenuMap(map)
+          setMenuMetaMap(meta)
+        }
+      }
+    } catch {}
+  }
+
+  useEffect(() => {
+    updatePortalState()
+    const handleConfigChange = () => updatePortalState()
+    window.addEventListener('portal-config-updated', handleConfigChange)
+    return () => window.removeEventListener('portal-config-updated', handleConfigChange)
+  }, [])
+
+  const baseNavItems = navItems || navItemsMap[role] || []
+  
+  // Filter nav items based on admin menu preferences
+  const resolvedNavItems = baseNavItems.filter((item) => {
+    const lower = item.href.toLowerCase()
+    let key = ''
+    if (lower.includes('profile')) key = 'profile'
+    else if (lower.includes('student')) key = 'students'
+    else if (lower.includes('faculty')) key = 'faculty'
+    else if (lower.includes('hod')) key = 'hod'
+    else if (lower.includes('admins')) key = 'admins'
+    else if (lower.includes('roles')) key = 'roles'
+    else if (lower.includes('academic') || lower.includes('subject')) key = 'academics'
+    else if (lower.includes('resource') || lower.includes('study')) key = 'resources'
+    else if (lower.includes('question')) key = 'questions'
+    else if (lower.includes('project')) key = 'projects'
+    else if (lower.includes('event')) key = 'events'
+    else if (lower.includes('announcement')) key = 'announcements'
+    else if (lower.includes('achievement')) key = 'achievements'
+    else if (lower.includes('notification')) key = 'notifications'
+    else if (lower.includes('report')) key = 'reports'
+    else if (lower.includes('log') || lower.includes('activity')) key = 'logs'
+    else if (lower.includes('/files') || lower.endsWith('files')) key = 'files'
+    else if (lower.includes('setting')) key = 'settings'
+
+    if (key && visibleMenuMap[key] === false) {
+      return false
+    }
+    return true
+  })
+
+  // Auto-scroll active menu item into view in sidebar
+  useEffect(() => {
+    if (navContainerRef.current) {
+      const activeEl = navContainerRef.current.querySelector('[data-active="true"]') as HTMLElement
+      if (activeEl) {
+        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+  }, [pathname, activePath, resolvedNavItems])
+  
   const roleBadge = roleBadgeMap[role] || roleBadgeMap.student
 
   const unreadCount = notifications.filter((n) => n.unread).length
@@ -274,7 +350,16 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         </div>
 
         {/* User Mini Profile Card in Drawer */}
-        <div className="p-4 mx-3 my-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3 shrink-0">
+        <Link
+          href={profileHref}
+          onClick={() => handleNavClick(profileHref)}
+          className={cn(
+            'p-4 mx-3 my-3 rounded-2xl border transition-all flex items-center gap-3 shrink-0 cursor-pointer',
+            (activePath || pathname) === profileHref
+              ? 'bg-white/15 border-white/30 shadow-md'
+              : 'bg-white/5 border-white/10 hover:bg-white/10'
+          )}
+        >
           <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0">
             {userName.charAt(0) || 'U'}
           </div>
@@ -290,38 +375,83 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               {roleBadge.label}
             </span>
           </div>
-        </div>
+        </Link>
 
         {/* Navigation Link Items */}
-        <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1" aria-label="Main navigation" style={{ scrollbarWidth: 'thin' }}>
+        <nav
+          ref={navContainerRef}
+          className="flex-1 overflow-y-auto px-3 py-2 space-y-1"
+          aria-label="Main navigation"
+          style={{ scrollbarWidth: 'thin' }}
+        >
           {resolvedNavItems.map((item) => {
             const current = activePath || pathname
+            const exactMatchExists = resolvedNavItems.some((i) => i.href === current)
             const isRootDashboard =
               item.href === '/dashboard' ||
               item.href === '/faculty-dashboard' ||
               item.href === '/hod-dashboard' ||
               item.href === '/admin' ||
               item.href === '/admin/dashboard'
-            const isActive = isRootDashboard
+            const isActive = exactMatchExists
+              ? current === item.href
+              : isRootDashboard
               ? current === item.href
               : current === item.href || current.startsWith(item.href + '/')
+            let key = ''
+            const lower = item.href.toLowerCase()
+            if (lower.includes('profile')) key = 'profile'
+            else if (lower.includes('student')) key = 'students'
+            else if (lower.includes('faculty')) key = 'faculty'
+            else if (lower.includes('hod')) key = 'hod'
+            else if (lower.includes('admins')) key = 'admins'
+            else if (lower.includes('roles')) key = 'roles'
+            else if (lower.includes('academic') || lower.includes('subject')) key = 'academics'
+            else if (lower.includes('resource') || lower.includes('study')) key = 'resources'
+            else if (lower.includes('question')) key = 'questions'
+            else if (lower.includes('project')) key = 'projects'
+            else if (lower.includes('event')) key = 'events'
+            else if (lower.includes('announcement')) key = 'announcements'
+            else if (lower.includes('achievement')) key = 'achievements'
+            else if (lower.includes('notification')) key = 'notifications'
+            else if (lower.includes('report')) key = 'reports'
+            else if (lower.includes('log') || lower.includes('activity')) key = 'logs'
+            else if (lower.includes('/files') || lower.endsWith('files')) key = 'files'
+            else if (lower.includes('setting')) key = 'settings'
+
+            const meta = key ? menuMetaMap[key] : null
+            const displayLabel = meta?.label || item.label
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 prefetch={true}
+                data-active={isActive ? 'true' : 'false'}
                 onClick={() => handleNavClick(item.href)}
+                style={isActive ? { backgroundColor: accentColor, boxShadow: `0 4px 14px ${accentColor}60` } : {}}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer',
+                  'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer',
                   isActive
-                    ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/30'
+                    ? 'text-white shadow-md'
                     : 'text-gray-300 hover:bg-white/10 hover:text-white'
                 )}
               >
-                <span className={cn('shrink-0 text-base', isActive ? 'text-white' : 'text-[#22C7E8]')}>
-                  {item.icon}
-                </span>
-                <span className="truncate">{item.label}</span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={cn('shrink-0 text-base', isActive ? 'text-white' : 'text-[#22C7E8]')}>
+                    {item.icon}
+                  </span>
+                  <span className="truncate">{displayLabel}</span>
+                </div>
+
+                {meta?.badgeText && (
+                  <span
+                    className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase text-white shrink-0 ml-1.5 shadow-2xs"
+                    style={{ backgroundColor: meta.badgeColor || '#1455D9' }}
+                  >
+                    {meta.badgeText}
+                  </span>
+                )}
               </Link>
             )
           })}

@@ -233,7 +233,7 @@ export function AIChatbot() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me anything about AI & DS department..."
+            placeholder="Type your question about subjects, syllabus, exams, faculty..."
             className="flex-1 px-4 py-3 rounded-xl bg-[#f8f9fc] border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#22C7E8]/40 focus:border-[#22C7E8] placeholder:text-gray-400 transition-all"
             disabled={isTyping}
             autoComplete="off"
