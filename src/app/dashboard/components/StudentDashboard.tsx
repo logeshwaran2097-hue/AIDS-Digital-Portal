@@ -54,6 +54,20 @@ interface DashboardData {
   projects: { id: string; title: string; domain: string; year: number; status: string }[]
   notifications: { id: string; title: string; message: string; createdAt: Date }[]
   subjects: { id: string; code: string; name: string; credits: number }[]
+  attendanceStats?: {
+    totalSessions: number
+    presentSessions: number
+    absentSessions: number
+    odSessions: number
+    percentage: number
+    subjectBreakdown: {
+      code: string
+      name: string
+      conducted: number
+      attended: number
+      percent: number
+    }[]
+  }
 }
 
 const quickAccess = [
@@ -65,16 +79,6 @@ const quickAccess = [
   { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#FF6B6B]/10 text-[#ee5253] hover:bg-[#FF6B6B]/20 border-[#FF6B6B]/20' },
   { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-5 w-5" />, bg: 'bg-[#2878E8]/10 text-[#2878E8] hover:bg-[#2878E8]/20 border-[#2878E8]/20' },
   { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-5 w-5" />, bg: 'bg-[#F4C430]/15 text-[#b8860b] hover:bg-[#F4C430]/25 border-[#F4C430]/30' },
-]
-
-const subjectAttendanceData = [
-  { code: 'AD2301', name: 'Data Structures & Algorithms', attended: 36, total: 38, percent: 94.7, color: 'text-[#1455D9]', bg: 'bg-blue-500' },
-  { code: 'AD2302', name: 'Database Management Systems', attended: 34, total: 37, percent: 91.9, color: 'text-purple-600', bg: 'bg-purple-500' },
-  { code: 'AD2303', name: 'Discrete Mathematics', attended: 32, total: 36, percent: 88.9, color: 'text-amber-600', bg: 'bg-amber-500' },
-  { code: 'AD2304', name: 'Operating Systems', attended: 30, total: 32, percent: 93.8, color: 'text-emerald-600', bg: 'bg-emerald-500' },
-  { code: 'AD2305', name: 'Machine Learning Foundations', attended: 36, total: 37, percent: 97.3, color: 'text-[#1455D9]', bg: 'bg-blue-500' },
-  { code: 'AD2306', name: 'Artificial Intelligence & Expert Systems', attended: 29, total: 32, percent: 90.6, color: 'text-rose-600', bg: 'bg-rose-500' },
-  { code: 'AD2307', name: 'Data Science Tools & Laboratory', attended: 18, total: 18, percent: 100.0, color: 'text-green-600', bg: 'bg-green-500' },
 ]
 
 export default function StudentDashboard({ data }: { data: DashboardData }) {
@@ -94,6 +98,26 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       setCurrentUser((prev) => ({ ...prev, ...updatedUser }))
     }
   }
+
+  const att = data.attendanceStats || {
+    totalSessions: 0,
+    presentSessions: 0,
+    absentSessions: 0,
+    odSessions: 0,
+    percentage: 0,
+    subjectBreakdown: [],
+  }
+
+  const isEligible = att.totalSessions === 0 || att.percentage >= 75
+  const displaySubjects = (att.subjectBreakdown && att.subjectBreakdown.length > 0)
+    ? att.subjectBreakdown
+    : data.subjects.map(s => ({
+        code: s.code,
+        name: s.name,
+        conducted: 0,
+        attended: 0,
+        percent: 0,
+      }))
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -161,10 +185,13 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-green-100 text-green-800 text-[10px] font-black uppercase tracking-wider">
-                  Government Biometric Record
+                <span className={cn(
+                  "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                  att.totalSessions > 0 ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                )}>
+                  {att.totalSessions > 0 ? "Government Biometric Record" : "Enrolled Academic Term"}
                 </span>
-                <span className="text-xs text-gray-400 font-semibold">· Semester 3 Compliance</span>
+                <span className="text-xs text-gray-400 font-semibold">· Semester {data.student.semester} Compliance</span>
               </div>
               <h2 className="text-lg font-black text-[#071A3D] mt-1 flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-[#1455D9]" /> Attendance &amp; Academic Health
@@ -172,9 +199,19 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-bold flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> Exam Eligible (&gt;75% Norm)
-              </span>
+              {att.totalSessions > 0 ? (
+                <span className={cn(
+                  "px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1 border",
+                  isEligible ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200"
+                )}>
+                  {isEligible ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600" /> : <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
+                  {isEligible ? "Exam Eligible (>75% Norm)" : "Attendance Condonation Alert (<75%)"}
+                </span>
+              ) : (
+                <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" /> Active Enrolled Term
+                </span>
+              )}
             </div>
           </div>
 
@@ -183,8 +220,10 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/80 to-blue-100/40 border border-blue-200/60 flex items-center justify-between">
               <div>
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Cumulative</p>
-                <p className="text-2xl font-black text-[#1455D9] mt-0.5">92.5%</p>
-                <p className="text-[10px] text-blue-700 font-medium">Safe Margin (+17.5%)</p>
+                <p className="text-2xl font-black text-[#1455D9] mt-0.5">{att.percentage.toFixed(1)}%</p>
+                <p className="text-[10px] text-blue-700 font-medium">
+                  {att.totalSessions > 0 ? (att.percentage >= 75 ? `Safe Margin (+${(att.percentage - 75).toFixed(1)}%)` : `Shortage (${(75 - att.percentage).toFixed(1)}%)`) : 'No Sessions Logged'}
+                </p>
               </div>
               <div className="w-11 h-11 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black text-sm shadow-md">
                 <Percent className="w-5 h-5" />
@@ -192,21 +231,21 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             </div>
 
             <div className="p-4 rounded-2xl bg-green-50/70 border border-green-200/60">
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Working Days</p>
-              <p className="text-2xl font-black text-green-700 mt-0.5">68 Days</p>
-              <p className="text-[10px] text-green-800 font-semibold">Total Conducted</p>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Working Sessions</p>
+              <p className="text-2xl font-black text-green-700 mt-0.5">{att.totalSessions} Sessions</p>
+              <p className="text-[10px] text-green-800 font-semibold">{att.totalSessions > 0 ? 'Total Conducted' : 'Term Started'}</p>
             </div>
 
             <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/60">
               <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Present</p>
-              <p className="text-2xl font-black text-emerald-700 mt-0.5">63 Days</p>
-              <p className="text-[10px] text-emerald-800 font-semibold">+ 2 On-Duty (OD)</p>
+              <p className="text-2xl font-black text-emerald-700 mt-0.5">{att.presentSessions} Sessions</p>
+              <p className="text-[10px] text-emerald-800 font-semibold">{att.odSessions > 0 ? `+ ${att.odSessions} On-Duty (OD)` : 'Recorded Attendance'}</p>
             </div>
 
             <div className="p-4 rounded-2xl bg-red-50/70 border border-red-200/60">
               <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Absenteeism</p>
-              <p className="text-2xl font-black text-red-600 mt-0.5">3 Days</p>
-              <p className="text-[10px] text-red-700 font-semibold">Allowed: Up to 17 Days</p>
+              <p className="text-2xl font-black text-red-600 mt-0.5">{att.absentSessions} Sessions</p>
+              <p className="text-[10px] text-red-700 font-semibold">{att.totalSessions > 0 ? 'Recorded Absences' : 'Zero Absences'}</p>
             </div>
           </div>
 
@@ -219,33 +258,48 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
               </Link>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {subjectAttendanceData.map((sub) => (
-                <div key={sub.code} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/80 space-y-2 hover:bg-white hover:shadow-xs transition-all">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200/60">
-                      {sub.code}
-                    </span>
-                    <span className={cn('text-xs font-black', sub.color)}>
-                      {sub.percent.toFixed(1)}%
-                    </span>
-                  </div>
+            {displaySubjects.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {displaySubjects.map((sub) => {
+                  const percent = sub.percent
+                  const isSafe = sub.conducted === 0 || percent >= 75
+                  return (
+                    <div key={sub.code} className="p-4 rounded-2xl bg-gray-50/70 border border-gray-200/80 space-y-2 hover:bg-white hover:shadow-xs transition-all">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200/60">
+                          {sub.code}
+                        </span>
+                        <span className={cn('text-xs font-black', isSafe ? 'text-green-600' : 'text-red-600')}>
+                          {percent.toFixed(1)}%
+                        </span>
+                      </div>
 
-                  <p className="text-xs font-bold text-[#071A3D] line-clamp-1">{sub.name}</p>
+                      <p className="text-xs font-bold text-[#071A3D] line-clamp-1">{sub.name}</p>
 
-                  {/* Progress Bar */}
-                  <div className="space-y-1">
-                    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                      <div className={cn('h-full rounded-full transition-all', sub.bg)} style={{ width: `${sub.percent}%` }} />
+                      {/* Progress Bar */}
+                      <div className="space-y-1">
+                        <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                          <div
+                            className={cn('h-full rounded-full transition-all', isSafe ? 'bg-green-500' : 'bg-red-500')}
+                            style={{ width: `${Math.min(100, Math.max(sub.conducted === 0 ? 0 : 5, percent))}%` }}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
+                          <span>{sub.attended} / {sub.conducted} Periods Attended</span>
+                          <span className={isSafe ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                            {sub.conducted === 0 ? 'Enrolled' : (isSafe ? '>75% Ok' : '<75% Low')}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-gray-400 font-medium">
-                      <span>{sub.attended} / {sub.total} Periods Attended</span>
-                      <span className="text-green-600 font-bold">&gt;75% Ok</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-xs text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                No subjects registered for the current semester.
+              </div>
+            )}
           </div>
         </div>
       </section>

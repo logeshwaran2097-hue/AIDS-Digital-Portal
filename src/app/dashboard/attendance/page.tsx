@@ -18,21 +18,92 @@ export default async function StudentAttendancePage() {
   }
 
   const student = (await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (await prisma.student.findUnique({ where: { registerNumber: session.registerNumber || '23AD001' } }).catch(() => null)) || {
+    (await prisma.student.findUnique({ where: { registerNumber: session.registerNumber || '92252524185' } }).catch(() => null)) || {
       id: 'student-default',
       userId: session.userId,
-      registerNumber: session.registerNumber || '23AD001',
+      registerNumber: session.registerNumber || '92252524185',
       dateOfBirth: new Date('2004-05-15'),
       department: 'Artificial Intelligence & Data Science',
-      year: 3,
-      semester: 5,
+      year: 2,
+      semester: 3,
       section: 'A',
     }
+
+  const semesters = await prisma.semester.findMany({
+    where: { number: student.semester },
+    select: { id: true },
+  }).catch(() => [])
+  const semesterIds = semesters.map((s) => s.id)
+
+  const subjects = await prisma.subject.findMany({
+    where: semesterIds.length > 0 ? { semesterId: { in: semesterIds } } : undefined,
+    orderBy: { code: 'asc' },
+  }).catch(() => [])
+
+  const attendanceRecords = await prisma.attendanceRecord.findMany({
+    where: {
+      OR: [
+        { studentId: student.id },
+        { registerNumber: student.registerNumber },
+      ],
+    },
+    include: {
+      session: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  }).catch(() => [])
+
+  const totalSessions = attendanceRecords.length
+  const presentSessions = attendanceRecords.filter((r) => r.status === 'P' || r.status === 'OD').length
+  const odSessions = attendanceRecords.filter((r) => r.status === 'OD').length
+  const absentSessions = attendanceRecords.filter((r) => r.status === 'A' || r.status === 'L').length
+  const percentage = totalSessions > 0 ? Number(((presentSessions / totalSessions) * 100).toFixed(1)) : 0
+
+  const subjectBreakdown = subjects.map((sub) => {
+    const subRecords = attendanceRecords.filter(
+      (r) => r.session?.subjectCode === sub.code || r.session?.subjectName === sub.name
+    )
+    const subTotal = subRecords.length
+    const subPresent = subRecords.filter((r) => r.status === 'P' || r.status === 'OD').length
+    const subPercent = subTotal > 0 ? Number(((subPresent / subTotal) * 100).toFixed(1)) : 0
+    return {
+      code: sub.code,
+      name: sub.name,
+      faculty: 'Assigned Course Faculty',
+      conducted: subTotal,
+      attended: subPresent,
+      percent: subPercent,
+      status: (subTotal === 0 || subPercent >= 75 ? 'Safe' : 'Warning') as 'Safe' | 'Warning' | 'Critical',
+    }
+  })
+
+  const history = attendanceRecords.map((r) => ({
+    id: r.id,
+    date: r.session?.date || r.createdAt.toISOString().split('T')[0],
+    subjectCode: r.session?.subjectCode || 'Course Session',
+    subjectName: r.session?.subjectName || 'Theory / Practical',
+    hour: r.session?.hour || 'Period 1',
+    status: r.status,
+    takenByName: r.session?.takenByName || 'Faculty Instructor',
+    remarks: r.remarks || '',
+  }))
 
   return (
     <PortalLayout role="student" userName={user.name || session.name || 'Student'}>
       <div className="py-2 animate-fade-in">
-        <StudentAttendanceView student={student as any} user={user as any} />
+        <StudentAttendanceView
+          student={student as any}
+          user={user as any}
+          stats={{
+            totalSessions,
+            presentSessions,
+            absentSessions,
+            odSessions,
+            percentage,
+            subjectBreakdown,
+            history,
+          }}
+        />
       </div>
     </PortalLayout>
   )
