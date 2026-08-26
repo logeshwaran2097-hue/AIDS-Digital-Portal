@@ -28,6 +28,7 @@ export interface ProjectRecord {
   domain?: string | null
   year: number
   semester?: number | null
+  batch?: string | null
   status: string
   guideName?: string | null
   teamMembers?: string | null
@@ -48,6 +49,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     domain: 'Computer Vision & Deep Learning',
     year: 4,
     semester: 8,
+    batch: '2022 - 2026',
     guideName: 'Dr. S. Karthik',
     teamMembers: 'K. Aishwarya (23AD001), R. Deepak (23AD002)',
     status: 'Approved & Active',
@@ -147,6 +149,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
       domain: formData.domain,
       year: Number(formData.year),
       semester: Number(formData.semester),
+      batch: formData.batch || (formData.year === 1 ? '2025 - 2029' : formData.year === 2 ? '2024 - 2028' : formData.year === 3 ? '2023 - 2027' : '2022 - 2026'),
       guideName: formData.guideName,
       teamMembers: formData.teamMembers,
       status: formData.status,
@@ -160,6 +163,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
       domain: 'Computer Vision & Deep Learning',
       year: 4,
       semester: 8,
+      batch: '2022 - 2026',
       guideName: 'Dr. S. Karthik',
       teamMembers: '',
       status: 'Approved & Active',
@@ -374,6 +378,9 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                         <span className="text-[10px] font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
                           Year {p.year || 4}
                         </span>
+                        <span className="text-[10px] font-black text-emerald-700 px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200">
+                          Batch: {p.batch || (p.year === 1 ? '2025 - 2029' : p.year === 2 ? '2024 - 2028' : p.year === 3 ? '2023 - 2027' : '2022 - 2026')}
+                        </span>
                       </div>
                       <h3 className="font-bold text-sm text-[#071A3D] mt-1 line-clamp-2">{p.title}</h3>
                     </div>
@@ -479,36 +486,58 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Year</label>
                   <select
                     value={formData.year}
                     onChange={(e) => {
                       const y = Number(e.target.value)
-                      setFormData({ ...formData, year: y, semester: y * 2 })
+                      const defaultBatches: Record<number, string> = {
+                        1: '2025 - 2029',
+                        2: '2024 - 2028',
+                        3: '2023 - 2027',
+                        4: '2022 - 2026',
+                      }
+                      setFormData({
+                        ...formData,
+                        year: y,
+                        semester: y * 2,
+                        batch: defaultBatches[y] || '2024 - 2028',
+                      })
                     }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value={1}>Year I (Mini Project)</option>
-                    <option value={2}>Year II (Prototype)</option>
-                    <option value={3}>Year III (Applied R&amp;D)</option>
-                    <option value={4}>Year IV (Capstone Project)</option>
+                    <option value={1}>Year I</option>
+                    <option value={2}>Year II</option>
+                    <option value={3}>Year III</option>
+                    <option value={4}>Year IV</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Technical Domain</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Batch</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 2023 - 2027"
+                    value={formData.batch}
+                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-purple-700 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Domain</label>
                   <select
                     value={formData.domain}
                     onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value="Computer Vision & Deep Learning">Computer Vision &amp; Deep Learning</option>
-                    <option value="Large Language Models & GenAI">LLMs &amp; Generative AI</option>
-                    <option value="Healthcare & Biomedical ML">Healthcare &amp; Biomedical ML</option>
-                    <option value="Robotics & Autonomous Edge AI">Robotics &amp; Edge AI</option>
-                    <option value="NLP & Speech Intelligence">NLP &amp; Speech Intelligence</option>
-                    <option value="Blockchain & Secure AI">Blockchain &amp; Secure AI</option>
+                    <option value="Computer Vision & Deep Learning">Vision &amp; DL</option>
+                    <option value="Large Language Models & GenAI">LLMs &amp; GenAI</option>
+                    <option value="Healthcare & Biomedical ML">Health AI</option>
+                    <option value="Robotics & Autonomous Edge AI">Robotics</option>
+                    <option value="NLP & Speech Intelligence">NLP &amp; Speech</option>
+                    <option value="Blockchain & Secure AI">Blockchain</option>
                   </select>
                 </div>
               </div>

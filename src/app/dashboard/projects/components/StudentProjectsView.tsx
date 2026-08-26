@@ -36,7 +36,15 @@ interface ProjectRecord {
   createdAt: Date
 }
 
-export function StudentProjectsView({ projects }: { projects: ProjectRecord[] }) {
+export function StudentProjectsView({
+  projects,
+  activeBatch = '2024 - 2028',
+  batchLabel = 'II Year (Semester 4)',
+}: {
+  projects: ProjectRecord[]
+  activeBatch?: string
+  batchLabel?: string
+}) {
   const [selectedDomain, setSelectedDomain] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null)
@@ -101,8 +109,8 @@ export function StudentProjectsView({ projects }: { projects: ProjectRecord[] })
 
         <div className="bg-white p-4 rounded-2xl border border-purple-200 shadow-xs bg-purple-50/20">
           <p className="text-xs font-bold text-purple-700 uppercase tracking-wider">Active Batch</p>
-          <p className="text-2xl font-black text-purple-600 mt-1">2023 - 2027</p>
-          <p className="text-[10px] text-purple-600 mt-0.5">III Year (Semester 5)</p>
+          <p className="text-2xl font-black text-purple-600 mt-1">{activeBatch}</p>
+          <p className="text-[10px] text-purple-600 mt-0.5">{batchLabel}</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-green-200 shadow-xs bg-green-50/20">
