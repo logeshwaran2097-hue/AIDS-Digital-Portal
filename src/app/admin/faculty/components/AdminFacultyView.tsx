@@ -37,6 +37,18 @@ import {
   FlaskConical,
   Coffee,
   Utensils,
+  Zap,
+  CheckSquare,
+  Code2,
+  Database,
+  Cloud,
+  Cpu,
+  BarChart3,
+  MessagesSquare,
+  Compass,
+  Globe,
+  Rocket,
+  BriefcaseBusiness,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { cn } from '@/lib/utils'
@@ -76,14 +88,182 @@ interface StudentInClass {
   status: 'active' | 'warning' | 'critical'
 }
 
+// Available Practical Labs & Training Sessions for Odd Semesters (Years 2, 3, and 4)
+export const ODD_SEMESTER_LABS_BY_YEAR = {
+  year2: {
+    yearNumber: 2,
+    semNumber: 3,
+    semLabel: 'Odd Semester (Semester 3)',
+    yearTitle: '2nd Year — Odd Semester Labs',
+    badgeColor: 'bg-blue-50 text-[#1455D9] border-blue-200',
+    labs: [
+      {
+        id: 'oop_lab',
+        code: 'AD2311',
+        name: 'Object Oriented Programming Laboratory',
+        shortName: 'OOP Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (AN)',
+        defaultTime: '01:20 PM - 03:50 PM',
+        defaultDays: 'Tuesday',
+        icon: 'code',
+      },
+      {
+        id: 'dbms_lab',
+        code: 'AD2312',
+        name: 'Database Management Systems Laboratory',
+        shortName: 'DBMS Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (FN)',
+        defaultTime: '09:15 AM - 12:30 PM',
+        defaultDays: 'Thursday',
+        icon: 'database',
+      },
+      {
+        id: 'dsa_lab',
+        code: 'AD2313',
+        name: 'Data Structures & Algorithms Laboratory',
+        shortName: 'DSA Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (AN)',
+        defaultTime: '01:20 PM - 03:50 PM',
+        defaultDays: 'Friday',
+        icon: 'cpu',
+      },
+    ],
+  },
+  year3: {
+    yearNumber: 3,
+    semNumber: 5,
+    semLabel: 'Odd Semester (Semester 5)',
+    yearTitle: '3rd Year — Odd Semester Labs & Skills',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+    labs: [
+      {
+        id: 'cloud_mgmt_lab',
+        code: 'AD2511',
+        name: 'Cloud Service Management Laboratory',
+        shortName: 'Cloud Service Mgmt Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (FN)',
+        defaultTime: '09:15 AM - 12:30 PM',
+        defaultDays: 'Monday',
+        icon: 'cloud',
+      },
+      {
+        id: 'big_data_lab',
+        code: 'AD2512',
+        name: 'Big Data Analytics Laboratory',
+        shortName: 'Big Data Analytics Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (AN)',
+        defaultTime: '01:20 PM - 03:50 PM',
+        defaultDays: 'Wednesday',
+        icon: 'database',
+      },
+      {
+        id: 'deep_learning_lab',
+        code: 'AD2513',
+        name: 'Deep Learning Laboratory',
+        shortName: 'Deep Learning Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (AN)',
+        defaultTime: '01:20 PM - 03:50 PM',
+        defaultDays: 'Thursday',
+        icon: 'cpu',
+      },
+      {
+        id: 'business_analytics_lab',
+        code: 'AD2514',
+        name: 'Business Analytics Laboratory',
+        shortName: 'Business Analytics Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (FN)',
+        defaultTime: '09:15 AM - 12:30 PM',
+        defaultDays: 'Friday',
+        icon: 'chart',
+      },
+      {
+        id: 'comm_training',
+        code: 'AD2515',
+        name: 'Communication Training & Soft Skills',
+        shortName: 'Communication Training',
+        credits: 1,
+        defaultPeriod: 'Period 7, Period 8',
+        defaultTime: '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM',
+        defaultDays: 'Tuesday',
+        icon: 'messages',
+      },
+      {
+        id: 'aptitude_training',
+        code: 'AD2516',
+        name: 'Aptitude & Quantitative Problem Solving',
+        shortName: 'Aptitude Training',
+        credits: 1,
+        defaultPeriod: 'Period 7, Period 8',
+        defaultTime: '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM',
+        defaultDays: 'Thursday',
+        icon: 'compass',
+      },
+      {
+        id: 'web_dev_lab',
+        code: 'AD2517',
+        name: 'Full Stack Web Development Laboratory',
+        shortName: 'Web Development Lab',
+        credits: 2,
+        defaultPeriod: 'Lab Session (AN)',
+        defaultTime: '01:20 PM - 03:50 PM',
+        defaultDays: 'Friday',
+        icon: 'globe',
+      },
+    ],
+  },
+  year4: {
+    yearNumber: 4,
+    semNumber: 7,
+    semLabel: 'Odd Semester (Semester 7)',
+    yearTitle: '4th Year — Odd Semester Projects & Placement',
+    badgeColor: 'bg-amber-50 text-amber-800 border-amber-300',
+    labs: [
+      {
+        id: 'project_phase1',
+        code: 'AD2711',
+        name: 'Project Work (Phase I)',
+        shortName: 'Project Phase I',
+        credits: 6,
+        defaultPeriod: 'Lab Session (P5-P8)',
+        defaultTime: '01:20 PM - 04:30 PM',
+        defaultDays: 'Wednesday, Friday',
+        icon: 'rocket',
+      },
+      {
+        id: 'placement_training',
+        code: 'AD2712',
+        name: 'Placement & Industry Training Program',
+        shortName: 'Placement & Training',
+        credits: 2,
+        defaultPeriod: 'Lab Session (AN)',
+        defaultTime: '01:20 PM - 03:50 PM',
+        defaultDays: 'Monday, Thursday',
+        icon: 'briefcase',
+      },
+    ],
+  },
+}
+
 const DEFAULT_SUBJECT_HANDLERS = [
-  { code: 'AD2301', name: 'Data Structures & Algorithms', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Wed, Fri', period: 'Period 1', time: '09:15 AM - 10:00 AM' },
-  { code: 'AD2302', name: 'Database Management Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 40, day: 'Tue, Thu', period: 'Period 2, Period 4', time: '10:00 AM - 10:45 AM, 11:45 AM - 12:30 PM' },
-  { code: 'AD2303', name: 'Discrete Mathematics', credits: 4, handler: 'Mr. S. Arun', hours: 45, day: 'Mon, Wed', period: 'Period 3', time: '11:00 AM - 11:45 AM' },
-  { code: 'AD2304', name: 'Operating Systems & System Software', credits: 3, handler: 'Mrs. R. Priya', hours: 38, day: 'Tue, Fri', period: 'Period 4, Period 8', time: '11:45 AM - 12:30 PM, 03:50 PM - 04:30 PM' },
-  { code: 'AD2305', name: 'Machine Learning Foundations', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Thu', period: 'Period 2, Period 5', time: '10:00 AM - 10:45 AM, 01:20 PM - 02:05 PM' },
-  { code: 'AD2306', name: 'Artificial Intelligence & Expert Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 36, day: 'Wed, Fri', period: 'Period 6, Period 7', time: '02:05 PM - 02:50 PM, 03:05 PM - 03:50 PM' },
-  { code: 'AD2307', name: 'Data Science Tools & Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Thu', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
+  { code: 'AD2311', name: 'Object Oriented Programming Laboratory', credits: 2, handler: 'Dr. S. Karthik', hours: 30, day: 'Tue', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
+  { code: 'AD2312', name: 'Database Management Systems Laboratory', credits: 2, handler: 'Dr. M. Sowmya', hours: 30, day: 'Thu', period: 'Lab Session (FN)', time: '09:15 AM - 12:30 PM' },
+  { code: 'AD2313', name: 'Data Structures & Algorithms Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Fri', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
+  { code: 'AD2511', name: 'Cloud Service Management Laboratory', credits: 2, handler: 'Dr. S. Karthik', hours: 30, day: 'Mon', period: 'Lab Session (FN)', time: '09:15 AM - 12:30 PM' },
+  { code: 'AD2512', name: 'Big Data Analytics Laboratory', credits: 2, handler: 'Mrs. R. Priya', hours: 30, day: 'Wed', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
+  { code: 'AD2513', name: 'Deep Learning Laboratory', credits: 2, handler: 'Dr. M. Sowmya', hours: 30, day: 'Thu', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
+  { code: 'AD2514', name: 'Business Analytics Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Fri', period: 'Lab Session (FN)', time: '09:15 AM - 12:30 PM' },
+  { code: 'AD2515', name: 'Communication Training & Soft Skills', credits: 1, handler: 'Mrs. R. Priya', hours: 20, day: 'Tue', period: 'Period 7, Period 8', time: '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM' },
+  { code: 'AD2516', name: 'Aptitude & Quantitative Problem Solving', credits: 1, handler: 'Mr. S. Arun', hours: 20, day: 'Thu', period: 'Period 7, Period 8', time: '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM' },
+  { code: 'AD2517', name: 'Full Stack Web Development Laboratory', credits: 2, handler: 'Dr. S. Karthik', hours: 30, day: 'Fri', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
+  { code: 'AD2711', name: 'Project Work (Phase I)', credits: 6, handler: 'Dr. S. Karthik', hours: 60, day: 'Wed, Fri', period: 'Lab Session (P5-P8)', time: '01:20 PM - 04:30 PM' },
+  { code: 'AD2712', name: 'Placement & Industry Training Program', credits: 2, handler: 'Dr. M. Sowmya', hours: 40, day: 'Mon, Thu', period: 'Lab Session (AN)', time: '01:20 PM - 03:50 PM' },
 ]
 
 // Exact 8 Periods & Institutional Bell Timings
@@ -111,11 +291,11 @@ const DAYS_OF_WEEK = [
 ]
 
 const DEFAULT_TIMETABLE = [
-  { day: 'Monday', p1: 'AD2301 (DS)', p2: 'AD2302 (DBMS)', p3: 'AD2303 (Maths)', p4: 'AD2305 (ML)', p5: 'Lab: AD2307', p6: 'Lab: AD2307', p7: 'Lab: AD2307', p8: 'Library' },
+  { day: 'Monday', p1: 'AD2301 (Theory)', p2: 'AD2302 (Theory)', p3: 'AD2303 (Maths)', p4: 'AD2305 (ML)', p5: 'Lab: AD2311 (OOP)', p6: 'Lab: AD2311 (OOP)', p7: 'Lab: AD2311 (OOP)', p8: 'Library' },
   { day: 'Tuesday', p1: 'AD2305 (ML)', p2: 'AD2304 (OS)', p3: 'AD2301 (DS)', p4: 'AD2306 (AI)', p5: 'Mentorship', p6: 'AD2302 (DBMS)', p7: 'Self-Study', p8: 'Placement Prep' },
-  { day: 'Wednesday', p1: 'AD2302 (DBMS)', p2: 'AD2303 (Maths)', p3: 'AD2306 (AI)', p4: 'AD2304 (OS)', p5: 'Project Work', p6: 'Project Work', p7: 'Seminar', p8: 'Sports' },
-  { day: 'Thursday', p1: 'AD2304 (OS)', p2: 'AD2301 (DS)', p3: 'AD2305 (ML)', p4: 'AD2302 (DBMS)', p5: 'Lab: AD2307', p6: 'Lab: AD2307', p7: 'Lab: AD2307', p8: 'Club Activity' },
-  { day: 'Friday', p1: 'AD2303 (Maths)', p2: 'AD2306 (AI)', p3: 'AD2304 (OS)', p4: 'AD2301 (DS)', p5: 'AD2305 (ML)', p6: 'AD2303 (Maths)', p7: 'Counseling', p8: 'Mentorship' },
+  { day: 'Wednesday', p1: 'AD2302 (DBMS)', p2: 'AD2303 (Maths)', p3: 'AD2306 (AI)', p4: 'AD2304 (OS)', p5: 'Lab: AD2313 (DSA)', p6: 'Lab: AD2313 (DSA)', p7: 'Lab: AD2313 (DSA)', p8: 'Sports' },
+  { day: 'Thursday', p1: 'Lab: AD2312 (DBMS)', p2: 'Lab: AD2312 (DBMS)', p3: 'Lab: AD2312 (DBMS)', p4: 'Lab: AD2312 (DBMS)', p5: 'AD2305 (ML)', p6: 'AD2304 (OS)', p7: 'Project', p8: 'Club Activity' },
+  { day: 'Friday', p1: 'AD2303 (Maths)', p2: 'AD2306 (AI)', p3: 'AD2304 (OS)', p4: 'AD2301 (DS)', p5: 'Lab: AD2313 (DSA)', p6: 'Lab: AD2313 (DSA)', p7: 'Counseling', p8: 'Mentorship' },
 ]
 
 export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRecord[] }) {
@@ -126,6 +306,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [yearFilter, setYearFilter] = useState('ALL')
   const [sectionFilter, setSectionFilter] = useState('ALL')
   const [designationFilter, setDesignationFilter] = useState('ALL')
+  const [oddSemLabFilter, setOddSemLabFilter] = useState<'ALL' | 'year2' | 'year3' | 'year4'>('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
   // Modals
@@ -158,10 +339,32 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     classTime: '09:15 AM - 10:00 AM',
     advisorBatch: '',
     advisorYear: 2,
-    advisorSem: 4,
+    advisorSem: 3, // Default to Odd Sem 3
     advisorSec: 'A',
     facultyType: 'advisor', // 'advisor', 'subject_handler', or 'both'
   })
+
+  // Quick Presets Modal Tab for Odd Semester Labs
+  const [quickLabTab, setQuickLabTab] = useState<'year2' | 'year3' | 'year4'>('year2')
+
+  // Apply Quick Lab Preset into Form
+  const applyLabPreset = (lab: {
+    code: string
+    name: string
+    shortName: string
+    defaultPeriod: string
+    defaultTime: string
+    defaultDays: string
+  }) => {
+    setFormData({
+      ...formData,
+      subjectName: lab.name,
+      subjects: lab.code,
+      classPeriod: lab.defaultPeriod,
+      classTime: lab.defaultTime,
+      classDay: lab.defaultDays,
+    })
+  }
 
   // Normalize subjects array helper
   const getSubjectsList = (subjects: string[] | string): string[] => {
@@ -176,7 +379,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     return []
   }
 
-  // Toggle Multiple Days (e.g. Mon, Wed, Fri)
+  // Toggle Multiple Days
   const toggleDaySelection = (dayCode: string) => {
     const currentDays = formData.classDay
       ? formData.classDay.split(',').map((d) => d.trim()).filter(Boolean)
@@ -223,7 +426,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   useEffect(() => {
     if (!selectedAdvisorDossier) return
     const year = selectedAdvisorDossier.advisorYear || 2
-    const sem = selectedAdvisorDossier.advisorSem || 4
+    const sem = selectedAdvisorDossier.advisorSem || 3
     const sec = selectedAdvisorDossier.advisorSec || 'A'
 
     setLoadingClassData(true)
@@ -324,9 +527,25 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         designationFilter === 'ALL' ||
         f.designation.toLowerCase().includes(designationFilter.toLowerCase())
 
-      return matchesSearch && matchesDesignation
+      // Odd Sem Lab category filter
+      let matchesOddSemFilter = true
+      if (oddSemLabFilter === 'year2') {
+        matchesOddSemFilter = ODD_SEMESTER_LABS_BY_YEAR.year2.labs.some(
+          (l) => (f.subjectName && f.subjectName.toLowerCase().includes(l.shortName.toLowerCase())) || subjs.includes(l.code)
+        )
+      } else if (oddSemLabFilter === 'year3') {
+        matchesOddSemFilter = ODD_SEMESTER_LABS_BY_YEAR.year3.labs.some(
+          (l) => (f.subjectName && f.subjectName.toLowerCase().includes(l.shortName.toLowerCase())) || subjs.includes(l.code)
+        )
+      } else if (oddSemLabFilter === 'year4') {
+        matchesOddSemFilter = ODD_SEMESTER_LABS_BY_YEAR.year4.labs.some(
+          (l) => (f.subjectName && f.subjectName.toLowerCase().includes(l.shortName.toLowerCase())) || subjs.includes(l.code)
+        )
+      }
+
+      return matchesSearch && matchesDesignation && matchesOddSemFilter
     })
-  }, [facultyList, searchQuery, designationFilter])
+  }, [facultyList, searchQuery, designationFilter, oddSemLabFilter])
 
   // PDF Export
   const handleExportPDF = () => {
@@ -334,36 +553,37 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     generateAndDownloadPDF({
       title: isAdvisors
         ? 'DEPARTMENT OF AI & DS — CLASS ADVISORS DIRECTORY'
-        : 'DEPARTMENT OF AI & DS — SUBJECT HANDLERS & TIMINGS DIRECTORY',
+        : 'DEPARTMENT OF AI & DS — ODD SEMESTER LABS & SUBJECT HANDLERS DIRECTORY',
       subtitle: 'V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026',
       author: 'Office of the Department Administrator',
       category: isAdvisors ? 'Class In-Charges & Mentors' : 'Course Instructors & Schedules',
       sections: [
         {
-          heading: isAdvisors ? '1. CLASS ADVISORS SUMMARY' : '1. COURSE INSTRUCTORS SUMMARY',
+          heading: isAdvisors ? '1. CLASS ADVISORS SUMMARY' : '1. COURSE INSTRUCTORS & LABS SUMMARY',
           body: [
             `Total Faculty Count: ${facultyList.length} Faculty Members`,
-            `Active View: ${isAdvisors ? 'Class Mentors & Batch Advisors' : 'Subject Handlers, Timing & Period Allocations'}`,
+            `Active View: ${isAdvisors ? 'Class Mentors & Batch Advisors' : 'Odd Semester Practical Labs & Subject Handlers'}`,
             `Department: Artificial Intelligence & Data Science (AI & DS)`,
+            `Curriculum Scope: Odd Semesters (Sem 3, Sem 5, Sem 7) Laboratory Courses`,
           ],
         },
         {
-          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : '2. SUBJECT HANDLERS & TIMETABLE ALLOCATION',
+          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : '2. SUBJECT HANDLERS & LAB ALLOCATIONS',
           body: (isAdvisors ? advisorsList : handlersList).map((f, idx) => {
             if (isAdvisors) {
               return `${idx + 1}. ${f.name} — ${f.designation} | Assigned Batch: ${f.advisorBatch || 'Year II (Sec A)'} | Contact: ${f.email}`
             } else {
-              const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2301'
-              const sName = f.subjectName || 'Artificial Intelligence'
-              const sDay = f.classDay || 'Mon, Wed, Fri'
-              const sPeriod = f.classPeriod || 'Period 1'
-              const sTime = f.classTime || '09:15 AM - 10:00 AM'
+              const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2311'
+              const sName = f.subjectName || 'Object Oriented Programming Laboratory'
+              const sDay = f.classDay || 'Tuesday'
+              const sPeriod = f.classPeriod || 'Lab Session (AN)'
+              const sTime = f.classTime || '01:20 PM - 03:50 PM'
               return `${idx + 1}. ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
             }
           }),
         },
       ],
-      fileName: isAdvisors ? 'VSB_AI_DS_Class_Advisors_2026' : 'VSB_AI_DS_Subject_Handlers_2026',
+      fileName: isAdvisors ? 'VSB_AI_DS_Class_Advisors_2026' : 'VSB_AI_DS_Odd_Semester_Labs_2026',
     })
   }
 
@@ -371,7 +591,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const handleExportClassDossierPDF = () => {
     if (!selectedAdvisorDossier) return
     generateAndDownloadPDF({
-      title: `CLASS DOSSIER: ${selectedAdvisorDossier.advisorBatch || 'Year II - Sem 4 - Sec A'}`,
+      title: `CLASS DOSSIER: ${selectedAdvisorDossier.advisorBatch || 'Year II - Sem 3 - Sec A'}`,
       subtitle: `Class Advisor: ${selectedAdvisorDossier.name} · Department of AI & DS`,
       author: 'Class Advisory Mentorship Record',
       category: 'Official Class Details & Student Roster',
@@ -380,7 +600,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           heading: '1. CLASS ADVISOR & BATCH DETAILS',
           body: [
             `Class Advisor: ${selectedAdvisorDossier.name} (${selectedAdvisorDossier.designation})`,
-            `Assigned Class: ${selectedAdvisorDossier.advisorBatch || 'Year 2, Sem 4, Sec A'}`,
+            `Assigned Class: ${selectedAdvisorDossier.advisorBatch || 'Year 2, Sem 3, Sec A'}`,
             `Advisor Email: ${selectedAdvisorDossier.email} | Phone: ${selectedAdvisorDossier.phone || 'N/A'}`,
             `Total Enrolled Students: ${classStudents.length} Students`,
             `Class Average Attendance: ${(classStudents.reduce((acc, s) => acc + s.attendancePercent, 0) / (classStudents.length || 1)).toFixed(1)}%`,
@@ -458,9 +678,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: 'Mon, Wed, Fri',
           classPeriod: 'Period 1',
           classTime: '09:15 AM - 10:00 AM',
-          advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
+          advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 3 - Sec A' : '',
           advisorYear: 2,
-          advisorSem: 4,
+          advisorSem: 3,
           advisorSec: 'A',
           facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
         })
@@ -589,13 +809,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Faculty Records Administration
+              Odd Semester Practical &amp; Theory Cadre
             </span>
             <span className="text-xs text-gray-300 font-medium">· Department of AI &amp; DS</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; Cadre</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; Labs</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Separated into dedicated pages for <strong>Class Advisors</strong> and <strong>Subject Handlers (8 Periods: 09:15 AM – 04:30 PM &amp; Labs)</strong>
+            Odd Semesters Labs for <strong>2nd Year</strong>, <strong>3rd Year</strong>, &amp; <strong>4th Year</strong> with exact 8-period timings (09:15 AM – 04:30 PM).
           </p>
         </div>
 
@@ -624,9 +844,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 classDay: 'Mon, Wed, Fri',
                 classPeriod: 'Period 1',
                 classTime: '09:15 AM - 10:00 AM',
-                advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
+                advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 3 - Sec A' : '',
                 advisorYear: 2,
-                advisorSem: 4,
+                advisorSem: 3,
                 advisorSec: 'A',
                 facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
               })
@@ -698,11 +918,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   'w-10 h-10 rounded-xl flex items-center justify-center font-black',
                   activeTab === 'handlers' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
                 )}>
-                  <BookMarked className="w-5 h-5" />
+                  <FlaskConical className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-[#071A3D]">Page 2: Subject Handlers</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">8 Periods (09:15 AM - 04:30 PM), Lab Slots, Schedules &amp; Timings</p>
+                  <h4 className="font-black text-sm text-[#071A3D]">Page 2: Odd Sem Labs &amp; Subject Handlers</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Available Labs (2nd, 3rd, 4th Year), 8 Periods (09:15 - 04:30) &amp; Schedules</p>
                 </div>
               </div>
               <span className={cn(
@@ -738,10 +958,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               {[
                 { val: 'ALL', label: 'All 4 Years', sub: 'All Batches' },
-                { val: '1', label: 'Year I', sub: 'Freshman' },
-                { val: '2', label: 'Year II', sub: 'Sophomore' },
-                { val: '3', label: 'Year III', sub: 'Junior' },
-                { val: '4', label: 'Year IV', sub: 'Senior' },
+                { val: '1', label: 'Year I', sub: 'Freshman (Sem 1)' },
+                { val: '2', label: 'Year II', sub: 'Sophomore (Sem 3)' },
+                { val: '3', label: 'Year III', sub: 'Junior (Sem 5)' },
+                { val: '4', label: 'Year IV', sub: 'Senior (Sem 7)' },
               ].map((b) => {
                 const isSelected = yearFilter === b.val
                 const count = facultyList.filter(
@@ -772,6 +992,176 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           </div>
         )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* ODD SEMESTER AVAILABLE LABS QUICK SHOWCASE & FILTER (FOR SUBJECT HANDLERS) */}
+      {/* ========================================================================= */}
+      {activeTab === 'handlers' && (
+        <div className="bg-gradient-to-br from-purple-900/5 via-blue-900/5 to-amber-900/5 rounded-3xl p-5 border border-purple-200/80 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-purple-700 text-white flex items-center justify-center shadow-xs">
+                <FlaskConical className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-[#071A3D] flex items-center gap-2">
+                  <span>Available Odd Semester Labs &amp; Practical Training</span>
+                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
+                    Odd Semesters (Sem 3, 5, 7)
+                  </span>
+                </h3>
+                <p className="text-[11px] text-gray-500 font-medium">
+                  Curriculum-assigned practical laboratories, soft skills, aptitude, and project phases
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Filter buttons */}
+            <div className="flex items-center gap-1.5 overflow-x-auto">
+              <button
+                onClick={() => setOddSemLabFilter('ALL')}
+                className={cn(
+                  'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                  oddSemLabFilter === 'ALL'
+                    ? 'bg-[#071A3D] text-white shadow-xs'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                )}
+              >
+                All Odd Labs ({ODD_SEMESTER_LABS_BY_YEAR.year2.labs.length + ODD_SEMESTER_LABS_BY_YEAR.year3.labs.length + ODD_SEMESTER_LABS_BY_YEAR.year4.labs.length})
+              </button>
+              <button
+                onClick={() => setOddSemLabFilter('year2')}
+                className={cn(
+                  'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                  oddSemLabFilter === 'year2'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-white text-blue-700 border border-blue-200 hover:bg-blue-50'
+                )}
+              >
+                2nd Year ({ODD_SEMESTER_LABS_BY_YEAR.year2.labs.length})
+              </button>
+              <button
+                onClick={() => setOddSemLabFilter('year3')}
+                className={cn(
+                  'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                  oddSemLabFilter === 'year3'
+                    ? 'bg-purple-700 text-white shadow-xs'
+                    : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-50'
+                )}
+              >
+                3rd Year ({ODD_SEMESTER_LABS_BY_YEAR.year3.labs.length})
+              </button>
+              <button
+                onClick={() => setOddSemLabFilter('year4')}
+                className={cn(
+                  'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                  oddSemLabFilter === 'year4'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-white text-amber-800 border border-amber-300 hover:bg-amber-50'
+                )}
+              >
+                4th Year ({ODD_SEMESTER_LABS_BY_YEAR.year4.labs.length})
+              </button>
+            </div>
+          </div>
+
+          {/* 3 Years Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {/* 2nd Year Labs */}
+            {(oddSemLabFilter === 'ALL' || oddSemLabFilter === 'year2') && (
+              <div className="p-4 rounded-2xl bg-white border border-blue-200/80 shadow-2xs space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] text-[10px] font-black uppercase tracking-wider border border-blue-200">
+                      2nd Year · Semester 3
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-bold">3 Core Labs</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-[#071A3D]">2nd Year Available Labs</h4>
+
+                  <ul className="mt-2.5 space-y-2 text-xs">
+                    {ODD_SEMESTER_LABS_BY_YEAR.year2.labs.map((l) => (
+                      <li key={l.id} className="p-2 rounded-xl bg-blue-50/40 border border-blue-100 flex items-start gap-2">
+                        <Code2 className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <span className="font-bold text-[#071A3D] block truncate">{l.name}</span>
+                          <span className="text-[10px] text-gray-500 font-mono">{l.code} · {l.defaultPeriod} ({l.defaultTime})</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-gray-100 text-[10px] text-blue-700 font-bold flex items-center justify-between">
+                  <span>OOP, DBMS, DSA Practical</span>
+                  <span className="font-mono">Sem 3 Curricula</span>
+                </div>
+              </div>
+            )}
+
+            {/* 3rd Year Labs */}
+            {(oddSemLabFilter === 'ALL' || oddSemLabFilter === 'year3') && (
+              <div className="p-4 rounded-2xl bg-white border border-purple-200/80 shadow-2xs space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-purple-50 text-purple-700 text-[10px] font-black uppercase tracking-wider border border-purple-200">
+                      3rd Year · Semester 5
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-bold">7 Labs &amp; Skills</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-[#071A3D]">3rd Year Available Labs &amp; Training</h4>
+
+                  <ul className="mt-2.5 space-y-1.5 text-xs max-h-56 overflow-y-auto pr-1">
+                    {ODD_SEMESTER_LABS_BY_YEAR.year3.labs.map((l) => (
+                      <li key={l.id} className="p-1.5 rounded-xl bg-purple-50/40 border border-purple-100 flex items-start gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-700 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <span className="font-bold text-[#071A3D] block text-[11px] truncate">{l.name}</span>
+                          <span className="text-[9px] text-gray-500 font-mono block">{l.code} · {l.defaultPeriod}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-gray-100 text-[10px] text-purple-700 font-bold flex items-center justify-between">
+                  <span>Cloud, Big Data, DL, BA, Comm, Apt, Web</span>
+                  <span className="font-mono">Sem 5 Curricula</span>
+                </div>
+              </div>
+            )}
+
+            {/* 4th Year Labs */}
+            {(oddSemLabFilter === 'ALL' || oddSemLabFilter === 'year4') && (
+              <div className="p-4 rounded-2xl bg-white border border-amber-300 shadow-2xs space-y-2.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-amber-100 text-amber-900 text-[10px] font-black uppercase tracking-wider border border-amber-300">
+                      4th Year · Semester 7
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-bold">2 Core Capstones</span>
+                  </div>
+                  <h4 className="font-extrabold text-xs text-[#071A3D]">4th Year Project &amp; Placement Training</h4>
+
+                  <ul className="mt-2.5 space-y-2 text-xs">
+                    {ODD_SEMESTER_LABS_BY_YEAR.year4.labs.map((l) => (
+                      <li key={l.id} className="p-2 rounded-xl bg-amber-50/40 border border-amber-200 flex items-start gap-2">
+                        <Rocket className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                        <div className="flex-1 min-w-0">
+                          <span className="font-bold text-[#071A3D] block truncate">{l.name}</span>
+                          <span className="text-[10px] text-gray-500 font-mono">{l.code} · {l.defaultPeriod} ({l.defaultTime})</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-gray-100 text-[10px] text-amber-800 font-bold flex items-center justify-between">
+                  <span>Project Phase I &amp; Placement Readiness</span>
+                  <span className="font-mono">Sem 7 Curricula</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Institutional Bell Schedule & Break Times Summary Bar */}
       <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-amber-50 rounded-2xl p-3.5 border border-blue-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -811,9 +1201,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           <p className="text-[10px] text-green-700 font-medium mt-1">4 Years · Sections A - D</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Subject Handlers</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">{handlersList.length}</p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">Curriculum &amp; Lab Sessions</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Odd Semester Labs</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">12 Courses</p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">Years II, III, IV Available Labs</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Daily Matrix</p>
@@ -930,7 +1320,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       <span className="px-3 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold border border-purple-200 inline-flex items-center gap-1.5">
                         <GraduationCap className="w-3.5 h-3.5" />
                         {advisor.advisorBatch ||
-                          `Year ${advisor.advisorYear || 2} · Sem ${advisor.advisorSem || 4} (Sec ${advisor.advisorSec || 'A'})`}
+                          `Year ${advisor.advisorYear || 2} · Sem ${advisor.advisorSem || 3} (Sec ${advisor.advisorSec || 'A'})`}
                       </span>
                     </td>
 
@@ -1000,9 +1390,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               classDay: advisor.classDay || 'Mon, Wed, Fri',
                               classPeriod: advisor.classPeriod || 'Period 1',
                               classTime: advisor.classTime || '09:15 AM - 10:00 AM',
-                              advisorBatch: advisor.advisorBatch || 'Year II - Sem 4 - Sec A',
+                              advisorBatch: advisor.advisorBatch || 'Year II - Sem 3 - Sec A',
                               advisorYear: advisor.advisorYear || 2,
-                              advisorSem: advisor.advisorSem || 4,
+                              advisorSem: advisor.advisorSem || 3,
                               advisorSec: advisor.advisorSec || 'A',
                               facultyType: advisor.facultyType || 'advisor',
                             })
@@ -1031,7 +1421,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================= */}
-      {/* PAGE 2: SUBJECT HANDLERS TABLE (WITH 8 PERIODS & LABS) */}
+      {/* PAGE 2: SUBJECT HANDLERS & LABS TABLE */}
       {/* ========================================================= */}
       {activeTab === 'handlers' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
@@ -1040,7 +1430,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               <tr>
                 <th className="px-4 py-3.5">#</th>
                 <th className="px-4 py-3.5">Faculty Name</th>
-                <th className="px-4 py-3.5">Subject Name &amp; Course Code</th>
+                <th className="px-4 py-3.5">Subject / Lab Name &amp; Code</th>
                 <th className="px-4 py-3.5">Class Days</th>
                 <th className="px-4 py-3.5">Periods (1-8) &amp; Lab Sessions</th>
                 <th className="px-4 py-3.5">Designation</th>
@@ -1051,7 +1441,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               {handlersList.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-gray-400">
-                    <BookMarked className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <FlaskConical className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="font-bold text-gray-600">No Subject Handlers Found</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subjects, days, 8 periods, and lab sessions.</p>
                   </td>
@@ -1059,18 +1449,24 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               ) : (
                 handlersList.map((handler, idx) => {
                   const subjs = getSubjectsList(handler.subjects)
-                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Subject: ${subjs.join(', ')}` : 'Machine Learning Foundations')
-                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2305'
-                  const dayList = handler.classDay ? handler.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Mon', 'Wed', 'Fri']
-                  const periodList = handler.classPeriod ? handler.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Period 1']
-                  const timeDisplay = handler.classTime || '09:15 AM - 10:00 AM'
+                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Course: ${subjs.join(', ')}` : 'Object Oriented Programming Laboratory')
+                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2311'
+                  const dayList = handler.classDay ? handler.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Tue']
+                  const periodList = handler.classPeriod ? handler.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Lab Session (AN)']
+                  const timeDisplay = handler.classTime || '01:20 PM - 03:50 PM'
+                  const isLabCourse = subjectDisplayName.toLowerCase().includes('lab') || subjectDisplayName.toLowerCase().includes('project') || subjectDisplayName.toLowerCase().includes('training') || periodList.some(p => p.toLowerCase().includes('lab'))
 
                   return (
                     <tr key={handler.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 font-black text-sm flex items-center justify-center border border-purple-200">
+                          <div className={cn(
+                            'w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center border',
+                            isLabCourse
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : 'bg-purple-100 text-purple-700 border-purple-200'
+                          )}>
                             {handler.name.charAt(0)}
                           </div>
                           <div>
@@ -1087,7 +1483,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       {/* Subject Name & Course Code */}
                       <td className="px-4 py-3.5">
                         <div>
-                          <span className="font-bold text-[#071A3D] block text-sm">
+                          <span className="font-bold text-[#071A3D] block text-sm flex items-center gap-1.5">
+                            {isLabCourse && <FlaskConical className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
                             {subjectDisplayName}
                           </span>
                           <span className="px-2 py-0.5 rounded-md bg-blue-50 text-[#1455D9] font-mono font-bold border border-blue-200/60 text-[10px] inline-block mt-0.5">
@@ -1164,12 +1561,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 specialization: handler.specialization || '',
                                 subjects: subjs.join(', '),
                                 subjectName: handler.subjectName || '',
-                                classDay: handler.classDay || 'Mon, Wed, Fri',
-                                classPeriod: handler.classPeriod || 'Period 1',
-                                classTime: handler.classTime || '09:15 AM - 10:00 AM',
+                                classDay: handler.classDay || 'Tue',
+                                classPeriod: handler.classPeriod || 'Lab Session (AN)',
+                                classTime: handler.classTime || '01:20 PM - 03:50 PM',
                                 advisorBatch: handler.advisorBatch || '',
                                 advisorYear: handler.advisorYear || 2,
-                                advisorSem: handler.advisorSem || 4,
+                                advisorSem: handler.advisorSem || 3,
                                 advisorSec: handler.advisorSec || 'A',
                                 facultyType: handler.facultyType || 'subject_handler',
                               })
@@ -1220,7 +1617,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Official Class Dossier
                     </span>
                     <span className="text-xs text-gray-300 font-bold">
-                      · {selectedAdvisorDossier.advisorBatch || 'Year II · Sem 4 · Sec A'}
+                      · {selectedAdvisorDossier.advisorBatch || 'Year II · Sem 3 · Sec A'}
                     </span>
                   </div>
 
@@ -1269,8 +1666,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   </p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
-                  <span className="text-[10px] font-bold text-gray-300 uppercase block">Semester Subjects</span>
-                  <p className="text-xl font-black text-[#F4C430] mt-0.5">{DEFAULT_SUBJECT_HANDLERS.length} Courses</p>
+                  <span className="text-[10px] font-bold text-gray-300 uppercase block">Semester Labs &amp; Courses</span>
+                  <p className="text-xl font-black text-[#F4C430] mt-0.5">{DEFAULT_SUBJECT_HANDLERS.length} Allocated</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
                   <span className="text-[10px] font-bold text-gray-300 uppercase block">Attendance Defaulters</span>
@@ -1285,7 +1682,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <div className="bg-gray-50 border-b border-gray-200 px-6 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
               {[
                 { id: 'students', label: '1. Student Roll Roster', icon: <Users className="w-3.5 h-3.5" />, count: classStudents.length },
-                { id: 'handlers', label: '2. Subjects & Handlers', icon: <BookMarked className="w-3.5 h-3.5" />, count: DEFAULT_SUBJECT_HANDLERS.length },
+                { id: 'handlers', label: '2. Odd Semester Labs & Handlers', icon: <FlaskConical className="w-3.5 h-3.5" />, count: DEFAULT_SUBJECT_HANDLERS.length },
                 { id: 'attendance', label: '3. Defaulters Watch (<75%)', icon: <AlertTriangle className="w-3.5 h-3.5" />, count: classStudents.filter((s) => s.attendancePercent < 75).length },
                 { id: 'timetable', label: '4. Class Timetable (8 Periods & Breaks)', icon: <Clock className="w-3.5 h-3.5" /> },
                 { id: 'notices', label: '5. Class Notices', icon: <MessageSquare className="w-3.5 h-3.5" /> },
@@ -1392,12 +1789,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* TAB 2: SUBJECTS & HANDLERS */}
+              {/* TAB 2: ODD SEMESTER LABS & HANDLERS */}
               {dossierTab === 'handlers' && (
                 <div className="space-y-4 animate-fade-in">
                   <div>
-                    <h4 className="font-black text-sm text-[#071A3D]">Curriculum Courses &amp; Allocated Subject Handlers</h4>
-                    <p className="text-gray-500 text-[11px]">All faculty members teaching this specific section this semester</p>
+                    <h4 className="font-black text-sm text-[#071A3D]">Odd Semester Curriculum &amp; Practical Laboratories</h4>
+                    <p className="text-gray-500 text-[11px]">Practical lab courses and subject handlers allocated for this academic class</p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -1409,7 +1806,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           </span>
                           <span className="text-[11px] text-gray-500 font-bold">{subj.credits} Credits · {subj.hours} Hours</span>
                         </div>
-                        <h5 className="font-black text-sm text-[#071A3D]">{subj.name}</h5>
+                        <h5 className="font-black text-sm text-[#071A3D] flex items-center gap-1.5">
+                          <FlaskConical className="w-3.5 h-3.5 text-purple-700" />
+                          {subj.name}
+                        </h5>
                         <div className="pt-2 border-t space-y-1 text-xs">
                           <div className="flex items-center justify-between">
                             <span className="text-gray-500 font-medium">Subject Handler:</span>
@@ -1554,7 +1954,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         <span className="text-[10px] text-gray-400 font-mono">Today, 09:30 AM</span>
                       </div>
                       <p className="text-gray-600 text-xs">
-                        All students are required to submit their Data Science Laboratory observation records by this Friday 4:00 PM.
+                        All students are required to submit their Laboratory observation records by this Friday 4:00 PM.
                       </p>
                     </div>
 
@@ -1641,8 +2041,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <BookMarked className="w-4 h-4" />
-                    <span>Subject Faculty</span>
+                    <FlaskConical className="w-4 h-4" />
+                    <span>Subject / Lab Faculty</span>
                     <span className="text-[10px] font-normal text-gray-400">Course Teacher</span>
                   </button>
 
@@ -1769,7 +2169,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 />
               </div>
 
-              {/* Class Advisor Assignment Fields (Shown when advisor or both) */}
+              {/* Class Advisor Assignment Fields */}
               {(formData.facultyType === 'advisor' || formData.facultyType === 'both') && (
                 <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 animate-fade-in">
                   <span className="font-black text-[#071A3D] flex items-center gap-1.5">
@@ -1778,7 +2178,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester (1 - 8)</label>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester</label>
                       <select
                         value={formData.advisorSem}
                         onChange={(e) => {
@@ -1793,11 +2193,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                          <option key={sem} value={sem}>
-                            Semester {sem} (Year {Math.ceil(sem / 2)})
-                          </option>
-                        ))}
+                        <option value={1}>Semester 1 (Year 1)</option>
+                        <option value={3}>Semester 3 (Year 2)</option>
+                        <option value={5}>Semester 5 (Year 3)</option>
+                        <option value={7}>Semester 7 (Year 4)</option>
+                        <option value={2}>Semester 2 (Even)</option>
+                        <option value={4}>Semester 4 (Even)</option>
+                        <option value={6}>Semester 6 (Even)</option>
+                        <option value={8}>Semester 8 (Even)</option>
                       </select>
                     </div>
 
@@ -1807,11 +2210,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         value={formData.advisorYear}
                         onChange={(e) => {
                           const y = Number(e.target.value)
+                          const sem = (y * 2) - 1
                           setFormData({
                             ...formData,
                             advisorYear: y,
-                            advisorSem: (y * 2) - 1,
-                            advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
+                            advisorSem: sem,
+                            advisorBatch: `Year ${y} - Sem ${sem} - Sec ${formData.advisorSec}`,
                           })
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
@@ -1847,27 +2251,85 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Subject Handler Schedule & Details (8 Periods & Lab Sessions) */}
+              {/* Subject / Lab Handler Schedule & Details */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
                 <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3.5 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                      <BookMarked className="w-4 h-4 text-purple-700" />
-                      Subject Details &amp; Timetable (8 Periods &amp; Labs):
+                      <FlaskConical className="w-4 h-4 text-purple-700" />
+                      Subject / Lab Assignment &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Exact Bell Timings
+                      Odd Sem Labs Available
                     </span>
+                  </div>
+
+                  {/* QUICK-FILL PRESETS FOR ODD SEMESTER LABS */}
+                  <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-amber-500" />
+                        Quick-Select Odd Semester Lab / Training:
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setQuickLabTab('year2')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer',
+                            quickLabTab === 'year2' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                          )}
+                        >
+                          2nd Year (Sem 3)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuickLabTab('year3')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer',
+                            quickLabTab === 'year3' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                          )}
+                        >
+                          3rd Year (Sem 5)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuickLabTab('year4')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer',
+                            quickLabTab === 'year4' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600'
+                          )}
+                        >
+                          4th Year (Sem 7)
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {ODD_SEMESTER_LABS_BY_YEAR[quickLabTab].labs.map((l) => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => applyLabPreset(l)}
+                          className="px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-900 border border-purple-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
+                          title={`Auto-fill ${l.name} (${l.code})`}
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>{l.shortName}</span>
+                          <span className="font-mono text-[9px] opacity-75">[{l.code}]</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Subject Name *
+                        Subject / Lab Name *
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Machine Learning Foundations"
+                        placeholder="e.g. Object Oriented Programming Laboratory"
                         value={formData.subjectName}
                         onChange={(e) => setFormData({ ...formData, subjectName: e.target.value })}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D]"
@@ -1875,11 +2337,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Course Code (e.g. AD2305)
+                        Course Code (e.g. AD2311)
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. AD2305"
+                        placeholder="e.g. AD2311"
                         value={formData.subjects}
                         onChange={(e) => setFormData({ ...formData, subjects: e.target.value.toUpperCase() })}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
@@ -2001,7 +2463,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 09:15 AM - 10:00 AM, 11:45 AM - 12:30 PM"
+                      placeholder="e.g. 09:15 AM - 12:30 PM"
                       value={formData.classTime}
                       onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
@@ -2090,8 +2552,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <BookMarked className="w-4 h-4" />
-                    <span>Subject Faculty</span>
+                    <FlaskConical className="w-4 h-4" />
+                    <span>Subject / Lab Faculty</span>
                     <span className="text-[10px] font-normal text-gray-400">Course Teacher</span>
                   </button>
 
@@ -2203,7 +2665,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester (1 - 8)</label>
+                      <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester</label>
                       <select
                         value={formData.advisorSem}
                         onChange={(e) => {
@@ -2218,9 +2680,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                          <option key={s} value={s}>Semester {s} (Year {Math.ceil(s / 2)})</option>
-                        ))}
+                        <option value={1}>Semester 1 (Year 1)</option>
+                        <option value={3}>Semester 3 (Year 2)</option>
+                        <option value={5}>Semester 5 (Year 3)</option>
+                        <option value={7}>Semester 7 (Year 4)</option>
                       </select>
                     </div>
 
@@ -2230,11 +2693,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         value={formData.advisorYear}
                         onChange={(e) => {
                           const y = Number(e.target.value)
+                          const sem = (y * 2) - 1
                           setFormData({
                             ...formData,
                             advisorYear: y,
-                            advisorSem: (y * 2) - 1,
-                            advisorBatch: `Year ${y} - Sem ${(y * 2) - 1} - Sec ${formData.advisorSec}`,
+                            advisorSem: sem,
+                            advisorBatch: `Year ${y} - Sem ${sem} - Sec ${formData.advisorSec}`,
                           })
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
@@ -2270,27 +2734,84 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Subject Handler Schedule & Details (8 Periods & Labs) */}
+              {/* Subject Handler Schedule & Details */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
                 <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3.5 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                      <BookMarked className="w-4 h-4 text-purple-700" />
-                      Subject Details &amp; Timetable (8 Periods &amp; Labs):
+                      <FlaskConical className="w-4 h-4 text-purple-700" />
+                      Subject / Lab Assignment &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Exact Bell Timings
+                      Odd Sem Labs Available
                     </span>
+                  </div>
+
+                  {/* QUICK-FILL PRESETS FOR ODD SEMESTER LABS IN EDIT MODAL */}
+                  <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-amber-500" />
+                        Quick-Select Odd Semester Lab:
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setQuickLabTab('year2')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer',
+                            quickLabTab === 'year2' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'
+                          )}
+                        >
+                          2nd Year
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuickLabTab('year3')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer',
+                            quickLabTab === 'year3' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                          )}
+                        >
+                          3rd Year
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuickLabTab('year4')}
+                          className={cn(
+                            'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer',
+                            quickLabTab === 'year4' ? 'bg-amber-600 text-white' : 'bg-gray-100 text-gray-600'
+                          )}
+                        >
+                          4th Year
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {ODD_SEMESTER_LABS_BY_YEAR[quickLabTab].labs.map((l) => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => applyLabPreset(l)}
+                          className="px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-900 border border-purple-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>{l.shortName}</span>
+                          <span className="font-mono text-[9px] opacity-75">[{l.code}]</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Subject Name *
+                        Subject / Lab Name *
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Machine Learning Foundations"
+                        placeholder="e.g. Object Oriented Programming Laboratory"
                         value={formData.subjectName}
                         onChange={(e) => setFormData({ ...formData, subjectName: e.target.value })}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D]"
@@ -2298,11 +2819,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Course Code (e.g. AD2305)
+                        Course Code (e.g. AD2311)
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. AD2305"
+                        placeholder="e.g. AD2311"
                         value={formData.subjects}
                         onChange={(e) => setFormData({ ...formData, subjects: e.target.value.toUpperCase() })}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800"
@@ -2424,7 +2945,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g. 09:15 AM - 10:00 AM, 11:45 AM - 12:30 PM"
+                      placeholder="e.g. 09:15 AM - 12:30 PM"
                       value={formData.classTime}
                       onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
