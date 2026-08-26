@@ -33,6 +33,7 @@ import {
   FileText,
   Send,
   MessageSquare,
+  Check,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { cn } from '@/lib/utils'
@@ -74,23 +75,31 @@ interface StudentInClass {
 
 const DEFAULT_SUBJECT_HANDLERS = [
   { code: 'AD2301', name: 'Data Structures & Algorithms', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Wed, Fri', period: 'Period 1', time: '09:00 AM - 09:50 AM' },
-  { code: 'AD2302', name: 'Database Management Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 40, day: 'Tue, Thu', period: 'Period 2', time: '09:50 AM - 10:40 AM' },
+  { code: 'AD2302', name: 'Database Management Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 40, day: 'Tue, Thu', period: 'Period 2, Period 4', time: '09:50 AM - 10:40 AM, 11:50 AM - 12:40 PM' },
   { code: 'AD2303', name: 'Discrete Mathematics', credits: 4, handler: 'Mr. S. Arun', hours: 45, day: 'Mon, Wed', period: 'Period 3', time: '11:00 AM - 11:50 AM' },
   { code: 'AD2304', name: 'Operating Systems & System Software', credits: 3, handler: 'Mrs. R. Priya', hours: 38, day: 'Tue, Fri', period: 'Period 4', time: '11:50 AM - 12:40 PM' },
-  { code: 'AD2305', name: 'Machine Learning Foundations', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Thu', period: 'Period 5', time: '01:40 PM - 02:30 PM' },
+  { code: 'AD2305', name: 'Machine Learning Foundations', credits: 4, handler: 'Dr. S. Karthik', hours: 45, day: 'Mon, Thu', period: 'Period 2, Period 5', time: '09:50 AM - 10:40 AM, 01:40 PM - 02:30 PM' },
   { code: 'AD2306', name: 'Artificial Intelligence & Expert Systems', credits: 3, handler: 'Dr. M. Sowmya', hours: 36, day: 'Wed, Fri', period: 'Period 6', time: '02:30 PM - 03:20 PM' },
-  { code: 'AD2307', name: 'Data Science Tools & Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Thursday', period: 'Period 5 - 7', time: '01:40 PM - 04:20 PM' },
+  { code: 'AD2307', name: 'Data Science Tools & Laboratory', credits: 2, handler: 'Mr. S. Arun', hours: 30, day: 'Thu', period: 'Period 5, Period 6, Period 7', time: '01:40 PM - 04:20 PM' },
 ]
 
-const PERIOD_TIME_PRESETS = [
-  { period: 'Period 1', time: '09:00 AM - 09:50 AM' },
-  { period: 'Period 2', time: '09:50 AM - 10:40 AM' },
-  { period: 'Period 3', time: '11:00 AM - 11:50 AM' },
-  { period: 'Period 4', time: '11:50 AM - 12:40 PM' },
-  { period: 'Period 5', time: '01:40 PM - 02:30 PM' },
-  { period: 'Period 6', time: '02:30 PM - 03:20 PM' },
-  { period: 'Period 7', time: '03:30 PM - 04:20 PM' },
-  { period: 'Lab Session (P5-P7)', time: '01:40 PM - 04:20 PM' },
+const PERIOD_LIST = [
+  { id: 'P1', name: 'Period 1', time: '09:00 AM - 09:50 AM', short: 'P1' },
+  { id: 'P2', name: 'Period 2', time: '09:50 AM - 10:40 AM', short: 'P2' },
+  { id: 'P3', name: 'Period 3', time: '11:00 AM - 11:50 AM', short: 'P3' },
+  { id: 'P4', name: 'Period 4', time: '11:50 AM - 12:40 PM', short: 'P4' },
+  { id: 'P5', name: 'Period 5', time: '01:40 PM - 02:30 PM', short: 'P5' },
+  { id: 'P6', name: 'Period 6', time: '02:30 PM - 03:20 PM', short: 'P6' },
+  { id: 'P7', name: 'Period 7', time: '03:30 PM - 04:20 PM', short: 'P7' },
+]
+
+const DAYS_OF_WEEK = [
+  { code: 'Mon', label: 'Monday' },
+  { code: 'Tue', label: 'Tuesday' },
+  { code: 'Wed', label: 'Wednesday' },
+  { code: 'Thu', label: 'Thursday' },
+  { code: 'Fri', label: 'Friday' },
+  { code: 'Sat', label: 'Saturday' },
 ]
 
 const DEFAULT_TIMETABLE = [
@@ -136,7 +145,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     specialization: '',
     subjects: '',
     subjectName: '',
-    classDay: 'Monday, Wednesday, Friday',
+    classDay: 'Mon, Wed, Fri',
     classPeriod: 'Period 1',
     classTime: '09:00 AM - 09:50 AM',
     advisorBatch: '',
@@ -157,6 +166,49 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       return subjects ? [subjects] : []
     }
     return []
+  }
+
+  // Toggle Multiple Days (e.g. Mon, Wed, Fri)
+  const toggleDaySelection = (dayCode: string) => {
+    const currentDays = formData.classDay
+      ? formData.classDay.split(',').map((d) => d.trim()).filter(Boolean)
+      : []
+    const nextDays = currentDays.includes(dayCode)
+      ? currentDays.filter((d) => d !== dayCode)
+      : [...currentDays, dayCode]
+    
+    setFormData({
+      ...formData,
+      classDay: nextDays.join(', '),
+    })
+  }
+
+  // Toggle Multiple Periods & Auto-calculate combined times
+  const togglePeriodSelection = (periodName: string) => {
+    const currentPeriods = formData.classPeriod
+      ? formData.classPeriod.split(',').map((p) => p.trim()).filter(Boolean)
+      : []
+    const nextPeriods = currentPeriods.includes(periodName)
+      ? currentPeriods.filter((p) => p !== periodName)
+      : [...currentPeriods, periodName]
+
+    // Sort periods in chronological order (Period 1 -> Period 7)
+    nextPeriods.sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, '') || '0', 10)
+      const numB = parseInt(b.replace(/\D/g, '') || '0', 10)
+      return numA - numB
+    })
+
+    const calculatedTimes = nextPeriods.map((p) => {
+      const found = PERIOD_LIST.find((item) => item.name === p)
+      return found ? found.time : ''
+    }).filter(Boolean)
+
+    setFormData({
+      ...formData,
+      classPeriod: nextPeriods.join(', '),
+      classTime: calculatedTimes.join(', '),
+    })
   }
 
   // Load students for the selected class dossier
@@ -257,6 +309,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         f.facultyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (f.subjectName && f.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (f.classDay && f.classDay.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (f.classPeriod && f.classPeriod.toLowerCase().includes(searchQuery.toLowerCase())) ||
         f.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
         subjs.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -298,7 +352,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               const sDay = f.classDay || 'Mon, Wed, Fri'
               const sPeriod = f.classPeriod || 'Period 1'
               const sTime = f.classTime || '09:00 AM - 09:50 AM'
-              return `${idx + 1}. [${f.facultyId}] ${f.name} — ${sName} [${subjs}] | Day: ${sDay} | Period: ${sPeriod} (${sTime}) | ${f.designation}`
+              return `${idx + 1}. [${f.facultyId}] ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
             }
           }),
         },
@@ -396,7 +450,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           specialization: '',
           subjects: '',
           subjectName: '',
-          classDay: 'Monday, Wednesday, Friday',
+          classDay: 'Mon, Wed, Fri',
           classPeriod: 'Period 1',
           classTime: '09:00 AM - 09:50 AM',
           advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
@@ -513,6 +567,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     }
   }
 
+  // Selected Days array helper
+  const parsedSelectedDays = useMemo(() => {
+    return formData.classDay ? formData.classDay.split(',').map((d) => d.trim()).filter(Boolean) : []
+  }, [formData.classDay])
+
+  // Selected Periods array helper
+  const parsedSelectedPeriods = useMemo(() => {
+    return formData.classPeriod ? formData.classPeriod.split(',').map((p) => p.trim()).filter(Boolean) : []
+  }, [formData.classPeriod])
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
       {/* Header Banner */}
@@ -526,7 +590,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; Cadre</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Separated into dedicated pages for <strong>Class Advisors</strong> and <strong>Subject Handlers (with Schedule &amp; Timings)</strong>
+            Separated into dedicated pages for <strong>Class Advisors</strong> and <strong>Subject Handlers (with Multi-Day &amp; Multi-Period Schedules)</strong>
           </p>
         </div>
 
@@ -552,7 +616,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 specialization: '',
                 subjects: '',
                 subjectName: '',
-                classDay: 'Monday, Wednesday, Friday',
+                classDay: 'Mon, Wed, Fri',
                 classPeriod: 'Period 1',
                 classTime: '09:00 AM - 09:50 AM',
                 advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 4 - Sec A' : '',
@@ -633,7 +697,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
                 <div>
                   <h4 className="font-black text-sm text-[#071A3D]">Page 2: Subject Handlers</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Curriculum Courses, Class Days, Periods &amp; Time Schedules</p>
+                  <p className="text-[11px] text-gray-500 font-medium">Subject Titles, Multi-Day Schedules, Periods &amp; Timings</p>
                 </div>
               </div>
               <span className={cn(
@@ -737,7 +801,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             placeholder={
               activeTab === 'advisors'
                 ? 'Search advisors by name, ID, or batch...'
-                : 'Search handlers by name, ID, subject name, or code...'
+                : 'Search handlers by name, subject name, days, period, or code...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -903,7 +967,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               specialization: advisor.specialization || '',
                               subjects: subjs.join(', '),
                               subjectName: advisor.subjectName || '',
-                              classDay: advisor.classDay || 'Monday, Wednesday, Friday',
+                              classDay: advisor.classDay || 'Mon, Wed, Fri',
                               classPeriod: advisor.classPeriod || 'Period 1',
                               classTime: advisor.classTime || '09:00 AM - 09:50 AM',
                               advisorBatch: advisor.advisorBatch || 'Year II - Sem 4 - Sec A',
@@ -937,7 +1001,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================= */}
-      {/* PAGE 2: SUBJECT HANDLERS TABLE (WITH DAY, PERIOD & TIMINGS) */}
+      {/* PAGE 2: SUBJECT HANDLERS TABLE (WITH MULTI-DAY & PERIODS) */}
       {/* ========================================================= */}
       {activeTab === 'handlers' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
@@ -947,8 +1011,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <th className="px-4 py-3.5">#</th>
                 <th className="px-4 py-3.5">Faculty ID &amp; Name</th>
                 <th className="px-4 py-3.5">Subject Name &amp; Course Code</th>
-                <th className="px-4 py-3.5">Class Day &amp; Schedule</th>
-                <th className="px-4 py-3.5">Class Period &amp; Time Slot</th>
+                <th className="px-4 py-3.5">Class Days (Multiple)</th>
+                <th className="px-4 py-3.5">Class Periods &amp; Time Slots</th>
                 <th className="px-4 py-3.5">Designation</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
@@ -959,16 +1023,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <td colSpan={7} className="text-center py-12 text-gray-400">
                     <BookMarked className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="font-bold text-gray-600">No Subject Handlers Found</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subject name and timings.</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subjects, days, and multiple periods.</p>
                   </td>
                 </tr>
               ) : (
                 handlersList.map((handler, idx) => {
                   const subjs = getSubjectsList(handler.subjects)
-                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Course: ${subjs.join(', ')}` : 'Machine Learning Foundations')
+                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Subject: ${subjs.join(', ')}` : 'Machine Learning Foundations')
                   const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2305'
-                  const dayDisplay = handler.classDay || 'Mon, Wed, Fri'
-                  const periodDisplay = handler.classPeriod || 'Period 1'
+                  const dayList = handler.classDay ? handler.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Mon', 'Wed', 'Fri']
+                  const periodList = handler.classPeriod ? handler.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Period 1']
                   const timeDisplay = handler.classTime || '09:00 AM - 09:50 AM'
 
                   return (
@@ -1002,22 +1066,36 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         </div>
                       </td>
 
-                      {/* Class Day */}
+                      {/* Multiple Class Days */}
                       <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-1.5 font-bold text-gray-800">
-                          <Calendar className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
-                          <span>{dayDisplay}</span>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {dayList.map((d, i) => (
+                            <span
+                              key={i}
+                              className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] border border-blue-200 text-[11px] font-bold inline-flex items-center gap-1"
+                            >
+                              <Calendar className="w-3 h-3 text-[#1455D9]" />
+                              {d}
+                            </span>
+                          ))}
                         </div>
                       </td>
 
-                      {/* Period & Time of Classes */}
+                      {/* Multiple Periods & Time Slots */}
                       <td className="px-4 py-3.5">
-                        <div>
-                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[11px] inline-flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {periodDisplay}
-                          </span>
-                          <span className="text-[11px] text-gray-500 font-mono font-semibold block mt-0.5">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-1">
+                            {periodList.map((p, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[11px] inline-flex items-center gap-1"
+                              >
+                                <Clock className="w-3 h-3 text-purple-600" />
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-[11px] text-gray-500 font-mono font-semibold block">
                             {timeDisplay}
                           </span>
                         </div>
@@ -1048,7 +1126,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 specialization: handler.specialization || '',
                                 subjects: subjs.join(', '),
                                 subjectName: handler.subjectName || '',
-                                classDay: handler.classDay || 'Monday, Wednesday, Friday',
+                                classDay: handler.classDay || 'Mon, Wed, Fri',
                                 classPeriod: handler.classPeriod || 'Period 1',
                                 classTime: handler.classTime || '09:00 AM - 09:50 AM',
                                 advisorBatch: handler.advisorBatch || '',
@@ -1565,7 +1643,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Initial Password *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Initial Password</label>
                   <input
                     type="text"
                     placeholder="Default: vsb@123"
@@ -1723,13 +1801,18 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Subject Handler Schedule & Details (Shown when subject_handler or both) */}
+              {/* Subject Handler Schedule & Details (Multiple Days & Periods) */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
-                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                    <BookMarked className="w-4 h-4 text-purple-700" />
-                    Subject Details, Day, Period &amp; Time:
-                  </span>
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                      <BookMarked className="w-4 h-4 text-purple-700" />
+                      Subject Details &amp; Multi-Period Timetable:
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                      Multiple Choice Enabled
+                    </span>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -1758,65 +1841,96 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Class Day(s)
+                  {/* 1. MULTIPLE CHOICE DAYS SELECTOR */}
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
+                      Class Days (Select all days that apply):
+                    </label>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {DAYS_OF_WEEK.map((d) => {
+                        const isSelected = parsedSelectedDays.includes(d.code)
+                        return (
+                          <button
+                            key={d.code}
+                            type="button"
+                            onClick={() => toggleDaySelection(d.code)}
+                            className={cn(
+                              'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
+                              isSelected
+                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50/50'
+                            )}
+                          >
+                            <span>{d.code}</span>
+                            <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. MULTIPLE CHOICE PERIODS SELECTOR */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-bold text-gray-700 text-[11px]">
+                        Period of Classes (Select 1 or more periods per day):
                       </label>
-                      <select
-                        value={formData.classDay}
-                        onChange={(e) => setFormData({ ...formData, classDay: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-gray-800"
-                      >
-                        <option value="Monday, Wednesday, Friday">Mon, Wed, Fri</option>
-                        <option value="Tuesday, Thursday">Tue, Thu</option>
-                        <option value="Monday, Wednesday">Mon, Wed</option>
-                        <option value="Tuesday, Friday">Tue, Fri</option>
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                      </select>
+                      <span className="text-[10px] text-gray-500 font-semibold">
+                        {parsedSelectedPeriods.length} selected
+                      </span>
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Period of Classes
-                      </label>
-                      <select
-                        value={formData.classPeriod}
-                        onChange={(e) => {
-                          const p = e.target.value
-                          const matched = PERIOD_TIME_PRESETS.find((pt) => pt.period === p)
-                          setFormData({
-                            ...formData,
-                            classPeriod: p,
-                            classTime: matched ? matched.time : formData.classTime,
-                          })
-                        }}
-                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-purple-700"
-                      >
-                        {PERIOD_TIME_PRESETS.map((pt) => (
-                          <option key={pt.period} value={pt.period}>
-                            {pt.period}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {PERIOD_LIST.map((p) => {
+                        const isSelected = parsedSelectedPeriods.includes(p.name)
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => togglePeriodSelection(p.name)}
+                            className={cn(
+                              'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
+                              isSelected
+                                ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
+                            )}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-extrabold">{p.name}</span>
+                              {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
+                            </div>
+                            <span className={cn(
+                              'text-[9px] font-mono mt-0.5',
+                              isSelected ? 'text-purple-200' : 'text-gray-400'
+                            )}>
+                              {p.time}
+                            </span>
+                          </button>
+                        )
+                      })}
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Time of Classes
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 09:00 AM - 09:50 AM"
-                        value={formData.classTime}
-                        onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-gray-800"
-                      />
-                    </div>
+                  {/* 3. CALCULATED TIME SLOTS (EDITABLE) */}
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                      Combined Time of Classes (Auto-calculated from periods):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 09:00 AM - 09:50 AM, 11:50 AM - 12:40 PM"
+                      value={formData.classTime}
+                      onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
+                    />
+                  </div>
+
+                  {/* 4. LIVE SCHEDULE PREVIEW */}
+                  <div className="p-2.5 rounded-xl bg-white border border-purple-200 flex items-center justify-between gap-2 text-[11px]">
+                    <span className="text-gray-500 font-bold">Schedule Summary:</span>
+                    <span className="font-mono font-bold text-purple-900 text-right truncate">
+                      {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
+                    </span>
                   </div>
                 </div>
               )}
@@ -2084,13 +2198,18 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Subject Handler Schedule & Details */}
+              {/* Subject Handler Schedule & Details (Multiple Days & Periods) */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
-                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                    <BookMarked className="w-4 h-4 text-purple-700" />
-                    Subject Details, Day, Period &amp; Time:
-                  </span>
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3.5 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                      <BookMarked className="w-4 h-4 text-purple-700" />
+                      Subject Details &amp; Multi-Period Timetable:
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                      Multiple Choice Enabled
+                    </span>
+                  </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -2119,65 +2238,96 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Class Day(s)
+                  {/* 1. MULTIPLE CHOICE DAYS SELECTOR */}
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
+                      Class Days (Select all days that apply):
+                    </label>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {DAYS_OF_WEEK.map((d) => {
+                        const isSelected = parsedSelectedDays.includes(d.code)
+                        return (
+                          <button
+                            key={d.code}
+                            type="button"
+                            onClick={() => toggleDaySelection(d.code)}
+                            className={cn(
+                              'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
+                              isSelected
+                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50/50'
+                            )}
+                          >
+                            <span>{d.code}</span>
+                            <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. MULTIPLE CHOICE PERIODS SELECTOR */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-bold text-gray-700 text-[11px]">
+                        Period of Classes (Select 1 or more periods per day):
                       </label>
-                      <select
-                        value={formData.classDay}
-                        onChange={(e) => setFormData({ ...formData, classDay: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-gray-800"
-                      >
-                        <option value="Monday, Wednesday, Friday">Mon, Wed, Fri</option>
-                        <option value="Tuesday, Thursday">Tue, Thu</option>
-                        <option value="Monday, Wednesday">Mon, Wed</option>
-                        <option value="Tuesday, Friday">Tue, Fri</option>
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                      </select>
+                      <span className="text-[10px] text-gray-500 font-semibold">
+                        {parsedSelectedPeriods.length} selected
+                      </span>
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Period of Classes
-                      </label>
-                      <select
-                        value={formData.classPeriod}
-                        onChange={(e) => {
-                          const p = e.target.value
-                          const matched = PERIOD_TIME_PRESETS.find((pt) => pt.period === p)
-                          setFormData({
-                            ...formData,
-                            classPeriod: p,
-                            classTime: matched ? matched.time : formData.classTime,
-                          })
-                        }}
-                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-purple-700"
-                      >
-                        {PERIOD_TIME_PRESETS.map((pt) => (
-                          <option key={pt.period} value={pt.period}>
-                            {pt.period}
-                          </option>
-                        ))}
-                      </select>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {PERIOD_LIST.map((p) => {
+                        const isSelected = parsedSelectedPeriods.includes(p.name)
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => togglePeriodSelection(p.name)}
+                            className={cn(
+                              'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
+                              isSelected
+                                ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
+                            )}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-extrabold">{p.name}</span>
+                              {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
+                            </div>
+                            <span className={cn(
+                              'text-[9px] font-mono mt-0.5',
+                              isSelected ? 'text-purple-200' : 'text-gray-400'
+                            )}>
+                              {p.time}
+                            </span>
+                          </button>
+                        )
+                      })}
                     </div>
+                  </div>
 
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Time of Classes
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 09:00 AM - 09:50 AM"
-                        value={formData.classTime}
-                        onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-gray-800"
-                      />
-                    </div>
+                  {/* 3. CALCULATED TIME SLOTS */}
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                      Combined Time of Classes (Auto-calculated from periods):
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 09:00 AM - 09:50 AM, 11:50 AM - 12:40 PM"
+                      value={formData.classTime}
+                      onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
+                    />
+                  </div>
+
+                  {/* 4. LIVE SCHEDULE PREVIEW */}
+                  <div className="p-2.5 rounded-xl bg-white border border-purple-200 flex items-center justify-between gap-2 text-[11px]">
+                    <span className="text-gray-500 font-bold">Schedule Summary:</span>
+                    <span className="font-mono font-bold text-purple-900 text-right truncate">
+                      {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
+                    </span>
                   </div>
                 </div>
               )}
