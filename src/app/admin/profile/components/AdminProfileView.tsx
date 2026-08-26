@@ -279,6 +279,19 @@ export function AdminProfileView({ initialProfile }: { initialProfile: AdminProf
           >
             {isEditing ? 'Cancel Edit' : 'Edit Profile'}
           </button>
+          <button
+            onClick={async () => {
+              try {
+                await fetch('/api/auth/logout', { method: 'POST' })
+              } catch {}
+              document.cookie = 'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
+              document.cookie = 'otp-challenge=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
+              window.location.replace('/login')
+            }}
+            className="px-3.5 py-2.5 rounded-xl bg-rose-600/40 hover:bg-rose-600/70 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-rose-400/40 cursor-pointer shadow-md hover:scale-105"
+          >
+            <LogOut className="w-4 h-4 text-rose-200" /> Logout
+          </button>
         </div>
       </div>
 
