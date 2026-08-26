@@ -40,6 +40,17 @@ import {
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
+export interface MenuItemConfig {
+  id: string
+  label: string
+  icon: string
+  visible: boolean
+  category: string
+  badgeText?: string
+  badgeColor?: string
+  customHref?: string
+}
+
 export function AdminSettingsView() {
   // Navigation Active Tab (Clean, Essential Tabs Only)
   const [activeTab, setActiveTab] = useState<'general' | 'menus' | 'notifications' | 'passwords' | 'branding'>('general')
@@ -317,7 +328,7 @@ export function AdminSettingsView() {
   }
 
   // 7. Menus Visibility State
-  const [menus, setMenus] = useState([
+  const [menus, setMenus] = useState<MenuItemConfig[]>([
     { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', visible: true, category: 'Core' },
     { id: 'students', label: 'Students Roster', icon: 'GraduationCap', visible: true, category: 'Academic' },
     { id: 'faculty', label: 'Faculty Directorate', icon: 'Users', visible: true, category: 'Academic' },
@@ -346,7 +357,7 @@ export function AdminSettingsView() {
   // Rich Menu Management State
   const [menuSearchQuery, setMenuSearchQuery] = useState('')
   const [selectedMenuCategory, setSelectedMenuCategory] = useState('ALL')
-  const [editingMenu, setEditingMenu] = useState<any | null>(null)
+  const [editingMenu, setEditingMenu] = useState<MenuItemConfig | null>(null)
   const [isAddMenuModalOpen, setIsAddMenuModalOpen] = useState(false)
   const [newCustomMenu, setNewCustomMenu] = useState({
     label: '',
@@ -357,7 +368,7 @@ export function AdminSettingsView() {
   })
 
   // Open Edit Menu Modal
-  const handleOpenEditMenu = (e: React.MouseEvent, menu: any) => {
+  const handleOpenEditMenu = (e: React.MouseEvent, menu: MenuItemConfig) => {
     e.stopPropagation()
     setEditingMenu({
       ...menu,

@@ -1138,7 +1138,7 @@ export function AdminReportsView({
               <CardContent className="p-5 space-y-3">
                 <div className="flex items-start justify-between">
                   <div className="p-2.5 rounded-2xl bg-gray-50 border border-gray-100">{d.icon}</div>
-                  <Badge variant="outline" className="text-[9px] uppercase tracking-wider font-extrabold text-gray-500">
+                  <Badge variant="info" className="text-[9px] uppercase tracking-wider font-extrabold text-[#1455D9] bg-blue-50">
                     {d.category}
                   </Badge>
                 </div>

@@ -12,11 +12,13 @@ export default async function AdminProjectsPage() {
     orderBy: { createdAt: 'desc' },
   }).catch(() => [])
 
-  const projectsList: ProjectRecord[] = dbProjects.map((p) => ({
+  const projectsList: ProjectRecord[] = dbProjects.map((p: any) => ({
     id: p.id,
     title: p.title,
     description: p.description,
     domain: p.domain || 'AI & Data Science',
+    year: p.year || 4,
+    semester: p.semester || 7,
     guideName: p.guideName || 'Faculty Guide',
     teamMembers: p.teamMembers || 'Student Team',
     status: p.status || 'Active',
