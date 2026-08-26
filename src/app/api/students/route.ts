@@ -73,9 +73,9 @@ export async function POST(request: Request) {
       status = 'active',
     } = data
 
-    if (!registerNumber || !name) {
+    if (!registerNumber || !name || !password?.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Register Number and Full Name are required.' },
+        { success: false, message: 'Register Number, Full Name, and Temporary Password are required.' },
         { status: 400 }
       )
     }
@@ -100,8 +100,8 @@ export async function POST(request: Request) {
       : `${regUpper.toLowerCase()}@student.vsb.edu.in`
     const isEmailCustom = Boolean(email?.trim())
 
-    // Hash password if provided or default vsb@123
-    const initialPassword = password?.trim() ? password.trim() : 'vsb@123'
+    // Hash admin-typed temporary password
+    const initialPassword = password.trim()
     const passwordHash = await bcrypt.hash(initialPassword, 10)
 
     // Upsert User

@@ -405,8 +405,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // Handle Add Faculty Submit
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name.trim()) {
-      alert('Please fill in Faculty Name.')
+    if (!formData.name.trim() || !formData.password.trim()) {
+      alert('Please fill in Faculty Name and Temporary Password.')
       return
     }
 
@@ -426,7 +426,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          password: formData.password.trim() || 'vsb@123',
+          password: formData.password.trim(),
           experience: Number(formData.experience) || 1,
           subjects: subjectsArr,
           subjectName: formData.subjectName.trim() || null,
@@ -462,7 +462,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           advisorSec: 'A',
           facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
         })
-        alert('Faculty member successfully registered in database!')
+        alert('Faculty member successfully registered with temporary password!')
       } else {
         alert(result.message || 'Failed to register faculty')
       }
@@ -1645,14 +1645,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Initial Password</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Temporary Password *</label>
                   <input
                     type="text"
-                    placeholder="Default: vsb@123"
+                    required
+                    placeholder="e.g. TempPass@2026"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
                   />
+                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Admin-assigned temporary password.</p>
                 </div>
               </div>
 

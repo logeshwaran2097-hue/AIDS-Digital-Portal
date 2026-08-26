@@ -129,7 +129,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.registerNumber.trim() || !formData.name.trim() || !formData.password.trim()) {
-      alert('Please fill in Register Number, Full Name, and Initial Password.')
+      alert('Please fill in Register Number, Full Name, and Temporary Password.')
       return
     }
 
@@ -149,15 +149,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           registerNumber: '',
           name: '',
           email: '',
-          password: 'vsb@123',
+          password: '',
           phone: '',
-          dateOfBirth: '2006-08-15',
+          dateOfBirth: '',
           year: 2,
           semester: 4,
           section: 'A',
           status: 'active',
         })
-        alert('Student successfully registered and saved to database!')
+        alert('Student successfully registered with temporary password!')
       } else {
         alert(result.message || 'Failed to add student')
       }
@@ -761,17 +761,17 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
-                    Initial Login Password *
+                    Temporary Password *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. vsb@123"
+                    placeholder="e.g. TempPass@2026"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
                   />
-                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Student will use this initial password to log in.</p>
+                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Student will use this temporary password for their first login &amp; verification.</p>
                 </div>
               </div>
 

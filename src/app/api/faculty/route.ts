@@ -87,16 +87,16 @@ export async function POST(request: Request) {
       status = 'active',
     } = data
 
-    if (!name?.trim()) {
+    if (!name?.trim() || !password?.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Faculty Name is required' },
+        { success: false, message: 'Faculty Name and Temporary Password are required.' },
         { status: 400 }
       )
     }
 
     const fid = facultyId?.trim().toUpperCase() || 'FAC' + Math.floor(1000 + Math.random() * 9000)
     const institutionalEmail = (email && email.trim()) ? email.trim().toLowerCase() : `${fid.toLowerCase()}@vsb.edu.in`
-    const initialPwd = password?.trim() || 'vsb@123'
+    const initialPwd = password.trim()
     const passwordHash = await bcrypt.hash(initialPwd, 10)
 
     // Upsert User
@@ -108,6 +108,7 @@ export async function POST(request: Request) {
         role: 'faculty',
         status: status || 'active',
         passwordHash,
+        mustChangePassword: true,
       },
       create: {
         email: institutionalEmail,
@@ -116,6 +117,7 @@ export async function POST(request: Request) {
         role: 'faculty',
         status: status || 'active',
         passwordHash,
+        mustChangePassword: true,
         emailVerified: true,
       },
     })
