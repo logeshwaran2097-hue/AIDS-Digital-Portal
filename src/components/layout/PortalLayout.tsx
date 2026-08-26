@@ -291,6 +291,20 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
   }
 
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch {}
+    // Clear cookies on client side
+    document.cookie = 'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
+    document.cookie = 'otp-challenge=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
+    window.location.href = '/login'
+  }
+
   const handleNavClick = (href: string) => {
     setIsDrawerOpen(false)
     if (pathname !== href) {
@@ -459,13 +473,15 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
 
         {/* Drawer Footer with Logout */}
         <div className="p-3 border-t border-white/10 bg-white/5">
-          <Link
-            href="/api/auth/logout"
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-200"
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
-            <span>Logout</span>
-          </Link>
+            <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+          </button>
         </div>
       </aside>
 
@@ -622,6 +638,18 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                 {userName}
               </span>
             </Link>
+
+            {/* Top Header Direct Logout Action */}
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              title="Logout from portal"
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-red-200/80 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 disabled:opacity-50"
+            >
+              <LogOut className="w-4 h-4 text-red-500" />
+              <span className="hidden sm:inline">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+            </button>
           </div>
         </div>
       </header>
