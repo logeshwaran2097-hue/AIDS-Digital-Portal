@@ -22,6 +22,10 @@ import {
   FlaskConical,
   Layers,
   Calendar,
+  Award,
+  Zap,
+  BookOpen,
+  HelpCircle,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { cn } from '@/lib/utils'
@@ -74,6 +78,48 @@ export const TARGET_AUDIENCE_OPTIONS = [
   },
 ]
 
+export const CIRCULAR_CATEGORIES = [
+  {
+    group: 'Academics & Examinations',
+    options: [
+      { value: 'ACADEMIC', label: 'Academic & Internal Exams', badge: 'bg-blue-50 text-[#1455D9] border-blue-200' },
+      { value: 'TIMETABLE', label: 'Class & Lab Timetable Schedule', badge: 'bg-cyan-50 text-cyan-800 border-cyan-200' },
+      { value: 'CURRICULUM', label: 'Curriculum, Electives & Regulations', badge: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+    ],
+  },
+  {
+    group: 'Placement, Training & Industry',
+    options: [
+      { value: 'PLACEMENT', label: 'Placement Drives & Campus Recruitment', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+      { value: 'INTERNSHIP', label: 'Internships & In-Plant Industrial Visits', badge: 'bg-teal-50 text-teal-800 border-teal-200' },
+      { value: 'APTITUDE', label: 'Aptitude & Soft Skills Training', badge: 'bg-purple-50 text-purple-700 border-purple-200' },
+    ],
+  },
+  {
+    group: 'Symposiums, Hackathons & Innovation',
+    options: [
+      { value: 'SYMPOSIUM', label: 'National Symposium & Conferences', badge: 'bg-amber-50 text-amber-800 border-amber-300' },
+      { value: 'HACKATHON', label: 'Hackathons, Coding Contests & Expos', badge: 'bg-rose-50 text-rose-700 border-rose-200' },
+      { value: 'WORKSHOP', label: 'Technical Workshops & Guest Seminars', badge: 'bg-orange-50 text-orange-800 border-orange-200' },
+    ],
+  },
+  {
+    group: 'Student Welfare & Co-Curricular',
+    options: [
+      { value: 'CLUB', label: 'AI Association & Department Clubs', badge: 'bg-pink-50 text-pink-700 border-pink-200' },
+      { value: 'SCHOLARSHIP', label: 'Scholarships & Merit Awards', badge: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
+    ],
+  },
+  {
+    group: 'Department Administration & Campus Logistics',
+    options: [
+      { value: 'FACULTY_NOTICE', label: 'Department Meeting & Faculty Notice', badge: 'bg-purple-50 text-purple-800 border-purple-300' },
+      { value: 'LOGISTICS', label: 'Hostel, Transport & Campus Guidelines', badge: 'bg-gray-50 text-gray-700 border-gray-300' },
+      { value: 'GENERAL', label: 'General Institutional Circular / Holiday', badge: 'bg-blue-50 text-[#071A3D] border-gray-200' },
+    ],
+  },
+]
+
 export function AdminAnnouncementsView({
   initialAnnouncements,
   studentList = [],
@@ -120,6 +166,22 @@ export function AdminAnnouncementsView({
     return target
   }
 
+  const getCategoryLabel = (category: string): string => {
+    for (const grp of CIRCULAR_CATEGORIES) {
+      const found = grp.options.find((o) => o.value === category || o.value.toLowerCase() === category.toLowerCase())
+      if (found) return found.label
+    }
+    return category
+  }
+
+  const getCategoryBadgeStyle = (category: string) => {
+    for (const grp of CIRCULAR_CATEGORIES) {
+      const found = grp.options.find((o) => o.value === category || o.value.toLowerCase() === category.toLowerCase())
+      if (found) return found.badge
+    }
+    return 'bg-blue-50 text-[#1455D9] border-blue-200'
+  }
+
   const getAudienceBadgeStyle = (target: string) => {
     const t = target.toLowerCase()
     if (t === 'all') return 'bg-blue-50 text-[#1455D9] border-blue-200'
@@ -152,7 +214,7 @@ export function AdminAnnouncementsView({
           heading: '2. DIGEST OF ACTIVE NOTICES',
           body: announcements.map(
             (a, idx) =>
-              `${idx + 1}. [${a.category}] ${a.title} — Target: ${getAudienceLabel(a.target)} | Date: ${a.createdAt}\n${a.content}`
+              `${idx + 1}. [${getCategoryLabel(a.category)}] ${a.title} — Target: ${getAudienceLabel(a.target)} | Date: ${a.createdAt}\n${a.content}`
           ),
         },
       ],
@@ -165,12 +227,13 @@ export function AdminAnnouncementsView({
       title: 'DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
       subtitle: 'Official Notification & Administrative Circular · Autonomous Scheme',
       author: ann.createdByName || 'Office of the Super Administrator',
-      category: `Circular / ${ann.category}`,
+      category: `Circular / ${getCategoryLabel(ann.category)}`,
       sections: [
         {
           heading: `SUBJECT: ${ann.title.toUpperCase()}`,
           body: [
             ann.content,
+            `Category: ${getCategoryLabel(ann.category)}`,
             `Target Audience: ${getAudienceLabel(ann.target)} ${ann.targetSpecific ? `(${ann.targetSpecific})` : ''}`,
             `Date of Issue: ${ann.createdAt}`,
             `Authorized Authority: ${ann.createdByName}`,
@@ -361,10 +424,15 @@ export function AdminAnnouncementsView({
               className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
             >
               <option value="ALL">All Categories</option>
-              <option value="ACADEMIC">Academic / Exam</option>
-              <option value="PLACEMENT">Placement &amp; Training</option>
-              <option value="SYMPOSIUM">Events &amp; Symposiums</option>
-              <option value="GENERAL">General Notice</option>
+              {CIRCULAR_CATEGORIES.map((grp) => (
+                <optgroup key={grp.group} label={grp.group}>
+                  {grp.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
           </div>
 
@@ -399,8 +467,8 @@ export function AdminAnnouncementsView({
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-[#1455D9] border border-blue-200">
-                      {a.category}
+                    <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border', getCategoryBadgeStyle(a.category))}>
+                      {getCategoryLabel(a.category)}
                     </span>
                     <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-black border', getAudienceBadgeStyle(a.target))}>
                       Target: {getAudienceLabel(a.target)}
@@ -444,7 +512,7 @@ export function AdminAnnouncementsView({
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: ISSUE OFFICIAL CIRCULAR WITH COMPREHENSIVE TARGET AUDIENCES */}
+      {/* MODAL: ISSUE OFFICIAL CIRCULAR WITH COMPREHENSIVE TARGET AUDIENCES & CATEGORIES */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -498,24 +566,31 @@ export function AdminAnnouncementsView({
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Category</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Notice Category *</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D] bg-white"
                   >
-                    <option value="ACADEMIC">Academic / Exam</option>
-                    <option value="PLACEMENT">Placement &amp; Training</option>
-                    <option value="SYMPOSIUM">Events &amp; Symposiums</option>
-                    <option value="GENERAL">General Notice</option>
+                    {CIRCULAR_CATEGORIES.map((grp) => (
+                      <optgroup key={grp.group} label={grp.group}>
+                        {grp.options.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              {/* Target Summary preview */}
+              {/* Target & Category Summary Preview */}
               <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-[#1455D9] flex items-center justify-between text-[11px] font-bold">
-                <span>Broadcast Recipient:</span>
-                <span className="font-extrabold">{getAudienceLabel(formData.target)}</span>
+                <span className="truncate">Recipient: <strong>{getAudienceLabel(formData.target)}</strong></span>
+                <span className="font-extrabold shrink-0 ml-2 px-2 py-0.5 rounded-md bg-white border border-blue-200 text-[10px]">
+                  {getCategoryLabel(formData.category)}
+                </span>
               </div>
 
               <div>
