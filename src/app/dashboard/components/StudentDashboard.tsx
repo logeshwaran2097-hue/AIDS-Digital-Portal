@@ -27,10 +27,25 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { StudentOnboardingModal } from '@/components/auth/StudentOnboardingModal'
 
 interface DashboardData {
-  user: { name: string; email: string; profileImage?: string | null }
-  student: { registerNumber: string; department: string; year: number; semester: number; section: string }
+  user: {
+    name: string
+    email: string
+    phone?: string | null
+    emailVerified?: boolean
+    mustChangePassword?: boolean
+    profileImage?: string | null
+  }
+  student: {
+    registerNumber: string
+    department: string
+    year: number
+    semester: number
+    section: string
+    dateOfBirth?: Date | string
+  }
   announcements: { id: string; title: string; category: string; content: string; createdAt: Date }[]
   events: { id: string; name: string; description: string | null; date: Date; time: string; venue: string; category: string }[]
   resources: { id: string; name: string; resourceType: string; fileName: string; fileSize: number }[]
@@ -64,23 +79,57 @@ const subjectAttendanceData = [
 
 export default function StudentDashboard({ data }: { data: DashboardData }) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentUser, setCurrentUser] = useState(data.user)
+
+  const isInitialNeedsOnboarding = Boolean(
+    data.user?.mustChangePassword ||
+    data.user?.emailVerified === false ||
+    data.user?.email?.includes('@student.vsb.edu.in')
+  )
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(isInitialNeedsOnboarding)
+
+  const handleOnboardingComplete = (updatedUser: any) => {
+    setIsOnboardingOpen(false)
+    if (updatedUser) {
+      setCurrentUser((prev) => ({ ...prev, ...updatedUser }))
+    }
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* First-Time Student Setup & Verification Modal */}
+      <StudentOnboardingModal
+        isOpen={isOnboardingOpen}
+        onComplete={handleOnboardingComplete}
+        initialData={{
+          name: currentUser.name,
+          email: currentUser.email,
+          phone: currentUser.phone || '',
+          registerNumber: data.student.registerNumber,
+          department: data.student.department,
+          year: data.student.year,
+          semester: data.student.semester,
+          section: data.student.section,
+          dateOfBirth: data.student.dateOfBirth
+            ? new Date(data.student.dateOfBirth).toISOString().split('T')[0]
+            : undefined,
+        }}
+      />
+
       {/* Hero Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 sm:p-8 text-white shadow-xl">
         <div className="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-[#22C7E8]/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#22C7E8]/40 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg">
-              {data.user.name.charAt(0)}
+              {currentUser.name.charAt(0)}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-300 font-medium">Hello,</span>
                 <span className="text-sm font-semibold text-[#22C7E8]">Student 👋</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold truncate mt-0.5">{data.user.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold truncate mt-0.5">{currentUser.name}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
                 <span className="rounded-lg bg-white/15 px-2.5 py-1 font-semibold tracking-wide border border-white/10 font-mono">
                   {data.student.registerNumber}

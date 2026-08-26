@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
@@ -22,12 +22,16 @@ import {
   Heart,
   TrendingUp,
   Percent,
+  Edit3,
+  X,
+  Lock,
 } from 'lucide-react'
 import { downloadStudentCardPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 
 export function StudentProfileView({
-  user,
-  student,
+  user: initialUser,
+  student: initialStudent,
 }: {
   user: { name: string; email: string; phone?: string | null }
   student: {
@@ -39,6 +43,18 @@ export function StudentProfileView({
     dateOfBirth?: Date | string | null
   }
 }) {
+  const [user, setUser] = useState(initialUser)
+  const [student, setStudent] = useState(initialStudent)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editName, setEditName] = useState(user.name)
+  const [editPhone, setEditPhone] = useState(user.phone || '')
+  const [editDob, setEditDob] = useState(
+    student.dateOfBirth
+      ? new Date(student.dateOfBirth).toISOString().split('T')[0]
+      : '2005-07-15'
+  )
+  const [loading, setLoading] = useState(false)
+
   const handleDownloadCard = () => {
     downloadStudentCardPDF({
       name: user.name,
@@ -53,6 +69,37 @@ export function StudentProfileView({
       cgpa: '8.84',
       attendance: '92.5%',
     })
+  }
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch('/api/students', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registerNumber: student.registerNumber,
+          name: editName.trim(),
+          phone: editPhone.trim(),
+          dateOfBirth: editDob,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setUser((prev) => ({ ...prev, name: editName.trim(), phone: editPhone.trim() }))
+        setStudent((prev) => ({ ...prev, dateOfBirth: new Date(editDob) }))
+        setIsEditOpen(false)
+        toast.success('Your profile details have been successfully updated!')
+      } else {
+        toast.error(data.message || 'Failed to update profile.')
+      }
+    } catch {
+      toast.error('Network error updating profile.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -84,7 +131,14 @@ export function StudentProfileView({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-stretch md:self-auto justify-end">
+          <div className="flex items-center flex-wrap gap-2 self-stretch md:self-auto justify-end">
+            <button
+              onClick={() => setIsEditOpen(true)}
+              type="button"
+              className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 transition-colors border border-white/20 shadow-xs cursor-pointer"
+            >
+              <Edit3 className="w-4 h-4 text-[#22C7E8]" /> Edit Profile
+            </button>
             <button
               onClick={handleDownloadCard}
               type="button"
@@ -209,6 +263,84 @@ export function StudentProfileView({
           </CardContent>
         </Card>
       </div>
+
+      {/* EDIT PROFILE MODAL */}
+      {isEditOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-lg font-black text-[#071A3D]">Edit Profile Details</h3>
+                <p className="text-xs text-[#1455D9] font-mono font-bold">
+                  {student.registerNumber}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsEditOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-[#071A3D]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  placeholder="+91 98765 43210"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  value={editDob}
+                  onChange={(e) => setEditDob(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                />
+              </div>
+
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200/80 space-y-1 text-[11px] text-gray-500">
+                <p className="font-bold text-[#071A3D]">Institutional Record Note:</p>
+                <p>Register number and academic standing are locked to your university enrollment records.</p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2"
+                >
+                  {loading ? 'Saving...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

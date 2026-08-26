@@ -14,10 +14,12 @@ model User {
   phone        String?
   role         String   @default("student")
   status       String   @default("active")
-  profileImage String?
-  passwordHash String?
-  lastLogin    DateTime?
-  createdAt    DateTime @default(now())
+  profileImage       String?
+  passwordHash       String?
+  emailVerified      Boolean   @default(false)
+  mustChangePassword Boolean   @default(false)
+  lastLogin          DateTime?
+  createdAt          DateTime  @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([email])

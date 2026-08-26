@@ -56,6 +56,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     registerNumber: '',
     name: '',
     email: '',
+    password: '',
     phone: '',
     dateOfBirth: '2006-08-15',
     year: 2,
@@ -125,8 +126,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   // Handle Add Student Submit with Real Database Save
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.registerNumber || !formData.name || !formData.email) {
-      alert('Please fill in Register Number, Name, and Email')
+    if (!formData.registerNumber.trim() || !formData.name.trim()) {
+      alert('Please fill in Register Number and Full Name.')
       return
     }
 
@@ -146,6 +147,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           registerNumber: '',
           name: '',
           email: '',
+          password: '',
           phone: '',
           dateOfBirth: '2006-08-15',
           year: 2,
@@ -653,6 +655,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 semester: s.semester,
                                 section: s.section,
                                 status: s.status,
+                                password: '',
                               })
                               setIsEditModalOpen(true)
                             }}
@@ -726,16 +729,34 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Institutional Email *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Institutional Email <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
                   <input
                     type="email"
-                    required
                     placeholder="e.g. 23ad001@vsb.edu.in"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
+                  <p className="text-[10px] text-gray-400 mt-1">Student can verify during first login.</p>
                 </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Initial Password <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Default: vsb@123"
+                    value={formData.password || ''}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">Student uses this password to log in.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
                   <input
@@ -743,6 +764,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     placeholder="e.g. +91 90252 10001"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
@@ -796,27 +826,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
@@ -876,18 +895,41 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Institutional Email</label>
                   <input
                     type="email"
-                    required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
                 <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Reset Password <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter new password"
+                    value={formData.password || ''}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
                   <input
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
+                  <input
+                    type="date"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>

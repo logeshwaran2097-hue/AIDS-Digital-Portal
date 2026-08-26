@@ -54,6 +54,8 @@ export async function GET(request: Request) {
   }
 }
 
+import bcrypt from 'bcryptjs'
+
 export async function POST(request: Request) {
   try {
     const data = await request.json()
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
       registerNumber,
       name,
       email,
+      password,
       phone,
       dateOfBirth,
       department = 'Artificial Intelligence & Data Science',
@@ -70,9 +73,9 @@ export async function POST(request: Request) {
       status = 'active',
     } = data
 
-    if (!registerNumber || !name || !email) {
+    if (!registerNumber || !name) {
       return NextResponse.json(
-        { success: false, message: 'Register number, Name, and Email are required' },
+        { success: false, message: 'Register Number and Full Name are required.' },
         { status: 400 }
       )
     }
@@ -91,21 +94,37 @@ export async function POST(request: Request) {
       )
     }
 
+    // Prepare institutional or provisional email
+    const finalEmail = email?.trim()
+      ? email.trim().toLowerCase()
+      : `${regUpper.toLowerCase()}@student.vsb.edu.in`
+    const isEmailCustom = Boolean(email?.trim())
+
+    // Hash password if provided or default vsb@123
+    const initialPassword = password?.trim() ? password.trim() : 'vsb@123'
+    const passwordHash = await bcrypt.hash(initialPassword, 10)
+
     // Upsert User
     const user = await prisma.user.upsert({
-      where: { email: email.trim().toLowerCase() },
+      where: { email: finalEmail },
       update: {
         name: name.trim(),
         phone: phone || null,
         role: 'student',
         status: status || 'active',
+        passwordHash,
+        emailVerified: isEmailCustom,
+        mustChangePassword: true,
       },
       create: {
-        email: email.trim().toLowerCase(),
+        email: finalEmail,
         name: name.trim(),
         phone: phone || null,
         role: 'student',
         status: status || 'active',
+        passwordHash,
+        emailVerified: isEmailCustom,
+        mustChangePassword: true,
       },
     })
 
@@ -150,7 +169,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const data = await request.json()
-    const { id, name, email, phone, year, semester, section, status } = data
+    const { id, name, email, password, phone, dateOfBirth, year, semester, section, status } = data
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Missing student ID' }, { status: 400 })
@@ -172,8 +191,14 @@ export async function PUT(request: Request) {
         ...(year !== undefined ? { year: Number(year) } : {}),
         ...(semester !== undefined ? { semester: Number(semester) } : {}),
         ...(section !== undefined ? { section } : {}),
+        ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
       },
     })
+
+    let passwordHash: string | undefined = undefined
+    if (password && password.trim()) {
+      passwordHash = await bcrypt.hash(password.trim(), 10)
+    }
 
     // Update User record
     await prisma.user.update({
@@ -183,6 +208,7 @@ export async function PUT(request: Request) {
         ...(email ? { email: email.trim().toLowerCase() } : {}),
         ...(phone !== undefined ? { phone } : {}),
         ...(status ? { status } : {}),
+        ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
       },
     })
 

@@ -727,6 +727,133 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
   }
 }
 
+export async function sendStudentVerificationEmail(email: string, otp: string, studentName: string, registerNumber: string) {
+  const nodemailer = require('nodemailer')
+  const dns = require('dns')
+  const fs = require('fs')
+  const path = require('path')
+
+  if (dns.setDefaultResultOrder) {
+    try {
+      dns.setDefaultResultOrder('ipv4first')
+    } catch {}
+  }
+  
+  const recipientEmail = email.toLowerCase().trim()
+  const smtpUser = process.env.SMTP_USER || 'admin@vsb.edu.in'
+  const smtpPass = process.env.SMTP_PASSWORD || ''
+  const isRealSmtpConfigured = smtpUser && smtpPass && smtpPass !== 'your-app-password'
+
+  const logoPath = path.join(process.cwd(), 'public', 'logo.png')
+  const hasLogo = fs.existsSync(logoPath)
+
+  const attachments = hasLogo
+    ? [
+        {
+          filename: 'vsb-logo.png',
+          path: logoPath,
+          cid: 'vsb_college_logo',
+        },
+      ]
+    : []
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || `V.S.B. AI & DS Portal <${smtpUser}>`,
+    to: recipientEmail,
+    subject: `V.S.B. AI & DS Portal — Email Verification OTP [${otp}]`,
+    attachments,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 540px; margin: 0 auto; padding: 16px; background-color: #f1f5f9;">
+        <div style="background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+          <div style="background: #071A3D; padding: 24px 20px; text-align: center;">
+            <div style="margin-bottom: 12px;">
+              ${
+                hasLogo
+                  ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="60" height="60" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #F4C430; background-color: #ffffff; padding: 2px; vertical-align: middle; display: inline-block; object-fit: contain;" />'
+                  : '<div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; border: 2px solid #F4C430;">VSB</div>'
+              }
+            </div>
+            <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;">V.S.B. ENGINEERING COLLEGE</h1>
+            <p style="color: #F4C430; margin: 4px 0 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Department of AI &amp; Data Science</p>
+          </div>
+          
+          <div style="padding: 24px 20px;">
+            <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">Student Email &amp; Password Setup Verification</h2>
+            <p style="margin: 0 0 14px; font-size: 14px; color: #334155;">Dear <strong>${studentName}</strong>,</p>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600; width: 140px;">🎓 Register No:</td>
+                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700; font-family: monospace;">${registerNumber}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">👤 Student Name:</td>
+                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">${studentName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">📧 Email ID:</td>
+                  <td style="padding: 3px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${recipientEmail}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your student portal to verify your institutional email and proceed to set your new permanent password:</p>
+            
+            <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; text-align: center; margin: 16px 0;">
+              <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
+            </div>
+            
+            <p style="margin: 0 0 10px; font-size: 13px; color: #e11d48; font-weight: 600;">⏱️ Valid for 10 minutes only.</p>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this email verification, please contact your department administrator.</p>
+            
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal • Student Verification System</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }
+
+  if (isRealSmtpConfigured) {
+    try {
+      const port = parseInt(process.env.SMTP_PORT || '465')
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: port,
+        secure: port === 465,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      })
+
+      const info = await transporter.sendMail(mailOptions)
+      console.log(`[SMTP] Real OTP Email dispatched to ${recipientEmail} for student verification (${registerNumber}): Message ID ${info.messageId}`)
+      return { success: true, messageId: info.messageId }
+    } catch (error) {
+      console.error('[SMTP] Error sending real email via SMTP:', error)
+      return { success: false, error }
+    }
+  } else {
+    console.log('\n========================================')
+    console.log(`  [SIMULATED STUDENT EMAIL DISPATCH]`)
+    console.log(`  To: ${recipientEmail}`)
+    console.log(`  Student: ${studentName} (${registerNumber})`)
+    console.log(`  OTP Code: ${otp}`)
+    console.log('========================================\n')
+    return { success: true }
+  }
+}
+
 export function requireAuth(allowedRoles?: string[]) {
   return async function (session: JWTPayload | null) {
     if (!session) {
