@@ -56,7 +56,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     registerNumber: '',
     name: '',
     email: '',
-    password: '',
+    password: 'vsb@123',
     phone: '',
     dateOfBirth: '2006-08-15',
     year: 2,
@@ -126,8 +126,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   // Handle Add Student Submit with Real Database Save
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.registerNumber.trim() || !formData.name.trim()) {
-      alert('Please fill in Register Number and Full Name.')
+    if (!formData.registerNumber.trim() || !formData.name.trim() || !formData.password.trim()) {
+      alert('Please fill in Register Number, Full Name, and Initial Password.')
       return
     }
 
@@ -147,7 +147,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           registerNumber: '',
           name: '',
           email: '',
-          password: '',
+          password: 'vsb@123',
           phone: '',
           dateOfBirth: '2006-08-15',
           year: 2,
@@ -743,16 +743,17 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
-                    Initial Password <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                    Initial Login Password *
                   </label>
                   <input
                     type="text"
-                    placeholder="Default: vsb@123"
-                    value={formData.password || ''}
+                    required
+                    placeholder="e.g. vsb@123"
+                    value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
                   />
-                  <p className="text-[10px] text-gray-400 mt-1">Student uses this password to log in.</p>
+                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Student will use this initial password to log in.</p>
                 </div>
               </div>
 
