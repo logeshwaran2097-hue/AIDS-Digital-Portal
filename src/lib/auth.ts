@@ -491,6 +491,8 @@ export async function verifyAdminOTP(email: string, otp: string, challenge?: str
 async function sendOTPEmail(email: string, otp: string, name: string) {
   const nodemailer = require('nodemailer')
   const dns = require('dns')
+  const fs = require('fs')
+  const path = require('path')
 
   if (dns.setDefaultResultOrder) {
     try {
@@ -503,10 +505,24 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
   const smtpPass = process.env.SMTP_PASSWORD || ''
   const isRealSmtpConfigured = smtpUser && smtpPass && smtpPass !== 'your-app-password'
 
+  const logoPath = path.join(process.cwd(), 'public', 'logo.png')
+  const hasLogo = fs.existsSync(logoPath)
+
+  const attachments = hasLogo
+    ? [
+        {
+          filename: 'vsb-logo.png',
+          path: logoPath,
+          cid: 'vsb_college_logo',
+        },
+      ]
+    : []
+
   const mailOptions = {
     from: process.env.EMAIL_FROM || `V.S.B. AI & DS Portal <${smtpUser}>`,
     to: defaultDestination,
     subject: `V.S.B. AI & DS Portal — Admin Login OTP [${otp}]`,
+    attachments,
     html: `
       <!DOCTYPE html>
       <html>
@@ -517,7 +533,13 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 540px; margin: 0 auto; padding: 16px; background-color: #f1f5f9;">
         <div style="background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
           <div style="background: #071A3D; padding: 24px 20px; text-align: center;">
-            <div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; margin-bottom: 10px; border: 2px solid #F4C430;">VSB</div>
+            <div style="margin-bottom: 12px;">
+              ${
+                hasLogo
+                  ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="60" height="60" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #F4C430; background-color: #ffffff; padding: 2px; vertical-align: middle; display: inline-block; object-fit: contain;" />'
+                  : '<div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; border: 2px solid #F4C430;">VSB</div>'
+              }
+            </div>
             <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;">V.S.B. ENGINEERING COLLEGE</h1>
             <p style="color: #F4C430; margin: 4px 0 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Department of AI &amp; Data Science</p>
           </div>
