@@ -347,13 +347,14 @@ export async function sendAdminOTP(email: string) {
   }
 
   console.log(`\n========================================`)
-  console.log(`  ADMIN LOGIN REQUEST: ${normalizedEmail}`)
-  console.log(`  DISPATCHING OTP TO INBOX: ${defaultAdminEmail}`)
-  console.log(`  OTP Code: ${otp}`)
-  console.log(`========================================\n`)
+  let user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  })
+
+  const recipientName = admin?.name || user?.name || 'Administrator'
 
   try {
-    await sendOTPEmail(normalizedEmail, otp, admin?.name || 'System Administrator')
+    await sendOTPEmail(normalizedEmail, otp, recipientName)
   } catch (emailError) {
     console.warn('Failed to send OTP email:', emailError)
   }
@@ -546,15 +547,33 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
           
           <div style="padding: 24px 20px;">
             <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">Admin Login Verification</h2>
-            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Dear <strong>${name}</strong>,</p>
-            <p style="margin: 0 0 16px; font-size: 14px; color: #334155;">Use the following 6-digit One-Time Password (OTP) to authenticate your login:</p>
+            <p style="margin: 0 0 14px; font-size: 14px; color: #334155;">Dear <strong>${name}</strong>,</p>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600; width: 140px;">👤 Admin Name:</td>
+                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">${name}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">📧 Login Email ID:</td>
+                  <td style="padding: 3px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${email}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🛡️ Access Role:</td>
+                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">System Administrator (Super Admin)</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Use the following 6-digit One-Time Password (OTP) to authenticate this login request:</p>
             
-            <div style="background: #f8fafc; border: 2px dashed #1455D9; border-radius: 8px; padding: 18px; text-align: center; margin: 16px 0;">
-              <span style="font-size: 34px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
+            <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; text-align: center; margin: 16px 0;">
+              <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
             </div>
             
             <p style="margin: 0 0 10px; font-size: 13px; color: #e11d48; font-weight: 600;">⏱️ Valid for ${OTP_EXPIRY_MINUTES} minutes only.</p>
-            <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this OTP, please ignore this email.</p>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this OTP, please secure your account immediately or ignore this email.</p>
             
             <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; text-align: center;">
               <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal • Automated Security Alert</p>
