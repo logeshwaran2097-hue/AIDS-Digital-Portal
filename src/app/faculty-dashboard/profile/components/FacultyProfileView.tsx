@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -16,8 +16,12 @@ import {
   Layers,
   MapPin,
   CheckCircle2,
+  Edit3,
+  X,
+  Lock,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 
 export interface FacultyProfileData {
   name: string
@@ -35,7 +39,21 @@ export interface FacultyProfileData {
   allocatedCourses: string[]
 }
 
-export function FacultyProfileView({ data }: { data: FacultyProfileData }) {
+export function FacultyProfileView({ data: initialData }: { data: FacultyProfileData }) {
+  const [data, setData] = useState(initialData)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editForm, setEditForm] = useState({
+    name: data.name,
+    phone: data.phone || '',
+    email: data.email || '',
+    qualification: data.qualification || '',
+    specialization: data.specialization || '',
+    experience: data.experience || 1,
+    cabin: data.cabin || 'Room 302, AI Block',
+    officeHours: data.officeHours || '03:05 PM - 04:30 PM (Mon-Fri)',
+  })
+  const [loading, setLoading] = useState(false)
+
   const handleDownloadFacultyDossier = () => {
     generateAndDownloadPDF({
       title: 'FACULTY ACADEMIC & RESEARCH DOSSIER',
@@ -76,6 +94,48 @@ export function FacultyProfileView({ data }: { data: FacultyProfileData }) {
     })
   }
 
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/complete-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editForm.name.trim(),
+          phone: editForm.phone.trim(),
+          email: editForm.email.trim(),
+          qualification: editForm.qualification.trim(),
+          specialization: editForm.specialization.trim(),
+          experience: Number(editForm.experience) || 1,
+        }),
+      })
+
+      const result = await res.json()
+      if (res.ok && result.success) {
+        setData((prev) => ({
+          ...prev,
+          name: editForm.name.trim(),
+          phone: editForm.phone.trim(),
+          email: editForm.email.trim(),
+          qualification: editForm.qualification.trim(),
+          specialization: editForm.specialization.trim(),
+          experience: Number(editForm.experience) || 1,
+          cabin: editForm.cabin,
+          officeHours: editForm.officeHours,
+        }))
+        setIsEditOpen(false)
+        toast.success('Your faculty profile details have been updated successfully!')
+      } else {
+        toast.error(result.message || 'Failed to update profile.')
+      }
+    } catch {
+      toast.error('Network error updating profile.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
       {/* Header Profile Hero */}
@@ -98,12 +158,20 @@ export function FacultyProfileView({ data }: { data: FacultyProfileData }) {
           </div>
         </div>
 
-        <button
-          onClick={handleDownloadFacultyDossier}
-          className="px-5 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
-        >
-          <Download className="w-4 h-4" /> Export Faculty Dossier (PDF)
-        </button>
+        <div className="flex items-center flex-wrap gap-2.5">
+          <button
+            onClick={() => setIsEditOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 shadow-xs cursor-pointer"
+          >
+            <Edit3 className="w-4 h-4 text-[#22C7E8]" /> Edit Profile
+          </button>
+          <button
+            onClick={handleDownloadFacultyDossier}
+            className="px-5 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
+          >
+            <Download className="w-4 h-4" /> Export Faculty Dossier (PDF)
+          </button>
+        </div>
       </div>
 
       {/* Metrics Strip */}
@@ -150,7 +218,12 @@ export function FacultyProfileView({ data }: { data: FacultyProfileData }) {
 
               <div className="p-3 rounded-2xl bg-gray-50 border flex items-center justify-between">
                 <span className="text-gray-500 font-medium">Contact Phone:</span>
-                <span className="font-bold text-[#071A3D]">{data.phone}</span>
+                <span className="font-bold text-[#071A3D]">{data.phone || '+91 98421 12345'}</span>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-gray-50 border flex items-center justify-between">
+                <span className="text-gray-500 font-medium">Qualification:</span>
+                <span className="font-bold text-[#071A3D]">{data.qualification}</span>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50 border flex items-center justify-between">
@@ -184,6 +257,133 @@ export function FacultyProfileView({ data }: { data: FacultyProfileData }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* EDIT PROFILE MODAL */}
+      {isEditOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-lg font-black text-[#071A3D]">Edit Faculty Profile</h3>
+                <p className="text-xs text-[#1455D9] font-mono font-bold">{data.facultyId}</p>
+              </div>
+              <button
+                onClick={() => setIsEditOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
+                  <input
+                    type="text"
+                    placeholder="+91 98421 12345"
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Contact Email</label>
+                  <input
+                    type="email"
+                    placeholder="karthik@vsb.edu.in"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Qualification</label>
+                  <input
+                    type="text"
+                    placeholder="M.E., Ph.D."
+                    value={editForm.qualification}
+                    onChange={(e) => setEditForm({ ...editForm, qualification: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Experience (Years)</label>
+                  <input
+                    type="number"
+                    value={editForm.experience}
+                    onChange={(e) => setEditForm({ ...editForm, experience: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Specialization Domain</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Deep Learning, Natural Language Processing"
+                  value={editForm.specialization}
+                  onChange={(e) => setEditForm({ ...editForm, specialization: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Faculty Cabin</label>
+                  <input
+                    type="text"
+                    value={editForm.cabin}
+                    onChange={(e) => setEditForm({ ...editForm, cabin: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Office Hours</label>
+                  <input
+                    type="text"
+                    value={editForm.officeHours}
+                    onChange={(e) => setEditForm({ ...editForm, officeHours: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setIsEditOpen(false)}
+                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2"
+                >
+                  {loading ? 'Saving...' : 'Save Profile Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

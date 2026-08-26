@@ -8,6 +8,8 @@ const loginSchema = z.object({
   dateOfBirth: z.string().optional(),
 })
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -29,8 +31,15 @@ export async function POST(request: NextRequest) {
         id: result.user.id,
         name: result.user.name,
         email: result.user.email,
+        phone: result.user.phone || '',
         role: 'student',
         registerNumber: result.student?.registerNumber,
+        department: result.student?.department,
+        year: result.student?.year,
+        semester: result.student?.semester,
+        section: result.student?.section,
+        dateOfBirth: result.student?.dateOfBirth ? result.student.dateOfBirth.toISOString().split('T')[0] : null,
+        mustChangePassword: result.user.mustChangePassword ?? false,
       },
     })
 
