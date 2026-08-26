@@ -41,20 +41,51 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email && email.trim() ? email.trim().toLowerCase() : undefined
 
-    // 2. Update User Record
-    const updatedUser = await prisma.user.update({
-      where: { id: session.userId },
-      data: {
-        ...(name && name.trim() ? { name: name.trim() } : {}),
-        ...(normalizedEmail ? { email: normalizedEmail } : {}),
-        ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
-        ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
-        emailVerified: true,
-        updatedAt: new Date(),
-      },
-    })
+    // 2. Check for duplicate email across other accounts
+    if (normalizedEmail) {
+      const existingUserWithEmail = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+      })
 
-    // 3. Update Student Record if user is student
+      if (existingUserWithEmail && existingUserWithEmail.id !== session.userId) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `The email address "${normalizedEmail}" is already linked to another account (e.g. Administrator account). Please provide a different personal or institutional email.`,
+          },
+          { status: 400 }
+        )
+      }
+    }
+
+    // 3. Update User Record safely
+    let updatedUser: any
+    try {
+      updatedUser = await prisma.user.update({
+        where: { id: session.userId },
+        data: {
+          ...(name && name.trim() ? { name: name.trim() } : {}),
+          ...(normalizedEmail ? { email: normalizedEmail } : {}),
+          ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
+          ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
+          emailVerified: true,
+          updatedAt: new Date(),
+        },
+      })
+    } catch (err: any) {
+      if (err?.code === 'P2002' || String(err).includes('Unique constraint')) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'This email address is already in use by another user account. Please use a unique email address.',
+          },
+          { status: 400 }
+        )
+      }
+      throw err
+    }
+
+    // 4. Update Student Record if user is student
     if (session.role === 'student') {
       await prisma.student.update({
         where: { userId: session.userId },
@@ -64,7 +95,7 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
 
-    // 4. Update Faculty Record if user is faculty
+    // 5. Update Faculty Record if user is faculty
     if (session.role === 'faculty') {
       await prisma.faculty.update({
         where: { userId: session.userId },
@@ -77,7 +108,7 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
 
-    // 5. Update HOD Record if user is hod
+    // 6. Update HOD Record if user is hod
     if (session.role === 'hod') {
       await prisma.hOD.update({
         where: { userId: session.userId },
@@ -89,7 +120,7 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
 
-    // 5. Audit Log
+    // 7. Audit Log
     await prisma.auditLog.create({
       data: {
         userName: updatedUser.name,
@@ -100,44 +131,44 @@ export async function POST(request: NextRequest) {
       },
     }).catch(() => {})
 
-    // 6. Re-issue JWT token with updated email, name, etc.
-    const newToken = await createToken({
+    // 8. Reissue updated JWT session token
+    const token = await createToken({
       userId: updatedUser.id,
       email: updatedUser.email,
-      role: session.role,
       name: updatedUser.name,
+      role: updatedUser.role as any,
       registerNumber: session.registerNumber,
       facultyId: session.facultyId,
     })
 
     const response = NextResponse.json({
       success: true,
+      message: 'Profile details and permanent password updated successfully.',
       user: {
         id: updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
         phone: updatedUser.phone,
-        role: session.role,
-        registerNumber: session.registerNumber,
-        facultyId: session.facultyId,
+        role: updatedUser.role,
         mustChangePassword: false,
       },
-      message: 'Profile and secure password saved successfully!',
     })
 
-    response.cookies.set('auth-token', newToken, {
+    response.cookies.set({
+      name: 'auth_token',
+      value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
       path: '/',
+      maxAge: 7 * 24 * 60 * 60,
     })
 
     return response
   } catch (error) {
-    console.error('Error completing profile setup:', error)
+    console.error('Complete profile error:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to complete profile: ' + String(error) },
+      { success: false, message: 'Failed to complete profile: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     )
   }
