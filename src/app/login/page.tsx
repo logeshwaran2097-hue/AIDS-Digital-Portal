@@ -121,7 +121,7 @@ export default function LoginPage() {
       }
 
       // Check if user must complete profile or change temporary password
-      if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty')) {
+      if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty' || selectedRole === 'hod')) {
         setOnboardingUser(data.user)
         setOnboardingForm({
           name: data.user.name || '',
@@ -441,7 +441,7 @@ export default function LoginPage() {
                   />
                   <div>
                     <label className="block text-sm font-medium text-[#071A3D] mb-1.5">
-                      Password
+                      Password / Temporary Password
                     </label>
                     <div className="relative">
                       <input
@@ -462,6 +462,9 @@ export default function LoginPage() {
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      First time logging in? Use the temporary password given by Admin.
+                    </p>
                   </div>
                   <Button type="submit" className="w-full font-bold mt-2" size="lg" loading={loading}>
                     Login to HOD Portal

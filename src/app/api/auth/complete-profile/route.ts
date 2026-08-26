@@ -77,6 +77,18 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
 
+    // 5. Update HOD Record if user is hod
+    if (session.role === 'hod') {
+      await prisma.hOD.update({
+        where: { userId: session.userId },
+        data: {
+          ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+          ...(qualification && qualification.trim() ? { qualification: qualification.trim() } : {}),
+          ...(experience !== undefined && experience !== '' ? { experience: Number(experience) || 1 } : {}),
+        },
+      }).catch(() => {})
+    }
+
     // 5. Audit Log
     await prisma.auditLog.create({
       data: {

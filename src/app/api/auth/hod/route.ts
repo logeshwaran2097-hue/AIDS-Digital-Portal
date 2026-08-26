@@ -29,8 +29,13 @@ export async function POST(request: NextRequest) {
         id: result.user.id,
         name: result.user.name,
         email: result.user.email,
+        phone: result.user.phone,
         role: 'hod',
         facultyId: result.hod?.facultyId,
+        mustChangePassword: result.user.mustChangePassword ?? false,
+        qualification: result.hod?.qualification,
+        experience: result.hod?.experience,
+        dateOfBirth: result.hod?.dateOfBirth ? result.hod.dateOfBirth.toISOString().split('T')[0] : null,
       },
     })
 
