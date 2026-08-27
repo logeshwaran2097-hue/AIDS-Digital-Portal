@@ -19,12 +19,14 @@ export async function POST(request: NextRequest) {
     const {
       name,
       phone,
+      parentPhone,
       email,
       dateOfBirth,
       newPassword,
       qualification,
       specialization,
       experience,
+      correctionRemarks,
     } = body
 
     // 1. Password validation (if provided)
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            message: `The email address "${normalizedEmail}" is already linked to another account (e.g. Administrator account). Please provide a different personal or institutional email.`,
+            message: `The email address "${normalizedEmail}" is already linked to another account. Please provide your unique personal or institutional email.`,
           },
           { status: 400 }
         )
@@ -91,6 +93,19 @@ export async function POST(request: NextRequest) {
         where: { userId: session.userId },
         data: {
           ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+        },
+      }).catch(() => {})
+    }
+
+    // 5. If correction requested, create notification for admin
+    if (correctionRemarks && correctionRemarks.trim()) {
+      await prisma.notification.create({
+        data: {
+          userId: session.userId,
+          title: `Profile Correction Request: ${session.registerNumber || updatedUser.name}`,
+          message: `Student ${updatedUser.name} (${session.registerNumber}) requested data corrections: "${correctionRemarks.trim()}"`,
+          type: 'correction_request',
+          link: '/admin/students',
         },
       }).catch(() => {})
     }

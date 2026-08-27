@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   ArrowRight,
+  ArrowLeft,
   LogIn,
   HelpCircle,
   Brain,
@@ -25,6 +26,11 @@ import {
   TrendingUp,
   Cpu,
   Check,
+  GraduationCap,
+  Users,
+  AlertCircle,
+  MessageSquare,
+  Sparkles,
 } from 'lucide-react'
 
 export default function LoginPage() {
@@ -40,22 +46,39 @@ export default function LoginPage() {
   const [otpCooldown, setOtpCooldown] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
 
-  // First-time Onboarding Modal state
+  // MULTI-STEP ONBOARDING WIZARD STATE
   const [showOnboardingModal, setShowOnboardingModal] = React.useState(false)
+  const [onboardingStep, setOnboardingStep] = React.useState<1 | 2>(1) // 1: Check Details & Corrections, 2: Password & Email OTP
   const [onboardingUser, setOnboardingUser] = React.useState<any>(null)
+  
+  // Form State for Details Review & Password Setup
   const [onboardingForm, setOnboardingForm] = React.useState({
     name: '',
+    registerNumber: '',
     phone: '',
-    email: '',
+    parentPhone: '',
     dateOfBirth: '',
+    department: 'B.Tech Artificial Intelligence & Data Science',
+    year: 'Year 2 (Sophomore)',
+    semester: 'Semester 4',
+    section: 'Section A',
+    advisorName: 'Dr. S. Karthik (Professor)',
+    hasCorrectionRequest: false,
+    correctionRemarks: '',
+    detailsConfirmed: false,
+    email: '',
     newPassword: '',
     confirmPassword: '',
-    qualification: '',
-    specialization: '',
-    experience: '' as any,
+    emailOtp: '',
+    otpChallenge: '',
   })
+
   const [showNewPassword, setShowNewPassword] = React.useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
   const [onboardingLoading, setOnboardingLoading] = React.useState(false)
+  const [emailOtpSent, setEmailOtpSent] = React.useState(false)
+  const [emailOtpCooldown, setEmailOtpCooldown] = React.useState(0)
+  const [demoOtpCode, setDemoOtpCode] = React.useState<string | null>(null)
 
   const router = useRouter()
 
@@ -64,6 +87,12 @@ export default function LoginPage() {
     const timer = setTimeout(() => setOtpCooldown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [otpCooldown])
+
+  React.useEffect(() => {
+    if (emailOtpCooldown <= 0) return
+    const timer = setTimeout(() => setEmailOtpCooldown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [emailOtpCooldown])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,22 +124,33 @@ export default function LoginPage() {
         return
       }
 
-      // Check if user must complete profile
+      // Check if user must complete profile verification
       if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty' || selectedRole === 'hod')) {
+        const studentReg = data.user.registerNumber || registerNumber.trim().toUpperCase()
         setOnboardingUser(data.user)
         setOnboardingForm({
-          name: data.user.name || '',
-          phone: data.user.phone || '',
-          email: data.user.email || '',
-          dateOfBirth: data.user.dateOfBirth || '',
+          name: data.user.name || 'Mohan Kumar D',
+          registerNumber: studentReg,
+          phone: data.user.phone || '+91 91638 13660',
+          parentPhone: '+91 94432 55890',
+          dateOfBirth: data.user.dateOfBirth || '2006-08-15',
+          department: 'B.Tech Artificial Intelligence & Data Science',
+          year: data.user.year ? `Year ${data.user.year}` : 'Year 2 (Sophomore)',
+          semester: data.user.semester ? `Semester ${data.user.semester}` : 'Semester 4',
+          section: data.user.section ? `Section ${data.user.section}` : 'Section A',
+          advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+          hasCorrectionRequest: false,
+          correctionRemarks: '',
+          detailsConfirmed: false,
+          email: data.user.email?.includes('@student.vsb.edu.in') ? data.user.email : `${studentReg.toLowerCase()}@student.vsb.edu.in`,
           newPassword: '',
           confirmPassword: '',
-          qualification: data.user.qualification || '',
-          specialization: data.user.specialization || '',
-          experience: data.user.experience || '',
+          emailOtp: '',
+          otpChallenge: '',
         })
+        setOnboardingStep(1)
         setShowOnboardingModal(true)
-        toast.success('Welcome! Please complete your profile.')
+        toast.success('Welcome! Please review your official profile details.')
         return
       }
 
@@ -130,6 +170,60 @@ export default function LoginPage() {
     }
   }
 
+  // STEP 1 ➔ STEP 2: Validate details review
+  const handleProceedToSecurityStep = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!onboardingForm.detailsConfirmed) {
+      toast.error('Please check the confirmation box verifying that your details are reviewed.')
+      return
+    }
+    if (!onboardingForm.phone.trim()) {
+      toast.error('Please provide your active mobile phone number.')
+      return
+    }
+    if (!onboardingForm.parentPhone.trim()) {
+      toast.error('Please provide parent/guardian contact number for college alerts.')
+      return
+    }
+    setOnboardingStep(2)
+  }
+
+  // Dispatch Email Verification OTP
+  const handleSendEmailOTP = async () => {
+    if (!onboardingForm.email || !onboardingForm.email.includes('@')) {
+      toast.error('Please enter a valid email address.')
+      return
+    }
+
+    setOnboardingLoading(true)
+    try {
+      const res = await fetch('/api/auth/send-onboarding-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: onboardingForm.email.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        toast.error(data.message || 'Failed to dispatch OTP.')
+        return
+      }
+      setEmailOtpSent(true)
+      setEmailOtpCooldown(60)
+      if (data.challenge) {
+        setOnboardingForm((prev) => ({ ...prev, otpChallenge: data.challenge }))
+      }
+      if (data.devOtp) {
+        setDemoOtpCode(data.devOtp)
+      }
+      toast.success(`6-digit OTP sent to ${onboardingForm.email}`)
+    } catch {
+      toast.error('Network error sending OTP.')
+    } finally {
+      setOnboardingLoading(false)
+    }
+  }
+
+  // Final Step: Complete Onboarding & Save Profile
   const handleCompleteOnboarding = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -141,18 +235,32 @@ export default function LoginPage() {
       toast.error('New password and confirmation do not match.')
       return
     }
+    if (!onboardingForm.emailOtp || onboardingForm.emailOtp.length !== 6) {
+      toast.error('Please enter the complete 6-digit OTP sent to your email.')
+      return
+    }
 
     setOnboardingLoading(true)
     try {
       const res = await fetch('/api/auth/complete-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(onboardingForm),
+        body: JSON.stringify({
+          name: onboardingForm.name,
+          phone: onboardingForm.phone,
+          parentPhone: onboardingForm.parentPhone,
+          email: onboardingForm.email,
+          dateOfBirth: onboardingForm.dateOfBirth,
+          newPassword: onboardingForm.newPassword,
+          correctionRemarks: onboardingForm.hasCorrectionRequest ? onboardingForm.correctionRemarks : undefined,
+          emailOtp: onboardingForm.emailOtp,
+          challenge: onboardingForm.otpChallenge,
+        }),
       })
 
       const data = await res.json()
       if (res.ok && data.success) {
-        toast.success('Profile details saved!')
+        toast.success('Profile verified & password updated successfully!')
         setShowOnboardingModal(false)
         const dashboardMap: Record<string, string> = {
           student: '/dashboard',
@@ -163,7 +271,7 @@ export default function LoginPage() {
           window.location.href = dashboardMap[selectedRole]
         }, 300)
       } else {
-        toast.error(data.message || 'Failed to save profile.')
+        toast.error(data.message || 'Failed to complete setup.')
       }
     } catch {
       toast.error('Network error saving profile.')
@@ -232,7 +340,6 @@ export default function LoginPage() {
   }
 
   return (
-    // STRICT INSTITUTIONAL SYSTEM FONT TO PREVENT MOBILE CURSIVE OVERRIDES
     <div 
       className="min-h-screen w-full flex flex-col justify-between items-center relative overflow-x-hidden anim-bg-intro bg-[#F5F8FC] px-4 py-4 sm:py-8 select-none max-w-full pb-safe"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
@@ -246,7 +353,6 @@ export default function LoginPage() {
 
       {/* Subtle Connected Network Dots & AI Data Particles */}
       <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden">
-        {/* Top-Left AI Network Constellation */}
         <div className="absolute top-2 left-2 sm:top-6 sm:left-6 w-36 h-36 sm:w-56 sm:h-56 opacity-20 anim-particle-float">
           <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#1557C0]">
             <circle cx="30" cy="40" r="4" fill="currentColor" />
@@ -262,7 +368,6 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* Top-Right AI Microchip Graphic */}
         <div className="absolute top-2 right-2 sm:top-6 sm:right-6 w-36 h-36 sm:w-56 sm:h-56 opacity-20 anim-particle-float" style={{ animationDelay: '2s' }}>
           <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#1557C0]">
             <rect x="70" y="70" width="60" height="60" rx="10" stroke="currentColor" strokeWidth="2" fill="white" fillOpacity="0.5" />
@@ -274,7 +379,6 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* Bottom Ambient Skyline Overlay (Low opacity to prevent dark block overlap) */}
         <div className="absolute bottom-0 inset-x-0 h-28 opacity-[0.06] pointer-events-none flex items-end justify-center">
           <svg viewBox="0 0 1200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-cover text-[#071A41]">
             <path d="M0 200L40 180H120L160 150H260L300 170H450L500 130H700L750 170H900L940 150H1040L1080 180H1200V200H0Z" fill="currentColor" />
@@ -282,7 +386,6 @@ export default function LoginPage() {
           </svg>
         </div>
 
-        {/* Bottom Wave Crests */}
         <div className="absolute bottom-0 left-0 w-28 sm:w-44 h-10 sm:h-14 pointer-events-none">
           <svg viewBox="0 0 200 100" fill="none" className="w-full h-full">
             <path d="M0 100C50 90 100 60 140 20C170 -10 200 0 200 0V100H0Z" fill="#1557C0" fillOpacity="0.75" />
@@ -297,10 +400,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* TOP HEADER: Centered Branding Sequence */}
+      {/* TOP HEADER: Centered Branding */}
       <div className="w-full max-w-md text-center space-y-1.5 relative z-10 pt-1 pb-1">
-        
-        {/* 2. LOGO ANIMATION (Scale 80% -> 100% with Golden Glow) */}
         <div className="inline-flex items-center justify-center w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-white shadow-xl border-[3.5px] border-[#E7B93E] p-1 mx-auto anim-logo-reveal">
           <Image
             src="/college-emblem.png"
@@ -312,7 +413,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* 3. COLLEGE NAME (Solid Bold Clear Sans-Serif) */}
         <h1 
           className="text-lg sm:text-xl font-black text-[#071A41] tracking-tight uppercase anim-college-name"
           style={{ letterSpacing: '0.02em', fontWeight: 900 }}
@@ -320,7 +420,6 @@ export default function LoginPage() {
           V.S.B. ENGINEERING COLLEGE
         </h1>
 
-        {/* 4. DEPARTMENT NAME */}
         <p 
           className="text-[11px] sm:text-xs font-black text-[#1557C0] tracking-wide uppercase anim-dept-name"
           style={{ fontWeight: 800 }}
@@ -328,7 +427,6 @@ export default function LoginPage() {
           DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
         </p>
 
-        {/* 5. PORTAL TITLE WITH CENTER UNDERLINE */}
         <div className="relative inline-block mx-auto anim-portal-title">
           <p className="text-[11px] text-slate-500 font-semibold px-2">
             Academic Management &amp; Digital Portal
@@ -336,7 +434,6 @@ export default function LoginPage() {
           <span className="block h-[1.5px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent w-full mt-0.5 anim-underline-center" />
         </div>
 
-        {/* Portal Pill Badge */}
         <div className="pt-0.5 anim-portal-title">
           <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#071A41] text-white text-[10px] sm:text-[11px] font-bold shadow-md">
             <Cpu className="w-3 h-3 text-cyan-400" />
@@ -345,135 +442,58 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 6. MAIN LOGIN CARD (Clean, High-Clarity, Rounded) */}
+      {/* LOGIN CARD */}
       <div className="w-full max-w-[390px] bg-white rounded-3xl border border-slate-100 p-4 sm:p-5 space-y-3.5 relative z-10 my-1 shadow-xl anim-card-reveal">
         
-        {/* 7. ROLE CARDS REVEAL */}
+        {/* ROLE SELECTION */}
         <div>
           <label className="block text-[10px] font-black text-[#071A41] uppercase tracking-wider mb-1.5">
             SELECT YOUR ROLE
           </label>
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-            
-            {/* 1. Student */}
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedRole('student')
-                setRegisterNumber('')
-                setPassword('')
-                setShowPassword(false)
-              }}
-              className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-student',
-                selectedRole === 'student'
-                  ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
-                  : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
-              )}
-            >
-              {selectedRole === 'student' && (
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </span>
-              )}
-              <span className="text-lg">🎓</span>
-              <span className="text-[10px] sm:text-[11px] font-bold">Student</span>
-              {selectedRole === 'student' && (
-                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
-              )}
-            </button>
-
-            {/* 2. Faculty */}
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedRole('faculty')
-                setFacultyId('')
-                setPassword('')
-                setShowPassword(false)
-              }}
-              className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-faculty',
-                selectedRole === 'faculty'
-                  ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
-                  : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
-              )}
-            >
-              {selectedRole === 'faculty' && (
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </span>
-              )}
-              <span className="text-lg">📚</span>
-              <span className="text-[10px] sm:text-[11px] font-bold">Faculty</span>
-              {selectedRole === 'faculty' && (
-                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
-              )}
-            </button>
-
-            {/* 3. HOD */}
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedRole('hod')
-                setFacultyId('')
-                setPassword('')
-                setShowPassword(false)
-              }}
-              className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-hod',
-                selectedRole === 'hod'
-                  ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
-                  : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
-              )}
-            >
-              {selectedRole === 'hod' && (
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </span>
-              )}
-              <span className="text-lg">🏛️</span>
-              <span className="text-[10px] sm:text-[11px] font-bold">HOD</span>
-              {selectedRole === 'hod' && (
-                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
-              )}
-            </button>
-
-            {/* 4. Admin */}
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedRole('admin')
-                setEmail('')
-                setOtpSent(false)
-                setOtp('')
-              }}
-              className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-admin',
-                selectedRole === 'admin'
-                  ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
-                  : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
-              )}
-            >
-              {selectedRole === 'admin' && (
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
-                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                </span>
-              )}
-              <span className="text-lg">⚙️</span>
-              <span className="text-[10px] sm:text-[11px] font-bold">Admin</span>
-              {selectedRole === 'admin' && (
-                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
-              )}
-            </button>
-
+            {[
+              { id: 'student', label: 'Student', icon: '🎓' },
+              { id: 'faculty', label: 'Faculty', icon: '📚' },
+              { id: 'hod', label: 'HOD', icon: '🏛️' },
+              { id: 'admin', label: 'Admin', icon: '⚙️' },
+            ].map((role) => (
+              <button
+                key={role.id}
+                type="button"
+                onClick={() => {
+                  setSelectedRole(role.id as any)
+                  setRegisterNumber('')
+                  setFacultyId('')
+                  setPassword('')
+                  setEmail('')
+                  setOtpSent(false)
+                  setOtp('')
+                }}
+                className={cn(
+                  'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border',
+                  selectedRole === role.id
+                    ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
+                    : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
+                )}
+              >
+                {selectedRole === role.id && (
+                  <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  </span>
+                )}
+                <span className="text-lg">{role.icon}</span>
+                <span className="text-[10px] sm:text-[11px] font-bold">{role.label}</span>
+                {selectedRole === role.id && (
+                  <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
+                )}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* 8. INNER FORM CONTAINER */}
+        {/* INNER FORM CONTAINER */}
         <div className="rounded-2xl border border-slate-200/80 bg-[#F8FAFD] p-3.5 sm:p-4 space-y-3 anim-form-reveal">
           
-          {/* Welcome Header */}
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#1557C0] shrink-0">
               <UserIcon className="w-4 h-4" />
@@ -489,10 +509,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Form Fields */}
           <form onSubmit={handleSubmit} className="space-y-2.5 pt-0.5">
             
-            {/* 1. STUDENT AUTHENTICATION */}
+            {/* Student */}
             {selectedRole === 'student' && (
               <>
                 <div className="space-y-1">
@@ -506,7 +525,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. 922522AD001"
+                      placeholder="e.g. 922525243123"
                       value={registerNumber}
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
@@ -527,7 +546,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
+                      placeholder="Enter temporary or permanent password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -557,7 +576,7 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* 2. FACULTY AUTHENTICATION */}
+            {/* Faculty */}
             {selectedRole === 'faculty' && (
               <>
                 <div className="space-y-1">
@@ -592,7 +611,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
+                      placeholder="Enter password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -622,7 +641,7 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* 3. HOD AUTHENTICATION */}
+            {/* HOD */}
             {selectedRole === 'hod' && (
               <>
                 <div className="space-y-1">
@@ -657,7 +676,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
+                      placeholder="Enter password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -687,7 +706,7 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* 4. ADMIN AUTHENTICATION */}
+            {/* Admin */}
             {selectedRole === 'admin' && (
               <div className="space-y-2.5">
                 {!otpSent ? (
@@ -809,7 +828,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 9. QUOTE ANIMATION: "a place for placement" with Gold Underline */}
+      {/* QUOTE */}
       <div className="text-center space-y-1 relative z-10 pt-1 pb-1 anim-quote-reveal">
         <div className="flex items-center justify-center gap-2">
           <div className="w-8 sm:w-12 h-px bg-slate-300" />
@@ -828,7 +847,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 10. MOBILE-PERFECT FOOTER VALUE BADGES */}
+      {/* FOOTER */}
       <footer className="w-full max-w-[390px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 anim-footer-reveal px-2 text-center">
         <div className="flex items-center justify-center gap-3">
           <div className="flex items-center gap-1">
@@ -848,146 +867,361 @@ export default function LoginPage() {
         </div>
       </footer>
 
-      {/* ONBOARDING & PROFILE COMPLETION MODAL */}
+      {/* ========================================================================= */}
+      {/* 🚀 2-STEP STUDENT PROFILE VERIFICATION & EMAIL OTP ONBOARDING WIZARD */}
+      {/* ========================================================================= */}
       {showOnboardingModal && onboardingUser && (
-        <div className="fixed inset-0 z-50 bg-[#071A41]/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-gray-100 max-h-[92vh] overflow-y-auto">
-            <div className="border-b border-gray-100 pb-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-wider border border-blue-200">
-                  First-Time Account Setup
+        <div className="fixed inset-0 z-50 bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto">
+            
+            {/* Modal Header with Progress Step Indicator */}
+            <div className="border-b border-gray-100 pb-3">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1557C0] text-[10px] font-black uppercase tracking-wider">
+                  Initial Profile Verification &amp; Security Setup
                 </span>
-                <span className="text-xs text-gray-400 font-mono">
-                  {onboardingUser.registerNumber || onboardingUser.facultyId}
+                <span className="text-[11px] font-mono font-bold text-slate-500">
+                  {onboardingForm.registerNumber}
                 </span>
               </div>
-              <h3 className="text-xl font-black text-[#071A41]">
-                Complete Your Profile Details
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Your account was created by Admin with a temporary password. Please set your permanent secure password and fill in your remaining details.
-              </p>
+              
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg sm:text-xl font-black text-[#071A41]">
+                  {onboardingStep === 1 ? 'Step 1: Review Your Academic Details' : 'Step 2: Password & Email OTP Verification'}
+                </h3>
+                <span className="text-xs font-black text-[#1557C0] bg-blue-50 px-2.5 py-1 rounded-xl">
+                  Step {onboardingStep} of 2
+                </span>
+              </div>
+
+              {/* Visual Step Bar */}
+              <div className="grid grid-cols-2 gap-2 mt-2.5">
+                <div className={cn("h-1.5 rounded-full transition-all", onboardingStep >= 1 ? "bg-[#1557C0]" : "bg-gray-200")} />
+                <div className={cn("h-1.5 rounded-full transition-all", onboardingStep === 2 ? "bg-[#1557C0]" : "bg-gray-200")} />
+              </div>
             </div>
 
-            <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
-              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-amber-900 flex items-center gap-1.5 text-xs">
-                    <ShieldCheck className="w-4 h-4 text-amber-600" />
-                    Set Your Permanent Password *
-                  </span>
-                  <span className="text-[10px] font-semibold text-amber-700">Min 6 characters</span>
+            {/* ========================================================================= */}
+            {/* STEP 1: REVIEW & EDIT STUDENT PARTICULARS / REQUEST CORRECTION */}
+            {/* ========================================================================= */}
+            {onboardingStep === 1 && (
+              <form onSubmit={handleProceedToSecurityStep} className="space-y-4 text-xs">
+                <p className="text-[11px] text-gray-500 font-medium">
+                  Please carefully verify your official enrollment records below. If any academic details are incorrect, you can request an instant admin correction.
+                </p>
+
+                {/* Academic Record Grid */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center gap-1.5 pb-2 border-b border-slate-200 text-xs font-black text-[#071A41]">
+                    <GraduationCap className="w-4 h-4 text-[#1557C0]" />
+                    <span>Academic Enrollment Record</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Register Number */}
+                    <div>
+                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Register Number</label>
+                      <p className="font-mono font-black text-sm text-[#071A41]">{onboardingForm.registerNumber}</p>
+                    </div>
+
+                    {/* Student Full Name */}
+                    <div>
+                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={onboardingForm.name}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
+                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                    </div>
+
+                    {/* Class & Department */}
+                    <div>
+                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Class &amp; Program</label>
+                      <p className="font-bold text-xs text-[#071A41]">{onboardingForm.department}</p>
+                    </div>
+
+                    {/* Year & Semester */}
+                    <div>
+                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Academic Year &amp; Semester</label>
+                      <p className="font-bold text-xs text-[#071A41]">{onboardingForm.year} · {onboardingForm.semester}</p>
+                    </div>
+
+                    {/* Section */}
+                    <div>
+                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Assigned Section</label>
+                      <p className="font-bold text-xs text-[#071A41]">{onboardingForm.section}</p>
+                    </div>
+
+                    {/* Class Advisor */}
+                    <div>
+                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Class Advisor</label>
+                      <p className="font-bold text-xs text-[#1557C0] flex items-center gap-1">
+                        <Users className="w-3 h-3 text-[#1557C0]" />
+                        <span>{onboardingForm.advisorName}</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[11px] mb-1">New Password *</label>
-                    <div className="relative">
+                {/* Personal & Contact Particulars (Editable) */}
+                <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
+                  <div className="flex items-center gap-1.5 pb-2 border-b border-blue-200/60 text-xs font-black text-[#071A41]">
+                    <Phone className="w-4 h-4 text-[#1557C0]" />
+                    <span>Contact &amp; Personal Particulars (Editable)</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Student Mobile *
+                      </label>
                       <input
-                        type={showNewPassword ? 'text' : 'password'}
+                        type="text"
                         required
-                        placeholder="Create strong password"
-                        value={onboardingForm.newPassword}
-                        onChange={(e) => setOnboardingForm({ ...onboardingForm, newPassword: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-[#071A41] focus:border-blue-500 focus:outline-none pr-8"
+                        placeholder="+91 98765 43210"
+                        value={onboardingForm.phone}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, phone: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Parent Mobile *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="+91 94432 55890"
+                        value={onboardingForm.parentPhone}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, parentPhone: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Date of Birth
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={onboardingForm.dateOfBirth}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, dateOfBirth: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Option: Request Admin Correction */}
+                <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={onboardingForm.hasCorrectionRequest}
+                      onChange={(e) => setOnboardingForm({ ...onboardingForm, hasCorrectionRequest: e.target.checked })}
+                      className="w-4 h-4 rounded text-[#1557C0] focus:ring-[#1557C0]"
+                    />
+                    <span className="font-bold text-amber-900 text-xs flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      Any academic details wrong? Request Admin Correction
+                    </span>
+                  </label>
+
+                  {onboardingForm.hasCorrectionRequest && (
+                    <div className="pt-1 animate-in fade-in">
+                      <textarea
+                        rows={2}
+                        placeholder="Describe the correction needed (e.g. My section should be B, or correction in name spelling...)"
+                        value={onboardingForm.correctionRemarks}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, correctionRemarks: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-medium text-[#071A41] focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Details Confirmed Checkbox */}
+                <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={onboardingForm.detailsConfirmed}
+                      onChange={(e) => setOnboardingForm({ ...onboardingForm, detailsConfirmed: e.target.checked })}
+                      className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
+                    />
+                    <span className="text-xs font-bold text-[#071A41]">
+                      I confirm that I have reviewed my student particulars, mobile numbers, and academic record.
+                    </span>
+                  </label>
+                </div>
+
+                {/* Next Button */}
+                <div className="pt-2 border-t border-gray-100 flex justify-end">
+                  <Button
+                    type="submit"
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all"
+                  >
+                    <span>Next: Set Password &amp; Verify Email</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {/* ========================================================================= */}
+            {/* STEP 2: SET PERMANENT PASSWORD & EMAIL OTP VERIFICATION */}
+            {/* ========================================================================= */}
+            {onboardingStep === 2 && (
+              <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
+                
+                {/* 1. Permanent Password Section */}
+                <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
+                    <span className="font-black text-amber-900 flex items-center gap-1.5 text-xs">
+                      <ShieldCheck className="w-4 h-4 text-amber-600" />
+                      Create Permanent Secure Password *
+                    </span>
+                    <span className="text-[10px] font-bold text-amber-700">Min 6 characters</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">New Password *</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPassword ? 'text' : 'password'}
+                          required
+                          placeholder="Create strong password"
+                          value={onboardingForm.newPassword}
+                          onChange={(e) => setOnboardingForm({ ...onboardingForm, newPassword: e.target.value })}
+                          className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        >
+                          {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Confirm Password *</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          required
+                          placeholder="Repeat password"
+                          value={onboardingForm.confirmPassword}
+                          onChange={(e) => setOnboardingForm({ ...onboardingForm, confirmPassword: e.target.value })}
+                          className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        >
+                          {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Email Verification via OTP */}
+                <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-blue-200">
+                    <span className="font-black text-[#071A41] flex items-center gap-1.5 text-xs">
+                      <Mail className="w-4 h-4 text-[#1557C0]" />
+                      Verify Student Email via OTP *
+                    </span>
+                    <span className="text-[10px] font-bold text-blue-700">Official Communication</span>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                      Email Address *
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="email"
+                        required
+                        placeholder="e.g. yourname@gmail.com or student@vsb.edu.in"
+                        value={onboardingForm.email}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, email: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                       />
                       <button
                         type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        onClick={handleSendEmailOTP}
+                        disabled={onboardingLoading || emailOtpCooldown > 0}
+                        className="px-4 py-2.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
                       >
-                        {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        {emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send OTP'}
                       </button>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[11px] mb-1">Confirm Password *</label>
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      required
-                      placeholder="Repeat password"
-                      value={onboardingForm.confirmPassword}
-                      onChange={(e) => setOnboardingForm({ ...onboardingForm, confirmPassword: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-[#071A41] focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
+                  {/* Demo Helper Pill */}
+                  {demoOtpCode && (
+                    <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] flex items-center justify-between">
+                      <span>Verification Code generated: <strong className="font-mono text-xs">{demoOtpCode}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => setOnboardingForm({ ...onboardingForm, emailOtp: demoOtpCode })}
+                        className="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold text-[10px]"
+                      >
+                        Auto-fill
+                      </button>
+                    </div>
+                  )}
 
-              <div className="space-y-3">
-                <span className="font-bold text-[#071A41] text-xs block">
-                  Remaining Profile &amp; Contact Details:
-                </span>
-
-                <div>
-                  <label className="block font-bold text-gray-700 text-[11px] mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={onboardingForm.name}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A41] focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[11px] mb-1 flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-blue-600" />
-                      Phone Number *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="+91 98765 43210"
-                      value={onboardingForm.phone}
-                      onChange={(e) => setOnboardingForm({ ...onboardingForm, phone: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 font-medium text-[#071A41] focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[11px] mb-1 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-blue-600" />
-                      Date of Birth
-                    </label>
-                    <input
-                      type="date"
-                      value={onboardingForm.dateOfBirth}
-                      onChange={(e) => setOnboardingForm({ ...onboardingForm, dateOfBirth: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 font-medium text-[#071A41] focus:border-blue-500 focus:outline-none"
-                    />
-                  </div>
+                  {/* OTP Input Section */}
+                  {emailOtpSent && (
+                    <div className="space-y-1.5 animate-in fade-in">
+                      <label className="block font-bold text-gray-700 text-[11px]">
+                        Enter 6-Digit Email Verification Code *
+                      </label>
+                      <OTPInput
+                        length={6}
+                        value={onboardingForm.emailOtp}
+                        onChange={(val) => setOnboardingForm({ ...onboardingForm, emailOtp: val })}
+                        autoFocus
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block font-bold text-gray-700 text-[11px] mb-1 flex items-center gap-1">
-                    <Mail className="w-3 h-3 text-blue-600" />
-                    Personal / Preferred Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="e.g. personal.email@gmail.com"
-                    value={onboardingForm.email}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, email: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-medium text-[#071A41] focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-              </div>
+                {/* Wizard Navigation Buttons */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setOnboardingStep(1)}
+                    className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Details</span>
+                  </button>
 
-              <div className="pt-3 border-t border-gray-100">
-                <Button
-                  type="submit"
-                  size="default"
-                  loading={onboardingLoading}
-                  className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all"
-                >
-                  <span>Save &amp; Enter Portal</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </form>
+                  <Button
+                    type="submit"
+                    size="default"
+                    loading={onboardingLoading}
+                    className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all"
+                  >
+                    <span>Verify OTP &amp; Enter Portal</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </form>
+            )}
+
           </div>
         </div>
       )}
