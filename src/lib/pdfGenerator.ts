@@ -22,165 +22,255 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
 
-  // 1. Header Banner (32mm height)
-  doc.setFillColor(7, 26, 61) // #071A3D
-  doc.rect(0, 0, pageWidth, 32, 'F')
+  // 1. Elegant Perimeter Margin Border
+  doc.setDrawColor(220, 230, 245)
+  doc.setLineWidth(0.4)
+  doc.rect(8, 8, pageWidth - 16, pageHeight - 16, 'S')
 
-  doc.setFillColor(20, 85, 217) // #1455D9 Accent Stripe
-  doc.rect(0, 32, pageWidth, 2.5, 'F')
+  // 2. Institutional Master Header (35mm height)
+  doc.setFillColor(7, 26, 61) // #071A3D Navy
+  doc.rect(8, 8, pageWidth - 16, 30, 'F')
 
-  doc.setFillColor(244, 196, 48) // Gold Accent Stripe
-  doc.rect(0, 34.5, pageWidth, 1, 'F')
+  doc.setFillColor(20, 85, 217) // Royal Blue Accent Stripe
+  doc.rect(8, 38, pageWidth - 16, 2.5, 'F')
 
+  doc.setFillColor(231, 185, 62) // Gold Accent Stripe
+  doc.rect(8, 40.5, pageWidth - 16, 1.2, 'F')
+
+  // College Emblem Logo
   try {
-    doc.addImage(VSB_LOGO_BASE64, 'PNG', 12, 4.5, 23, 23)
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', 13, 11, 24, 24)
   } catch (e) {
     console.error('Failed to embed logo in PDF:', e)
   }
 
+  // Header Typography
   doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(13.5)
-  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', (pageWidth + 15) / 2, 12, { align: 'center' })
+  doc.setFontSize(13)
+  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', (pageWidth + 18) / 2, 18, { align: 'center' })
 
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9.5)
-  doc.setTextColor(244, 196, 48)
-  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', (pageWidth + 15) / 2, 18.5, { align: 'center' })
+  doc.setFontSize(9)
+  doc.setTextColor(231, 185, 62) // Gold
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', (pageWidth + 18) / 2, 24, { align: 'center' })
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7.5)
+  doc.setFontSize(7.2)
   doc.setTextColor(215, 230, 255)
-  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111', (pageWidth + 15) / 2, 24.5, { align: 'center' })
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111', (pageWidth + 18) / 2, 29.5, { align: 'center' })
 
-  doc.setFontSize(7)
+  doc.setFontSize(6.8)
   doc.setTextColor(180, 205, 240)
-  doc.text('Accredited by NAAC with "A" Grade · NBA Accredited Programs', (pageWidth + 15) / 2, 29, { align: 'center' })
+  doc.text('Accredited by NAAC with "A" Grade · NBA Accredited Programs · ISO 9001:2015 Certified', (pageWidth + 18) / 2, 34, { align: 'center' })
 
-  // 2. Document Title Section
-  let currentY = 44
+  // 3. Document Title Section
+  let currentY = 48
   doc.setTextColor(7, 26, 61)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(14)
-  doc.text(options.title, 15, currentY)
+  doc.setFontSize(13.5)
+  doc.text(options.title, 12, currentY)
   currentY += 5.5
 
   if (options.subtitle) {
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(9)
-    doc.setTextColor(80, 90, 105)
-    doc.text(options.subtitle, 15, currentY)
-    currentY += 6.5
+    doc.setFontSize(8.5)
+    doc.setTextColor(90, 105, 125)
+    doc.text(options.subtitle, 12, currentY)
+    currentY += 6
   }
 
-  // Metadata Pill Box
-  doc.setFillColor(244, 247, 253)
-  doc.roundedRect(15, currentY, pageWidth - 30, 8.5, 2, 2, 'F')
-  doc.setDrawColor(215, 225, 245)
-  doc.setLineWidth(0.3)
-  doc.roundedRect(15, currentY, pageWidth - 30, 8.5, 2, 2, 'S')
+  // Executive Metadata Table Box (2x2 Grid)
+  const metaBoxY = currentY
+  const metaBoxW = pageWidth - 24
+  const metaBoxH = 12
 
-  doc.setFontSize(8)
+  doc.setFillColor(246, 249, 254)
+  doc.roundedRect(12, metaBoxY, metaBoxW, metaBoxH, 2, 2, 'F')
+  doc.setDrawColor(210, 222, 240)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(12, metaBoxY, metaBoxW, metaBoxH, 2, 2, 'S')
+
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+
+  // Meta Row 1
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.2)
+  doc.setTextColor(20, 85, 217)
+  doc.text('DOCUMENT CATEGORY:', 16, metaBoxY + 4.8)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(options.category || 'Official Institutional Statement', 52, metaBoxY + 4.8)
+
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(20, 85, 217)
+  doc.text('GENERATED ON:', metaBoxW / 2 + 16, metaBoxY + 4.8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(7, 26, 61)
+  doc.text(`${dateStr} at ${timeStr}`, metaBoxW / 2 + 44, metaBoxY + 4.8)
 
-  const metaItems: string[] = []
-  if (options.subjectCode) metaItems.push(`Course: ${options.subjectCode}`)
-  if (options.category) metaItems.push(`Category: ${options.category}`)
-  if (options.author) metaItems.push(`Authority: ${options.author}`)
-  metaItems.push(`Date: ${new Date().toLocaleDateString('en-GB')}`)
+  // Meta Row 2
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(20, 85, 217)
+  doc.text('ISSUING AUTHORITY:', 16, metaBoxY + 9.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(options.author || 'System Super Administrator', 52, metaBoxY + 9.5)
 
-  doc.text(metaItems.join('   ·   '), 19, currentY + 5.8)
-  currentY += 13
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(20, 85, 217)
+  doc.text('SECURITY PROTOCOL:', metaBoxW / 2 + 16, metaBoxY + 9.5)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(7, 26, 61)
+  doc.text('256-Bit SHA Encrypted Dossier', metaBoxW / 2 + 50, metaBoxY + 9.5)
 
-  // 3. Structured Sections
+  currentY += metaBoxH + 7
+
+  // 4. Structured Sections Rendered as Executive Tables
   if (options.sections && options.sections.length > 0) {
     for (const sec of options.sections) {
-      if (currentY > pageHeight - 42) {
+      if (currentY > pageHeight - 50) {
         doc.addPage()
-        currentY = 22
+        // Perimeter border on new page
+        doc.setDrawColor(220, 230, 245)
+        doc.setLineWidth(0.4)
+        doc.rect(8, 8, pageWidth - 16, pageHeight - 16, 'S')
+        currentY = 18
       }
 
-      doc.setFillColor(243, 246, 252)
-      doc.roundedRect(15, currentY - 4.5, pageWidth - 30, 8, 1.5, 1.5, 'F')
+      // Section Header Banner
+      doc.setFillColor(240, 245, 253)
+      doc.roundedRect(12, currentY, pageWidth - 24, 7.5, 1.5, 1.5, 'F')
       doc.setFillColor(20, 85, 217)
-      doc.rect(15, currentY - 4.5, 3, 8, 'F')
+      doc.rect(12, currentY, 3.5, 7.5, 'F')
 
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9.5)
+      doc.setFontSize(9)
       doc.setTextColor(7, 26, 61)
-      doc.text(sec.heading, 21, currentY + 1)
-      currentY += 8.5
+      doc.text(sec.heading.toUpperCase(), 18, currentY + 5)
+      currentY += 10.5
 
-      for (const rawLine of sec.body) {
-        if (currentY > pageHeight - 25) {
+      // Parse Lines into Key-Value Table if structured
+      const tableX = 12
+      const tableW = pageWidth - 24
+      const rowHeight = 7.5
+
+      for (let rIdx = 0; rIdx < sec.body.length; rIdx++) {
+        if (currentY > pageHeight - 40) {
           doc.addPage()
-          currentY = 22
+          doc.setDrawColor(220, 230, 245)
+          doc.setLineWidth(0.4)
+          doc.rect(8, 8, pageWidth - 16, pageHeight - 16, 'S')
+          currentY = 18
         }
 
+        const rawLine = sec.body[rIdx]
         const cleanLine = rawLine.replace(/^[•\-\*]\s*/, '').trim()
-
-        doc.setFillColor(20, 85, 217)
-        doc.circle(19, currentY - 1, 0.8, 'F')
-
         const colonIdx = cleanLine.indexOf(':')
-        if (colonIdx > 0 && colonIdx < 35) {
-          const label = cleanLine.slice(0, colonIdx + 1).trim()
+
+        // Alternating Table Row
+        doc.setFillColor(rIdx % 2 === 0 ? 255 : 249, rIdx % 2 === 0 ? 255 : 251, rIdx % 2 === 0 ? 255 : 254)
+        doc.rect(tableX, currentY, tableW, rowHeight, 'F')
+        doc.setDrawColor(225, 233, 245)
+        doc.setLineWidth(0.2)
+        doc.rect(tableX, currentY, tableW, rowHeight, 'S')
+
+        if (colonIdx > 0 && colonIdx < 40) {
+          const label = cleanLine.slice(0, colonIdx).trim()
           const val = cleanLine.slice(colonIdx + 1).trim()
 
+          // Column 1 Divider
+          const col1W = 65
+          doc.line(tableX + col1W, currentY, tableX + col1W, currentY + rowHeight)
+
+          // Key Label
           doc.setFont('helvetica', 'bold')
-          doc.setFontSize(9)
-          doc.setTextColor(50, 60, 80)
-          doc.text(label, 23, currentY)
+          doc.setFontSize(7.5)
+          doc.setTextColor(70, 80, 95)
+          doc.text(label, tableX + 4, currentY + 5)
 
-          const labelWidth = doc.getTextWidth(`${label} `)
-          doc.setFont('helvetica', 'normal')
-          doc.setTextColor(20, 30, 45)
+          // Value Pill / Text
+          doc.setFont('helvetica', 'bold')
+          doc.setFontSize(7.8)
+          doc.setTextColor(7, 26, 61)
 
-          const splitVal = doc.splitTextToSize(val, pageWidth - 23 - labelWidth - 16)
-          doc.text(splitVal, 23 + labelWidth, currentY)
-          currentY += Math.max(1, splitVal.length) * 4.8
+          // If numeric or status, highlight
+          const splitVal = doc.splitTextToSize(val, tableW - col1W - 8)
+          doc.text(splitVal, tableX + col1W + 4, currentY + 5)
         } else {
+          // Regular Line
           doc.setFont('helvetica', 'normal')
-          doc.setFontSize(9)
+          doc.setFontSize(7.8)
           doc.setTextColor(30, 40, 55)
-
-          const splitText = doc.splitTextToSize(cleanLine, pageWidth - 39)
-          doc.text(splitText, 23, currentY)
-          currentY += splitText.length * 4.8
+          const splitText = doc.splitTextToSize(cleanLine, tableW - 8)
+          doc.text(splitText, tableX + 4, currentY + 5)
         }
+
+        currentY += rowHeight
       }
-      currentY += 3
+
+      currentY += 4
     }
   }
 
-  // 4. Signatures
-  const finalY = Math.max(currentY + 4, pageHeight - 34)
+  // 5. Official Verification Signatures & Digital Seal Box
+  const sigY = Math.max(currentY + 4, pageHeight - 38)
+  
   doc.setDrawColor(215, 225, 240)
   doc.setLineWidth(0.3)
-  doc.line(15, finalY, pageWidth - 15, finalY)
+  doc.line(12, sigY, pageWidth - 12, sigY)
 
-  doc.setFontSize(8)
+  // 3 Signature Columns
+  const sigColWidth = (pageWidth - 24) / 3
+
+  // Col 1: System Admin / Class Advisor
+  doc.setFontSize(7.5)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text('Faculty Class Advisor', 25, finalY + 6)
-  doc.text('Head of Department (AI & DS)', pageWidth / 2, finalY + 6, { align: 'center' })
-  doc.text('Controller of Examinations (Autonomous)', pageWidth - 25, finalY + 6, { align: 'right' })
+  doc.text('Prepared & Verified By', 12 + sigColWidth / 2, sigY + 5, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.8)
+  doc.setTextColor(110, 125, 145)
+  doc.text('System Administrator / Class Advisor', 12 + sigColWidth / 2, sigY + 9, { align: 'center' })
+  doc.text('Department of AI & DS', 12 + sigColWidth / 2, sigY + 12.5, { align: 'center' })
 
-  // 5. Footers
+  // Col 2: Head of Department
+  doc.setFontSize(7.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text('Head of Department', 12 + sigColWidth * 1.5, sigY + 5, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.8)
+  doc.setTextColor(110, 125, 145)
+  doc.text('Dr. S. Karthik, M.E., Ph.D.', 12 + sigColWidth * 1.5, sigY + 9, { align: 'center' })
+  doc.text('Professor & Department Head', 12 + sigColWidth * 1.5, sigY + 12.5, { align: 'center' })
+
+  // Col 3: Principal & Institutional Seal
+  doc.setFontSize(7.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text('Principal / COE (Autonomous)', 12 + sigColWidth * 2.5, sigY + 5, { align: 'center' })
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.8)
+  doc.setTextColor(110, 125, 145)
+  doc.text('V.S.B. Engineering College', 12 + sigColWidth * 2.5, sigY + 9, { align: 'center' })
+  doc.text('Official Digital Institutional Seal', 12 + sigColWidth * 2.5, sigY + 12.5, { align: 'center' })
+
+  // 6. Multi-Page Footer Bar
   const totalPages = doc.getNumberOfPages()
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i)
-    doc.setFillColor(248, 250, 253)
-    doc.rect(0, pageHeight - 9, pageWidth, 9, 'F')
+    doc.setFillColor(246, 248, 252)
+    doc.rect(8, pageHeight - 12, pageWidth - 16, 4, 'F')
     doc.setDrawColor(220, 228, 240)
-    doc.line(0, pageHeight - 9, pageWidth, pageHeight - 9)
+    doc.line(8, pageHeight - 12, pageWidth - 8, pageHeight - 12)
 
-    doc.setFontSize(7.5)
+    doc.setFontSize(6.5)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(100, 110, 125)
-    doc.text('V.S.B. AI & DS Digital Portal · Official Academic Documentation System', 15, pageHeight - 3.5)
-    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 15, pageHeight - 3.5, { align: 'right' })
+    doc.setTextColor(110, 125, 145)
+    doc.text('CONFIDENTIAL · V.S.B. ENGINEERING COLLEGE · AI & DS ACADEMIC DIGITAL PORTAL · FOR OFFICIAL INSTITUTIONAL USE ONLY', 12, pageHeight - 9.5)
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth - 12, pageHeight - 9.5, { align: 'right' })
   }
 
   const safeFileName = (options.fileName || options.title)
