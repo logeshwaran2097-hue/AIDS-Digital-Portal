@@ -161,6 +161,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           semester: 4,
           batch: '2024 - 2028',
           section: 'A',
+          advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
           status: 'active',
         })
         alert('Student successfully registered with temporary password!')
@@ -204,6 +205,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   year: Number(formData.year),
                   semester: Number(formData.semester),
                   section: formData.section,
+                  advisorName: formData.advisorName,
                   status: formData.status,
                 }
               : s

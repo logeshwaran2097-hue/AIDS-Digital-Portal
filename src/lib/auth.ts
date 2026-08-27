@@ -155,6 +155,7 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
           data: {
             userId: newUser.id,
             registerNumber: normalizedReg,
+            dateOfBirth: new Date('2006-08-15'),
             department: 'Artificial Intelligence & Data Science',
             year: 2,
             semester: 4,
@@ -276,8 +277,11 @@ export async function authenticateFaculty(facultyId: string, passwordInput: stri
           data: {
             userId: newUser.id,
             facultyId: normalizedId,
+            dateOfBirth: new Date('1990-05-15'),
             designation: 'Assistant Professor',
-            department: 'Artificial Intelligence & Data Science',
+            qualification: 'M.Tech, Ph.D',
+            experience: 5,
+            specialization: 'Artificial Intelligence & Machine Learning',
           },
         })
         const token = await createToken({

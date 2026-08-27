@@ -97,15 +97,15 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
 
-    // 5. If correction requested, create notification for admin
+    // 5. If correction requested, create audit log for admin
     if (correctionRemarks && correctionRemarks.trim()) {
-      await prisma.notification.create({
+      await prisma.auditLog.create({
         data: {
-          userId: session.userId,
-          title: `Profile Correction Request: ${session.registerNumber || updatedUser.name}`,
-          message: `Student ${updatedUser.name} (${session.registerNumber}) requested data corrections: "${correctionRemarks.trim()}"`,
-          type: 'correction_request',
-          link: '/admin/students',
+          userName: updatedUser.name,
+          action: 'correction_request',
+          module: 'student_onboarding',
+          details: `Student ${updatedUser.name} (${session.registerNumber}) requested data corrections: "${correctionRemarks.trim()}"`,
+          status: 'pending_review',
         },
       }).catch(() => {})
     }
