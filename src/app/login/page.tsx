@@ -246,20 +246,20 @@ export default function LoginPage() {
   return (
     // STRICT INSTITUTIONAL SYSTEM FONT TO PREVENT MOBILE CURSIVE OVERRIDES
     <div 
-      className="min-h-screen w-full flex flex-col justify-between items-center relative overflow-x-hidden anim-bg-intro bg-[#F5F8FC] px-3 sm:px-4 py-3 sm:py-6 select-none max-w-full pb-safe"
+      className="min-h-screen w-full flex flex-col justify-between items-center relative overflow-x-hidden anim-bg-intro bg-[#F5F8FC] px-4 py-4 sm:py-8 select-none max-w-full pb-safe"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
     >
       
       {/* Background Soft Blue Light Wave Sweep */}
       <div className="absolute inset-0 pointer-events-none z-[1] overflow-hidden">
-        <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-blue-400/12 to-transparent anim-light-wave" />
-        <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-400/8 to-transparent anim-idle-wave" />
+        <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-blue-400/15 to-transparent anim-light-wave" />
+        <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent anim-idle-wave" />
       </div>
 
-      {/* Subtle Connected Network Dots & AI Microchip Graphic */}
+      {/* Subtle Connected Network Dots & AI Data Particles */}
       <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden">
         {/* Top-Left AI Network Constellation */}
-        <div className="absolute top-2 left-2 sm:top-6 sm:left-6 w-32 h-32 sm:w-56 sm:h-56 opacity-20 anim-particle-float">
+        <div className="absolute top-2 left-2 sm:top-6 sm:left-6 w-36 h-36 sm:w-56 sm:h-56 opacity-20 anim-particle-float">
           <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#1557C0]">
             <circle cx="30" cy="40" r="4" fill="currentColor" />
             <circle cx="100" cy="20" r="5" fill="currentColor" />
@@ -275,7 +275,7 @@ export default function LoginPage() {
         </div>
 
         {/* Top-Right AI Microchip Graphic */}
-        <div className="absolute top-2 right-2 sm:top-6 sm:right-6 w-32 h-32 sm:w-56 sm:h-56 opacity-20 anim-particle-float" style={{ animationDelay: '2s' }}>
+        <div className="absolute top-2 right-2 sm:top-6 sm:right-6 w-36 h-36 sm:w-56 sm:h-56 opacity-20 anim-particle-float" style={{ animationDelay: '2s' }}>
           <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#1557C0]">
             <rect x="70" y="70" width="60" height="60" rx="10" stroke="currentColor" strokeWidth="2" fill="white" fillOpacity="0.5" />
             <text x="100" y="106" textAnchor="middle" fill="currentColor" fontSize="16" fontWeight="bold" fontFamily="sans-serif">AI</text>
@@ -285,18 +285,40 @@ export default function LoginPage() {
             <circle cx="152" cy="100" r="3" fill="currentColor" />
           </svg>
         </div>
+
+        {/* Bottom Ambient Skyline Overlay (Low opacity to prevent dark block overlap) */}
+        <div className="absolute bottom-0 inset-x-0 h-28 opacity-[0.06] pointer-events-none flex items-end justify-center">
+          <svg viewBox="0 0 1200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-cover text-[#071A41]">
+            <path d="M0 200L40 180H120L160 150H260L300 170H450L500 130H700L750 170H900L940 150H1040L1080 180H1200V200H0Z" fill="currentColor" />
+            <path d="M500 130L600 90L700 130V200H500V130Z" fill="currentColor" />
+          </svg>
+        </div>
+
+        {/* Bottom Wave Crests */}
+        <div className="absolute bottom-0 left-0 w-28 sm:w-44 h-10 sm:h-14 pointer-events-none">
+          <svg viewBox="0 0 200 100" fill="none" className="w-full h-full">
+            <path d="M0 100C50 90 100 60 140 20C170 -10 200 0 200 0V100H0Z" fill="#1557C0" fillOpacity="0.75" />
+            <path d="M0 100C40 95 90 75 130 35C150 15 180 5 180 5" stroke="#E7B93E" strokeWidth="4" />
+          </svg>
+        </div>
+        <div className="absolute bottom-0 right-0 w-28 sm:w-44 h-10 sm:h-14 pointer-events-none">
+          <svg viewBox="0 0 200 100" fill="none" className="w-full h-full">
+            <path d="M200 100C150 90 100 60 60 20C30 -10 0 0 0 0V100H200Z" fill="#1557C0" fillOpacity="0.75" />
+            <path d="M200 100C160 95 110 75 70 35C50 15 20 5 20 5" stroke="#E7B93E" strokeWidth="4" />
+          </svg>
+        </div>
       </div>
 
       {/* TOP HEADER: Centered Branding Sequence */}
-      <div className="w-full max-w-md text-center space-y-1 relative z-10 pt-1 pb-1">
+      <div className="w-full max-w-md text-center space-y-1.5 relative z-10 pt-1 pb-1">
         
         {/* 2. LOGO ANIMATION (Scale 80% -> 100% with Golden Glow) */}
-        <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white shadow-lg border-[3px] border-[#E7B93E] p-1 mx-auto anim-logo-reveal">
+        <div className="inline-flex items-center justify-center w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-white shadow-xl border-[3.5px] border-[#E7B93E] p-1 mx-auto anim-logo-reveal">
           <Image
             src="/college-emblem.png"
             alt="V.S.B. Engineering College Logo"
-            width={75}
-            height={75}
+            width={85}
+            height={85}
             className="w-full h-full object-contain rounded-full"
             priority
           />
@@ -304,7 +326,7 @@ export default function LoginPage() {
 
         {/* 3. COLLEGE NAME (Solid Bold Clear Sans-Serif) */}
         <h1 
-          className="text-base sm:text-xl font-black text-[#071A41] tracking-tight uppercase anim-college-name leading-tight"
+          className="text-lg sm:text-xl font-black text-[#071A41] tracking-tight uppercase anim-college-name"
           style={{ letterSpacing: '0.02em', fontWeight: 900 }}
         >
           V.S.B. ENGINEERING COLLEGE
@@ -312,7 +334,7 @@ export default function LoginPage() {
 
         {/* 4. DEPARTMENT NAME */}
         <p 
-          className="text-[10px] sm:text-xs font-black text-[#1557C0] tracking-wide uppercase anim-dept-name leading-tight"
+          className="text-[11px] sm:text-xs font-black text-[#1557C0] tracking-wide uppercase anim-dept-name"
           style={{ fontWeight: 800 }}
         >
           DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
@@ -320,7 +342,7 @@ export default function LoginPage() {
 
         {/* 5. PORTAL TITLE WITH CENTER UNDERLINE */}
         <div className="relative inline-block mx-auto anim-portal-title">
-          <p className="text-[10px] sm:text-[11px] text-slate-500 font-semibold px-2">
+          <p className="text-[11px] text-slate-500 font-semibold px-2">
             Academic Management &amp; Digital Portal
           </p>
           <span className="block h-[1.5px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent w-full mt-0.5 anim-underline-center" />
@@ -328,7 +350,7 @@ export default function LoginPage() {
 
         {/* Portal Pill Badge */}
         <div className="pt-0.5 anim-portal-title">
-          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#071A41] text-white text-[10px] font-bold shadow-sm">
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#071A41] text-white text-[10px] sm:text-[11px] font-bold shadow-md">
             <Cpu className="w-3 h-3 text-cyan-400" />
             <span>AI &amp; DS Department Portal</span>
           </span>
@@ -336,7 +358,7 @@ export default function LoginPage() {
       </div>
 
       {/* 6. MAIN LOGIN CARD (Clean, High-Clarity, Rounded) */}
-      <div className="w-full max-w-[390px] bg-white rounded-3xl border border-slate-100 p-4 sm:p-5 space-y-3 relative z-10 my-1 shadow-xl anim-card-reveal">
+      <div className="w-full max-w-[390px] bg-white rounded-3xl border border-slate-100 p-4 sm:p-5 space-y-3.5 relative z-10 my-1 shadow-xl anim-card-reveal">
         
         {/* 7. ROLE CARDS REVEAL */}
         <div>
@@ -460,12 +482,12 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* 8. INNER FORM CONTAINER (High Contrast & Clear Inputs) */}
-        <div className="rounded-2xl border border-slate-200/80 bg-[#F8FAFD] p-3 sm:p-4 space-y-2.5 anim-form-reveal">
+        {/* 8. INNER FORM CONTAINER */}
+        <div className="rounded-2xl border border-slate-200/80 bg-[#F8FAFD] p-3.5 sm:p-4 space-y-3 anim-form-reveal">
           
           {/* Welcome Header */}
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center text-[#1557C0] shrink-0">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#1557C0] shrink-0">
               <UserIcon className="w-4 h-4" />
             </div>
             <div>
@@ -473,14 +495,14 @@ export default function LoginPage() {
                 <span>Welcome Back</span>
                 <span>👋</span>
               </h2>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">
+              <p className="text-[11px] text-slate-500 font-medium">
                 Sign in to access your <span className="capitalize font-bold text-[#1557C0]">{selectedRole} Portal</span>
               </p>
             </div>
           </div>
 
           {/* Form Fields */}
-          <form onSubmit={handleSubmit} className="space-y-2 pt-0.5">
+          <form onSubmit={handleSubmit} className="space-y-2.5 pt-0.5">
             
             {/* 1. STUDENT AUTHENTICATION */}
             {selectedRole === 'student' && (
@@ -538,7 +560,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-bold py-2.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-1.5 flex items-center justify-center gap-2"
+                  className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>{loading ? 'Logging in...' : 'Login to Student Portal'}</span>
@@ -603,7 +625,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-bold py-2.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-1.5 flex items-center justify-center gap-2"
+                  className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>{loading ? 'Logging in...' : 'Login to Faculty Portal'}</span>
@@ -668,7 +690,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-bold py-2.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-1.5 flex items-center justify-center gap-2"
+                  className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>{loading ? 'Logging in...' : 'Login to HOD Portal'}</span>
@@ -679,7 +701,7 @@ export default function LoginPage() {
 
             {/* 4. ADMIN AUTHENTICATION */}
             {selectedRole === 'admin' && (
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {!otpSent ? (
                   <>
                     <div className="space-y-1">
@@ -707,7 +729,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={handleSendOTP}
                       disabled={loading}
-                      className="w-full font-bold py-2.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-1.5 flex items-center justify-center gap-2"
+                      className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                     >
                       <ShieldCheck className="w-4 h-4" />
                       <span>{loading ? 'Sending 2FA OTP...' : 'Send 2FA Code'}</span>
@@ -715,7 +737,7 @@ export default function LoginPage() {
                     </button>
                   </>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     <div className="flex items-center justify-between p-2 rounded-xl bg-blue-50/80 border border-blue-200 text-xs">
                       <span className="text-blue-900 font-medium">
                         OTP sent to: <span className="font-bold">{email}</span>
@@ -752,7 +774,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => handleVerifyOTP()}
                       disabled={loading}
-                      className="w-full font-bold py-2.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2"
+                      className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>{loading ? 'Verifying...' : 'Verify OTP & Login'}</span>
@@ -779,7 +801,7 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Help & Secure Links Bar */}
-          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500">
             <span className="flex items-center gap-1">
               <Lock className="w-3 h-3 text-[#1557C0]" />
               <span>Secure Login</span>
@@ -799,12 +821,12 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 9. QUOTE SECTION: "a place for placement" with Gold Accent Lines */}
+      {/* 9. QUOTE ANIMATION: "a place for placement" with Gold Underline */}
       <div className="text-center space-y-1 relative z-10 pt-1 pb-1 anim-quote-reveal">
         <div className="flex items-center justify-center gap-2">
           <div className="w-8 sm:w-12 h-px bg-slate-300" />
           <p 
-            className="text-sm sm:text-base font-bold tracking-wider italic text-[#071A41]" 
+            className="text-base sm:text-lg font-bold tracking-wider italic text-[#071A41]" 
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
             &ldquo;a place for placement&rdquo;
@@ -818,19 +840,23 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 10. CLEAN MOBILE-PERFECT FOOTER VALUE PILLS (Zero Overlap) */}
-      <footer className="w-full max-w-md mx-auto grid grid-cols-3 gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-1 pb-1 anim-footer-reveal px-1">
-        <div className="p-1.5 rounded-xl bg-white/90 border border-blue-100 shadow-xs flex items-center justify-center gap-1 text-center">
-          <Brain className="w-3 h-3 text-[#1557C0] shrink-0" />
-          <span className="truncate">Learn Today</span>
-        </div>
-        <div className="p-1.5 rounded-xl bg-white/90 border border-amber-100 shadow-xs flex items-center justify-center gap-1 text-center">
-          <Lightbulb className="w-3 h-3 text-[#E7B93E] shrink-0" />
-          <span className="truncate">Build Tomorrow</span>
-        </div>
-        <div className="p-1.5 rounded-xl bg-white/90 border border-emerald-100 shadow-xs flex items-center justify-center gap-1 text-center">
-          <TrendingUp className="w-3 h-3 text-emerald-600 shrink-0" />
-          <span className="truncate">Better Future</span>
+      {/* 10. MOBILE-PERFECT FOOTER VALUE BADGES */}
+      <footer className="w-full max-w-[390px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 anim-footer-reveal px-2 text-center">
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center gap-1">
+            <Brain className="w-3.5 h-3.5 text-[#1557C0] shrink-0" />
+            <span>Learn Today</span>
+          </div>
+          <span className="text-slate-300">|</span>
+          <div className="flex items-center gap-1">
+            <Lightbulb className="w-3.5 h-3.5 text-[#E7B93E] shrink-0" />
+            <span>Build Tomorrow</span>
+          </div>
+          <span className="text-slate-300">|</span>
+          <div className="flex items-center gap-1">
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Better Future</span>
+          </div>
         </div>
       </footer>
 
