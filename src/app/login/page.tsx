@@ -33,6 +33,7 @@ interface BgTheme {
   name: string
   pillColor: string
   containerClass: string
+  gridColor: string
   blob1: string
   blob2: string
   blob3: string
@@ -41,14 +42,48 @@ interface BgTheme {
   headerText: string
   badgeText: string
   subText: string
+  quoteBg: string
 }
 
 const BG_THEMES: BgTheme[] = [
+  {
+    id: 'daylight',
+    name: 'Daylight Pearl',
+    pillColor: 'bg-blue-400',
+    containerClass: 'bg-gradient-to-br from-[#f8fafc] via-[#eff4fb] to-[#e8eef8]',
+    gridColor: 'rgba(7, 26, 61, 0.03)',
+    blob1: 'from-blue-400/15 to-indigo-400/10',
+    blob2: 'from-sky-300/20 to-teal-300/15',
+    blob3: 'from-purple-300/15 to-pink-300/10',
+    cardBg: 'bg-white/95 backdrop-blur-xl',
+    cardBorder: 'border-gray-200/90 shadow-2xl shadow-slate-300/50',
+    headerText: 'text-[#071A3D] drop-shadow-xs',
+    badgeText: 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent',
+    subText: 'text-gray-500',
+    quoteBg: 'bg-amber-100/80 border-amber-300/90 text-amber-900',
+  },
+  {
+    id: 'ice',
+    name: 'Ice Blue',
+    pillColor: 'bg-sky-200',
+    containerClass: 'bg-gradient-to-br from-[#e0f2fe] via-[#f0f9ff] to-[#e8f0fe]',
+    gridColor: 'rgba(14, 116, 144, 0.03)',
+    blob1: 'from-cyan-300/25 to-blue-300/15',
+    blob2: 'from-sky-200/30 to-indigo-200/15',
+    blob3: 'from-teal-200/20 to-blue-200/15',
+    cardBg: 'bg-white/95 backdrop-blur-xl',
+    cardBorder: 'border-sky-200/80 shadow-2xl shadow-sky-200/50',
+    headerText: 'text-[#071A3D]',
+    badgeText: 'bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-800 bg-clip-text text-transparent',
+    subText: 'text-slate-600',
+    quoteBg: 'bg-amber-100/90 border-amber-300 text-amber-900',
+  },
   {
     id: 'ocean',
     name: 'Ocean Navy',
     pillColor: 'bg-blue-600',
     containerClass: 'bg-gradient-to-br from-[#06142E] via-[#0B2559] to-[#0A1938]',
+    gridColor: 'rgba(255, 255, 255, 0.035)',
     blob1: 'from-blue-500/25 to-cyan-400/20',
     blob2: 'from-indigo-600/25 to-blue-400/15',
     blob3: 'from-sky-400/20 to-teal-400/15',
@@ -57,12 +92,14 @@ const BG_THEMES: BgTheme[] = [
     headerText: 'text-white drop-shadow-md',
     badgeText: 'bg-gradient-to-r from-blue-400 via-cyan-300 to-sky-300 bg-clip-text text-transparent',
     subText: 'text-blue-200/80',
+    quoteBg: 'bg-amber-400/20 border-amber-300/40 text-amber-300',
   },
   {
     id: 'aurora',
     name: 'Cyber Aurora',
     pillColor: 'bg-purple-600',
     containerClass: 'bg-gradient-to-br from-[#0F0C20] via-[#1E124A] to-[#120B30]',
+    gridColor: 'rgba(255, 255, 255, 0.035)',
     blob1: 'from-purple-500/30 to-pink-500/20',
     blob2: 'from-cyan-400/25 to-teal-400/15',
     blob3: 'from-indigo-500/25 to-fuchsia-500/15',
@@ -71,48 +108,7 @@ const BG_THEMES: BgTheme[] = [
     headerText: 'text-white drop-shadow-md',
     badgeText: 'bg-gradient-to-r from-purple-300 via-pink-300 to-cyan-300 bg-clip-text text-transparent',
     subText: 'text-purple-200/80',
-  },
-  {
-    id: 'emerald',
-    name: 'Emerald Deep',
-    pillColor: 'bg-emerald-600',
-    containerClass: 'bg-gradient-to-br from-[#041C15] via-[#083327] to-[#062018]',
-    blob1: 'from-emerald-500/30 to-teal-400/20',
-    blob2: 'from-teal-600/25 to-green-400/15',
-    blob3: 'from-cyan-400/20 to-emerald-400/15',
-    cardBg: 'bg-white/95 backdrop-blur-xl',
-    cardBorder: 'border-emerald-200/40 shadow-2xl shadow-emerald-950/50',
-    headerText: 'text-white drop-shadow-md',
-    badgeText: 'bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent',
-    subText: 'text-emerald-200/80',
-  },
-  {
-    id: 'sunset',
-    name: 'Sunset Amber',
-    pillColor: 'bg-amber-600',
-    containerClass: 'bg-gradient-to-br from-[#240B13] via-[#451624] to-[#2B0E17]',
-    blob1: 'from-orange-500/30 to-amber-400/20',
-    blob2: 'from-rose-600/25 to-red-400/15',
-    blob3: 'from-amber-400/20 to-yellow-400/15',
-    cardBg: 'bg-white/95 backdrop-blur-xl',
-    cardBorder: 'border-amber-200/40 shadow-2xl shadow-rose-950/50',
-    headerText: 'text-white drop-shadow-md',
-    badgeText: 'bg-gradient-to-r from-amber-300 via-orange-300 to-rose-300 bg-clip-text text-transparent',
-    subText: 'text-amber-200/80',
-  },
-  {
-    id: 'daylight',
-    name: 'Clean Light',
-    pillColor: 'bg-sky-400',
-    containerClass: 'bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100/70',
-    blob1: 'from-blue-400/20 to-indigo-400/15',
-    blob2: 'from-cyan-400/20 to-teal-400/15',
-    blob3: 'from-purple-400/15 to-pink-400/10',
-    cardBg: 'bg-white/95 backdrop-blur-xl',
-    cardBorder: 'border-gray-200 shadow-2xl shadow-slate-400/30',
-    headerText: 'text-[#071A3D]',
-    badgeText: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent',
-    subText: 'text-gray-500',
+    quoteBg: 'bg-amber-400/20 border-amber-300/40 text-amber-300',
   },
 ]
 
@@ -181,7 +177,7 @@ const roles: RoleConfig[] = [
 ]
 
 export default function LoginPage() {
-  const [currentThemeId, setCurrentThemeId] = React.useState('ocean')
+  const [currentThemeId, setCurrentThemeId] = React.useState('daylight')
   const [selectedRoleId, setSelectedRoleId] = React.useState<'student' | 'faculty' | 'hod' | 'admin'>('student')
   const [registerNumber, setRegisterNumber] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -399,29 +395,29 @@ export default function LoginPage() {
   }
 
   return (
-    // LAYER 1: Navy/Royal-Blue Gradient Background
+    // LAYER 1: Light Gradient Background (Default: Daylight Pearl)
     <div className={cn('min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 py-8 sm:py-12 select-none transition-colors duration-700', theme.containerClass)}>
       
       {/* LAYER 2: Subtle Grid Pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.035] pointer-events-none z-[1]"
+        className="absolute inset-0 pointer-events-none z-[1]"
         style={{
-          backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(to right, #ffffff 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${theme.gridColor} 1px, transparent 1px), linear-gradient(to right, ${theme.gridColor} 1px, transparent 1px)`,
           backgroundSize: '36px 36px'
         }}
       />
 
-      {/* Background Aurora Lighting Blobs */}
+      {/* Background Soft Lighting Blobs */}
       <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden">
         <div className={cn('absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br blur-3xl animate-pulse transition-all duration-1000', theme.blob1)} style={{ animationDuration: '8s' }} />
         <div className={cn('absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr blur-3xl animate-pulse transition-all duration-1000', theme.blob2)} style={{ animationDuration: '10s' }} />
         <div className={cn('absolute top-1/3 -right-24 w-[400px] h-[400px] rounded-full bg-gradient-to-bl blur-3xl animate-pulse transition-all duration-1000', theme.blob3)} style={{ animationDuration: '12s' }} />
       </div>
 
-      {/* LAYER 3: V.S.B. ENGINEERING COLLEGE LOGO WATERMARK (5-10% Opacity, Centered, Proportional, Seamless) */}
+      {/* LAYER 3: V.S.B. LOGO WATERMARK */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[3] overflow-hidden">
         <div 
-          className="relative w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] md:w-[580px] md:h-[580px] lg:w-[680px] lg:h-[680px] opacity-[0.07] [mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] [-webkit-mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] transform select-none"
+          className="relative w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] md:w-[580px] md:h-[580px] lg:w-[680px] lg:h-[680px] opacity-[0.06] [mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] [-webkit-mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] transform select-none"
         >
           <Image
             src="/college-emblem.png"
@@ -435,9 +431,9 @@ export default function LoginPage() {
       </div>
 
       {/* TOP BACKGROUND THEME PALETTE PICKER */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
-        <Palette className="w-3.5 h-3.5 text-white" />
-        <span className="text-[11px] font-bold text-white hidden sm:inline">Theme:</span>
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-200 shadow-md">
+        <Palette className="w-3.5 h-3.5 text-gray-700" />
+        <span className="text-[11px] font-bold text-gray-700 hidden sm:inline">Theme:</span>
         <div className="flex items-center gap-1.5">
           {BG_THEMES.map((t) => (
             <button
@@ -449,9 +445,9 @@ export default function LoginPage() {
                 toast.success(`Theme set to ${t.name}`)
               }}
               className={cn(
-                'w-4 h-4 rounded-full transition-all duration-300 cursor-pointer border border-white/40',
+                'w-4 h-4 rounded-full transition-all duration-300 cursor-pointer border border-black/10',
                 t.pillColor,
-                currentThemeId === t.id ? 'ring-2 ring-white scale-125 shadow-md' : 'opacity-70 hover:opacity-100'
+                currentThemeId === t.id ? 'ring-2 ring-indigo-600 scale-125 shadow-md' : 'opacity-70 hover:opacity-100'
               )}
             />
           ))}
@@ -463,7 +459,7 @@ export default function LoginPage() {
         
         {/* Foreground Emblem with Glowing Rim */}
         <div className="relative inline-flex mx-auto group">
-          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-amber-400 via-indigo-500 to-teal-400 opacity-70 blur-md group-hover:opacity-100 transition-opacity duration-700 animate-spin" style={{ animationDuration: '12s' }} />
+          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-amber-400 via-indigo-500 to-teal-400 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-700 animate-spin" style={{ animationDuration: '12s' }} />
           <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white shadow-2xl border-4 border-white p-1.5 flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
             <Image
               src="/college-emblem.png"
@@ -487,14 +483,14 @@ export default function LoginPage() {
 
           {/* Institutional Motto Quote */}
           <div className="pt-0.5">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs sm:text-sm font-black italic tracking-wide shadow-sm backdrop-blur-xs">
-              <Award className="w-3.5 h-3.5 text-amber-300" />
+            <span className={cn('inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full border text-xs sm:text-sm font-black italic tracking-wide shadow-xs backdrop-blur-xs transition-colors duration-500', theme.quoteBg)}>
+              <Award className="w-3.5 h-3.5" />
               <span>&ldquo;A Place for Placement&rdquo;</span>
             </span>
           </div>
 
           <p className={cn('text-xs font-medium flex items-center justify-center gap-1.5 transition-colors duration-500 pt-0.5', theme.subText)}>
-            <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-spin" style={{ animationDuration: '6s' }} />
             <span>Academic Management &amp; Digital Portal</span>
           </p>
         </div>
