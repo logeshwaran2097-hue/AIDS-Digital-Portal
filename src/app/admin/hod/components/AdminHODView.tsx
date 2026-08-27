@@ -21,6 +21,7 @@ import {
   Search,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
 
 export interface HODRecord {
@@ -89,11 +90,6 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
   // Handle Add/Appoint HOD
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name.trim()) {
-      alert('Please enter the HOD Full Name.')
-      return
-    }
-
     setIsLoading(true)
     try {
       const res = await fetch('/api/hod', {
@@ -101,14 +97,13 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          password: formData.password.trim() || 'nitr',
           experience: Number(formData.experience) || 15,
         }),
       })
       const result = await res.json()
 
       if (result.success && result.hod) {
-        setHODList([result.hod, ...hodList.filter((h) => h.id !== result.hod.id)])
+        setHODList([result.hod, ...hodList])
         setIsAddModalOpen(false)
         setFormData({
           name: '',
@@ -123,13 +118,13 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
           department: 'Artificial Intelligence & Data Science',
           status: 'active',
         })
-        alert('HOD appointed and registered with temporary password successfully!')
+        toast.success('HOD successfully registered in database!')
       } else {
-        alert(result.message || 'Failed to save HOD')
+        toast.error(result.message || 'Failed to add HOD')
       }
     } catch (err) {
       console.error(err)
-      alert('Network error saving HOD.')
+      toast.error('Network error saving HOD.')
     } finally {
       setIsLoading(false)
     }
@@ -173,13 +168,13 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
           )
         )
         setIsEditModalOpen(false)
-        alert('HOD details updated in database!')
+        toast.success('HOD details updated in database!')
       } else {
-        alert(result.message || 'Failed to update HOD')
+        toast.error(result.message || 'Failed to update HOD')
       }
     } catch (err) {
       console.error(err)
-      alert('Network error updating HOD.')
+      toast.error('Network error updating HOD.')
     } finally {
       setIsLoading(false)
     }
@@ -196,13 +191,13 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
       const result = await res.json()
       if (result.success) {
         setHODList(hodList.filter((h) => h.id !== id))
-        alert('HOD record removed.')
+        toast.success(`HOD record for "${name}" removed.`)
       } else {
-        alert(result.message || 'Failed to delete HOD')
+        toast.error(result.message || 'Failed to delete HOD')
       }
     } catch (err) {
       console.error(err)
-      alert('Error deleting HOD record.')
+      toast.error('Error deleting HOD record.')
     }
   }
 

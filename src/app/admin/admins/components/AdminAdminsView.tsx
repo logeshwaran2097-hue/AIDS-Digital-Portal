@@ -16,6 +16,8 @@ import {
   Shield,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
+import { cn } from '@/lib/utils'
 
 export interface AdminUserRecord {
   id: string
@@ -23,7 +25,7 @@ export interface AdminUserRecord {
   email: string
   role: string
   status: string
-  createdAt: string
+  createdAt?: string
 }
 
 export function AdminAdminsView({ initialAdmins }: { initialAdmins: AdminUserRecord[] }) {
@@ -39,36 +41,26 @@ export function AdminAdminsView({ initialAdmins }: { initialAdmins: AdminUserRec
 
   const handleExportPDF = () => {
     generateAndDownloadPDF({
-      title: 'SUPER ADMINISTRATORS & ROOT ACCESS ROSTER',
-      subtitle: 'V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026',
-      author: 'Super Administrator',
-      category: 'System Security & Root Access Statement',
+      title: 'V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)',
+      subtitle: 'System Super Administrators Access Matrix',
+      author: 'Security Directorate',
+      category: 'System Operators Inventory',
       sections: [
         {
-          heading: '1. SUPER ADMIN ACCESS CONTROL SUMMARY',
-          body: [
-            `Total System Administrators: ${admins.length} Certified Operators`,
-            'Access Protocol: Two-Factor SMTP OTP Verification',
-            'Encryption: SHA-256 OTP Hash + JWT Authentication Tokens',
-            'Audit Trail: Real-time action logging on all CRUD operations',
-          ],
-        },
-        {
-          heading: '2. CERTIFIED SYSTEM OPERATORS',
+          heading: 'CERTIFIED SUPER ADMINISTRATOR ACCOUNTS',
           body: admins.map(
-            (a, idx) =>
-              `${idx + 1}. ${a.name} — ${a.email} | Role: ${a.role.toUpperCase()} | Status: ${a.status.toUpperCase()}`
+            (a, i) => `${i + 1}. ${a.name} (${a.email}) · Role: ${a.role.toUpperCase()} · Status: ${a.status.toUpperCase()}`
           ),
         },
       ],
-      fileName: 'VSB_System_Admins_Roster_2026',
+      fileName: 'VSB_Super_Admins_Directory_2026',
     })
   }
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.name || !formData.email) {
-      alert('Please fill in Name and Email')
+      toast.error('Please fill in Name and Email')
       return
     }
 
@@ -89,16 +81,16 @@ export function AdminAdminsView({ initialAdmins }: { initialAdmins: AdminUserRec
       role: 'super_admin',
       status: 'active',
     })
+    toast.success('Administrator record created in system!')
   }
 
   const handleDelete = (id: string) => {
     if (admins.length <= 1) {
-      alert('Cannot delete the last remaining Super Administrator account.')
+      toast.warning('Cannot delete the last remaining Super Administrator account.')
       return
     }
-    if (confirm('Are you sure you want to revoke admin access for this account?')) {
-      setAdmins(admins.filter((a) => a.id !== id))
-    }
+    setAdmins(admins.filter((a) => a.id !== id))
+    toast.success('Administrator access revoked.')
   }
 
   return (

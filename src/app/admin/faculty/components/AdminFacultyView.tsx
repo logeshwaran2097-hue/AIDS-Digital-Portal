@@ -53,6 +53,7 @@ import {
   Printer,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
 
 export interface FacultyRecord {
@@ -725,13 +726,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           advisorSec: 'A',
           facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
         })
-        alert('Faculty member successfully registered with temporary password!')
+        toast.success('Faculty registered successfully in database!')
       } else {
-        alert(result.message || 'Failed to register faculty')
+        toast.error(result.message || 'Failed to register faculty')
       }
     } catch (err) {
       console.error(err)
-      alert('Network error adding faculty.')
+      toast.error('Network error adding faculty.')
     } finally {
       setIsLoading(false)
     }
@@ -772,7 +773,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       if (result.success) {
         setFacultyList(
           facultyList.map((f) =>
-            f.id === selectedFaculty.id
+            f.facultyId === selectedFaculty.facultyId
               ? {
                   ...f,
                   name: formData.name,
@@ -797,13 +798,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           )
         )
         setIsEditModalOpen(false)
-        alert('Faculty record updated successfully in database!')
+        toast.success('Faculty record updated in database!')
       } else {
-        alert(result.message || 'Failed to update faculty')
+        toast.error(result.message || 'Failed to update faculty')
       }
     } catch (err) {
       console.error(err)
-      alert('Network error updating faculty.')
+      toast.error('Network error updating faculty.')
     } finally {
       setIsLoading(false)
     }
@@ -811,23 +812,19 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
   // Handle Delete Faculty
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete ${name}? This will remove all their course and advisory assignments.`)) {
-      return
-    }
-
     setIsLoading(true)
     try {
       const res = await fetch(`/api/faculty?id=${id}`, { method: 'DELETE' })
       const result = await res.json()
       if (result.success) {
         setFacultyList(facultyList.filter((f) => f.id !== id && f.facultyId !== id))
-        alert(`${name} removed successfully.`)
+        toast.success(`"${name}" removed from database.`)
       } else {
-        alert(result.message || 'Failed to delete faculty')
+        toast.error(result.message || 'Failed to delete faculty')
       }
     } catch (err) {
       console.error(err)
-      alert('Error deleting faculty.')
+      toast.error('Error deleting faculty.')
     } finally {
       setIsLoading(false)
     }

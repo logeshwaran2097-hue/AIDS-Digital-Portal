@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { playNotificationChime } from '@/lib/notificationEngine'
+import { toast } from '@/components/ui/Toast'
 
 export interface StudentRecord {
   id: string
@@ -246,13 +247,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
           status: 'active',
         })
-        alert('Student successfully registered with temporary password!')
+        toast.success('Student registered successfully in database!')
       } else {
-        alert(result.message || 'Failed to add student')
+        toast.error(result.message || 'Failed to add student')
       }
     } catch (err) {
       console.error(err)
-      alert('Network error adding student. Please try again.')
+      toast.error('Network error adding student. Please try again.')
     } finally {
       setIsLoading(false)
     }
@@ -294,13 +295,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           )
         )
         setIsEditModalOpen(false)
-        alert('Student record updated successfully in database!')
+        toast.success('Student record updated in database!')
       } else {
-        alert(result.message || 'Failed to update student')
+        toast.error(result.message || 'Failed to update student')
       }
     } catch (err) {
       console.error(err)
-      alert('Network error updating student.')
+      toast.error('Network error updating student.')
     } finally {
       setIsLoading(false)
     }
@@ -308,10 +309,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
   // Handle Delete with Real Database Delete
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to permanently delete "${name}" from the database?`)) {
-      return
-    }
-
     try {
       const res = await fetch(`/api/students?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
@@ -319,38 +316,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       const result = await res.json()
       if (result.success) {
         setStudents(students.filter((s) => s.id !== id))
+        toast.success(`"${name}" removed from database.`)
       } else {
-        alert(result.message || 'Failed to delete student')
+        toast.error(result.message || 'Failed to delete student')
       }
     } catch (err) {
       console.error(err)
-      alert('Error deleting student record.')
-    }
-  }
-
-  // Clear all mock/sample students
-  const handleClearAllStudents = async () => {
-    if (!confirm('Are you sure you want to delete ALL student records from the database? This will clear all mock data so you can enter real students.')) {
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const res = await fetch('/api/students?clearAll=true', {
-        method: 'DELETE',
-      })
-      const result = await res.json()
-      if (result.success) {
-        setStudents([])
-        alert('All mock student records have been permanently cleared! You can now add your real students.')
-      } else {
-        alert(result.message || 'Failed to clear students')
-      }
-    } catch (err) {
-      console.error(err)
-      alert('Error clearing student records.')
-    } finally {
-      setIsLoading(false)
+      toast.error('Error deleting student record.')
     }
   }
 

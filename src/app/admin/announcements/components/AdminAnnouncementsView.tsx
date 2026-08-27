@@ -28,6 +28,7 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
 
 export interface AnnouncementRecord {
@@ -280,7 +281,6 @@ export function AdminAnnouncementsView({
           isPublished: true,
           createdAt: a.createdAt ? String(a.createdAt).split('T')[0] : new Date().toISOString().split('T')[0],
         }
-
         setAnnouncements([newA, ...announcements])
         setIsAddModalOpen(false)
         setFormData({
@@ -290,51 +290,31 @@ export function AdminAnnouncementsView({
           target: 'ALL',
           targetSpecific: '',
         })
-        alert('Circular dispatched and saved to database successfully!')
+        toast.success('Circular broadcast successfully to database!')
       } else {
-        alert(result.message || 'Failed to dispatch circular')
+        toast.error(result.message || 'Failed to issue circular')
       }
     } catch (err) {
       console.error(err)
-      alert('Network error dispatching circular.')
+      toast.error('Network error publishing circular.')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this circular from the database?')) {
-      return
-    }
-
     try {
       const res = await fetch(`/api/announcements?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
       const result = await res.json()
       if (result.success) {
         setAnnouncements(announcements.filter((a) => a.id !== id))
+        toast.success('Circular removed from database.')
       } else {
-        alert(result.message || 'Failed to delete circular')
+        toast.error(result.message || 'Failed to delete circular')
       }
     } catch (err) {
       console.error(err)
-      alert('Error deleting circular.')
-    }
-  }
-
-  const handleClearAll = async () => {
-    if (!confirm('Are you sure you want to clear ALL circulars from the database?')) {
-      return
-    }
-
-    try {
-      const res = await fetch('/api/announcements?clearAll=true', { method: 'DELETE' })
-      const result = await res.json()
-      if (result.success) {
-        setAnnouncements([])
-        alert('All circulars cleared!')
-      }
-    } catch (err) {
-      console.error(err)
+      toast.error('Error deleting circular.')
     }
   }
 
@@ -356,15 +336,6 @@ export function AdminAnnouncementsView({
         </div>
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
-          {announcements.length > 0 && (
-            <button
-              onClick={handleClearAll}
-              className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:text-white"
-            >
-              <Trash2 className="w-4 h-4 text-red-400" /> Clear All Notices
-            </button>
-          )}
-
           <button
             onClick={handleExportAllPDF}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"

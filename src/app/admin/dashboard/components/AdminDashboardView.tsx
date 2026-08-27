@@ -48,9 +48,6 @@ export interface AdminDashboardData {
 }
 
 export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
-  const [isSeeding, setIsSeeding] = useState(false)
-  const [isClearing, setIsClearing] = useState(false)
-
   const handleDownloadSystemReport = () => {
     generateAndDownloadPDF({
       title: 'ENTERPRISE SYSTEM INFRASTRUCTURE & AUDIT REPORT',
@@ -94,52 +91,6 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
     })
   }
 
-  const handleSeedBaseline = async () => {
-    if (!confirm('Would you like to populate baseline records (HOD, Faculty across Semesters 1-8, Students, and Circulars)?')) {
-      return
-    }
-
-    setIsSeeding(true)
-    try {
-      const res = await fetch('/api/admin/seed-mock-data', { method: 'POST' })
-      const result = await res.json()
-      if (result.success) {
-        alert(result.message || 'Baseline records seeded successfully!')
-        window.location.reload()
-      } else {
-        alert(result.message || 'Failed to seed baseline data')
-      }
-    } catch {
-      alert('Network error while populating baseline data.')
-    } finally {
-      setIsSeeding(false)
-    }
-  }
-
-  const handleClearAll = async () => {
-    if (!confirm('Are you sure you want to clean all non-admin mock/sample data? Admin accounts will remain safe.')) {
-      return
-    }
-
-    setIsClearing(true)
-    try {
-      const res = await fetch('/api/admin/clean-mock-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: 'all' }),
-      })
-      const result = await res.json()
-      if (result.success) {
-        alert('Database cleared to pure state.')
-        window.location.reload()
-      }
-    } catch {
-      alert('Error clearing data.')
-    } finally {
-      setIsClearing(false)
-    }
-  }
-
   const managementTiles = [
     { title: 'Student Accounts', count: data.studentCount, href: '/admin/students', icon: <GraduationCap className="w-5 h-5" />, color: 'bg-[#1455D9]', desc: 'Enrolled student accounts & bio-data' },
     { title: 'Faculty Members', count: data.facultyCount, href: '/admin/faculty', icon: <Users className="w-5 h-5" />, color: 'bg-purple-600', desc: 'Faculty professors & course allocations' },
@@ -173,26 +124,6 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5 shrink-0">
-          {data.studentCount === 0 && (
-            <button
-              onClick={handleSeedBaseline}
-              disabled={isSeeding}
-              className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
-            >
-              <Sparkles className="w-4 h-4" /> {isSeeding ? 'Populating...' : 'Seed Baseline Data'}
-            </button>
-          )}
-
-          {data.studentCount > 0 && (
-            <button
-              onClick={handleClearAll}
-              disabled={isClearing}
-              className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:text-white"
-            >
-              <Trash2 className="w-4 h-4 text-red-400" /> Clean Sample Data
-            </button>
-          )}
-
           <button
             onClick={handleDownloadSystemReport}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
