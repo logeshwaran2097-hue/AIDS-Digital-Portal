@@ -688,137 +688,152 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                   </span>
                 )}
               </button>
-
-              {/* Notification Popover Modal / Dropdown */}
               {isNotificationOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-3xl bg-white border border-gray-200 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right">
-                  {/* Dropdown Header */}
-                  <div className="p-4 bg-[#071A3D] text-white flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Bell className="w-4 h-4 text-[#F4C430]" />
-                      <h3 className="text-xs font-bold uppercase tracking-wider">Department Alerts</h3>
-                      {unreadCount > 0 && (
-                        <span className="px-1.5 py-0.5 bg-[#F4C430] text-[#071A3D] rounded-full text-[10px] font-black">
-                          {unreadCount} New
-                        </span>
-                      )}
-                    </div>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={markAllAsRead}
-                        className="text-[11px] text-gray-300 hover:text-white font-medium underline transition-colors cursor-pointer"
-                      >
-                        Mark read
-                      </button>
-                    )}
-                  </div>
+                <>
+                  {/* Backdrop for mobile */}
+                  <div
+                    onClick={() => setIsNotificationOpen(false)}
+                    className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
+                  />
 
-                  {/* Mobile Push Notification Status Banner & Instant Trigger Button */}
-                  <div className="p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className={cn(
-                        'w-2 h-2 rounded-full shrink-0',
-                        pushPermission === 'granted' ? 'bg-green-500 animate-pulse' : 'bg-amber-500'
-                      )} />
-                      <span className="text-[11px] font-bold text-[#071A3D] truncate">
-                        {pushPermission === 'granted' ? 'Mobile Push Active' : 'Mobile Alerts Inactive'}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {pushPermission !== 'granted' ? (
-                        <button
-                          onClick={handleEnablePush}
-                          className="px-2.5 py-1 rounded-lg bg-[#1455D9] hover:bg-[#0f44b0] text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer"
-                        >
-                          Enable Push
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleSendTestPush}
-                          disabled={isTestingPush}
-                          className="px-2.5 py-1 rounded-lg bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-[10px] font-black transition-all shadow-xs cursor-pointer disabled:opacity-50"
-                        >
-                          {isTestingPush ? 'Ringing...' : '⚡ Test Alert'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Notification Items List */}
-                  <div className="max-h-80 overflow-y-auto divide-y divide-gray-100" style={{ scrollbarWidth: 'thin' }}>
-                    {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-xs text-gray-500">
-                        No alerts at this moment
-                      </div>
-                    ) : (
-                      notifications.map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => {
-                            setNotifications((prev) =>
-                              prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
-                            )
-                          }}
-                          className={cn(
-                            'p-4 hover:bg-gray-50 transition-colors cursor-pointer flex items-start gap-3',
-                            item.unread ? 'bg-blue-50/40' : 'bg-white'
-                          )}
-                        >
-                          <div className="mt-0.5 shrink-0">
-                            {(item.type === 'alert' || item.type === 'warning') && (
-                              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                                <AlertTriangle className="w-4 h-4" />
-                              </div>
-                            )}
-                            {item.type === 'approval' && (
-                              <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
-                                <FileQuestion className="w-4 h-4" />
-                              </div>
-                            )}
-                            {item.type === 'success' && (
-                              <div className="w-8 h-8 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
-                                <CheckCircle2 className="w-4 h-4" />
-                              </div>
-                            )}
-                            {item.type === 'info' && (
-                              <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center">
-                                <Sparkles className="w-4 h-4" />
-                              </div>
+                  <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 w-auto sm:w-[400px] max-w-[calc(100vw-24px)] rounded-3xl bg-white border border-slate-200 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-right flex flex-col font-sans">
+                    {/* Dropdown Header */}
+                    <div className="p-4 bg-[#071A41] text-white flex items-center justify-between shadow-xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                          <Bell className="w-4 h-4 text-[#F4C430]" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-black tracking-wide text-white">Department Alerts</h3>
+                            {unreadCount > 0 && (
+                              <span className="px-2 py-0.5 bg-[#F4C430] text-[#071A41] rounded-full text-[10px] font-black">
+                                {unreadCount} New
+                              </span>
                             )}
                           </div>
+                          <p className="text-[10px] text-blue-200 font-medium">Real-time academic broadcast</p>
+                        </div>
+                      </div>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={markAllAsRead}
+                          className="text-xs bg-white/10 hover:bg-white/20 text-white font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                        >
+                          Mark read
+                        </button>
+                      )}
+                    </div>
 
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <h4 className="text-xs font-bold text-[#071A3D] truncate">{item.title}</h4>
-                              {item.unread && (
-                                <span className="w-2 h-2 rounded-full bg-[#1455D9] shrink-0" />
+                    {/* Mobile Push Notification Status Banner & Instant Trigger Button */}
+                    <div className="p-3 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border-b border-blue-100 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={cn(
+                          'w-2.5 h-2.5 rounded-full shrink-0',
+                          pushPermission === 'granted' ? 'bg-emerald-500 ring-2 ring-emerald-200 animate-pulse' : 'bg-amber-500'
+                        )} />
+                        <span className="text-xs font-black text-[#071A41] truncate">
+                          {pushPermission === 'granted' ? 'Mobile Push Active' : 'Mobile Alerts Inactive'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {pushPermission !== 'granted' ? (
+                          <button
+                            onClick={handleEnablePush}
+                            className="px-3 py-1.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                          >
+                            Enable Push
+                          </button>
+                        ) : (
+                          <button
+                            onClick={handleSendTestPush}
+                            disabled={isTestingPush}
+                            className="px-3 py-1.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A41] text-xs font-black transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                          >
+                            {isTestingPush ? 'Ringing...' : '⚡ Test Alert'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Notification Items List */}
+                    <div className="max-h-80 sm:max-h-96 overflow-y-auto divide-y divide-slate-100 bg-white" style={{ scrollbarWidth: 'thin' }}>
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-slate-500 font-medium">
+                          No alerts at this moment
+                        </div>
+                      ) : (
+                        notifications.map((item) => (
+                          <div
+                            key={item.id}
+                            onClick={() => {
+                              setNotifications((prev) =>
+                                prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
+                              )
+                            }}
+                            className={cn(
+                              'p-3.5 sm:p-4 hover:bg-slate-50 transition-colors cursor-pointer flex items-start gap-3',
+                              item.unread ? 'bg-blue-50/50' : 'bg-white'
+                            )}
+                          >
+                            <div className="mt-0.5 shrink-0">
+                              {(item.type === 'alert' || item.type === 'warning') && (
+                                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shadow-xs">
+                                  <AlertTriangle className="w-4 h-4" />
+                                </div>
+                              )}
+                              {item.type === 'approval' && (
+                                <div className="w-9 h-9 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-xs">
+                                  <FileQuestion className="w-4 h-4" />
+                                </div>
+                              )}
+                              {item.type === 'success' && (
+                                <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-xs">
+                                  <CheckCircle2 className="w-4 h-4" />
+                                </div>
+                              )}
+                              {item.type === 'info' && (
+                                <div className="w-9 h-9 rounded-2xl bg-blue-100 text-[#1557C0] flex items-center justify-center shadow-xs">
+                                  <Sparkles className="w-4 h-4" />
+                                </div>
                               )}
                             </div>
-                            <p className="text-[11px] text-gray-600 mt-0.5 line-clamp-2 leading-relaxed">
-                              {item.description}
-                            </p>
-                            <span className="text-[10px] text-gray-400 font-medium mt-1 block">
-                              {item.time}
-                            </span>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
 
-                  {/* Dropdown Footer */}
-                  <div className="p-3 bg-gray-50 border-t border-gray-100 text-center">
-                    <Link
-                      href={notificationsHref}
-                      onClick={() => setIsNotificationOpen(false)}
-                      className="text-xs font-bold text-[#1455D9] hover:underline inline-flex items-center gap-1"
-                    >
-                      <span>View All Notifications</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Link>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-1.5">
+                                <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-snug line-clamp-1">
+                                  {item.title.replace(/^\?\?\s*/, '📢 ')}
+                                </h4>
+                                {item.unread && (
+                                  <span className="w-2 h-2 rounded-full bg-[#1557C0] shrink-0 mt-1" />
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-700 font-medium mt-1 line-clamp-2 leading-relaxed">
+                                {item.description}
+                              </p>
+                              <span className="text-[10px] sm:text-[11px] text-slate-500 font-bold mt-1.5 block">
+                                {item.time}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Dropdown Footer */}
+                    <div className="p-3 bg-slate-50 border-t border-slate-100 text-center">
+                      <Link
+                        href={notificationsHref}
+                        onClick={() => setIsNotificationOpen(false)}
+                        className="text-xs font-black text-[#1557C0] hover:underline inline-flex items-center gap-1.5 p-1"
+                      >
+                        <span>View All Notifications</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
