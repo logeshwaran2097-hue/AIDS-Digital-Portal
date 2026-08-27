@@ -127,13 +127,18 @@ export default function LoginPage() {
       // Check if user must complete profile verification
       if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty' || selectedRole === 'hod')) {
         const studentReg = data.user.registerNumber || registerNumber.trim().toUpperCase()
+        const rawName = data.user.name || ''
+        const cleanName = rawName.startsWith('Student (') ? '' : rawName
+        const rawEmail = data.user.email || ''
+        const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
+
         setOnboardingUser(data.user)
         setOnboardingForm({
-          name: data.user.name || 'Mohan Kumar D',
+          name: cleanName,
           registerNumber: studentReg,
-          phone: data.user.phone || '+91 91638 13660',
-          parentPhone: '+91 94432 55890',
-          dateOfBirth: data.user.dateOfBirth || '2006-08-15',
+          phone: data.user.phone || '',
+          parentPhone: '',
+          dateOfBirth: data.user.dateOfBirth ? String(data.user.dateOfBirth).split('T')[0] : '',
           department: 'B.Tech Artificial Intelligence & Data Science',
           year: data.user.year ? `Year ${data.user.year}` : 'Year 2 (Sophomore)',
           semester: data.user.semester ? `Semester ${data.user.semester}` : 'Semester 4',
@@ -142,7 +147,7 @@ export default function LoginPage() {
           hasCorrectionRequest: false,
           correctionRemarks: '',
           detailsConfirmed: false,
-          email: data.user.email?.includes('@student.vsb.edu.in') ? data.user.email : `${studentReg.toLowerCase()}@student.vsb.edu.in`,
+          email: cleanEmail,
           newPassword: '',
           confirmPassword: '',
           emailOtp: '',
@@ -150,7 +155,7 @@ export default function LoginPage() {
         })
         setOnboardingStep(1)
         setShowOnboardingModal(true)
-        toast.success('Welcome! Please review your official profile details.')
+        toast.success('Welcome! Please fill and review your official student profile.')
         return
       }
 
@@ -924,16 +929,17 @@ export default function LoginPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Register Number */}
                     <div>
-                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Register Number</label>
-                      <p className="font-mono font-black text-sm text-[#071A41]">{onboardingForm.registerNumber}</p>
+                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Register Number (Verified)</label>
+                      <p className="font-mono font-black text-sm text-[#071A41] bg-gray-100/80 px-2.5 py-1.5 rounded-xl border border-gray-200">{onboardingForm.registerNumber}</p>
                     </div>
 
                     {/* Student Full Name */}
                     <div>
-                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Full Name</label>
+                      <label className="block font-bold text-[#071A41] text-[11px]">Full Name *</label>
                       <input
                         type="text"
                         required
+                        placeholder="Enter your official Full Name"
                         value={onboardingForm.name}
                         onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
                         className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -942,29 +948,81 @@ export default function LoginPage() {
 
                     {/* Class & Department */}
                     <div>
-                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Class &amp; Program</label>
-                      <p className="font-bold text-xs text-[#071A41]">{onboardingForm.department}</p>
+                      <label className="block font-bold text-[#071A41] text-[11px]">Class &amp; Program</label>
+                      <select
+                        value={onboardingForm.department}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, department: e.target.value })}
+                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="B.Tech Artificial Intelligence & Data Science">B.Tech Artificial Intelligence &amp; Data Science</option>
+                        <option value="B.E Computer Science & Engineering">B.E Computer Science &amp; Engineering</option>
+                        <option value="B.Tech Information Technology">B.Tech Information Technology</option>
+                      </select>
                     </div>
 
                     {/* Year & Semester */}
-                    <div>
-                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Academic Year &amp; Semester</label>
-                      <p className="font-bold text-xs text-[#071A41]">{onboardingForm.year} · {onboardingForm.semester}</p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div>
+                        <label className="block font-bold text-[#071A41] text-[11px]">Year</label>
+                        <select
+                          value={onboardingForm.year}
+                          onChange={(e) => setOnboardingForm({ ...onboardingForm, year: e.target.value })}
+                          className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                        >
+                          <option value="Year 1 (Freshman)">Year 1 (Freshman)</option>
+                          <option value="Year 2 (Sophomore)">Year 2 (Sophomore)</option>
+                          <option value="Year 3 (Junior)">Year 3 (Junior)</option>
+                          <option value="Year 4 (Senior)">Year 4 (Senior)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-bold text-[#071A41] text-[11px]">Semester</label>
+                        <select
+                          value={onboardingForm.semester}
+                          onChange={(e) => setOnboardingForm({ ...onboardingForm, semester: e.target.value })}
+                          className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                            <option key={s} value={`Semester ${s}`}>Semester {s}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
 
                     {/* Section */}
                     <div>
-                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Assigned Section</label>
-                      <p className="font-bold text-xs text-[#071A41]">{onboardingForm.section}</p>
+                      <label className="block font-bold text-[#071A41] text-[11px]">Assigned Section</label>
+                      <select
+                        value={onboardingForm.section}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, section: e.target.value })}
+                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="Section A">Section A</option>
+                        <option value="Section B">Section B</option>
+                        <option value="Section C">Section C</option>
+                        <option value="Section D">Section D</option>
+                      </select>
                     </div>
 
                     {/* Class Advisor */}
                     <div>
-                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Class Advisor</label>
-                      <p className="font-bold text-xs text-[#1557C0] flex items-center gap-1">
-                        <Users className="w-3 h-3 text-[#1557C0]" />
-                        <span>{onboardingForm.advisorName}</span>
-                      </p>
+                      <label className="block font-bold text-[#071A41] text-[11px]">Class Advisor / Mentor Name</label>
+                      <input
+                        type="text"
+                        list="advisorOnboardingList"
+                        placeholder="Type or select Advisor Name"
+                        value={onboardingForm.advisorName}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, advisorName: e.target.value })}
+                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#1557C0] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                      <datalist id="advisorOnboardingList">
+                        <option value="Dr. S. Karthik (Professor · AI & DS)" />
+                        <option value="Dr. M. Sowmya (Associate Professor)" />
+                        <option value="Dr. K. Meenakshi (Associate Professor)" />
+                        <option value="Dr. R. Ramanathan (Professor · AI & DS)" />
+                        <option value="Prof. P. Naveen (Assistant Professor)" />
+                        <option value="Prof. S. Divya (Assistant Professor)" />
+                      </datalist>
                     </div>
                   </div>
                 </div>
@@ -984,7 +1042,7 @@ export default function LoginPage() {
                       <input
                         type="text"
                         required
-                        placeholder="+91 98765 43210"
+                        placeholder="Enter your 10-digit mobile"
                         value={onboardingForm.phone}
                         onChange={(e) => setOnboardingForm({ ...onboardingForm, phone: e.target.value })}
                         className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -998,7 +1056,7 @@ export default function LoginPage() {
                       <input
                         type="text"
                         required
-                        placeholder="+91 94432 55890"
+                        placeholder="Enter parent / guardian mobile"
                         value={onboardingForm.parentPhone}
                         onChange={(e) => setOnboardingForm({ ...onboardingForm, parentPhone: e.target.value })}
                         className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -1171,20 +1229,6 @@ export default function LoginPage() {
                       </button>
                     </div>
                   </div>
-
-                  {/* Demo Helper Pill */}
-                  {demoOtpCode && (
-                    <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] flex items-center justify-between">
-                      <span>Verification Code generated: <strong className="font-mono text-xs">{demoOtpCode}</strong></span>
-                      <button
-                        type="button"
-                        onClick={() => setOnboardingForm({ ...onboardingForm, emailOtp: demoOtpCode })}
-                        className="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold text-[10px]"
-                      >
-                        Auto-fill
-                      </button>
-                    </div>
-                  )}
 
                   {/* OTP Input Section */}
                   {emailOtpSent && (
