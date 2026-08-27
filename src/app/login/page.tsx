@@ -21,11 +21,11 @@ import {
   ShieldCheck,
   CheckCircle2,
   ArrowRight,
-  Sparkles,
   KeyRound,
   FileCheck2,
   Layers,
   HelpCircle,
+  ExternalLink,
 } from 'lucide-react'
 
 interface RoleOption {
@@ -109,13 +109,13 @@ export default function LoginPage() {
 
       if (selectedRole === 'student') {
         endpoint = '/api/auth/student'
-        payload = { registerNumber, password }
+        payload = { registerNumber: registerNumber.trim(), password }
       } else if (selectedRole === 'faculty') {
         endpoint = '/api/auth/faculty'
-        payload = { facultyId, password }
+        payload = { facultyId: facultyId.trim(), password }
       } else if (selectedRole === 'hod') {
         endpoint = '/api/auth/hod'
-        payload = { facultyId, password }
+        payload = { facultyId: facultyId.trim(), password }
       }
 
       const res = await fetch(endpoint, {
@@ -126,7 +126,7 @@ export default function LoginPage() {
 
       const data = await res.json()
       if (!res.ok || !data.success) {
-        toast.error(data.message || 'Authentication failed. Please verify credentials.')
+        toast.error(data.message || 'Invalid credentials. Please verify and try again.')
         return
       }
 
@@ -145,11 +145,11 @@ export default function LoginPage() {
           experience: data.user.experience || '',
         })
         setShowOnboardingModal(true)
-        toast.success('Welcome! Please set a permanent password to complete setup.')
+        toast.success('Welcome! Please complete your account profile.')
         return
       }
 
-      toast.success('Authentication verified! Entering portal...')
+      toast.success('Authentication successful! Opening dashboard...')
       const dashboardMap: Record<string, string> = {
         student: '/dashboard',
         faculty: '/faculty-dashboard',
@@ -157,9 +157,9 @@ export default function LoginPage() {
       }
       setTimeout(() => {
         window.location.href = dashboardMap[selectedRole]
-      }, 300)
+      }, 250)
     } catch {
-      toast.error('Network connection issue. Please try again.')
+      toast.error('Network error connecting to server. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -171,11 +171,11 @@ export default function LoginPage() {
 
     if (onboardingForm.newPassword) {
       if (onboardingForm.newPassword.length < 6) {
-        toast.error('New password must be at least 6 characters long.')
+        toast.error('Password must be at least 6 characters.')
         return
       }
       if (onboardingForm.newPassword !== onboardingForm.confirmPassword) {
-        toast.error('New password and confirmation do not match.')
+        toast.error('Password confirmation does not match.')
         return
       }
     }
@@ -190,7 +190,7 @@ export default function LoginPage() {
 
       const data = await res.json()
       if (res.ok && data.success) {
-        toast.success('Profile details and permanent password saved!')
+        toast.success('Profile details saved successfully.')
         setShowOnboardingModal(false)
         const dashboardMap: Record<string, string> = {
           student: '/dashboard',
@@ -199,9 +199,9 @@ export default function LoginPage() {
         }
         setTimeout(() => {
           window.location.href = dashboardMap[selectedRole]
-        }, 400)
+        }, 300)
       } else {
-        toast.error(data.message || 'Failed to save profile.')
+        toast.error(data.message || 'Failed to update profile.')
       }
     } catch {
       toast.error('Network error saving profile.')
@@ -221,8 +221,8 @@ export default function LoginPage() {
   }
 
   const handleSendOTP = async () => {
-    if (!email) {
-      toast.error('Please enter registered administrator email')
+    if (!email || !email.includes('@')) {
+      toast.error('Please enter a valid administrator email address')
       return
     }
     setLoading(true)
@@ -230,18 +230,18 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim() }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
-        toast.error(data.message || 'Unable to send 2FA OTP')
+        toast.error(data.message || 'Unable to generate administrator OTP')
         return
       }
       if (data.challenge) {
         setChallenge(data.challenge)
       }
       setOtpSent(true)
-      toast.success(data.message || '2FA OTP code dispatched.')
+      toast.success(data.message || 'Two-Factor Authentication OTP code dispatched.')
       setOtpCooldown(60)
     } catch {
       toast.error('Network error. Please try again.')
@@ -261,7 +261,7 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: codeToVerify, challenge }),
+        body: JSON.stringify({ email: email.trim(), otp: codeToVerify, challenge }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
@@ -271,30 +271,12 @@ export default function LoginPage() {
       toast.success('Administrator authenticated!')
       setTimeout(() => {
         window.location.href = '/admin/dashboard'
-      }, 300)
+      }, 250)
     } catch {
       toast.error('Network error. Please try again.')
     } finally {
       setLoading(false)
     }
-  }
-
-  // Demo auto-fill helper
-  const handleFillDemo = (role: 'student' | 'faculty' | 'hod' | 'admin') => {
-    setSelectedRole(role)
-    if (role === 'student') {
-      setRegisterNumber('922522AD001')
-      setPassword('student123')
-    } else if (role === 'faculty') {
-      setFacultyId('FAC001')
-      setPassword('faculty123')
-    } else if (role === 'hod') {
-      setFacultyId('HOD001')
-      setPassword('hod123')
-    } else if (role === 'admin') {
-      setEmail('admin@vsb.edu.in')
-    }
-    toast.success(`Demo credentials populated for ${role.toUpperCase()}`)
   }
 
   return (
@@ -331,27 +313,16 @@ export default function LoginPage() {
               V.S.B. ENGINEERING COLLEGE
             </h1>
             <p className="text-[10px] text-gray-400 font-medium">
-              Autonomous Institution · Karur, Tamil Nadu
+              Autonomous Institution · Affiliated to Anna University, Chennai
             </p>
           </div>
         </div>
 
-        {/* Quick Demo Credentials Bar */}
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-gray-400 hidden sm:inline">
-            Quick Demo:
-          </span>
-          <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/10">
-            {(['student', 'faculty', 'admin'] as const).map((r) => (
-              <button
-                key={r}
-                type="button"
-                onClick={() => handleFillDemo(r)}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-gray-300 hover:text-white hover:bg-white/10 transition-all cursor-pointer capitalize"
-              >
-                {r}
-              </button>
-            ))}
+        {/* Official Security & Portal Status */}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[11px] text-gray-300 font-medium">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>256-Bit SSL Encrypted</span>
           </div>
         </div>
       </header>
@@ -479,7 +450,7 @@ export default function LoginPage() {
                         <UserIcon className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
-                          placeholder="e.g. 922522AD001"
+                          placeholder="Enter your Register Number..."
                           value={registerNumber}
                           onChange={(e) => setRegisterNumber(e.target.value)}
                           required
@@ -538,7 +509,7 @@ export default function LoginPage() {
                         <BookOpen className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
-                          placeholder="e.g. FAC001"
+                          placeholder="Enter your Faculty ID..."
                           value={facultyId}
                           onChange={(e) => setFacultyId(e.target.value)}
                           required
@@ -556,7 +527,7 @@ export default function LoginPage() {
                         <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type={showPassword ? 'text' : 'password'}
-                          placeholder="Enter faculty password..."
+                          placeholder="Enter your faculty password..."
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
@@ -591,13 +562,13 @@ export default function LoginPage() {
                   <div className="space-y-3.5">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1">
-                        HOD ID / Faculty Code
+                        HOD Faculty Code
                       </label>
                       <div className="relative">
                         <Building2 className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
-                          placeholder="e.g. HOD001"
+                          placeholder="Enter your HOD Faculty Code..."
                           value={facultyId}
                           onChange={(e) => setFacultyId(e.target.value)}
                           required
@@ -615,7 +586,7 @@ export default function LoginPage() {
                         <Lock className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type={showPassword ? 'text' : 'password'}
-                          placeholder="Enter HOD password..."
+                          placeholder="Enter your password..."
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
@@ -658,7 +629,7 @@ export default function LoginPage() {
                             <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                             <input
                               type="email"
-                              placeholder="admin@vsb.edu.in"
+                              placeholder="Enter administrator email..."
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               required
