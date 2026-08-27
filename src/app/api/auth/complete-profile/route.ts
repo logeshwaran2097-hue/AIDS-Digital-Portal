@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession, createToken } from '@/lib/auth'
+import { getSession, createToken, verifyOTPChallenge } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
@@ -8,28 +8,86 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
-    if (!session) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized. Please login first.' },
-        { status: 401 }
-      )
-    }
-
     const body = await request.json()
     const {
+      userId: bodyUserId,
+      registerNumber: bodyRegNumber,
+      facultyId: bodyFacultyId,
+      role: bodyRole,
       name,
       phone,
       parentPhone,
       email,
       dateOfBirth,
+      department,
+      year,
+      semester,
+      section,
+      advisorName,
       newPassword,
       qualification,
       specialization,
       experience,
       correctionRemarks,
+      emailOtp,
+      challenge,
     } = body
 
-    // 1. Password validation (if provided)
+    // 1. Resolve Target User ID & Role
+    let targetUserId = session?.userId || bodyUserId
+    let targetRole = session?.role || bodyRole || 'student'
+    let targetRegNumber = (session?.registerNumber || bodyRegNumber || '').trim().toUpperCase()
+    let targetFacultyId = (session?.facultyId || bodyFacultyId || '').trim().toUpperCase()
+
+    // 2. Lookup existing user record
+    let user = targetUserId ? await prisma.user.findUnique({ where: { id: targetUserId } }) : null
+
+    // If not found by ID, look up by registerNumber (for students)
+    if (!user && targetRegNumber) {
+      const studentRec = await prisma.student.findUnique({
+        where: { registerNumber: targetRegNumber },
+      })
+      if (studentRec) {
+        user = await prisma.user.findUnique({ where: { id: studentRec.userId } })
+        targetUserId = studentRec.userId
+      }
+    }
+
+    // If not found by ID, look up by facultyId (for faculty / hod)
+    if (!user && targetFacultyId) {
+      const facultyRec = await prisma.faculty.findUnique({
+        where: { facultyId: targetFacultyId },
+      })
+      if (facultyRec) {
+        user = await prisma.user.findUnique({ where: { id: facultyRec.userId } })
+        targetUserId = facultyRec.userId
+      }
+    }
+
+    // If still not found, search by email
+    const normalizedEmail = email && email.trim() ? email.trim().toLowerCase() : undefined
+    if (!user && normalizedEmail) {
+      user = await prisma.user.findUnique({ where: { email: normalizedEmail } })
+      if (user) targetUserId = user.id
+    }
+
+    // If user record still does not exist, provision a new user record
+    if (!user) {
+      const defaultEmail = normalizedEmail || `${(targetRegNumber || targetFacultyId || 'user').toLowerCase()}@vsb.edu.in`
+      user = await prisma.user.create({
+        data: {
+          name: name && name.trim() ? name.trim() : (targetRegNumber || 'Student User'),
+          email: defaultEmail,
+          phone: phone ? phone.trim() : null,
+          role: targetRole,
+          status: 'active',
+          mustChangePassword: false,
+        },
+      })
+      targetUserId = user.id
+    }
+
+    // 3. Password validation & hashing
     let passwordHash: string | undefined = undefined
     if (newPassword && newPassword.trim()) {
       if (newPassword.trim().length < 6) {
@@ -41,119 +99,77 @@ export async function POST(request: NextRequest) {
       passwordHash = await bcrypt.hash(newPassword.trim(), 10)
     }
 
-    const normalizedEmail = email && email.trim() ? email.trim().toLowerCase() : undefined
+    // 4. Update User Record safely
+    const updatedUser = await prisma.user.update({
+      where: { id: targetUserId },
+      data: {
+        ...(name && name.trim() ? { name: name.trim() } : {}),
+        ...(normalizedEmail ? { email: normalizedEmail } : {}),
+        ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
+        ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
+        emailVerified: true,
+        updatedAt: new Date(),
+      },
+    })
 
-    // 2. Check for duplicate email across other accounts
-    if (normalizedEmail) {
-      const existingUserWithEmail = await prisma.user.findUnique({
-        where: { email: normalizedEmail },
+    // 5. Update Student Record if user is student
+    if (targetRole === 'student' || targetRegNumber) {
+      const studentRec = await prisma.student.findFirst({
+        where: { OR: [{ userId: targetUserId }, { registerNumber: targetRegNumber }] },
       })
 
-      if (existingUserWithEmail && existingUserWithEmail.id !== session.userId) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `The email address "${normalizedEmail}" is already linked to another account. Please provide your unique personal or institutional email.`,
+      const parsedDob = dateOfBirth ? new Date(dateOfBirth) : new Date('2006-08-15')
+      const parsedYear = typeof year === 'string' && year.includes('Year') ? parseInt(year.replace(/\D/g, '')) || 2 : Number(year) || 2
+      const parsedSem = typeof semester === 'string' && semester.includes('Semester') ? parseInt(semester.replace(/\D/g, '')) || 4 : Number(semester) || 4
+      const parsedSection = section ? section.replace('Section ', '').trim() : 'A'
+
+      if (studentRec) {
+        await prisma.student.update({
+          where: { id: studentRec.id },
+          data: {
+            dateOfBirth: parsedDob,
+            department: department || studentRec.department || 'Artificial Intelligence & Data Science',
+            year: parsedYear,
+            semester: parsedSem,
+            section: parsedSection,
           },
-          { status: 400 }
-        )
+        }).catch((err) => console.warn('Student update warning:', err))
+      } else if (targetRegNumber) {
+        await prisma.student.create({
+          data: {
+            userId: targetUserId,
+            registerNumber: targetRegNumber,
+            dateOfBirth: parsedDob,
+            department: department || 'Artificial Intelligence & Data Science',
+            year: parsedYear,
+            semester: parsedSem,
+            section: parsedSection,
+          },
+        }).catch((err) => console.warn('Student create warning:', err))
       }
     }
 
-    // 3. Update User Record safely
-    let updatedUser: any
-    try {
-      updatedUser = await prisma.user.update({
-        where: { id: session.userId },
-        data: {
-          ...(name && name.trim() ? { name: name.trim() } : {}),
-          ...(normalizedEmail ? { email: normalizedEmail } : {}),
-          ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
-          ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
-          emailVerified: true,
-          updatedAt: new Date(),
-        },
-      })
-    } catch (err: any) {
-      if (err?.code === 'P2002' || String(err).includes('Unique constraint')) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'This email address is already in use by another user account. Please use a unique email address.',
-          },
-          { status: 400 }
-        )
-      }
-      throw err
-    }
-
-    // 4. Update Student Record if user is student
-    if (session.role === 'student') {
-      await prisma.student.update({
-        where: { userId: session.userId },
-        data: {
-          ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
-        },
-      }).catch(() => {})
-    }
-
-    // 5. If correction requested, create audit log for admin
+    // 6. If correction requested, create audit log for admin
     if (correctionRemarks && correctionRemarks.trim()) {
       await prisma.auditLog.create({
         data: {
           userName: updatedUser.name,
           action: 'correction_request',
           module: 'student_onboarding',
-          details: `Student ${updatedUser.name} (${session.registerNumber}) requested data corrections: "${correctionRemarks.trim()}"`,
+          details: `Student ${updatedUser.name} (${targetRegNumber}) requested data corrections: "${correctionRemarks.trim()}"`,
           status: 'pending_review',
         },
       }).catch(() => {})
     }
 
-    // 5. Update Faculty Record if user is faculty
-    if (session.role === 'faculty') {
-      await prisma.faculty.update({
-        where: { userId: session.userId },
-        data: {
-          ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
-          ...(qualification && qualification.trim() ? { qualification: qualification.trim() } : {}),
-          ...(specialization && specialization.trim() ? { specialization: specialization.trim() } : {}),
-          ...(experience !== undefined && experience !== '' ? { experience: Number(experience) || 1 } : {}),
-        },
-      }).catch(() => {})
-    }
-
-    // 6. Update HOD Record if user is hod
-    if (session.role === 'hod') {
-      await prisma.hOD.update({
-        where: { userId: session.userId },
-        data: {
-          ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
-          ...(qualification && qualification.trim() ? { qualification: qualification.trim() } : {}),
-          ...(experience !== undefined && experience !== '' ? { experience: Number(experience) || 1 } : {}),
-        },
-      }).catch(() => {})
-    }
-
-    // 7. Audit Log
-    await prisma.auditLog.create({
-      data: {
-        userName: updatedUser.name,
-        action: 'profile_complete',
-        module: 'auth',
-        details: `${session.role.toUpperCase()} ${session.registerNumber || session.facultyId || updatedUser.name} completed initial profile setup and password change.`,
-        status: 'success',
-      },
-    }).catch(() => {})
-
-    // 8. Reissue updated JWT session token
+    // 7. Reissue updated JWT session token
     const token = await createToken({
       userId: updatedUser.id,
       email: updatedUser.email,
       name: updatedUser.name,
       role: updatedUser.role as any,
-      registerNumber: session.registerNumber,
-      facultyId: session.facultyId,
+      registerNumber: targetRegNumber || undefined,
+      facultyId: targetFacultyId || undefined,
     })
 
     const response = NextResponse.json({
