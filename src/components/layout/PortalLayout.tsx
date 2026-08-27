@@ -24,6 +24,14 @@ import {
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
+import { RealtimeNotificationToast, RealtimeToastData } from '@/components/notifications/RealtimeNotificationToast'
+import {
+  playNotificationChime,
+  triggerDeviceVibration,
+  requestNotificationPermission,
+  getNotificationPermissionStatus,
+  dispatchNativeNotification,
+} from '@/lib/notificationEngine'
 
 export interface NavItem {
   label: string
@@ -154,6 +162,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   const [notifications, setNotifications] = useState<NotificationItem[]>(
     DEFAULT_NOTIFICATIONS[role] || DEFAULT_NOTIFICATIONS.student
   )
+  const [realtimeToast, setRealtimeToast] = useState<RealtimeToastData | null>(null)
+  const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
+  const [isTestingPush, setIsTestingPush] = useState(false)
+  const knownNotificationIds = useRef<Set<string>>(new Set())
+  const isInitialSyncDone = useRef<boolean>(false)
+
   const notificationRef = useRef<HTMLDivElement>(null)
   const navContainerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
@@ -161,6 +175,147 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   const [accentColor, setAccentColor] = useState('#1455D9')
   const [visibleMenuMap, setVisibleMenuMap] = useState<Record<string, boolean>>({})
   const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
+
+  // Register Service Worker and check notification permission
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPushPermission(getNotificationPermissionStatus())
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          console.debug('ServiceWorker registration note:', err)
+        })
+      }
+    }
+  }, [])
+
+  // Sync real-time notifications from API
+  const syncNotifications = async () => {
+    try {
+      const res = await fetch(`/api/notifications?role=${role}&limit=20`)
+      if (!res.ok) return
+      const data = await res.json()
+      if (data.success && Array.isArray(data.notifications)) {
+        const fetchedList = data.notifications
+
+        if (!isInitialSyncDone.current) {
+          // Initial population
+          fetchedList.forEach((n: any) => knownNotificationIds.current.add(n.id))
+          DEFAULT_NOTIFICATIONS[role]?.forEach((n) => knownNotificationIds.current.add(n.id))
+
+          if (fetchedList.length > 0) {
+            const formatted: NotificationItem[] = fetchedList.map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              description: n.message,
+              time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+              unread: true,
+              type: 'info',
+              link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+            }))
+            setNotifications(formatted)
+          }
+          isInitialSyncDone.current = true
+        } else {
+          // Detect brand new notifications
+          const newItems = fetchedList.filter((n: any) => !knownNotificationIds.current.has(n.id))
+          if (newItems.length > 0) {
+            newItems.forEach((n: any) => {
+              knownNotificationIds.current.add(n.id)
+              // Trigger audio chime, vibration & mobile push notification
+              dispatchNativeNotification({
+                id: n.id,
+                title: n.title,
+                message: n.message,
+                createdByName: n.createdByName,
+                link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+              })
+              // Show in-app live toast
+              setRealtimeToast({
+                id: n.id,
+                title: n.title,
+                message: n.message,
+                createdByName: n.createdByName,
+                link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+              })
+            })
+
+            const formattedNew: NotificationItem[] = newItems.map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              description: n.message,
+              time: 'Just now',
+              unread: true,
+              type: 'info',
+              link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+            }))
+
+            setNotifications((prev) => [...formattedNew, ...prev])
+          }
+        }
+      }
+    } catch {}
+  }
+
+  // Polling loop for sub-second / 4s real-time alert updates
+  useEffect(() => {
+    syncNotifications()
+    const interval = setInterval(syncNotifications, 4000)
+    return () => clearInterval(interval)
+  }, [role])
+
+  // Handle user requesting push permission
+  const handleEnablePush = async () => {
+    const perm = await requestNotificationPermission()
+    setPushPermission(perm)
+    if (perm === 'granted') {
+      playNotificationChime()
+      triggerDeviceVibration([200, 100, 200])
+      dispatchNativeNotification({
+        id: 'test_welcome',
+        title: '🔔 Notifications Active!',
+        message: 'You will now receive real-time mobile & browser alerts from V.S.B. AI & DS Department.',
+      })
+    }
+  }
+
+  // Trigger Instant Test Alert
+  const handleSendTestPush = async () => {
+    setIsTestingPush(true)
+    try {
+      // Play sound & vibration immediately
+      playNotificationChime()
+      triggerDeviceVibration([200, 100, 200])
+
+      // Push to API to trigger multi-client sync
+      await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '⚡ Live Mobile Real-Time Alert',
+          message: `Department broadcast test at ${new Date().toLocaleTimeString()} received successfully!`,
+          target: role,
+        }),
+      })
+
+      // Immediate local dispatch
+      dispatchNativeNotification({
+        id: 'test_' + Date.now(),
+        title: '⚡ Live Mobile Real-Time Alert',
+        message: `Department broadcast test at ${new Date().toLocaleTimeString()} received successfully!`,
+      })
+
+      setRealtimeToast({
+        id: 'test_' + Date.now(),
+        title: '⚡ Live Mobile Real-Time Alert',
+        message: `Department broadcast test at ${new Date().toLocaleTimeString()} received successfully!`,
+        createdByName: 'V.S.B. Alert System',
+      })
+    } catch {
+    } finally {
+      setIsTestingPush(false)
+    }
+  }
 
   const updatePortalState = () => {
     try {
@@ -551,67 +706,105 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                     {unreadCount > 0 && (
                       <button
                         onClick={markAllAsRead}
-                        className="text-[11px] text-gray-300 hover:text-white font-medium underline transition-colors"
+                        className="text-[11px] text-gray-300 hover:text-white font-medium underline transition-colors cursor-pointer"
                       >
                         Mark read
                       </button>
                     )}
                   </div>
 
+                  {/* Mobile Push Notification Status Banner & Instant Trigger Button */}
+                  <div className="p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className={cn(
+                        'w-2 h-2 rounded-full shrink-0',
+                        pushPermission === 'granted' ? 'bg-green-500 animate-pulse' : 'bg-amber-500'
+                      )} />
+                      <span className="text-[11px] font-bold text-[#071A3D] truncate">
+                        {pushPermission === 'granted' ? 'Mobile Push Active' : 'Mobile Alerts Inactive'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {pushPermission !== 'granted' ? (
+                        <button
+                          onClick={handleEnablePush}
+                          className="px-2.5 py-1 rounded-lg bg-[#1455D9] hover:bg-[#0f44b0] text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer"
+                        >
+                          Enable Push
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleSendTestPush}
+                          disabled={isTestingPush}
+                          className="px-2.5 py-1 rounded-lg bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-[10px] font-black transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                        >
+                          {isTestingPush ? 'Ringing...' : '⚡ Test Alert'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Notification Items List */}
                   <div className="max-h-80 overflow-y-auto divide-y divide-gray-100" style={{ scrollbarWidth: 'thin' }}>
-                    {notifications.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => {
-                          setNotifications((prev) =>
-                            prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
-                          )
-                        }}
-                        className={cn(
-                          'p-4 hover:bg-gray-50 transition-colors cursor-pointer flex items-start gap-3',
-                          item.unread ? 'bg-blue-50/40' : 'bg-white'
-                        )}
-                      >
-                        <div className="mt-0.5 shrink-0">
-                          {(item.type === 'alert' || item.type === 'warning') && (
-                            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-                              <AlertTriangle className="w-4 h-4" />
-                            </div>
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-gray-500">
+                        No alerts at this moment
+                      </div>
+                    ) : (
+                      notifications.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setNotifications((prev) =>
+                              prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
+                            )
+                          }}
+                          className={cn(
+                            'p-4 hover:bg-gray-50 transition-colors cursor-pointer flex items-start gap-3',
+                            item.unread ? 'bg-blue-50/40' : 'bg-white'
                           )}
-                          {item.type === 'approval' && (
-                            <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
-                              <FileQuestion className="w-4 h-4" />
-                            </div>
-                          )}
-                          {item.type === 'success' && (
-                            <div className="w-8 h-8 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
-                              <CheckCircle2 className="w-4 h-4" />
-                            </div>
-                          )}
-                          {item.type === 'info' && (
-                            <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center">
-                              <Sparkles className="w-4 h-4" />
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-1">
-                            <h4 className="text-xs font-bold text-[#071A3D] truncate">{item.title}</h4>
-                            {item.unread && (
-                              <span className="w-2 h-2 rounded-full bg-[#1455D9] shrink-0" />
+                        >
+                          <div className="mt-0.5 shrink-0">
+                            {(item.type === 'alert' || item.type === 'warning') && (
+                              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                                <AlertTriangle className="w-4 h-4" />
+                              </div>
+                            )}
+                            {item.type === 'approval' && (
+                              <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                                <FileQuestion className="w-4 h-4" />
+                              </div>
+                            )}
+                            {item.type === 'success' && (
+                              <div className="w-8 h-8 rounded-xl bg-green-100 text-green-600 flex items-center justify-center">
+                                <CheckCircle2 className="w-4 h-4" />
+                              </div>
+                            )}
+                            {item.type === 'info' && (
+                              <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center">
+                                <Sparkles className="w-4 h-4" />
+                              </div>
                             )}
                           </div>
-                          <p className="text-[11px] text-gray-600 mt-0.5 line-clamp-2 leading-relaxed">
-                            {item.description}
-                          </p>
-                          <span className="text-[10px] text-gray-400 font-medium mt-1 block">
-                            {item.time}
-                          </span>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <h4 className="text-xs font-bold text-[#071A3D] truncate">{item.title}</h4>
+                              {item.unread && (
+                                <span className="w-2 h-2 rounded-full bg-[#1455D9] shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-[11px] text-gray-600 mt-0.5 line-clamp-2 leading-relaxed">
+                              {item.description}
+                            </p>
+                            <span className="text-[10px] text-gray-400 font-medium mt-1 block">
+                              {item.time}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
 
                   {/* Dropdown Footer */}
@@ -728,6 +921,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
           <span>Profile</span>
         </Link>
       </nav>
+
+      {/* Real-time In-App Floating Toast Notification */}
+      <RealtimeNotificationToast
+        toast={realtimeToast}
+        onDismiss={() => setRealtimeToast(null)}
+      />
 
       {/* Floating AI Chatbot Bottom-Right Icon */}
       <FloatingChatbot />

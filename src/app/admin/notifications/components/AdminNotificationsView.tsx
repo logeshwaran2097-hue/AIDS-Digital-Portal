@@ -111,35 +111,82 @@ export function AdminNotificationsView({
     })
   }
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title || !formData.message) {
       alert('Please fill in Title and Message')
       return
     }
 
-    const newN: NotificationRecord = {
-      id: 'notif_' + Date.now(),
-      title: formData.title,
-      message: formData.message,
-      target: formData.targetSpecific ? `${formData.target} (${formData.targetSpecific})` : formData.target,
-      createdByName: 'System Administrator',
-      status: 'published',
-      createdAt: new Date().toISOString().split('T')[0],
-    }
+    setIsSubmitting(true)
+    const targetValue = formData.targetSpecific ? `${formData.target} (${formData.targetSpecific})` : formData.target
 
-    setNotifications([newN, ...notifications])
-    setIsAddModalOpen(false)
-    setFormData({
-      title: '',
-      message: '',
-      target: 'all',
-      targetSpecific: '',
-    })
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formData.title,
+          message: formData.message,
+          target: targetValue,
+          createdByName: 'Administrator',
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success && data.notification) {
+        const newN: NotificationRecord = {
+          id: data.notification.id,
+          title: data.notification.title,
+          message: data.notification.message,
+          target: data.notification.target,
+          createdByName: data.notification.createdByName || 'Administrator',
+          status: 'published',
+          createdAt: new Date().toISOString().split('T')[0],
+        }
+        setNotifications([newN, ...notifications])
+      } else {
+        const newN: NotificationRecord = {
+          id: 'notif_' + Date.now(),
+          title: formData.title,
+          message: formData.message,
+          target: targetValue,
+          createdByName: 'System Administrator',
+          status: 'published',
+          createdAt: new Date().toISOString().split('T')[0],
+        }
+        setNotifications([newN, ...notifications])
+      }
+    } catch {
+      const newN: NotificationRecord = {
+        id: 'notif_' + Date.now(),
+        title: formData.title,
+        message: formData.message,
+        target: targetValue,
+        createdByName: 'System Administrator',
+        status: 'published',
+        createdAt: new Date().toISOString().split('T')[0],
+      }
+      setNotifications([newN, ...notifications])
+    } finally {
+      setIsSubmitting(false)
+      setIsAddModalOpen(false)
+      setFormData({
+        title: '',
+        message: '',
+        target: 'all',
+        targetSpecific: '',
+      })
+    }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to remove this notification?')) {
+      try {
+        await fetch(`/api/notifications?id=${id}`, { method: 'DELETE' })
+      } catch {}
       setNotifications(notifications.filter((n) => n.id !== id))
     }
   }

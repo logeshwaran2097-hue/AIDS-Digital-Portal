@@ -1,11 +1,18 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
-import { Bell, Calendar, User, CheckCircle2, Filter, Sparkles, CheckCheck } from 'lucide-react'
+import { Bell, Calendar, User, CheckCircle2, Filter, Sparkles, CheckCheck, Smartphone, Volume2, ShieldCheck, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  playNotificationChime,
+  triggerDeviceVibration,
+  requestNotificationPermission,
+  getNotificationPermissionStatus,
+  dispatchNativeNotification,
+} from '@/lib/notificationEngine'
 
 interface NotificationItem {
   id: string
@@ -18,6 +25,54 @@ interface NotificationItem {
 export function StudentNotificationsView({ notifications }: { notifications: NotificationItem[] }) {
   const [filter, setFilter] = useState('ALL')
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [pushStatus, setPushStatus] = useState<NotificationPermission>('default')
+  const [isSendingTest, setIsSendingTest] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPushStatus(getNotificationPermissionStatus())
+    }
+  }, [])
+
+  const handleEnablePush = async () => {
+    const perm = await requestNotificationPermission()
+    setPushStatus(perm)
+    if (perm === 'granted') {
+      playNotificationChime()
+      triggerDeviceVibration([200, 100, 200])
+      dispatchNativeNotification({
+        id: 'welcome_' + Date.now(),
+        title: '🔔 Mobile Notifications Enabled!',
+        message: 'You are all set to receive real-time class, attendance, and exam alerts.',
+      })
+    }
+  }
+
+  const handleTestAlert = async () => {
+    setIsSendingTest(true)
+    try {
+      playNotificationChime()
+      triggerDeviceVibration([200, 100, 200])
+
+      await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: '📱 Real-Time Mobile Push Test',
+          message: `Department alert delivered at ${new Date().toLocaleTimeString()} with sound & vibration!`,
+          target: 'student',
+        }),
+      })
+
+      dispatchNativeNotification({
+        id: 'test_student_' + Date.now(),
+        title: '📱 Real-Time Mobile Push Test',
+        message: `Department alert delivered at ${new Date().toLocaleTimeString()} with sound & vibration!`,
+      })
+    } catch {} finally {
+      setIsSendingTest(false)
+    }
+  }
 
   const handleMarkAllRead = () => {
     setReadIds(new Set(notifications.map((n) => n.id)))
@@ -64,6 +119,50 @@ export function StudentNotificationsView({ notifications }: { notifications: Not
             <p className="text-[10px] text-gray-300 uppercase font-bold">Unread</p>
             <p className="text-base font-black text-[#F4C430]">{unreadCount} Alerts</p>
           </div>
+        </div>
+      </div>
+
+      {/* Real-Time Mobile Push Configuration Banner */}
+      <div className="bg-white rounded-3xl p-5 border border-blue-200/80 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shrink-0 shadow-md">
+            <Smartphone className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-sm text-[#071A3D]">Real-Time Mobile Push &amp; Sound Alerts</h3>
+              <span
+                className={cn(
+                  'px-2 py-0.5 rounded-full text-[10px] font-black uppercase',
+                  pushStatus === 'granted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                )}
+              >
+                {pushStatus === 'granted' ? '● Connected' : '○ Permission Needed'}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Receive native mobile push notifications, haptic vibrations, and audio chimes for immediate department updates.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+          {pushStatus !== 'granted' ? (
+            <button
+              onClick={handleEnablePush}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer hover:scale-102"
+            >
+              <Bell className="w-4 h-4" /> Enable Mobile Push
+            </button>
+          ) : (
+            <button
+              onClick={handleTestAlert}
+              disabled={isSendingTest}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer hover:scale-102 disabled:opacity-50"
+            >
+              <Zap className="w-4 h-4" /> {isSendingTest ? 'Sending Alert...' : 'Test Mobile Notification'}
+            </button>
+          )}
         </div>
       </div>
 
