@@ -133,15 +133,13 @@ export default function LoginPage() {
   const handleCompleteOnboarding = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (onboardingForm.newPassword) {
-      if (onboardingForm.newPassword.length < 6) {
-        toast.error('New password must be at least 6 characters long.')
-        return
-      }
-      if (onboardingForm.newPassword !== onboardingForm.confirmPassword) {
-        toast.error('New password and confirmation do not match.')
-        return
-      }
+    if (!onboardingForm.newPassword || onboardingForm.newPassword.length < 6) {
+      toast.error('Please create a permanent password (at least 6 characters).')
+      return
+    }
+    if (onboardingForm.newPassword !== onboardingForm.confirmPassword) {
+      toast.error('New password and confirmation do not match.')
+      return
     }
 
     setOnboardingLoading(true)
@@ -172,16 +170,6 @@ export default function LoginPage() {
     } finally {
       setOnboardingLoading(false)
     }
-  }
-
-  const handleSkipOnboarding = () => {
-    setShowOnboardingModal(false)
-    const dashboardMap: Record<string, string> = {
-      student: '/dashboard',
-      faculty: '/faculty-dashboard',
-      hod: '/hod-dashboard',
-    }
-    window.location.href = dashboardMap[selectedRole]
   }
 
   const handleSendOTP = async () => {
@@ -988,22 +976,15 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <button
-                  type="button"
-                  onClick={handleSkipOnboarding}
-                  className="text-xs text-gray-500 hover:text-[#071A41] font-bold underline cursor-pointer"
-                >
-                  Skip for now
-                </button>
+              <div className="pt-3 border-t border-gray-100">
                 <Button
                   type="submit"
                   size="default"
                   loading={onboardingLoading}
-                  className="font-bold flex items-center gap-1.5 bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white"
+                  className="w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all"
                 >
                   <span>Save &amp; Enter Portal</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
             </form>
