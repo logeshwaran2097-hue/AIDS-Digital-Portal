@@ -4,6 +4,7 @@ import '@/styles/globals.css'
 import { Toaster } from '@/components/ui/Toast'
 import { PWAInstall } from '@/components/PWAInstall'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { MobileAppSplashScreen } from '@/components/MobileAppSplashScreen'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -41,6 +42,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ThemeProvider>
+          <MobileAppSplashScreen />
           {children}
           <Toaster />
           <PWAInstall />
