@@ -73,6 +73,290 @@ html, body {
 }
 
 /* =========================================================
+   🎓 V.S.B. PORTAL PREMIUM STAGED INTRO ANIMATION SUITE
+   ========================================================= */
+
+@keyframes bgIntroGradient {
+  0% {
+    background-color: #071A41;
+    filter: brightness(0.9);
+  }
+  30% {
+    background-color: #1557C0;
+  }
+  70% {
+    background-color: #E2EFFF;
+  }
+  100% {
+    background-color: #F5F8FC;
+    filter: brightness(1);
+  }
+}
+
+@keyframes lightWaveSweep {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes idleWaveSweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateX(220%) skewX(-20deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(220%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes scaleFadeInSmooth {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUpFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpSmallFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardScaleFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+    box-shadow: 0 0 0 rgba(7, 26, 65, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 25px 50px -12px rgba(7, 26, 65, 0.12);
+  }
+}
+
+@keyframes underlineCenterOut {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes underlineLeftToRight {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes quoteFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlowSlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(21, 87, 192, 0.25), 0 0 30px rgba(231, 185, 62, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(21, 87, 192, 0.4), 0 0 45px rgba(231, 185, 62, 0.3);
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+@keyframes circuitLineDrift {
+  0% {
+    stroke-dashoffset: 60;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Helper Animation Utility Classes with Precise Staged Timing */
+.anim-bg-intro {
+  animation: bgIntroGradient 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-light-wave {
+  animation: lightWaveSweep 1.8s ease-in-out 0.2s forwards;
+}
+
+.anim-idle-wave {
+  animation: idleWaveSweep 9s ease-in-out 3s infinite;
+}
+
+.anim-logo-reveal {
+  opacity: 0;
+  animation: scaleFadeInSmooth 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+}
+
+.anim-college-name {
+  opacity: 0;
+  animation: slideUpFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+}
+
+.anim-dept-name {
+  opacity: 0;
+  animation: slideUpFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 2.6s forwards;
+}
+
+.anim-portal-title {
+  opacity: 0;
+  animation: slideUpSmallFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 3.3s forwards;
+}
+
+.anim-underline-center {
+  transform: scaleX(0);
+  transform-origin: center;
+  animation: underlineCenterOut 0.5s cubic-bezier(0.16, 1, 0.3, 1) 3.45s forwards;
+}
+
+.anim-card-reveal {
+  opacity: 0;
+  animation: cardScaleFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 3.8s forwards;
+}
+
+.anim-role-student {
+  opacity: 0;
+  animation: slideUpSmallFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) 4.6s forwards;
+}
+
+.anim-role-faculty {
+  opacity: 0;
+  animation: slideUpSmallFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) 4.8s forwards;
+}
+
+.anim-role-hod {
+  opacity: 0;
+  animation: slideUpSmallFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) 5.0s forwards;
+}
+
+.anim-role-admin {
+  opacity: 0;
+  animation: slideUpSmallFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) 5.2s forwards;
+}
+
+.anim-form-reveal {
+  opacity: 0;
+  animation: slideUpSmallFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 5.3s forwards;
+}
+
+.anim-quote-reveal {
+  opacity: 0;
+  animation: quoteFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 5.8s forwards;
+}
+
+.anim-quote-underline {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: underlineLeftToRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) 6.0s forwards;
+}
+
+.anim-footer-reveal {
+  opacity: 0;
+  animation: slideUpSmallFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 6.4s forwards;
+}
+
+.anim-selected-glow {
+  box-shadow: 0 4px 20px -2px rgba(21, 87, 192, 0.45), 0 0 0 2px rgba(21, 87, 192, 0.3);
+}
+
+.anim-circuit-drift {
+  stroke-dasharray: 6 6;
+  animation: circuitLineDrift 14s linear infinite;
+}
+
+.anim-particle-float {
+  animation: floatGentle 7s ease-in-out infinite;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .anim-bg-intro,
+  .anim-logo-reveal,
+  .anim-college-name,
+  .anim-dept-name,
+  .anim-portal-title,
+  .anim-underline-center,
+  .anim-card-reveal,
+  .anim-role-student,
+  .anim-role-faculty,
+  .anim-role-hod,
+  .anim-role-admin,
+  .anim-form-reveal,
+  .anim-quote-reveal,
+  .anim-quote-underline,
+  .anim-footer-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .anim-light-wave,
+  .anim-idle-wave,
+  .anim-circuit-drift,
+  .anim-particle-float {
+    display: none !important;
+  }
+}
+
+/* =========================================================
    🌙 MIDNIGHT NAVY & DARK THEME OVERRIDES
    ========================================================= */
 html.midnight body,
