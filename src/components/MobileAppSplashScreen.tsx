@@ -192,19 +192,19 @@ export function MobileAppSplashScreen() {
         </div>
 
         {/* 0.0s: Golden 3D Crest with Celestial Holographic Rings */}
-        <div className="relative flex items-center justify-center my-1.5 anim-crest-intro anim-crest-float">
-          {/* Celestial Outer Cyan Tech Ring */}
-          <div className="absolute w-48 h-48 sm:w-56 sm:h-56 rounded-full border-2 border-dashed border-[#06B6D4]/45 anim-ring-primary" />
+        <div className="relative flex items-center justify-center my-3 py-1 anim-crest-intro anim-crest-float">
+          {/* Celestial Outer Cyan Tech Orbit Ring (Vivid on Mobile) */}
+          <div className="absolute w-46 h-46 sm:w-56 sm:h-56 rounded-full border-[2.5px] border-dashed border-[#0284C7] shadow-[0_0_20px_rgba(2,132,199,0.75)] anim-ring-primary" />
           
-          {/* Celestial Inner Gold Beaded Ring */}
-          <div className="absolute w-42 h-42 sm:w-50 sm:h-50 rounded-full border-2 border-dotted border-[#E7B93E]/60 anim-ring-secondary" />
+          {/* Celestial Inner Gold Beaded Ring (Vivid on Mobile) */}
+          <div className="absolute w-38 h-38 sm:w-48 sm:h-48 rounded-full border-[2.5px] border-dotted border-[#D97706] shadow-[0_0_20px_rgba(217,119,6,0.85)] anim-ring-secondary" />
           
           {/* Pulsing Radial Backlight Aura */}
-          <div className="absolute w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-[#1557C0]/40 via-[#06B6D4]/35 to-[#E7B93E]/40 blur-2xl animate-pulse" />
+          <div className="absolute w-34 h-34 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-[#1557C0]/60 via-[#06B6D4]/50 to-[#E7B93E]/60 blur-2xl animate-pulse" />
           
           {/* Gold-Framed Raised Emblem Disk */}
-          <div className="relative w-30 h-30 sm:w-36 sm:h-36 rounded-full p-1.5 bg-gradient-to-tr from-[#E7B93E] via-white to-[#1557C0] shadow-[0_20px_45px_rgba(7,26,65,0.22)] hover:scale-105 transition-transform duration-500">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-3 shadow-inner overflow-hidden">
+          <div className="relative w-28 h-28 sm:w-34 sm:h-34 rounded-full p-1.5 bg-gradient-to-tr from-[#E7B93E] via-[#FDE047] to-[#1557C0] ring-4 ring-[#1557C0]/20 shadow-[0_20px_45px_rgba(7,26,65,0.3)] hover:scale-105 transition-transform duration-500">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-3 shadow-inner overflow-hidden border border-amber-200">
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"

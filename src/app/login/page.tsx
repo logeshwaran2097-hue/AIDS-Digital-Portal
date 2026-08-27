@@ -467,26 +467,32 @@ export default function LoginPage() {
           <ShieldCheck className="w-3.5 h-3.5 text-[#E7B93E] animate-pulse" />
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
-
-        {/* 3D Gold-Rimmed Emblem with Dual Rotating Celestial Rings */}
-        <div className="relative flex items-center justify-center my-1 anim-logo-reveal">
-          {/* Celestial Outer Cyan Tech Ring */}
-          <div className="absolute w-36 h-36 sm:w-44 sm:h-44 rounded-full border-2 border-dashed border-[#06B6D4]/45 animate-spin" style={{ animationDuration: '10s' }} />
+        
+        {/* 3D Gold-Rimmed Emblem with Dual High-Contrast Rotating Celestial Rings */}
+        <div className="relative flex items-center justify-center my-3 py-1 anim-logo-reveal">
+          {/* Celestial Outer Cyan Tech Orbit Ring (Vivid on Mobile) */}
+          <div 
+            className="absolute w-36 h-36 sm:w-44 sm:h-44 rounded-full border-[2.5px] border-dashed border-[#0284C7] shadow-[0_0_18px_rgba(2,132,199,0.75)] animate-spin" 
+            style={{ animationDuration: '10s' }} 
+          />
           
-          {/* Celestial Inner Gold Beaded Ring */}
-          <div className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full border-2 border-dotted border-[#E7B93E]/60 animate-spin" style={{ animationDuration: '14s', animationDirection: 'reverse' }} />
+          {/* Celestial Inner Gold Beaded Ring (Vivid on Mobile) */}
+          <div 
+            className="absolute w-30 h-30 sm:w-38 sm:h-38 rounded-full border-[2.5px] border-dotted border-[#D97706] shadow-[0_0_18px_rgba(217,119,6,0.85)] animate-spin" 
+            style={{ animationDuration: '14s', animationDirection: 'reverse' }} 
+          />
           
           {/* Pulsing Radial Backlight Aura */}
-          <div className="absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-[#1557C0]/40 via-[#06B6D4]/35 to-[#E7B93E]/40 blur-xl animate-pulse" />
+          <div className="absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-[#1557C0]/60 via-[#06B6D4]/50 to-[#E7B93E]/60 blur-xl animate-pulse" />
           
           {/* Gold-Framed Raised Emblem Disk */}
-          <div className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-white to-[#1557C0] shadow-[0_15px_35px_rgba(7,26,65,0.2)] hover:scale-105 transition-transform duration-500">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-2 shadow-inner overflow-hidden">
+          <div className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full p-1.5 bg-gradient-to-tr from-[#E7B93E] via-[#FDE047] to-[#1557C0] ring-4 ring-[#1557C0]/20 shadow-[0_15px_35px_rgba(7,26,65,0.3)] hover:scale-105 transition-transform duration-500">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-2 shadow-inner overflow-hidden border border-amber-200">
               <Image
-                src="/college-emblem.png"
+                src="/images/logo.png"
                 alt="V.S.B. Engineering College Logo"
-                width={100}
-                height={100}
+                width={85}
+                height={85}
                 className="w-full h-full object-contain drop-shadow-sm"
                 priority
               />
