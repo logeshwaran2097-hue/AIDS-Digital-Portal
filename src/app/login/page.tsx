@@ -47,6 +47,11 @@ export default function LoginPage() {
   const [otpCooldown, setOtpCooldown] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
 
+  // LUXURY AUTHENTICATION ANIMATION STATES
+  const [authStatus, setAuthStatus] = React.useState<'idle' | 'success' | 'error'>('idle')
+  const [authMessage, setAuthMessage] = React.useState('')
+  const [successDestination, setSuccessDestination] = React.useState('')
+
   // MULTI-STEP ONBOARDING WIZARD STATE
   const [showOnboardingModal, setShowOnboardingModal] = React.useState(false)
   const [onboardingStep, setOnboardingStep] = React.useState<1 | 2>(1) // 1: Check Details & Corrections, 2: Password & Email OTP
@@ -98,6 +103,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setAuthStatus('idle')
     try {
       let endpoint = ''
       let payload: Record<string, string> = {}
@@ -121,7 +127,12 @@ export default function LoginPage() {
 
       const data = await res.json()
       if (!res.ok || !data.success) {
+        setAuthStatus('error')
+        setAuthMessage(data.message || 'Authentication Failed · Invalid Credentials')
         toast.error(data.message || 'Login failed. Please check your credentials.')
+        setTimeout(() => {
+          setAuthStatus('idle')
+        }, 4000)
         return
       }
 
@@ -160,16 +171,24 @@ export default function LoginPage() {
         return
       }
 
-      toast.success('Login verified! Entering portal...')
+      // Success Luxury Animation & Warp Navigation
       const dashboardMap: Record<string, string> = {
         student: '/dashboard',
         faculty: '/faculty-dashboard',
         hod: '/hod-dashboard',
       }
+      const targetUrl = dashboardMap[selectedRole]
+      setSuccessDestination(targetUrl)
+      setAuthStatus('success')
+      setAuthMessage(`Identity Verified · Entering ${selectedRole.toUpperCase()} Digital Portal...`)
+      toast.success('Login verified! Entering portal...')
+
       setTimeout(() => {
-        window.location.href = dashboardMap[selectedRole]
-      }, 250)
+        window.location.href = targetUrl
+      }, 1400)
     } catch {
+      setAuthStatus('error')
+      setAuthMessage('Network Connection Error · Unable to Reach Campus Server')
       toast.error('Network connection error. Please try again.')
     } finally {
       setLoading(false)
@@ -338,10 +357,14 @@ export default function LoginPage() {
   const handleVerifyOTP = async (customOtp?: string) => {
     const codeToVerify = typeof customOtp === 'string' ? customOtp : otp
     if (!codeToVerify || codeToVerify.length !== 6) {
+      setAuthStatus('error')
+      setAuthMessage('Please enter the complete 6-digit OTP security code.')
       toast.error('Please enter the complete 6-digit OTP')
+      setTimeout(() => setAuthStatus('idle'), 3000)
       return
     }
     setLoading(true)
+    setAuthStatus('idle')
     try {
       const res = await fetch('/api/auth/admin', {
         method: 'POST',
@@ -350,14 +373,25 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
+        setAuthStatus('error')
+        setAuthMessage(data.message || '2FA Verification Failed · Invalid or Expired Code')
         toast.error(data.message || 'Invalid or expired OTP.')
+        setTimeout(() => setAuthStatus('idle'), 4000)
         return
       }
+
+      // Success Admin 2FA Elevation Animation
+      setSuccessDestination('/admin/dashboard')
+      setAuthStatus('success')
+      setAuthMessage('2FA Biometric Verified · Elevating Super Admin Console...')
       toast.success('Admin authenticated!')
+
       setTimeout(() => {
         window.location.href = '/admin/dashboard'
-      }, 250)
+      }, 1400)
     } catch {
+      setAuthStatus('error')
+      setAuthMessage('Network Connection Error · Unable to Verify 2FA')
       toast.error('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -499,8 +533,56 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* FULL-SCREEN QUANTUM SUCCESS PORTAL MODAL */}
+      {authStatus === 'success' && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-[#071A41]/85 backdrop-blur-2xl text-white select-none animate-fade-in">
+          {/* Rotating Success Energy Halo */}
+          <div className="absolute w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-gradient-to-tr from-emerald-500/30 via-cyan-400/30 to-[#E7B93E]/30 blur-3xl animate-pulse" />
+          
+          <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center text-center space-y-5 p-8 rounded-[2.5rem] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.5)] anim-success-portal">
+            
+            {/* Holographic Glowing Checkmark Crest */}
+            <div className="relative flex items-center justify-center my-2">
+              <div className="absolute w-36 h-36 rounded-full border-2 border-dashed border-emerald-400/60 animate-spin" style={{ animationDuration: '6s' }} />
+              <div className="absolute w-32 h-32 rounded-full border-2 border-dotted border-[#E7B93E]/60 animate-spin" style={{ animationDuration: '8s', animationDirection: 'reverse' }} />
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-1 shadow-[0_0_40px_rgba(16,185,129,0.6)] flex items-center justify-center">
+                <div className="w-full h-full rounded-full bg-[#071A41] flex items-center justify-center">
+                  <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-bounce" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black uppercase tracking-wider">
+                <Sparkles className="w-3.5 h-3.5 text-[#E7B93E]" />
+                <span>ACCESS GRANTED</span>
+              </div>
+              
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Security Verified
+              </h2>
+              
+              <p className="text-xs text-slate-300 font-semibold px-2">
+                {authMessage}
+              </p>
+            </div>
+
+            {/* Quantum Warp Streamer Bar */}
+            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden p-0.5 shadow-inner">
+              <div className="h-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-[#E7B93E] rounded-full animate-progress-bar" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ULTRA-LUXURY LOGIN CARD */}
-      <div className="w-full max-w-[420px] bg-white/85 backdrop-blur-2xl rounded-[2.25rem] border border-white/95 p-4 sm:p-6 space-y-4 relative z-10 my-1 shadow-[0_30px_70px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] anim-card-reveal">
+      <div 
+        className={cn(
+          "w-full max-w-[420px] bg-white/85 backdrop-blur-2xl rounded-[2.25rem] border p-4 sm:p-6 space-y-4 relative z-10 my-1 shadow-[0_30px_70px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] anim-card-reveal transition-all duration-300",
+          authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-white/95',
+          authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
+        )}
+      >
         
         {/* ROLE SELECTION */}
         <div>
@@ -532,6 +614,7 @@ export default function LoginPage() {
                   setEmail('')
                   setOtpSent(false)
                   setOtp('')
+                  setAuthStatus('idle')
                 }}
                 className={cn(
                   'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-300 cursor-pointer border shadow-xs',
@@ -554,6 +637,19 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
+
+        {/* ERROR ALERT BANNER */}
+        {authStatus === 'error' && (
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-rose-50 to-red-50 border border-rose-200/90 text-rose-800 flex items-center gap-3 animate-fade-in shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-black text-rose-900 uppercase tracking-wide">Access Denied</p>
+              <p className="text-[10px] text-rose-700 font-semibold truncate">{authMessage}</p>
+            </div>
+          </div>
+        )}
 
         {/* INNER FORM CONTAINER */}
         <div className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white/90 to-[#F8FAFD]/90 backdrop-blur-md p-4 sm:p-5 space-y-3.5 anim-form-reveal shadow-sm">

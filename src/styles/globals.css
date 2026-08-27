@@ -223,6 +223,71 @@ html, body {
   }
 }
 
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-6px) scale(0.99); }
+  30%, 60%, 90% { transform: translateX(6px) scale(1.01); }
+}
+
+@keyframes rubyPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3), 0 0 35px rgba(239, 68, 68, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.6), 0 0 50px rgba(239, 68, 68, 0.3);
+  }
+}
+
+@keyframes successPortalExpand {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) rotate(-10deg);
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) rotate(0deg);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0px);
+  }
+}
+
+@keyframes warpSpeed {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+    filter: blur(12px);
+  }
+}
+
+.anim-error-shake {
+  animation: errorShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.anim-ruby-glow {
+  animation: rubyPulse 2s ease-in-out infinite;
+}
+
+.anim-success-portal {
+  animation: successPortalExpand 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.anim-warp-exit {
+  animation: warpSpeed 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .anim-word {
   display: inline-block;
   animation: wordPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
