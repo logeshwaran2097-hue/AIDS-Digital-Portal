@@ -49,11 +49,11 @@ const BG_THEMES: BgTheme[] = [
     name: 'Ocean Navy',
     pillColor: 'bg-blue-600',
     containerClass: 'bg-gradient-to-br from-[#06142E] via-[#0B2559] to-[#0A1938]',
-    blob1: 'from-blue-500/30 to-cyan-400/25',
-    blob2: 'from-indigo-600/30 to-blue-400/20',
-    blob3: 'from-sky-400/25 to-teal-400/20',
+    blob1: 'from-blue-500/25 to-cyan-400/20',
+    blob2: 'from-indigo-600/25 to-blue-400/15',
+    blob3: 'from-sky-400/20 to-teal-400/15',
     cardBg: 'bg-white/95 backdrop-blur-xl',
-    cardBorder: 'border-white/40 shadow-2xl shadow-blue-950/50',
+    cardBorder: 'border-white/40 shadow-2xl shadow-blue-950/60',
     headerText: 'text-white drop-shadow-md',
     badgeText: 'bg-gradient-to-r from-blue-400 via-cyan-300 to-sky-300 bg-clip-text text-transparent',
     subText: 'text-blue-200/80',
@@ -63,9 +63,9 @@ const BG_THEMES: BgTheme[] = [
     name: 'Cyber Aurora',
     pillColor: 'bg-purple-600',
     containerClass: 'bg-gradient-to-br from-[#0F0C20] via-[#1E124A] to-[#120B30]',
-    blob1: 'from-purple-500/35 to-pink-500/25',
-    blob2: 'from-cyan-400/30 to-teal-400/20',
-    blob3: 'from-indigo-500/30 to-fuchsia-500/20',
+    blob1: 'from-purple-500/30 to-pink-500/20',
+    blob2: 'from-cyan-400/25 to-teal-400/15',
+    blob3: 'from-indigo-500/25 to-fuchsia-500/15',
     cardBg: 'bg-white/95 backdrop-blur-xl',
     cardBorder: 'border-purple-200/40 shadow-2xl shadow-purple-950/60',
     headerText: 'text-white drop-shadow-md',
@@ -77,9 +77,9 @@ const BG_THEMES: BgTheme[] = [
     name: 'Emerald Deep',
     pillColor: 'bg-emerald-600',
     containerClass: 'bg-gradient-to-br from-[#041C15] via-[#083327] to-[#062018]',
-    blob1: 'from-emerald-500/35 to-teal-400/25',
-    blob2: 'from-teal-600/30 to-green-400/20',
-    blob3: 'from-cyan-400/25 to-emerald-400/20',
+    blob1: 'from-emerald-500/30 to-teal-400/20',
+    blob2: 'from-teal-600/25 to-green-400/15',
+    blob3: 'from-cyan-400/20 to-emerald-400/15',
     cardBg: 'bg-white/95 backdrop-blur-xl',
     cardBorder: 'border-emerald-200/40 shadow-2xl shadow-emerald-950/50',
     headerText: 'text-white drop-shadow-md',
@@ -91,9 +91,9 @@ const BG_THEMES: BgTheme[] = [
     name: 'Sunset Amber',
     pillColor: 'bg-amber-600',
     containerClass: 'bg-gradient-to-br from-[#240B13] via-[#451624] to-[#2B0E17]',
-    blob1: 'from-orange-500/35 to-amber-400/25',
-    blob2: 'from-rose-600/30 to-red-400/20',
-    blob3: 'from-amber-400/25 to-yellow-400/20',
+    blob1: 'from-orange-500/30 to-amber-400/20',
+    blob2: 'from-rose-600/25 to-red-400/15',
+    blob3: 'from-amber-400/20 to-yellow-400/15',
     cardBg: 'bg-white/95 backdrop-blur-xl',
     cardBorder: 'border-amber-200/40 shadow-2xl shadow-rose-950/50',
     headerText: 'text-white drop-shadow-md',
@@ -399,28 +399,43 @@ export default function LoginPage() {
   }
 
   return (
+    // LAYER 1: Navy/Royal-Blue Gradient Background
     <div className={cn('min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 py-8 sm:py-12 select-none transition-colors duration-700', theme.containerClass)}>
       
-      {/* ========================================================================= */}
-      {/* BACKGROUND WATERMARK LOGO (SUBTLE BLUR & LOW OPACITY) */}
-      {/* ========================================================================= */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
-        <div className="w-[500px] h-[500px] sm:w-[650px] sm:h-[650px] opacity-[0.06] blur-[1px] transform scale-110 select-none">
+      {/* LAYER 2: Subtle Grid Pattern */}
+      <div 
+        className="absolute inset-0 opacity-[0.035] pointer-events-none z-[1]"
+        style={{
+          backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(to right, #ffffff 1px, transparent 1px)`,
+          backgroundSize: '36px 36px'
+        }}
+      />
+
+      {/* Background Aurora Lighting Blobs */}
+      <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden">
+        <div className={cn('absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br blur-3xl animate-pulse transition-all duration-1000', theme.blob1)} style={{ animationDuration: '8s' }} />
+        <div className={cn('absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr blur-3xl animate-pulse transition-all duration-1000', theme.blob2)} style={{ animationDuration: '10s' }} />
+        <div className={cn('absolute top-1/3 -right-24 w-[400px] h-[400px] rounded-full bg-gradient-to-bl blur-3xl animate-pulse transition-all duration-1000', theme.blob3)} style={{ animationDuration: '12s' }} />
+      </div>
+
+      {/* LAYER 3: V.S.B. ENGINEERING COLLEGE LOGO WATERMARK (5-10% Opacity, Centered, Proportional, Seamless) */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[3] overflow-hidden">
+        <div 
+          className="relative w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] md:w-[580px] md:h-[580px] lg:w-[680px] lg:h-[680px] opacity-[0.07] [mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] [-webkit-mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] transform select-none"
+        >
           <Image
             src="/college-emblem.png"
-            alt="V.S.B. Watermark Crest"
-            width={650}
-            height={650}
-            className="w-full h-full object-contain filter grayscale contrast-125"
+            alt="V.S.B. Engineering College Watermark"
+            fill
+            sizes="(max-width: 640px) 340px, (max-width: 768px) 480px, 680px"
+            className="object-contain"
             priority
           />
         </div>
       </div>
 
-      {/* ========================================================================= */}
       {/* TOP BACKGROUND THEME PALETTE PICKER */}
-      {/* ========================================================================= */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
         <Palette className="w-3.5 h-3.5 text-white" />
         <span className="text-[11px] font-bold text-white hidden sm:inline">Theme:</span>
         <div className="flex items-center gap-1.5">
@@ -443,30 +458,10 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* ANIMATED GLOWING AURORA BLOBS */}
-      {/* ========================================================================= */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className={cn('absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br blur-3xl animate-pulse transition-all duration-1000', theme.blob1)} style={{ animationDuration: '8s' }} />
-        <div className={cn('absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr blur-3xl animate-pulse transition-all duration-1000', theme.blob2)} style={{ animationDuration: '10s' }} />
-        <div className={cn('absolute top-1/3 -right-24 w-[400px] h-[400px] rounded-full bg-gradient-to-bl blur-3xl animate-pulse transition-all duration-1000', theme.blob3)} style={{ animationDuration: '12s' }} />
+      {/* LAYER 4: LOGIN BRANDING AND COLLEGE INFORMATION */}
+      <div className="w-full max-w-md text-center mb-6 sm:mb-8 space-y-3 relative z-20">
         
-        {/* Subtle grid pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(to right, #ffffff 1px, transparent 1px)`,
-            backgroundSize: '36px 36px'
-          }}
-        />
-      </div>
-
-      {/* ========================================================================= */}
-      {/* TOP INSTITUTION BRANDING WITH "A PLACE FOR PLACEMENT" QUOTE */}
-      {/* ========================================================================= */}
-      <div className="w-full max-w-md text-center mb-6 sm:mb-8 space-y-3 relative z-10">
-        
-        {/* Floating Glowing Emblem */}
+        {/* Foreground Emblem with Glowing Rim */}
         <div className="relative inline-flex mx-auto group">
           <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-amber-400 via-indigo-500 to-teal-400 opacity-70 blur-md group-hover:opacity-100 transition-opacity duration-700 animate-spin" style={{ animationDuration: '12s' }} />
           <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white shadow-2xl border-4 border-white p-1.5 flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
@@ -490,9 +485,9 @@ export default function LoginPage() {
             DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
           </p>
 
-          {/* Important Motto Quote */}
+          {/* Institutional Motto Quote */}
           <div className="pt-0.5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs sm:text-sm font-black italic tracking-wide shadow-sm backdrop-blur-xs">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs sm:text-sm font-black italic tracking-wide shadow-sm backdrop-blur-xs">
               <Award className="w-3.5 h-3.5 text-amber-300" />
               <span>&ldquo;A Place for Placement&rdquo;</span>
             </span>
@@ -505,10 +500,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* LOGIN CARD */}
-      {/* ========================================================================= */}
-      <div className={cn('w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 relative z-10 transition-all duration-500 border', theme.cardBg, theme.cardBorder)}>
+      {/* LAYER 5 & 6: WHITE AUTHENTICATION CARD, FORM CONTROLS & BUTTONS */}
+      <div className={cn('w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 relative z-20 transition-all duration-500 border', theme.cardBg, theme.cardBorder)}>
         
         {/* SELECT YOUR ROLE SEGMENT WITH VIBRANT THEMES */}
         <div>
