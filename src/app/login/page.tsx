@@ -23,153 +23,33 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
-  Palette,
   Award,
-  TrendingUp,
-  Cpu,
-  Layers,
-  HelpCircle,
 } from 'lucide-react'
 
-// Background Themes
-interface BgTheme {
-  id: string
-  name: string
-  pillColor: string
-  containerClass: string
-  gridColor: string
-  blob1: string
-  blob2: string
-  blob3: string
-  cardBg: string
-  cardBorder: string
-  headerText: string
-  badgeText: string
-  subText: string
-  quoteBg: string
-  featureBadgeBg: string
-}
-
-const BG_THEMES: BgTheme[] = [
-  {
-    id: 'daylight',
-    name: 'Daylight Pearl',
-    pillColor: 'bg-blue-500',
-    containerClass: 'bg-gradient-to-br from-[#F8FAFC] via-[#EEF4FF] to-[#E2ECFC]',
-    gridColor: 'rgba(7, 26, 61, 0.035)',
-    blob1: 'from-blue-400/20 to-indigo-400/15',
-    blob2: 'from-sky-300/25 to-teal-300/15',
-    blob3: 'from-purple-300/20 to-pink-300/10',
-    cardBg: 'bg-white/90 backdrop-blur-2xl',
-    cardBorder: 'border-white/80 shadow-2xl shadow-blue-900/10',
-    headerText: 'text-[#071A3D] drop-shadow-xs',
-    badgeText: 'bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent',
-    subText: 'text-slate-500',
-    quoteBg: 'bg-gradient-to-r from-amber-500/15 via-yellow-500/20 to-amber-500/15 border-amber-300 text-amber-900',
-    featureBadgeBg: 'bg-white/80 border-slate-200/80 text-slate-700 shadow-sm',
-  },
-  {
-    id: 'ocean',
-    name: 'Ocean Navy',
-    pillColor: 'bg-blue-600',
-    containerClass: 'bg-gradient-to-br from-[#06142E] via-[#0B2559] to-[#0A1938]',
-    gridColor: 'rgba(255, 255, 255, 0.04)',
-    blob1: 'from-blue-500/30 to-cyan-400/20',
-    blob2: 'from-indigo-600/30 to-blue-400/15',
-    blob3: 'from-sky-400/25 to-teal-400/15',
-    cardBg: 'bg-white/95 backdrop-blur-2xl',
-    cardBorder: 'border-white/40 shadow-2xl shadow-blue-950/60',
-    headerText: 'text-white drop-shadow-md',
-    badgeText: 'bg-gradient-to-r from-blue-400 via-cyan-300 to-sky-300 bg-clip-text text-transparent',
-    subText: 'text-blue-200/80',
-    quoteBg: 'bg-amber-400/20 border-amber-300/40 text-amber-300',
-    featureBadgeBg: 'bg-white/10 border-white/15 text-blue-100 backdrop-blur-md',
-  },
-  {
-    id: 'aurora',
-    name: 'Cyber Aurora',
-    pillColor: 'bg-purple-600',
-    containerClass: 'bg-gradient-to-br from-[#0F0C20] via-[#1E124A] to-[#120B30]',
-    gridColor: 'rgba(255, 255, 255, 0.04)',
-    blob1: 'from-purple-500/35 to-pink-500/20',
-    blob2: 'from-cyan-400/30 to-teal-400/15',
-    blob3: 'from-indigo-500/30 to-fuchsia-500/15',
-    cardBg: 'bg-white/95 backdrop-blur-2xl',
-    cardBorder: 'border-purple-200/40 shadow-2xl shadow-purple-950/60',
-    headerText: 'text-white drop-shadow-md',
-    badgeText: 'bg-gradient-to-r from-purple-300 via-pink-300 to-cyan-300 bg-clip-text text-transparent',
-    subText: 'text-purple-200/80',
-    quoteBg: 'bg-amber-400/20 border-amber-300/40 text-amber-300',
-    featureBadgeBg: 'bg-white/10 border-white/15 text-purple-100 backdrop-blur-md',
-  },
-]
-
-interface RoleConfig {
-  id: 'student' | 'faculty' | 'hod' | 'admin'
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  gradient: string
-  glowColor: string
-  activeRing: string
-  activeBadge: string
-  buttonGradient: string
-  titleColor: string
-  badgeText: string
-}
-
-const roles: RoleConfig[] = [
+const roles = [
   {
     id: 'student',
     label: 'Student',
     icon: GraduationCap,
-    gradient: 'from-blue-600 via-indigo-600 to-blue-700',
-    glowColor: 'shadow-blue-500/30',
-    activeRing: 'ring-blue-500/40',
-    activeBadge: 'bg-blue-50 text-blue-700 border-blue-200',
-    buttonGradient: 'from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/25',
-    titleColor: 'text-blue-600',
-    badgeText: 'Student Authentication',
   },
   {
     id: 'faculty',
     label: 'Faculty',
     icon: BookOpen,
-    gradient: 'from-emerald-500 via-teal-600 to-emerald-700',
-    glowColor: 'shadow-emerald-500/30',
-    activeRing: 'ring-emerald-500/40',
-    activeBadge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    buttonGradient: 'from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/25',
-    titleColor: 'text-emerald-600',
-    badgeText: 'Faculty Authentication',
   },
   {
     id: 'hod',
     label: 'HOD',
     icon: Building2,
-    gradient: 'from-purple-600 via-indigo-700 to-purple-800',
-    glowColor: 'shadow-purple-500/30',
-    activeRing: 'ring-purple-500/40',
-    activeBadge: 'bg-purple-50 text-purple-700 border-purple-200',
-    buttonGradient: 'from-purple-600 via-indigo-700 to-purple-800 hover:from-purple-700 hover:to-indigo-800 shadow-purple-500/25',
-    titleColor: 'text-purple-600',
-    badgeText: 'HOD Authentication',
   },
   {
     id: 'admin',
     label: 'Admin',
     icon: Settings,
-    gradient: 'from-amber-500 via-orange-600 to-amber-700',
-    glowColor: 'shadow-amber-500/30',
-    activeRing: 'ring-amber-500/40',
-    activeBadge: 'bg-amber-50 text-amber-700 border-amber-200',
-    buttonGradient: 'from-amber-500 via-orange-600 to-amber-600 hover:from-amber-600 hover:to-orange-700 shadow-orange-500/25',
-    titleColor: 'text-amber-600',
-    badgeText: 'Administrator 2FA',
   },
 ]
 
 export default function LoginPage() {
-  const [currentThemeId, setCurrentThemeId] = React.useState('daylight')
   const [selectedRoleId, setSelectedRoleId] = React.useState<'student' | 'faculty' | 'hod' | 'admin'>('student')
   const [registerNumber, setRegisterNumber] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -199,8 +79,7 @@ export default function LoginPage() {
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const [onboardingLoading, setOnboardingLoading] = React.useState(false)
 
-  const theme = BG_THEMES.find((t) => t.id === currentThemeId) || BG_THEMES[0]
-  const currentRole = roles.find((r) => r.id === selectedRoleId) || roles[0]
+  const router = useRouter()
 
   React.useEffect(() => {
     if (otpCooldown <= 0) return
@@ -387,536 +266,438 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={cn('min-h-screen w-full flex flex-col justify-between items-center relative overflow-hidden px-4 py-6 sm:py-10 select-none transition-colors duration-700', theme.containerClass)}>
+    // UNIFIED SIGNATURE PALETTE: Deep Royal Navy & Ambient Cyber Cyan
+    <div className="min-h-screen w-full flex flex-col justify-between items-center relative overflow-hidden bg-gradient-to-b from-[#051329] via-[#081F48] to-[#040D1C] px-4 py-6 sm:py-10 select-none">
       
-      {/* LAYER 1: Subtle Grid Pattern */}
+      {/* Subtle Geometric Tech Grid */}
       <div 
-        className="absolute inset-0 pointer-events-none z-[1]"
+        className="absolute inset-0 pointer-events-none z-[1] opacity-40"
         style={{
-          backgroundImage: `linear-gradient(${theme.gridColor} 1px, transparent 1px), linear-gradient(to right, ${theme.gridColor} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px), linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px)`,
           backgroundSize: '36px 36px'
         }}
       />
 
-      {/* Dynamic Ambient Glowing Blobs */}
+      {/* Ambient Lighting Orbs for Deep AMOLED Contrast */}
       <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden">
-        <div className={cn('absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-gradient-to-br blur-3xl animate-pulse transition-all duration-1000', theme.blob1)} style={{ animationDuration: '8s' }} />
-        <div className={cn('absolute -bottom-32 -right-32 w-[550px] h-[550px] rounded-full bg-gradient-to-tr blur-3xl animate-pulse transition-all duration-1000', theme.blob2)} style={{ animationDuration: '10s' }} />
-        <div className={cn('absolute top-1/3 -right-24 w-[450px] h-[450px] rounded-full bg-gradient-to-bl blur-3xl animate-pulse transition-all duration-1000', theme.blob3)} style={{ animationDuration: '12s' }} />
+        <div className="absolute -top-32 -left-32 w-[550px] h-[550px] rounded-full bg-gradient-to-br from-blue-500/25 to-cyan-400/15 blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute -bottom-32 -right-32 w-[550px] h-[550px] rounded-full bg-gradient-to-tr from-indigo-600/25 to-sky-400/15 blur-3xl animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-3xl pointer-events-none" />
       </div>
 
-      {/* LAYER 2: Seamless Watermark Emblem */}
+      {/* Seamless Watermark Emblem */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-[3] overflow-hidden">
         <div 
-          className="relative w-[340px] h-[340px] sm:w-[500px] sm:h-[500px] md:w-[620px] md:h-[620px] lg:w-[720px] lg:h-[720px] opacity-[0.05] [mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] [-webkit-mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] transform select-none"
+          className="relative w-[340px] h-[340px] sm:w-[480px] sm:h-[480px] md:w-[600px] md:h-[600px] opacity-[0.06] [mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] [-webkit-mask-image:radial-gradient(circle_at_center,black_55%,transparent_90%)] transform select-none"
         >
           <Image
             src="/college-emblem.png"
             alt="V.S.B. Engineering College Watermark"
             fill
-            sizes="(max-width: 640px) 340px, (max-width: 768px) 500px, 720px"
-            className="object-contain filter grayscale"
+            sizes="(max-width: 640px) 340px, (max-width: 768px) 480px, 600px"
+            className="object-contain"
             priority
           />
         </div>
       </div>
 
-      {/* TOP BAR: Portal Navigation & Live Theme Switcher */}
-      <header className="w-full max-w-6xl mx-auto flex items-center justify-between z-30 pb-4">
-        {/* Left: Quick Portal Status */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/70 backdrop-blur-md border border-slate-200 text-[11px] font-bold text-slate-700 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>Official AI &amp; DS Portal</span>
-          </div>
-        </div>
-
-        {/* Right: Theme Picker */}
-        <div className="flex items-center gap-2 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-200 shadow-xs">
-          <Palette className="w-3.5 h-3.5 text-slate-600" />
-          <span className="text-[11px] font-bold text-slate-600 hidden sm:inline">Theme:</span>
-          <div className="flex items-center gap-1.5">
-            {BG_THEMES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                title={t.name}
-                onClick={() => {
-                  setCurrentThemeId(t.id)
-                  toast.success(`Theme set to ${t.name}`)
-                }}
-                className={cn(
-                  'w-4 h-4 rounded-full transition-all duration-300 cursor-pointer border border-black/10',
-                  t.pillColor,
-                  currentThemeId === t.id ? 'ring-2 ring-blue-600 scale-125 shadow-md' : 'opacity-60 hover:opacity-100'
-                )}
-              />
-            ))}
-          </div>
-        </div>
-      </header>
-
-      {/* CENTER WORKSPACE: Grid with Floating Highlights and Login Card */}
-      <main className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-center justify-center relative z-20 my-auto py-2">
+      {/* TOP HEADER: Centered Branding */}
+      <div className="w-full max-w-md text-center space-y-3 relative z-20 my-auto pt-2 pb-4">
         
-        {/* LEFT PROMINENT HIGHLIGHTS (DESKTOP) */}
-        <div className="hidden lg:flex lg:col-span-4 flex-col space-y-4 text-left">
-          
-          <div className={cn('p-4 rounded-2xl border transition-all duration-500', theme.featureBadgeBg)}>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 border border-amber-500/20">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-800">Placement Excellence</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Over 95%+ campus placements in Tier-1 product &amp; IT enterprises including TCS, Infosys, Zoho &amp; Cognizant.
-            </p>
-          </div>
-
-          <div className={cn('p-4 rounded-2xl border transition-all duration-500', theme.featureBadgeBg)}>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 border border-blue-500/20">
-                <Cpu className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-800">Advanced AI Labs</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Equipped with high-performance GPU clusters, Deep Learning workstations &amp; IoT analytics hubs.
-            </p>
-          </div>
-
-          <div className={cn('p-4 rounded-2xl border transition-all duration-500', theme.featureBadgeBg)}>
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 border border-emerald-500/20">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-800">Accredited Governance</h3>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed font-medium">
-              Autonomous curriculum under Anna University, accredited with NAAC &apos;A&apos; Grade &amp; NBA Tier-1.
-            </p>
+        {/* Glowing Official Emblem */}
+        <div className="relative inline-flex mx-auto group">
+          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-amber-400 via-indigo-500 to-cyan-400 opacity-75 blur-md group-hover:opacity-100 transition-opacity duration-700 animate-spin" style={{ animationDuration: '14s' }} />
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white shadow-2xl border-4 border-white p-1.5 flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
+            <Image
+              src="/college-emblem.png"
+              alt="V.S.B. Engineering College Official Emblem"
+              width={90}
+              height={90}
+              className="w-full h-full object-contain rounded-full"
+              priority
+            />
           </div>
         </div>
 
-        {/* CENTER COLUMN: EMBLEM, BRANDING & LOGIN CARD */}
-        <div className="lg:col-span-8 flex flex-col items-center max-w-md mx-auto w-full space-y-5">
+        {/* Institution Titles */}
+        <div className="space-y-1">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md">
+            V.S.B. ENGINEERING COLLEGE
+          </h1>
+          <p className="text-xs sm:text-sm font-black tracking-wide uppercase bg-gradient-to-r from-cyan-400 via-sky-300 to-blue-300 bg-clip-text text-transparent">
+            DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
+          </p>
+
+          {/* Institutional Motto Quote */}
+          <div className="pt-0.5">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs sm:text-sm font-black italic tracking-wide shadow-sm backdrop-blur-xs">
+              <Award className="w-3.5 h-3.5 text-amber-300" />
+              <span>&ldquo;A Place for Placement&rdquo;</span>
+            </span>
+          </div>
+
+          <p className="text-xs text-blue-200/80 font-medium flex items-center justify-center gap-1.5 pt-0.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+            <span>Academic Management &amp; Digital Portal</span>
+          </p>
+        </div>
+      </div>
+
+      {/* MAIN AUTHENTICATION CARD (Ultra-Clean, High-Contrast White Surface) */}
+      <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl shadow-black/40 border border-white/90 space-y-5 relative z-20 my-auto">
+        
+        {/* SELECT YOUR ROLE SEGMENT */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-wider">
+              SELECT YOUR ROLE
+            </label>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+              Role: <span className="capitalize font-black">{selectedRoleId}</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2">
+            {roles.map((role) => {
+              const isSelected = selectedRoleId === role.id
+              const Icon = role.icon
+              return (
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedRoleId(role.id as any)
+                    setRegisterNumber('')
+                    setPassword('')
+                    setShowPassword(false)
+                    setFacultyId('')
+                    setEmail('')
+                    setOtpSent(false)
+                    setOtp('')
+                  }}
+                  className={cn(
+                    'group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-300 cursor-pointer overflow-hidden border',
+                    isSelected
+                      ? 'bg-[#071A3D] text-white shadow-md border-[#071A3D] scale-105 ring-2 ring-[#071A3D]/20'
+                      : 'bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border-gray-200 hover:scale-[1.02]'
+                  )}
+                >
+                  <Icon className={cn('w-4 h-4 transition-transform duration-300 group-hover:scale-110', isSelected ? 'text-white' : 'text-gray-600')} />
+                  <span className="text-[10px] sm:text-[11px] font-bold tracking-tight">{role.label}</span>
+                  {isSelected && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-[#F4C430] rounded-full" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* DYNAMIC FORM */}
+        <form onSubmit={handleSubmit} className="space-y-3.5 pt-1">
           
-          {/* Top Institution Branding */}
-          <div className="text-center space-y-2.5">
-            
-            {/* Floating Emblem */}
-            <div className="relative inline-flex mx-auto group">
-              <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-amber-400 via-indigo-500 to-teal-400 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-700 animate-spin" style={{ animationDuration: '12s' }} />
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white shadow-2xl border-4 border-white p-1.5 flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
-                <Image
-                  src="/college-emblem.png"
-                  alt="V.S.B. Engineering College Emblem"
-                  width={90}
-                  height={90}
-                  className="w-full h-full object-contain rounded-full"
-                  priority
+          {/* STUDENT ROLE */}
+          {selectedRoleId === 'student' && (
+            <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#071A3D]">
+                <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
+                  <UserIcon className="w-3 h-3" />
+                </div>
+                <span>Student Authentication</span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  Register Number
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 922522AD001"
+                  value={registerNumber}
+                  onChange={(e) => setRegisterNumber(e.target.value)}
+                  required
+                  autoComplete="username"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/15 transition-all shadow-xs"
                 />
               </div>
-            </div>
 
-            {/* Institution Titles */}
-            <div className="space-y-1">
-              <h1 className={cn('text-xl sm:text-2xl font-black tracking-tight transition-colors duration-500', theme.headerText)}>
-                V.S.B. ENGINEERING COLLEGE
-              </h1>
-              <p className={cn('text-xs sm:text-sm font-black tracking-wide uppercase transition-all duration-500', theme.badgeText)}>
-                DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
-              </p>
-
-              {/* Motto Quote Badge */}
-              <div className="pt-0.5">
-                <span className={cn('inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full border text-xs sm:text-sm font-black italic tracking-wide shadow-xs backdrop-blur-xs transition-colors duration-500', theme.quoteBg)}>
-                  <Award className="w-3.5 h-3.5" />
-                  <span>&ldquo;A Place for Placement&rdquo;</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* MAIN AUTHENTICATION CARD */}
-          <div className={cn('w-full rounded-3xl p-6 sm:p-7 space-y-5 transition-all duration-500 border', theme.cardBg, theme.cardBorder)}>
-            
-            {/* Role Switcher */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-wider">
-                  SELECT YOUR ROLE
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  Password / Temporary Password
                 </label>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                  Role: <span className="capitalize text-blue-600 font-black">{selectedRoleId}</span>
-                </span>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/15 transition-all pr-10 shadow-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1 font-medium">
+                  First time logging in? Use the temporary password given by Admin.
+                </p>
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
-                {roles.map((role) => {
-                  const isSelected = selectedRoleId === role.id
-                  const Icon = role.icon
-                  return (
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full font-bold py-3.5 px-4 rounded-xl text-white bg-[#071A3D] hover:bg-[#1455D9] shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01]"
+              >
+                <span>{loading ? 'Authenticating...' : 'Login to Student Portal'}</span>
+                <ArrowRight className="w-4 h-4 text-[#F4C430]" />
+              </button>
+            </div>
+          )}
+
+          {/* FACULTY ROLE */}
+          {selectedRoleId === 'faculty' && (
+            <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#071A3D]">
+                <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
+                  <BookOpen className="w-3 h-3" />
+                </div>
+                <span>Faculty Authentication</span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  Faculty ID
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. FAC001"
+                  value={facultyId}
+                  onChange={(e) => setFacultyId(e.target.value)}
+                  required
+                  autoComplete="username"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/15 transition-all shadow-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  Password / Temporary Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/15 transition-all pr-10 shadow-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1 font-medium">
+                  First time logging in? Use the temporary password given by Admin.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full font-bold py-3.5 px-4 rounded-xl text-white bg-[#071A3D] hover:bg-[#1455D9] shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01]"
+              >
+                <span>{loading ? 'Authenticating...' : 'Login to Faculty Portal'}</span>
+                <ArrowRight className="w-4 h-4 text-[#F4C430]" />
+              </button>
+            </div>
+          )}
+
+          {/* HOD ROLE */}
+          {selectedRoleId === 'hod' && (
+            <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#071A3D]">
+                <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
+                  <Building2 className="w-3 h-3" />
+                </div>
+                <span>HOD Authentication</span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  HOD Faculty Code
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. HOD001"
+                  value={facultyId}
+                  onChange={(e) => setFacultyId(e.target.value)}
+                  required
+                  autoComplete="username"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/15 transition-all shadow-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-gray-800">
+                  Password / Temporary Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/15 transition-all pr-10 shadow-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-700 focus:outline-none cursor-pointer transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-500 mt-1 font-medium">
+                  First time logging in? Use the temporary password given by Admin.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full font-bold py-3.5 px-4 rounded-xl text-white bg-[#071A3D] hover:bg-[#1455D9] shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01]"
+              >
+                <span>{loading ? 'Authenticating...' : 'Login to HOD Portal'}</span>
+                <ArrowRight className="w-4 h-4 text-[#F4C430]" />
+              </button>
+            </div>
+          )}
+
+          {/* ADMIN ROLE */}
+          {selectedRoleId === 'admin' && (
+            <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-[#071A3D]">
+                <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
+                  <ShieldCheck className="w-3 h-3" />
+                </div>
+                <span>Administrator 2FA Authentication</span>
+              </div>
+
+              {!otpSent ? (
+                <>
+                  <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                    Enter your registered institutional administrator email to receive a secure 2FA OTP code.
+                  </p>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-800">
+                      Admin Email Address
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="admin@vsb.edu.in"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/15 transition-all shadow-xs"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSendOTP}
+                    disabled={loading}
+                    className="w-full font-bold py-3.5 px-4 rounded-xl text-white bg-[#071A3D] hover:bg-[#1455D9] shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01]"
+                  >
+                    <span>{loading ? 'Sending OTP...' : 'Send 2FA Code'}</span>
+                    <ArrowRight className="w-4 h-4 text-[#F4C430]" />
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs">
+                    <span className="text-blue-900 font-medium">
+                      Code sent to: <span className="font-bold">{email}</span>
+                    </span>
                     <button
-                      key={role.id}
                       type="button"
                       onClick={() => {
-                        setSelectedRoleId(role.id)
-                        setRegisterNumber('')
-                        setPassword('')
-                        setShowPassword(false)
-                        setFacultyId('')
-                        setEmail('')
                         setOtpSent(false)
                         setOtp('')
                       }}
-                      className={cn(
-                        'group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-300 cursor-pointer overflow-hidden border',
-                        isSelected
-                          ? cn('bg-gradient-to-br text-white shadow-lg scale-105 border-transparent ring-2', role.gradient, role.glowColor, role.activeRing)
-                          : 'bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border-gray-200 hover:border-gray-300 hover:scale-[1.02]'
-                      )}
+                      className="text-xs text-blue-700 font-bold hover:underline cursor-pointer"
                     >
-                      <Icon className={cn('w-4 h-4 transition-transform duration-300 group-hover:scale-110', isSelected ? 'text-white' : 'text-gray-600')} />
-                      <span className="text-[10px] sm:text-[11px] font-bold tracking-tight">{role.label}</span>
-                      {isSelected && (
-                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-white/80 rounded-full" />
-                      )}
+                      Change
                     </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Dynamic Form */}
-            <form onSubmit={handleSubmit} className="space-y-3.5 pt-1">
-              
-              {/* STUDENT ROLE */}
-              {selectedRoleId === 'student' && (
-                <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-blue-700">
-                    <div className="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shadow-xs">
-                      <UserIcon className="w-3 h-3" />
-                    </div>
-                    <span>Student Authentication</span>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-gray-800">
-                      Register Number
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      Enter 6-Digit OTP Code
                     </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 922522AD001"
-                      value={registerNumber}
-                      onChange={(e) => setRegisterNumber(e.target.value)}
-                      required
-                      autoComplete="username"
-                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all shadow-xs"
+                    <OTPInput
+                      length={6}
+                      value={otp}
+                      onChange={setOtp}
+                      onComplete={(v) => {
+                        setOtp(v)
+                        handleVerifyOTP(v)
+                      }}
+                      autoFocus
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-gray-800">
-                      Password / Temporary Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        autoComplete="current-password"
-                        className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-xs sm:text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all pr-10 shadow-xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-600 focus:outline-none cursor-pointer transition-colors"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-gray-500 mt-1 font-medium">
-                      First time logging in? Use the temporary password given by Admin.
-                    </p>
-                  </div>
+                  <div className="space-y-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleVerifyOTP()}
+                      disabled={loading}
+                      className="w-full font-bold py-3.5 px-4 rounded-xl text-white bg-[#071A3D] hover:bg-[#1455D9] shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01]"
+                    >
+                      <span>{loading ? 'Verifying...' : 'Verify OTP & Enter Portal'}</span>
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    </button>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={cn(
-                      'w-full font-bold py-3 px-4 rounded-xl text-white shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01] bg-gradient-to-r',
-                      currentRole.buttonGradient
-                    )}
-                  >
-                    <span>{loading ? 'Authenticating...' : 'Login to Student Portal'}</span>
-                    <ArrowRight className="w-4 h-4 text-white/90" />
-                  </button>
-                </div>
-              )}
-
-              {/* FACULTY ROLE */}
-              {selectedRoleId === 'faculty' && (
-                <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-700">
-                    <div className="w-5 h-5 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-xs">
-                      <BookOpen className="w-3 h-3" />
-                    </div>
-                    <span>Faculty Authentication</span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-gray-800">
-                      Faculty ID
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. FAC001"
-                      value={facultyId}
-                      onChange={(e) => setFacultyId(e.target.value)}
-                      required
-                      autoComplete="username"
-                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all shadow-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-gray-800">
-                      Password / Temporary Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        autoComplete="current-password"
-                        className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-xs sm:text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all pr-10 shadow-xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-emerald-600 focus:outline-none cursor-pointer transition-colors"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-gray-500 mt-1 font-medium">
-                      First time logging in? Use the temporary password given by Admin.
-                    </p>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={cn(
-                      'w-full font-bold py-3 px-4 rounded-xl text-white shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01] bg-gradient-to-r',
-                      currentRole.buttonGradient
-                    )}
-                  >
-                    <span>{loading ? 'Authenticating...' : 'Login to Faculty Portal'}</span>
-                    <ArrowRight className="w-4 h-4 text-white/90" />
-                  </button>
-                </div>
-              )}
-
-              {/* HOD ROLE */}
-              {selectedRoleId === 'hod' && (
-                <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-purple-700">
-                    <div className="w-5 h-5 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 shadow-xs">
-                      <Building2 className="w-3 h-3" />
-                    </div>
-                    <span>HOD Authentication</span>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-gray-800">
-                      HOD Faculty Code
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. HOD001"
-                      value={facultyId}
-                      onChange={(e) => setFacultyId(e.target.value)}
-                      required
-                      autoComplete="username"
-                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all shadow-xs"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-gray-800">
-                      Password / Temporary Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        autoComplete="current-password"
-                        className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-xs sm:text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all pr-10 shadow-xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-purple-600 focus:outline-none cursor-pointer transition-colors"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-gray-500 mt-1 font-medium">
-                      First time logging in? Use the temporary password given by Admin.
-                    </p>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={cn(
-                      'w-full font-bold py-3 px-4 rounded-xl text-white shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01] bg-gradient-to-r',
-                      currentRole.buttonGradient
-                    )}
-                  >
-                    <span>{loading ? 'Authenticating...' : 'Login to HOD Portal'}</span>
-                    <ArrowRight className="w-4 h-4 text-white/90" />
-                  </button>
-                </div>
-              )}
-
-              {/* ADMIN ROLE */}
-              {selectedRoleId === 'admin' && (
-                <div className="space-y-3.5 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-amber-700">
-                    <div className="w-5 h-5 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 shadow-xs">
-                      <ShieldCheck className="w-3 h-3" />
-                    </div>
-                    <span>Administrator 2FA Authentication</span>
-                  </div>
-
-                  {!otpSent ? (
-                    <>
-                      <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                        Enter your registered institutional administrator email to receive a secure 2FA OTP code.
+                    {otpCooldown > 0 ? (
+                      <p className="text-center text-xs text-gray-500 font-medium">
+                        Resend code in {otpCooldown}s
                       </p>
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-gray-800">
-                          Admin Email Address
-                        </label>
-                        <input
-                          type="email"
-                          placeholder="admin@vsb.edu.in"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
-                          autoComplete="email"
-                          className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-xs sm:text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 transition-all shadow-xs"
-                        />
-                      </div>
+                    ) : (
                       <button
                         type="button"
                         onClick={handleSendOTP}
                         disabled={loading}
-                        className={cn(
-                          'w-full font-bold py-3 px-4 rounded-xl text-white shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-1 flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01] bg-gradient-to-r',
-                          currentRole.buttonGradient
-                        )}
+                        className="block w-full text-center text-xs font-bold text-[#1455D9] hover:underline cursor-pointer disabled:opacity-50"
                       >
-                        <span>{loading ? 'Sending OTP...' : 'Send 2FA Code'}</span>
-                        <ArrowRight className="w-4 h-4 text-white/90" />
+                        Resend OTP
                       </button>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs">
-                        <span className="text-amber-900 font-medium">
-                          Code sent to: <span className="font-bold">{email}</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOtpSent(false)
-                            setOtp('')
-                          }}
-                          className="text-xs text-amber-700 font-bold hover:underline cursor-pointer"
-                        >
-                          Change
-                        </button>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                          Enter 6-Digit OTP Code
-                        </label>
-                        <OTPInput
-                          length={6}
-                          value={otp}
-                          onChange={setOtp}
-                          onComplete={(v) => {
-                            setOtp(v)
-                            handleVerifyOTP(v)
-                          }}
-                          autoFocus
-                        />
-                      </div>
-
-                      <div className="space-y-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleVerifyOTP()}
-                          disabled={loading}
-                          className={cn(
-                            'w-full font-bold py-3 px-4 rounded-xl text-white shadow-lg transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 transform active:scale-98 hover:scale-[1.01] bg-gradient-to-r',
-                            currentRole.buttonGradient
-                          )}
-                        >
-                          <span>{loading ? 'Verifying...' : 'Verify OTP & Enter Portal'}</span>
-                          <CheckCircle2 className="w-4 h-4 text-white" />
-                        </button>
-
-                        {otpCooldown > 0 ? (
-                          <p className="text-center text-xs text-gray-500 font-medium">
-                            Resend code in {otpCooldown}s
-                          </p>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={handleSendOTP}
-                            disabled={loading}
-                            className="block w-full text-center text-xs font-bold text-amber-600 hover:underline cursor-pointer disabled:opacity-50"
-                          >
-                            Resend OTP
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
-            </form>
-          </div>
-        </div>
-      </main>
+            </div>
+          )}
+        </form>
+      </div>
 
       {/* FOOTER: Institutional Standing & Accreditation */}
-      <footer className="w-full max-w-6xl mx-auto pt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500 font-medium z-20 border-t border-slate-200/60">
-        <div className="flex items-center gap-3">
-          <span>© {new Date().getFullYear()} V.S.B. Engineering College (Autonomous)</span>
-          <span className="hidden sm:inline">·</span>
-          <span className="hidden sm:inline font-semibold text-slate-700">NAAC &apos;A&apos; Grade &amp; NBA Tier-1</span>
-        </div>
-        <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <span>Portal Support: <span className="font-semibold text-slate-700">admin@vsb.edu.in</span></span>
-        </div>
+      <footer className="w-full max-w-md text-center pt-4 text-[11px] text-blue-300/70 font-medium z-20 space-y-1 pb-2">
+        <p>© {new Date().getFullYear()} V.S.B. Engineering College (Autonomous)</p>
+        <p className="text-[10px] text-blue-200/50">NAAC &apos;A&apos; Grade &amp; NBA Tier-1 · Anna University Affiliated</p>
       </footer>
 
       {/* ========================================================================= */}
@@ -1061,7 +842,7 @@ export default function LoginPage() {
                   type="submit"
                   size="default"
                   loading={onboardingLoading}
-                  className="font-bold flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                  className="font-bold flex items-center gap-1.5 bg-[#071A3D] hover:bg-[#1455D9] text-white"
                 >
                   <span>Save &amp; Enter Portal</span>
                   <ArrowRight className="w-3.5 h-3.5" />
