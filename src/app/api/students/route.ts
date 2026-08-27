@@ -71,6 +71,7 @@ export async function POST(request: Request) {
       semester = 4,
       section = 'A',
       status = 'active',
+      advisorName = 'Dr. S. Karthik (Professor · AI & DS)',
     } = data
 
     if (!registerNumber || !name || !password?.trim()) {
@@ -154,6 +155,7 @@ export async function POST(request: Request) {
         semester: student.semester,
         section: student.section,
         status: user.status,
+        advisorName: advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
       },
       message: 'Student registered successfully in database',
     })

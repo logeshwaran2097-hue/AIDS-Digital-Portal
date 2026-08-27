@@ -37,6 +37,7 @@ export interface StudentRecord {
   section: string
   batch?: string | null
   status: string
+  advisorName?: string | null
 }
 
 export function AdminStudentsView({ initialStudents }: { initialStudents: StudentRecord[] }) {
@@ -67,6 +68,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     batch: '2024 - 2028',
     section: 'A',
     status: 'active',
+    advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
   })
 
   // 8 Semesters Definition
@@ -705,6 +707,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 section: s.section,
                                 status: s.status,
                                 password: '',
+                                advisorName: s.advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
                               })
                               setIsEditModalOpen(true)
                             }}
@@ -909,16 +912,31 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Class Advisor Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dr. S. Karthik (Professor)"
+                    value={formData.advisorName || ''}
+                    onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 font-bold text-[#1455D9] focus:bg-white focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
@@ -1111,16 +1129,31 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Class Advisor Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dr. S. Karthik (Professor)"
+                    value={formData.advisorName || ''}
+                    onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 font-bold text-[#1455D9] focus:bg-white focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
@@ -1179,6 +1212,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 <div className="flex justify-between">
                   <span className="text-gray-400">Status:</span>
                   <span className="font-bold text-green-700 uppercase">{selectedStudent.status}</span>
+                </div>
+                <div className="flex justify-between border-t border-gray-200/60 pt-1.5">
+                  <span className="text-gray-400">Class Advisor:</span>
+                  <span className="font-bold text-[#1455D9]">{selectedStudent.advisorName || 'Dr. S. Karthik (Professor)'}</span>
                 </div>
               </div>
 
