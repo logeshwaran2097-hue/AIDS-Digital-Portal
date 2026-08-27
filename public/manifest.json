@@ -5,9 +5,9 @@
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#071A3D",
-  "theme_color": "#071A3D",
+  "orientation": "portrait",
+  "background_color": "#F5F8FC",
+  "theme_color": "#071A41",
   "lang": "en",
   "dir": "ltr",
   "categories": ["education", "academic", "productivity"],
@@ -27,7 +27,8 @@
     {
       "src": "/college-emblem.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "shortcuts": [

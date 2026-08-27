@@ -9,7 +9,7 @@ import { MobileAppSplashScreen } from '@/components/MobileAppSplashScreen'
 const inter = Inter({ subsets: ['latin'] })
 
 export const viewport: Viewport = {
-  themeColor: '#071A3D',
+  themeColor: '#071A41',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -40,6 +40,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="application-name" content="VSB AI&DS" />
+        <meta name="apple-mobile-web-app-title" content="VSB AI&DS" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider>
           <MobileAppSplashScreen />
