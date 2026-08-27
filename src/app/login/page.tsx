@@ -200,7 +200,11 @@ export default function LoginPage() {
       const res = await fetch('/api/auth/send-onboarding-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: onboardingForm.email.trim() }),
+        body: JSON.stringify({
+          email: onboardingForm.email.trim(),
+          name: onboardingForm.name,
+          registerNumber: onboardingForm.registerNumber,
+        }),
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
@@ -215,7 +219,7 @@ export default function LoginPage() {
       if (data.devOtp) {
         setDemoOtpCode(data.devOtp)
       }
-      toast.success(`6-digit OTP sent to ${onboardingForm.email}`)
+      toast.success(`6-digit OTP sent to ${onboardingForm.email}! Please check your inbox.`)
     } catch {
       toast.error('Network error sending OTP.')
     } finally {
