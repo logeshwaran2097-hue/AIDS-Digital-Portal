@@ -21,66 +21,92 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
 
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
-  const marginX = 10
+  const marginX = 12
   const contentW = pageWidth - marginX * 2
 
-  // 1. Double Luxury Perimeter Document Frame
-  doc.setDrawColor(200, 215, 235)
-  doc.setLineWidth(0.5)
-  doc.rect(marginX - 3, marginX - 3, contentW + 6, pageHeight - (marginX - 3) * 2, 'S')
+  // 1. Double Luxury Document Frame
+  doc.setDrawColor(215, 226, 242)
+  doc.setLineWidth(0.4)
+  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
 
-  doc.setDrawColor(230, 238, 250)
+  doc.setDrawColor(238, 243, 250)
   doc.setLineWidth(0.2)
-  doc.rect(marginX - 1.5, marginX - 1.5, contentW + 3, pageHeight - (marginX - 1.5) * 2, 'S')
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
 
-  // 2. Institutional Master Header
-  const headerHeight = 33
-  doc.setFillColor(7, 26, 61) // #071A3D Royal Navy
-  doc.rect(marginX - 3, marginX - 3, contentW + 6, headerHeight, 'F')
+  // 2. NEAT & CLEAN PRESTIGIOUS ACADEMIC LETTERHEAD
+  // Top Soft Ambient Header Tint
+  doc.setFillColor(250, 252, 255)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
 
-  doc.setFillColor(21, 87, 192) // Sapphire Blue Accent Stripe
-  doc.rect(marginX - 3, marginX - 3 + headerHeight, contentW + 6, 2.5, 'F')
+  // College Emblem Mount (Clean Centered/Left Gold Crest)
+  const logoX = marginX + 2
+  const logoY = marginX + 3
+  const logoSize = 24
 
-  doc.setFillColor(231, 185, 62) // Gold Accent Stripe
-  doc.rect(marginX - 3, marginX - 3 + headerHeight + 2.5, contentW + 6, 1.2, 'F')
-
-  // Circular Gold & White Emblem Mount for Logo
-  const logoCenterX = marginX + 13
-  const logoCenterY = marginX + 13
+  // Circular Gold Ring Base
   doc.setFillColor(255, 255, 255)
-  doc.circle(logoCenterX, logoCenterY, 12, 'F')
-  doc.setDrawColor(231, 185, 62)
-  doc.setLineWidth(0.7)
-  doc.circle(logoCenterX, logoCenterY, 12, 'S')
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+  doc.setDrawColor(231, 185, 62) // Gold
+  doc.setLineWidth(0.6)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
 
   try {
-    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoCenterX - 10, logoCenterY - 10, 20, 20)
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4)
   } catch (e) {
     console.error('Failed to embed logo in PDF:', e)
   }
 
-  // Header Titles
-  const textCenterX = (pageWidth + 24) / 2
-  doc.setTextColor(255, 255, 255)
+  // Header Center Typography
+  const headerCenterX = marginX + logoSize + (contentW - logoSize) / 2
+
+  // Line 1: College Master Name
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(12.5)
-  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', textCenterX, marginX + 4.5, { align: 'center' })
+  doc.setFontSize(14.5)
+  doc.setTextColor(7, 26, 61) // Deep Royal Navy
+  doc.text('V.S.B. ENGINEERING COLLEGE', headerCenterX, marginX + 6.5, { align: 'center' })
 
-  doc.setFontSize(8.8)
-  doc.setTextColor(244, 196, 48) // Luminous Gold
-  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', textCenterX, marginX + 10.5, { align: 'center' })
+  // Autonomous Pill Tag
+  doc.setFillColor(231, 185, 62) // Gold
+  doc.roundedRect(headerCenterX - 22, marginX + 8.5, 44, 4, 1, 1, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION', headerCenterX, marginX + 11.3, { align: 'center' })
 
+  // Line 2: Department Title
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9.5)
+  doc.setTextColor(21, 87, 192) // Royal Cobalt
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', headerCenterX, marginX + 17.5, { align: 'center' })
+
+  // Line 3: AICTE & Anna University Affiliation
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(7)
-  doc.setTextColor(220, 235, 255)
-  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111', textCenterX, marginX + 16, { align: 'center' })
+  doc.setTextColor(75, 85, 105)
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', headerCenterX, marginX + 22.5, { align: 'center' })
 
-  doc.setFontSize(6.5)
-  doc.setTextColor(185, 210, 245)
-  doc.text('Accredited by NAAC with "A" Grade · NBA Accredited Programs · ISO 9001:2015 Certified Institution', textCenterX, marginX + 21, { align: 'center' })
+  // Line 4: NAAC & NBA Accreditation
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', headerCenterX, marginX + 27, { align: 'center' })
 
-  // 3. Document Title Section
-  let currentY = 48
+  // 3. MASTER GOLD & SAPPHIRE ORNAMENTAL BEAM SEPARATOR
+  const beamY = marginX + 34
+  doc.setFillColor(21, 87, 192) // Sapphire Beam
+  doc.rect(marginX, beamY, contentW, 1.4, 'F')
+
+  doc.setFillColor(231, 185, 62) // Gold Underline
+  doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
+
+  // Center Diamond Accent
+  doc.setFillColor(231, 185, 62)
+  doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
+  doc.setFillColor(7, 26, 61)
+  doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
+
+  // 4. Document Title Section
+  let currentY = beamY + 9
   doc.setTextColor(7, 26, 61)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(13)
@@ -89,13 +115,13 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
 
   if (options.subtitle) {
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8.2)
+    doc.setFontSize(8)
     doc.setTextColor(90, 105, 125)
     doc.text(options.subtitle, marginX, currentY)
     currentY += 5.5
   }
 
-  // 4. Executive 4-Cell Metadata Matrix
+  // 5. Executive 4-Cell Metadata Matrix
   const metaBoxY = currentY
   const metaBoxW = contentW
   const metaBoxH = 13.5
