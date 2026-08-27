@@ -59,7 +59,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     registerNumber: '',
     name: '',
     email: '',
-    password: 'vsb@123',
+    password: '',
     phone: '',
     dateOfBirth: '2006-08-15',
     year: 2,
@@ -306,7 +306,22 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             <Download className="w-4 h-4" /> Export Roster (PDF)
           </button>
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setFormData({
+                registerNumber: '',
+                name: '',
+                email: '',
+                password: '',
+                phone: '',
+                dateOfBirth: '2006-08-15',
+                year: 2,
+                semester: 4,
+                batch: '2024 - 2028',
+                section: 'A',
+                status: 'active',
+              })
+              setIsAddModalOpen(true)
+            }}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
           >
             <Plus className="w-4 h-4" /> + Add New Student
@@ -781,10 +796,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     required
-                    placeholder="e.g. TempPass@2026"
+                    placeholder="Enter custom temporary password (min 6 chars)"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#1455D9] font-mono font-medium text-[#071A3D]"
                   />
                 </div>
               </div>
