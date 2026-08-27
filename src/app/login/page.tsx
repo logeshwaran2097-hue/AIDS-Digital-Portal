@@ -23,8 +23,97 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
-  Zap,
+  Palette,
 } from 'lucide-react'
+
+// Background Themes
+interface BgTheme {
+  id: string
+  name: string
+  pillColor: string
+  containerClass: string
+  blob1: string
+  blob2: string
+  blob3: string
+  cardBg: string
+  cardBorder: string
+  headerText: string
+  badgeText: string
+  subText: string
+}
+
+const BG_THEMES: BgTheme[] = [
+  {
+    id: 'ocean',
+    name: 'Ocean Navy',
+    pillColor: 'bg-blue-600',
+    containerClass: 'bg-gradient-to-br from-[#06142E] via-[#0B2559] to-[#0A1938]',
+    blob1: 'from-blue-500/30 to-cyan-400/25',
+    blob2: 'from-indigo-600/30 to-blue-400/20',
+    blob3: 'from-sky-400/25 to-teal-400/20',
+    cardBg: 'bg-white/95 backdrop-blur-xl',
+    cardBorder: 'border-white/40 shadow-2xl shadow-blue-950/50',
+    headerText: 'text-white drop-shadow-md',
+    badgeText: 'bg-gradient-to-r from-blue-400 via-cyan-300 to-sky-300 bg-clip-text text-transparent',
+    subText: 'text-blue-200/80',
+  },
+  {
+    id: 'aurora',
+    name: 'Cyber Aurora',
+    pillColor: 'bg-purple-600',
+    containerClass: 'bg-gradient-to-br from-[#0F0C20] via-[#1E124A] to-[#120B30]',
+    blob1: 'from-purple-500/35 to-pink-500/25',
+    blob2: 'from-cyan-400/30 to-teal-400/20',
+    blob3: 'from-indigo-500/30 to-fuchsia-500/20',
+    cardBg: 'bg-white/95 backdrop-blur-xl',
+    cardBorder: 'border-purple-200/40 shadow-2xl shadow-purple-950/60',
+    headerText: 'text-white drop-shadow-md',
+    badgeText: 'bg-gradient-to-r from-purple-300 via-pink-300 to-cyan-300 bg-clip-text text-transparent',
+    subText: 'text-purple-200/80',
+  },
+  {
+    id: 'emerald',
+    name: 'Emerald Deep',
+    pillColor: 'bg-emerald-600',
+    containerClass: 'bg-gradient-to-br from-[#041C15] via-[#083327] to-[#062018]',
+    blob1: 'from-emerald-500/35 to-teal-400/25',
+    blob2: 'from-teal-600/30 to-green-400/20',
+    blob3: 'from-cyan-400/25 to-emerald-400/20',
+    cardBg: 'bg-white/95 backdrop-blur-xl',
+    cardBorder: 'border-emerald-200/40 shadow-2xl shadow-emerald-950/50',
+    headerText: 'text-white drop-shadow-md',
+    badgeText: 'bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-300 bg-clip-text text-transparent',
+    subText: 'text-emerald-200/80',
+  },
+  {
+    id: 'sunset',
+    name: 'Sunset Amber',
+    pillColor: 'bg-amber-600',
+    containerClass: 'bg-gradient-to-br from-[#240B13] via-[#451624] to-[#2B0E17]',
+    blob1: 'from-orange-500/35 to-amber-400/25',
+    blob2: 'from-rose-600/30 to-red-400/20',
+    blob3: 'from-amber-400/25 to-yellow-400/20',
+    cardBg: 'bg-white/95 backdrop-blur-xl',
+    cardBorder: 'border-amber-200/40 shadow-2xl shadow-rose-950/50',
+    headerText: 'text-white drop-shadow-md',
+    badgeText: 'bg-gradient-to-r from-amber-300 via-orange-300 to-rose-300 bg-clip-text text-transparent',
+    subText: 'text-amber-200/80',
+  },
+  {
+    id: 'daylight',
+    name: 'Clean Light',
+    pillColor: 'bg-sky-400',
+    containerClass: 'bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100/70',
+    blob1: 'from-blue-400/20 to-indigo-400/15',
+    blob2: 'from-cyan-400/20 to-teal-400/15',
+    blob3: 'from-purple-400/15 to-pink-400/10',
+    cardBg: 'bg-white/95 backdrop-blur-xl',
+    cardBorder: 'border-gray-200 shadow-2xl shadow-slate-400/30',
+    headerText: 'text-[#071A3D]',
+    badgeText: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent',
+    subText: 'text-gray-500',
+  },
+]
 
 interface RoleConfig {
   id: 'student' | 'faculty' | 'hod' | 'admin'
@@ -91,6 +180,7 @@ const roles: RoleConfig[] = [
 ]
 
 export default function LoginPage() {
+  const [currentThemeId, setCurrentThemeId] = React.useState('ocean')
   const [selectedRoleId, setSelectedRoleId] = React.useState<'student' | 'faculty' | 'hod' | 'admin'>('student')
   const [registerNumber, setRegisterNumber] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -120,6 +210,7 @@ export default function LoginPage() {
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const [onboardingLoading, setOnboardingLoading] = React.useState(false)
 
+  const theme = BG_THEMES.find((t) => t.id === currentThemeId) || BG_THEMES[0]
   const currentRole = roles.find((r) => r.id === selectedRoleId) || roles[0]
 
   React.useEffect(() => {
@@ -307,36 +398,60 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/60 px-4 py-8 sm:py-12 select-none">
+    <div className={cn('min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 py-8 sm:py-12 select-none transition-colors duration-700', theme.containerClass)}>
       
       {/* ========================================================================= */}
-      {/* COLORFUL ANIMATED BACKGROUND AMBIENCE */}
+      {/* TOP BACKGROUND THEME PALETTE PICKER */}
+      {/* ========================================================================= */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
+        <Palette className="w-3.5 h-3.5 text-white" />
+        <span className="text-[11px] font-bold text-white hidden sm:inline">Theme:</span>
+        <div className="flex items-center gap-1.5">
+          {BG_THEMES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              title={t.name}
+              onClick={() => {
+                setCurrentThemeId(t.id)
+                toast.success(`Theme set to ${t.name}`)
+              }}
+              className={cn(
+                'w-4 h-4 rounded-full transition-all duration-300 cursor-pointer border border-white/40',
+                t.pillColor,
+                currentThemeId === t.id ? 'ring-2 ring-white scale-125 shadow-md' : 'opacity-70 hover:opacity-100'
+              )}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* ANIMATED GLOWING AURORA BLOBS */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Animated Glowing Color Blobs */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-br from-blue-400/25 to-indigo-400/20 blur-3xl animate-pulse" style={{ animationDuration: '7s' }} />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-gradient-to-tr from-teal-400/25 via-emerald-400/20 to-cyan-400/20 blur-3xl animate-pulse" style={{ animationDuration: '9s' }} />
-        <div className="absolute top-1/3 -right-20 w-80 h-80 rounded-full bg-gradient-to-bl from-purple-400/20 to-pink-400/15 blur-3xl animate-pulse" style={{ animationDuration: '11s' }} />
-        <div className="absolute bottom-1/4 -left-20 w-80 h-80 rounded-full bg-gradient-to-tr from-amber-400/20 to-orange-400/15 blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className={cn('absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-br blur-3xl animate-pulse transition-all duration-1000', theme.blob1)} style={{ animationDuration: '8s' }} />
+        <div className={cn('absolute -bottom-32 -right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr blur-3xl animate-pulse transition-all duration-1000', theme.blob2)} style={{ animationDuration: '10s' }} />
+        <div className={cn('absolute top-1/3 -right-24 w-[400px] h-[400px] rounded-full bg-gradient-to-bl blur-3xl animate-pulse transition-all duration-1000', theme.blob3)} style={{ animationDuration: '12s' }} />
         
         {/* Subtle grid pattern */}
         <div 
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0 opacity-[0.04]"
           style={{
-            backgroundImage: `linear-gradient(#071A3D 1px, transparent 1px), linear-gradient(to right, #071A3D 1px, transparent 1px)`,
-            backgroundSize: '32px 32px'
+            backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(to right, #ffffff 1px, transparent 1px)`,
+            backgroundSize: '36px 36px'
           }}
         />
       </div>
 
       {/* ========================================================================= */}
-      {/* TOP INSTITUTION BRANDING WITH ANIMATIONS */}
+      {/* TOP INSTITUTION BRANDING */}
       {/* ========================================================================= */}
       <div className="w-full max-w-md text-center mb-6 sm:mb-8 space-y-3 relative z-10">
         
         {/* Floating Glowing Emblem */}
         <div className="relative inline-flex mx-auto group">
-          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-amber-400 via-indigo-500 to-teal-400 opacity-60 blur-md group-hover:opacity-100 transition-opacity duration-700 animate-spin" style={{ animationDuration: '15s' }} />
+          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-amber-400 via-indigo-500 to-teal-400 opacity-70 blur-md group-hover:opacity-100 transition-opacity duration-700 animate-spin" style={{ animationDuration: '12s' }} />
           <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white shadow-2xl border-4 border-white p-1.5 flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
             <Image
               src="/college-emblem.png"
@@ -349,25 +464,25 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Institution Title with Gradient Accent */}
+        {/* Institution Title */}
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#071A3D] drop-shadow-xs">
+          <h1 className={cn('text-2xl sm:text-3xl font-black tracking-tight transition-colors duration-500', theme.headerText)}>
             V.S.B. ENGINEERING COLLEGE
           </h1>
-          <p className="text-xs sm:text-sm font-black tracking-wide uppercase bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+          <p className={cn('text-xs sm:text-sm font-black tracking-wide uppercase transition-all duration-500', theme.badgeText)}>
             DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
           </p>
-          <p className="text-xs text-gray-500 font-medium flex items-center justify-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-spin" style={{ animationDuration: '6s' }} />
+          <p className={cn('text-xs font-medium flex items-center justify-center gap-1.5 transition-colors duration-500', theme.subText)}>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
             <span>Academic Management &amp; Digital Portal</span>
           </p>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* GLASSMORPHIC COLORFUL LOGIN CARD */}
+      {/* LOGIN CARD */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-md bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/80 p-6 sm:p-8 space-y-6 relative z-10 transition-all duration-300 hover:shadow-indigo-500/10">
+      <div className={cn('w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-6 relative z-10 transition-all duration-500 border', theme.cardBg, theme.cardBorder)}>
         
         {/* SELECT YOUR ROLE SEGMENT WITH VIBRANT THEMES */}
         <div>
@@ -375,8 +490,8 @@ export default function LoginPage() {
             <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">
               SELECT YOUR ROLE
             </label>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
-              Role: <span className="capitalize text-indigo-600 font-black">{selectedRoleId}</span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+              Role: <span className="capitalize text-blue-600 font-black">{selectedRoleId}</span>
             </span>
           </div>
 
@@ -402,7 +517,7 @@ export default function LoginPage() {
                     'group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl py-3 px-1 text-xs font-bold transition-all duration-300 cursor-pointer overflow-hidden border',
                     isSelected
                       ? cn('bg-gradient-to-br text-white shadow-lg scale-105 border-transparent ring-2', role.gradient, role.glowColor, role.activeRing)
-                      : 'bg-white/80 hover:bg-white text-gray-700 hover:text-gray-900 border-gray-200 hover:border-gray-300 hover:scale-[1.02]'
+                      : 'bg-white hover:bg-gray-50 text-gray-700 hover:text-gray-900 border-gray-200 hover:border-gray-300 hover:scale-[1.02]'
                   )}
                 >
                   <Icon className={cn('w-5 h-5 transition-transform duration-300 group-hover:scale-110', isSelected ? 'text-white' : 'text-gray-600')} />
@@ -416,7 +531,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* DYNAMIC AUTHENTICATION FORM WITH ANIMATIONS */}
+        {/* DYNAMIC AUTHENTICATION FORM */}
         <form onSubmit={handleSubmit} className="space-y-4 pt-1">
           
           {/* STUDENT ROLE */}
@@ -433,17 +548,15 @@ export default function LoginPage() {
                 <label className="block text-xs font-bold text-gray-800">
                   Register Number
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="e.g. 922522AD001"
-                    value={registerNumber}
-                    onChange={(e) => setRegisterNumber(e.target.value)}
-                    required
-                    autoComplete="username"
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white/90 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all shadow-xs"
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. 922522AD001"
+                  value={registerNumber}
+                  onChange={(e) => setRegisterNumber(e.target.value)}
+                  required
+                  autoComplete="username"
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all shadow-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -458,7 +571,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-900 bg-white/90 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all pr-10 shadow-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all pr-10 shadow-xs"
                   />
                   <button
                     type="button"
@@ -502,17 +615,15 @@ export default function LoginPage() {
                 <label className="block text-xs font-bold text-gray-800">
                   Faculty ID
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="e.g. FAC001"
-                    value={facultyId}
-                    onChange={(e) => setFacultyId(e.target.value)}
-                    required
-                    autoComplete="username"
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white/90 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all shadow-xs"
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. FAC001"
+                  value={facultyId}
+                  onChange={(e) => setFacultyId(e.target.value)}
+                  required
+                  autoComplete="username"
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all shadow-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -527,7 +638,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-900 bg-white/90 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all pr-10 shadow-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all pr-10 shadow-xs"
                   />
                   <button
                     type="button"
@@ -571,17 +682,15 @@ export default function LoginPage() {
                 <label className="block text-xs font-bold text-gray-800">
                   HOD Faculty Code
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="e.g. HOD001"
-                    value={facultyId}
-                    onChange={(e) => setFacultyId(e.target.value)}
-                    required
-                    autoComplete="username"
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white/90 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all shadow-xs"
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. HOD001"
+                  value={facultyId}
+                  onChange={(e) => setFacultyId(e.target.value)}
+                  required
+                  autoComplete="username"
+                  className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all shadow-xs"
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -596,7 +705,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     autoComplete="current-password"
-                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-900 bg-white/90 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all pr-10 shadow-xs"
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-900 bg-white focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/15 transition-all pr-10 shadow-xs"
                   />
                   <button
                     type="button"
@@ -652,7 +761,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       autoComplete="email"
-                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white/90 focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 transition-all shadow-xs"
+                      className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-mono font-bold text-gray-900 bg-white focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 transition-all shadow-xs"
                     />
                   </div>
                   <button
@@ -670,7 +779,7 @@ export default function LoginPage() {
                 </>
               ) : (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs">
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs">
                     <span className="text-amber-900 font-medium">
                       Code sent to: <span className="font-bold">{email}</span>
                     </span>
