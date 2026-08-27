@@ -244,19 +244,22 @@ export default function LoginPage() {
   }
 
   return (
-    // 1. STAGED BACKGROUND: 0-1s Deep Navy -> Royal Blue -> Soft Light Blue -> White/Pearl with subtle idle wave
-    <div className="min-h-screen w-full flex flex-col justify-between items-center relative overflow-hidden anim-bg-intro bg-[#F5F8FC] px-4 py-5 sm:py-8 select-none font-sans max-w-full">
+    // STRICT INSTITUTIONAL SYSTEM FONT TO PREVENT MOBILE CURSIVE OVERRIDES
+    <div 
+      className="min-h-screen w-full flex flex-col justify-between items-center relative overflow-x-hidden anim-bg-intro bg-[#F5F8FC] px-4 py-4 sm:py-8 select-none max-w-full pb-safe"
+      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
+    >
       
-      {/* Soft Blue Light Wave Sweep (Initial 0.2s-2.0s & Idle repeat every 9s) */}
+      {/* Background Soft Blue Light Wave Sweep */}
       <div className="absolute inset-0 pointer-events-none z-[1] overflow-hidden">
         <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-blue-400/15 to-transparent anim-light-wave" />
         <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent anim-idle-wave" />
       </div>
 
-      {/* Subtle Connected Network Dots & AI Data Particles (Gentle low opacity idle float) */}
+      {/* Subtle Connected Network Dots & AI Data Particles */}
       <div className="absolute inset-0 pointer-events-none z-[2] overflow-hidden">
         {/* Top-Left AI Network Constellation */}
-        <div className="absolute top-2 left-2 sm:top-6 sm:left-6 w-44 h-44 sm:w-56 sm:h-56 opacity-20 anim-particle-float">
+        <div className="absolute top-2 left-2 sm:top-6 sm:left-6 w-36 h-36 sm:w-56 sm:h-56 opacity-20 anim-particle-float">
           <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#1557C0]">
             <circle cx="30" cy="40" r="4" fill="currentColor" />
             <circle cx="100" cy="20" r="5" fill="currentColor" />
@@ -272,10 +275,10 @@ export default function LoginPage() {
         </div>
 
         {/* Top-Right AI Microchip Graphic */}
-        <div className="absolute top-2 right-2 sm:top-6 sm:right-6 w-44 h-44 sm:w-56 sm:h-56 opacity-20 anim-particle-float" style={{ animationDelay: '2s' }}>
+        <div className="absolute top-2 right-2 sm:top-6 sm:right-6 w-36 h-36 sm:w-56 sm:h-56 opacity-20 anim-particle-float" style={{ animationDelay: '2s' }}>
           <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-[#1557C0]">
             <rect x="70" y="70" width="60" height="60" rx="10" stroke="currentColor" strokeWidth="2" fill="white" fillOpacity="0.5" />
-            <text x="100" y="106" textAnchor="middle" fill="currentColor" fontSize="16" fontWeight="bold">AI</text>
+            <text x="100" y="106" textAnchor="middle" fill="currentColor" fontSize="16" fontWeight="bold" fontFamily="sans-serif">AI</text>
             <path d="M70 85 H48 M70 100 H48 M70 115 H48 M130 85 H152 M130 100 H152 M130 115 H152 M85 70 V48 M100 70 V48 M115 70 V48 M85 130 V152 M100 130 V152 M115 130 V152" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="anim-circuit-drift" />
             <circle cx="48" cy="85" r="3" fill="currentColor" />
             <circle cx="48" cy="115" r="3" fill="currentColor" />
@@ -284,21 +287,21 @@ export default function LoginPage() {
         </div>
 
         {/* Bottom Ambient Skyline Overlay */}
-        <div className="absolute bottom-0 inset-x-0 h-40 opacity-15 pointer-events-none flex items-end justify-center">
+        <div className="absolute bottom-0 inset-x-0 h-36 opacity-15 pointer-events-none flex items-end justify-center">
           <svg viewBox="0 0 1200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full object-cover text-[#071A41]">
             <path d="M0 200L40 180H120L160 150H260L300 170H450L500 130H700L750 170H900L940 150H1040L1080 180H1200V200H0Z" fill="currentColor" />
             <path d="M500 130L600 90L700 130V200H500V130Z" fill="currentColor" />
           </svg>
         </div>
 
-        {/* Bottom Left & Right Wave Crests in #1557C0 & #E7B93E */}
-        <div className="absolute bottom-0 left-0 w-36 sm:w-44 h-14 pointer-events-none">
+        {/* Bottom Wave Crests */}
+        <div className="absolute bottom-0 left-0 w-32 sm:w-44 h-12 sm:h-14 pointer-events-none">
           <svg viewBox="0 0 200 100" fill="none" className="w-full h-full">
             <path d="M0 100C50 90 100 60 140 20C170 -10 200 0 200 0V100H0Z" fill="#1557C0" fillOpacity="0.75" />
             <path d="M0 100C40 95 90 75 130 35C150 15 180 5 180 5" stroke="#E7B93E" strokeWidth="4" />
           </svg>
         </div>
-        <div className="absolute bottom-0 right-0 w-36 sm:w-44 h-14 pointer-events-none">
+        <div className="absolute bottom-0 right-0 w-32 sm:w-44 h-12 sm:h-14 pointer-events-none">
           <svg viewBox="0 0 200 100" fill="none" className="w-full h-full">
             <path d="M200 100C150 90 100 60 60 20C30 -10 0 0 0 0V100H200Z" fill="#1557C0" fillOpacity="0.75" />
             <path d="M200 100C160 95 110 75 70 35C50 15 20 5 20 5" stroke="#E7B93E" strokeWidth="4" />
@@ -307,33 +310,39 @@ export default function LoginPage() {
       </div>
 
       {/* TOP HEADER: Centered Branding Sequence */}
-      <div className="w-full max-w-lg text-center space-y-2 relative z-10 pt-1 pb-1">
+      <div className="w-full max-w-md text-center space-y-1.5 relative z-10 pt-1 pb-1">
         
-        {/* 2. LOGO ANIMATION (1.0s - 1.8s): Scale 80% -> 100%, Opacity 0 -> 1, Smooth Ease-out with Subtle Gold Glow */}
-        <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white shadow-xl border-[3.5px] border-[#E7B93E] p-1 mx-auto anim-logo-reveal">
+        {/* 2. LOGO ANIMATION (Scale 80% -> 100% with Golden Glow) */}
+        <div className="inline-flex items-center justify-center w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-white shadow-xl border-[3.5px] border-[#E7B93E] p-1 mx-auto anim-logo-reveal">
           <Image
             src="/college-emblem.png"
             alt="V.S.B. Engineering College Logo"
-            width={90}
-            height={90}
+            width={85}
+            height={85}
             className="w-full h-full object-contain rounded-full"
             priority
           />
         </div>
 
-        {/* 3. COLLEGE NAME ANIMATION (1.8s - 2.6s): Fade in + translateY 18px -> 0 */}
-        <h1 className="text-xl sm:text-2xl font-black text-[#071A41] tracking-tight anim-college-name">
+        {/* 3. COLLEGE NAME (Solid Bold Clear Sans-Serif) */}
+        <h1 
+          className="text-lg sm:text-xl font-black text-[#071A41] tracking-tight uppercase anim-college-name"
+          style={{ letterSpacing: '0.02em', fontWeight: 900 }}
+        >
           V.S.B. ENGINEERING COLLEGE
         </h1>
 
-        {/* 4. DEPARTMENT NAME ANIMATION (2.6s - 3.3s): Fade in + upward transition */}
-        <p className="text-xs sm:text-[13px] font-black text-[#1557C0] tracking-wide uppercase anim-dept-name">
+        {/* 4. DEPARTMENT NAME */}
+        <p 
+          className="text-[11px] sm:text-xs font-black text-[#1557C0] tracking-wide uppercase anim-dept-name"
+          style={{ fontWeight: 800 }}
+        >
           DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
         </p>
 
-        {/* 5. PORTAL TITLE ANIMATION (3.3s - 3.8s): Fade in + center-out underline animation */}
+        {/* 5. PORTAL TITLE WITH CENTER UNDERLINE */}
         <div className="relative inline-block mx-auto anim-portal-title">
-          <p className="text-xs text-slate-500 font-medium px-2">
+          <p className="text-[11px] text-slate-500 font-semibold px-2">
             Academic Management &amp; Digital Portal
           </p>
           <span className="block h-[1.5px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent w-full mt-0.5 anim-underline-center" />
@@ -341,24 +350,24 @@ export default function LoginPage() {
 
         {/* Portal Pill Badge */}
         <div className="pt-0.5 anim-portal-title">
-          <span className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-[#071A41] text-white text-[11px] font-semibold shadow-md">
+          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#071A41] text-white text-[10px] sm:text-[11px] font-bold shadow-md">
             <Cpu className="w-3 h-3 text-cyan-400" />
             <span>AI &amp; DS Department Portal</span>
           </span>
         </div>
       </div>
 
-      {/* 6. LOGIN CARD ANIMATION (3.8s - 4.6s): Scale 96% -> 100%, Opacity 0 -> 1, Gradual Soft Shadow */}
-      <div className="w-full max-w-[410px] bg-white rounded-3xl border border-white/90 p-5 sm:p-6 space-y-4 relative z-10 my-1.5 anim-card-reveal">
+      {/* 6. MAIN LOGIN CARD (Clean, High-Clarity, Rounded) */}
+      <div className="w-full max-w-[390px] bg-white rounded-3xl border border-slate-100 p-4 sm:p-5 space-y-3.5 relative z-10 my-1 shadow-xl anim-card-reveal">
         
-        {/* 7. ROLE CARDS REVEAL (4.6s - 5.3s): Sequential Student -> Faculty -> HOD -> Admin with 10px upward motion */}
+        {/* 7. ROLE CARDS REVEAL */}
         <div>
-          <label className="block text-[10px] font-black text-[#071A41] uppercase tracking-wider mb-2">
+          <label className="block text-[10px] font-black text-[#071A41] uppercase tracking-wider mb-1.5">
             SELECT YOUR ROLE
           </label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             
-            {/* 1. Student (4.6s reveal, highlighted with blue gradient & check indicator) */}
+            {/* 1. Student */}
             <button
               type="button"
               onClick={() => {
@@ -368,25 +377,25 @@ export default function LoginPage() {
                 setShowPassword(false)
               }}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-student',
+                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-student',
                 selectedRole === 'student'
                   ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
                   : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
               )}
             >
               {selectedRole === 'student' && (
-                <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
+                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
               )}
-              <span className="text-xl">🎓</span>
-              <span className="text-[11px] font-bold">Student</span>
+              <span className="text-lg">🎓</span>
+              <span className="text-[10px] sm:text-[11px] font-bold">Student</span>
               {selectedRole === 'student' && (
-                <span className="w-5 h-0.5 bg-white/90 rounded-full mt-0.5" />
+                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
               )}
             </button>
 
-            {/* 2. Faculty (4.8s reveal) */}
+            {/* 2. Faculty */}
             <button
               type="button"
               onClick={() => {
@@ -396,25 +405,25 @@ export default function LoginPage() {
                 setShowPassword(false)
               }}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-faculty',
+                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-faculty',
                 selectedRole === 'faculty'
                   ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
                   : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
               )}
             >
               {selectedRole === 'faculty' && (
-                <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
+                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
               )}
-              <span className="text-xl">📚</span>
-              <span className="text-[11px] font-bold">Faculty</span>
+              <span className="text-lg">📚</span>
+              <span className="text-[10px] sm:text-[11px] font-bold">Faculty</span>
               {selectedRole === 'faculty' && (
-                <span className="w-5 h-0.5 bg-white/90 rounded-full mt-0.5" />
+                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
               )}
             </button>
 
-            {/* 3. HOD (5.0s reveal) */}
+            {/* 3. HOD */}
             <button
               type="button"
               onClick={() => {
@@ -424,25 +433,25 @@ export default function LoginPage() {
                 setShowPassword(false)
               }}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-hod',
+                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-hod',
                 selectedRole === 'hod'
                   ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
                   : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
               )}
             >
               {selectedRole === 'hod' && (
-                <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
+                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
               )}
-              <span className="text-xl">🏛️</span>
-              <span className="text-[11px] font-bold">HOD</span>
+              <span className="text-lg">🏛️</span>
+              <span className="text-[10px] sm:text-[11px] font-bold">HOD</span>
               {selectedRole === 'hod' && (
-                <span className="w-5 h-0.5 bg-white/90 rounded-full mt-0.5" />
+                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
               )}
             </button>
 
-            {/* 4. Admin (5.2s reveal) */}
+            {/* 4. Admin */}
             <button
               type="button"
               onClick={() => {
@@ -452,60 +461,60 @@ export default function LoginPage() {
                 setOtp('')
               }}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-admin',
+                'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-1 text-xs font-bold transition-all duration-200 cursor-pointer border anim-role-admin',
                 selectedRole === 'admin'
                   ? 'bg-gradient-to-b from-[#1557C0] to-[#071A41] text-white border-transparent anim-selected-glow'
                   : 'bg-white text-[#071A41] hover:bg-slate-50 border-slate-200 shadow-xs'
               )}
             >
               {selectedRole === 'admin' && (
-                <span className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
+                <span className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
               )}
-              <span className="text-xl">⚙️</span>
-              <span className="text-[11px] font-bold">Admin</span>
+              <span className="text-lg">⚙️</span>
+              <span className="text-[10px] sm:text-[11px] font-bold">Admin</span>
               {selectedRole === 'admin' && (
-                <span className="w-5 h-0.5 bg-white/90 rounded-full mt-0.5" />
+                <span className="w-4 h-0.5 bg-white/90 rounded-full mt-0.5" />
               )}
             </button>
 
           </div>
         </div>
 
-        {/* 8. LOGIN FORM REVEAL (5.3s - 5.8s): Welcome Back + Inputs + CTA Button */}
-        <div className="rounded-2xl border border-blue-100/80 bg-[#F8FAFD] p-4 sm:p-5 space-y-3.5 anim-form-reveal">
+        {/* 8. INNER FORM CONTAINER (High Contrast & Clear Inputs) */}
+        <div className="rounded-2xl border border-slate-200/80 bg-[#F8FAFD] p-3.5 sm:p-4 space-y-3 anim-form-reveal">
           
           {/* Welcome Header */}
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-[#1557C0]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-[#1557C0] shrink-0">
               <UserIcon className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-[#071A41] flex items-center gap-1">
+              <h2 className="text-xs sm:text-sm font-bold text-[#071A41] flex items-center gap-1">
                 <span>Welcome Back</span>
                 <span>👋</span>
               </h2>
-              <p className="text-xs text-slate-500">
-                Sign in to access your <span className="capitalize font-semibold text-[#1557C0]">{selectedRole} Portal</span>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Sign in to access your <span className="capitalize font-bold text-[#1557C0]">{selectedRole} Portal</span>
               </p>
             </div>
           </div>
 
           {/* Form Fields */}
-          <form onSubmit={handleSubmit} className="space-y-3 pt-1">
+          <form onSubmit={handleSubmit} className="space-y-2.5 pt-0.5">
             
             {/* 1. STUDENT AUTHENTICATION */}
             {selectedRole === 'student' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#071A41] flex items-center gap-1.5">
+                  <label className="block text-[11px] font-bold text-[#071A41] flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Register Number</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <UserIcon className="w-3.5 h-3.5" />
                     </div>
                     <input
                       type="text"
@@ -514,19 +523,19 @@ export default function LoginPage() {
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#071A41] flex items-center gap-1.5">
+                  <label className="block text-[11px] font-bold text-[#071A41] flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Password</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -535,7 +544,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-9 pr-9 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
                     />
                     <button
                       type="button"
@@ -551,7 +560,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-bold py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg shadow-blue-900/20 transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
+                  className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>{loading ? 'Logging in...' : 'Login to Student Portal'}</span>
@@ -564,13 +573,13 @@ export default function LoginPage() {
             {selectedRole === 'faculty' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#071A41] flex items-center gap-1.5">
+                  <label className="block text-[11px] font-bold text-[#071A41] flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Faculty ID</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <UserIcon className="w-3.5 h-3.5" />
                     </div>
                     <input
                       type="text"
@@ -579,19 +588,19 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#071A41] flex items-center gap-1.5">
+                  <label className="block text-[11px] font-bold text-[#071A41] flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Password</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -600,7 +609,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-9 pr-9 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
                     />
                     <button
                       type="button"
@@ -616,7 +625,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-bold py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg shadow-blue-900/20 transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
+                  className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>{loading ? 'Logging in...' : 'Login to Faculty Portal'}</span>
@@ -629,13 +638,13 @@ export default function LoginPage() {
             {selectedRole === 'hod' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#071A41] flex items-center gap-1.5">
+                  <label className="block text-[11px] font-bold text-[#071A41] flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Faculty ID</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <UserIcon className="w-3.5 h-3.5" />
                     </div>
                     <input
                       type="text"
@@ -644,19 +653,19 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-bold text-[#071A41] flex items-center gap-1.5">
+                  <label className="block text-[11px] font-bold text-[#071A41] flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Password</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4" />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <Lock className="w-3.5 h-3.5" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -665,7 +674,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-9 pr-9 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
                     />
                     <button
                       type="button"
@@ -681,7 +690,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-bold py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg shadow-blue-900/20 transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
+                  className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>{loading ? 'Logging in...' : 'Login to HOD Portal'}</span>
@@ -692,17 +701,17 @@ export default function LoginPage() {
 
             {/* 4. ADMIN AUTHENTICATION */}
             {selectedRole === 'admin' && (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {!otpSent ? (
                   <>
                     <div className="space-y-1">
-                      <label className="block text-xs font-bold text-[#071A41] flex items-center gap-1.5">
+                      <label className="block text-[11px] font-bold text-[#071A41] flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
                         <span>Admin Email Address</span>
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                          <Mail className="w-4 h-4" />
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Mail className="w-3.5 h-3.5" />
                         </div>
                         <input
                           type="email"
@@ -711,7 +720,7 @@ export default function LoginPage() {
                           onChange={(e) => setEmail(e.target.value)}
                           required
                           autoComplete="email"
-                          className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                          className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
                         />
                       </div>
                     </div>
@@ -720,7 +729,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={handleSendOTP}
                       disabled={loading}
-                      className="w-full font-bold py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg shadow-blue-900/20 transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
+                      className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2"
                     >
                       <ShieldCheck className="w-4 h-4" />
                       <span>{loading ? 'Sending 2FA OTP...' : 'Send 2FA Code'}</span>
@@ -728,7 +737,7 @@ export default function LoginPage() {
                     </button>
                   </>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div className="flex items-center justify-between p-2 rounded-xl bg-blue-50/80 border border-blue-200 text-xs">
                       <span className="text-blue-900 font-medium">
                         OTP sent to: <span className="font-bold">{email}</span>
@@ -746,7 +755,7 @@ export default function LoginPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-[#071A41] mb-1.5">
+                      <label className="block text-[11px] font-bold text-[#071A41] mb-1">
                         Enter 6-Digit OTP Code
                       </label>
                       <OTPInput
@@ -765,7 +774,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => handleVerifyOTP()}
                       disabled={loading}
-                      className="w-full font-bold py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg shadow-blue-900/20 transition-all duration-200 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2"
+                      className="w-full font-bold py-2.5 sm:py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] hover:from-[#05132E] hover:to-[#1557C0] shadow-md transition-all duration-200 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>{loading ? 'Verifying...' : 'Verify OTP & Login'}</span>
@@ -792,7 +801,7 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Help & Secure Links Bar */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500">
             <span className="flex items-center gap-1">
               <Lock className="w-3 h-3 text-[#1557C0]" />
               <span>Secure Login</span>
@@ -812,52 +821,53 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 9. QUOTE ANIMATION (5.8s - 6.5s): Opening quote, text slide-up, closing quote, and gold underline drawing left to right */}
-      <div className="text-center space-y-1 relative z-10 pt-1.5 pb-1 anim-quote-reveal">
+      {/* 9. QUOTE ANIMATION: "a place for placement" with Gold Underline */}
+      <div className="text-center space-y-1 relative z-10 pt-1 pb-1 anim-quote-reveal">
         <div className="flex items-center justify-center gap-2">
           <div className="w-8 sm:w-12 h-px bg-slate-300" />
-          <p className="text-base sm:text-lg font-bold tracking-wider italic text-[#071A41]" style={{ fontFamily: 'Georgia, serif' }}>
+          <p 
+            className="text-base sm:text-lg font-bold tracking-wider italic text-[#071A41]" 
+            style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+          >
             &ldquo;a place for placement&rdquo;
           </p>
           <div className="w-8 sm:w-12 h-px bg-slate-300" />
         </div>
         <div className="flex items-center justify-center gap-2 pt-0.5">
-          <span className="h-[2px] bg-[#E7B93E] w-12 sm:w-16 rounded-full block anim-quote-underline" />
+          <span className="h-[2px] bg-[#E7B93E] w-10 sm:w-14 rounded-full block anim-quote-underline" />
           <span className="text-xs">🎓</span>
-          <span className="h-[2px] bg-[#E7B93E] w-12 sm:w-16 rounded-full block anim-quote-underline" />
+          <span className="h-[2px] bg-[#E7B93E] w-10 sm:w-14 rounded-full block anim-quote-underline" />
         </div>
       </div>
 
-      {/* 10. FOOTER VALUE BADGES (6.4s): Learn Today | Build Tomorrow | Create a Better Future */}
-      <footer className="w-full max-w-md mx-auto flex items-center justify-start gap-4 text-[11px] text-[#071A41] font-bold z-10 pt-1.5 border-t border-blue-200/50 anim-footer-reveal">
+      {/* 10. FOOTER VALUE BADGES */}
+      <footer className="w-full max-w-md mx-auto flex items-center justify-between sm:justify-start gap-2 sm:gap-4 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-1 border-t border-blue-200/50 anim-footer-reveal px-1">
         <div className="flex items-center gap-1.5">
-          <Brain className="w-3.5 h-3.5 text-[#1557C0]" />
+          <Brain className="w-3.5 h-3.5 text-[#1557C0] shrink-0" />
           <div className="leading-tight">
-            <span className="block text-[9px] text-slate-500 font-medium">Learn</span>
+            <span className="block text-[8px] sm:text-[9px] text-slate-500 font-medium">Learn</span>
             <span>Today</span>
           </div>
         </div>
-        <div className="h-5 w-px bg-slate-300" />
+        <div className="h-4 sm:h-5 w-px bg-slate-300" />
         <div className="flex items-center gap-1.5">
-          <Lightbulb className="w-3.5 h-3.5 text-[#E7B93E]" />
+          <Lightbulb className="w-3.5 h-3.5 text-[#E7B93E] shrink-0" />
           <div className="leading-tight">
-            <span className="block text-[9px] text-slate-500 font-medium">Build</span>
+            <span className="block text-[8px] sm:text-[9px] text-slate-500 font-medium">Build</span>
             <span>Tomorrow</span>
           </div>
         </div>
-        <div className="h-5 w-px bg-slate-300" />
+        <div className="h-4 sm:h-5 w-px bg-slate-300" />
         <div className="flex items-center gap-1.5">
-          <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+          <TrendingUp className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           <div className="leading-tight">
-            <span className="block text-[9px] text-slate-500 font-medium">Create a</span>
+            <span className="block text-[8px] sm:text-[9px] text-slate-500 font-medium">Create a</span>
             <span>Better Future</span>
           </div>
         </div>
       </footer>
 
-      {/* ========================================================================= */}
       {/* ONBOARDING & PROFILE COMPLETION MODAL */}
-      {/* ========================================================================= */}
       {showOnboardingModal && onboardingUser && (
         <div className="fixed inset-0 z-50 bg-[#071A41]/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-300">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-gray-100 max-h-[92vh] overflow-y-auto">
