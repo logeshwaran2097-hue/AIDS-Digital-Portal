@@ -468,31 +468,19 @@ export default function LoginPage() {
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
         
-        {/* 3D Gold-Rimmed Emblem with Dual High-Contrast Rotating Celestial Rings */}
-        <div className="relative flex items-center justify-center my-1.5 sm:my-2 py-0.5 anim-logo-reveal">
-          {/* Celestial Outer Cyan Tech Orbit Ring (Vivid on Mobile) */}
-          <div 
-            className="absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full border-[2.2px] border-dashed border-[#0284C7] shadow-[0_0_15px_rgba(2,132,199,0.7)] animate-spin" 
-            style={{ animationDuration: '10s' }} 
-          />
+        {/* ONE PREMIUM CIRCULAR GOLD EMBLEM */}
+        <div className="relative flex items-center justify-center my-2 sm:my-3 anim-logo-reveal">
+          {/* Subtle Ambient Backlight Glow */}
+          <div className="absolute w-24 h-24 sm:w-30 sm:h-30 rounded-full bg-gradient-to-tr from-[#1557C0]/35 via-[#E7B93E]/30 to-[#06B6D4]/35 blur-xl animate-pulse" />
           
-          {/* Celestial Inner Gold Beaded Ring (Vivid on Mobile) */}
-          <div 
-            className="absolute w-23 h-23 sm:w-30 sm:h-30 rounded-full border-[2.2px] border-dotted border-[#D97706] shadow-[0_0_15px_rgba(217,119,6,0.8)] animate-spin" 
-            style={{ animationDuration: '14s', animationDirection: 'reverse' }} 
-          />
-          
-          {/* Pulsing Radial Backlight Aura */}
-          <div className="absolute w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-[#1557C0]/60 via-[#06B6D4]/50 to-[#E7B93E]/60 blur-xl animate-pulse" />
-          
-          {/* Gold-Framed Raised Emblem Disk */}
-          <div className="relative w-17 h-17 sm:w-22 sm:h-22 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FDE047] to-[#1557C0] ring-3 sm:ring-4 ring-[#1557C0]/20 shadow-[0_12px_30px_rgba(7,26,65,0.25)] hover:scale-105 transition-transform duration-500">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-inner overflow-hidden border border-amber-200">
+          {/* Single Premium Circular Gold Medallion */}
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_12px_30px_rgba(7,26,65,0.2),0_0_20px_rgba(231,185,62,0.45)] ring-2 ring-white/90 hover:scale-105 transition-transform duration-500">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-inner overflow-hidden">
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
-                width={85}
-                height={85}
+                width={95}
+                height={95}
                 className="w-full h-full object-contain drop-shadow-sm"
                 priority
               />
