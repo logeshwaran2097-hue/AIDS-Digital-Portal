@@ -460,36 +460,36 @@ export default function LoginPage() {
       </div>
 
       {/* TOP HEADER: Centered Ultra-Luxury Branding */}
-      <div className="w-full max-w-lg text-center space-y-2.5 relative z-10 pt-2 pb-1">
+      <div className="w-full max-w-lg text-center space-y-1.5 sm:space-y-2.5 relative z-10 pt-1 pb-1">
         
         {/* Accreditation Top Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[10px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md anim-logo-reveal">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#E7B93E] animate-pulse" />
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md anim-logo-reveal">
+          <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
         
         {/* 3D Gold-Rimmed Emblem with Dual High-Contrast Rotating Celestial Rings */}
-        <div className="relative flex items-center justify-center my-3 py-1 anim-logo-reveal">
+        <div className="relative flex items-center justify-center my-1.5 sm:my-2 py-0.5 anim-logo-reveal">
           {/* Celestial Outer Cyan Tech Orbit Ring (Vivid on Mobile) */}
           <div 
-            className="absolute w-36 h-36 sm:w-44 sm:h-44 rounded-full border-[2.5px] border-dashed border-[#0284C7] shadow-[0_0_18px_rgba(2,132,199,0.75)] animate-spin" 
+            className="absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full border-[2.2px] border-dashed border-[#0284C7] shadow-[0_0_15px_rgba(2,132,199,0.7)] animate-spin" 
             style={{ animationDuration: '10s' }} 
           />
           
           {/* Celestial Inner Gold Beaded Ring (Vivid on Mobile) */}
           <div 
-            className="absolute w-30 h-30 sm:w-38 sm:h-38 rounded-full border-[2.5px] border-dotted border-[#D97706] shadow-[0_0_18px_rgba(217,119,6,0.85)] animate-spin" 
+            className="absolute w-23 h-23 sm:w-30 sm:h-30 rounded-full border-[2.2px] border-dotted border-[#D97706] shadow-[0_0_15px_rgba(217,119,6,0.8)] animate-spin" 
             style={{ animationDuration: '14s', animationDirection: 'reverse' }} 
           />
           
           {/* Pulsing Radial Backlight Aura */}
-          <div className="absolute w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-[#1557C0]/60 via-[#06B6D4]/50 to-[#E7B93E]/60 blur-xl animate-pulse" />
+          <div className="absolute w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-[#1557C0]/60 via-[#06B6D4]/50 to-[#E7B93E]/60 blur-xl animate-pulse" />
           
           {/* Gold-Framed Raised Emblem Disk */}
-          <div className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full p-1.5 bg-gradient-to-tr from-[#E7B93E] via-[#FDE047] to-[#1557C0] ring-4 ring-[#1557C0]/20 shadow-[0_15px_35px_rgba(7,26,65,0.3)] hover:scale-105 transition-transform duration-500">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-2 shadow-inner overflow-hidden border border-amber-200">
+          <div className="relative w-17 h-17 sm:w-22 sm:h-22 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FDE047] to-[#1557C0] ring-3 sm:ring-4 ring-[#1557C0]/20 shadow-[0_12px_30px_rgba(7,26,65,0.25)] hover:scale-105 transition-transform duration-500">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-inner overflow-hidden border border-amber-200">
               <Image
-                src="/images/logo.png"
+                src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
                 width={85}
                 height={85}
@@ -501,39 +501,39 @@ export default function LoginPage() {
         </div>
 
         {/* Master Branding Typography with Liquid Gold Shimmer */}
-        <div className="space-y-1.5 w-full">
+        <div className="space-y-1 w-full">
           <h1 
-            className="text-lg sm:text-2xl font-black tracking-tight uppercase"
+            className="text-base sm:text-2xl font-black tracking-tight uppercase"
             style={{ letterSpacing: '0.02em', fontWeight: 900 }}
           >
-            <span className="anim-word anim-word-1 mr-1.5 shimmer-liquid-gold">V.S.B.</span>
-            <span className="anim-word anim-word-2 mr-1.5 shimmer-liquid-gold">ENGINEERING</span>
+            <span className="anim-word anim-word-1 mr-1 shimmer-liquid-gold">V.S.B.</span>
+            <span className="anim-word anim-word-2 mr-1 shimmer-liquid-gold">ENGINEERING</span>
             <span className="anim-word anim-word-3 shimmer-liquid-gold">COLLEGE</span>
           </h1>
 
           <div>
-            <p className="text-[10px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3.5 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
-              <GraduationCap className="w-3.5 h-3.5 text-[#E7B93E]" />
+            <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
+              <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E]" />
               <span>Autonomous Institution · Karur</span>
             </p>
           </div>
 
           {/* Glowing Golden Light Beam Separator */}
-          <div className="w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-1 opacity-80" />
+          <div className="w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 opacity-80" />
 
           {/* Department Name with Sapphire Cyan Holographic Glow */}
-          <h2 className="text-xs sm:text-sm font-black leading-snug">
-            <span className="block text-slate-500 text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
+          <h2 className="text-[11px] sm:text-sm font-black leading-tight">
+            <span className="block text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
             <span className="block font-black shimmer-sapphire-cyan text-xs sm:text-base">
               ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
             </span>
           </h2>
 
           <div className="pt-0.5 anim-cpu-badge flex items-center justify-center">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-[10px] sm:text-xs font-bold shadow-md border border-cyan-400/30">
-              <Cpu className="w-3 h-3 text-cyan-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-[9px] sm:text-xs font-bold shadow-md border border-cyan-400/30">
+              <Cpu className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-cyan-400 animate-pulse" />
               <span>Digital Academic Portal</span>
-              <Sparkles className="w-3 h-3 text-[#E7B93E]" />
+              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#E7B93E]" />
             </span>
           </div>
         </div>
@@ -584,7 +584,7 @@ export default function LoginPage() {
       {/* ULTRA-LUXURY LOGIN CARD */}
       <div 
         className={cn(
-          "w-full max-w-[420px] bg-white/85 backdrop-blur-2xl rounded-[2.25rem] border p-4 sm:p-6 space-y-4 relative z-10 my-1 shadow-[0_30px_70px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] anim-card-reveal transition-all duration-300",
+          "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] anim-card-reveal transition-all duration-300",
           authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-white/95',
           authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
         )}
