@@ -36,8 +36,8 @@ export interface StudentRecord {
   semester: number
   section: string
   batch?: string | null
-  status: string
   advisorName?: string | null
+  status: string
 }
 
 export function AdminStudentsView({ initialStudents }: { initialStudents: StudentRecord[] }) {
@@ -67,8 +67,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     semester: 4,
     batch: '2024 - 2028',
     section: 'A',
-    status: 'active',
     advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+    status: 'active',
   })
 
   // 8 Semesters Definition
@@ -320,6 +320,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 semester: 4,
                 batch: '2024 - 2028',
                 section: 'A',
+                advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
                 status: 'active',
               })
               setIsAddModalOpen(true)
@@ -705,9 +706,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 semester: s.semester,
                                 batch: s.batch || defaultBatches[s.year] || '2024 - 2028',
                                 section: s.section,
+                                advisorName: s.advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
                                 status: s.status,
                                 password: '',
-                                advisorName: s.advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
                               })
                               setIsEditModalOpen(true)
                             }}
@@ -914,6 +915,23 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Class Advisor / Mentor <span className="text-gray-400 font-normal text-[11px]">(Assigned Faculty)</span>
+                  </label>
+                  <select
+                    value={formData.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}
+                    onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="Dr. S. Karthik (Professor · AI & DS)">Dr. S. Karthik (Professor · AI & DS)</option>
+                    <option value="Dr. M. Sowmya (Associate Professor)">Dr. M. Sowmya (Associate Professor)</option>
+                    <option value="Dr. K. Meenakshi (Associate Professor)">Dr. K. Meenakshi (Associate Professor)</option>
+                    <option value="Dr. R. Ramanathan (Professor · AI & DS)">Dr. R. Ramanathan (Professor · AI & DS)</option>
+                    <option value="Prof. P. Naveen (Assistant Professor)">Prof. P. Naveen (Assistant Professor)</option>
+                    <option value="Prof. S. Divya (Assistant Professor)">Prof. S. Divya (Assistant Professor)</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Status</label>
                   <select
                     value={formData.status}
@@ -923,19 +941,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Class Advisor Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Dr. S. Karthik (Professor)"
-                    value={formData.advisorName || ''}
-                    onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 font-bold text-[#1455D9] focus:bg-white focus:outline-none focus:border-[#1455D9]"
-                  />
                 </div>
               </div>
 
@@ -1131,6 +1136,23 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Class Advisor / Mentor <span className="text-gray-400 font-normal text-[11px]">(Assigned Faculty)</span>
+                  </label>
+                  <select
+                    value={formData.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}
+                    onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="Dr. S. Karthik (Professor · AI & DS)">Dr. S. Karthik (Professor · AI & DS)</option>
+                    <option value="Dr. M. Sowmya (Associate Professor)">Dr. M. Sowmya (Associate Professor)</option>
+                    <option value="Dr. K. Meenakshi (Associate Professor)">Dr. K. Meenakshi (Associate Professor)</option>
+                    <option value="Dr. R. Ramanathan (Professor · AI & DS)">Dr. R. Ramanathan (Professor · AI & DS)</option>
+                    <option value="Prof. P. Naveen (Assistant Professor)">Prof. P. Naveen (Assistant Professor)</option>
+                    <option value="Prof. S. Divya (Assistant Professor)">Prof. S. Divya (Assistant Professor)</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Status</label>
                   <select
                     value={formData.status}
@@ -1140,19 +1162,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Class Advisor Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Dr. S. Karthik (Professor)"
-                    value={formData.advisorName || ''}
-                    onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 font-bold text-[#1455D9] focus:bg-white focus:outline-none focus:border-[#1455D9]"
-                  />
                 </div>
               </div>
 
@@ -1210,12 +1219,14 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   </span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-400">Class Advisor:</span>
+                  <span className="font-bold text-[#1455D9]">
+                    {selectedStudent.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-400">Status:</span>
                   <span className="font-bold text-green-700 uppercase">{selectedStudent.status}</span>
-                </div>
-                <div className="flex justify-between border-t border-gray-200/60 pt-1.5">
-                  <span className="text-gray-400">Class Advisor:</span>
-                  <span className="font-bold text-[#1455D9]">{selectedStudent.advisorName || 'Dr. S. Karthik (Professor)'}</span>
                 </div>
               </div>
 

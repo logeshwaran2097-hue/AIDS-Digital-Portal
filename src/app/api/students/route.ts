@@ -28,6 +28,12 @@ export async function GET(request: Request) {
 
     const result = students.map((s) => {
       const u = userMap.get(s.userId)
+      const defaultAdvisors: Record<number, string> = {
+        1: 'Dr. R. Ramanathan (Professor · AI & DS)',
+        2: 'Dr. S. Karthik (Professor · AI & DS)',
+        3: 'Dr. M. Sowmya (Associate Professor)',
+        4: 'Dr. K. Meenakshi (Associate Professor)',
+      }
       return {
         id: s.id,
         userId: s.userId,
@@ -40,6 +46,7 @@ export async function GET(request: Request) {
         year: s.year,
         semester: s.semester,
         section: s.section,
+        advisorName: defaultAdvisors[s.year] || 'Dr. S. Karthik (Professor · AI & DS)',
         status: u?.status || 'active',
       }
     })
@@ -71,7 +78,6 @@ export async function POST(request: Request) {
       semester = 4,
       section = 'A',
       status = 'active',
-      advisorName = 'Dr. S. Karthik (Professor · AI & DS)',
     } = data
 
     if (!registerNumber || !name || !password?.trim()) {
@@ -154,8 +160,8 @@ export async function POST(request: Request) {
         year: student.year,
         semester: student.semester,
         section: student.section,
+        advisorName: data.advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
         status: user.status,
-        advisorName: advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
       },
       message: 'Student registered successfully in database',
     })
