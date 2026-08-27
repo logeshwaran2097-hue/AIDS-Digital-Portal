@@ -105,29 +105,6 @@ const INITIAL_SUBJECTS: Subject[] = [
   { id: 'sub-5', code: 'AD2305', name: 'Big Data Analytics', credits: 3 },
 ]
 
-const INITIAL_STUDENTS: StudentRecord[] = [
-  { id: 'st-1', registerNumber: '23AD001', name: 'K. Aishwarya', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 94.5, status: 'P', remarks: '' },
-  { id: 'st-2', registerNumber: '23AD002', name: 'S. Gokul', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 88.0, status: 'P', remarks: '' },
-  { id: 'st-3', registerNumber: '23AD003', name: 'M. Harish', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 96.2, status: 'P', remarks: '' },
-  { id: 'st-4', registerNumber: '23AD004', name: 'V. Divya', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 72.0, status: 'A', remarks: 'Uninformed Absence' },
-  { id: 'st-5', registerNumber: '23AD005', name: 'P. Vignesh', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 95.0, status: 'P', remarks: '' },
-  { id: 'st-6', registerNumber: '23AD006', name: 'R. Sneha', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 89.5, status: 'P', remarks: '' },
-  { id: 'st-7', registerNumber: '23AD007', name: 'N. Balaji', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 69.5, status: 'A', remarks: 'Medical Leave (Certificate Provided)' },
-  { id: 'st-8', registerNumber: '23AD008', name: 'T. Kaviya', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 92.0, status: 'P', remarks: '' },
-  { id: 'st-9', registerNumber: '23AD009', name: 'A. Dinesh', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 84.0, status: 'P', remarks: '' },
-  { id: 'st-10', registerNumber: '23AD010', name: 'S. Monisha', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 95.5, status: 'P', remarks: '' },
-  { id: 'st-11', registerNumber: '23AD011', name: 'B. Naveen', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 89.0, status: 'P', remarks: '' },
-  { id: 'st-12', registerNumber: '23AD012', name: 'K. Priya', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 91.5, status: 'P', remarks: '' },
-  { id: 'st-13', registerNumber: '23AD013', name: 'C. Rahul', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 78.0, status: 'P', remarks: '' },
-  { id: 'st-14', registerNumber: '23AD014', name: 'D. Sandhiya', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 93.5, status: 'P', remarks: '' },
-  { id: 'st-15', registerNumber: '23AD015', name: 'E. Surya', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 70.5, status: 'OD', remarks: 'Symposium / Hackathon OD' },
-  { id: 'st-16', registerNumber: '23AD016', name: 'G. Swetha', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 87.0, status: 'P', remarks: '' },
-  { id: 'st-17', registerNumber: '23AD017', name: 'J. Tarun', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 94.0, status: 'P', remarks: '' },
-  { id: 'st-18', registerNumber: '23AD018', name: 'L. Varsha', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 86.5, status: 'P', remarks: '' },
-  { id: 'st-19', registerNumber: '23AD019', name: 'M. Yogesh', gender: 'M', section: 'A', year: 3, semester: 5, cumulativeAttendance: 82.5, status: 'P', remarks: '' },
-  { id: 'st-20', registerNumber: '23AD020', name: 'R. Abinaya', gender: 'F', section: 'A', year: 3, semester: 5, cumulativeAttendance: 97.5, status: 'P', remarks: '' },
-]
-
 export function GovernmentAttendanceSystem() {
   // Metadata
   const [mode, setMode] = useState<AttendanceMode>('morning')
@@ -146,8 +123,8 @@ export function GovernmentAttendanceSystem() {
   // Real-time live clock
   const [currentTime, setCurrentTime] = useState<string>('')
 
-  // Attendance data - initialized with 20 rich mock students
-  const [students, setStudents] = useState<StudentRecord[]>(INITIAL_STUDENTS)
+  // Attendance data - initialized with real database students
+  const [students, setStudents] = useState<StudentRecord[]>([])
   const [existingSession, setExistingSession] = useState<ExistingSession | null>(null)
 
   // UI state
@@ -157,7 +134,7 @@ export function GovernmentAttendanceSystem() {
   const [searchFilter, setSearchFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; msg: string } | null>(null)
-  const [dataLoaded, setDataLoaded] = useState(true)
+  const [dataLoaded, setDataLoaded] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('card')
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [showLegend, setShowLegend] = useState(false)
@@ -240,18 +217,18 @@ export function GovernmentAttendanceSystem() {
       })
       const res = await fetch(`/api/attendance?${params}`)
       const data = await res.json()
-      if (data.success && data.students?.length > 0) {
+      if (data.success && data.students) {
         setStudents(data.students)
         setExistingSession(data.existingSession || null)
         setIsLocked(data.existingSession?.isLocked || false)
         setDataLoaded(true)
         setLastSyncedAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
       } else {
-        setStudents(INITIAL_STUDENTS)
+        setStudents([])
         setDataLoaded(true)
       }
     } catch {
-      setStudents(INITIAL_STUDENTS)
+      setStudents([])
       setDataLoaded(true)
     } finally {
       setLoading(false)

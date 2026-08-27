@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -21,8 +21,15 @@ import {
   UserCheck,
   AlertTriangle,
   RotateCcw,
+  Clock,
+  Check,
+  XCircle,
+  FileText,
+  ShieldAlert,
+  Send,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { playNotificationChime } from '@/lib/notificationEngine'
 
 export interface StudentRecord {
   id: string
@@ -48,6 +55,81 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [sectionFilter, setSectionFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Main Tab Navigation: 'directory' | 'requests'
+  const [activeMainTab, setActiveMainTab] = useState<'directory' | 'requests'>('directory')
+
+  // Profile Edit Permission Requests State
+  const [profileRequests, setProfileRequests] = useState<any[]>([])
+  const [requestFilter, setRequestFilter] = useState<'ALL' | 'pending' | 'approved' | 'rejected'>('ALL')
+  const [adminNotesMap, setAdminNotesMap] = useState<Record<string, string>>({})
+  const [processingRequestId, setProcessingRequestId] = useState<string | null>(null)
+
+  const fetchProfileRequests = async () => {
+    try {
+      const res = await fetch('/api/students/profile-requests')
+      const data = await res.json()
+      if (data.success && Array.isArray(data.requests)) {
+        setProfileRequests(data.requests)
+      }
+    } catch {}
+  }
+
+  useEffect(() => {
+    fetchProfileRequests()
+    const interval = setInterval(fetchProfileRequests, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleReviewRequest = async (id: string, action: 'approve' | 'reject') => {
+    setProcessingRequestId(id)
+    try {
+      const res = await fetch('/api/students/profile-requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          action,
+          adminNotes: adminNotesMap[id] || '',
+          reviewedBy: 'Super Administrator',
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        playNotificationChime()
+        fetchProfileRequests()
+
+        // Also refresh student list if approved
+        if (action === 'approve') {
+          const req = profileRequests.find((r) => r.id === id)
+          if (req && req.requestedData) {
+            setStudents((prev) =>
+              prev.map((s) =>
+                s.registerNumber === req.registerNumber
+                  ? {
+                      ...s,
+                      name: req.requestedData.name || s.name,
+                      email: req.requestedData.email || s.email,
+                      phone: req.requestedData.phone !== undefined ? req.requestedData.phone : s.phone,
+                      year: req.requestedData.year ? Number(req.requestedData.year) : s.year,
+                      semester: req.requestedData.semester ? Number(req.requestedData.semester) : s.semester,
+                      section: req.requestedData.section || s.section,
+                    }
+                  : s
+              )
+            )
+          }
+        }
+      } else {
+        alert(data.message || 'Failed to update request')
+      }
+    } catch {
+      alert('Network error updating request')
+    } finally {
+      setProcessingRequestId(null)
+    }
+  }
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -323,99 +405,127 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         </div>
       </div>
 
-      {/* Two-Step Hierarchical Year -> Semester Academic Navigation */}
-      <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm space-y-4">
-        {/* STEP 1: Select Academic Year */}
-        <div>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#1455D9] text-white text-[11px] font-black flex items-center justify-center">1</span>
-              <h2 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
-                Step 1: Choose Academic Year
-              </h2>
-            </div>
-            <span className="text-[11px] font-semibold text-gray-500">
-              {yearFilter === 'ALL' ? 'Browsing across all 4 Academic Years' : `Selected: Year ${yearFilter}`}
+      {/* Primary Top Tab Switcher */}
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+        <button
+          onClick={() => setActiveMainTab('directory')}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
+            activeMainTab === 'directory'
+              ? 'bg-[#071A3D] text-white shadow-md'
+              : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" /> Enrolled Directory ({students.length})
+        </button>
+
+        <button
+          onClick={() => setActiveMainTab('requests')}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
+            activeMainTab === 'requests'
+              ? 'bg-[#1455D9] text-white shadow-md'
+              : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+          }`}
+        >
+          <ShieldAlert className="w-4 h-4" /> Profile Edit &amp; Permission Requests
+          {profileRequests.filter((r) => r.status === 'pending').length > 0 && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#F4C430] text-[#071A3D] animate-pulse">
+              {profileRequests.filter((r) => r.status === 'pending').length} Pending
             </span>
-          </div>
+          )}
+        </button>
+      </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-            <button
-              onClick={() => {
-                setYearFilter('ALL')
-                setSemFilter('ALL')
-              }}
-              className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                yearFilter === 'ALL'
-                  ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-md ring-2 ring-[#071A3D]/30'
-                  : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
-              }`}
-            >
-              <span className="text-[10px] font-extrabold uppercase block opacity-80">All 4 Years</span>
-              <p className="text-xs font-black mt-0.5">All Years</p>
-              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-1 inline-block ${
-                yearFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
-              }`}>
-                {students.length} Total
-              </span>
-            </button>
+      {activeMainTab === 'directory' && (
+        <div className="space-y-6">
+          {/* Two-Step Hierarchical Year -> Semester Academic Navigation */}
+          <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm space-y-4">
+            {/* STEP 1: Select Academic Year */}
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#1455D9] text-white text-[11px] font-black flex items-center justify-center">1</span>
+                  <h2 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
+                    Step 1: Choose Academic Year
+                  </h2>
+                </div>
+                <span className="text-[11px] font-semibold text-gray-500">
+                  {yearFilter === 'ALL' ? 'Browsing across all 4 Academic Years' : `Selected: Year ${yearFilter}`}
+                </span>
+              </div>
 
-            {[
-              { year: 1, name: 'Year I', label: '1st Year (Freshman)', sems: [1, 2] },
-              { year: 2, name: 'Year II', label: '2nd Year (Sophomore)', sems: [3, 4] },
-              { year: 3, name: 'Year III', label: '3rd Year (Junior)', sems: [5, 6] },
-              { year: 4, name: 'Year IV', label: '4th Year (Senior)', sems: [7, 8] },
-            ].map((y) => {
-              const isSelected = yearFilter === String(y.year)
-              const yCount = students.filter((s) => s.year === y.year).length
-              return (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                 <button
-                  key={y.year}
                   onClick={() => {
-                    setYearFilter(String(y.year))
+                    setYearFilter('ALL')
                     setSemFilter('ALL')
                   }}
                   className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-gradient-to-b from-[#1455D9] to-[#0A2A5E] text-white border-[#1455D9] shadow-md ring-2 ring-[#1455D9]/30 scale-101'
-                      : 'bg-gray-50 hover:bg-blue-50/60 border-gray-200 text-gray-700'
+                    yearFilter === 'ALL'
+                      ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-md ring-2 ring-[#071A3D]/30'
+                      : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
                   }`}
                 >
-                  <span className={`text-[10px] font-extrabold uppercase block ${
-                    isSelected ? 'text-blue-200' : 'text-gray-400'
-                  }`}>
-                    {y.name}
-                  </span>
-                  <p className="text-xs font-black mt-0.5">{y.label}</p>
+                  <span className="text-[10px] font-extrabold uppercase block opacity-80">All 4 Years</span>
+                  <p className="text-xs font-black mt-0.5">All Years</p>
                   <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-1 inline-block ${
-                    isSelected ? 'bg-[#F4C430] text-[#071A3D]' : 'bg-gray-200 text-gray-600'
+                    yearFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
                   }`}>
-                    {yCount} {yCount === 1 ? 'Student' : 'Students'}
+                    {students.length} Total
                   </span>
                 </button>
-              )
-            })}
-          </div>
-        </div>
 
-        {/* STEP 2: Choose Semester within Selected Year */}
-        <div className="border-t border-gray-100 pt-3">
-          <div className="flex items-center justify-between gap-2 mb-2.5">
-            <div className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#F4C430] text-[#071A3D] text-[11px] font-black flex items-center justify-center">2</span>
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
-                Step 2: Choose Semester {yearFilter !== 'ALL' ? `(Year ${yearFilter})` : '(All 8 Semesters)'}
-              </h3>
+                {[
+                  { year: 1, name: 'Year I', label: '1st Year (Freshman)' },
+                  { year: 2, name: 'Year II', label: '2nd Year (Sophomore)' },
+                  { year: 3, name: 'Year III', label: '3rd Year (Junior)' },
+                  { year: 4, name: 'Year IV', label: '4th Year (Senior)' },
+                ].map((y) => {
+                  const isSelected = yearFilter === String(y.year)
+                  const yCount = students.filter((s) => s.year === y.year).length
+                  return (
+                    <button
+                      key={y.year}
+                      onClick={() => {
+                        setYearFilter(String(y.year))
+                        setSemFilter('ALL')
+                      }}
+                      className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-md ring-2 ring-[#1455D9]/30'
+                          : 'bg-white hover:bg-blue-50/50 border-gray-200 text-gray-700'
+                      }`}
+                    >
+                      <span className="text-[10px] font-extrabold uppercase block opacity-80">{y.name}</span>
+                      <p className="text-xs font-black mt-0.5">{y.label}</p>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-1 inline-block ${
+                        isSelected ? 'bg-white/20 text-white' : 'bg-blue-50 text-[#1455D9]'
+                      }`}>
+                        {yCount} Students
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-            {semFilter !== 'ALL' && (
-              <button
-                onClick={() => setSemFilter('ALL')}
-                className="text-[11px] font-bold text-[#1455D9] hover:underline cursor-pointer"
-              >
-                Clear Semester Filter
-              </button>
-            )}
-          </div>
+
+            {/* STEP 2: Choose Semester within Selected Year */}
+            <div className="border-t border-gray-100 pt-3">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#F4C430] text-[#071A3D] text-[11px] font-black flex items-center justify-center">2</span>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
+                    Step 2: Choose Semester {yearFilter !== 'ALL' ? `(Year ${yearFilter})` : '(All 8 Semesters)'}
+                  </h3>
+                </div>
+                {semFilter !== 'ALL' && (
+                  <button
+                    onClick={() => setSemFilter('ALL')}
+                    className="text-[11px] font-bold text-[#1455D9] hover:underline cursor-pointer"
+                  >
+                    Clear Semester Filter
+                  </button>
+                )}
+              </div>
 
           <div className="flex flex-wrap gap-2">
             <button
@@ -723,6 +833,239 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+    </div>
+  )}
+
+      {/* Profile Edit & Permission Requests Dashboard */}
+      {activeMainTab === 'requests' && (
+        <div className="space-y-5 animate-fade-in">
+          {/* Sub-Filter Bar for Requests */}
+          <div className="bg-white rounded-3xl p-4 border border-gray-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setRequestFilter('ALL')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  requestFilter === 'ALL'
+                    ? 'bg-[#071A3D] text-white shadow-xs'
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+              >
+                All Requests ({profileRequests.length})
+              </button>
+              <button
+                onClick={() => setRequestFilter('pending')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  requestFilter === 'pending'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" /> Pending Review ({profileRequests.filter((r) => r.status === 'pending').length})
+              </button>
+              <button
+                onClick={() => setRequestFilter('approved')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  requestFilter === 'approved'
+                    ? 'bg-green-600 text-white shadow-xs'
+                    : 'bg-green-50 hover:bg-green-100 text-green-800 border border-green-200'
+                }`}
+              >
+                <Check className="w-3.5 h-3.5" /> Approved ({profileRequests.filter((r) => r.status === 'approved').length})
+              </button>
+              <button
+                onClick={() => setRequestFilter('rejected')}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  requestFilter === 'rejected'
+                    ? 'bg-red-600 text-white shadow-xs'
+                    : 'bg-red-50 hover:bg-red-100 text-red-800 border border-red-200'
+                }`}
+              >
+                <XCircle className="w-3.5 h-3.5" /> Declined ({profileRequests.filter((r) => r.status === 'rejected').length})
+              </button>
+            </div>
+
+            <button
+              onClick={fetchProfileRequests}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#071A3D] text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Refresh Requests
+            </button>
+          </div>
+
+          {/* Requests List */}
+          {profileRequests.filter((r) => requestFilter === 'ALL' || r.status === requestFilter).length === 0 ? (
+            <Card className="rounded-3xl border-gray-200 shadow-sm">
+              <CardContent className="p-12 text-center space-y-2">
+                <div className="w-12 h-12 rounded-full bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto mb-2">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <h3 className="font-black text-[#071A3D] text-base">No Profile Permission Requests</h3>
+                <p className="text-xs text-gray-500">
+                  {requestFilter === 'pending'
+                    ? 'There are currently no pending student edit requests awaiting your review.'
+                    : 'No requests match the selected filter status.'}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {profileRequests
+                .filter((r) => requestFilter === 'ALL' || r.status === requestFilter)
+                .map((req) => {
+                  const reqData = req.requestedData || {}
+                  const currData = req.currentData || {}
+                  const isPending = req.status === 'pending'
+                  const isProcessing = processingRequestId === req.id
+
+                  return (
+                    <Card
+                      key={req.id}
+                      className={`rounded-3xl border transition-all ${
+                        isPending
+                          ? 'border-amber-300 bg-amber-50/20 shadow-md'
+                          : req.status === 'approved'
+                          ? 'border-green-200 bg-white shadow-xs'
+                          : 'border-gray-200 bg-gray-50/60 opacity-80'
+                      }`}
+                    >
+                      <CardContent className="p-6 space-y-4">
+                        {/* Request Header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white font-black text-base flex items-center justify-center shadow-xs">
+                              {req.studentName.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-black text-sm text-[#071A3D]">{req.studentName}</h3>
+                                <span className="font-mono text-xs font-bold text-[#1455D9] px-2 py-0.2 rounded-md bg-blue-50 border border-blue-200">
+                                  {req.registerNumber}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-gray-400 mt-0.5">
+                                Requested on {new Date(req.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                                isPending
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-300 animate-pulse'
+                                  : req.status === 'approved'
+                                  ? 'bg-green-100 text-green-800 border border-green-300'
+                                  : 'bg-red-100 text-red-800 border border-red-300'
+                              }`}
+                            >
+                              {req.status === 'pending' ? '● Awaiting Admin Decision' : req.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Reason Callout */}
+                        {req.reason && (
+                          <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-blue-950">
+                            <span className="font-bold text-[#1455D9]">Student Justification: </span>
+                            &ldquo;{req.reason}&rdquo;
+                          </div>
+                        )}
+
+                        {/* Diff Comparison Table */}
+                        <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden text-xs">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold text-[11px]">
+                                <th className="p-3">Profile Field</th>
+                                <th className="p-3">Current / Previous Record</th>
+                                <th className="p-3">Requested New Record</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {[
+                                { label: 'Full Name', key: 'name' },
+                                { label: 'Institutional Email', key: 'email' },
+                                { label: 'Contact Phone', key: 'phone' },
+                                { label: 'Date of Birth', key: 'dateOfBirth' },
+                                { label: 'Blood Group', key: 'bloodGroup' },
+                                { label: 'Residency Status', key: 'residencyStatus' },
+                                { label: 'Academic Regulation', key: 'regulation' },
+                                { label: 'Academic Batch', key: 'batch' },
+                                { label: 'Year / Semester / Section', key: 'cohort', custom: `Year ${reqData.year || currData.year} · Sem ${reqData.semester || currData.semester} · Sec ${reqData.section || currData.section}`, prevCustom: `Year ${currData.year} · Sem ${currData.semester} · Sec ${currData.section}` },
+                                { label: 'Class Advisor', key: 'advisor' },
+                                { label: 'Academic CGPA', key: 'cgpa' },
+                                { label: 'Attendance Record', key: 'attendance' },
+                                { label: 'Department Rank', key: 'rank' },
+                                { label: 'Arrear Status', key: 'arrears' },
+                              ]
+                                .filter((f) => {
+                                  if (f.custom) return f.custom !== f.prevCustom
+                                  return reqData[f.key] !== undefined && reqData[f.key] !== currData[f.key]
+                                })
+                                .map((f) => (
+                                  <tr key={f.key} className="hover:bg-blue-50/20">
+                                    <td className="p-3 font-bold text-[#071A3D]">{f.label}</td>
+                                    <td className="p-3 text-gray-500 font-mono">
+                                      {f.prevCustom || currData[f.key] || '—'}
+                                    </td>
+                                    <td className="p-3 font-mono font-bold text-[#1455D9] bg-blue-50/40">
+                                      {f.custom || reqData[f.key]}
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Admin Action Controls */}
+                        {isPending ? (
+                          <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <input
+                              type="text"
+                              placeholder="Admin review notes (optional, sent to student)..."
+                              value={adminNotesMap[req.id] || ''}
+                              onChange={(e) =>
+                                setAdminNotesMap({ ...adminNotesMap, [req.id]: e.target.value })
+                              }
+                              className="p-2.5 rounded-xl border border-gray-200 text-xs w-full sm:w-96 focus:outline-none focus:border-[#1455D9]"
+                            />
+
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                onClick={() => handleReviewRequest(req.id, 'reject')}
+                                disabled={isProcessing}
+                                className="px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold cursor-pointer transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                              >
+                                <XCircle className="w-4 h-4" /> Decline
+                              </button>
+                              <button
+                                onClick={() => handleReviewRequest(req.id, 'approve')}
+                                disabled={isProcessing}
+                                className="px-5 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white text-xs font-bold cursor-pointer shadow-md transition-all hover:scale-102 disabled:opacity-50 flex items-center gap-1.5"
+                              >
+                                <Check className="w-4 h-4" /> {isProcessing ? 'Applying...' : 'Approve & Apply to DB'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="pt-2 border-t border-gray-100 text-[11px] text-gray-500 flex items-center justify-between">
+                            <span>
+                              Reviewed by <strong className="text-[#071A3D]">{req.reviewedBy || 'Admin'}</strong> on{' '}
+                              {req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : 'N/A'}
+                            </span>
+                            {req.adminNotes && (
+                              <span className="italic text-gray-600">Note: &ldquo;{req.adminNotes}&rdquo;</span>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+            </div>
+          )}
         </div>
       )}
 

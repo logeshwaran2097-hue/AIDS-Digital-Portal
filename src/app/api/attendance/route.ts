@@ -2,36 +2,13 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 
-const MOCK_STUDENTS = [
-  { id: 'st-1', registerNumber: '23AD001', name: 'K. Aishwarya', gender: 'F', cumulativeAttendance: 92.5, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-2', registerNumber: '23AD002', name: 'S. Gokul', gender: 'M', cumulativeAttendance: 88.0, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-3', registerNumber: '23AD003', name: 'M. Harish', gender: 'M', cumulativeAttendance: 94.2, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-4', registerNumber: '23AD004', name: 'V. Divya', gender: 'F', cumulativeAttendance: 74.0, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-5', registerNumber: '23AD005', name: 'P. Vignesh', gender: 'M', cumulativeAttendance: 96.0, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-6', registerNumber: '23AD006', name: 'R. Sneha', gender: 'F', cumulativeAttendance: 85.5, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-7', registerNumber: '23AD007', name: 'N. Balaji', gender: 'M', cumulativeAttendance: 71.5, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-8', registerNumber: '23AD008', name: 'T. Kaviya', gender: 'F', cumulativeAttendance: 90.0, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-9', registerNumber: '23AD009', name: 'A. Dinesh', gender: 'M', cumulativeAttendance: 83.4, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-10', registerNumber: '23AD010', name: 'S. Monisha', gender: 'F', cumulativeAttendance: 95.1, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-11', registerNumber: '23AD011', name: 'B. Naveen', gender: 'M', cumulativeAttendance: 89.2, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-12', registerNumber: '23AD012', name: 'K. Priya', gender: 'F', cumulativeAttendance: 91.8, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-13', registerNumber: '23AD013', name: 'C. Rahul', gender: 'M', cumulativeAttendance: 78.4, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-14', registerNumber: '23AD014', name: 'D. Sandhiya', gender: 'F', cumulativeAttendance: 93.0, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-15', registerNumber: '23AD015', name: 'E. Surya', gender: 'M', cumulativeAttendance: 69.5, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-16', registerNumber: '23AD016', name: 'G. Swetha', gender: 'F', cumulativeAttendance: 87.0, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-17', registerNumber: '23AD017', name: 'J. Tarun', gender: 'M', cumulativeAttendance: 94.5, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-18', registerNumber: '23AD018', name: 'L. Varsha', gender: 'F', cumulativeAttendance: 86.2, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-19', registerNumber: '23AD019', name: 'M. Yogesh', gender: 'M', cumulativeAttendance: 82.0, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-  { id: 'st-20', registerNumber: '23AD020', name: 'R. Abinaya', gender: 'F', cumulativeAttendance: 97.4, section: 'A', year: 3, semester: 5, status: 'P', remarks: '' },
-]
-
 // GET: Fetch students for a given year/section
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const year = parseInt(searchParams.get('year') || '3')
+    const year = parseInt(searchParams.get('year') || '2')
     const section = searchParams.get('section') || 'A'
-    const semester = parseInt(searchParams.get('semester') || '5')
+    const semester = parseInt(searchParams.get('semester') || '4')
     const date = searchParams.get('date') || new Date().toISOString().split('T')[0]
     const sessionType = searchParams.get('sessionType') || 'morning'
     const subjectCode = searchParams.get('subjectCode') || ''
@@ -39,6 +16,7 @@ export async function GET(request: Request) {
 
     const students = await prisma.student.findMany({
       where: { year, section, semester },
+      orderBy: { registerNumber: 'asc' },
     }).catch(() => [])
 
     let studentDetails: any[] = []
@@ -53,10 +31,12 @@ export async function GET(request: Request) {
             registerNumber: s.registerNumber,
             name: user?.name || s.registerNumber,
             email: user?.email || `${s.registerNumber.toLowerCase()}@vsb.edu.in`,
+            phone: user?.phone || '',
             gender: (s.registerNumber.endsWith('2') || s.registerNumber.endsWith('4') || s.registerNumber.endsWith('6') || s.registerNumber.endsWith('8') || s.registerNumber.endsWith('0')) ? 'F' : 'M',
             section: s.section,
             year: s.year,
             semester: s.semester,
+            cumulativeAttendance: 100,
           }
         })
       )
@@ -80,12 +60,11 @@ export async function GET(request: Request) {
       }
     } catch {}
 
-    const sourceStudents = studentDetails.length > 0 ? studentDetails : MOCK_STUDENTS
+    const sourceStudents = studentDetails
 
-    const studentsWithAttendance = sourceStudents.map((s, idx) => {
-      const percentage = s.cumulativeAttendance || (85 + (idx % 12))
-      let currentStatus: 'P' | 'A' | 'OD' | 'ML' | 'L' = s.status || 'P'
-      let currentRemarks = s.remarks || ''
+    const studentsWithAttendance = sourceStudents.map((s) => {
+      let currentStatus: 'P' | 'A' | 'OD' | 'ML' | 'L' = 'P'
+      let currentRemarks = ''
       if (existingSession && Array.isArray(existingSession.records)) {
         const rec = existingSession.records.find((r: any) => r.registerNumber === s.registerNumber)
         if (rec) {
@@ -97,7 +76,7 @@ export async function GET(request: Request) {
       return {
         ...s,
         gender: s.gender || 'M',
-        cumulativeAttendance: percentage,
+        cumulativeAttendance: s.cumulativeAttendance || 100,
         status: currentStatus,
         remarks: currentRemarks,
       }
@@ -124,11 +103,11 @@ export async function GET(request: Request) {
     console.error('Attendance GET error:', error)
     return NextResponse.json({
       success: true,
-      students: MOCK_STUDENTS,
+      students: [],
       existingSession: null,
       summary: {
-        total: MOCK_STUDENTS.length,
-        present: MOCK_STUDENTS.length,
+        total: 0,
+        present: 0,
         absent: 0,
         od: 0,
       },

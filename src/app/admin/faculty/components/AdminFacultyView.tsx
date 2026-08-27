@@ -479,28 +479,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           })
           setClassStudents(mapped)
         } else {
-          const mock: StudentInClass[] = Array.from({ length: 15 }).map((_, i) => {
-            const num = (i + 1).toString().padStart(3, '0')
-            const att = 92 + (i % 7) - (i === 3 ? 20 : i === 7 ? 12 : 0)
-            return {
-              id: `mock-${i}`,
-              registerNumber: `23AD${num}`,
-              name: [
-                'Aarav Sharma', 'Deepa Krishnan', 'Dinesh Kumar', 'Gowtham R', 'Harini V',
-                'Karthik S', 'Keerthana M', 'Logeshwaran S', 'Manoj K', 'Naveen Raj',
-                'Pavithra R', 'Praveen K', 'Rahul V', 'Santhosh M', 'Sneha Priya'
-              ][i] || `Student ${num}`,
-              email: `23ad${num}@vsb.edu.in`,
-              phone: `+91 98765 ${43200 + i}`,
-              attendancePercent: Math.min(100, Math.max(68, att)),
-              cgpa: Number((7.8 + ((i * 0.13) % 2.1)).toFixed(2)),
-              status: att < 75 ? 'critical' : att < 85 ? 'warning' : 'active',
-            }
-          })
-          setClassStudents(mock)
+          setClassStudents([])
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        setClassStudents([])
+      })
       .finally(() => setLoadingClassData(false))
   }, [selectedAdvisorDossier])
 

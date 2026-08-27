@@ -6,123 +6,115 @@ import { Sparkles, Cpu, GraduationCap, ShieldCheck } from 'lucide-react'
 
 export function MobileAppSplashScreen() {
   const [isVisible, setIsVisible] = useState(true)
-  const [animationStep, setAnimationStep] = useState(0) // 0: Logo, 1: College Name, 2: Welcome Dept, 3: Complete
+  const [isFadingOut, setIsFadingOut] = useState(false)
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
-    // Only show once per session
-    const hasSeenSplash = sessionStorage.getItem('vsb_splash_shown')
-    if (hasSeenSplash) {
+    // 1. Quick progress fill from 0% -> 100% in exactly 0.5 seconds
+    let current = 0
+    const interval = setInterval(() => {
+      current += 10
+      if (current >= 100) {
+        setProgress(100)
+        clearInterval(interval)
+      } else {
+        setProgress(current)
+      }
+    }, 45)
+
+    // 2. 5-Second Animated Showcase until 5.0s, then seamless transition
+    const fadeTimer = setTimeout(() => {
+      setIsFadingOut(true)
+    }, 5000)
+
+    // 3. Completely unmount from DOM at 5.4 seconds
+    const unmountTimer = setTimeout(() => {
       setIsVisible(false)
-      return
-    }
-
-    setAnimationStep(0)
-
-    const timer1 = setTimeout(() => {
-      setAnimationStep(1)
-    }, 450)
-
-    const timer2 = setTimeout(() => {
-      setAnimationStep(2)
-    }, 950)
-
-    // Smooth progress bar increment
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval)
-          return 100
-        }
-        return prev + 4
-      })
-    }, 85)
-
-    const timer3 = setTimeout(() => {
-      setAnimationStep(3)
-      setTimeout(() => {
-        setIsVisible(false)
-        sessionStorage.setItem('vsb_splash_shown', 'true')
-      }, 500)
-    }, 2400)
+    }, 5400)
 
     return () => {
-      clearTimeout(timer1)
-      clearTimeout(timer2)
-      clearTimeout(timer3)
-      clearInterval(progressInterval)
+      clearInterval(interval)
+      clearTimeout(fadeTimer)
+      clearTimeout(unmountTimer)
     }
   }, [])
 
   if (!isVisible) return null
 
-  const handleSkip = () => {
-    setAnimationStep(3)
+  const handleInstantDismiss = () => {
+    setIsFadingOut(true)
     setTimeout(() => {
       setIsVisible(false)
-      sessionStorage.setItem('vsb_splash_shown', 'true')
-    }, 300)
+    }, 60)
   }
 
   return (
     <div
-      onClick={handleSkip}
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-between p-6 bg-gradient-to-br from-[#EBF3FC] via-[#F4F8FD] to-[#FFFFFF] text-slate-800 transition-all duration-500 cursor-pointer select-none overflow-hidden ${
-        animationStep === 3 ? 'opacity-0 pointer-events-none scale-105 transition-all duration-500' : 'opacity-100'
+      onClick={handleInstantDismiss}
+      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-[#EBF3FC] via-[#F4F8FD] to-[#FFFFFF] text-slate-800 select-none overflow-hidden cursor-pointer transition-all duration-400 ${
+        isFadingOut ? 'opacity-0 pointer-events-none scale-105 transition-all duration-400' : 'opacity-100'
       }`}
       style={{
-        paddingTop: 'max(2rem, env(safe-area-inset-top))',
-        paddingBottom: 'max(2rem, env(safe-area-inset-bottom))',
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
     >
-      {/* Aurora Ambient Lighting & Rotating Grid (Lighter & Subtle Colors) */}
+      <style jsx>{`
+        @keyframes fillProgressBar {
+          0% {
+            width: 0%;
+          }
+          30% {
+            width: 45%;
+          }
+          70% {
+            width: 85%;
+          }
+          100% {
+            width: 100%;
+          }
+        }
+        .animate-progress-bar {
+          animation: fillProgressBar 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+        }
+      `}</style>
+
+      {/* Background Ambient Lighting & Glow Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {/* Soft Pastel Blue & Gold Glow Spots */}
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#1557C0]/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s' }} />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#E7B93E]/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '7s', animationDelay: '1.5s' }} />
-        <div className="absolute top-1/4 right-1/4 w-80 h-80 bg-blue-100/30 rounded-full blur-3xl" />
+        <div className="absolute -top-32 -left-32 w-[32rem] h-[32rem] bg-[#1557C0]/15 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
+        <div className="absolute -bottom-32 -right-32 w-[32rem] h-[32rem] bg-[#E7B93E]/15 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
         
-        {/* Soft Radial Grid in Light Blue */}
+        {/* Soft Grid Overlay */}
         <div 
-          className="absolute inset-0 opacity-[0.06]" 
+          className="absolute inset-0 opacity-[0.07]" 
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, #1557C0 1.5px, transparent 0)`,
-            backgroundSize: '28px 28px'
+            backgroundSize: '24px 24px'
           }}
         />
-        
-        {/* Horizontal Moving Light Sweepers */}
-        <div className="absolute top-0 bottom-0 left-0 w-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 animate-[pulse_10s_infinite]" />
       </div>
 
-      {/* Top Header Accreditation Tag (High Contrast Dark Slate Style) */}
-      <div className={`relative z-10 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#071A41]/5 backdrop-blur-md border border-[#071A41]/10 text-[11px] font-black text-[#071A41] shadow-xs transition-all duration-700 transform ${
-        animationStep >= 0 ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
-      }`}>
-        <ShieldCheck className="w-3.5 h-3.5 text-[#E7B93E]" />
-        <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited</span>
-      </div>
-
-      {/* Center Cinematic Emblem & Animated Welcome Content */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-sm my-auto space-y-6">
+      {/* Main Centered Showcase Card */}
+      <div className="relative z-10 w-full max-w-lg mx-auto flex flex-col items-center text-center space-y-5 sm:space-y-6 p-6 sm:p-8 rounded-3xl bg-white/80 backdrop-blur-xl border border-white/90 shadow-[0_20px_60px_-15px_rgba(7,26,65,0.15)] animate-fade-in">
         
+        {/* Top Accreditation Tag */}
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#071A41]/10 text-xs font-extrabold text-[#071A41] shadow-xs">
+          <ShieldCheck className="w-4 h-4 text-[#E7B93E]" />
+          <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
+        </div>
+
         {/* Circular Emblem with Dynamic Glow Rings */}
-        <div className="relative flex items-center justify-center">
-          {/* Pulsing Outer Glow Rings */}
-          <div className="absolute w-36 h-36 rounded-full bg-gradient-to-tr from-[#1557C0]/20 to-[#E7B93E]/20 opacity-40 blur-xl animate-pulse" />
-          <div className="absolute w-32 h-32 rounded-full border border-[#1557C0]/20 animate-ping opacity-25" style={{ animationDuration: '2.5s' }} />
+        <div className="relative flex items-center justify-center my-1">
+          <div className="absolute w-40 h-40 sm:w-44 sm:h-44 rounded-full bg-gradient-to-tr from-[#1557C0]/35 to-[#E7B93E]/35 opacity-70 blur-xl animate-pulse" />
+          <div className="absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full border-2 border-[#1557C0]/30 animate-ping opacity-30" style={{ animationDuration: '2.5s' }} />
           
-          {/* Circular Frame */}
-          <div className={`relative w-28 h-28 sm:w-32 sm:h-32 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-white to-[#1557C0] shadow-[0_4px_25px_rgba(21,87,192,0.15)] transition-all duration-700 transform ${
-            animationStep >= 0 ? 'scale-100 rotate-0 opacity-100' : 'scale-75 -rotate-6 opacity-0'
-          }`}>
+          <div className="relative w-28 h-28 sm:w-34 sm:h-34 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-white to-[#1557C0] shadow-2xl transition-transform duration-700">
             <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-2.5 shadow-inner overflow-hidden">
               <Image
                 src="/college-emblem.png"
-                alt="V.S.B. Engineering College Emblem"
-                width={120}
-                height={120}
+                alt="V.S.B. Engineering College Logo"
+                width={130}
+                height={130}
                 className="w-full h-full object-contain"
                 priority
               />
@@ -130,72 +122,63 @@ export function MobileAppSplashScreen() {
           </div>
         </div>
 
-        {/* College Name & Accreditation Status */}
-        <div className={`space-y-2 transition-all duration-700 transform ${
-          animationStep >= 1 ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
-        }`}>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#071A41] drop-shadow-xs">
-            V.S.B. ENGINEERING COLLEGE
-          </h1>
-          <p className="text-[10px] font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1.5 bg-[#1557C0]/5 px-3 py-1 rounded-full border border-[#1557C0]/10">
-            <GraduationCap className="w-3.5 h-3.5 shrink-0 text-[#E7B93E]" />
-            <span>Autonomous Institution · Karur</span>
-          </p>
-        </div>
-
-        {/* Decorative Glowing Center Separator Line */}
-        <div className={`w-32 h-[1.5px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent transition-all duration-700 ${
-          animationStep >= 2 ? 'scale-x-100 opacity-100' : 'scale-x-0 opacity-0'
-        }`} />
-
-        {/* Welcome Section & AI & DS Portal details */}
-        <div className={`space-y-3.5 transition-all duration-700 transform ${
-          animationStep >= 2 ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-6 opacity-0 scale-95'
-        }`}>
-          <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#1557C0]/10 border border-[#1557C0]/20 text-[10px] font-black uppercase text-[#1557C0] tracking-wider shadow-sm">
-            <Sparkles className="w-3 h-3 text-[#E7B93E] animate-spin" style={{ animationDuration: '3s' }} />
-            <span>Welcome To</span>
+        {/* College & Department Branding Titles */}
+        <div className="space-y-3 w-full">
+          <div className="space-y-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-[#071A41] drop-shadow-xs">
+              V.S.B. ENGINEERING COLLEGE
+            </h1>
+            <p className="text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1.5 bg-[#1557C0]/10 px-4 py-1 rounded-full border border-[#1557C0]/15 mx-auto w-fit">
+              <GraduationCap className="w-4 h-4 text-[#E7B93E]" />
+              <span>Autonomous Institution · Karur</span>
+            </p>
           </div>
 
-          <h2 className="text-base sm:text-lg font-black leading-snug drop-shadow-xs text-[#071A41]">
-            <span className="block">DEPARTMENT OF</span>
-            <span className="text-[#1557C0] block">
-              ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
-            </span>
-          </h2>
+          {/* Decorative Divider */}
+          <div className="w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto opacity-80" />
 
-          <div className="flex items-center justify-center gap-2 pt-0.5">
-            <span className="flex items-center gap-1 text-[11px] font-bold text-slate-600">
-              <Cpu className="w-3.5 h-3.5 text-[#1557C0]" /> Digital Academic Portal
-            </span>
+          {/* Department Name */}
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-[#1557C0]/10 border border-[#1557C0]/20 text-xs font-black uppercase text-[#1557C0] tracking-wider shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#E7B93E] animate-spin" style={{ animationDuration: '4s' }} />
+              <span>Welcome To</span>
+            </div>
+
+            <h2 className="text-base sm:text-lg font-black leading-snug text-[#071A41]">
+              <span className="block text-slate-500 text-xs font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
+              <span className="text-[#1557C0] block font-black">
+                ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
+              </span>
+            </h2>
+
+            <div className="flex items-center justify-center pt-0.5">
+              <span className="inline-flex items-center gap-1.5 px-4 py-1 rounded-full bg-[#071A41] text-white text-xs font-bold shadow-md">
+                <Cpu className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Digital Academic Portal</span>
+              </span>
+            </div>
           </div>
         </div>
 
-      </div>
+        {/* Progress Bar Directly Below */}
+        <div className="w-full max-w-md pt-1 space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-600 font-bold px-1">
+            <span className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+              <span>{progress < 100 ? 'Initializing Digital Portal...' : 'Ready · Online'}</span>
+            </span>
+            <span className="font-mono font-black text-[#1557C0] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200 shadow-xs">
+              {progress}%
+            </span>
+          </div>
 
-      {/* Bottom Progress Bar & Loading Status */}
-      <div className="relative z-10 w-full max-w-xs space-y-2 pb-2">
-        <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold px-1">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span>{progress < 100 ? 'Initializing Portal...' : 'Ready · Opening...'}</span>
-          </span>
-          <span className="font-mono text-slate-700">{progress}%</span>
+          <div className="w-full h-2.5 bg-[#071A41]/10 rounded-full overflow-hidden p-0.5 shadow-inner">
+            <div
+              className="h-full bg-gradient-to-r from-[#1557C0] via-cyan-500 to-[#E7B93E] rounded-full shadow-sm animate-progress-bar"
+            />
+          </div>
         </div>
 
-        {/* Animated Progress Bar */}
-        <div className="w-full h-1.5 bg-[#071A41]/10 rounded-full overflow-hidden p-0.5">
-          <div
-            className="h-full bg-gradient-to-r from-[#1557C0] via-cyan-500 to-[#E7B93E] rounded-full transition-all duration-200"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <div className="text-center pt-1">
-          <span className="text-[10px] text-slate-400 font-semibold animate-pulse">
-            Tap anywhere to enter
-          </span>
-        </div>
       </div>
     </div>
   )

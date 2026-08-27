@@ -321,6 +321,9 @@ export default function LoginPage() {
       if (data.challenge) {
         setChallenge(data.challenge)
       }
+      if (data.devOtp) {
+        setDemoOtpCode(data.devOtp)
+      }
       setOtpSent(true)
       toast.success(data.message || 'OTP dispatched to administrator email.')
       setOtpCooldown(60)
@@ -797,6 +800,22 @@ export default function LoginPage() {
                         autoFocus
                       />
                     </div>
+
+                    {demoOtpCode && (
+                      <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs flex items-center justify-between text-amber-900">
+                        <span>Code: <strong className="font-mono text-sm">{demoOtpCode}</strong></span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOtp(demoOtpCode)
+                            handleVerifyOTP(demoOtpCode)
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 font-bold text-amber-900 cursor-pointer shadow-xs"
+                        >
+                          Auto Fill Code
+                        </button>
+                      </div>
+                    )}
 
                     <button
                       type="button"

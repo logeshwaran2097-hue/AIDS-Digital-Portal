@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
     console.error('Student login error:', error)
     return NextResponse.json(
-      { success: false, message: 'An error occurred during login' },
+      { success: false, message: 'Login error: ' + (error instanceof Error ? error.message : String(error)) },
       { status: 500 }
     )
   }

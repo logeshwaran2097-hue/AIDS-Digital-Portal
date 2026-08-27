@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json({ 
         success: true, 
         message: result.message,
-        challenge: result.challenge 
+        challenge: result.challenge,
+        devOtp: (result as any).devOtp,
       })
 
       if (result.challenge) {

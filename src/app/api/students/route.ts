@@ -177,28 +177,33 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const data = await request.json()
-    const { id, name, email, password, phone, dateOfBirth, year, semester, section, status } = data
+    const { id, registerNumber, name, email, password, phone, dateOfBirth, department, year, semester, section, status } = data
 
-    if (!id) {
-      return NextResponse.json({ success: false, message: 'Missing student ID' }, { status: 400 })
+    const lookupKey = id || registerNumber
+    if (!lookupKey) {
+      return NextResponse.json({ success: false, message: 'Missing student ID or register number' }, { status: 400 })
     }
 
-    let student = await prisma.student.findUnique({ where: { id } })
+    let student = await prisma.student.findUnique({ where: { id: lookupKey } }).catch(() => null)
     if (!student) {
-      student = await prisma.student.findFirst({ where: { userId: id } })
+      student = await prisma.student.findFirst({ where: { userId: lookupKey } }).catch(() => null)
+    }
+    if (!student) {
+      student = await prisma.student.findUnique({ where: { registerNumber: String(lookupKey).trim().toUpperCase() } }).catch(() => null)
     }
 
     if (!student) {
-      return NextResponse.json({ success: false, message: 'Student record not found' }, { status: 404 })
+      return NextResponse.json({ success: false, message: 'Student record not found in database' }, { status: 404 })
     }
 
     // Update Student record
-    await prisma.student.update({
+    const updatedStudent = await prisma.student.update({
       where: { id: student.id },
       data: {
+        ...(department ? { department: department.trim() } : {}),
         ...(year !== undefined ? { year: Number(year) } : {}),
         ...(semester !== undefined ? { semester: Number(semester) } : {}),
-        ...(section !== undefined ? { section } : {}),
+        ...(section !== undefined ? { section: section.trim() } : {}),
         ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
       },
     })
@@ -209,21 +214,40 @@ export async function PUT(request: Request) {
     }
 
     // Update User record
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: student.userId },
       data: {
         ...(name ? { name: name.trim() } : {}),
         ...(email ? { email: email.trim().toLowerCase() } : {}),
-        ...(phone !== undefined ? { phone } : {}),
+        ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
         ...(status ? { status } : {}),
         ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
       },
     })
 
-    return NextResponse.json({ success: true, message: 'Student updated successfully' })
+    return NextResponse.json({
+      success: true,
+      message: 'Student profile updated successfully',
+      student: {
+        id: updatedStudent.id,
+        userId: updatedStudent.userId,
+        registerNumber: updatedStudent.registerNumber,
+        department: updatedStudent.department,
+        year: updatedStudent.year,
+        semester: updatedStudent.semester,
+        section: updatedStudent.section,
+        dateOfBirth: updatedStudent.dateOfBirth ? updatedStudent.dateOfBirth.toISOString().split('T')[0] : null,
+      },
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+      },
+    })
   } catch (error) {
     console.error('Update student error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to update student' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to update student: ' + String(error) }, { status: 500 })
   }
 }
 
