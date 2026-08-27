@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Sparkles,
   Palette,
+  Award,
 } from 'lucide-react'
 
 // Background Themes
@@ -401,6 +402,22 @@ export default function LoginPage() {
     <div className={cn('min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden px-4 py-8 sm:py-12 select-none transition-colors duration-700', theme.containerClass)}>
       
       {/* ========================================================================= */}
+      {/* BACKGROUND WATERMARK LOGO (SUBTLE BLUR & LOW OPACITY) */}
+      {/* ========================================================================= */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+        <div className="w-[500px] h-[500px] sm:w-[650px] sm:h-[650px] opacity-[0.06] blur-[1px] transform scale-110 select-none">
+          <Image
+            src="/college-emblem.png"
+            alt="V.S.B. Watermark Crest"
+            width={650}
+            height={650}
+            className="w-full h-full object-contain filter grayscale contrast-125"
+            priority
+          />
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
       {/* TOP BACKGROUND THEME PALETTE PICKER */}
       {/* ========================================================================= */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 shadow-lg">
@@ -445,7 +462,7 @@ export default function LoginPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* TOP INSTITUTION BRANDING */}
+      {/* TOP INSTITUTION BRANDING WITH "A PLACE FOR PLACEMENT" QUOTE */}
       {/* ========================================================================= */}
       <div className="w-full max-w-md text-center mb-6 sm:mb-8 space-y-3 relative z-10">
         
@@ -464,15 +481,24 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Institution Title */}
-        <div className="space-y-1">
+        {/* Institution Title & Quotes */}
+        <div className="space-y-1.5">
           <h1 className={cn('text-2xl sm:text-3xl font-black tracking-tight transition-colors duration-500', theme.headerText)}>
             V.S.B. ENGINEERING COLLEGE
           </h1>
           <p className={cn('text-xs sm:text-sm font-black tracking-wide uppercase transition-all duration-500', theme.badgeText)}>
             DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
           </p>
-          <p className={cn('text-xs font-medium flex items-center justify-center gap-1.5 transition-colors duration-500', theme.subText)}>
+
+          {/* Important Motto Quote */}
+          <div className="pt-0.5">
+            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-300 text-xs sm:text-sm font-black italic tracking-wide shadow-sm backdrop-blur-xs">
+              <Award className="w-3.5 h-3.5 text-amber-300" />
+              <span>&ldquo;A Place for Placement&rdquo;</span>
+            </span>
+          </div>
+
+          <p className={cn('text-xs font-medium flex items-center justify-center gap-1.5 transition-colors duration-500 pt-0.5', theme.subText)}>
             <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
             <span>Academic Management &amp; Digital Portal</span>
           </p>
