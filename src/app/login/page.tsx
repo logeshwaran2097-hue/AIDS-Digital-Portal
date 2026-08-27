@@ -468,14 +468,17 @@ export default function LoginPage() {
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
         
-        {/* ONE PREMIUM CIRCULAR GOLD EMBLEM */}
-        <div className="relative flex items-center justify-center my-2 sm:my-3 anim-logo-reveal">
-          {/* Subtle Ambient Backlight Glow */}
-          <div className="absolute w-24 h-24 sm:w-30 sm:h-30 rounded-full bg-gradient-to-tr from-[#1557C0]/35 via-[#E7B93E]/30 to-[#06B6D4]/35 blur-xl animate-pulse" />
+        {/* ONE PREMIUM CIRCULAR GOLD EMBLEM WITH LUXURY ANIMATIONS */}
+        <div className="relative flex items-center justify-center my-2 sm:my-3 anim-logo-reveal anim-medallion-levitate">
+          {/* Subtle Ambient Solar Corona Pulse */}
+          <div className="absolute w-24 h-24 sm:w-30 sm:h-30 rounded-full bg-gradient-to-tr from-[#1557C0]/40 via-[#E7B93E]/35 to-[#06B6D4]/40 blur-xl anim-solar-corona" />
           
-          {/* Single Premium Circular Gold Medallion */}
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_12px_30px_rgba(7,26,65,0.2),0_0_20px_rgba(231,185,62,0.45)] ring-2 ring-white/90 hover:scale-105 transition-transform duration-500">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-inner overflow-hidden">
+          {/* Single Premium Circular Gold Medallion with Specular Sheen */}
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_14px_35px_rgba(7,26,65,0.22),0_0_25px_rgba(231,185,62,0.5)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-500">
+            {/* Specular Liquid Gold Sweep */}
+            <div className="anim-gold-sheen" />
+
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-inner overflow-hidden relative z-10">
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
@@ -485,6 +488,11 @@ export default function LoginPage() {
                 priority
               />
             </div>
+          </div>
+
+          {/* Sparkling Diamond Glint at Top-Right */}
+          <div className="absolute top-0 right-1/2 translate-x-10 sm:translate-x-12 -translate-y-1 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E7B93E] drop-shadow-[0_0_8px_rgba(231,185,62,0.9)]" />
           </div>
         </div>
 

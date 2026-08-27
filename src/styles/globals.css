@@ -223,6 +223,105 @@ html, body {
   }
 }
 
+@keyframes specularGoldGlint {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+    opacity: 0;
+  }
+  20%, 80% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(200%) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes royalSolarCorona {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.85;
+  }
+}
+
+@keyframes royalMedallionLevitate {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0.8deg);
+  }
+}
+
+@keyframes diamondTwinkle {
+  0%, 100% {
+    transform: scale(0.6) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.25) rotate(90deg);
+    opacity: 1;
+  }
+}
+
+.anim-gold-sheen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.anim-gold-sheen::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 40%,
+    rgba(255, 245, 180, 0.75) 50%,
+    rgba(255, 255, 255, 0.1) 60%,
+    transparent 100%
+  );
+  animation: specularGoldGlint 3.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.anim-solar-corona {
+  animation: royalSolarCorona 3.5s ease-in-out infinite;
+}
+
+.anim-medallion-levitate {
+  animation: royalMedallionLevitate 4.5s ease-in-out infinite;
+}
+
+.anim-diamond-twinkle {
+  animation: diamondTwinkle 2.5s ease-in-out infinite;
+}
+
+@keyframes warpSpeed {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+    filter: blur(12px);
+  }
+}
+
 @keyframes errorShake {
   0%, 100% { transform: translateX(0); }
   15%, 45%, 75% { transform: translateX(-6px) scale(0.99); }
@@ -253,22 +352,6 @@ html, body {
     opacity: 1;
     transform: scale(1) rotate(0deg);
     filter: blur(0px);
-  }
-}
-
-@keyframes warpSpeed {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  60% {
-    transform: scale(1.08);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.4);
-    opacity: 0;
-    filter: blur(12px);
   }
 }
 

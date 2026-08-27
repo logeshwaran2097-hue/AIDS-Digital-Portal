@@ -191,14 +191,17 @@ export function MobileAppSplashScreen() {
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
 
-        {/* 0.0s: Single Luxury Circular Gold Medallion */}
-        <div className="relative flex items-center justify-center my-3 anim-crest-intro anim-crest-float">
-          {/* Subtle Ambient Backlight Glow */}
-          <div className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-[#1557C0]/35 via-[#E7B93E]/30 to-[#06B6D4]/35 blur-2xl animate-pulse" />
+        {/* 0.0s: Single Luxury Circular Gold Medallion with Liquid Sheen */}
+        <div className="relative flex items-center justify-center my-3 anim-crest-intro anim-medallion-levitate">
+          {/* Ambient Solar Corona Pulse */}
+          <div className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-[#1557C0]/40 via-[#E7B93E]/35 to-[#06B6D4]/40 blur-2xl anim-solar-corona" />
           
           {/* Single Luxury Circular Gold Medallion */}
-          <div className="relative w-26 h-26 sm:w-32 sm:h-32 rounded-full p-1.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_18px_40px_rgba(7,26,65,0.22),0_0_25px_rgba(231,185,62,0.5)] ring-3 ring-white/90 hover:scale-105 transition-transform duration-500">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-2 shadow-inner overflow-hidden">
+          <div className="relative w-26 h-26 sm:w-32 sm:h-32 rounded-full p-1.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_20px_45px_rgba(7,26,65,0.25),0_0_30px_rgba(231,185,62,0.6)] ring-3 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-500">
+            {/* Specular Liquid Gold Sweep */}
+            <div className="anim-gold-sheen" />
+
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-2 shadow-inner overflow-hidden relative z-10">
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
@@ -208,6 +211,11 @@ export function MobileAppSplashScreen() {
                 priority
               />
             </div>
+          </div>
+
+          {/* Sparkling Diamond Glint */}
+          <div className="absolute top-0 right-1/2 translate-x-12 sm:translate-x-16 -translate-y-2 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
+            <Sparkles className="w-5 h-5 text-[#E7B93E] drop-shadow-[0_0_12px_rgba(231,185,62,1)]" />
           </div>
         </div>
 
