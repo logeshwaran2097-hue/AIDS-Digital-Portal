@@ -44,10 +44,31 @@ export async function POST(request: NextRequest) {
     const challenge = `${Buffer.from(challengePayload).toString('base64')}.${signature}`
 
     // 3. Dispatch Real Email via SMTP
-    const studentDisplayName = name || 'Student'
-    const studentRegNumber = registerNumber || 'N/A'
+    let studentDisplayName = name && name.trim() ? name.trim() : ''
+    const studentRegNumber = registerNumber ? registerNumber.trim().toUpperCase() : 'N/A'
 
-    console.log(`[VSB Onboarding] Dispatching real OTP email to ${trimmedEmail} (OTP: ${otp})`)
+    // If name is missing or looks like "Student (RegNo)", lookup real name from database
+    if (!studentDisplayName || studentDisplayName.startsWith('Student (')) {
+      try {
+        if (studentRegNumber && studentRegNumber !== 'N/A') {
+          const studentRec = await prisma.student.findUnique({
+            where: { registerNumber: studentRegNumber },
+          })
+          if (studentRec) {
+            const userRec = await prisma.user.findUnique({ where: { id: studentRec.userId } })
+            if (userRec?.name && !userRec.name.startsWith('Student (')) {
+              studentDisplayName = userRec.name
+            }
+          }
+        }
+      } catch {}
+    }
+
+    if (!studentDisplayName || studentDisplayName.startsWith('Student (')) {
+      studentDisplayName = 'Student'
+    }
+
+    console.log(`[VSB Onboarding] Dispatching real OTP email to ${trimmedEmail} (Student: ${studentDisplayName}, OTP: ${otp})`)
     const emailResult = await sendStudentVerificationEmail(
       trimmedEmail,
       otp,

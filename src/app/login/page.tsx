@@ -178,6 +178,10 @@ export default function LoginPage() {
   // STEP 1 ➔ STEP 2: Validate details review
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!onboardingForm.name.trim() || onboardingForm.name.startsWith('Student (')) {
+      toast.error('Please enter your official Full Name.')
+      return
+    }
     if (!onboardingForm.detailsConfirmed) {
       toast.error('Please check the confirmation box verifying that your details are reviewed.')
       return
