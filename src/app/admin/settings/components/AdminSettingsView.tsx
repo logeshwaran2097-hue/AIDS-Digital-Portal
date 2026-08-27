@@ -51,6 +51,14 @@ export interface MenuItemConfig {
   customHref?: string
 }
 
+export interface YearCohortConfig {
+  yearNumber: 1 | 2 | 3 | 4
+  yearLabel: string
+  batch: string
+  activeSemester: number
+  semesterType: 'ODD' | 'EVEN'
+}
+
 export function AdminSettingsView() {
   // Navigation Active Tab (Clean, Essential Tabs Only)
   const [activeTab, setActiveTab] = useState<'general' | 'menus' | 'notifications' | 'passwords' | 'branding'>('general')
@@ -72,7 +80,38 @@ export function AdminSettingsView() {
   const [minAttendancePct, setMinAttendancePct] = useState(75.0)
   const [condonationLimitPct, setCondonationLimitPct] = useState(65.0)
 
-  // Academic Cohort Batches (Admin Configurable)
+  // Academic Cohort Batches & 4-Year Odd/Even Semester Configuration
+  const [yearConfigs, setYearConfigs] = useState<YearCohortConfig[]>([
+    {
+      yearNumber: 1,
+      yearLabel: 'Year I (Freshman)',
+      batch: '2025 - 2029',
+      activeSemester: 2,
+      semesterType: 'EVEN',
+    },
+    {
+      yearNumber: 2,
+      yearLabel: 'Year II (Sophomore)',
+      batch: '2024 - 2028',
+      activeSemester: 4,
+      semesterType: 'EVEN',
+    },
+    {
+      yearNumber: 3,
+      yearLabel: 'Year III (Junior)',
+      batch: '2023 - 2027',
+      activeSemester: 6,
+      semesterType: 'EVEN',
+    },
+    {
+      yearNumber: 4,
+      yearLabel: 'Year IV (Senior)',
+      batch: '2022 - 2026',
+      activeSemester: 8,
+      semesterType: 'EVEN',
+    },
+  ])
+
   const [batches, setBatches] = useState({
     year1: '2025 - 2029',
     year2: '2024 - 2028',
@@ -89,10 +128,12 @@ export function AdminSettingsView() {
     { id: 'm5', month: 'May', days: 10 },
   ])
 
-  // Handle Semester Term Change with automatic monthly default presets
+  // Handle Semester Term Change with automatic monthly & 4-year odd/even semester switching
   const handleSemesterTypeChange = (term: string) => {
     setCurrentSemesterType(term)
-    if (term.includes('Odd')) {
+    const isOdd = term.includes('Odd')
+
+    if (isOdd) {
       const oddMonths = [
         { id: 'm1', month: 'July', days: 18 },
         { id: 'm2', month: 'August', days: 20 },
@@ -102,6 +143,13 @@ export function AdminSettingsView() {
       ]
       setMonthlyWorkingDays(oddMonths)
       setPrescribedWorkingDays(90)
+      setYearConfigs((prev) =>
+        prev.map((c) => ({
+          ...c,
+          activeSemester: c.yearNumber * 2 - 1, // 1, 3, 5, 7
+          semesterType: 'ODD',
+        }))
+      )
     } else {
       const evenMonths = [
         { id: 'm1', month: 'January', days: 18 },
@@ -112,6 +160,80 @@ export function AdminSettingsView() {
       ]
       setMonthlyWorkingDays(evenMonths)
       setPrescribedWorkingDays(90)
+      setYearConfigs((prev) =>
+        prev.map((c) => ({
+          ...c,
+          activeSemester: c.yearNumber * 2, // 2, 4, 6, 8
+          semesterType: 'EVEN',
+        }))
+      )
+    }
+  }
+
+  // Update specific year's batch
+  const handleYearBatchChange = (yearNum: number, newBatch: string) => {
+    setYearConfigs((prev) =>
+      prev.map((c) => (c.yearNumber === yearNum ? { ...c, batch: newBatch } : c))
+    )
+    if (yearNum === 1) setBatches((b) => ({ ...b, year1: newBatch }))
+    if (yearNum === 2) setBatches((b) => ({ ...b, year2: newBatch }))
+    if (yearNum === 3) setBatches((b) => ({ ...b, year3: newBatch }))
+    if (yearNum === 4) setBatches((b) => ({ ...b, year4: newBatch }))
+  }
+
+  // Update specific year's active semester & odd/even toggle
+  const handleYearSemesterChange = (yearNum: number, semNum: number) => {
+    const isOdd = semNum % 2 !== 0
+    setYearConfigs((prev) =>
+      prev.map((c) =>
+        c.yearNumber === yearNum
+          ? {
+              ...c,
+              activeSemester: semNum,
+              semesterType: isOdd ? 'ODD' : 'EVEN',
+            }
+          : c
+      )
+    )
+  }
+
+  // Update specific year's label
+  const handleYearLabelChange = (yearNum: number, newLabel: string) => {
+    setYearConfigs((prev) =>
+      prev.map((c) => (c.yearNumber === yearNum ? { ...c, yearLabel: newLabel } : c))
+    )
+  }
+
+  // Shift all batches forward or backward by 1 year
+  const handleRollBatches = (delta: number) => {
+    setYearConfigs((prev) =>
+      prev.map((c) => {
+        const parts = c.batch.split('-').map((p) => parseInt(p.trim(), 10))
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          const newBatch = `${parts[0] + delta} - ${parts[1] + delta}`
+          return { ...c, batch: newBatch }
+        }
+        return c
+      })
+    )
+    setBatches((prev) => {
+      const shift = (b: string) => {
+        const parts = b.split('-').map((p) => parseInt(p.trim(), 10))
+        if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+          return `${parts[0] + delta} - ${parts[1] + delta}`
+        }
+        return b
+      }
+      return {
+        year1: shift(prev.year1),
+        year2: shift(prev.year2),
+        year3: shift(prev.year3),
+        year4: shift(prev.year4),
+      }
+    })
+    const ayParts = academicYear.split('-').map((p) => parseInt(p.trim(), 10))
+    if (ayParts.length === 2 && !isNaN(ayParts[0]) && !isNaN(ayParts[1])) {
+      setAcademicYear(`${ayParts[0] + delta} - ${ayParts[1] + delta}`)
     }
   }
 
@@ -439,6 +561,8 @@ export function AdminSettingsView() {
         if (parsed.regulation) setRegulation(parsed.regulation)
         if (parsed.prescribedWorkingDays) setPrescribedWorkingDays(parsed.prescribedWorkingDays)
         if (parsed.monthlyWorkingDays && Array.isArray(parsed.monthlyWorkingDays)) setMonthlyWorkingDays(parsed.monthlyWorkingDays)
+        if (parsed.yearConfigs && Array.isArray(parsed.yearConfigs)) setYearConfigs(parsed.yearConfigs)
+        if (parsed.batches) setBatches(parsed.batches)
         if (parsed.minAttendancePct) setMinAttendancePct(parsed.minAttendancePct)
         if (parsed.twoFactorRequired !== undefined) setTwoFactorRequired(parsed.twoFactorRequired)
         if (parsed.maintenanceMode !== undefined) setMaintenanceMode(parsed.maintenanceMode)
@@ -600,6 +724,8 @@ export function AdminSettingsView() {
       regulation,
       prescribedWorkingDays,
       monthlyWorkingDays,
+      yearConfigs,
+      batches,
       minAttendancePct,
       condonationLimitPct,
       smtpHost,
@@ -1025,61 +1151,159 @@ export function AdminSettingsView() {
                   </div>
                 </div>
 
-                {/* Academic Batches Configuration Block */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/70 border-2 border-indigo-200 space-y-3.5">
-                  <div className="flex items-center justify-between">
+                {/* Academic Batches & 4-Year Odd/Even Semester Configuration Block */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-indigo-50/70 border-2 border-indigo-200 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div>
-                      <span className="block font-black text-[#071A3D] text-[11px] uppercase tracking-wider">
-                        🎓 Academic Batches (Admin Configured Cohorts)
+                      <span className="block font-black text-[#071A3D] text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        🎓 Academic Batches &amp; 4-Year Odd/Even Semesters
                       </span>
-                      <p className="text-[10px] text-gray-500">Configure active 4-year student batches across all student &amp; admin portals</p>
+                      <p className="text-[10px] text-gray-500">
+                        Configure batch year spans, cohort titles, and active Odd / Even semesters for all 4 years
+                      </p>
+                    </div>
+
+                    <div className="flex items-center flex-wrap gap-1.5 self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleSemesterTypeChange('Odd Semester (Jul - Dec)')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer shadow-2xs ${
+                          currentSemesterType.includes('Odd')
+                            ? 'bg-[#1455D9] text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-indigo-200'
+                        }`}
+                        title="Set all 4 years to Odd Semesters (Sem 1, 3, 5, 7)"
+                      >
+                        ⚡ Set All Odd
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSemesterTypeChange('Even Semester (Jan - May)')}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer shadow-2xs ${
+                          currentSemesterType.includes('Even')
+                            ? 'bg-[#1455D9] text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-indigo-200'
+                        }`}
+                        title="Set all 4 years to Even Semesters (Sem 2, 4, 6, 8)"
+                      >
+                        ⚡ Set All Even
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRollBatches(1)}
+                        className="px-2 py-1 rounded-lg bg-white text-gray-700 hover:text-[#071A3D] text-[10px] font-bold border border-indigo-200 shadow-2xs cursor-pointer hover:bg-gray-100"
+                        title="Advance academic batch years by +1 year"
+                      >
+                        +1 Yr
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRollBatches(-1)}
+                        className="px-2 py-1 rounded-lg bg-white text-gray-700 hover:text-[#071A3D] text-[10px] font-bold border border-indigo-200 shadow-2xs cursor-pointer hover:bg-gray-100"
+                        title="Rewind academic batch years by -1 year"
+                      >
+                        -1 Yr
+                      </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
-                      <label className="block text-[10px] font-black text-indigo-700 uppercase">Year I (Freshman)</label>
-                      <input
-                        type="text"
-                        value={batches.year1}
-                        onChange={(e) => setBatches({ ...batches, year1: e.target.value })}
-                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                      />
-                      <span className="text-[9px] text-gray-400">Semesters 1 &amp; 2</span>
-                    </div>
+                  {/* 4 Years Interactive Cohort Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {yearConfigs.map((cfg) => {
+                      const isOddActive = cfg.activeSemester % 2 !== 0
+                      const oddSemNumber = cfg.yearNumber * 2 - 1
+                      const evenSemNumber = cfg.yearNumber * 2
 
-                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
-                      <label className="block text-[10px] font-black text-purple-700 uppercase">Year II (Sophomore)</label>
-                      <input
-                        type="text"
-                        value={batches.year2}
-                        onChange={(e) => setBatches({ ...batches, year2: e.target.value })}
-                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                      />
-                      <span className="text-[9px] text-purple-600 font-medium">Semesters 3 &amp; 4</span>
-                    </div>
+                      const yearColors = {
+                        1: { border: 'border-indigo-200', text: 'text-indigo-700', badge: 'bg-indigo-100 text-indigo-800' },
+                        2: { border: 'border-purple-200', text: 'text-purple-700', badge: 'bg-purple-100 text-purple-800' },
+                        3: { border: 'border-sky-200', text: 'text-sky-700', badge: 'bg-sky-100 text-sky-800' },
+                        4: { border: 'border-emerald-200', text: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-800' },
+                      }[cfg.yearNumber]
 
-                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
-                      <label className="block text-[10px] font-black text-blue-700 uppercase">Year III (Junior)</label>
-                      <input
-                        type="text"
-                        value={batches.year3}
-                        onChange={(e) => setBatches({ ...batches, year3: e.target.value })}
-                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                      />
-                      <span className="text-[9px] text-blue-600 font-medium">Semesters 5 &amp; 6</span>
-                    </div>
+                      return (
+                        <div
+                          key={cfg.yearNumber}
+                          className={`p-3 rounded-2xl bg-white border-2 ${yearColors.border} space-y-2 shadow-2xs flex flex-col justify-between`}
+                        >
+                          <div className="space-y-1.5">
+                            {/* Year Title & Badge */}
+                            <div className="flex items-center justify-between gap-1">
+                              <span className={`text-[10px] font-black uppercase ${yearColors.text}`}>
+                                Year {cfg.yearNumber}
+                              </span>
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                                  isOddActive ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {isOddActive ? 'Odd Sem' : 'Even Sem'}
+                              </span>
+                            </div>
 
-                    <div className="p-2.5 rounded-xl bg-white border border-indigo-100 space-y-1">
-                      <label className="block text-[10px] font-black text-emerald-700 uppercase">Year IV (Senior)</label>
-                      <input
-                        type="text"
-                        value={batches.year4}
-                        onChange={(e) => setBatches({ ...batches, year4: e.target.value })}
-                        className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                      />
-                      <span className="text-[9px] text-emerald-600 font-medium">Semesters 7 &amp; 8</span>
-                    </div>
+                            {/* Editable Year Label */}
+                            <div>
+                              <input
+                                type="text"
+                                value={cfg.yearLabel}
+                                onChange={(e) => handleYearLabelChange(cfg.yearNumber, e.target.value)}
+                                className="w-full px-1.5 py-0.5 rounded text-[11px] font-bold text-[#071A3D] border border-gray-200 bg-gray-50 focus:bg-white focus:border-[#1455D9] focus:outline-none"
+                                placeholder="Year Label..."
+                              />
+                            </div>
+
+                            {/* Editable Batch */}
+                            <div>
+                              <label className="block text-[9px] font-bold text-gray-400 uppercase">Batch Span</label>
+                              <input
+                                type="text"
+                                value={cfg.batch}
+                                onChange={(e) => handleYearBatchChange(cfg.yearNumber, e.target.value)}
+                                placeholder="2025 - 2029"
+                                className="w-full px-2 py-1 rounded-lg border border-gray-200 text-xs font-mono font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                              />
+                            </div>
+
+                            {/* Odd / Even Semester Picker */}
+                            <div className="pt-1 space-y-1">
+                              <label className="block text-[9px] font-bold text-gray-500 uppercase">Active Semester</label>
+                              <div className="grid grid-cols-2 gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleYearSemesterChange(cfg.yearNumber, oddSemNumber)}
+                                  className={`py-1 px-1.5 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer ${
+                                    cfg.activeSemester === oddSemNumber
+                                      ? 'bg-[#071A3D] text-white shadow-2xs font-black'
+                                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                  }`}
+                                >
+                                  Sem {oddSemNumber} <span className="text-[8px] opacity-80">(Odd)</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleYearSemesterChange(cfg.yearNumber, evenSemNumber)}
+                                  className={`py-1 px-1.5 rounded-lg text-[10px] font-bold transition-all text-center cursor-pointer ${
+                                    cfg.activeSemester === evenSemNumber
+                                      ? 'bg-[#1455D9] text-white shadow-2xs font-black'
+                                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                                  }`}
+                                >
+                                  Sem {evenSemNumber} <span className="text-[8px] opacity-80">(Even)</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-1.5 border-t border-gray-100 text-[9px] text-gray-500 font-medium flex items-center justify-between">
+                            <span>Selected:</span>
+                            <span className="font-bold text-[#071A3D]">
+                              Semester {cfg.activeSemester} ({cfg.activeSemester % 2 !== 0 ? 'Odd Term' : 'Even Term'})
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
 
