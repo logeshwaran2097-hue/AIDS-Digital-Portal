@@ -468,13 +468,19 @@ export default function LoginPage() {
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
         
-        {/* ONE PREMIUM CIRCULAR GOLD EMBLEM WITH LUXURY ANIMATIONS */}
+        {/* 3-LAYER CELESTIAL MASTER EMBLEM */}
         <div className="relative flex items-center justify-center my-2 sm:my-3 anim-logo-reveal anim-medallion-levitate">
-          {/* Subtle Ambient Solar Corona Pulse */}
-          <div className="absolute w-24 h-24 sm:w-30 sm:h-30 rounded-full bg-gradient-to-tr from-[#1557C0]/40 via-[#E7B93E]/35 to-[#06B6D4]/40 blur-xl anim-solar-corona" />
+          {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
+          <div 
+            className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full border border-dashed border-[#06B6D4]/60 shadow-[0_0_16px_rgba(6,182,212,0.4)] animate-spin" 
+            style={{ animationDuration: '14s' }} 
+          />
+
+          {/* Layer 2: Middle Sapphire-Cyan Glass Orbit Halo */}
+          <div className="absolute w-26 h-26 sm:w-34 sm:h-34 rounded-full border-[1.5px] border-[#1557C0]/35 bg-gradient-to-tr from-cyan-100/35 via-blue-100/20 to-amber-100/30 shadow-[0_0_20px_rgba(21,87,192,0.2)] anim-solar-corona" />
           
-          {/* Single Premium Circular Gold Medallion with Specular Sheen */}
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_14px_35px_rgba(7,26,65,0.22),0_0_25px_rgba(231,185,62,0.5)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-500">
+          {/* Layer 1: Inner Circular Gold Medallion with Specular Sheen */}
+          <div className="relative w-20 h-20 sm:w-26 sm:h-26 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_14px_35px_rgba(7,26,65,0.22),0_0_25px_rgba(231,185,62,0.5)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-500">
             {/* Specular Liquid Gold Sweep */}
             <div className="anim-gold-sheen" />
 
@@ -482,8 +488,8 @@ export default function LoginPage() {
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
-                width={95}
-                height={95}
+                width={100}
+                height={100}
                 className="w-full h-full object-contain drop-shadow-sm"
                 priority
               />
@@ -491,7 +497,7 @@ export default function LoginPage() {
           </div>
 
           {/* Sparkling Diamond Glint at Top-Right */}
-          <div className="absolute top-0 right-1/2 translate-x-10 sm:translate-x-12 -translate-y-1 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
+          <div className="absolute top-0 right-1/2 translate-x-10 sm:translate-x-13 -translate-y-1 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
             <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E7B93E] drop-shadow-[0_0_8px_rgba(231,185,62,0.9)]" />
           </div>
         </div>

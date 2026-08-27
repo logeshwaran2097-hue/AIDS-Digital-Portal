@@ -191,12 +191,18 @@ export function MobileAppSplashScreen() {
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
 
-        {/* 0.0s: Single Luxury Circular Gold Medallion with Liquid Sheen */}
+        {/* 0.0s: 3-Layer Celestial Master Emblem */}
         <div className="relative flex items-center justify-center my-3 anim-crest-intro anim-medallion-levitate">
-          {/* Ambient Solar Corona Pulse */}
-          <div className="absolute w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-tr from-[#1557C0]/40 via-[#E7B93E]/35 to-[#06B6D4]/40 blur-2xl anim-solar-corona" />
+          {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
+          <div 
+            className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full border border-dashed border-[#06B6D4]/60 shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-spin" 
+            style={{ animationDuration: '14s' }} 
+          />
+
+          {/* Layer 2: Middle Sapphire-Cyan Glass Orbit Halo */}
+          <div className="absolute w-36 h-36 sm:w-44 sm:h-44 rounded-full border-[1.5px] border-[#1557C0]/35 bg-gradient-to-tr from-cyan-100/40 via-blue-100/25 to-amber-100/35 shadow-[0_0_25px_rgba(21,87,192,0.25)] anim-solar-corona" />
           
-          {/* Single Luxury Circular Gold Medallion */}
+          {/* Layer 1: Inner Circular Gold Medallion with Specular Sheen */}
           <div className="relative w-26 h-26 sm:w-32 sm:h-32 rounded-full p-1.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_20px_45px_rgba(7,26,65,0.25),0_0_30px_rgba(231,185,62,0.6)] ring-3 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-500">
             {/* Specular Liquid Gold Sweep */}
             <div className="anim-gold-sheen" />
@@ -220,7 +226,7 @@ export function MobileAppSplashScreen() {
         </div>
 
         {/* STAGE REVEALS: Pure Royal & Academic Branding */}
-        <div className="space-y-3.5 w-full">
+        <div className="space-y-3 w-full">
           
           {/* STAGE 2: College Master Name (1.4s) */}
           <div className="anim-stage-2 space-y-1">
@@ -258,14 +264,19 @@ export function MobileAppSplashScreen() {
             </h2>
           </div>
 
-          {/* STAGE 6: Digital Academic Portal Crest Pill (3.8s) */}
-          <div className="anim-stage-6 pt-1">
-            <div className="flex items-center justify-center">
-              <span className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-xs font-bold shadow-xl border border-cyan-400/30 hover:scale-105 transition-transform">
-                <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
-                <span>Digital Academic Portal</span>
-                <Stars className="w-3.5 h-3.5 text-[#E7B93E]" />
+          {/* Bottom System Status Bar */}
+          <div className="w-full pt-4 space-y-1.5 border-t border-slate-100/80">
+            <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-extrabold text-[#071A41]">System Ready · Online</span>
               </span>
+              <span className="font-black text-[#1557C0] bg-blue-50 px-2 py-0.5 rounded border border-blue-100 text-[10px]">
+                100%
+              </span>
+            </div>
+            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden p-0.2">
+              <div className="h-full bg-gradient-to-r from-[#1557C0] via-cyan-400 to-[#E7B93E] rounded-full animate-pulse" style={{ width: '100%' }} />
             </div>
           </div>
 
