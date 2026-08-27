@@ -438,17 +438,25 @@ export default function LoginPage() {
         </div>
 
         <h1 
-          className="text-lg sm:text-xl font-black text-[#071A41] tracking-tight uppercase anim-college-name"
+          className="text-lg sm:text-xl font-black text-[#071A41] tracking-tight uppercase"
           style={{ letterSpacing: '0.02em', fontWeight: 900 }}
         >
-          V.S.B. ENGINEERING COLLEGE
+          <span className="anim-word anim-word-1 mr-1.5">V.S.B.</span>
+          <span className="anim-word anim-word-2 mr-1.5">ENGINEERING</span>
+          <span className="anim-word anim-word-3">COLLEGE</span>
         </h1>
 
         <p 
-          className="text-[11px] sm:text-xs font-black text-[#1557C0] tracking-wide uppercase anim-dept-name"
+          className="text-[11px] sm:text-xs font-black text-[#1557C0] tracking-wide uppercase"
           style={{ fontWeight: 800 }}
         >
-          DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
+          <span className="anim-word anim-word-4 mr-1">DEPARTMENT</span>
+          <span className="anim-word anim-word-5 mr-1">OF</span>
+          <span className="anim-word anim-word-6 mr-1">ARTIFICIAL</span>
+          <span className="anim-word anim-word-7 mr-1">INTELLIGENCE</span>
+          <span className="anim-word anim-word-8 mr-1">&amp;</span>
+          <span className="anim-word anim-word-9 mr-1">DATA</span>
+          <span className="anim-word anim-word-10">SCIENCE</span>
         </p>
 
         <div className="relative inline-block mx-auto anim-portal-title">
@@ -458,7 +466,7 @@ export default function LoginPage() {
           <span className="block h-[1.5px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent w-full mt-0.5 anim-underline-center" />
         </div>
 
-        <div className="pt-0.5 anim-portal-title">
+        <div className="pt-0.5 anim-cpu-badge">
           <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#071A41] text-white text-[10px] sm:text-[11px] font-bold shadow-md">
             <Cpu className="w-3 h-3 text-cyan-400" />
             <span>AI &amp; DS Department Portal</span>
