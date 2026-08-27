@@ -290,17 +290,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         </div>
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
-          {students.length > 0 && (
-            <button
-              onClick={handleClearAllStudents}
-              disabled={isLoading}
-              className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:text-white"
-              title="Delete all sample students from database"
-            >
-              <Trash2 className="w-4 h-4 text-red-400" /> Clear Mock Data
-            </button>
-          )}
-
           <button
             onClick={handleExportPDF}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
@@ -916,20 +905,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
-                    Class Advisor / Mentor <span className="text-gray-400 font-normal text-[11px]">(Assigned Faculty)</span>
+                    Class Advisor / Mentor Name *
                   </label>
-                  <select
-                    value={formData.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}
+                  <input
+                    type="text"
+                    list="advisorOptionsAdd"
+                    required
+                    placeholder="Type or select Advisor Name"
+                    value={formData.advisorName}
                     onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="Dr. S. Karthik (Professor · AI & DS)">Dr. S. Karthik (Professor · AI & DS)</option>
-                    <option value="Dr. M. Sowmya (Associate Professor)">Dr. M. Sowmya (Associate Professor)</option>
-                    <option value="Dr. K. Meenakshi (Associate Professor)">Dr. K. Meenakshi (Associate Professor)</option>
-                    <option value="Dr. R. Ramanathan (Professor · AI & DS)">Dr. R. Ramanathan (Professor · AI & DS)</option>
-                    <option value="Prof. P. Naveen (Assistant Professor)">Prof. P. Naveen (Assistant Professor)</option>
-                    <option value="Prof. S. Divya (Assistant Professor)">Prof. S. Divya (Assistant Professor)</option>
-                  </select>
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20"
+                  />
+                  <datalist id="advisorOptionsAdd">
+                    <option value="Dr. S. Karthik (Professor · AI & DS)" />
+                    <option value="Dr. M. Sowmya (Associate Professor)" />
+                    <option value="Dr. K. Meenakshi (Associate Professor)" />
+                    <option value="Dr. R. Ramanathan (Professor · AI & DS)" />
+                    <option value="Prof. P. Naveen (Assistant Professor)" />
+                    <option value="Prof. S. Divya (Assistant Professor)" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Status</label>
@@ -1137,20 +1131,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
-                    Class Advisor / Mentor <span className="text-gray-400 font-normal text-[11px]">(Assigned Faculty)</span>
+                    Class Advisor / Mentor Name *
                   </label>
-                  <select
-                    value={formData.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}
+                  <input
+                    type="text"
+                    list="advisorOptionsEdit"
+                    required
+                    placeholder="Type or select Advisor Name"
+                    value={formData.advisorName}
                     onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="Dr. S. Karthik (Professor · AI & DS)">Dr. S. Karthik (Professor · AI & DS)</option>
-                    <option value="Dr. M. Sowmya (Associate Professor)">Dr. M. Sowmya (Associate Professor)</option>
-                    <option value="Dr. K. Meenakshi (Associate Professor)">Dr. K. Meenakshi (Associate Professor)</option>
-                    <option value="Dr. R. Ramanathan (Professor · AI & DS)">Dr. R. Ramanathan (Professor · AI & DS)</option>
-                    <option value="Prof. P. Naveen (Assistant Professor)">Prof. P. Naveen (Assistant Professor)</option>
-                    <option value="Prof. S. Divya (Assistant Professor)">Prof. S. Divya (Assistant Professor)</option>
-                  </select>
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20"
+                  />
+                  <datalist id="advisorOptionsEdit">
+                    <option value="Dr. S. Karthik (Professor · AI & DS)" />
+                    <option value="Dr. M. Sowmya (Associate Professor)" />
+                    <option value="Dr. K. Meenakshi (Associate Professor)" />
+                    <option value="Dr. R. Ramanathan (Professor · AI & DS)" />
+                    <option value="Prof. P. Naveen (Assistant Professor)" />
+                    <option value="Prof. S. Divya (Assistant Professor)" />
+                  </datalist>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Status</label>
