@@ -588,7 +588,7 @@ export default function LoginPage() {
         </div>
 
         {/* Master Branding Typography with Staged Reveals */}
-        <div className="space-y-1 w-full">
+        <div className="space-y-1.5 w-full">
           {/* Stage 3: College Master Title */}
           <div className={cn(
             "transition-all duration-700 ease-out transform",
@@ -607,23 +607,32 @@ export default function LoginPage() {
             "transition-all duration-700 ease-out transform",
             animStage >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
-              <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E]" />
+            <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3.5 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
+              <GraduationCap className="w-3.5 h-3.5 text-[#E7B93E]" />
               <span>AUTONOMOUS INSTITUTION · KARUR</span>
             </p>
           </div>
 
           {/* Stage 5: Glowing Golden Light Beam Separator */}
           <div className={cn(
-            "w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 anim-beam-glow transition-all duration-700 ease-out transform origin-center",
+            "w-36 sm:w-48 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-1 anim-beam-glow transition-all duration-700 ease-out transform origin-center",
             animStage >= 5 ? "opacity-80 scale-x-100" : "opacity-0 scale-x-0"
           )} />
 
-          {/* Stage 6: Department Name */}
+          {/* Stage 6: VSB AI&DS Hero Badge & Department Name */}
           <div className={cn(
-            "transition-all duration-700 ease-out transform",
+            "space-y-1 transition-all duration-700 ease-out transform",
             animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
+            {/* HERO VSB AI&DS BADGE */}
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-2xl bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] text-white shadow-[0_8px_20px_-4px_rgba(7,26,65,0.4)] border border-cyan-400/40 hover:scale-105 transition-transform duration-300">
+              <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
+              <span className="text-sm sm:text-base font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-white to-cyan-300 drop-shadow-xs">
+                VSB AI&amp;DS
+              </span>
+              <Sparkles className="w-3.5 h-3.5 text-[#E7B93E]" />
+            </div>
+
             <h2 className="text-[11px] sm:text-sm font-black leading-tight">
               <span className="block text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
               <span className="block font-black shimmer-sapphire-cyan text-xs sm:text-base">
@@ -637,10 +646,9 @@ export default function LoginPage() {
             "pt-0.5 flex items-center justify-center transition-all duration-700 ease-out transform",
             animStage >= 7 ? "opacity-100 scale-100" : "opacity-0 scale-75"
           )}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-[9px] sm:text-xs font-bold shadow-md border border-cyan-400/30">
-              <Cpu className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-cyan-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-slate-900/90 text-cyan-300 text-[9px] sm:text-[10px] font-bold shadow-xs border border-cyan-500/30">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               <span>Digital Academic Portal</span>
-              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#E7B93E]" />
             </span>
           </div>
         </div>
@@ -789,12 +797,15 @@ export default function LoginPage() {
             {selectedRole === 'student' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
-                    <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <span>Register Number</span>
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Register Number</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Anna Univ. Format</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
                       <UserIcon className="w-4 h-4" />
                     </div>
                     <input
@@ -804,18 +815,21 @@ export default function LoginPage() {
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <span>Password</span>
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Password</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Encrypted</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
@@ -825,12 +839,12 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#1557C0] hover:scale-110 focus:outline-none cursor-pointer transition-all"
                       tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -841,8 +855,9 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
+                  className="group relative overflow-hidden w-full font-black py-3 sm:py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-[0_10px_25px_rgba(21,87,192,0.35)] hover:shadow-[0_15px_30px_rgba(21,87,192,0.5)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-cyan-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform" />
                   <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
                   <span>{loading ? 'Authenticating...' : 'Login to Student Portal'}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -854,12 +869,15 @@ export default function LoginPage() {
             {selectedRole === 'faculty' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
-                    <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <span>Faculty ID</span>
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Faculty ID</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Staff Portal</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
                       <UserIcon className="w-4 h-4" />
                     </div>
                     <input
@@ -869,18 +887,21 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <span>Password</span>
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Password</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Encrypted</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
@@ -890,12 +911,12 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#1557C0] hover:scale-110 focus:outline-none cursor-pointer transition-all"
                       tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -906,8 +927,9 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
+                  className="group relative overflow-hidden w-full font-black py-3 sm:py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-[0_10px_25px_rgba(21,87,192,0.35)] hover:shadow-[0_15px_30px_rgba(21,87,192,0.5)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-cyan-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform" />
                   <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
                   <span>{loading ? 'Authenticating...' : 'Login to Faculty Portal'}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -919,12 +941,15 @@ export default function LoginPage() {
             {selectedRole === 'hod' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
-                    <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <span>Faculty ID</span>
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Faculty ID</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Head of Department</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
                       <UserIcon className="w-4 h-4" />
                     </div>
                     <input
@@ -934,18 +959,21 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <span>Password</span>
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Password</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Encrypted</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
                       <Lock className="w-4 h-4" />
                     </div>
                     <input
@@ -955,12 +983,12 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#1557C0] hover:scale-110 focus:outline-none cursor-pointer transition-all"
                       tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -971,8 +999,9 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
+                  className="group relative overflow-hidden w-full font-black py-3 sm:py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-[0_10px_25px_rgba(21,87,192,0.35)] hover:shadow-[0_15px_30px_rgba(21,87,192,0.5)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-cyan-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform" />
                   <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
                   <span>{loading ? 'Authenticating...' : 'Login to HOD Portal'}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -984,12 +1013,15 @@ export default function LoginPage() {
             {selectedRole === 'admin' && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <span>Administrator Email</span>
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Administrator Email</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Admin Clearance</span>
                   </label>
                   <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
                       <Mail className="w-4 h-4" />
                     </div>
                     <input
@@ -999,7 +1031,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       autoComplete="email"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1009,8 +1041,9 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleSendOTP}
                     disabled={loading || !email}
-                    className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
+                    className="group relative overflow-hidden w-full font-black py-3 sm:py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-[0_10px_25px_rgba(21,87,192,0.35)] hover:shadow-[0_15px_30px_rgba(21,87,192,0.5)] transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 border border-cyan-400/30 hover:scale-[1.02] active:scale-[0.98]"
                   >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform" />
                     <Send className="w-4 h-4 text-[#E7B93E] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     <span>{loading ? 'Sending OTP...' : 'Send Verification OTP'}</span>
                   </button>
@@ -1027,7 +1060,7 @@ export default function LoginPage() {
                         maxLength={6}
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="w-full px-4 py-2.5 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/70 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] transition-all shadow-inner"
+                        className="w-full px-4 py-2.5 sm:py-3 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/70 focus:outline-none focus:ring-4 focus:ring-[#1557C0]/20 focus:border-[#1557C0] transition-all shadow-inner"
                       />
                     </div>
 
@@ -1035,7 +1068,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => handleVerifyOTP()}
                       disabled={loading}
-                      className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+                      className="w-full font-black py-3 sm:py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>{loading ? 'Verifying...' : 'Verify OTP & Login'}</span>
