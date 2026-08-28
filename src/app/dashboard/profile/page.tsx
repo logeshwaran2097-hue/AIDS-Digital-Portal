@@ -33,7 +33,14 @@ export default async function StudentProfilePage() {
   return (
     <PortalLayout role="student" userName={user.name || session.name || 'Student'}>
       <div className="py-2 animate-fade-in">
-        <StudentProfileView user={user as any} student={student as any} />
+        <StudentProfileView
+          user={user as any}
+          student={{
+            ...student,
+            advisorName: (student as any).advisorName || null,
+            batch: (student as any).batch || null,
+          } as any}
+        />
       </div>
     </PortalLayout>
   )

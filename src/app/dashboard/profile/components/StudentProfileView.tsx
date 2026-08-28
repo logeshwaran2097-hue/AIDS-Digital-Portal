@@ -92,37 +92,39 @@ export function StudentProfileView({
     semester: number
     section: string
     dateOfBirth?: Date | string | null
+    advisorName?: string | null
+    batch?: string | null
   }
 }) {
   const regNo = initialStudent.registerNumber || '922525243123'
   const storageKey = `vsb_student_profile_v2_${regNo}`
 
   const defaultProfile: StudentFullProfile = {
-    name: initialUser.name || 'Mohan Kumar D',
-    email: initialUser.email || `${regNo.toLowerCase()}@student.vsb.edu.in`,
-    phone: initialUser.phone || '+91 98765 43210',
+    name: initialUser.name || '',
+    email: (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in')) ? initialUser.email : '',
+    phone: initialUser.phone || '',
     dateOfBirth: initialStudent.dateOfBirth
       ? new Date(initialStudent.dateOfBirth).toISOString().split('T')[0]
-      : '2006-02-09',
-    bloodGroup: 'O +ve',
-    residencyStatus: 'Day Scholar (College Bus Route 14)',
+      : '',
+    bloodGroup: '',
+    residencyStatus: '',
     registerNumber: regNo,
     department: initialStudent.department || 'Artificial Intelligence & Data Science',
     degreeProgram: 'B.Tech Artificial Intelligence & Data Science',
     regulation: 'R-2021 (Autonomous System)',
-    batch: '2023 - 2027 (4 Year Program)',
-    year: initialStudent.year || 2,
-    semester: initialStudent.semester || 4,
+    batch: initialStudent.batch || '',
+    year: initialStudent.year || 1,
+    semester: initialStudent.semester || 1,
     section: initialStudent.section || 'A',
-    advisor: 'Dr. S. Karthik (Professor)',
-    cgpa: '8.84 / 10.0',
-    cgpaClass: 'First Class with Distinction',
-    attendance: '92.5%',
-    attendanceRemark: 'Compliant (>75% Req)',
-    rank: 'Rank 4 / 68',
-    rankRemark: 'Top 6% in Batch',
-    arrears: '0 Arrears',
-    arrearRemark: 'All Semesters Cleared',
+    advisor: initialStudent.advisorName || '',
+    cgpa: '',
+    cgpaClass: '',
+    attendance: '',
+    attendanceRemark: '',
+    rank: '',
+    rankRemark: '',
+    arrears: '',
+    arrearRemark: '',
     enrollmentStatus: 'Enrolled & Active',
   }
 
