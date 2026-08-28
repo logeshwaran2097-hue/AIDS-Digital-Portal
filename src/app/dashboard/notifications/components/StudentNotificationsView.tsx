@@ -14,6 +14,8 @@ import {
   dispatchNativeNotification,
   getSavedSoundTheme,
   setSavedSoundTheme,
+  getCustomSoundUrl,
+  setCustomSoundUrl,
   NotificationSoundType,
 } from '@/lib/notificationEngine'
 
@@ -31,6 +33,7 @@ const SOUND_OPTIONS: { id: NotificationSoundType; name: string; desc: string; ic
   { id: 'cyber', name: 'Cyber Pulse', desc: 'Sleek ultra-clean high-tech laser accent', icon: '⚡' },
   { id: 'marimba', name: 'Glass Marimba', desc: 'Organic acoustic wooden-crystal chime', icon: '🪵' },
   { id: 'zen', name: 'Zen Ripple', desc: 'Peaceful soothing harmonic water droplet', icon: '🌊' },
+  { id: 'custom', name: 'Custom Sound', desc: 'Paste a URL to your own audio file (.mp3, .wav)', icon: '🎵' },
 ]
 
 export function StudentNotificationsView({ notifications }: { notifications: NotificationItem[] }) {
@@ -40,11 +43,13 @@ export function StudentNotificationsView({ notifications }: { notifications: Not
   const [isSendingTest, setIsSendingTest] = useState(false)
   const [activeSound, setActiveSound] = useState<NotificationSoundType>('quantum')
   const [previewingSound, setPreviewingSound] = useState<string | null>(null)
+  const [customUrl, setCustomUrl] = useState('')
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setPushStatus(getNotificationPermissionStatus())
       setActiveSound(getSavedSoundTheme())
+      setCustomUrl(getCustomSoundUrl())
     }
   }, [])
 
@@ -263,6 +268,30 @@ export function StudentNotificationsView({ notifications }: { notifications: Not
             )
           })}
         </div>
+
+        {activeSound === 'custom' && (
+          <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-2xl animate-fade-in flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex-1 w-full">
+              <label className="block text-xs font-bold text-[#071A3D] mb-1">Custom Audio URL</label>
+              <input
+                type="url"
+                value={customUrl}
+                onChange={(e) => {
+                  setCustomUrl(e.target.value)
+                  setCustomSoundUrl(e.target.value)
+                }}
+                placeholder="https://example.com/sound.mp3"
+                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1455D9] bg-white text-gray-700"
+              />
+            </div>
+            <button
+              onClick={() => handleSelectSound('custom')}
+              className="mt-4 sm:mt-0 px-4 py-2 bg-[#1455D9] hover:bg-[#0f44b0] text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1 shrink-0"
+            >
+              <Volume2 className="w-4 h-4" /> Test Custom Sound
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Notifications List */}

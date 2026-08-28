@@ -16,15 +16,31 @@ export interface RealtimeNotificationPayload {
   createdAt?: string | Date
 }
 
-export type NotificationSoundType = 'quantum' | 'bloom' | 'cyber' | 'marimba' | 'zen'
+export type NotificationSoundType = 'quantum' | 'bloom' | 'cyber' | 'marimba' | 'zen' | 'custom'
 
 const SOUND_PREF_KEY = 'vsb_notif_sound_theme'
+const CUSTOM_SOUND_URL_KEY = 'vsb_notif_custom_url'
+
+export function getCustomSoundUrl(): string {
+  if (typeof window === 'undefined') return ''
+  try {
+    return localStorage.getItem(CUSTOM_SOUND_URL_KEY) || ''
+  } catch {}
+  return ''
+}
+
+export function setCustomSoundUrl(url: string) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(CUSTOM_SOUND_URL_KEY, url)
+  } catch {}
+}
 
 export function getSavedSoundTheme(): NotificationSoundType {
   if (typeof window === 'undefined') return 'quantum'
   try {
     const saved = localStorage.getItem(SOUND_PREF_KEY) as NotificationSoundType
-    if (saved && ['quantum', 'bloom', 'cyber', 'marimba', 'zen'].includes(saved)) {
+    if (saved && ['quantum', 'bloom', 'cyber', 'marimba', 'zen', 'custom'].includes(saved)) {
       return saved
     }
   } catch {}
@@ -55,6 +71,18 @@ export function playNotificationChime(soundType?: NotificationSoundType) {
 
     const theme = soundType || getSavedSoundTheme()
     const now = ctx.currentTime
+
+    if (theme === 'custom') {
+      const customUrl = getCustomSoundUrl()
+      if (customUrl) {
+        const audio = new Audio(customUrl)
+        audio.play().catch((e) => console.debug('Custom audio play failed:', e))
+      } else {
+        // Fallback to quantum if custom url is missing
+        playNotificationChime('quantum')
+      }
+      return
+    }
 
     // Studio-grade Master Chain: Dynamics Compressor + High-Shelf / Low-Cut EQ
     const compressor = ctx.createDynamicsCompressor()
