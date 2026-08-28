@@ -23,6 +23,9 @@ import {
   BookOpen,
   Filter,
   RotateCcw,
+  AlertTriangle,
+  Flame,
+  ShieldAlert,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -45,40 +48,9 @@ export interface EventRecord {
   status: string
 }
 
-export const ALL_8_SEMESTERS_EVENTS_CATALOG: EventRecord[] = [
-  // ================= YEAR 1 (FRESHMAN · SEM 1 & SEM 2) =================
+export const SAMPLE_STARTER_EVENTS_TEMPLATE: EventRecord[] = [
   {
-    id: 'ev_s1_1',
-    name: 'C Programming & Algorithmic Thinking Foundation Workshop',
-    description: 'Hands-on problem solving bootcamp covering structured programming, pointers, memory allocation, and debugging tools for first-year engineers.',
-    category: 'Workshop',
-    semester: 'sem1',
-    semesterLabel: 'Semester 1 (Yr 1)',
-    academicYear: 'year1',
-    date: '2026-09-08',
-    time: '09:30 AM - 04:30 PM',
-    venue: 'Computing Center 1 · Academic Block',
-    organizer: 'Dr. S. Karthik · AI & DS Dept',
-    status: 'published',
-  },
-  {
-    id: 'ev_s2_1',
-    name: 'Python for Data Science & Numerical Computing Sprint',
-    description: 'Intensive workshop on NumPy, Pandas, Matplotlib, and data wrangling techniques designed for freshman data science students.',
-    category: 'Workshop',
-    semester: 'sem2',
-    semesterLabel: 'Semester 2 (Yr 1)',
-    academicYear: 'year1',
-    date: '2026-02-14',
-    time: '10:00 AM - 04:30 PM',
-    venue: 'Computing Lab 2 · AI & DS Block',
-    organizer: 'Mrs. R. Priya · AI & DS Dept',
-    status: 'published',
-  },
-
-  // ================= YEAR 2 (SOPHOMORE · SEM 3 & SEM 4) =================
-  {
-    id: 'ev_s3_1',
+    id: 'tpl_s3_1',
     name: 'Python DSA & OOP Algorithms Bootcamp 2026',
     description: 'Intensive algorithmic bootcamp on Advanced Data Structures, graph algorithms, and Object-Oriented System Design with live competitive coding benchmarks.',
     category: 'Workshop',
@@ -92,37 +64,7 @@ export const ALL_8_SEMESTERS_EVENTS_CATALOG: EventRecord[] = [
     status: 'published',
   },
   {
-    id: 'ev_s3_2',
-    name: 'DBMS & Relational Query Optimization Hackathon',
-    description: '24-hour SQL and MongoDB database indexing, transaction query optimization, and normalization challenge with cash prizes.',
-    category: 'Hackathon',
-    semester: 'sem3',
-    semesterLabel: 'Semester 3 (Yr 2)',
-    academicYear: 'year2',
-    date: '2026-09-25',
-    time: '10:00 AM - 04:30 PM',
-    venue: 'Database Engineering Lab (Room 205) · AI & DS Block',
-    organizer: 'Mrs. R. Priya · AI & DS Dept',
-    status: 'published',
-  },
-  {
-    id: 'ev_s4_1',
-    name: 'Full Stack Web & React Framework Masterclass',
-    description: 'Comprehensive hands-on training on modern JavaScript, React.js, Tailwind CSS, and REST API integration for sophomore developers.',
-    category: 'Workshop',
-    semester: 'sem4',
-    semesterLabel: 'Semester 4 (Yr 2)',
-    academicYear: 'year2',
-    date: '2026-03-12',
-    time: '09:15 AM - 04:30 PM',
-    venue: 'Web Technologies Lab · AI & DS Block',
-    organizer: 'Mr. S. Arun · AI & DS Dept',
-    status: 'published',
-  },
-
-  // ================= YEAR 3 (JUNIOR · SEM 5 & SEM 6) =================
-  {
-    id: 'ev_s5_1',
+    id: 'tpl_s5_1',
     name: 'AWS Cloud & DevOps Enterprise Architect Masterclass',
     description: 'Production-grade AWS microservices, serverless functions, EC2 clusters, and automated container pipelines deployment workshop led by certified industry architects.',
     category: 'Workshop',
@@ -136,51 +78,7 @@ export const ALL_8_SEMESTERS_EVENTS_CATALOG: EventRecord[] = [
     status: 'published',
   },
   {
-    id: 'ev_s5_2',
-    name: 'National Deep Learning & Vision AI Hackathon',
-    description: 'National-level Computer Vision and Generative Deep Learning hackathon focusing on Healthcare Diagnostics, Robotics, and Smart City automation.',
-    category: 'Hackathon',
-    semester: 'sem5',
-    semesterLabel: 'Semester 5 (Yr 3)',
-    academicYear: 'year3',
-    date: '2026-10-08',
-    time: '09:00 AM - 05:00 PM',
-    venue: 'AI Innovation Hub · Academic Block',
-    organizer: 'Dr. M. Sowmya · AI & DS Dept',
-    status: 'published',
-  },
-  {
-    id: 'ev_s5_3',
-    name: 'Industry Big Data & Predictive Business Analytics Summit',
-    description: 'Guest seminar by senior analytics directors on PySpark stream processing, business intelligence dashboards, and revenue forecasting.',
-    category: 'Seminar',
-    semester: 'sem5',
-    semesterLabel: 'Semester 5 (Yr 3)',
-    academicYear: 'year3',
-    date: '2026-10-14',
-    time: '02:00 PM - 04:30 PM',
-    venue: 'Department Auditorium (Hall 2)',
-    organizer: 'Mr. S. Arun · AI & DS Dept',
-    status: 'published',
-  },
-  {
-    id: 'ev_s6_1',
-    name: 'Natural Language Processing & LLM Fine-Tuning Bootcamp',
-    description: 'Advanced transformer architectures, BERT embeddings, HuggingFace pipeline integration, and private LLM fine-tuning techniques.',
-    category: 'Workshop',
-    semester: 'sem6',
-    semesterLabel: 'Semester 6 (Yr 3)',
-    academicYear: 'year3',
-    date: '2026-04-05',
-    time: '09:30 AM - 04:30 PM',
-    venue: 'Deep Learning & NLP Lab · Room 306',
-    organizer: 'Dr. M. Sowmya · AI & DS Dept',
-    status: 'published',
-  },
-
-  // ================= YEAR 4 (SENIOR · SEM 7 & SEM 8) =================
-  {
-    id: 'ev_s7_1',
+    id: 'tpl_s7_1',
     name: 'National AI Capstone & Innovation Project Expo 2026',
     description: 'Final year research exhibition where senior students showcase patents, funded prototypes, and commercial enterprise AI software to industry evaluators.',
     category: 'Symposium',
@@ -194,37 +92,7 @@ export const ALL_8_SEMESTERS_EVENTS_CATALOG: EventRecord[] = [
     status: 'published',
   },
   {
-    id: 'ev_s7_2',
-    name: 'Corporate AI Leadership & High-Tier Placement Bootcamp',
-    description: 'Advanced technical mock interviews, scalable system design interviews, and corporate AI readiness program tailored for Tier-1 product companies.',
-    category: 'Workshop',
-    semester: 'sem7',
-    semesterLabel: 'Semester 7 (Yr 4)',
-    academicYear: 'year4',
-    date: '2026-10-10',
-    time: '09:15 AM - 04:30 PM',
-    venue: 'Innovation & Placement Wing (Room 401)',
-    organizer: 'Dr. M. Sowmya · Placement Coordinator',
-    status: 'published',
-  },
-  {
-    id: 'ev_s8_1',
-    name: 'Industry Internship Project Defense & Enterprise AI Showcase',
-    description: 'Senior students present their semester-long corporate internships, production deliveries, and research papers before the Autonomous Review Board.',
-    category: 'Symposium',
-    semester: 'sem8',
-    semesterLabel: 'Semester 8 (Yr 4)',
-    academicYear: 'year4',
-    date: '2026-05-18',
-    time: '09:00 AM - 05:00 PM',
-    venue: 'Executive Seminar Hall · Placement Wing',
-    organizer: 'Dr. S. Karthik · AI & DS Dept',
-    status: 'published',
-  },
-
-  // ================= ALL SEMESTERS (DEPARTMENT-WIDE) =================
-  {
-    id: 'ev_all_1',
+    id: 'tpl_all_1',
     name: 'INNOVAIT 2026 — Annual Department Symposium & CodeFest',
     description: 'Flagship intra-college technical festival featuring multi-track coding, technical paper presentations, AI quiz contests, and startup pitch rounds.',
     category: 'Symposium',
@@ -276,9 +144,9 @@ const ALL_8_SEMESTERS = [
 ]
 
 export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[] }) {
-  // Initialize events state; if initialEvents is empty, preload default semester-wise events
+  // Pure database initial state without forced mock data fallback
   const [events, setEvents] = useState<EventRecord[]>(() => {
-    if (initialEvents && initialEvents.length > 0) {
+    if (initialEvents && Array.isArray(initialEvents)) {
       return initialEvents.map((ev) => {
         let sem: any = (ev as any).semester || 'ALL'
         if (ev.registrationInfo && ev.registrationInfo.startsWith('sem')) {
@@ -299,7 +167,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         }
       })
     }
-    return ALL_8_SEMESTERS_EVENTS_CATALOG
+    return []
   })
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -307,8 +175,14 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
   const [semesterFilter, setSemesterFilter] = useState<string>('ALL')
   const [monthFilter, setMonthFilter] = useState<string>('ALL')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
+
+  // Modals & Confirmation Popups
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [eventToDelete, setEventToDelete] = useState<EventRecord | null>(null)
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false)
+  const [showClearAllModal, setShowClearAllModal] = useState(false)
+  const [isClearingAll, setIsClearingAll] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -327,7 +201,6 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     if (yr === 'ALL') {
       setSemesterFilter('ALL')
     } else {
-      // Check if current semester is inside this year; if not, reset to ALL
       if (semesterFilter !== 'ALL') {
         const semObj = ALL_8_SEMESTERS.find((s) => s.key === semesterFilter)
         if (semObj && semObj.yr !== yr) {
@@ -340,9 +213,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
   // When semester filter changes, auto-adjust year filter
   const handleSelectSemester = (sem: string) => {
     setSemesterFilter(sem)
-    if (sem === 'ALL') {
-      // keep current year or reset
-    } else {
+    if (sem !== 'ALL') {
       const semObj = ALL_8_SEMESTERS.find((s) => s.key === sem)
       if (semObj && semObj.yr !== 'ALL') {
         setYearFilter(semObj.yr)
@@ -350,24 +221,21 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     }
   }
 
-  // Filtered Events based on Year, Semester, Month, Category, and Live Search
+  // Filtered Events
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
-      // 1. Year Filter
       const matchesYear =
         yearFilter === 'ALL' ||
         e.academicYear === yearFilter ||
         e.academicYear === 'ALL' ||
         !e.academicYear
 
-      // 2. Semester Filter
       const matchesSemester =
         semesterFilter === 'ALL' ||
         e.semester === semesterFilter ||
         e.semester === 'ALL' ||
         !e.semester
 
-      // 3. Month Filter
       let matchesMonth = true
       if (monthFilter !== 'ALL') {
         const evDate = new Date(e.date)
@@ -375,10 +243,8 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         matchesMonth = evMonth === monthFilter
       }
 
-      // 4. Category Filter
       const matchesCategory = categoryFilter === 'ALL' || e.category === categoryFilter
 
-      // 5. Search Query
       const matchesSearch =
         e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (e.description && e.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -392,7 +258,10 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
 
   // PDF Export
   const handleExportPDF = () => {
-    const scopeLabel = `Scope: Year ${yearFilter} · Semester ${semesterFilter} · Month ${monthFilter}`
+    if (filteredEvents.length === 0) {
+      toast.error('No events available to export.')
+      return
+    }
 
     generateAndDownloadPDF({
       title: `DEPARTMENT OF AI & DS — TECHNICAL EVENTS CALENDAR`,
@@ -406,7 +275,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
             `Academic Year Scope: ${yearFilter.toUpperCase()}`,
             `Semester Scope: ${semesterFilter.toUpperCase()}`,
             `Month Scope: ${monthFilter === 'ALL' ? 'All 12 Months' : MONTHS_LIST.find((m) => m.num === monthFilter)?.label}`,
-            `Total Filtered Events: ${filteredEvents.length} Technical Events`,
+            `Total Scheduled Events: ${filteredEvents.length} Technical Events`,
           ],
         },
         {
@@ -515,21 +384,48 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     }
   }
 
-  // Delete Event
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete event "${name}"?`)) {
-      return
-    }
+  // Execute Pop-up Confirmed Deletion
+  const handleConfirmDelete = async () => {
+    if (!eventToDelete) return
+    setIsDeletingEvent(true)
 
     try {
-      await fetch(`/api/events?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
-      setEvents(events.filter((e) => e.id !== id))
-      toast.success(`Event removed from calendar.`)
+      await fetch(`/api/events?id=${encodeURIComponent(eventToDelete.id)}`, { method: 'DELETE' })
+      setEvents((prev) => prev.filter((e) => e.id !== eventToDelete.id))
+      toast.success(`Event "${eventToDelete.name}" permanently deleted.`)
+      setEventToDelete(null)
     } catch (err) {
       console.error(err)
-      setEvents(events.filter((e) => e.id !== id))
-      toast.success(`Event removed.`)
+      setEvents((prev) => prev.filter((e) => e.id !== eventToDelete.id))
+      toast.success(`Event removed from calendar.`)
+      setEventToDelete(null)
+    } finally {
+      setIsDeletingEvent(false)
     }
+  }
+
+  // Execute Pop-up Confirmed Purge of All Events
+  const handleConfirmClearAll = async () => {
+    setIsClearingAll(true)
+    try {
+      await fetch('/api/events?clearAll=true', { method: 'DELETE' })
+      setEvents([])
+      toast.success('All events purged from the database.')
+      setShowClearAllModal(false)
+    } catch (err) {
+      console.error(err)
+      setEvents([])
+      toast.success('Events cleared.')
+      setShowClearAllModal(false)
+    } finally {
+      setIsClearingAll(false)
+    }
+  }
+
+  // Load starter templates
+  const handleLoadSampleTemplates = () => {
+    setEvents(SAMPLE_STARTER_EVENTS_TEMPLATE)
+    toast.success('Loaded starter department event templates!')
   }
 
   // Reset all filters
@@ -540,14 +436,6 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     setCategoryFilter('ALL')
     setSearchQuery('')
     toast.success('All filters reset!')
-  }
-
-  // Reset to default catalog
-  const handleResetDefaultCatalog = () => {
-    if (confirm('Reload the complete 8-semester institutional event catalog?')) {
-      setEvents(ALL_8_SEMESTERS_EVENTS_CATALOG)
-      toast.success('Loaded full 8-semester catalog across all months!')
-    }
   }
 
   return (
@@ -563,18 +451,31 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Events, Workshops &amp; Hackathons</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Comprehensive calendar filtered across all 8 Semesters, 4 Academic Years, and 12 Months
+            {events.length > 0
+              ? `Manage and broadcast ${events.length} active department events across all 8 Semesters, 4 Years & 12 Months`
+              : 'Calendar is ready for real event entries · Filter by 8 Semesters, Years, and Months'}
           </p>
         </div>
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
-          <button
-            onClick={handleResetDefaultCatalog}
-            className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
-            title="Reload standard 8-semester events catalog"
-          >
-            <CalendarDays className="w-4 h-4 text-[#F4C430]" /> Standard Catalog
-          </button>
+          {events.length > 0 && (
+            <button
+              onClick={() => setShowClearAllModal(true)}
+              className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:text-white"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" /> Clear All Events
+            </button>
+          )}
+
+          {events.length === 0 && (
+            <button
+              onClick={handleLoadSampleTemplates}
+              className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
+              title="Load sample starter templates"
+            >
+              <Sparkles className="w-4 h-4 text-[#F4C430]" /> Load Templates
+            </button>
+          )}
 
           <button
             onClick={handleExportPDF}
@@ -762,7 +663,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">All Scheduled Events</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">All Active Programs</p>
           <p className="text-2xl font-black text-[#071A3D] mt-0.5">{events.length}</p>
           <p className="text-[10px] text-[#1455D9] font-medium mt-1">Across Semesters 1 – 8</p>
         </div>
@@ -771,17 +672,17 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
           <p className="text-2xl font-black text-blue-700 mt-0.5">
             {events.filter((e) => e.academicYear === 'year1' || e.academicYear === 'year2' || e.academicYear === 'ALL').length}
           </p>
-          <p className="text-[10px] text-blue-700 font-medium mt-1">Semesters 1, 2, 3, 4 Programs</p>
+          <p className="text-[10px] text-blue-700 font-medium mt-1">Semesters 1 – 4</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Years 3 &amp; 4 (Junior &amp; Senior)</p>
           <p className="text-2xl font-black text-purple-700 mt-0.5">
             {events.filter((e) => e.academicYear === 'year3' || e.academicYear === 'year4' || e.academicYear === 'ALL').length}
           </p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">Semesters 5, 6, 7, 8 Programs</p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">Semesters 5 – 8</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Active Filter Result</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Filtered Results</p>
           <p className="text-2xl font-black text-amber-700 mt-0.5">{filteredEvents.length}</p>
           <p className="text-[10px] text-amber-700 font-medium mt-1">Matching Criteria</p>
         </div>
@@ -819,26 +720,37 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         </div>
       </div>
 
-      {/* Events Grid / Empty State */}
+      {/* Events Grid / Clean Empty State */}
       {filteredEvents.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center shadow-xs">
-          <CalendarDays className="w-12 h-12 text-purple-300 mx-auto mb-3" />
-          <h3 className="font-bold text-base text-[#071A3D] mb-1">No Events Found for Selected Filter</h3>
-          <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
-            There are currently no events matching your criteria. Try adjusting the Year, Semester, or Month filter, or click &ldquo;+ Create New Event&rdquo; to publish one.
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={handleResetFilters}
-              className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all cursor-pointer"
-            >
-              Reset All Filters
-            </button>
+        <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center shadow-xs space-y-4">
+          <div className="w-16 h-16 rounded-3xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto shadow-inner">
+            <CalendarDays className="w-8 h-8" />
+          </div>
+          <div>
+            <h3 className="font-extrabold text-lg text-[#071A3D] mb-1">
+              {events.length === 0 ? 'No Events Scheduled Yet' : 'No Events Found for Selected Filters'}
+            </h3>
+            <p className="text-xs text-gray-500 max-w-md mx-auto">
+              {events.length === 0
+                ? 'Your calendar is clean and ready. Click "+ Create New Event" to publish workshops, seminars, or hackathons directly into the database.'
+                : 'No programs match the selected Year, Semester, or Month. Adjust your filters or reset to view all.'}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center flex-wrap gap-3 pt-2">
+            {events.length > 0 && (
+              <button
+                onClick={handleResetFilters}
+                className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all cursor-pointer"
+              >
+                Reset All Filters
+              </button>
+            )}
             <button
               onClick={() => setIsAddModalOpen(true)}
               className="px-6 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
             >
-              <Plus className="w-4 h-4" /> + Create New Event
+              <Plus className="w-4 h-4" /> + Create First Real Event
             </button>
           </div>
         </div>
@@ -931,7 +843,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
                   </button>
 
                   <button
-                    onClick={() => handleDelete(ev.id, ev.name)}
+                    onClick={() => setEventToDelete(ev)}
                     className="p-1.5 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer border border-transparent hover:border-red-200"
                     title="Delete Event"
                   >
@@ -941,6 +853,136 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* INNOVATIVE POPUP: DELETE CONFIRMATION MODAL */}
+      {/* ========================================================================= */}
+      {eventToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-scale-up border border-red-100">
+            {/* Modal Header with glowing danger badge */}
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center shadow-inner border border-red-100">
+                <Trash2 className="w-6 h-6 animate-pulse" />
+              </div>
+              <button
+                onClick={() => setEventToDelete(null)}
+                className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black text-[#071A3D]">Confirm Event Deletion</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Are you sure you want to permanently delete this event from the technical portal?
+              </p>
+            </div>
+
+            {/* Event Summary Preview Box */}
+            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200 space-y-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-[#1455D9] text-[10px] font-black">
+                  {eventToDelete.semesterLabel || 'All Semesters'}
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-gray-200 text-gray-700 text-[10px] font-bold">
+                  {eventToDelete.category}
+                </span>
+              </div>
+              <h4 className="font-extrabold text-[#071A3D] text-sm leading-snug">{eventToDelete.name}</h4>
+              <div className="flex items-center gap-2 text-gray-500 font-mono text-[11px]">
+                <Clock className="w-3.5 h-3.5 text-[#1455D9]" />
+                <span>{eventToDelete.date} · {eventToDelete.time}</span>
+              </div>
+            </div>
+
+            {/* Warning Note */}
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-medium flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <span>This record will be permanently deleted from the database and removed from all student dashboards.</span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setEventToDelete(null)}
+                disabled={isDeletingEvent}
+                className="w-full py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                Cancel, Keep Event
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeletingEvent}
+                className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isDeletingEvent ? 'Deleting...' : 'Yes, Delete Event'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* INNOVATIVE POPUP: CLEAR ALL EVENTS CONFIRMATION MODAL */}
+      {/* ========================================================================= */}
+      {showClearAllModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 animate-scale-up border border-red-200">
+            <div className="flex items-center justify-between">
+              <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center shadow-inner">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <button
+                onClick={() => setShowClearAllModal(false)}
+                className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-black text-red-950">Purge All Department Events?</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                You are about to delete all <span className="font-bold text-red-600 font-mono">{events.length}</span> scheduled workshops, hackathons, and symposiums from the database.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-xs font-semibold space-y-1">
+              <p className="flex items-center gap-1.5 font-bold">
+                <Flame className="w-4 h-4 text-red-600" /> Irreversible Action
+              </p>
+              <p className="text-[11px] text-red-700 font-normal">
+                This will reset your portal to an empty slate. No student or faculty will see any scheduled events until new ones are created.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowClearAllModal(false)}
+                disabled={isClearingAll}
+                className="w-full py-2.5 rounded-xl border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-100 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmClearAll}
+                disabled={isClearingAll}
+                className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-500/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isClearingAll ? 'Purging All...' : 'Purge All Events'}</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
