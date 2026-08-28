@@ -37,6 +37,8 @@ model Student {
   year           Int
   semester       Int
   section        String
+  batch          String?
+  advisorName    String?
 
   @@index([registerNumber])
   @@index([department])

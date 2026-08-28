@@ -33,6 +33,8 @@ export async function getStudentData(userId: string) {
         year: 2,
         semester: 4,
         section: 'A',
+        batch: '2024 - 2028',
+        advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
       }
     }
 

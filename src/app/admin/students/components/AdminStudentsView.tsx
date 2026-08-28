@@ -277,20 +277,24 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       const result = await res.json()
 
       if (result.success) {
+        const updated = result.student || {
+          ...selectedStudent,
+          registerNumber: formData.registerNumber,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          dateOfBirth: formData.dateOfBirth,
+          year: Number(formData.year),
+          semester: Number(formData.semester),
+          batch: formData.batch,
+          section: formData.section,
+          advisorName: formData.advisorName,
+          status: formData.status,
+        }
         setStudents(
           students.map((s) =>
-            s.id === selectedStudent.id
-              ? {
-                  ...s,
-                  name: formData.name,
-                  email: formData.email,
-                  phone: formData.phone,
-                  year: Number(formData.year),
-                  semester: Number(formData.semester),
-                  section: formData.section,
-                  advisorName: formData.advisorName,
-                  status: formData.status,
-                }
+            s.id === selectedStudent.id || s.registerNumber === selectedStudent.registerNumber
+              ? { ...s, ...updated }
               : s
           )
         )

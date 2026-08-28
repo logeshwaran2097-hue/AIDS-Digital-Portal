@@ -19,18 +19,35 @@ export default async function AdminStudentsPage() {
 
   const userMap = new Map(dbUsers.map((u) => [u.id, u]))
 
+  const defaultBatches: Record<number, string> = {
+    1: '2025 - 2029',
+    2: '2024 - 2028',
+    3: '2023 - 2027',
+    4: '2022 - 2026',
+  }
+
+  const defaultAdvisors: Record<number, string> = {
+    1: 'Dr. R. Ramanathan (Professor · AI & DS)',
+    2: 'Dr. S. Karthik (Professor · AI & DS)',
+    3: 'Dr. M. Sowmya (Associate Professor)',
+    4: 'Dr. K. Meenakshi (Associate Professor)',
+  }
+
   const studentsList: StudentRecord[] = dbStudents.map((s) => {
     const user = userMap.get(s.userId)
     return {
       id: s.id,
+      userId: s.userId,
       registerNumber: s.registerNumber,
       name: user?.name || s.registerNumber,
-      email: user?.email || `${s.registerNumber.toLowerCase()}@vsb.edu.in`,
-      phone: user?.phone || '+91 98765 43210',
+      email: user?.email || `${s.registerNumber.toLowerCase()}@student.vsb.edu.in`,
+      phone: user?.phone || '',
       dateOfBirth: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,
       year: s.year,
       semester: s.semester,
+      batch: (s as any).batch || defaultBatches[s.year] || '2024 - 2028',
       section: s.section,
+      advisorName: (s as any).advisorName || defaultAdvisors[s.year] || 'Dr. S. Karthik (Professor · AI & DS)',
       status: user?.status || 'active',
     }
   })
