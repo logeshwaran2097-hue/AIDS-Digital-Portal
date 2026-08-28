@@ -188,27 +188,45 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
   const trimmedPassword = passwordInput.trim()
   let isValid = false
 
-  // 1. Check bcrypt passwordHash
-  if (user.passwordHash) {
+  // 1. If user has no passwordHash set yet, accept entered password and initialize passwordHash
+  if (!user.passwordHash && trimmedPassword) {
+    const newHash = await bcrypt.hash(trimmedPassword, 10)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: newHash, mustChangePassword: true },
+    }).catch(() => {})
+    isValid = true
+  }
+
+  // 2. Check bcrypt passwordHash
+  if (!isValid && user.passwordHash) {
     try {
       isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
     } catch {}
   }
 
-  // 2. Check direct match if stored plain
+  // 3. Check direct match if stored plain
   if (!isValid && user.passwordHash && user.passwordHash === trimmedPassword) {
     isValid = true
   }
 
-  // 3. Default password fallbacks
+  // 4. Default password fallbacks
   if (!isValid) {
-    const defaultPwds = ['vsb@123', 'student@123', 'password123', normalizedReg.toLowerCase(), normalizedReg]
-    if (defaultPwds.includes(trimmedPassword)) {
+    const defaultPwds = [
+      'vsb@123',
+      'student@123',
+      'password123',
+      'abc',
+      '123456',
+      normalizedReg.toLowerCase(),
+      normalizedReg,
+    ]
+    if (defaultPwds.includes(trimmedPassword.toLowerCase())) {
       isValid = true
     }
   }
 
-  // 4. Date of Birth comparison
+  // 5. Date of Birth comparison
   if (!isValid && student.dateOfBirth) {
     const inputDob = normalizeDate(trimmedPassword)
     const studentDob = normalizeDate(student.dateOfBirth)
