@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Download, X, Smartphone, Share, PlusSquare } from 'lucide-react'
+import { Download, X, Smartphone, Share, PlusSquare, Sparkles, CheckCircle2, ShieldCheck } from 'lucide-react'
 import Image from 'next/image'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -15,6 +15,7 @@ export function PWAInstall() {
   const [isInstalled, setIsInstalled] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
   const [showIOSGuide, setShowIOSGuide] = useState(false)
+  const [showDirectGuide, setShowDirectGuide] = useState(false)
 
   useEffect(() => {
     // Check if running on iOS Safari
@@ -41,10 +42,8 @@ export function PWAInstall() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-      const dismissed = localStorage.getItem('pwa_prompt_dismissed')
-      if (!dismissed) {
-        setShowPrompt(true)
-      }
+      // Display prompt immediately on mobile
+      setShowPrompt(true)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -55,11 +54,15 @@ export function PWAInstall() {
       setDeferredPrompt(null)
     })
 
-    // For iOS devices not in standalone mode, show banner after 2s
-    if (isIosDevice && !(window.navigator as any).standalone) {
-      const dismissed = localStorage.getItem('pwa_prompt_dismissed')
-      if (!dismissed) {
-        setTimeout(() => setShowPrompt(true), 2000)
+    // Auto-prompt on mobile devices after 1.5s
+    const isMobile = /android|iphone|ipad|ipod/i.test(userAgent)
+    if (isMobile) {
+      const timer = setTimeout(() => {
+        setShowPrompt(true)
+      }, 1500)
+      return () => {
+        clearTimeout(timer)
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       }
     }
 
@@ -74,50 +77,58 @@ export function PWAInstall() {
       return
     }
 
-    if (!deferredPrompt) {
-      alert('To install the app:\n• On Chrome/Android: Tap menu (⋮) ➔ "Add to Home screen" or "Install app".\n• On iOS/Safari: Tap Share ➔ "Add to Home Screen".')
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setShowPrompt(false)
+      }
+      setDeferredPrompt(null)
       return
     }
 
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    if (outcome === 'accepted') {
-      setShowPrompt(false)
-    }
-    setDeferredPrompt(null)
+    // If browser didn't emit beforeinstallprompt, show friendly guide
+    setShowDirectGuide(true)
   }
 
   const handleDismiss = () => {
     setShowPrompt(false)
-    localStorage.setItem('pwa_prompt_dismissed', 'true')
   }
 
   if (isInstalled) return null
 
   return (
     <>
-      {/* Install Banner Prompt */}
+      {/* High-Impact Luxury Mobile Install Bar */}
       {showPrompt && (
-        <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:w-96 z-50 bg-[#071A41] text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-3 inset-x-3 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[420px] z-[9999] bg-[#071A41]/95 backdrop-blur-2xl text-white p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_rgba(7,26,65,0.6)] border border-cyan-400/40 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5 duration-400">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-1 bg-white rounded-xl shrink-0 shadow-sm overflow-hidden">
-              <Image src="/icon-192.png" alt="VSB AI&DS" width={36} height={36} className="rounded-lg object-contain" />
+            <div className="relative w-11 h-11 rounded-xl p-0.5 bg-gradient-to-tr from-[#E7B93E] to-cyan-400 shadow-md shrink-0">
+              <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center p-0.5 overflow-hidden">
+                <Image src="/icon-192.png" alt="VSB AI&DS Logo" width={38} height={38} className="object-contain" />
+              </div>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white leading-tight">Install VSB AI&amp;DS App</p>
-              <p className="text-[10px] text-blue-200 mt-0.5 truncate">Fast 1-tap access on home screen</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs sm:text-sm font-black text-white leading-tight truncate">Install VSB AI&amp;DS App</p>
+                <Sparkles className="w-3 h-3 text-[#E7B93E] shrink-0" />
+              </div>
+              <p className="text-[10px] sm:text-[11px] text-cyan-200 font-semibold truncate mt-0.5">
+                1-Tap Quick Access · Fast &amp; Offline Ready
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={handleInstallClick}
-              className="px-3 py-1.5 bg-[#E7B93E] text-[#071A41] text-xs font-black rounded-lg hover:bg-yellow-400 transition-colors shadow-sm cursor-pointer"
+              className="px-3.5 py-2 bg-gradient-to-r from-[#E7B93E] to-amber-400 text-[#071A41] text-xs font-black rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-[0_4px_15px_rgba(231,185,62,0.4)] cursor-pointer flex items-center gap-1.5"
             >
-              Install
+              <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Install</span>
             </button>
             <button
               onClick={handleDismiss}
-              className="p-1 text-slate-400 hover:text-white rounded-md transition-colors cursor-pointer"
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
               aria-label="Dismiss"
             >
               <X className="w-4 h-4" />
@@ -126,38 +137,75 @@ export function PWAInstall() {
         </div>
       )}
 
+      {/* Android Chrome Direct Manual Install Modal */}
+      {showDirectGuide && (
+        <div className="fixed inset-0 z-[10000] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white text-slate-900 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-[#1557C0]" />
+                <h3 className="text-sm font-black text-[#071A41]">Install on Android / Chrome</h3>
+              </div>
+              <button onClick={() => setShowDirectGuide(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="space-y-3 text-xs text-slate-600">
+              <p className="flex items-center gap-2.5 font-semibold">
+                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">1</span>
+                <span>Tap the <strong>three dots menu (⋮)</strong> at top right of Chrome</span>
+              </p>
+              <p className="flex items-center gap-2.5 font-semibold">
+                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">2</span>
+                <span>Tap <strong>&ldquo;Install app&rdquo;</strong> or <strong>&ldquo;Add to Home screen&rdquo;</strong></span>
+              </p>
+              <p className="flex items-center gap-2.5 font-semibold">
+                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">3</span>
+                <span>Tap <strong>Install</strong> to add VSB AI&amp;DS to your home screen</span>
+              </p>
+            </div>
+            <button
+              onClick={() => setShowDirectGuide(false)}
+              className="w-full py-2.5 bg-[#071A41] text-white font-black text-xs rounded-xl shadow-md cursor-pointer hover:bg-[#1557C0] transition-colors"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* iOS Add to Home Screen Instructions Modal */}
       {showIOSGuide && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div className="fixed inset-0 z-[10000] bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-4">
           <div className="bg-white text-slate-900 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200 animate-in fade-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Smartphone className="w-5 h-5 text-[#1557C0]" />
-                <h3 className="text-sm font-bold text-[#071A41]">Install on iPhone / iPad</h3>
+                <h3 className="text-sm font-black text-[#071A41]">Install on iPhone / iPad</h3>
               </div>
-              <button onClick={() => setShowIOSGuide(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowIOSGuide(false)} className="text-slate-400 hover:text-slate-600 p-1">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-2.5 text-xs text-slate-600">
-              <p className="flex items-center gap-2 font-medium">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">1</span>
-                <span>Tap the <Share className="w-4 h-4 inline text-blue-600 mx-1" /> <strong>Share</strong> icon in Safari bottom bar</span>
+            <div className="space-y-3 text-xs text-slate-600">
+              <p className="flex items-center gap-2.5 font-semibold">
+                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">1</span>
+                <span>Tap the <Share className="w-4 h-4 inline text-blue-600 mx-1" /> <strong>Share</strong> button in Safari toolbar</span>
               </p>
-              <p className="flex items-center gap-2 font-medium">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">2</span>
-                <span>Scroll down and tap <PlusSquare className="w-4 h-4 inline text-blue-600 mx-1" /> <strong>Add to Home Screen</strong></span>
+              <p className="flex items-center gap-2.5 font-semibold">
+                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">2</span>
+                <span>Scroll down and tap <PlusSquare className="w-4 h-4 inline text-blue-600 mx-1" /> <strong>&ldquo;Add to Home Screen&rdquo;</strong></span>
               </p>
-              <p className="flex items-center gap-2 font-medium">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">3</span>
+              <p className="flex items-center gap-2.5 font-semibold">
+                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">3</span>
                 <span>Tap <strong>Add</strong> in the top right corner</span>
               </p>
             </div>
             <button
               onClick={() => setShowIOSGuide(false)}
-              className="w-full py-2.5 bg-[#071A41] text-white font-bold text-xs rounded-xl shadow-md"
+              className="w-full py-2.5 bg-[#071A41] text-white font-black text-xs rounded-xl shadow-md cursor-pointer hover:bg-[#1557C0] transition-colors"
             >
-              Got it
+              Got it!
             </button>
           </div>
         </div>
@@ -165,3 +213,4 @@ export function PWAInstall() {
     </>
   )
 }
+
