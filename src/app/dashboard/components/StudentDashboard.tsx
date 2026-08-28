@@ -137,6 +137,8 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
           dateOfBirth: data.student.dateOfBirth
             ? new Date(data.student.dateOfBirth).toISOString().split('T')[0]
             : undefined,
+          advisorName: (data.student as any).advisorName || undefined,
+          batch: (data.student as any).batch || undefined,
         }}
       />
 

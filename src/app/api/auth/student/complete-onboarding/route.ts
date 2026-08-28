@@ -14,8 +14,76 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, dateOfBirth, email, otp, newPassword } = body
+    const { name, phone, dateOfBirth, email, otp, newPassword, skipEmailVerification } = body
 
+    // ─────────────────────────────────────────────────────────────────────
+    // FAST PATH: Student confirms details only — no email/OTP/password required
+    // ─────────────────────────────────────────────────────────────────────
+    if (skipEmailVerification) {
+      const updatedUser = await prisma.user.update({
+        where: { id: session.userId },
+        data: {
+          name: name ? name.trim() : session.name,
+          phone: phone ? phone.trim() : undefined,
+          mustChangePassword: false,
+          updatedAt: new Date(),
+        },
+      }).catch(() => null)
+
+      // Update DOB in Student record if corrected
+      if (dateOfBirth) {
+        await prisma.student.update({
+          where: { userId: session.userId },
+          data: { dateOfBirth: new Date(dateOfBirth) },
+        }).catch(() => {})
+      }
+
+      // Audit log
+      await prisma.auditLog.create({
+        data: {
+          userName: updatedUser?.name || session.name || 'Student',
+          action: 'onboarding_details_confirmed',
+          module: 'student_portal',
+          details: `Student ${session.registerNumber || name} confirmed their details and entered the portal.`,
+          status: 'success',
+        },
+      }).catch(() => {})
+
+      // Re-issue token so mustChangePassword is false
+      const newToken = await createToken({
+        userId: session.userId,
+        email: session.email,
+        role: 'student',
+        name: updatedUser?.name || session.name,
+        registerNumber: session.registerNumber,
+      })
+
+      const response = NextResponse.json({
+        success: true,
+        user: {
+          name: updatedUser?.name || session.name,
+          email: updatedUser?.email || session.email,
+          phone: updatedUser?.phone || phone || '',
+          emailVerified: updatedUser?.emailVerified ?? false,
+          mustChangePassword: false,
+        },
+        message: 'Details confirmed! Welcome to your student portal.',
+      })
+
+      response.cookies.set('auth-token', newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      })
+
+      return response
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // FULL PATH: Email OTP verification + password change (legacy flow)
+    // ─────────────────────────────────────────────────────────────────────
     if (!email || !email.includes('@')) {
       return NextResponse.json({ success: false, message: 'A valid email address is required.' }, { status: 400 })
     }
@@ -64,17 +132,15 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update Student
+    // Update Student DOB
     if (dateOfBirth) {
       await prisma.student.update({
         where: { userId: session.userId },
-        data: {
-          dateOfBirth: new Date(dateOfBirth),
-        },
+        data: { dateOfBirth: new Date(dateOfBirth) },
       }).catch(() => {})
     }
 
-    // Create Audit Log
+    // Audit Log
     await prisma.auditLog.create({
       data: {
         userName: updatedUser.name,
@@ -85,7 +151,7 @@ export async function POST(request: NextRequest) {
       },
     }).catch(() => {})
 
-    // Re-issue JWT token with updated email and verified credentials
+    // Re-issue JWT token
     const newToken = await createToken({
       userId: updatedUser.id,
       email: updatedUser.email,
