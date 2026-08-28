@@ -585,7 +585,7 @@ export default function LoginPage() {
           </div>
 
           {/* Stage 5: Glowing Golden Light Beam Separator */}
-          <div className="anim-stage-5 w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 opacity-80" />
+          <div className="anim-stage-5 anim-beam-glow w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 opacity-80" />
 
           {/* Stage 6: Department Name */}
           <div className="anim-stage-6">
