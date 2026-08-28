@@ -48,65 +48,6 @@ export interface EventRecord {
   status: string
 }
 
-export const SAMPLE_STARTER_EVENTS_TEMPLATE: EventRecord[] = [
-  {
-    id: 'tpl_s3_1',
-    name: 'Python DSA & OOP Algorithms Bootcamp 2026',
-    description: 'Intensive algorithmic bootcamp on Advanced Data Structures, graph algorithms, and Object-Oriented System Design with live competitive coding benchmarks.',
-    category: 'Workshop',
-    semester: 'sem3',
-    semesterLabel: 'Semester 3 (Yr 2)',
-    academicYear: 'year2',
-    date: '2026-09-16',
-    time: '09:30 AM - 04:30 PM',
-    venue: 'Data Structures Lab (Room 203) · AI & DS Block',
-    organizer: 'Dr. S. Karthik · AI & DS Dept',
-    status: 'published',
-  },
-  {
-    id: 'tpl_s5_1',
-    name: 'AWS Cloud & DevOps Enterprise Architect Masterclass',
-    description: 'Production-grade AWS microservices, serverless functions, EC2 clusters, and automated container pipelines deployment workshop led by certified industry architects.',
-    category: 'Workshop',
-    semester: 'sem5',
-    semesterLabel: 'Semester 5 (Yr 3)',
-    academicYear: 'year3',
-    date: '2026-09-19',
-    time: '09:15 AM - 04:30 PM',
-    venue: 'Cloud Service Management Lab (Room 304) · AI & DS Block',
-    organizer: 'Dr. S. Karthik · AI & DS Dept',
-    status: 'published',
-  },
-  {
-    id: 'tpl_s7_1',
-    name: 'National AI Capstone & Innovation Project Expo 2026',
-    description: 'Final year research exhibition where senior students showcase patents, funded prototypes, and commercial enterprise AI software to industry evaluators.',
-    category: 'Symposium',
-    semester: 'sem7',
-    semesterLabel: 'Semester 7 (Yr 4)',
-    academicYear: 'year4',
-    date: '2026-09-28',
-    time: '09:30 AM - 05:00 PM',
-    venue: 'VSB Convention Center · Main Campus',
-    organizer: 'Dr. S. Karthik (Professor & Head)',
-    status: 'published',
-  },
-  {
-    id: 'tpl_all_1',
-    name: 'INNOVAIT 2026 — Annual Department Symposium & CodeFest',
-    description: 'Flagship intra-college technical festival featuring multi-track coding, technical paper presentations, AI quiz contests, and startup pitch rounds.',
-    category: 'Symposium',
-    semester: 'ALL',
-    semesterLabel: 'All 8 Semesters',
-    academicYear: 'ALL',
-    date: '2026-10-15',
-    time: '09:00 AM - 05:30 PM',
-    venue: 'Main Institutional Auditorium · V.S.B.',
-    organizer: 'Department of AI & DS Council',
-    status: 'published',
-  },
-]
-
 const MONTHS_LIST = [
   { num: 'ALL', label: 'All 12 Months', short: 'All' },
   { num: '1', label: 'January', short: 'Jan' },
@@ -422,12 +363,6 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     }
   }
 
-  // Load starter templates
-  const handleLoadSampleTemplates = () => {
-    setEvents(SAMPLE_STARTER_EVENTS_TEMPLATE)
-    toast.success('Loaded starter department event templates!')
-  }
-
   // Reset all filters
   const handleResetFilters = () => {
     setYearFilter('ALL')
@@ -464,16 +399,6 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
               className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 border border-red-400/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:text-white"
             >
               <Trash2 className="w-4 h-4 text-red-400" /> Clear All Events
-            </button>
-          )}
-
-          {events.length === 0 && (
-            <button
-              onClick={handleLoadSampleTemplates}
-              className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
-              title="Load sample starter templates"
-            >
-              <Sparkles className="w-4 h-4 text-[#F4C430]" /> Load Templates
             </button>
           )}
 
