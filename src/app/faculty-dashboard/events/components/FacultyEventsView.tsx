@@ -41,6 +41,7 @@ export interface FacultyEventItem {
 export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEventItem[] }) {
   const [events, setEvents] = useState<FacultyEventItem[]>(initialEvents)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedSemester, setSelectedSemester] = useState('ALL')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [selectedEvent, setSelectedEvent] = useState<FacultyEventItem | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -56,9 +57,16 @@ export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEve
       const matchesCat =
         selectedCategory === 'ALL' || e.category.toLowerCase() === selectedCategory.toLowerCase()
 
-      return matchesSearch && matchesCat
+      const semInfo = e.registrationInfo || 'ALL'
+      const matchesSemester =
+        selectedSemester === 'ALL' ||
+        semInfo === selectedSemester ||
+        semInfo === 'ALL' ||
+        e.name.toLowerCase().includes(selectedSemester.toLowerCase())
+
+      return matchesSearch && matchesCat && matchesSemester
     })
-  }, [events, searchQuery, selectedCategory])
+  }, [events, searchQuery, selectedCategory, selectedSemester])
 
   const handleDownloadBrochure = (e: FacultyEventItem) => {
     const d = new Date(e.date)
@@ -166,6 +174,37 @@ export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEve
           <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Certificates</p>
           <p className="text-2xl font-black text-amber-600 mt-0.5">Autonomous Seal</p>
           <p className="text-[10px] text-amber-700 font-semibold">Anna University Accredited</p>
+        </div>
+      </div>
+
+      {/* Semester Switcher Tabs */}
+      <div className="bg-white p-4 rounded-3xl border border-blue-200/80 shadow-xs space-y-3">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+          <span className="text-xs font-black text-[#071A3D] uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#1455D9]" /> Filter by Semester:
+          </span>
+          <span className="text-xs font-bold text-gray-500 font-mono">{filtered.length} Events in View</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {[
+            { key: 'ALL', label: 'All Active Sems (3, 5, 7)', short: 'All Semesters' },
+            { key: 'sem3', label: 'Semester 3 (Yr 2)', short: 'Sem 3 (Year 2)' },
+            { key: 'sem5', label: 'Semester 5 (Yr 3)', short: 'Sem 5 (Year 3)' },
+            { key: 'sem7', label: 'Semester 7 (Yr 4)', short: 'Sem 7 (Year 4)' },
+          ].map((s) => (
+            <button
+              key={s.key}
+              onClick={() => setSelectedSemester(s.key)}
+              className={cn(
+                'py-2 px-3 rounded-xl text-xs font-bold text-center transition-all cursor-pointer border',
+                selectedSemester === s.key
+                  ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
+                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-blue-50/50'
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
       </div>
 

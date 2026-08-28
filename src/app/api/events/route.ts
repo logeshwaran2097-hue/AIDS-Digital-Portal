@@ -37,6 +37,8 @@ export async function POST(request: Request) {
         time: body.time || '09:00 AM - 04:30 PM',
         venue: body.venue || 'Main Auditorium',
         createdByName: body.createdByName || body.organizer || 'Administrator',
+        registrationInfo: body.targetSemester || body.registrationInfo || 'ALL',
+        registrationUrl: body.registrationUrl || null,
         status: 'published',
         isPublished: true,
       },
