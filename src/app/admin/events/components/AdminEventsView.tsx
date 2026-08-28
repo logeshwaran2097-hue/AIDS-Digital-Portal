@@ -21,6 +21,8 @@ import {
   CheckCircle2,
   Tag,
   BookOpen,
+  Filter,
+  RotateCcw,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -31,26 +33,58 @@ export interface EventRecord {
   name: string
   description?: string | null
   category: string
-  semester?: 'ALL' | 'sem3' | 'sem5' | 'sem7' | string
+  semester?: 'ALL' | 'sem1' | 'sem2' | 'sem3' | 'sem4' | 'sem5' | 'sem6' | 'sem7' | 'sem8' | string
   semesterLabel?: string
+  academicYear?: 'ALL' | 'year1' | 'year2' | 'year3' | 'year4' | string
   registrationInfo?: string | null
   registrationUrl?: string | null
-  date: string
+  date: string // YYYY-MM-DD
   time: string
   venue: string
   organizer: string
   status: string
 }
 
-export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
-  // Semester 3 (Year 2 - Sophomore)
+export const ALL_8_SEMESTERS_EVENTS_CATALOG: EventRecord[] = [
+  // ================= YEAR 1 (FRESHMAN · SEM 1 & SEM 2) =================
+  {
+    id: 'ev_s1_1',
+    name: 'C Programming & Algorithmic Thinking Foundation Workshop',
+    description: 'Hands-on problem solving bootcamp covering structured programming, pointers, memory allocation, and debugging tools for first-year engineers.',
+    category: 'Workshop',
+    semester: 'sem1',
+    semesterLabel: 'Semester 1 (Yr 1)',
+    academicYear: 'year1',
+    date: '2026-09-08',
+    time: '09:30 AM - 04:30 PM',
+    venue: 'Computing Center 1 · Academic Block',
+    organizer: 'Dr. S. Karthik · AI & DS Dept',
+    status: 'published',
+  },
+  {
+    id: 'ev_s2_1',
+    name: 'Python for Data Science & Numerical Computing Sprint',
+    description: 'Intensive workshop on NumPy, Pandas, Matplotlib, and data wrangling techniques designed for freshman data science students.',
+    category: 'Workshop',
+    semester: 'sem2',
+    semesterLabel: 'Semester 2 (Yr 1)',
+    academicYear: 'year1',
+    date: '2026-02-14',
+    time: '10:00 AM - 04:30 PM',
+    venue: 'Computing Lab 2 · AI & DS Block',
+    organizer: 'Mrs. R. Priya · AI & DS Dept',
+    status: 'published',
+  },
+
+  // ================= YEAR 2 (SOPHOMORE · SEM 3 & SEM 4) =================
   {
     id: 'ev_s3_1',
     name: 'Python DSA & OOP Algorithms Bootcamp 2026',
-    description: 'Intensive 2-day hands-on algorithmic bootcamp on Advanced Data Structures, recursion, and Object-Oriented System Architecture with live competitive coding benchmarks.',
+    description: 'Intensive algorithmic bootcamp on Advanced Data Structures, graph algorithms, and Object-Oriented System Design with live competitive coding benchmarks.',
     category: 'Workshop',
     semester: 'sem3',
     semesterLabel: 'Semester 3 (Yr 2)',
+    academicYear: 'year2',
     date: '2026-09-16',
     time: '09:30 AM - 04:30 PM',
     venue: 'Data Structures Lab (Room 203) · AI & DS Block',
@@ -60,18 +94,33 @@ export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
   {
     id: 'ev_s3_2',
     name: 'DBMS & Relational Query Optimization Hackathon',
-    description: '24-hour SQL and MongoDB database indexing, query execution optimization, and data normalization challenge with cash prizes.',
+    description: '24-hour SQL and MongoDB database indexing, transaction query optimization, and normalization challenge with cash prizes.',
     category: 'Hackathon',
     semester: 'sem3',
     semesterLabel: 'Semester 3 (Yr 2)',
+    academicYear: 'year2',
     date: '2026-09-25',
     time: '10:00 AM - 04:30 PM',
     venue: 'Database Engineering Lab (Room 205) · AI & DS Block',
     organizer: 'Mrs. R. Priya · AI & DS Dept',
     status: 'published',
   },
+  {
+    id: 'ev_s4_1',
+    name: 'Full Stack Web & React Framework Masterclass',
+    description: 'Comprehensive hands-on training on modern JavaScript, React.js, Tailwind CSS, and REST API integration for sophomore developers.',
+    category: 'Workshop',
+    semester: 'sem4',
+    semesterLabel: 'Semester 4 (Yr 2)',
+    academicYear: 'year2',
+    date: '2026-03-12',
+    time: '09:15 AM - 04:30 PM',
+    venue: 'Web Technologies Lab · AI & DS Block',
+    organizer: 'Mr. S. Arun · AI & DS Dept',
+    status: 'published',
+  },
 
-  // Semester 5 (Year 3 - Junior)
+  // ================= YEAR 3 (JUNIOR · SEM 5 & SEM 6) =================
   {
     id: 'ev_s5_1',
     name: 'AWS Cloud & DevOps Enterprise Architect Masterclass',
@@ -79,6 +128,7 @@ export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
     category: 'Workshop',
     semester: 'sem5',
     semesterLabel: 'Semester 5 (Yr 3)',
+    academicYear: 'year3',
     date: '2026-09-19',
     time: '09:15 AM - 04:30 PM',
     venue: 'Cloud Service Management Lab (Room 304) · AI & DS Block',
@@ -92,6 +142,7 @@ export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
     category: 'Hackathon',
     semester: 'sem5',
     semesterLabel: 'Semester 5 (Yr 3)',
+    academicYear: 'year3',
     date: '2026-10-08',
     time: '09:00 AM - 05:00 PM',
     venue: 'AI Innovation Hub · Academic Block',
@@ -105,14 +156,29 @@ export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
     category: 'Seminar',
     semester: 'sem5',
     semesterLabel: 'Semester 5 (Yr 3)',
+    academicYear: 'year3',
     date: '2026-10-14',
     time: '02:00 PM - 04:30 PM',
     venue: 'Department Auditorium (Hall 2)',
     organizer: 'Mr. S. Arun · AI & DS Dept',
     status: 'published',
   },
+  {
+    id: 'ev_s6_1',
+    name: 'Natural Language Processing & LLM Fine-Tuning Bootcamp',
+    description: 'Advanced transformer architectures, BERT embeddings, HuggingFace pipeline integration, and private LLM fine-tuning techniques.',
+    category: 'Workshop',
+    semester: 'sem6',
+    semesterLabel: 'Semester 6 (Yr 3)',
+    academicYear: 'year3',
+    date: '2026-04-05',
+    time: '09:30 AM - 04:30 PM',
+    venue: 'Deep Learning & NLP Lab · Room 306',
+    organizer: 'Dr. M. Sowmya · AI & DS Dept',
+    status: 'published',
+  },
 
-  // Semester 7 (Year 4 - Senior)
+  // ================= YEAR 4 (SENIOR · SEM 7 & SEM 8) =================
   {
     id: 'ev_s7_1',
     name: 'National AI Capstone & Innovation Project Expo 2026',
@@ -120,6 +186,7 @@ export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
     category: 'Symposium',
     semester: 'sem7',
     semesterLabel: 'Semester 7 (Yr 4)',
+    academicYear: 'year4',
     date: '2026-09-28',
     time: '09:30 AM - 05:00 PM',
     venue: 'VSB Convention Center · Main Campus',
@@ -133,21 +200,37 @@ export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
     category: 'Workshop',
     semester: 'sem7',
     semesterLabel: 'Semester 7 (Yr 4)',
+    academicYear: 'year4',
     date: '2026-10-10',
     time: '09:15 AM - 04:30 PM',
     venue: 'Innovation & Placement Wing (Room 401)',
     organizer: 'Dr. M. Sowmya · Placement Coordinator',
     status: 'published',
   },
+  {
+    id: 'ev_s8_1',
+    name: 'Industry Internship Project Defense & Enterprise AI Showcase',
+    description: 'Senior students present their semester-long corporate internships, production deliveries, and research papers before the Autonomous Review Board.',
+    category: 'Symposium',
+    semester: 'sem8',
+    semesterLabel: 'Semester 8 (Yr 4)',
+    academicYear: 'year4',
+    date: '2026-05-18',
+    time: '09:00 AM - 05:00 PM',
+    venue: 'Executive Seminar Hall · Placement Wing',
+    organizer: 'Dr. S. Karthik · AI & DS Dept',
+    status: 'published',
+  },
 
-  // All Active Semesters (Department-Wide)
+  // ================= ALL SEMESTERS (DEPARTMENT-WIDE) =================
   {
     id: 'ev_all_1',
     name: 'INNOVAIT 2026 — Annual Department Symposium & CodeFest',
     description: 'Flagship intra-college technical festival featuring multi-track coding, technical paper presentations, AI quiz contests, and startup pitch rounds.',
     category: 'Symposium',
     semester: 'ALL',
-    semesterLabel: 'All Active Semesters (3, 5, 7)',
+    semesterLabel: 'All 8 Semesters',
+    academicYear: 'ALL',
     date: '2026-10-15',
     time: '09:00 AM - 05:30 PM',
     venue: 'Main Institutional Auditorium · V.S.B.',
@@ -156,11 +239,40 @@ export const DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS: EventRecord[] = [
   },
 ]
 
-const SEMESTER_OPTIONS = [
-  { key: 'ALL', label: 'All Active Sems (3, 5, 7)', shortLabel: 'All Active Sems', yr: 'All Years' },
-  { key: 'sem3', label: 'Semester 3 · Year 2 (Sophomore)', shortLabel: 'Sem 3 (Yr 2)', yr: 'Year 2' },
-  { key: 'sem5', label: 'Semester 5 · Year 3 (Junior)', shortLabel: 'Sem 5 (Yr 3)', yr: 'Year 3' },
-  { key: 'sem7', label: 'Semester 7 · Year 4 (Senior)', shortLabel: 'Sem 7 (Yr 4)', yr: 'Year 4' },
+const MONTHS_LIST = [
+  { num: 'ALL', label: 'All 12 Months', short: 'All' },
+  { num: '1', label: 'January', short: 'Jan' },
+  { num: '2', label: 'February', short: 'Feb' },
+  { num: '3', label: 'March', short: 'Mar' },
+  { num: '4', label: 'April', short: 'Apr' },
+  { num: '5', label: 'May', short: 'May' },
+  { num: '6', label: 'June', short: 'Jun' },
+  { num: '7', label: 'July', short: 'Jul' },
+  { num: '8', label: 'August', short: 'Aug' },
+  { num: '9', label: 'September', short: 'Sep' },
+  { num: '10', label: 'October', short: 'Oct' },
+  { num: '11', label: 'November', short: 'Nov' },
+  { num: '12', label: 'December', short: 'Dec' },
+]
+
+const YEARS_LIST = [
+  { key: 'ALL', label: 'All 4 Academic Years', short: 'All Years', semRange: 'Semesters 1 - 8' },
+  { key: 'year1', label: 'Year 1 · Freshman', short: 'Year 1', semRange: 'Sem 1 & Sem 2' },
+  { key: 'year2', label: 'Year 2 · Sophomore', short: 'Year 2', semRange: 'Sem 3 & Sem 4' },
+  { key: 'year3', label: 'Year 3 · Junior', short: 'Year 3', semRange: 'Sem 5 & Sem 6' },
+  { key: 'year4', label: 'Year 4 · Senior', short: 'Year 4', semRange: 'Sem 7 & Sem 8' },
+]
+
+const ALL_8_SEMESTERS = [
+  { key: 'ALL', label: 'All 8 Sems', yr: 'ALL', yrNum: 'ALL' },
+  { key: 'sem1', label: 'Sem 1', yr: 'year1', yrNum: 'Yr 1 (Odd)' },
+  { key: 'sem2', label: 'Sem 2', yr: 'year1', yrNum: 'Yr 1 (Even)' },
+  { key: 'sem3', label: 'Sem 3', yr: 'year2', yrNum: 'Yr 2 (Odd)' },
+  { key: 'sem4', label: 'Sem 4', yr: 'year2', yrNum: 'Yr 2 (Even)' },
+  { key: 'sem5', label: 'Sem 5', yr: 'year3', yrNum: 'Yr 3 (Odd)' },
+  { key: 'sem6', label: 'Sem 6', yr: 'year3', yrNum: 'Yr 3 (Even)' },
+  { key: 'sem7', label: 'Sem 7', yr: 'year4', yrNum: 'Yr 4 (Odd)' },
+  { key: 'sem8', label: 'Sem 8', yr: 'year4', yrNum: 'Yr 4 (Even)' },
 ]
 
 export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[] }) {
@@ -169,28 +281,31 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     if (initialEvents && initialEvents.length > 0) {
       return initialEvents.map((ev) => {
         let sem: any = (ev as any).semester || 'ALL'
-        if (ev.registrationInfo && ['sem3', 'sem5', 'sem7', 'ALL'].includes(ev.registrationInfo)) {
+        if (ev.registrationInfo && ev.registrationInfo.startsWith('sem')) {
           sem = ev.registrationInfo
         }
+        const semNum = sem.replace('sem', '')
+        const yrNum = semNum !== 'ALL' && !isNaN(Number(semNum)) ? Math.ceil(Number(semNum) / 2) : 'ALL'
+        const yrKey = yrNum !== 'ALL' ? `year${yrNum}` : 'ALL'
+
         return {
           ...ev,
           semester: sem,
+          academicYear: yrKey,
           semesterLabel:
-            sem === 'sem3'
-              ? 'Semester 3 (Yr 2)'
-              : sem === 'sem5'
-              ? 'Semester 5 (Yr 3)'
-              : sem === 'sem7'
-              ? 'Semester 7 (Yr 4)'
-              : 'All Active Semesters (3, 5, 7)',
+            sem === 'ALL'
+              ? 'All 8 Semesters'
+              : `Semester ${semNum} (Yr ${yrNum})`,
         }
       })
     }
-    return DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS
+    return ALL_8_SEMESTERS_EVENTS_CATALOG
   })
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [yearFilter, setYearFilter] = useState<string>('ALL')
   const [semesterFilter, setSemesterFilter] = useState<string>('ALL')
+  const [monthFilter, setMonthFilter] = useState<string>('ALL')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -206,18 +321,64 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     organizer: 'Department of AI & DS',
   })
 
-  // Filtered Events based on Semester and Category
+  // When year filter changes, auto-adjust semester filter
+  const handleSelectYear = (yr: string) => {
+    setYearFilter(yr)
+    if (yr === 'ALL') {
+      setSemesterFilter('ALL')
+    } else {
+      // Check if current semester is inside this year; if not, reset to ALL
+      if (semesterFilter !== 'ALL') {
+        const semObj = ALL_8_SEMESTERS.find((s) => s.key === semesterFilter)
+        if (semObj && semObj.yr !== yr) {
+          setSemesterFilter('ALL')
+        }
+      }
+    }
+  }
+
+  // When semester filter changes, auto-adjust year filter
+  const handleSelectSemester = (sem: string) => {
+    setSemesterFilter(sem)
+    if (sem === 'ALL') {
+      // keep current year or reset
+    } else {
+      const semObj = ALL_8_SEMESTERS.find((s) => s.key === sem)
+      if (semObj && semObj.yr !== 'ALL') {
+        setYearFilter(semObj.yr)
+      }
+    }
+  }
+
+  // Filtered Events based on Year, Semester, Month, Category, and Live Search
   const filteredEvents = useMemo(() => {
     return events.filter((e) => {
-      // Semester match: If filter is ALL, show everything. Otherwise match exact sem or ALL events
+      // 1. Year Filter
+      const matchesYear =
+        yearFilter === 'ALL' ||
+        e.academicYear === yearFilter ||
+        e.academicYear === 'ALL' ||
+        !e.academicYear
+
+      // 2. Semester Filter
       const matchesSemester =
         semesterFilter === 'ALL' ||
         e.semester === semesterFilter ||
         e.semester === 'ALL' ||
         !e.semester
 
+      // 3. Month Filter
+      let matchesMonth = true
+      if (monthFilter !== 'ALL') {
+        const evDate = new Date(e.date)
+        const evMonth = String(evDate.getMonth() + 1)
+        matchesMonth = evMonth === monthFilter
+      }
+
+      // 4. Category Filter
       const matchesCategory = categoryFilter === 'ALL' || e.category === categoryFilter
 
+      // 5. Search Query
       const matchesSearch =
         e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (e.description && e.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -225,44 +386,38 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         e.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (e.semesterLabel && e.semesterLabel.toLowerCase().includes(searchQuery.toLowerCase()))
 
-      return matchesSemester && matchesCategory && matchesSearch
+      return matchesYear && matchesSemester && matchesMonth && matchesCategory && matchesSearch
     })
-  }, [events, semesterFilter, categoryFilter, searchQuery])
+  }, [events, yearFilter, semesterFilter, monthFilter, categoryFilter, searchQuery])
 
   // PDF Export
   const handleExportPDF = () => {
-    const semName =
-      semesterFilter === 'ALL'
-        ? 'Active Odd Semesters (3, 5 & 7)'
-        : semesterFilter === 'sem3'
-        ? 'Semester 3 (Year 2)'
-        : semesterFilter === 'sem5'
-        ? 'Semester 5 (Year 3)'
-        : 'Semester 7 (Year 4)'
+    const scopeLabel = `Scope: Year ${yearFilter} · Semester ${semesterFilter} · Month ${monthFilter}`
 
     generateAndDownloadPDF({
-      title: `DEPARTMENT OF AI & DS — TECHNICAL EVENTS CALENDAR (${semName.toUpperCase()})`,
-      subtitle: 'V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026',
+      title: `DEPARTMENT OF AI & DS — TECHNICAL EVENTS CALENDAR`,
+      subtitle: `V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026`,
       author: 'Office of the Department Administrator',
       category: 'Department Programs & Technical Events Schedule',
       sections: [
         {
-          heading: '1. EXECUTIVE OVERVIEW',
+          heading: '1. EXECUTIVE OVERVIEW & FILTER CRITERIA',
           body: [
-            `Active Scope: ${semName}`,
-            `Total Scheduled Department Programs: ${filteredEvents.length} Technical Events`,
-            'Curriculum Tracks: National Hackathons, Hands-on Workshops, Research Symposia & Guest Lectures',
+            `Academic Year Scope: ${yearFilter.toUpperCase()}`,
+            `Semester Scope: ${semesterFilter.toUpperCase()}`,
+            `Month Scope: ${monthFilter === 'ALL' ? 'All 12 Months' : MONTHS_LIST.find((m) => m.num === monthFilter)?.label}`,
+            `Total Filtered Events: ${filteredEvents.length} Technical Events`,
           ],
         },
         {
-          heading: '2. CALENDAR OF SCHEDULED SEMESTER EVENTS',
+          heading: '2. CALENDAR OF SCHEDULED EVENTS',
           body: filteredEvents.map(
             (e, idx) =>
               `${idx + 1}. "${e.name}" — [${e.semesterLabel || 'All Sems'}] | Category: ${e.category} | Date: ${e.date} (${e.time}) | Venue: ${e.venue}`
           ),
         },
       ],
-      fileName: `VSB_AI_DS_Events_${semesterFilter}_2026`,
+      fileName: `VSB_AI_DS_Events_${yearFilter}_${semesterFilter}_${monthFilter}`,
     })
   }
 
@@ -279,7 +434,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
           body: [
             ev.description ||
               'State-of-the-art technical program designed to empower students with hands-on expertise in next-gen Artificial Intelligence.',
-            `Target Audience: ${ev.semesterLabel || 'All Active Semesters'}`,
+            `Target Academic Year / Semester: ${ev.semesterLabel || 'All 8 Semesters'}`,
             `Event Category: ${ev.category}`,
             `Date & Time: ${ev.date} · ${ev.time}`,
             `Official Venue: ${ev.venue}`,
@@ -287,9 +442,9 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
           ],
         },
         {
-          heading: '2. PARTICIPATION & RECOGNITION',
+          heading: '2. PARTICIPATION & CERTIFICATION',
           body: [
-            'Eligibility: AI & DS students in active odd semesters (Semesters 3, 5, and 7).',
+            'Eligibility: AI & DS students in corresponding academic semesters.',
             'Accredited Certificate of Participation will be issued upon completion.',
             'Direct mentorship and project review by institutional faculty and industry leads.',
           ],
@@ -309,6 +464,11 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
 
     setIsLoading(true)
     try {
+      const semNum = formData.targetSemester.replace('sem', '')
+      const yrNum = semNum !== 'ALL' && !isNaN(Number(semNum)) ? Math.ceil(Number(semNum) / 2) : 'ALL'
+      const yrKey = yrNum !== 'ALL' ? `year${yrNum}` : 'ALL'
+      const semLabel = semNum === 'ALL' ? 'All 8 Semesters' : `Semester ${semNum} (Yr ${yrNum})`
+
       const res = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -319,15 +479,6 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
       })
       const result = await res.json()
 
-      const semLabel =
-        formData.targetSemester === 'sem3'
-          ? 'Semester 3 (Yr 2)'
-          : formData.targetSemester === 'sem5'
-          ? 'Semester 5 (Yr 3)'
-          : formData.targetSemester === 'sem7'
-          ? 'Semester 7 (Yr 4)'
-          : 'All Active Semesters (3, 5, 7)'
-
       const newEv: EventRecord = {
         id: (result.event && result.event.id) || 'ev_' + Date.now(),
         name: formData.name.trim(),
@@ -335,6 +486,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         category: formData.category,
         semester: formData.targetSemester,
         semesterLabel: semLabel,
+        academicYear: yrKey,
         date: formData.date,
         time: formData.time,
         venue: formData.venue.trim() || 'AI & DS Academic Block',
@@ -370,7 +522,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     }
 
     try {
-      const res = await fetch(`/api/events?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      await fetch(`/api/events?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
       setEvents(events.filter((e) => e.id !== id))
       toast.success(`Event removed from calendar.`)
     } catch (err) {
@@ -380,11 +532,21 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     }
   }
 
-  // Reset to default institutional events
-  const handleResetDefaultEvents = () => {
-    if (confirm('Reset to standard semester-wise department programs & hackathons?')) {
-      setEvents(DEFAULT_ACTIVE_ODD_SEMESTER_EVENTS)
-      toast.success('Calendar loaded with active semester programs!')
+  // Reset all filters
+  const handleResetFilters = () => {
+    setYearFilter('ALL')
+    setSemesterFilter('ALL')
+    setMonthFilter('ALL')
+    setCategoryFilter('ALL')
+    setSearchQuery('')
+    toast.success('All filters reset!')
+  }
+
+  // Reset to default catalog
+  const handleResetDefaultCatalog = () => {
+    if (confirm('Reload the complete 8-semester institutional event catalog?')) {
+      setEvents(ALL_8_SEMESTERS_EVENTS_CATALOG)
+      toast.success('Loaded full 8-semester catalog across all months!')
     }
   }
 
@@ -395,23 +557,23 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Odd Semesters Programs (3, 5, 7)
+              8-Semester &amp; Multi-Year Hub
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Technical Hub &amp; Hackathons</span>
+            <span className="text-xs text-gray-300 font-medium">· Technical Workshops &amp; Hackathons</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Semester-Wise Events &amp; Workshops</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">Events, Workshops &amp; Hackathons</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Browse, manage, and schedule hackathons, technical bootcamps &amp; guest lectures tailored for Semesters 3, 5, and 7
+            Comprehensive calendar filtered across all 8 Semesters, 4 Academic Years, and 12 Months
           </p>
         </div>
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
           <button
-            onClick={handleResetDefaultEvents}
+            onClick={handleResetDefaultCatalog}
             className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
-            title="Reload standard department programs"
+            title="Reload standard 8-semester events catalog"
           >
-            <CalendarDays className="w-4 h-4 text-[#F4C430]" /> Standard Events
+            <CalendarDays className="w-4 h-4 text-[#F4C430]" /> Standard Catalog
           </button>
 
           <button
@@ -431,101 +593,197 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
       </div>
 
       {/* ========================================================================= */}
-      {/* SEMESTER FILTER SWITCHER BAR */}
+      {/* MULTI-TIER FILTER ENGINE: YEAR WISE, 8 SEMESTERS & MONTH WISE */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-br from-blue-900/5 via-purple-900/5 to-amber-900/5 rounded-3xl p-5 border border-blue-200/80 shadow-xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-100 pb-3">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-blue-200/80 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#1455D9] text-white flex items-center justify-center shadow-xs">
-              <Layers className="w-4 h-4" />
+              <Filter className="w-4 h-4" />
             </div>
             <div>
               <h3 className="font-black text-sm text-[#071A3D] flex items-center gap-2">
-                <span>Select Academic Semester:</span>
-                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[10px] font-bold">
-                  Active Odd Semesters
+                <span>Multi-Dimensional Filter Console</span>
+                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-bold">
+                  Year · 8 Sems · Month
                 </span>
               </h3>
               <p className="text-[11px] text-gray-500 font-medium">
-                Filter events curated specifically for Year 2, Year 3, or Year 4 students
+                Refine technical programs by Academic Year, Specific Semester, and Month of the Year
               </p>
             </div>
           </div>
 
-          <span className="text-xs font-bold text-gray-500 font-mono">
-            {filteredEvents.length} Events in View
-          </span>
+          <div className="flex items-center gap-2">
+            {(yearFilter !== 'ALL' || semesterFilter !== 'ALL' || monthFilter !== 'ALL' || categoryFilter !== 'ALL' || searchQuery) && (
+              <button
+                onClick={handleResetFilters}
+                className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3 text-gray-500" /> Reset Filters
+              </button>
+            )}
+            <span className="text-xs font-bold text-[#1455D9] bg-blue-50 px-3 py-1 rounded-xl border border-blue-100 font-mono">
+              {filteredEvents.length} Events in View
+            </span>
+          </div>
         </div>
 
-        {/* Semester Buttons Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          {SEMESTER_OPTIONS.map((s) => {
-            const isSelected = semesterFilter === s.key
-            const count =
-              s.key === 'ALL'
-                ? events.length
-                : events.filter((e) => e.semester === s.key || e.semester === 'ALL').length
+        {/* 1. YEAR-WISE SELECTOR */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1">
+              <GraduationCap className="w-3.5 h-3.5 text-[#1455D9]" /> 1. Academic Year Wise Filter:
+            </span>
+            <span className="text-[10px] text-gray-400 font-medium font-mono">Years 1 to 4</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {YEARS_LIST.map((y) => {
+              const isSelected = yearFilter === y.key
+              const count =
+                y.key === 'ALL'
+                  ? events.length
+                  : events.filter((e) => e.academicYear === y.key || e.academicYear === 'ALL').length
 
-            return (
-              <button
-                key={s.key}
-                onClick={() => setSemesterFilter(s.key)}
-                className={cn(
-                  'p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-1 group relative overflow-hidden',
-                  isSelected
-                    ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-md ring-2 ring-[#1455D9]/20'
-                    : 'bg-white hover:bg-blue-50/50 border-gray-200 text-[#071A3D]'
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className={cn('text-xs font-black', isSelected ? 'text-white' : 'text-[#071A3D]')}>
-                    {s.shortLabel}
+              return (
+                <button
+                  key={y.key}
+                  onClick={() => handleSelectYear(y.key)}
+                  className={cn(
+                    'p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-0.5',
+                    isSelected
+                      ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
+                      : 'bg-gray-50/80 hover:bg-blue-50/40 border-gray-200 text-[#071A3D]'
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={cn('text-xs font-black', isSelected ? 'text-white' : 'text-[#071A3D]')}>
+                      {y.short}
+                    </span>
+                    <span
+                      className={cn(
+                        'px-1.5 py-0.2 rounded-full text-[9px] font-black font-mono',
+                        isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </div>
+                  <span className={cn('text-[9px] font-semibold truncate', isSelected ? 'text-blue-100' : 'text-gray-400')}>
+                    {y.semRange}
                   </span>
-                  <span
-                    className={cn(
-                      'px-2 py-0.5 rounded-full text-[10px] font-black font-mono',
-                      isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'
-                    )}
-                  >
-                    {count} Events
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 2. 8-SEMESTER WISE SELECTOR */}
+        <div className="space-y-1.5 pt-1 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5 text-purple-700" /> 2. 8 Semesters Wise Filter:
+            </span>
+            <span className="text-[10px] text-gray-400 font-medium font-mono">Semesters 1 through 8</span>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-9 gap-1.5">
+            {ALL_8_SEMESTERS.map((s) => {
+              const isSelected = semesterFilter === s.key
+              const count =
+                s.key === 'ALL'
+                  ? events.length
+                  : events.filter((e) => e.semester === s.key || e.semester === 'ALL').length
+
+              return (
+                <button
+                  key={s.key}
+                  onClick={() => handleSelectSemester(s.key)}
+                  className={cn(
+                    'py-2 px-1 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5',
+                    isSelected
+                      ? 'bg-purple-700 text-white border-purple-700 shadow-xs ring-2 ring-purple-400/20'
+                      : 'bg-white hover:bg-purple-50/50 border-gray-200 text-gray-700'
+                  )}
+                >
+                  <span className={cn('text-xs font-black leading-none', isSelected ? 'text-white' : 'text-[#071A3D]')}>
+                    {s.label}
                   </span>
-                </div>
-                <span className={cn('text-[10px] font-medium', isSelected ? 'text-blue-100' : 'text-gray-400')}>
-                  {s.yr}
-                </span>
-              </button>
-            )
-          })}
+                  <span className={cn('text-[9px] font-semibold', isSelected ? 'text-purple-100' : 'text-gray-400')}>
+                    {s.yrNum} ({count})
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 3. MONTH-WISE SELECTOR */}
+        <div className="space-y-1.5 pt-1 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-black uppercase text-gray-400 tracking-wider flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5 text-amber-600" /> 3. Month Wise Calendar Filter:
+            </span>
+            <span className="text-[10px] text-gray-400 font-medium font-mono">12 Calendar Months</span>
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-13 gap-1 overflow-x-auto pb-1">
+            {MONTHS_LIST.map((m) => {
+              const isSelected = monthFilter === m.num
+              const count =
+                m.num === 'ALL'
+                  ? events.length
+                  : events.filter((e) => {
+                      const d = new Date(e.date)
+                      return String(d.getMonth() + 1) === m.num
+                    }).length
+
+              return (
+                <button
+                  key={m.num}
+                  onClick={() => setMonthFilter(m.num)}
+                  className={cn(
+                    'py-1.5 px-1 rounded-xl text-center text-xs font-bold transition-all cursor-pointer border flex flex-col items-center justify-center',
+                    isSelected
+                      ? 'bg-amber-600 text-white border-amber-600 shadow-xs ring-2 ring-amber-400/20'
+                      : 'bg-gray-50/80 hover:bg-amber-50/50 border-gray-200 text-gray-700'
+                  )}
+                  title={`${m.label} (${count} events)`}
+                >
+                  <span className="text-[11px] font-black">{m.short}</span>
+                  <span className={cn('text-[8.5px] font-mono', isSelected ? 'text-amber-100' : 'text-gray-400')}>
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">All Active Programs</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">All Scheduled Events</p>
           <p className="text-2xl font-black text-[#071A3D] mt-0.5">{events.length}</p>
-          <p className="text-[10px] text-[#1455D9] font-medium mt-1">Hackathons, Labs &amp; Seminars</p>
+          <p className="text-[10px] text-[#1455D9] font-medium mt-1">Across Semesters 1 – 8</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Semester 3 (Year 2)</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Years 1 &amp; 2 (Fresh &amp; Soph)</p>
           <p className="text-2xl font-black text-blue-700 mt-0.5">
-            {events.filter((e) => e.semester === 'sem3' || e.semester === 'ALL').length}
+            {events.filter((e) => e.academicYear === 'year1' || e.academicYear === 'year2' || e.academicYear === 'ALL').length}
           </p>
-          <p className="text-[10px] text-blue-700 font-medium mt-1">DSA &amp; DBMS Bootcamps</p>
+          <p className="text-[10px] text-blue-700 font-medium mt-1">Semesters 1, 2, 3, 4 Programs</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Semester 5 (Year 3)</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Years 3 &amp; 4 (Junior &amp; Senior)</p>
           <p className="text-2xl font-black text-purple-700 mt-0.5">
-            {events.filter((e) => e.semester === 'sem5' || e.semester === 'ALL').length}
+            {events.filter((e) => e.academicYear === 'year3' || e.academicYear === 'year4' || e.academicYear === 'ALL').length}
           </p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">Cloud, DL &amp; Big Data</p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">Semesters 5, 6, 7, 8 Programs</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-indigo-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Semester 7 (Year 4)</p>
-          <p className="text-2xl font-black text-indigo-700 mt-0.5">
-            {events.filter((e) => e.semester === 'sem7' || e.semester === 'ALL').length}
-          </p>
-          <p className="text-[10px] text-indigo-700 font-medium mt-1">Project Expo &amp; Placement</p>
+        <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Active Filter Result</p>
+          <p className="text-2xl font-black text-amber-700 mt-0.5">{filteredEvents.length}</p>
+          <p className="text-[10px] text-amber-700 font-medium mt-1">Matching Criteria</p>
         </div>
       </div>
 
@@ -556,7 +814,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
           </select>
 
           <span className="text-xs text-gray-500 font-bold px-2.5 py-1.5 bg-gray-50 rounded-xl border border-gray-200 whitespace-nowrap">
-            Showing {filteredEvents.length} Events
+            Showing {filteredEvents.length} of {events.length}
           </span>
         </div>
       </div>
@@ -567,39 +825,49 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
           <CalendarDays className="w-12 h-12 text-purple-300 mx-auto mb-3" />
           <h3 className="font-bold text-base text-[#071A3D] mb-1">No Events Found for Selected Filter</h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
-            There are currently no events matching {semesterFilter !== 'ALL' ? semesterFilter.toUpperCase() : 'your criteria'}. Click &ldquo;+ Create New Event&rdquo; to publish an event.
+            There are currently no events matching your criteria. Try adjusting the Year, Semester, or Month filter, or click &ldquo;+ Create New Event&rdquo; to publish one.
           </p>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-6 py-3 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
-          >
-            <Plus className="w-4 h-4" /> + Create New Event
-          </button>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={handleResetFilters}
+              className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all cursor-pointer"
+            >
+              Reset All Filters
+            </button>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-6 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
+            >
+              <Plus className="w-4 h-4" /> + Create New Event
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {filteredEvents.map((ev) => {
-            const isSem3 = ev.semester === 'sem3'
-            const isSem5 = ev.semester === 'sem5'
-            const isSem7 = ev.semester === 'sem7'
+            const semNum = ev.semester ? ev.semester.replace('sem', '') : 'ALL'
+            const yrNum = semNum !== 'ALL' && !isNaN(Number(semNum)) ? Math.ceil(Number(semNum) / 2) : 'ALL'
 
-            const semBadgeColor = isSem3
-              ? 'bg-blue-50 text-[#1455D9] border-blue-200'
-              : isSem5
-              ? 'bg-purple-50 text-purple-700 border-purple-200'
-              : isSem7
-              ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            const semBadgeColor =
+              yrNum === 1
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : yrNum === 2
+                ? 'bg-blue-50 text-[#1455D9] border-blue-200'
+                : yrNum === 3
+                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                : yrNum === 4
+                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                : 'bg-amber-50 text-amber-800 border-amber-200'
 
             const semTagLabel =
               ev.semesterLabel ||
-              (isSem3
-                ? 'Semester 3 (Yr 2)'
-                : isSem5
-                ? 'Semester 5 (Yr 3)'
-                : isSem7
-                ? 'Semester 7 (Yr 4)'
-                : 'All Active Semesters (3, 5, 7)')
+              (semNum === 'ALL' ? 'All 8 Semesters' : `Semester ${semNum} (Year ${yrNum})`)
+
+            const eventDateObj = new Date(ev.date)
+            const monthShortName = isNaN(eventDateObj.getTime())
+              ? '2026'
+              : eventDateObj.toLocaleString('en-US', { month: 'short' }).toUpperCase()
+            const dayNumber = isNaN(eventDateObj.getTime()) ? '15' : eventDateObj.getDate()
 
             return (
               <div
@@ -624,8 +892,19 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
                     </span>
                   </div>
 
-                  <h3 className="font-extrabold text-sm text-[#071A3D] leading-snug">{ev.name}</h3>
-                  {ev.description && <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">{ev.description}</p>}
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-14 rounded-2xl bg-gradient-to-br from-[#071A3D] to-[#1455D9] text-white flex flex-col items-center justify-center shrink-0 shadow-md">
+                      <span className="text-[9.5px] font-black uppercase text-[#F4C430]">{monthShortName}</span>
+                      <span className="text-base font-black leading-none">{dayNumber}</span>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-extrabold text-sm text-[#071A3D] leading-snug">{ev.name}</h3>
+                      {ev.description && (
+                        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-1">{ev.description}</p>
+                      )}
+                    </div>
+                  </div>
 
                   <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3 rounded-2xl border border-gray-100 font-medium">
                     <div className="flex items-center gap-2 text-gray-700">
@@ -666,7 +945,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: ADD SEMESTER-WISE EVENT */}
+      {/* MODAL: ADD EVENT WITH 8-SEMESTER & YEAR SELECTION */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
@@ -674,7 +953,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Schedule Semester Event</h3>
-                <p className="text-xs text-gray-500">Configure technical programs for active odd semesters</p>
+                <p className="text-xs text-gray-500">Configure technical programs across 8 semesters and all academic years</p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -687,16 +966,21 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
               {/* Target Semester */}
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Target Academic Semester *</label>
+                <label className="block font-bold text-[#071A3D] mb-1">Target Semester (Semesters 1 – 8) *</label>
                 <select
                   value={formData.targetSemester}
                   onChange={(e) => setFormData({ ...formData, targetSemester: e.target.value })}
                   className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                 >
-                  <option value="ALL">All Active Semesters (Sem 3, 5 &amp; 7)</option>
-                  <option value="sem3">Semester 3 · Year 2 (Sophomore)</option>
-                  <option value="sem5">Semester 5 · Year 3 (Junior)</option>
-                  <option value="sem7">Semester 7 · Year 4 (Senior)</option>
+                  <option value="ALL">All 8 Semesters (Department-Wide)</option>
+                  <option value="sem1">Semester 1 · Year 1 (Freshman - Odd)</option>
+                  <option value="sem2">Semester 2 · Year 1 (Freshman - Even)</option>
+                  <option value="sem3">Semester 3 · Year 2 (Sophomore - Odd)</option>
+                  <option value="sem4">Semester 4 · Year 2 (Sophomore - Even)</option>
+                  <option value="sem5">Semester 5 · Year 3 (Junior - Odd)</option>
+                  <option value="sem6">Semester 6 · Year 3 (Junior - Even)</option>
+                  <option value="sem7">Semester 7 · Year 4 (Senior - Odd)</option>
+                  <option value="sem8">Semester 8 · Year 4 (Senior - Even)</option>
                 </select>
               </div>
 
@@ -729,7 +1013,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Event Date</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Event Date (Determines Month)</label>
                   <input
                     type="date"
                     value={formData.date}

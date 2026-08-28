@@ -41,7 +41,9 @@ export interface FacultyEventItem {
 export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEventItem[] }) {
   const [events, setEvents] = useState<FacultyEventItem[]>(initialEvents)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedYear, setSelectedYear] = useState('ALL')
   const [selectedSemester, setSelectedSemester] = useState('ALL')
+  const [selectedMonth, setSelectedMonth] = useState('ALL')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [selectedEvent, setSelectedEvent] = useState<FacultyEventItem | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -58,15 +60,26 @@ export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEve
         selectedCategory === 'ALL' || e.category.toLowerCase() === selectedCategory.toLowerCase()
 
       const semInfo = e.registrationInfo || 'ALL'
+      const semNum = semInfo.replace('sem', '')
+      const yrNum = semNum !== 'ALL' && !isNaN(Number(semNum)) ? Math.ceil(Number(semNum) / 2) : 'ALL'
+      const yrKey = yrNum !== 'ALL' ? `year${yrNum}` : 'ALL'
+
+      const matchesYear = selectedYear === 'ALL' || yrKey === selectedYear || semInfo === 'ALL'
       const matchesSemester =
         selectedSemester === 'ALL' ||
         semInfo === selectedSemester ||
         semInfo === 'ALL' ||
         e.name.toLowerCase().includes(selectedSemester.toLowerCase())
 
-      return matchesSearch && matchesCat && matchesSemester
+      let matchesMonth = true
+      if (selectedMonth !== 'ALL') {
+        const d = new Date(e.date)
+        matchesMonth = String(d.getMonth() + 1) === selectedMonth
+      }
+
+      return matchesSearch && matchesCat && matchesYear && matchesSemester && matchesMonth
     })
-  }, [events, searchQuery, selectedCategory, selectedSemester])
+  }, [events, searchQuery, selectedCategory, selectedYear, selectedSemester, selectedMonth])
 
   const handleDownloadBrochure = (e: FacultyEventItem) => {
     const d = new Date(e.date)
@@ -177,34 +190,99 @@ export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEve
         </div>
       </div>
 
-      {/* Semester Switcher Tabs */}
+      {/* Multi-Dimensional Filter Bar */}
       <div className="bg-white p-4 rounded-3xl border border-blue-200/80 shadow-xs space-y-3">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-          <span className="text-xs font-black text-[#071A3D] uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#1455D9]" /> Filter by Semester:
-          </span>
-          <span className="text-xs font-bold text-gray-500 font-mono">{filtered.length} Events in View</span>
+        {/* Academic Year Filter */}
+        <div className="space-y-1">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">1. Academic Year:</span>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+            {[
+              { key: 'ALL', label: 'All Years' },
+              { key: 'year1', label: 'Year 1 (Freshman)' },
+              { key: 'year2', label: 'Year 2 (Sophomore)' },
+              { key: 'year3', label: 'Year 3 (Junior)' },
+              { key: 'year4', label: 'Year 4 (Senior)' },
+            ].map((y) => (
+              <button
+                key={y.key}
+                onClick={() => setSelectedYear(y.key)}
+                className={cn(
+                  'py-1.5 px-2 rounded-xl text-xs font-bold text-center transition-all cursor-pointer border',
+                  selectedYear === y.key
+                    ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-blue-50/50'
+                )}
+              >
+                {y.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {[
-            { key: 'ALL', label: 'All Active Sems (3, 5, 7)', short: 'All Semesters' },
-            { key: 'sem3', label: 'Semester 3 (Yr 2)', short: 'Sem 3 (Year 2)' },
-            { key: 'sem5', label: 'Semester 5 (Yr 3)', short: 'Sem 5 (Year 3)' },
-            { key: 'sem7', label: 'Semester 7 (Yr 4)', short: 'Sem 7 (Year 4)' },
-          ].map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setSelectedSemester(s.key)}
-              className={cn(
-                'py-2 px-3 rounded-xl text-xs font-bold text-center transition-all cursor-pointer border',
-                selectedSemester === s.key
-                  ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
-                  : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-blue-50/50'
-              )}
-            >
-              {s.label}
-            </button>
-          ))}
+
+        {/* 8 Semesters Filter */}
+        <div className="space-y-1 pt-1 border-t border-gray-100">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">2. 8 Semesters:</span>
+          <div className="grid grid-cols-3 sm:grid-cols-9 gap-1">
+            {[
+              { key: 'ALL', label: 'All Sems' },
+              { key: 'sem1', label: 'Sem 1' },
+              { key: 'sem2', label: 'Sem 2' },
+              { key: 'sem3', label: 'Sem 3' },
+              { key: 'sem4', label: 'Sem 4' },
+              { key: 'sem5', label: 'Sem 5' },
+              { key: 'sem6', label: 'Sem 6' },
+              { key: 'sem7', label: 'Sem 7' },
+              { key: 'sem8', label: 'Sem 8' },
+            ].map((s) => (
+              <button
+                key={s.key}
+                onClick={() => setSelectedSemester(s.key)}
+                className={cn(
+                  'py-1.5 px-1 rounded-xl text-xs font-bold text-center transition-all cursor-pointer border',
+                  selectedSemester === s.key
+                    ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 12 Months Filter */}
+        <div className="space-y-1 pt-1 border-t border-gray-100">
+          <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider">3. Month:</span>
+          <div className="grid grid-cols-4 sm:grid-cols-13 gap-1 overflow-x-auto">
+            {[
+              { num: 'ALL', short: 'All' },
+              { num: '1', short: 'Jan' },
+              { num: '2', short: 'Feb' },
+              { num: '3', short: 'Mar' },
+              { num: '4', short: 'Apr' },
+              { num: '5', short: 'May' },
+              { num: '6', short: 'Jun' },
+              { num: '7', short: 'Jul' },
+              { num: '8', short: 'Aug' },
+              { num: '9', short: 'Sep' },
+              { num: '10', short: 'Oct' },
+              { num: '11', short: 'Nov' },
+              { num: '12', short: 'Dec' },
+            ].map((m) => (
+              <button
+                key={m.num}
+                onClick={() => setSelectedMonth(m.num)}
+                className={cn(
+                  'py-1 px-1 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer border',
+                  selectedMonth === m.num
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-amber-50/50'
+                )}
+              >
+                {m.short}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
