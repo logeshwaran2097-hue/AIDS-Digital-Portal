@@ -21,6 +21,7 @@ import {
   Building,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { NotificationSettingsUI } from '@/components/notifications/NotificationSettingsUI'
 
 export interface NotificationRecord {
   id: string
@@ -224,7 +225,9 @@ export function AdminNotificationsView({
         </div>
       </div>
 
-      {/* Metrics Row */}
+      <NotificationSettingsUI role="admin" />
+
+      {/* Analytics / Stats Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Total Broadcasts</p>

@@ -18,6 +18,7 @@ import {
   Send,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { NotificationSettingsUI } from '@/components/notifications/NotificationSettingsUI'
 
 interface NotificationItem {
   id: string
@@ -114,6 +115,8 @@ export function FacultyNotificationsView() {
           </button>
         )}
       </div>
+
+      <NotificationSettingsUI role="faculty" />
 
       {/* Filter Toolbar */}
       <div className="flex items-center justify-between gap-2 bg-white p-3 rounded-2xl border border-gray-200 shadow-xs">
