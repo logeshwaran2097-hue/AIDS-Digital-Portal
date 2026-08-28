@@ -32,6 +32,7 @@ import {
   Key,
   AlertCircle,
   Users,
+  Pencil,
 } from 'lucide-react'
 
 export default function LoginPage() {
@@ -85,6 +86,14 @@ export default function LoginPage() {
   const [emailOtpSent, setEmailOtpSent] = React.useState(false)
   const [emailOtpCooldown, setEmailOtpCooldown] = React.useState(0)
   const [demoOtpCode, setDemoOtpCode] = React.useState<string | null>(null)
+
+  // Academic Details Correction Request to Admin States
+  const [showCorrectionModal, setShowCorrectionModal] = React.useState(false)
+  const [correctionCategory, setCorrectionCategory] = React.useState('name')
+  const [correctionRequestedValue, setCorrectionRequestedValue] = React.useState('')
+  const [correctionReason, setCorrectionReason] = React.useState('')
+  const [correctionSubmitting, setCorrectionSubmitting] = React.useState(false)
+  const [correctionSubmitted, setCorrectionSubmitted] = React.useState(false)
 
   const router = useRouter()
 
@@ -215,6 +224,57 @@ export default function LoginPage() {
       return
     }
     setOnboardingStep(2)
+  }
+
+  // Submit Official Correction Request to Admin
+  const handleSendCorrectionRequest = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!correctionRequestedValue.trim()) {
+      toast.error('Please enter the requested corrected value.')
+      return
+    }
+    if (!correctionReason.trim()) {
+      toast.error('Please provide a reason or explanation for this change.')
+      return
+    }
+
+    setCorrectionSubmitting(true)
+    try {
+      const res = await fetch('/api/students/profile-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registerNumber: onboardingForm.registerNumber,
+          studentName: onboardingForm.name || onboardingUser?.name || 'Student',
+          requestedData: {
+            [correctionCategory]: correctionRequestedValue.trim(),
+          },
+          currentData: {
+            name: onboardingForm.name,
+            department: onboardingForm.department,
+            year: onboardingForm.year,
+            semester: onboardingForm.semester,
+            section: onboardingForm.section,
+            advisorName: onboardingForm.advisorName,
+          },
+          reason: `Requested ${correctionCategory.toUpperCase()} correction: ${correctionReason.trim()}`,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        toast.error(data.message || 'Failed to submit correction request.')
+        return
+      }
+
+      setCorrectionSubmitted(true)
+      setShowCorrectionModal(false)
+      toast.success('Correction request submitted to Admin! It will be verified with official college records.')
+    } catch {
+      toast.error('Network error submitting correction request.')
+    } finally {
+      setCorrectionSubmitting(false)
+    }
   }
 
   // Dispatch Email Verification OTP
@@ -1043,110 +1103,98 @@ export default function LoginPage() {
                   Please carefully verify your official enrollment records below. If any academic details are incorrect, you can request an instant admin correction.
                 </p>
 
-                {/* Academic Record Grid */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                  <div className="flex items-center gap-1.5 pb-2 border-b border-slate-200 text-xs font-black text-[#071A41]">
-                    <GraduationCap className="w-4 h-4 text-[#1557C0]" />
-                    <span>Academic Enrollment Record</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Register Number */}
-                    <div>
-                      <label className="block font-bold text-gray-500 text-[10px] uppercase">Register Number (Verified)</label>
-                      <p className="font-mono font-black text-sm text-[#071A41] bg-gray-100/80 px-2.5 py-1.5 rounded-xl border border-gray-200">{onboardingForm.registerNumber}</p>
+                {/* Academic Record Grid (Locked by Admin - Request Permission to Change) */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3.5 shadow-xs">
+                  <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-lg bg-[#1557C0]/10 flex items-center justify-center text-[#1557C0]">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="font-black text-[#071A41] text-xs block">Official Academic Record</span>
+                        <span className="text-[10px] font-bold text-slate-500">Verified &amp; Configured by Department Administrator</span>
+                      </div>
                     </div>
 
-                    {/* Student Full Name */}
-                    <div>
-                      <label className="block font-bold text-[#071A41] text-[11px]">Full Name *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="Enter your official Full Name"
-                        value={onboardingForm.name}
-                        onChange={(e) => setOnboardingForm({ ...onboardingForm, name: e.target.value })}
-                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      />
+                    <button
+                      type="button"
+                      onClick={() => setShowCorrectionModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300/80 text-amber-900 hover:bg-amber-100 text-[11px] font-black transition-all shadow-xs"
+                    >
+                      <Pencil className="w-3 h-3 text-amber-700" />
+                      <span>Request Admin Correction</span>
+                    </button>
+                  </div>
+
+                  {/* Pending Correction Alert if submitted */}
+                  {correctionSubmitted && (
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2 text-emerald-900 text-xs">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                      <div>
+                        <span className="font-black block">Correction Request Pending Admin Review</span>
+                        <span className="text-[11px] text-emerald-700">
+                          Your request to modify academic details has been submitted. The Administrator will review and update official records.
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 6 High-Contrast Locked Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* Register Number */}
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                      <div>
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Register Number</span>
+                        <span className="font-mono font-black text-xs text-[#071A41]">{onboardingForm.registerNumber}</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <Lock className="w-2.5 h-2.5" /> Verified
+                      </span>
+                    </div>
+
+                    {/* Official Full Name */}
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                      <div>
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Full Name</span>
+                        <span className="font-bold text-xs text-[#071A41]">{onboardingForm.name || 'Set by Admin'}</span>
+                      </div>
+                      <Lock className="w-3 h-3 text-slate-400" />
                     </div>
 
                     {/* Class & Department */}
-                    <div>
-                      <label className="block font-bold text-[#071A41] text-[11px]">Class &amp; Program</label>
-                      <select
-                        value={onboardingForm.department}
-                        onChange={(e) => setOnboardingForm({ ...onboardingForm, department: e.target.value })}
-                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      >
-                        <option value="B.Tech Artificial Intelligence & Data Science">B.Tech Artificial Intelligence &amp; Data Science</option>
-                        <option value="B.E Computer Science & Engineering">B.E Computer Science &amp; Engineering</option>
-                        <option value="B.Tech Information Technology">B.Tech Information Technology</option>
-                      </select>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                      <div>
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Program / Department</span>
+                        <span className="font-bold text-xs text-[#1557C0]">{onboardingForm.department}</span>
+                      </div>
+                      <Lock className="w-3 h-3 text-slate-400" />
                     </div>
 
                     {/* Year & Semester */}
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                       <div>
-                        <label className="block font-bold text-[#071A41] text-[11px]">Year</label>
-                        <select
-                          value={onboardingForm.year}
-                          onChange={(e) => setOnboardingForm({ ...onboardingForm, year: e.target.value })}
-                          className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                        >
-                          <option value="Year 1 (Freshman)">Year 1 (Freshman)</option>
-                          <option value="Year 2 (Sophomore)">Year 2 (Sophomore)</option>
-                          <option value="Year 3 (Junior)">Year 3 (Junior)</option>
-                          <option value="Year 4 (Senior)">Year 4 (Senior)</option>
-                        </select>
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Year &amp; Semester</span>
+                        <span className="font-bold text-xs text-[#071A41]">{onboardingForm.year} · {onboardingForm.semester}</span>
                       </div>
-                      <div>
-                        <label className="block font-bold text-[#071A41] text-[11px]">Semester</label>
-                        <select
-                          value={onboardingForm.semester}
-                          onChange={(e) => setOnboardingForm({ ...onboardingForm, semester: e.target.value })}
-                          className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                        >
-                          {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                            <option key={s} value={`Semester ${s}`}>Semester {s}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <Lock className="w-3 h-3 text-slate-400" />
                     </div>
 
-                    {/* Section */}
-                    <div>
-                      <label className="block font-bold text-[#071A41] text-[11px]">Assigned Section</label>
-                      <select
-                        value={onboardingForm.section}
-                        onChange={(e) => setOnboardingForm({ ...onboardingForm, section: e.target.value })}
-                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      >
-                        <option value="Section A">Section A</option>
-                        <option value="Section B">Section B</option>
-                        <option value="Section C">Section C</option>
-                        <option value="Section D">Section D</option>
-                      </select>
+                    {/* Assigned Section */}
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                      <div>
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Assigned Section</span>
+                        <span className="font-bold text-xs text-[#071A41]">{onboardingForm.section}</span>
+                      </div>
+                      <Lock className="w-3 h-3 text-slate-400" />
                     </div>
 
                     {/* Class Advisor */}
-                    <div>
-                      <label className="block font-bold text-[#071A41] text-[11px]">Class Advisor / Mentor Name</label>
-                      <input
-                        type="text"
-                        list="advisorOnboardingList"
-                        placeholder="Type or select Advisor Name"
-                        value={onboardingForm.advisorName}
-                        onChange={(e) => setOnboardingForm({ ...onboardingForm, advisorName: e.target.value })}
-                        className="w-full mt-0.5 p-2 rounded-xl border border-gray-300 font-bold text-xs text-[#1557C0] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      />
-                      <datalist id="advisorOnboardingList">
-                        <option value="Dr. S. Karthik (Professor · AI & DS)" />
-                        <option value="Dr. M. Sowmya (Associate Professor)" />
-                        <option value="Dr. K. Meenakshi (Associate Professor)" />
-                        <option value="Dr. R. Ramanathan (Professor · AI & DS)" />
-                        <option value="Prof. P. Naveen (Assistant Professor)" />
-                        <option value="Prof. S. Divya (Assistant Professor)" />
-                      </datalist>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                      <div>
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Class Advisor / Mentor</span>
+                        <span className="font-bold text-xs text-[#1557C0]">{onboardingForm.advisorName}</span>
+                      </div>
+                      <Lock className="w-3 h-3 text-slate-400" />
                     </div>
                   </div>
                 </div>
@@ -1393,6 +1441,110 @@ export default function LoginPage() {
                 </div>
               </form>
             )}
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 📝 OFFICIAL ACADEMIC CORRECTION REQUEST MODAL TO ADMIN */}
+      {/* ========================================================================= */}
+      {showCorrectionModal && (
+        <div className="fixed inset-0 z-60 bg-[#071A41]/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-amber-200 animate-in zoom-in-95 duration-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-black text-[#071A41] text-sm">Request Official Academic Correction</h4>
+                  <p className="text-[10px] text-slate-500 font-bold">Requires Verification &amp; Approval by Department Admin</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowCorrectionModal(false)}
+                className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSendCorrectionRequest} className="space-y-3.5 text-xs">
+              <p className="text-[11px] text-slate-600 font-medium">
+                Official enrollment data (Name, Register Number, Department, Semester, Section, Advisor) is locked for security. Select the parameter to correct and provide official justification:
+              </p>
+
+              <div>
+                <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                  Field / Particular to Correct *
+                </label>
+                <select
+                  value={correctionCategory}
+                  onChange={(e) => setCorrectionCategory(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-xs text-[#071A41] bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                >
+                  <option value="name">Full Name (Spelling / Initial correction)</option>
+                  <option value="department">Program / Department</option>
+                  <option value="year">Academic Year</option>
+                  <option value="semester">Semester</option>
+                  <option value="section">Assigned Section</option>
+                  <option value="advisorName">Class Advisor / Mentor Name</option>
+                  <option value="other">Other Official Particular</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                  Requested Correct Value *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter the exact correct value"
+                  value={correctionRequestedValue}
+                  onChange={(e) => setCorrectionRequestedValue(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-bold text-xs text-[#071A41] bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                  Reason &amp; Justification for Admin *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="State the reason (e.g. As per 10th/12th certificate, section change approved by HOD, etc.)"
+                  value={correctionReason}
+                  onChange={(e) => setCorrectionReason(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-300 font-medium text-xs text-[#071A41] bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCorrectionModal(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <Button
+                  type="submit"
+                  size="sm"
+                  loading={correctionSubmitting}
+                  className="px-5 py-2.5 rounded-xl font-bold bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white shadow-sm cursor-pointer"
+                >
+                  <span>Submit to Admin</span>
+                  <Send className="w-3.5 h-3.5 ml-1" />
+                </Button>
+              </div>
+            </form>
 
           </div>
         </div>
