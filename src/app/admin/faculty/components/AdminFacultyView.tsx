@@ -51,10 +51,32 @@ import {
   Rocket,
   BriefcaseBusiness,
   Printer,
+  RotateCcw,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
+
+export interface LabItem {
+  id: string
+  code: string
+  name: string
+  shortName: string
+  credits: number
+  defaultPeriod: string
+  defaultTime: string
+  defaultDays: string
+}
+
+export interface SemesterLabGroup {
+  semNumber: number
+  yearNumber: number
+  semLabel: string
+  badgeColor: string
+  labs: LabItem[]
+}
+
+export type SemestersLabsMap = Record<string, SemesterLabGroup>
 
 export interface FacultyRecord {
   id: string
@@ -302,9 +324,174 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     facultyType: 'advisor',
   })
 
-  // Quick Presets Modal Tab for Labs & Theory Courses (Semesters 1 - 8)
+  // Quick Presets Modal Tab for Labs & Theory Courses (Semesters 3, 5, 7)
   const [quickLabTab, setQuickLabTab] = useState<string>('sem3')
   const [quickTheoryTab, setQuickTheoryTab] = useState<string>('sem3')
+
+  // Dynamic Editable Labs State (Persistent across browser reloads)
+  const [semestersLabs, setSemestersLabs] = useState<SemestersLabsMap>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('VSB_AIDS_EDITABLE_LABS')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (parsed && typeof parsed === 'object' && parsed.sem3) return parsed
+        }
+      } catch {}
+    }
+    return ALL_SEMESTERS_LABS
+  })
+
+  // Save changes to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('VSB_AIDS_EDITABLE_LABS', JSON.stringify(semestersLabs))
+      } catch {}
+    }
+  }, [semestersLabs])
+
+  // Lab Edit & Add Modal State
+  const [isLabModalOpen, setIsLabModalOpen] = useState(false)
+  const [editingLabId, setEditingLabId] = useState<string | null>(null)
+  const [labFormData, setLabFormData] = useState<{
+    targetSem: 'sem3' | 'sem5' | 'sem7'
+    name: string
+    shortName: string
+    code: string
+    credits: number
+    defaultPeriod: string
+    defaultTime: string
+    defaultDays: string
+  }>({
+    targetSem: 'sem3',
+    name: '',
+    shortName: '',
+    code: '',
+    credits: 2,
+    defaultPeriod: 'Lab Session (FN)',
+    defaultTime: '09:15 AM - 12:30 PM',
+    defaultDays: 'Tuesday',
+  })
+
+  // Open Add Lab Modal
+  const handleOpenAddLab = (semKey: 'sem3' | 'sem5' | 'sem7' = 'sem3') => {
+    setEditingLabId(null)
+    setLabFormData({
+      targetSem: semKey,
+      name: '',
+      shortName: '',
+      code: '',
+      credits: 2,
+      defaultPeriod: 'Lab Session (FN)',
+      defaultTime: '09:15 AM - 12:30 PM',
+      defaultDays: 'Monday',
+    })
+    setIsLabModalOpen(true)
+  }
+
+  // Open Edit Lab Modal
+  const handleOpenEditLab = (semKey: 'sem3' | 'sem5' | 'sem7', lab: LabItem) => {
+    setEditingLabId(lab.id)
+    setLabFormData({
+      targetSem: semKey,
+      name: lab.name,
+      shortName: lab.shortName,
+      code: lab.code,
+      credits: lab.credits,
+      defaultPeriod: lab.defaultPeriod,
+      defaultTime: lab.defaultTime,
+      defaultDays: lab.defaultDays,
+    })
+    setIsLabModalOpen(true)
+  }
+
+  // Save Lab (Add or Update)
+  const handleSaveLab = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!labFormData.name.trim() || !labFormData.code.trim()) {
+      toast.error('Please enter both Laboratory Name and Course Code')
+      return
+    }
+
+    const semKey = labFormData.targetSem
+    const currentSem = semestersLabs[semKey] || ALL_SEMESTERS_LABS[semKey]
+
+    if (editingLabId) {
+      // Update existing lab
+      const updatedLabs = currentSem.labs.map((l) =>
+        l.id === editingLabId
+          ? {
+              ...l,
+              name: labFormData.name.trim(),
+              shortName: labFormData.shortName.trim() || labFormData.name.trim().slice(0, 16),
+              code: labFormData.code.trim().toUpperCase(),
+              credits: Number(labFormData.credits) || 2,
+              defaultPeriod: labFormData.defaultPeriod,
+              defaultTime: labFormData.defaultTime,
+              defaultDays: labFormData.defaultDays,
+            }
+          : l
+      )
+      setSemestersLabs({
+        ...semestersLabs,
+        [semKey]: {
+          ...currentSem,
+          labs: updatedLabs,
+        },
+      })
+      toast.success(`Lab "${labFormData.code}" updated successfully!`)
+    } else {
+      // Add new lab
+      const newLab: LabItem = {
+        id: 'lab_' + Date.now(),
+        name: labFormData.name.trim(),
+        shortName: labFormData.shortName.trim() || labFormData.name.trim().slice(0, 16),
+        code: labFormData.code.trim().toUpperCase(),
+        credits: Number(labFormData.credits) || 2,
+        defaultPeriod: labFormData.defaultPeriod,
+        defaultTime: labFormData.defaultTime,
+        defaultDays: labFormData.defaultDays,
+      }
+      setSemestersLabs({
+        ...semestersLabs,
+        [semKey]: {
+          ...currentSem,
+          labs: [...currentSem.labs, newLab],
+        },
+      })
+      toast.success(`New lab "${newLab.code}" added to Semester ${currentSem.semNumber}!`)
+    }
+
+    setIsLabModalOpen(false)
+  }
+
+  // Delete Lab
+  const handleDeleteLab = (semKey: 'sem3' | 'sem5' | 'sem7', labId: string, labName: string) => {
+    if (window.confirm(`Are you sure you want to remove "${labName}" from this semester?`)) {
+      const currentSem = semestersLabs[semKey]
+      if (!currentSem) return
+      setSemestersLabs({
+        ...semestersLabs,
+        [semKey]: {
+          ...currentSem,
+          labs: currentSem.labs.filter((l) => l.id !== labId),
+        },
+      })
+      toast.success(`Lab "${labName}" removed successfully.`)
+    }
+  }
+
+  // Reset Labs to Official Defaults
+  const handleResetLabs = () => {
+    if (window.confirm('Reset all laboratories to default institutional curricula?')) {
+      setSemestersLabs(ALL_SEMESTERS_LABS)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('VSB_AIDS_EDITABLE_LABS')
+      }
+      toast.success('Laboratories reset to standard curricula!')
+    }
+  }
 
   // Apply Quick Lab Preset into Form
   const applyLabPreset = (lab: {
@@ -493,8 +680,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
       // Lab Semester filter
       let matchesLabSem = true
-      if (labSemesterFilter !== 'ALL' && ALL_SEMESTERS_LABS[labSemesterFilter as keyof typeof ALL_SEMESTERS_LABS]) {
-        const targetLabs = ALL_SEMESTERS_LABS[labSemesterFilter as keyof typeof ALL_SEMESTERS_LABS].labs
+      if (labSemesterFilter !== 'ALL' && semestersLabs[labSemesterFilter as keyof typeof semestersLabs]) {
+        const targetLabs = semestersLabs[labSemesterFilter as keyof typeof semestersLabs].labs
         matchesLabSem = targetLabs.some(
           (l) => (f.subjectName && f.subjectName.toLowerCase().includes(l.shortName.toLowerCase())) || subjs.includes(l.code)
         )
@@ -502,7 +689,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
       return matchesSearch && matchesDesignation && matchesLabSem
     })
-  }, [facultyList, searchQuery, designationFilter, labSemesterFilter])
+  }, [facultyList, searchQuery, designationFilter, labSemesterFilter, semestersLabs])
 
   // PDF Export for Master Timetable
   const handleExportTimetablePDF = () => {
@@ -982,7 +1169,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       </div>
 
       {/* ========================================================================= */}
-      {/* ACTIVE SEMESTERS (3, 5, 7) AVAILABLE LABS SHOWCASE & FILTER */}
+      {/* ACTIVE SEMESTERS (3, 5, 7) EDITABLE LABS SHOWCASE & FILTER */}
       {/* ========================================================================= */}
       {activeTab === 'handlers' && (
         <div className="bg-gradient-to-br from-purple-900/5 via-blue-900/5 to-amber-900/5 rounded-3xl p-5 border border-purple-200/80 shadow-xs space-y-4">
@@ -995,17 +1182,38 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <h3 className="font-black text-sm text-[#071A3D] flex items-center gap-2">
                   <span>Available Laboratories &amp; Practical Training (Semesters 3, 5 &amp; 7)</span>
                   <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
-                    Odd Semesters Active
+                    Editable Curricula
                   </span>
                 </h3>
                 <p className="text-[11px] text-gray-500 font-medium">
-                  FN Lab: 09:15 AM – 12:30 PM · AN Lab: 01:20 PM – 04:30 PM
+                  FN Lab: 09:15 AM – 12:30 PM · AN Lab: 01:20 PM – 04:30 PM · Click Edit on any lab to customize
                 </p>
               </div>
             </div>
 
-            {/* Active Semester Filter buttons */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+            {/* Quick Actions & Semester Filter buttons */}
+            <div className="flex items-center flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleOpenAddLab(labSemesterFilter !== 'ALL' ? (labSemesterFilter as any) : 'sem3')}
+                className="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Lab Course</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetLabs}
+                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                title="Reset to default institutional laboratory curricula"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
+                <span>Reset</span>
+              </button>
+
+              <div className="h-5 w-px bg-purple-200 hidden sm:block mx-0.5" />
+
               <button
                 onClick={() => setLabSemesterFilter('ALL')}
                 className={cn(
@@ -1038,29 +1246,71 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
           </div>
 
-          {/* Active Semesters Labs Grid */}
+          {/* Active Semesters Editable Labs Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            {Object.entries(ALL_SEMESTERS_LABS).filter(([k]) => labSemesterFilter === 'ALL' || labSemesterFilter === k).map(([key, sem]) => (
+            {Object.entries(semestersLabs).filter(([k]) => labSemesterFilter === 'ALL' || labSemesterFilter === k).map(([key, sem]) => (
               <div key={key} className="p-4 rounded-2xl bg-white border border-gray-200 shadow-2xs space-y-2 flex flex-col justify-between hover:border-purple-300 transition-all">
                 <div>
                   <div className="flex items-center justify-between gap-1 mb-1.5">
                     <span className={cn('px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border', sem.badgeColor)}>
                       Semester {sem.semNumber} (Year {sem.yearNumber})
                     </span>
-                    <span className="text-[10px] text-gray-400 font-bold font-mono">{sem.labs.length} Labs</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-gray-400 font-bold font-mono">{sem.labs.length} Labs</span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAddLab(key as any)}
+                        className="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-700 hover:text-white text-purple-700 text-[10px] font-bold transition-all border border-purple-200 cursor-pointer flex items-center gap-0.5"
+                        title={`Add laboratory to Semester ${sem.semNumber}`}
+                      >
+                        <Plus className="w-2.5 h-2.5" /> Add
+                      </button>
+                    </div>
                   </div>
                   <h4 className="font-extrabold text-sm text-[#071A3D]">{sem.semLabel}</h4>
 
-                  <ul className="mt-2.5 space-y-2 text-xs max-h-56 overflow-y-auto pr-1">
-                    {sem.labs.map((l) => (
-                      <li key={l.id} className="p-2 rounded-xl bg-gray-50 border border-gray-100 flex items-start gap-2">
-                        <Code2 className="w-3.5 h-3.5 text-[#1455D9] shrink-0 mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <span className="font-bold text-[#071A3D] block text-xs truncate">{l.name}</span>
-                          <span className="text-[10px] text-gray-500 font-mono block">{l.code} · {l.defaultPeriod} ({l.defaultTime})</span>
-                        </div>
+                  <ul className="mt-2.5 space-y-2 text-xs max-h-64 overflow-y-auto pr-1">
+                    {sem.labs.length === 0 ? (
+                      <li className="p-4 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-center text-gray-400 text-xs font-semibold">
+                        No labs configured yet. Click "+ Add" above to insert a lab.
                       </li>
-                    ))}
+                    ) : (
+                      sem.labs.map((l) => (
+                        <li key={l.id} className="p-2 rounded-xl bg-gray-50 border border-gray-100 hover:border-purple-200 flex items-start justify-between gap-2 group transition-all">
+                          <div className="flex items-start gap-2 flex-1 min-w-0">
+                            <Code2 className="w-3.5 h-3.5 text-[#1455D9] shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <span className="font-bold text-[#071A3D] block text-xs truncate" title={l.name}>{l.name}</span>
+                              <span className="text-[10px] text-gray-500 font-mono block">
+                                <span className="text-purple-700 font-bold">{l.code}</span> · {l.defaultPeriod} ({l.defaultTime})
+                              </span>
+                              <span className="text-[9px] text-gray-400 font-semibold block mt-0.5">
+                                Days: {l.defaultDays} · {l.credits} Credits
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditLab(key as any, l)}
+                              className="p-1 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 text-[10px] transition-all cursor-pointer shadow-2xs"
+                              title={`Edit ${l.name}`}
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLab(key as any, l.id, l.name)}
+                              className="p-1 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 text-[10px] transition-all cursor-pointer shadow-2xs"
+                              title={`Delete ${l.name}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </div>
                 <div className="pt-2.5 border-t border-gray-100 text-xs text-purple-700 font-bold flex items-center justify-between">
@@ -2636,7 +2886,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      {ALL_SEMESTERS_LABS[quickLabTab as keyof typeof ALL_SEMESTERS_LABS]?.labs.map((l) => (
+                      {semestersLabs[quickLabTab as keyof typeof semestersLabs]?.labs.map((l) => (
                         <button
                           key={l.id}
                           type="button"
@@ -3237,7 +3487,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 pt-1">
-                      {ALL_SEMESTERS_LABS[quickLabTab as keyof typeof ALL_SEMESTERS_LABS]?.labs.map((l) => (
+                      {semestersLabs[quickLabTab as keyof typeof semestersLabs]?.labs.map((l) => (
                         <button
                           key={l.id}
                           type="button"
@@ -3363,6 +3613,217 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md"
                 >
                   {isLoading ? 'Updating...' : 'Update Faculty Record'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* EDIT / ADD LABORATORY MODAL */}
+      {/* ========================================================================= */}
+      {isLabModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-gray-100">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-black">
+                  <FlaskConical className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-[#071A3D]">
+                    {editingLabId ? 'Edit Laboratory Course' : 'Add New Laboratory Course'}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-medium">
+                    Configure curriculum details, default sessions, timings and schedule days
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLabModalOpen(false)}
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveLab} className="space-y-4 text-xs">
+              {/* Target Semester */}
+              <div>
+                <label className="block font-bold text-gray-700 text-xs mb-1">Target Semester *</label>
+                <select
+                  value={labFormData.targetSem}
+                  onChange={(e) => setLabFormData({ ...labFormData, targetSem: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9] focus:border-[#1455D9] focus:outline-none"
+                  disabled={Boolean(editingLabId)}
+                >
+                  <option value="sem3">Semester 3 · Year 2 (Sophomore - Odd)</option>
+                  <option value="sem5">Semester 5 · Year 3 (Junior - Odd)</option>
+                  <option value="sem7">Semester 7 · Year 4 (Senior - Odd)</option>
+                </select>
+              </div>
+
+              {/* Lab Full Name */}
+              <div>
+                <label className="block font-bold text-gray-700 text-xs mb-1">
+                  Full Laboratory Name * <span className="text-gray-400 font-normal">(e.g. Object Oriented Programming Laboratory)</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Object Oriented Programming Laboratory"
+                  value={labFormData.name}
+                  onChange={(e) => setLabFormData({ ...labFormData, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-purple-600 focus:outline-none"
+                />
+              </div>
+
+              {/* Code & Short Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-700 text-xs mb-1">
+                    Course Code * <span className="text-gray-400 font-normal">(e.g. AD2311)</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. AD2311"
+                    value={labFormData.code}
+                    onChange={(e) => setLabFormData({ ...labFormData, code: e.target.value.toUpperCase() })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800 focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-xs mb-1">
+                    Short Name <span className="text-gray-400 font-normal">(e.g. OOP Lab)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. OOP Lab"
+                    value={labFormData.shortName}
+                    onChange={(e) => setLabFormData({ ...labFormData, shortName: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Credits & Period Preset */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-700 text-xs mb-1">Credits</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={labFormData.credits}
+                    onChange={(e) => setLabFormData({ ...labFormData, credits: Number(e.target.value) || 1 })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-xs mb-1">Standard Lab Session</label>
+                  <select
+                    value={labFormData.defaultPeriod}
+                    onChange={(e) => {
+                      const period = e.target.value
+                      let time = labFormData.defaultTime
+                      if (period === 'Lab Session (FN)') time = '09:15 AM - 12:30 PM'
+                      else if (period === 'Lab Session (AN)') time = '01:20 PM - 04:30 PM'
+                      else if (period === 'Period 7, Period 8') time = '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM'
+                      setLabFormData({
+                        ...labFormData,
+                        defaultPeriod: period,
+                        defaultTime: time,
+                      })
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-semibold text-[#071A3D] focus:border-purple-600 focus:outline-none"
+                  >
+                    <option value="Lab Session (FN)">Forenoon: Lab Session (FN) [09:15 - 12:30]</option>
+                    <option value="Lab Session (AN)">Afternoon: Lab Session (AN) [01:20 - 04:30]</option>
+                    <option value="Period 7, Period 8">Evening: Period 7, Period 8 [03:05 - 04:30]</option>
+                    <option value="Full Day Block">Full Day Dedicated Project Block</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Default Time & Default Days */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-700 text-xs mb-1">Default Timings</label>
+                  <input
+                    type="text"
+                    value={labFormData.defaultTime}
+                    onChange={(e) => setLabFormData({ ...labFormData, defaultTime: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-gray-700 focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-xs mb-1">Default Class Days</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Tuesday, Friday"
+                    value={labFormData.defaultDays}
+                    onChange={(e) => setLabFormData({ ...labFormData, defaultDays: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-gray-700 focus:border-purple-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Quick Day Chips */}
+              <div>
+                <label className="block font-bold text-gray-500 text-[11px] mb-1">Click to toggle day:</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d) => {
+                    const active = labFormData.defaultDays.includes(d)
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          const currentDays = labFormData.defaultDays
+                            ? labFormData.defaultDays.split(',').map((x) => x.trim()).filter(Boolean)
+                            : []
+                          const updated = currentDays.includes(d)
+                            ? currentDays.filter((x) => x !== d)
+                            : [...currentDays, d]
+                          setLabFormData({
+                            ...labFormData,
+                            defaultDays: updated.join(', '),
+                          })
+                        }}
+                        className={cn(
+                          'px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer border',
+                          active
+                            ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-purple-50'
+                        )}
+                      >
+                        {d}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setIsLabModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold cursor-pointer shadow-md flex items-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{editingLabId ? 'Save Lab Changes' : 'Create Laboratory'}</span>
                 </button>
               </div>
             </form>
