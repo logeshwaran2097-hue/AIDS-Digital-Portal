@@ -454,7 +454,7 @@ export function AdminProfileView({ initialProfile }: { initialProfile: AdminProf
                 <Lock className="w-3 h-3 text-purple-600" /> Security Token
               </p>
               <p className="font-mono text-[#071A3D] font-bold truncate">JWT (SHA-256)</p>
-              <p className="text-[11px] text-gray-500">HTTP-Only Encrypted</p>
+              <p className="text-[11px] text-gray-500">HTTP-Only (TLS 1.3)</p>
             </div>
 
             <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
@@ -527,7 +527,7 @@ export function AdminProfileView({ initialProfile }: { initialProfile: AdminProf
             </div>
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
               <span className="font-bold text-gray-500">Authentication:</span>
-              <span className="font-bold text-[#1455D9] text-right">Email OTP + SHA-256 JWT</span>
+              <span className="font-bold text-[#1455D9] text-right">TLS 1.3 + OTP + Argon2id / Scrypt</span>
             </div>
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50">
               <span className="font-bold text-gray-500">Account Standing:</span>
