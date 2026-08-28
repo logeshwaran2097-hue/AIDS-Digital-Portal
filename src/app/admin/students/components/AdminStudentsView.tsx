@@ -145,12 +145,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     email: '',
     password: '',
     phone: '',
-    dateOfBirth: '2006-08-15',
-    year: 2,
-    semester: 4,
-    batch: '2024 - 2028',
+    dateOfBirth: '',
+    year: 1,
+    semester: 1,
+    batch: '',
     section: 'A',
-    advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+    advisorName: '',
     status: 'active',
   })
 
@@ -240,11 +240,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           password: '',
           phone: '',
           dateOfBirth: '',
-          year: 2,
-          semester: 4,
-          batch: '2024 - 2028',
+          year: 1,
+          semester: 1,
+          batch: '',
           section: 'A',
-          advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+          advisorName: '',
           status: 'active',
         })
         toast.success('Student registered successfully in database!')
@@ -364,12 +364,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 email: '',
                 password: '',
                 phone: '',
-                dateOfBirth: '2006-08-15',
-                year: 2,
-                semester: 4,
-                batch: '2024 - 2028',
+                dateOfBirth: '',
+                year: 1,
+                semester: 1,
+                batch: '',
                 section: 'A',
-                advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+                advisorName: '',
                 status: 'active',
               })
               setIsAddModalOpen(true)
@@ -766,25 +766,19 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           </button>
                           <button
                             onClick={() => {
-                              const defaultBatches: Record<number, string> = {
-                                1: '2025 - 2029',
-                                2: '2024 - 2028',
-                                3: '2023 - 2027',
-                                4: '2022 - 2026',
-                              }
                               setSelectedStudent(s)
                               setFormData({
-                                registerNumber: s.registerNumber,
-                                name: s.name,
-                                email: s.email,
+                                registerNumber: s.registerNumber || '',
+                                name: s.name || '',
+                                email: s.email || '',
                                 phone: s.phone || '',
-                                dateOfBirth: s.dateOfBirth || '2006-08-15',
-                                year: s.year,
-                                semester: s.semester,
-                                batch: s.batch || defaultBatches[s.year] || '2024 - 2028',
-                                section: s.section,
-                                advisorName: s.advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
-                                status: s.status,
+                                dateOfBirth: s.dateOfBirth || '',
+                                year: s.year || 1,
+                                semester: s.semester || 1,
+                                batch: s.batch || '',
+                                section: s.section || 'A',
+                                advisorName: s.advisorName || '',
+                                status: s.status || 'active',
                                 password: '',
                               })
                               setIsEditModalOpen(true)
@@ -1062,14 +1056,14 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleAddSubmit} autoComplete="off" className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Register Number *</label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. 23AD001"
+                    autoComplete="off"
                     value={formData.registerNumber}
                     onChange={(e) =>
                       setFormData({ ...formData, registerNumber: e.target.value.toUpperCase() })
@@ -1082,7 +1076,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     required
-                    placeholder="e.g. K. Aishwarya"
+                    autoComplete="off"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1093,11 +1087,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
-                    Institutional Email <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                    Email <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
                   </label>
                   <input
                     type="email"
-                    placeholder="e.g. 23ad001@vsb.edu.in"
+                    autoComplete="off"
+                    name="student_email_entry"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1108,9 +1103,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     Temporary Password *
                   </label>
                   <input
-                    type="text"
+                    type="password"
                     required
-                    placeholder="Enter custom temporary password (min 6 chars)"
+                    autoComplete="new-password"
+                    name="student_password_entry"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#1455D9] font-mono font-medium text-[#071A3D]"
@@ -1123,7 +1119,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
                   <input
                     type="text"
-                    placeholder="e.g. +91 90252 10001"
+                    autoComplete="off"
+                    name="student_phone_entry"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1133,6 +1130,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
                   <input
                     type="date"
+                    autoComplete="off"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1145,22 +1143,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
                   <select
                     value={formData.semester}
-                    onChange={(e) => {
-                      const sem = Number(e.target.value)
-                      const y = Math.ceil(sem / 2)
-                      const defaultBatches: Record<number, string> = {
-                        1: '2025 - 2029',
-                        2: '2024 - 2028',
-                        3: '2023 - 2027',
-                        4: '2022 - 2026',
-                      }
-                      setFormData({
-                        ...formData,
-                        semester: sem,
-                        year: y,
-                        batch: defaultBatches[y] || '2024 - 2028',
-                      })
-                    }}
+                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
@@ -1174,21 +1157,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Year</label>
                   <select
                     value={formData.year}
-                    onChange={(e) => {
-                      const y = Number(e.target.value)
-                      const defaultBatches: Record<number, string> = {
-                        1: '2025 - 2029',
-                        2: '2024 - 2028',
-                        3: '2023 - 2027',
-                        4: '2022 - 2026',
-                      }
-                      setFormData({
-                        ...formData,
-                        year: y,
-                        semester: (y * 2) - 1,
-                        batch: defaultBatches[y] || '2024 - 2028',
-                      })
-                    }}
+                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
                     <option value={1}>Year 1</option>
@@ -1201,11 +1170,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
                   <input
                     type="text"
-                    required
+                    autoComplete="off"
                     placeholder="e.g. 2024 - 2028"
                     value={formData.batch}
                     onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-purple-200 bg-purple-50/20 font-bold text-purple-700 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
                 <div>
@@ -1226,25 +1195,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
-                    Class Advisor / Mentor Name *
+                    Class Advisor / Mentor Name
                   </label>
                   <input
                     type="text"
-                    list="advisorOptionsAdd"
-                    required
-                    placeholder="Type or select Advisor Name"
+                    autoComplete="off"
+                    placeholder="Enter Class Advisor / Mentor Name"
                     value={formData.advisorName}
                     onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20"
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
                   />
-                  <datalist id="advisorOptionsAdd">
-                    <option value="Dr. S. Karthik (Professor · AI & DS)" />
-                    <option value="Dr. M. Sowmya (Associate Professor)" />
-                    <option value="Dr. K. Meenakshi (Associate Professor)" />
-                    <option value="Dr. R. Ramanathan (Professor · AI & DS)" />
-                    <option value="Prof. P. Naveen (Assistant Professor)" />
-                    <option value="Prof. S. Divya (Assistant Professor)" />
-                  </datalist>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Status</label>
@@ -1287,7 +1247,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Edit Student Record</h3>
-                <p className="text-xs text-gray-500">Update cohort, academic batch, and student credentials</p>
+                <p className="text-xs text-gray-500">Update student cohort, academic credentials, and details</p>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
@@ -1297,13 +1257,14 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleEditSubmit} autoComplete="off" className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Register Number *</label>
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     value={formData.registerNumber}
                     onChange={(e) =>
                       setFormData({ ...formData, registerNumber: e.target.value.toUpperCase() })
@@ -1316,6 +1277,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1328,6 +1290,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Email</label>
                   <input
                     type="email"
+                    autoComplete="off"
+                    name="student_email_edit"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1337,6 +1301,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Reset Password (Optional)</label>
                   <input
                     type="password"
+                    autoComplete="new-password"
+                    name="student_password_edit"
                     placeholder="Leave blank to keep unchanged"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -1350,6 +1316,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
                   <input
                     type="text"
+                    autoComplete="off"
+                    name="student_phone_edit"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1359,6 +1327,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
                   <input
                     type="date"
+                    autoComplete="off"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1371,22 +1340,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
                   <select
                     value={formData.semester}
-                    onChange={(e) => {
-                      const sem = Number(e.target.value)
-                      const y = Math.ceil(sem / 2)
-                      const defaultBatches: Record<number, string> = {
-                        1: '2025 - 2029',
-                        2: '2024 - 2028',
-                        3: '2023 - 2027',
-                        4: '2022 - 2026',
-                      }
-                      setFormData({
-                        ...formData,
-                        semester: sem,
-                        year: y,
-                        batch: defaultBatches[y] || '2024 - 2028',
-                      })
-                    }}
+                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
@@ -1400,21 +1354,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Year</label>
                   <select
                     value={formData.year}
-                    onChange={(e) => {
-                      const y = Number(e.target.value)
-                      const defaultBatches: Record<number, string> = {
-                        1: '2025 - 2029',
-                        2: '2024 - 2028',
-                        3: '2023 - 2027',
-                        4: '2022 - 2026',
-                      }
-                      setFormData({
-                        ...formData,
-                        year: y,
-                        semester: (y * 2) - 1,
-                        batch: defaultBatches[y] || '2024 - 2028',
-                      })
-                    }}
+                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
                     <option value={1}>Year 1</option>
@@ -1427,11 +1367,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
                   <input
                     type="text"
-                    required
+                    autoComplete="off"
                     placeholder="e.g. 2024 - 2028"
                     value={formData.batch}
                     onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-purple-200 bg-purple-50/20 font-bold text-purple-700 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
                 <div>
@@ -1452,25 +1392,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
-                    Class Advisor / Mentor Name *
+                    Class Advisor / Mentor Name
                   </label>
                   <input
                     type="text"
-                    list="advisorOptionsEdit"
-                    required
-                    placeholder="Type or select Advisor Name"
+                    autoComplete="off"
+                    placeholder="Enter Class Advisor / Mentor Name"
                     value={formData.advisorName}
                     onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20"
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
                   />
-                  <datalist id="advisorOptionsEdit">
-                    <option value="Dr. S. Karthik (Professor · AI & DS)" />
-                    <option value="Dr. M. Sowmya (Associate Professor)" />
-                    <option value="Dr. K. Meenakshi (Associate Professor)" />
-                    <option value="Dr. R. Ramanathan (Professor · AI & DS)" />
-                    <option value="Prof. P. Naveen (Assistant Professor)" />
-                    <option value="Prof. S. Divya (Assistant Professor)" />
-                  </datalist>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Status</label>

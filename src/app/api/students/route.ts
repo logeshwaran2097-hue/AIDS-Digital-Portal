@@ -27,20 +27,6 @@ export async function GET(request: Request) {
     })
     const userMap = new Map(users.map((u) => [u.id, u]))
 
-    const defaultBatches: Record<number, string> = {
-      1: '2025 - 2029',
-      2: '2024 - 2028',
-      3: '2023 - 2027',
-      4: '2022 - 2026',
-    }
-
-    const defaultAdvisors: Record<number, string> = {
-      1: 'Dr. R. Ramanathan (Professor · AI & DS)',
-      2: 'Dr. S. Karthik (Professor · AI & DS)',
-      3: 'Dr. M. Sowmya (Associate Professor)',
-      4: 'Dr. K. Meenakshi (Associate Professor)',
-    }
-
     const result = students.map((s) => {
       const u = userMap.get(s.userId)
       return {
@@ -54,9 +40,9 @@ export async function GET(request: Request) {
         department: s.department || 'Artificial Intelligence & Data Science',
         year: s.year,
         semester: s.semester,
-        batch: (s as any).batch || defaultBatches[s.year] || '2024 - 2028',
+        batch: (s as any).batch || '',
         section: s.section,
-        advisorName: (s as any).advisorName || defaultAdvisors[s.year] || 'Dr. S. Karthik (Professor · AI & DS)',
+        advisorName: (s as any).advisorName || '',
         status: u?.status || 'active',
       }
     })
@@ -82,11 +68,11 @@ export async function POST(request: Request) {
       phone,
       dateOfBirth,
       department = 'Artificial Intelligence & Data Science',
-      year = 2,
-      semester = 4,
+      year = 1,
+      semester = 1,
       batch,
       section = 'A',
-      advisorName = 'Dr. S. Karthik (Professor · AI & DS)',
+      advisorName,
       status = 'active',
     } = data
 
@@ -126,7 +112,7 @@ export async function POST(request: Request) {
       where: { email: finalEmail },
       update: {
         name: name.trim(),
-        phone: phone || null,
+        phone: phone ? phone.trim() : null,
         role: 'student',
         status: status || 'active',
         passwordHash,
@@ -136,7 +122,7 @@ export async function POST(request: Request) {
       create: {
         email: finalEmail,
         name: name.trim(),
-        phone: phone || null,
+        phone: phone ? phone.trim() : null,
         role: 'student',
         status: status || 'active',
         passwordHash,
@@ -145,20 +131,18 @@ export async function POST(request: Request) {
       },
     })
 
-    const computedBatch = batch?.trim() || (Number(year) === 1 ? '2025 - 2029' : Number(year) === 2 ? '2024 - 2028' : Number(year) === 3 ? '2023 - 2027' : '2022 - 2026')
-
-    // Create Student
+    // Create Student with manual values only
     const student = await prisma.student.create({
       data: {
         userId: user.id,
         registerNumber: regUpper,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2006-08-15'),
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2000-01-01'),
         department: department || 'Artificial Intelligence & Data Science',
-        year: Number(year) || 2,
-        semester: Number(semester) || 4,
-        batch: computedBatch,
+        year: Number(year) || 1,
+        semester: Number(semester) || 1,
+        batch: batch ? String(batch).trim() : null,
         section: section || 'A',
-        advisorName: advisorName?.trim() || 'Dr. S. Karthik (Professor · AI & DS)',
+        advisorName: advisorName ? String(advisorName).trim() : null,
       } as any,
     })
 
@@ -170,14 +154,14 @@ export async function POST(request: Request) {
         registerNumber: student.registerNumber,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || '',
         dateOfBirth: student.dateOfBirth ? student.dateOfBirth.toISOString().split('T')[0] : null,
         department: student.department,
         year: student.year,
         semester: student.semester,
-        batch: (student as any).batch || computedBatch,
+        batch: (student as any).batch || '',
         section: student.section,
-        advisorName: (student as any).advisorName || advisorName,
+        advisorName: (student as any).advisorName || '',
         status: user.status,
       },
       message: 'Student registered successfully in database',
@@ -243,8 +227,6 @@ export async function PUT(request: Request) {
 
     // If student record exists, update both Student and User
     if (student) {
-      const computedBatch = batch !== undefined ? batch : (student.batch || (Number(year || student.year) === 1 ? '2025 - 2029' : Number(year || student.year) === 2 ? '2024 - 2028' : Number(year || student.year) === 3 ? '2023 - 2027' : '2022 - 2026'))
-
       const updatedStudent = await prisma.student.update({
         where: { id: student.id },
         data: {
@@ -279,21 +261,21 @@ export async function PUT(request: Request) {
           registerNumber: updatedStudent.registerNumber,
           name: updatedUser.name,
           email: updatedUser.email,
-          phone: updatedUser.phone,
+          phone: updatedUser.phone || '',
           dateOfBirth: updatedStudent.dateOfBirth ? updatedStudent.dateOfBirth.toISOString().split('T')[0] : null,
           department: updatedStudent.department,
           year: updatedStudent.year,
           semester: updatedStudent.semester,
-          batch: (updatedStudent as any).batch || computedBatch,
+          batch: (updatedStudent as any).batch || '',
           section: updatedStudent.section,
-          advisorName: (updatedStudent as any).advisorName || advisorName || 'Dr. S. Karthik (Professor · AI & DS)',
+          advisorName: (updatedStudent as any).advisorName || '',
           status: updatedUser.status,
         },
         user: {
           id: updatedUser.id,
           name: updatedUser.name,
           email: updatedUser.email,
-          phone: updatedUser.phone,
+          phone: updatedUser.phone || '',
         },
       })
     }
@@ -324,29 +306,27 @@ export async function PUT(request: Request) {
       },
     })
 
-    const computedBatch = batch?.trim() || (Number(year || 2) === 1 ? '2025 - 2029' : Number(year || 2) === 2 ? '2024 - 2028' : Number(year || 2) === 3 ? '2023 - 2027' : '2022 - 2026')
-
     const newStudent = await prisma.student.upsert({
       where: { registerNumber: finalRegNo },
       update: {
         department: department || 'Artificial Intelligence & Data Science',
-        year: Number(year) || 2,
-        semester: Number(semester) || 4,
-        batch: computedBatch,
+        year: Number(year) || 1,
+        semester: Number(semester) || 1,
+        batch: batch ? String(batch).trim() : null,
         section: section || 'A',
-        advisorName: advisorName?.trim() || 'Dr. S. Karthik (Professor · AI & DS)',
+        advisorName: advisorName ? String(advisorName).trim() : null,
         ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
       } as any,
       create: {
         userId: user.id,
         registerNumber: finalRegNo,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2006-08-15'),
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2000-01-01'),
         department: department || 'Artificial Intelligence & Data Science',
-        year: Number(year) || 2,
-        semester: Number(semester) || 4,
-        batch: computedBatch,
+        year: Number(year) || 1,
+        semester: Number(semester) || 1,
+        batch: batch ? String(batch).trim() : null,
         section: section || 'A',
-        advisorName: advisorName?.trim() || 'Dr. S. Karthik (Professor · AI & DS)',
+        advisorName: advisorName ? String(advisorName).trim() : null,
       } as any,
     })
 
@@ -359,21 +339,21 @@ export async function PUT(request: Request) {
         registerNumber: newStudent.registerNumber,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || '',
         dateOfBirth: newStudent.dateOfBirth ? newStudent.dateOfBirth.toISOString().split('T')[0] : null,
         department: newStudent.department,
         year: newStudent.year,
         semester: newStudent.semester,
-        batch: (newStudent as any).batch || computedBatch,
+        batch: (newStudent as any).batch || '',
         section: newStudent.section,
-        advisorName: (newStudent as any).advisorName || advisorName,
+        advisorName: (newStudent as any).advisorName || '',
         status: user.status,
       },
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
+        phone: user.phone || '',
       },
     })
   } catch (error) {
@@ -416,7 +396,7 @@ export async function DELETE(request: Request) {
       await prisma.user.delete({ where: { id: userId } }).catch(() => null)
     } else {
       // Direct user delete
-      await prisma.user.delete({ where: { id } }).catch(() => null)
+      await prisma.user.delete({ where: { id: id } }).catch(() => null)
     }
 
     return NextResponse.json({
