@@ -223,46 +223,6 @@ const PERIOD_LIST = [
   { id: 'LAB_AN', name: 'Lab Session (AN)', time: '01:20 PM - 04:30 PM', isLab: true, duration: '3h 10m', session: 'Periods 5-8 Practical' },
 ]
 
-// Master Weekly Timetables across Active Odd Semesters (Sem 3, 5, 7)
-const MASTER_TIMETABLES_ALL_8_SEMS: Record<string, { title: string; room: string; advisor: string; rows: any[] }> = {
-  sem3: {
-    title: 'Semester 3 · Year 2 (Odd Semester)',
-    room: 'Room 201 · AI & DS Academic Block',
-    advisor: 'Dr. S. Karthik (Professor)',
-    rows: [
-      { day: 'Monday', p1: 'AD2301 (DS)', p2: 'AD2302 (DBMS)', p3: 'MA2301 (Maths III)', p4: 'AD2303 (OOP)', p5: 'Lab: AD2311 (OOP Lab)', p6: 'Lab: AD2311 (OOP Lab)', p7: 'Lab: AD2311 (OOP Lab)', p8: 'Lab: AD2311 (OOP Lab)' },
-      { day: 'Tuesday', p1: 'AD2304 (AI)', p2: 'AD2301 (DS)', p3: 'AD2302 (DBMS)', p4: 'MA2301 (Maths III)', p5: 'AD2303 (OOP)', p6: 'Mentorship', p7: 'Library / Self-Study', p8: 'Placement Prep' },
-      { day: 'Wednesday', p1: 'MA2301 (Maths III)', p2: 'AD2304 (AI)', p3: 'AD2301 (DS)', p4: 'AD2302 (DBMS)', p5: 'Lab: AD2313 (DSA Lab)', p6: 'Lab: AD2313 (DSA Lab)', p7: 'Lab: AD2313 (DSA Lab)', p8: 'Lab: AD2313 (DSA Lab)' },
-      { day: 'Thursday', p1: 'Lab: AD2312 (DBMS Lab)', p2: 'Lab: AD2312 (DBMS Lab)', p3: 'Lab: AD2312 (DBMS Lab)', p4: 'Lab: AD2312 (DBMS Lab)', p5: 'AD2303 (OOP)', p6: 'AD2304 (AI)', p7: 'Problem Solving', p8: 'Club Activity' },
-      { day: 'Friday', p1: 'AD2302 (DBMS)', p2: 'MA2301 (Maths III)', p3: 'AD2304 (AI)', p4: 'AD2301 (DS)', p5: 'AD2303 (OOP)', p6: 'Mini-Project', p7: 'Counseling', p8: 'Mentorship' },
-    ],
-  },
-  sem5: {
-    title: 'Semester 5 · Year 3 (Odd Semester)',
-    room: 'Room 302 · AI & DS Academic Block',
-    advisor: 'Dr. M. Sowmya (Associate Prof)',
-    rows: [
-      { day: 'Monday', p1: 'Lab: AD2511 (Cloud Lab)', p2: 'Lab: AD2511 (Cloud Lab)', p3: 'Lab: AD2511 (Cloud Lab)', p4: 'Lab: AD2511 (Cloud Lab)', p5: 'AD2501 (Big Data)', p6: 'AD2502 (Deep Learning)', p7: 'AD2503 (Business Analytics)', p8: 'Industry Seminar' },
-      { day: 'Tuesday', p1: 'AD2502 (Deep Learning)', p2: 'AD2501 (Big Data)', p3: 'AD2503 (Business Analytics)', p4: 'AD2504 (Cloud Computing)', p5: 'Mentorship', p6: 'Research Review', p7: 'AD2515 (Comm Training)', p8: 'AD2515 (Comm Training)' },
-      { day: 'Wednesday', p1: 'AD2503 (Business Analytics)', p2: 'AD2504 (Cloud Computing)', p3: 'AD2501 (Big Data)', p4: 'AD2502 (Deep Learning)', p5: 'Lab: AD2512 (Big Data Lab)', p6: 'Lab: AD2512 (Big Data Lab)', p7: 'Lab: AD2512 (Big Data Lab)', p8: 'Lab: AD2512 (Big Data Lab)' },
-      { day: 'Thursday', p1: 'AD2504 (Cloud Computing)', p2: 'AD2502 (Deep Learning)', p3: 'AD2501 (Big Data)', p4: 'AD2503 (Business Analytics)', p5: 'Lab: AD2513 (DL Lab)', p6: 'Lab: AD2513 (DL Lab)', p7: 'AD2516 (Aptitude)', p8: 'AD2516 (Aptitude)' },
-      { day: 'Friday', p1: 'Lab: AD2514 (BA Lab)', p2: 'Lab: AD2514 (BA Lab)', p3: 'Lab: AD2514 (BA Lab)', p4: 'Lab: AD2514 (BA Lab)', p5: 'Lab: AD2517 (Web Dev Lab)', p6: 'Lab: AD2517 (Web Dev Lab)', p7: 'Lab: AD2517 (Web Dev Lab)', p8: 'Lab: AD2517 (Web Dev Lab)' },
-    ],
-  },
-  sem7: {
-    title: 'Semester 7 · Year 4 (Odd Semester)',
-    room: 'Room 401 · Innovation & Placement Wing',
-    advisor: 'Dr. S. Karthik (Professor & Head)',
-    rows: [
-      { day: 'Monday', p1: 'AD2701 (AI Ethics & Law)', p2: 'AD2702 (Generative AI)', p3: 'AD2703 (Elective IV)', p4: 'AD2704 (Elective V)', p5: 'AD2712 (Placement Training)', p6: 'AD2712 (Placement Training)', p7: 'AD2712 (Placement Training)', p8: 'AD2712 (Placement Training)' },
-      { day: 'Tuesday', p1: 'AD2702 (Generative AI)', p2: 'AD2701 (AI Ethics & Law)', p3: 'AD2704 (Elective V)', p4: 'AD2703 (Elective IV)', p5: 'Industry Mentoring', p6: 'Mock Interviews', p7: 'Resume Building', p8: 'Corporate Readiness' },
-      { day: 'Wednesday', p1: 'AD2703 (Elective IV)', p2: 'AD2704 (Elective V)', p3: 'AD2701 (AI Ethics & Law)', p4: 'AD2702 (Generative AI)', p5: 'Lab: AD2711 (Project Phase I)', p6: 'Lab: AD2711 (Project Phase I)', p7: 'Lab: AD2711 (Project Phase I)', p8: 'Lab: AD2711 (Project Phase I)' },
-      { day: 'Thursday', p1: 'AD2704 (Elective V)', p2: 'AD2703 (Elective IV)', p3: 'AD2702 (Generative AI)', p4: 'AD2701 (AI Ethics & Law)', p5: 'AD2712 (Placement Training)', p6: 'AD2712 (Placement Training)', p7: 'AD2712 (Placement Training)', p8: 'AD2712 (Placement Training)' },
-      { day: 'Friday', p1: 'AD2701 (AI Ethics & Law)', p2: 'AD2702 (Generative AI)', p3: 'AD2703 (Elective IV)', p4: 'AD2704 (Elective V)', p5: 'Lab: AD2711 (Project Phase I)', p6: 'Lab: AD2711 (Project Phase I)', p7: 'Lab: AD2711 (Project Phase I)', p8: 'Lab: AD2711 (Project Phase I)' },
-    ],
-  },
-}
-
 const DAYS_OF_WEEK = [
   { code: 'Mon', label: 'Monday' },
   { code: 'Tue', label: 'Tuesday' },
@@ -284,11 +244,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [labSemesterFilter, setLabSemesterFilter] = useState<string>('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Master Timetable Expanded & Selected Tab
-  const [isTimetableExpanded, setIsTimetableExpanded] = useState(true)
-  const [timetableTab, setTimetableTab] = useState<'bell' | 'matrix'>('bell')
-  const [timetableSemester, setTimetableSemester] = useState<string>('sem3')
-
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedFaculty, setSelectedFaculty] = useState<FacultyRecord | null>(null)
@@ -296,7 +251,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
   // Dossier Modal for Class Advisor
   const [selectedAdvisorDossier, setSelectedAdvisorDossier] = useState<FacultyRecord | null>(null)
-  const [dossierTab, setDossierTab] = useState<'students' | 'handlers' | 'attendance' | 'timetable' | 'notices'>('students')
+  const [dossierTab, setDossierTab] = useState<'students' | 'handlers' | 'attendance' | 'notices'>('students')
   const [classStudents, setClassStudents] = useState<StudentInClass[]>([])
   const [loadingClassData, setLoadingClassData] = useState(false)
 
@@ -690,36 +645,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       return matchesSearch && matchesDesignation && matchesLabSem
     })
   }, [facultyList, searchQuery, designationFilter, labSemesterFilter, semestersLabs])
-
-  // PDF Export for Master Timetable
-  const handleExportTimetablePDF = () => {
-    const cur = MASTER_TIMETABLES_ALL_8_SEMS[timetableSemester] || MASTER_TIMETABLES_ALL_8_SEMS.sem3
-    generateAndDownloadPDF({
-      title: `DEPARTMENT MASTER TIMETABLE: ${cur.title.toUpperCase()}`,
-      subtitle: `V.S.B. Engineering College · Department of AI & DS · ${cur.room}`,
-      author: 'Office of Academic Dean & Department Coordinator',
-      category: 'Master Class Timetable & Schedule',
-      sections: [
-        {
-          heading: '1. TIMETABLE PARTICULARS & CLASS ALLOTMENT',
-          body: [
-            `Class Scope: ${cur.title}`,
-            `Classroom Allocation: ${cur.room}`,
-            `Assigned Class Advisor: ${cur.advisor}`,
-            'Operating Timings: 09:15 AM - 04:30 PM (8 Periods Daily)',
-            'Break Intervals: Morning Tea (10:45-11:00 AM) | Lunch (12:30-01:20 PM) | Evening Tea (02:50-03:05 PM)',
-          ],
-        },
-        {
-          heading: '2. WEEKLY CLASS SCHEDULE (MONDAY - FRIDAY)',
-          body: cur.rows.map(
-            (r) => `${r.day.toUpperCase()}: P1: ${r.p1} | P2: ${r.p2} | P3: ${r.p3} | P4: ${r.p4} | P5: ${r.p5} | P6: ${r.p6} | P7: ${r.p7} | P8: ${r.p8}`
-          ),
-        },
-      ],
-      fileName: `Master_Timetable_${timetableSemester}_AI_DS`,
-    })
-  }
 
   // PDF Export
   const handleExportPDF = () => {
@@ -1323,275 +1248,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* COMPREHENSIVE BELL TIMINGS & ODD SEMESTERS MASTER TIMETABLE SECTION */}
-      {/* ========================================================================= */}
-      <div className="bg-white rounded-3xl p-5 border border-blue-200 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3.5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shadow-md">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-black text-sm text-[#071A3D]">
-                  Institutional Bell Timings &amp; Odd Semesters Master Timetable
-                </h3>
-                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black">
-                  8 Periods · 3 Breaks · FN/AN Labs
-                </span>
-              </div>
-              <p className="text-[11px] text-gray-500 font-medium">
-                Official institutional schedule (09:15 AM – 04:30 PM) across Semesters 3, 5 &amp; 7
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setTimetableTab('bell')}
-              className={cn(
-                'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                timetableTab === 'bell'
-                  ? 'bg-[#1455D9] text-white shadow-xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              )}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>1. Bell Timings (8 Periods)</span>
-            </button>
-
-            <button
-              onClick={() => setTimetableTab('matrix')}
-              className={cn(
-                'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                timetableTab === 'matrix'
-                  ? 'bg-purple-700 text-white shadow-xs'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              )}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>2. Odd Semesters Timetable (Sem 3, 5, 7)</span>
-            </button>
-
-            <button
-              onClick={() => setIsTimetableExpanded(!isTimetableExpanded)}
-              className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-500 cursor-pointer border border-gray-200 ml-1"
-              title={isTimetableExpanded ? 'Collapse Timetable' : 'Expand Timetable'}
-            >
-              {isTimetableExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        {isTimetableExpanded && (
-          <div className="space-y-4 animate-fade-in">
-            {/* VIEW 1: BELL TIMINGS & 8 PERIODS BREAKDOWN */}
-            {timetableTab === 'bell' && (
-              <div className="space-y-4">
-                {/* 3 Institutional Break Slots Highlighting Banner */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-center gap-3 shadow-2xs">
-                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black shrink-0">
-                      <Coffee className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">First Break (Morning)</span>
-                      <span className="text-sm font-black text-amber-950 block">10:45 AM – 11:00 AM</span>
-                      <span className="text-[10px] text-amber-800 font-medium">15 mins Refreshment Tea</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200 flex items-center gap-3 shadow-2xs">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black shrink-0">
-                      <Utensils className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">Lunch Break (Midday)</span>
-                      <span className="text-sm font-black text-emerald-950 block">12:30 PM – 01:20 PM</span>
-                      <span className="text-[10px] text-emerald-800 font-medium">50 mins Dining Interval</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-center gap-3 shadow-2xs">
-                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black shrink-0">
-                      <Coffee className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">Evening Break (Tea)</span>
-                      <span className="text-sm font-black text-amber-950 block">02:50 PM – 03:05 PM</span>
-                      <span className="text-[10px] text-amber-800 font-medium">15 mins Refreshment Tea</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 8 Regular Periods Grid */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase text-[#071A3D] tracking-wider flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-[#1455D9]" />
-                      Regular Periods (Periods 1 to 8):
-                    </span>
-                    <span className="text-[11px] font-bold text-gray-400">Total Duration: 6 Hours 15 Mins Class Time</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {PERIOD_LIST.filter(p => !p.isLab).map((p) => (
-                      <div
-                        key={p.id}
-                        className="p-3 rounded-2xl bg-gray-50/80 border border-gray-200 hover:border-[#1455D9] transition-all flex flex-col justify-between space-y-2 group shadow-2xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] font-black text-xs border border-blue-200/60">
-                            {p.name}
-                          </span>
-                          <span className="text-[10px] font-mono font-bold text-gray-600 bg-white px-2 py-0.5 rounded-md border border-gray-200">
-                            {p.duration}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="font-mono font-black text-xs text-[#071A3D]">{p.time}</p>
-                          <p className="text-[10px] text-gray-500 font-medium mt-0.5">{p.session}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Dedicated Lab Blocks */}
-                <div className="pt-2 border-t border-gray-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase text-[#071A3D] tracking-wider flex items-center gap-1.5">
-                      <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
-                      Laboratory &amp; Practical Blocks (FN &amp; AN):
-                    </span>
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                      Consecutive Multi-Period Practical Slots
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-200 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black shrink-0">
-                          <Code2 className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="font-black text-sm text-[#071A3D] block">Forenoon Lab Session (FN)</span>
-                          <span className="text-xs font-mono font-bold text-[#1455D9]">09:15 AM – 12:30 PM</span>
-                          <span className="text-[10px] text-gray-500 block">Periods 1, 2, 3, 4 (with 15m Tea Break)</span>
-                        </div>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-xl bg-white border border-blue-200 text-xs font-black text-blue-700 font-mono">
-                        3h 15m
-                      </span>
-                    </div>
-
-                    <div className="p-3.5 rounded-2xl bg-amber-50/50 border border-amber-300 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-black shrink-0">
-                          <Cpu className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="font-black text-sm text-[#071A3D] block">Afternoon Lab Session (AN)</span>
-                          <span className="text-xs font-mono font-bold text-amber-800">01:20 PM – 04:30 PM</span>
-                          <span className="text-[10px] text-gray-500 block">Periods 5, 6, 7, 8 (with 15m Tea Break)</span>
-                        </div>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-xl bg-white border border-amber-300 text-xs font-black text-amber-800 font-mono">
-                        3h 10m
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* VIEW 2: ODD SEMESTERS MASTER TIMETABLE MATRIX TABLE */}
-            {timetableTab === 'matrix' && (
-              <div className="space-y-3.5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                    <span className="text-xs font-bold text-gray-600 whitespace-nowrap">Choose Semester:</span>
-                    <div className="flex items-center gap-1.5">
-                      {[
-                        { k: 'sem3', label: 'Sem 3 (Yr 2)' },
-                        { k: 'sem5', label: 'Sem 5 (Yr 3)' },
-                        { k: 'sem7', label: 'Sem 7 (Yr 4)' },
-                      ].map((s) => (
-                        <button
-                          key={s.k}
-                          onClick={() => setTimetableSemester(s.k)}
-                          className={cn(
-                            'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                            timetableSemester === s.k
-                              ? 'bg-[#1455D9] text-white shadow-xs'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          )}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500 font-medium font-mono">
-                      {(MASTER_TIMETABLES_ALL_8_SEMS[timetableSemester] || MASTER_TIMETABLES_ALL_8_SEMS.sem3).room}
-                    </span>
-                    <button
-                      onClick={handleExportTimetablePDF}
-                      className="px-3 py-1 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1.5 border border-gray-200 cursor-pointer whitespace-nowrap"
-                    >
-                      <Download className="w-3.5 h-3.5 text-[#1455D9]" /> Download PDF
-                    </button>
-                  </div>
-                </div>
-
-                <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
-                    <thead>
-                      <tr className="bg-[#071A3D] text-white font-bold text-[11px]">
-                        <th className="p-2.5">Day</th>
-                        <th className="p-2.5 text-center">P1<br /><span className="text-[9px] font-normal text-gray-300 font-mono">09:15-10:00</span></th>
-                        <th className="p-2.5 text-center">P2<br /><span className="text-[9px] font-normal text-gray-300 font-mono">10:00-10:45</span></th>
-                        <th className="p-2.5 bg-amber-500/30 text-amber-200 text-center text-[10px]">Morning Tea<br /><span className="font-mono text-[8px]">10:45-11:00</span></th>
-                        <th className="p-2.5 text-center">P3<br /><span className="text-[9px] font-normal text-gray-300 font-mono">11:00-11:45</span></th>
-                        <th className="p-2.5 text-center">P4<br /><span className="text-[9px] font-normal text-gray-300 font-mono">11:45-12:30</span></th>
-                        <th className="p-2.5 bg-emerald-500/30 text-emerald-200 text-center text-[10px]">Lunch Break<br /><span className="font-mono text-[8px]">12:30-01:20</span></th>
-                        <th className="p-2.5 text-center">P5<br /><span className="text-[9px] font-normal text-gray-300 font-mono">01:20-02:05</span></th>
-                        <th className="p-2.5 text-center">P6<br /><span className="text-[9px] font-normal text-gray-300 font-mono">02:05-02:50</span></th>
-                        <th className="p-2.5 bg-amber-500/30 text-amber-200 text-center text-[10px]">Evening Tea<br /><span className="font-mono text-[8px]">02:50-03:05</span></th>
-                        <th className="p-2.5 text-center">P7<br /><span className="text-[9px] font-normal text-gray-300 font-mono">03:05-03:50</span></th>
-                        <th className="p-2.5 text-center">P8<br /><span className="text-[9px] font-normal text-gray-300 font-mono">03:50-04:30</span></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 font-medium">
-                      {(MASTER_TIMETABLES_ALL_8_SEMS[timetableSemester] || MASTER_TIMETABLES_ALL_8_SEMS.sem3).rows.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-blue-50/30">
-                          <td className="p-2.5 font-bold text-[#1455D9] bg-gray-50">{row.day}</td>
-                          <td className={cn('p-2.5 text-center', row.p1.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p1}</td>
-                          <td className={cn('p-2.5 text-center', row.p2.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p2}</td>
-                          <td className="p-2.5 bg-amber-50/60 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">☕ 15m</td>
-                          <td className={cn('p-2.5 text-center', row.p3.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p3}</td>
-                          <td className={cn('p-2.5 text-center', row.p4.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p4}</td>
-                          <td className="p-2.5 bg-emerald-50/60 text-emerald-800 text-center font-mono text-[10px] border-x border-emerald-100">🍱 50m</td>
-                          <td className={cn('p-2.5 text-center', row.p5.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p5}</td>
-                          <td className={cn('p-2.5 text-center', row.p6.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p6}</td>
-                          <td className="p-2.5 bg-amber-50/60 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">☕ 15m</td>
-                          <td className={cn('p-2.5 text-center', row.p7.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p7}</td>
-                          <td className={cn('p-2.5 text-center', row.p8.startsWith('Lab') ? 'bg-amber-50 text-amber-900 font-bold' : '')}>{row.p8}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
@@ -1605,14 +1261,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           <p className="text-[10px] text-green-700 font-medium mt-1">Semesters 3, 5, 7 · Sections A - D</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Active Semesters Labs</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">12 Courses</p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">Semesters 3, 5, 7 Active Labs</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Subject Handlers</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">{handlersList.length}</p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">Theory &amp; Lab Instructors</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Daily Matrix</p>
-          <p className="text-2xl font-black text-amber-700 mt-0.5">8 Periods</p>
-          <p className="text-[10px] text-amber-700 font-medium mt-1">09:15 AM - 04:30 PM &amp; Labs</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Active Practical Labs</p>
+          <p className="text-2xl font-black text-amber-700 mt-0.5">
+            {Object.values(semestersLabs).reduce((acc, s) => acc + s.labs.length, 0)} Courses
+          </p>
+          <p className="text-[10px] text-amber-700 font-medium mt-1">Semesters 3, 5, 7 Active Curricula</p>
         </div>
       </div>
 
@@ -2088,8 +1746,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 { id: 'students', label: '1. Student Roll Roster', icon: <Users className="w-3.5 h-3.5" />, count: classStudents.length },
                 { id: 'handlers', label: '2. Semester Labs & Handlers', icon: <FlaskConical className="w-3.5 h-3.5" />, count: DEFAULT_SUBJECT_HANDLERS.length },
                 { id: 'attendance', label: '3. Defaulters Watch (<75%)', icon: <AlertTriangle className="w-3.5 h-3.5" />, count: classStudents.filter((s) => s.attendancePercent < 75).length },
-                { id: 'timetable', label: '4. Class Timetable (8 Periods & Breaks)', icon: <Clock className="w-3.5 h-3.5" /> },
-                { id: 'notices', label: '5. Class Notices', icon: <MessageSquare className="w-3.5 h-3.5" /> },
+                { id: 'notices', label: '4. Class Notices & Broadcasts', icon: <MessageSquare className="w-3.5 h-3.5" /> },
               ].map((t) => (
                 <button
                   key={t.id}
@@ -2277,65 +1934,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* TAB 4: TIMETABLE (8 FULL PERIODS & BREAKS) */}
-              {dossierTab === 'timetable' && (
-                <div className="space-y-4 animate-fade-in">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <h4 className="font-black text-sm text-[#071A3D]">Weekly Class Timetable &amp; Schedule (8 Periods &amp; Break Slots)</h4>
-                      <p className="text-gray-500 text-[11px]">Room 204, AI Block · Mon – Fri (09:15 AM – 04:30 PM)</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-xl">
-                      <span>🍵 Morning: 10:45-11:00</span>
-                      <span>•</span>
-                      <span>🍱 Lunch: 12:30-01:20</span>
-                      <span>•</span>
-                      <span>☕ Evening: 02:50-03:05</span>
-                    </div>
-                  </div>
-
-                  <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs whitespace-nowrap">
-                      <thead>
-                        <tr className="bg-blue-50/60 border-b border-gray-200 text-[#071A3D] font-bold">
-                          <th className="p-2.5">Day</th>
-                          <th className="p-2.5">P1 (09:15-10:00)</th>
-                          <th className="p-2.5">P2 (10:00-10:45)</th>
-                          <th className="p-2.5 bg-amber-50/70 text-amber-900 border-x border-amber-200 text-center text-[10px]">Morning Tea</th>
-                          <th className="p-2.5">P3 (11:00-11:45)</th>
-                          <th className="p-2.5">P4 (11:45-12:30)</th>
-                          <th className="p-2.5 bg-amber-50/70 text-amber-900 border-x border-amber-200 text-center text-[10px]">Lunch Break</th>
-                          <th className="p-2.5">P5 (01:20-02:05)</th>
-                          <th className="p-2.5">P6 (02:05-02:50)</th>
-                          <th className="p-2.5 bg-amber-50/70 text-amber-900 border-x border-amber-200 text-center text-[10px]">Evening Tea</th>
-                          <th className="p-2.5">P7 (03:05-03:50)</th>
-                          <th className="p-2.5">P8 (03:50-04:30)</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 font-medium">
-                        {(MASTER_TIMETABLES_ALL_8_SEMS.sem3).rows.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50">
-                            <td className="p-2.5 font-bold text-[#1455D9]">{row.day}</td>
-                            <td className="p-2.5">{row.p1}</td>
-                            <td className="p-2.5">{row.p2}</td>
-                            <td className="p-2.5 bg-amber-50/30 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">10:45-11:00</td>
-                            <td className="p-2.5">{row.p3}</td>
-                            <td className="p-2.5">{row.p4}</td>
-                            <td className="p-2.5 bg-amber-50/30 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">12:30-01:20</td>
-                            <td className="p-2.5">{row.p5}</td>
-                            <td className="p-2.5">{row.p6}</td>
-                            <td className="p-2.5 bg-amber-50/30 text-amber-800 text-center font-mono text-[10px] border-x border-amber-100">02:50-03:05</td>
-                            <td className="p-2.5">{row.p7}</td>
-                            <td className="p-2.5">{row.p8}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 5: NOTICES */}
+              {/* TAB 4: NOTICES */}
               {dossierTab === 'notices' && (
                 <div className="space-y-4 animate-fade-in">
                   <div className="flex items-center justify-between">
