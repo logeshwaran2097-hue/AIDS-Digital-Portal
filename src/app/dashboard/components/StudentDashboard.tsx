@@ -85,11 +85,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState(data.user)
 
-  const isInitialNeedsOnboarding = Boolean(
-    data.user?.mustChangePassword ||
-    data.user?.emailVerified === false ||
-    data.user?.email?.includes('@student.vsb.edu.in')
-  )
+  const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(isInitialNeedsOnboarding)
 
   const handleOnboardingComplete = (updatedUser: any) => {
