@@ -95,7 +95,26 @@ export default function LoginPage() {
   const [correctionSubmitting, setCorrectionSubmitting] = React.useState(false)
   const [correctionSubmitted, setCorrectionSubmitted] = React.useState(false)
 
+  // Deterministic 1-by-1 Staged Appearance Controller
+  const [animStage, setAnimStage] = React.useState(0)
+
   const router = useRouter()
+
+  React.useEffect(() => {
+    // Progressive staged entrance timers
+    const timers = [
+      setTimeout(() => setAnimStage(1), 150),  // Stage 1: Accreditation Shield
+      setTimeout(() => setAnimStage(2), 450),  // Stage 2: Picture & Celestial Emblem
+      setTimeout(() => setAnimStage(3), 750),  // Stage 3: College Name
+      setTimeout(() => setAnimStage(4), 1000), // Stage 4: Autonomous Karur Tag
+      setTimeout(() => setAnimStage(5), 1200), // Stage 5: Golden Light Beam
+      setTimeout(() => setAnimStage(6), 1400), // Stage 6: Department Name
+      setTimeout(() => setAnimStage(7), 1600), // Stage 7: Digital Portal CPU Badge
+      setTimeout(() => setAnimStage(8), 1850), // Stage 8: Luxury Login Card
+      setTimeout(() => setAnimStage(9), 2150), // Stage 9: Motto & Footer
+    ]
+    return () => timers.forEach(clearTimeout)
+  }, [])
 
   React.useEffect(() => {
     if (otpCooldown <= 0) return
@@ -523,13 +542,19 @@ export default function LoginPage() {
       <div className="w-full max-w-lg text-center space-y-1.5 sm:space-y-2.5 relative z-10 pt-1 pb-1">
         
         {/* Stage 1: Accreditation Top Badge */}
-        <div className="anim-stage-1 inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md">
+        <div className={cn(
+          "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-700 ease-out transform",
+          animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+        )}>
           <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
         
-        {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM */}
-        <div className="anim-stage-2 relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate">
+        {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (PICTURE LOGO) */}
+        <div className={cn(
+          "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-700 ease-out transform",
+          animStage >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"
+        )}>
           {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
           <div 
             className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-dashed border-[#06B6D4]/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] animate-spin" 
@@ -565,7 +590,10 @@ export default function LoginPage() {
         {/* Master Branding Typography with Staged Reveals */}
         <div className="space-y-1 w-full">
           {/* Stage 3: College Master Title */}
-          <div className="anim-stage-3">
+          <div className={cn(
+            "transition-all duration-700 ease-out transform",
+            animStage >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          )}>
             <h1 
               className="text-base sm:text-2xl font-black tracking-tight uppercase"
               style={{ letterSpacing: '0.02em', fontWeight: 900 }}
@@ -577,7 +605,10 @@ export default function LoginPage() {
           </div>
 
           {/* Stage 4: Autonomous Karur Tag */}
-          <div className="anim-stage-4">
+          <div className={cn(
+            "transition-all duration-700 ease-out transform",
+            animStage >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          )}>
             <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
               <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E]" />
               <span>Autonomous Institution · Karur</span>
@@ -585,10 +616,16 @@ export default function LoginPage() {
           </div>
 
           {/* Stage 5: Glowing Golden Light Beam Separator */}
-          <div className="anim-stage-5 anim-beam-glow w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 opacity-80" />
+          <div className={cn(
+            "w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 anim-beam-glow transition-all duration-700 ease-out transform origin-center",
+            animStage >= 5 ? "opacity-80 scale-x-100" : "opacity-0 scale-x-0"
+          )} />
 
           {/* Stage 6: Department Name */}
-          <div className="anim-stage-6">
+          <div className={cn(
+            "transition-all duration-700 ease-out transform",
+            animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          )}>
             <h2 className="text-[11px] sm:text-sm font-black leading-tight">
               <span className="block text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
               <span className="block font-black shimmer-sapphire-cyan text-xs sm:text-base">
@@ -598,7 +635,10 @@ export default function LoginPage() {
           </div>
 
           {/* Stage 7: Digital Academic Portal CPU Badge */}
-          <div className="anim-stage-7 pt-0.5 flex items-center justify-center">
+          <div className={cn(
+            "pt-0.5 flex items-center justify-center transition-all duration-700 ease-out transform",
+            animStage >= 7 ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          )}>
             <span className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-[9px] sm:text-xs font-bold shadow-md border border-cyan-400/30">
               <Cpu className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-cyan-400 animate-pulse" />
               <span>Digital Academic Portal</span>
@@ -653,7 +693,8 @@ export default function LoginPage() {
       {/* ULTRA-LUXURY LOGIN CARD (STAGE 8) */}
       <div 
         className={cn(
-          "anim-stage-8 w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-300",
+          "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-700 ease-out transform",
+          animStage >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none",
           authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-white/95',
           authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
         )}
@@ -1029,7 +1070,10 @@ export default function LoginPage() {
       </div>
 
       {/* QUOTE (STAGE 9) */}
-      <div className="anim-stage-9 text-center space-y-1 relative z-10 pt-2 pb-1">
+      <div className={cn(
+        "text-center space-y-1 relative z-10 pt-2 pb-1 transition-all duration-700 ease-out transform",
+        animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      )}>
         <div className="flex items-center justify-center gap-2">
           <div className="w-10 sm:w-16 h-px bg-gradient-to-r from-transparent via-[#E7B93E] to-slate-300" />
           <p 
@@ -1048,7 +1092,10 @@ export default function LoginPage() {
       </div>
 
       {/* FOOTER (STAGE 9) */}
-      <footer className="anim-stage-9 w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 px-2 text-center">
+      <footer className={cn(
+        "w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 px-2 text-center transition-all duration-700 ease-out transform",
+        animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+      )}>
         <div className="flex items-center justify-center gap-3">
           <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-blue-100 shadow-2xs">
             <Brain className="w-3.5 h-3.5 text-[#1557C0] shrink-0" />
