@@ -105,16 +105,16 @@ export function PWAInstall() {
           <div className="flex items-center gap-3 min-w-0">
             <div className="relative w-11 h-11 rounded-xl p-0.5 bg-gradient-to-tr from-[#E7B93E] to-cyan-400 shadow-md shrink-0">
               <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center p-0.5 overflow-hidden">
-                <Image src="/icon-192.png" alt="VSB AI&DS Logo" width={38} height={38} className="object-contain" />
+                <Image src="/icon-192.png" alt="Digital Portal of AI&DS Logo" width={38} height={38} className="object-contain" />
               </div>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="text-xs sm:text-sm font-black text-white leading-tight truncate">Install VSB AI&amp;DS App</p>
+                <p className="text-xs sm:text-sm font-black text-white leading-tight truncate">Install Digital Portal of AI&amp;DS</p>
                 <Sparkles className="w-3 h-3 text-[#E7B93E] shrink-0" />
               </div>
               <p className="text-[10px] sm:text-[11px] text-cyan-200 font-semibold truncate mt-0.5">
-                1-Tap Quick Access · Fast &amp; Offline Ready
+                V.S.B. Engineering College · 1-Tap Access
               </p>
             </div>
           </div>

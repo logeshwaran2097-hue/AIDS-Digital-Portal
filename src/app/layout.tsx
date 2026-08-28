@@ -18,13 +18,13 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'VSB AI&DS - Digital Academic Portal',
-  description: 'V.S.B. Engineering College - Artificial Intelligence & Data Science Department Digital Academic Portal, Karur, Tamil Nadu, India',
+  title: 'Digital Portal of AI&DS - V.S.B. Engineering College',
+  description: 'V.S.B. Engineering College - Department of Artificial Intelligence & Data Science Digital Portal, Karur, Tamil Nadu, India',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'VSB AI&DS',
+    title: 'Digital Portal of AI&DS',
   },
   icons: {
     icon: '/icon-512.png',
@@ -44,8 +44,8 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="application-name" content="VSB AI&DS" />
-        <meta name="apple-mobile-web-app-title" content="VSB AI&DS" />
+        <meta name="application-name" content="Digital Portal of AI&DS" />
+        <meta name="apple-mobile-web-app-title" content="Digital Portal of AI&DS" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       </head>
       <body className={inter.className}>

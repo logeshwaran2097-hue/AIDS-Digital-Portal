@@ -641,14 +641,14 @@ export default function LoginPage() {
             </h2>
           </div>
 
-          {/* Stage 7: Digital Academic Portal CPU Badge */}
+          {/* Stage 7: Digital Portal of AI&DS Badge */}
           <div className={cn(
             "pt-0.5 flex items-center justify-center transition-all duration-700 ease-out transform",
             animStage >= 7 ? "opacity-100 scale-100" : "opacity-0 scale-75"
           )}>
             <span className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-slate-900/90 text-cyan-300 text-[9px] sm:text-[10px] font-bold shadow-xs border border-cyan-500/30">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>Digital Academic Portal</span>
+              <span>Digital Portal of AI&amp;DS</span>
             </span>
           </div>
         </div>
