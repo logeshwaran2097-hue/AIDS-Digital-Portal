@@ -35,62 +35,6 @@ import {
   Pencil,
 } from 'lucide-react'
 
-interface LetterRevealProps {
-  text: string
-  baseDelay?: number
-  charStagger?: number
-  className?: string
-  charClassName?: string
-}
-
-function LetterReveal({
-  text,
-  baseDelay = 0,
-  charStagger = 35,
-  className = '',
-  charClassName = '',
-}: LetterRevealProps) {
-  const words = text.split(' ')
-  let globalCharIndex = 0
-
-  return (
-    <span className={cn('inline-block', className)}>
-      {words.map((word, wIdx) => {
-        const chars = Array.from(word)
-        const wordEl = (
-          <span key={wIdx} className="inline-block whitespace-nowrap">
-            {chars.map((char, cIdx) => {
-              const delay = baseDelay + globalCharIndex * charStagger
-              globalCharIndex++
-              return (
-                <span
-                  key={cIdx}
-                  className={cn('letter-reveal-char', charClassName)}
-                  style={{ animationDelay: `${delay}ms` }}
-                >
-                  {char}
-                </span>
-              )
-            })}
-            {wIdx < words.length - 1 && (
-              <span
-                className={cn('letter-reveal-char', charClassName)}
-                style={{ animationDelay: `${baseDelay + globalCharIndex * charStagger}ms` }}
-              >
-                &nbsp;
-              </span>
-            )}
-          </span>
-        )
-        if (wIdx < words.length - 1) {
-          globalCharIndex++
-        }
-        return wordEl
-      })}
-    </span>
-  )
-}
-
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'hod' | 'admin'>('student')
   const [registerNumber, setRegisterNumber] = React.useState('')
@@ -643,7 +587,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Master Branding Typography with Top-to-Bottom Sequential Letter Reveals */}
+        {/* Master Branding Typography with Staged Reveals */}
         <div className="space-y-1 w-full">
           {/* Stage 3: College Master Title */}
           <div className={cn(
@@ -651,10 +595,10 @@ export default function LoginPage() {
             animStage >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             <h1 
-              className="text-base sm:text-2xl font-black tracking-tight uppercase overflow-hidden py-0.5"
+              className="text-base sm:text-2xl font-black tracking-tight uppercase py-0.5"
               style={{ letterSpacing: '0.02em', fontWeight: 900 }}
             >
-              <LetterReveal text="V.S.B. ENGINEERING COLLEGE" baseDelay={400} charStagger={35} charClassName="shimmer-liquid-gold" />
+              <span className="shimmer-liquid-gold">V.S.B. ENGINEERING COLLEGE</span>
             </h1>
           </div>
 
@@ -663,9 +607,9 @@ export default function LoginPage() {
             "transition-all duration-700 ease-out transform",
             animStage >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs overflow-hidden">
+            <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
               <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E]" />
-              <LetterReveal text="AUTONOMOUS INSTITUTION · KARUR" baseDelay={1400} charStagger={30} />
+              <span>AUTONOMOUS INSTITUTION · KARUR</span>
             </p>
           </div>
 
@@ -680,12 +624,10 @@ export default function LoginPage() {
             "transition-all duration-700 ease-out transform",
             animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            <h2 className="text-[11px] sm:text-sm font-black leading-tight overflow-hidden">
-              <span className="block mb-0.5">
-                <LetterReveal text="DEPARTMENT OF" baseDelay={2350} charStagger={35} charClassName="text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider" />
-              </span>
-              <span className="block font-black">
-                <LetterReveal text="ARTIFICIAL INTELLIGENCE & DATA SCIENCE" baseDelay={2850} charStagger={35} charClassName="shimmer-sapphire-cyan text-xs sm:text-base" />
+            <h2 className="text-[11px] sm:text-sm font-black leading-tight">
+              <span className="block text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
+              <span className="block font-black shimmer-sapphire-cyan text-xs sm:text-base">
+                ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
               </span>
             </h2>
           </div>
@@ -695,9 +637,9 @@ export default function LoginPage() {
             "pt-0.5 flex items-center justify-center transition-all duration-700 ease-out transform",
             animStage >= 7 ? "opacity-100 scale-100" : "opacity-0 scale-75"
           )}>
-            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-[9px] sm:text-xs font-bold shadow-md border border-cyan-400/30 overflow-hidden">
+            <span className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-[9px] sm:text-xs font-bold shadow-md border border-cyan-400/30">
               <Cpu className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-cyan-400 animate-pulse" />
-              <LetterReveal text="Digital Academic Portal" baseDelay={4250} charStagger={30} />
+              <span>Digital Academic Portal</span>
               <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#E7B93E]" />
             </span>
           </div>
@@ -759,8 +701,8 @@ export default function LoginPage() {
         {/* ROLE SELECTION */}
         <div>
           <div className="flex items-center justify-between mb-2 px-1">
-            <label className="block text-[10px] font-black text-[#071A41] uppercase tracking-wider overflow-hidden">
-              <LetterReveal text="SELECT YOUR PORTAL" baseDelay={5200} charStagger={30} />
+            <label className="block text-[10px] font-black text-[#071A41] uppercase tracking-wider">
+              SELECT YOUR PORTAL
             </label>
             <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
               <Lock className="w-2.5 h-2.5 text-[#1557C0]" />
@@ -770,10 +712,10 @@ export default function LoginPage() {
 
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {[
-              { id: 'student', label: 'Student', icon: '🎓', delay: 5400 },
-              { id: 'faculty', label: 'Faculty', icon: '📚', delay: 5550 },
-              { id: 'hod', label: 'HOD', icon: '🏛️', delay: 5700 },
-              { id: 'admin', label: 'Admin', icon: '⚙️', delay: 5850 },
+              { id: 'student', label: 'Student', icon: '🎓' },
+              { id: 'faculty', label: 'Faculty', icon: '📚' },
+              { id: 'hod', label: 'HOD', icon: '🏛️' },
+              { id: 'admin', label: 'Admin', icon: '⚙️' },
             ].map((role) => (
               <button
                 key={role.id}
@@ -789,7 +731,7 @@ export default function LoginPage() {
                   setAuthStatus('idle')
                 }}
                 className={cn(
-                  'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-300 cursor-pointer border shadow-xs overflow-hidden',
+                  'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-300 cursor-pointer border shadow-xs',
                   selectedRole === role.id
                     ? 'bg-gradient-to-b from-[#1557C0] via-[#0D3B82] to-[#071A41] text-white border-cyan-400/40 shadow-[0_10px_20px_-3px_rgba(21,87,192,0.4)] scale-[1.03]'
                     : 'bg-white/80 hover:bg-white text-[#071A41] hover:border-slate-300 border-slate-200/80 hover:scale-[1.01]'
@@ -801,9 +743,7 @@ export default function LoginPage() {
                   </span>
                 )}
                 <span className="text-xl drop-shadow-xs">{role.icon}</span>
-                <span className="text-[10px] sm:text-[11px] font-black">
-                  <LetterReveal text={role.label} baseDelay={role.delay} charStagger={30} />
-                </span>
+                <span className="text-[10px] sm:text-[11px] font-black">{role.label}</span>
                 {selectedRole === role.id && (
                   <span className="w-5 h-0.5 bg-[#E7B93E] rounded-full mt-0.5 animate-pulse" />
                 )}
@@ -833,13 +773,12 @@ export default function LoginPage() {
               <UserIcon className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-xs sm:text-sm font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
-                <LetterReveal text="Welcome Back" baseDelay={6000} charStagger={30} />
+              <h2 className="text-xs sm:text-sm font-black text-[#071A41] flex items-center gap-1.5">
+                <span>Welcome Back</span>
                 <span>👋</span>
               </h2>
-              <p className="text-[11px] text-slate-500 font-semibold overflow-hidden">
-                <LetterReveal text="Sign in to access your" baseDelay={6200} charStagger={25} />{' '}
-                <span className="capitalize font-black text-[#1557C0]">{selectedRole} Portal</span>
+              <p className="text-[11px] text-slate-500 font-semibold">
+                Sign in to access your <span className="capitalize font-black text-[#1557C0]">{selectedRole} Portal</span>
               </p>
             </div>
           </div>
@@ -850,9 +789,9 @@ export default function LoginPage() {
             {selectedRole === 'student' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <LetterReveal text="Register Number" baseDelay={6500} charStagger={30} />
+                    <span>Register Number</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
@@ -871,9 +810,9 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <LetterReveal text="Password" baseDelay={6700} charStagger={30} />
+                    <span>Password</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
@@ -902,12 +841,10 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
-                  <span>
-                    <LetterReveal text="Login to Student Portal" baseDelay={6900} charStagger={25} />
-                  </span>
+                  <span>{loading ? 'Authenticating...' : 'Login to Student Portal'}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </>
@@ -917,9 +854,9 @@ export default function LoginPage() {
             {selectedRole === 'faculty' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <LetterReveal text="Faculty ID" baseDelay={6500} charStagger={30} />
+                    <span>Faculty ID</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
@@ -938,9 +875,9 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <LetterReveal text="Password" baseDelay={6700} charStagger={30} />
+                    <span>Password</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
@@ -969,12 +906,10 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
-                  <span>
-                    <LetterReveal text="Login to Faculty Portal" baseDelay={6900} charStagger={25} />
-                  </span>
+                  <span>{loading ? 'Authenticating...' : 'Login to Faculty Portal'}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </>
@@ -984,9 +919,9 @@ export default function LoginPage() {
             {selectedRole === 'hod' && (
               <>
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <LetterReveal text="Faculty ID" baseDelay={6500} charStagger={30} />
+                    <span>Faculty ID</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
@@ -1005,9 +940,9 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <LetterReveal text="Password" baseDelay={6700} charStagger={30} />
+                    <span>Password</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
@@ -1036,12 +971,10 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
-                  <span>
-                    <LetterReveal text="Login to HOD Portal" baseDelay={6900} charStagger={25} />
-                  </span>
+                  <span>{loading ? 'Authenticating...' : 'Login to HOD Portal'}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </>
@@ -1051,9 +984,9 @@ export default function LoginPage() {
             {selectedRole === 'admin' && (
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
-                    <LetterReveal text="Administrator Email" baseDelay={6500} charStagger={25} />
+                    <span>Administrator Email</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
@@ -1076,19 +1009,17 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleSendOTP}
                     disabled={loading || !email}
-                    className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                    className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Send className="w-4 h-4 text-[#E7B93E] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                    <span>
-                      <LetterReveal text="Send Verification OTP" baseDelay={6900} charStagger={25} />
-                    </span>
+                    <span>{loading ? 'Sending OTP...' : 'Send Verification OTP'}</span>
                   </button>
                 ) : (
                   <div className="space-y-2.5 animate-fade-in">
                     <div className="space-y-1">
-                      <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5 overflow-hidden">
+                      <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                         <Key className="w-3.5 h-3.5 text-[#1557C0]" />
-                        <LetterReveal text="Enter 6-Digit OTP" baseDelay={7000} charStagger={25} />
+                        <span>Enter 6-Digit OTP</span>
                       </label>
                       <input
                         type="text"
@@ -1104,12 +1035,10 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => handleVerifyOTP()}
                       disabled={loading}
-                      className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
+                      className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>
-                        <LetterReveal text="Verify OTP & Login" baseDelay={7200} charStagger={25} />
-                      </span>
+                      <span>{loading ? 'Verifying...' : 'Verify OTP & Login'}</span>
                     </button>
                   </div>
                 )}
@@ -1118,20 +1047,20 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Help & Secure Links Bar */}
-          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-bold overflow-hidden">
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-bold">
             <span className="flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-[#E7B93E]" />
-              <LetterReveal text="256-Bit SSL Encrypted" baseDelay={7100} charStagger={20} />
+              <span>256-Bit SSL Encrypted</span>
             </span>
             <span className="text-slate-300">|</span>
             <span className="flex items-center gap-1 cursor-pointer hover:text-[#1557C0]">
               <HelpCircle className="w-3.5 h-3.5 text-[#1557C0]" />
-              <LetterReveal text="Help Center" baseDelay={7250} charStagger={20} />
+              <span>Help Center</span>
             </span>
             <span className="text-slate-300">|</span>
             <span className="flex items-center gap-1 cursor-pointer hover:text-[#1557C0]">
               <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
-              <LetterReveal text="Admin Support" baseDelay={7400} charStagger={20} />
+              <span>Admin Support</span>
             </span>
           </div>
 
@@ -1140,16 +1069,16 @@ export default function LoginPage() {
 
       {/* QUOTE (STAGE 9) */}
       <div className={cn(
-        "text-center space-y-1 relative z-10 pt-2 pb-1 transition-all duration-700 ease-out transform overflow-hidden",
+        "text-center space-y-1 relative z-10 pt-2 pb-1 transition-all duration-700 ease-out transform",
         animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         <div className="flex items-center justify-center gap-2">
           <div className="w-10 sm:w-16 h-px bg-gradient-to-r from-transparent via-[#E7B93E] to-slate-300" />
           <p 
-            className="text-base sm:text-xl font-bold tracking-wider italic text-[#071A41] overflow-hidden" 
+            className="text-base sm:text-xl font-bold tracking-wider italic text-[#071A41]" 
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
-            <LetterReveal text="“a place for placement”" baseDelay={7600} charStagger={40} />
+            &ldquo;a place for placement&rdquo;
           </p>
           <div className="w-10 sm:w-16 h-px bg-gradient-to-l from-transparent via-[#E7B93E] to-slate-300" />
         </div>
@@ -1166,19 +1095,19 @@ export default function LoginPage() {
         animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         <div className="flex items-center justify-center gap-3">
-          <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-blue-100 shadow-2xs overflow-hidden">
+          <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-blue-100 shadow-2xs">
             <Brain className="w-3.5 h-3.5 text-[#1557C0] shrink-0" />
-            <LetterReveal text="Learn Today" baseDelay={8400} charStagger={30} />
+            <span>Learn Today</span>
           </div>
           <span className="text-slate-300">|</span>
-          <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-amber-100 shadow-2xs overflow-hidden">
+          <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-amber-100 shadow-2xs">
             <Lightbulb className="w-3.5 h-3.5 text-[#E7B93E] shrink-0" />
-            <LetterReveal text="Build Tomorrow" baseDelay={8700} charStagger={30} />
+            <span>Build Tomorrow</span>
           </div>
           <span className="text-slate-300">|</span>
-          <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-emerald-100 shadow-2xs overflow-hidden">
+          <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-emerald-100 shadow-2xs">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <LetterReveal text="Better Future" baseDelay={9000} charStagger={30} />
+            <span>Better Future</span>
           </div>
         </div>
       </footer>

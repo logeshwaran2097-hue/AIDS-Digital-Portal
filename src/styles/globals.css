@@ -403,37 +403,41 @@ html, body {
 }
 
 .shimmer-liquid-gold {
+  color: #071A41;
   background: linear-gradient(
     110deg,
     #071A41 0%,
-    #1557C0 25%,
-    #E7B93E 45%,
-    #FFF4B8 50%,
-    #E7B93E 55%,
-    #1557C0 75%,
+    #1557C0 20%,
+    #B8860B 40%,
+    #E7B93E 50%,
+    #B8860B 60%,
+    #1557C0 80%,
     #071A41 100%
   );
-  background-size: 200% auto;
+  background-size: 220% auto;
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmerLiquidGold 4s linear infinite;
+  animation: shimmerLiquidGold 5s ease-in-out infinite;
 }
 
 .shimmer-sapphire-cyan {
+  color: #071A41;
   background: linear-gradient(
     110deg,
     #071A41 0%,
     #1557C0 25%,
-    #06B6D4 45%,
-    #E0F2FE 50%,
-    #06B6D4 55%,
+    #0284C7 45%,
+    #06B6D4 50%,
+    #0284C7 55%,
     #1557C0 75%,
     #071A41 100%
   );
-  background-size: 200% auto;
+  background-size: 220% auto;
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmerSapphireCyan 4s linear infinite;
+  animation: shimmerSapphireCyan 5s ease-in-out infinite;
 }
 
 @keyframes goldenBeamPulse {
