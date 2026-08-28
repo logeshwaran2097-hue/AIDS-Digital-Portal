@@ -1,15 +1,18 @@
 {
+  "id": "vsb-aids-digital-portal",
   "name": "VSB AI&DS - Digital Academic Portal",
   "short_name": "VSB AI&DS",
   "description": "V.S.B. Engineering College - Artificial Intelligence & Data Science Department Digital Academic Portal, Karur, Tamil Nadu",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
   "background_color": "#071A41",
   "theme_color": "#071A41",
   "lang": "en",
   "dir": "ltr",
+  "prefer_related_applications": false,
   "categories": ["education", "academic", "productivity"],
   "icons": [
     {
