@@ -100,18 +100,18 @@ export function PWAInstall() {
       {showPrompt && (
         <div className="fixed bottom-4 right-4 left-4 sm:left-auto sm:right-6 sm:w-96 z-50 bg-[#071A41] text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="p-1 bg-white rounded-xl shrink-0 shadow-sm">
-              <Image src="/college-emblem.png" alt="VSB Logo" width={34} height={34} className="rounded-lg object-contain" />
+            <div className="p-1 bg-white rounded-xl shrink-0 shadow-sm overflow-hidden">
+              <Image src="/icon-192.png" alt="VSB AI&DS" width={36} height={36} className="rounded-lg object-contain" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white leading-tight">Install V.S.B. Mobile App</p>
+              <p className="text-xs font-bold text-white leading-tight">Install VSB AI&amp;DS App</p>
               <p className="text-[10px] text-blue-200 mt-0.5 truncate">Fast 1-tap access on home screen</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleInstallClick}
-              className="px-3 py-1.5 bg-[#E7B93E] text-[#071A41] text-xs font-bold rounded-lg hover:bg-yellow-400 transition-colors shadow-sm cursor-pointer"
+              className="px-3 py-1.5 bg-[#E7B93E] text-[#071A41] text-xs font-black rounded-lg hover:bg-yellow-400 transition-colors shadow-sm cursor-pointer"
             >
               Install
             </button>

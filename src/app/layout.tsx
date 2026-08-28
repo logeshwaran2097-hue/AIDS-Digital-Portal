@@ -18,8 +18,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'V.S.B. AI & DS Digital Portal',
-  description: 'V.S.B. Engineering College - Artificial Intelligence & Data Science Department Digital Portal, Karur, Tamil Nadu, India',
+  title: 'VSB AI&DS - Digital Academic Portal',
+  description: 'V.S.B. Engineering College - Artificial Intelligence & Data Science Department Digital Academic Portal, Karur, Tamil Nadu, India',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     title: 'VSB AI&DS',
   },
   icons: {
-    icon: '/college-emblem.png',
-    shortcut: '/college-emblem.png',
+    icon: '/icon-512.png',
+    shortcut: '/icon-192.png',
     apple: '/apple-touch-icon.png',
   },
 }
