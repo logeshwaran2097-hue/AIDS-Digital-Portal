@@ -29,12 +29,15 @@ export async function GET(request: Request) {
 
     const result = students.map((s) => {
       const u = userMap.get(s.userId)
+      const rawEmail = u?.email || ''
+      const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
+
       return {
         id: s.id,
         userId: s.userId,
         registerNumber: s.registerNumber,
         name: u?.name || s.registerNumber,
-        email: u?.email || `${s.registerNumber.toLowerCase()}@student.vsb.edu.in`,
+        email: cleanEmail,
         phone: u?.phone || '',
         dateOfBirth: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,
         department: s.department || 'Artificial Intelligence & Data Science',
@@ -97,11 +100,10 @@ export async function POST(request: Request) {
       )
     }
 
-    // Prepare institutional or provisional email
-    const finalEmail = email?.trim()
+    const isEmailCustom = Boolean(email?.trim())
+    const finalEmail = isEmailCustom
       ? email.trim().toLowerCase()
       : `${regUpper.toLowerCase()}@student.vsb.edu.in`
-    const isEmailCustom = Boolean(email?.trim())
 
     // Hash admin-typed temporary password
     const initialPassword = password.trim()
@@ -153,7 +155,7 @@ export async function POST(request: Request) {
         userId: user.id,
         registerNumber: student.registerNumber,
         name: user.name,
-        email: user.email,
+        email: isEmailCustom ? finalEmail : '',
         phone: user.phone || '',
         dateOfBirth: student.dateOfBirth ? student.dateOfBirth.toISOString().split('T')[0] : null,
         department: student.department,
@@ -225,6 +227,8 @@ export async function PUT(request: Request) {
       passwordHash = await bcrypt.hash(password.trim(), 10)
     }
 
+    const isEmailCustom = Boolean(email?.trim())
+
     // If student record exists, update both Student and User
     if (student) {
       const updatedStudent = await prisma.student.update({
@@ -241,11 +245,16 @@ export async function PUT(request: Request) {
         } as any,
       })
 
+      const targetEmail = isEmailCustom
+        ? email.trim().toLowerCase()
+        : `${(regUpper || student.registerNumber).toLowerCase()}@student.vsb.edu.in`
+
       const updatedUser = await prisma.user.update({
         where: { id: student.userId },
         data: {
           ...(name ? { name: name.trim() } : {}),
-          ...(email ? { email: email.trim().toLowerCase() } : {}),
+          email: targetEmail,
+          emailVerified: isEmailCustom,
           ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
           ...(status ? { status } : {}),
           ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
@@ -260,7 +269,7 @@ export async function PUT(request: Request) {
           userId: updatedStudent.userId,
           registerNumber: updatedStudent.registerNumber,
           name: updatedUser.name,
-          email: updatedUser.email,
+          email: isEmailCustom ? updatedUser.email : '',
           phone: updatedUser.phone || '',
           dateOfBirth: updatedStudent.dateOfBirth ? updatedStudent.dateOfBirth.toISOString().split('T')[0] : null,
           department: updatedStudent.department,
@@ -274,7 +283,7 @@ export async function PUT(request: Request) {
         user: {
           id: updatedUser.id,
           name: updatedUser.name,
-          email: updatedUser.email,
+          email: isEmailCustom ? updatedUser.email : '',
           phone: updatedUser.phone || '',
         },
       })
@@ -282,7 +291,7 @@ export async function PUT(request: Request) {
 
     // Fallback: If student record was not yet in DB, create/upsert it seamlessly
     const finalRegNo = regUpper || id || `REG${Date.now()}`
-    const finalEmail = email?.trim() ? email.trim().toLowerCase() : `${finalRegNo.toLowerCase()}@student.vsb.edu.in`
+    const finalEmail = isEmailCustom ? email.trim().toLowerCase() : `${finalRegNo.toLowerCase()}@student.vsb.edu.in`
     const defaultPassHash = passwordHash || await bcrypt.hash('Student@123', 10)
 
     const user = await prisma.user.upsert({
@@ -292,6 +301,7 @@ export async function PUT(request: Request) {
         phone: phone ? phone.trim() : null,
         role: 'student',
         status: status || 'active',
+        emailVerified: isEmailCustom,
         ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
       },
       create: {
@@ -301,7 +311,7 @@ export async function PUT(request: Request) {
         role: 'student',
         status: status || 'active',
         passwordHash: defaultPassHash,
-        emailVerified: true,
+        emailVerified: isEmailCustom,
         mustChangePassword: true,
       },
     })
@@ -338,7 +348,7 @@ export async function PUT(request: Request) {
         userId: user.id,
         registerNumber: newStudent.registerNumber,
         name: user.name,
-        email: user.email,
+        email: isEmailCustom ? user.email : '',
         phone: user.phone || '',
         dateOfBirth: newStudent.dateOfBirth ? newStudent.dateOfBirth.toISOString().split('T')[0] : null,
         department: newStudent.department,
@@ -352,7 +362,7 @@ export async function PUT(request: Request) {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email,
+        email: isEmailCustom ? user.email : '',
         phone: user.phone || '',
       },
     })

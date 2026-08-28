@@ -726,7 +726,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       <td className="px-4 py-3 font-bold text-[#071A3D]">{s.name}</td>
                       <td className="px-4 py-3 text-gray-500">
                         <div className="flex flex-col text-[11px]">
-                          <span>{s.email}</span>
+                          {s.email && !s.email.endsWith('@student.vsb.edu.in') ? (
+                            <span>{s.email}</span>
+                          ) : (
+                            <span className="text-gray-300 italic">No email</span>
+                          )}
                           {s.phone && <span className="text-gray-400">{s.phone}</span>}
                         </div>
                       </td>
@@ -768,11 +772,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           </button>
                           <button
                             onClick={() => {
+                              const cleanEmail = s.email && !s.email.endsWith('@student.vsb.edu.in') ? s.email : ''
                               setSelectedStudent(s)
                               setFormData({
                                 registerNumber: s.registerNumber || '',
                                 name: s.name || '',
-                                email: s.email || '',
+                                email: cleanEmail,
                                 phone: s.phone || '',
                                 dateOfBirth: s.dateOfBirth || '',
                                 year: s.year || 1,
@@ -1479,10 +1484,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Mail className="w-4 h-4 text-[#1455D9]" />
-                  <span>{selectedStudent.email}</span>
-                </div>
+                {selectedStudent.email && !selectedStudent.email.endsWith('@student.vsb.edu.in') ? (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Mail className="w-4 h-4 text-[#1455D9]" />
+                    <span>{selectedStudent.email}</span>
+                  </div>
+                ) : null}
                 {selectedStudent.phone && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Phone className="w-4 h-4 text-[#1455D9]" />
