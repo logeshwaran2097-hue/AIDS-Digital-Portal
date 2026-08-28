@@ -271,18 +271,34 @@ export function StudentNotificationsView({ notifications }: { notifications: Not
 
         {activeSound === 'custom' && (
           <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-2xl animate-fade-in flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="flex-1 w-full">
-              <label className="block text-xs font-bold text-[#071A3D] mb-1">Custom Audio URL</label>
+            <div className="flex-1 w-full relative">
+              <label className="block text-xs font-bold text-[#071A3D] mb-1">Upload Audio File (.mp3, .wav)</label>
               <input
-                type="url"
-                value={customUrl}
+                type="file"
+                accept="audio/*"
                 onChange={(e) => {
-                  setCustomUrl(e.target.value)
-                  setCustomSoundUrl(e.target.value)
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    if (file.size > 2 * 1024 * 1024) {
+                      alert('File is too large. Please select an audio file under 2MB.')
+                      return
+                    }
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
+                      const dataUrl = reader.result as string
+                      setCustomUrl(dataUrl)
+                      setCustomSoundUrl(dataUrl)
+                    }
+                    reader.readAsDataURL(file)
+                  }
                 }}
-                placeholder="https://example.com/sound.mp3"
-                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1455D9] bg-white text-gray-700"
+                className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1455D9]/10 file:text-[#1455D9] hover:file:bg-[#1455D9]/20 transition-all cursor-pointer"
               />
+              {customUrl && customUrl.startsWith('data:audio') && (
+                <p className="mt-1.5 text-[10px] text-green-600 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Custom audio loaded successfully!
+                </p>
+              )}
             </div>
             <button
               onClick={() => handleSelectSound('custom')}
