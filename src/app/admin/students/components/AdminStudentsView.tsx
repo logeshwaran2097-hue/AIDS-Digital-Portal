@@ -735,9 +735,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-bold border border-purple-200">
                             Yr {s.year} / S{s.semester}
                           </span>
-                          <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
-                            {s.batch || (s.year === 1 ? '2025-2029' : s.year === 2 ? '2024-2028' : s.year === 3 ? '2023-2027' : '2022-2026')}
-                          </span>
+                          {s.batch ? (
+                            <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
+                              {s.batch}
+                            </span>
+                          ) : null}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center font-bold text-[#071A3D]">Sec {s.section}</td>
@@ -1171,7 +1173,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     autoComplete="off"
-                    placeholder="e.g. 2024 - 2028"
                     value={formData.batch}
                     onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1200,7 +1201,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     autoComplete="off"
-                    placeholder="Enter Class Advisor / Mentor Name"
                     value={formData.advisorName}
                     onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
@@ -1303,7 +1303,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     type="password"
                     autoComplete="new-password"
                     name="student_password_edit"
-                    placeholder="Leave blank to keep unchanged"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1368,7 +1367,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     autoComplete="off"
-                    placeholder="e.g. 2024 - 2028"
                     value={formData.batch}
                     onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1397,7 +1395,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="text"
                     autoComplete="off"
-                    placeholder="Enter Class Advisor / Mentor Name"
                     value={formData.advisorName}
                     onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
@@ -1472,7 +1469,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 <div className="flex justify-between">
                   <span className="text-gray-400">Class Advisor:</span>
                   <span className="font-bold text-[#1455D9]">
-                    {selectedStudent.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}
+                    {selectedStudent.advisorName || 'Not Assigned'}
                   </span>
                 </div>
                 <div className="flex justify-between">
