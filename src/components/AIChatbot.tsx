@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { cn } from '@/lib/utils'
+import { Bot, Sparkles, Send, Trash2, Plus, Check, Zap } from 'lucide-react'
 
 interface ChatMessage {
   id: string
@@ -24,6 +25,48 @@ function getTime() {
   return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
 }
 
+// Clean and crisp text renderer that parses markdown bold and bullets correctly
+function FormattedMessage({ content }: { content: string }) {
+  const lines = content.split('\n')
+
+  return (
+    <div className="space-y-1.5 text-xs sm:text-sm leading-relaxed">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim()
+        if (!trimmed) return <div key={idx} className="h-1" />
+
+        // Check if line is a bullet item
+        const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('* ')
+        const textToFormat = isBullet ? trimmed.replace(/^[•\-\*]\s*/, '') : trimmed
+
+        // Format bold text **text** -> <strong>text</strong>
+        const parts = textToFormat.split(/(\*\*.*?\*\*)/g)
+        const renderedLine = parts.map((part, pIdx) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+              <strong key={pIdx} className="font-bold text-[#071A3D]">
+                {part.slice(2, -2)}
+              </strong>
+            )
+          }
+          return part
+        })
+
+        if (isBullet) {
+          return (
+            <div key={idx} className="flex items-start gap-1.5 pl-0.5 text-gray-700">
+              <span className="text-[#1455D9] font-black text-xs leading-none mt-1">•</span>
+              <div className="flex-1">{renderedLine}</div>
+            </div>
+          )
+        }
+
+        return <p key={idx} className="text-gray-800">{renderedLine}</p>
+      })}
+    </div>
+  )
+}
+
 export function AIChatbot() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -36,10 +79,10 @@ export function AIChatbot() {
   useEffect(() => {
     setMessages([{
       id: 'welcome',
-      text: "Hello! 👋 I'm the V.S.B. AI & DS Chatbot.\n\nI can help you with information about subjects, faculty, placements, research, events, and more.\n\nWhat would you like to know?",
+      text: "Hello! 👋 I'm the V.S.B. AI & DS Portal Intelligence Assistant.\n\nI can help you with comprehensive institutional intelligence across curricula, semester subjects, faculty directorate, placements, research laboratories, and institutional governance.\n\nWhat would you like to explore today?",
       sender: 'bot',
       time: getTime(),
-      suggestions: ['What subjects are offered?', 'Placement statistics', 'Faculty info', 'Department labs'],
+      suggestions: ['What subjects are offered?', 'Placement statistics', 'Faculty directorate', 'Department labs'],
     }])
   }, [])
 
@@ -68,7 +111,7 @@ export function AIChatbot() {
       const data = await res.json()
 
       // Simulate slight delay for natural feel
-      await new Promise(r => setTimeout(r, 400 + Math.random() * 600))
+      await new Promise(r => setTimeout(r, 350 + Math.random() * 300))
 
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
@@ -103,7 +146,7 @@ export function AIChatbot() {
   const clearChat = () => {
     setMessages([{
       id: 'welcome-new',
-      text: "Chat cleared! 🔄 How can I help you?",
+      text: "Chat cleared! 🔄 How can I assist you with department queries today?",
       sender: 'bot',
       time: getTime(),
       suggestions: ['What subjects are offered?', 'Placement statistics', 'Faculty info'],
@@ -112,81 +155,111 @@ export function AIChatbot() {
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col" style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
-      {/* Chat Header */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0d2f66] to-[#1455D9] rounded-t-2xl px-6 py-4 flex items-center gap-4 shadow-lg">
-        <div className="relative">
-          <div className="w-12 h-12 rounded-2xl bg-[#22C7E8]/20 border border-[#22C7E8]/30 flex items-center justify-center shadow-inner">
-            <span className="text-2xl">🤖</span>
+    <div className="w-full max-w-4xl mx-auto flex flex-col rounded-3xl overflow-hidden shadow-2xl border border-indigo-100" style={{ height: 'calc(100vh - 180px)', minHeight: '520px', boxShadow: '0 25px 60px -15px rgba(7, 26, 61, 0.3)' }}>
+      {/* Vibrant Chat Header */}
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0D2F81] to-[#1455D9] px-6 py-4 flex items-center justify-between shadow-md relative overflow-hidden text-white">
+        {/* Ambient Glow */}
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-cyan-400/20 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-indigo-500/20 rounded-full blur-xl pointer-events-none" />
+
+        <div className="flex items-center gap-3.5 relative z-10">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1455D9] via-[#00D2FF] to-[#22C7E8] p-0.5 shadow-lg shadow-cyan-500/30 flex items-center justify-center">
+            <div className="w-full h-full bg-[#071A3D] rounded-[14px] flex items-center justify-center">
+              <Bot className="w-6 h-6 text-[#00E5FF]" />
+            </div>
           </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-[#071A3D]" />
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-white font-black text-lg tracking-wide drop-shadow-xs">AI &amp; DS Neural Engine</h2>
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 shadow-xs shadow-emerald-400" />
+              </span>
+            </div>
+            <p className="text-[#00E5FF] text-xs font-bold flex items-center gap-1 mt-0.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#F4C430]" />
+              <span>Real-Time Institutional Knowledge Base · Active</span>
+            </p>
+          </div>
         </div>
-        <div className="flex-1">
-          <h2 className="text-white font-bold text-lg tracking-tight">AI & DS Chatbot</h2>
-          <p className="text-[#22C7E8] text-xs font-medium">● Online — Powered by Department Knowledge Base</p>
-        </div>
+
         <button
           onClick={clearChat}
-          className="text-white/60 hover:text-white text-xs px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+          className="relative z-10 text-white/80 hover:text-white text-xs px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all font-bold flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
           title="Clear chat"
         >
-          🗑️ Clear
+          <Trash2 className="w-3.5 h-3.5" />
+          <span>Clear Chat</span>
         </button>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto bg-[#f8f9fc] border-x border-gray-200 px-4 py-5 space-y-4" style={{ scrollbarWidth: 'thin' }}>
+      <div className="flex-1 overflow-y-auto bg-gradient-to-b from-[#F3F7FD] via-[#F8FAFC] to-[#EEF4FF] border-x border-gray-200 px-5 py-6 space-y-4" style={{ scrollbarWidth: 'thin' }}>
         {/* Quick Prompts */}
         {showQuickPrompts && messages.length <= 1 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-            {QUICK_PROMPTS.map((p) => (
-              <button
-                key={p.text}
-                onClick={() => sendMessage(p.text)}
-                className="flex items-center gap-2 px-3 py-3 bg-white rounded-xl border border-gray-200 text-left hover:border-[#22C7E8] hover:shadow-md transition-all group"
-              >
-                <span className="text-xl group-hover:scale-110 transition-transform">{p.icon}</span>
-                <span className="text-xs text-gray-600 group-hover:text-[#1455D9] font-medium leading-tight">{p.text}</span>
-              </button>
-            ))}
+          <div className="space-y-2.5 mb-5 animate-fade-in">
+            <p className="text-[11px] font-black text-[#1455D9] uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-[#F4C430]" />
+              Frequently Inquired Topics
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {QUICK_PROMPTS.map((p) => (
+                <button
+                  key={p.text}
+                  onClick={() => sendMessage(p.text)}
+                  className="flex items-center gap-2.5 px-3.5 py-3 bg-white rounded-2xl border border-blue-100 text-left hover:border-[#1455D9]/50 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 hover:shadow-md transition-all group cursor-pointer shadow-2xs hover:scale-[1.02]"
+                >
+                  <span className="text-xl group-hover:scale-115 transition-transform p-1.5 rounded-xl bg-blue-50 shrink-0">{p.icon}</span>
+                  <span className="text-xs text-[#071A3D] group-hover:text-[#1455D9] font-bold leading-tight">{p.text}</span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
         {/* Chat Messages */}
         {messages.map((msg) => (
-          <div key={msg.id} className={cn('flex gap-3', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
+          <div key={msg.id} className={cn('flex gap-3 animate-fade-in', msg.sender === 'user' ? 'justify-end' : 'justify-start')}>
             {/* Bot Avatar */}
             {msg.sender === 'bot' && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-[#22C7E8] to-[#1455D9] flex items-center justify-center shadow-sm mt-1">
-                <span className="text-sm">🤖</span>
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#071A3D] via-[#1455D9] to-[#00D2FF] p-0.5 shrink-0 shadow-md shadow-blue-500/20 mt-0.5">
+                <div className="w-full h-full bg-[#071A3D] rounded-[14px] flex items-center justify-center text-cyan-300">
+                  <Bot className="w-4.5 h-4.5" />
+                </div>
               </div>
             )}
 
-            <div className={cn('max-w-[80%]', msg.sender === 'user' ? 'order-first' : '')}>
+            <div className={cn('max-w-[82%]', msg.sender === 'user' ? 'order-first' : '')}>
               <div className={cn(
-                'rounded-2xl px-4 py-3 shadow-sm',
+                'rounded-3xl px-5 py-4 shadow-md transition-all',
                 msg.sender === 'user'
-                  ? 'bg-[#1455D9] text-white rounded-tr-md'
-                  : 'bg-white border border-gray-100 text-gray-800 rounded-tl-md'
+                  ? 'bg-gradient-to-r from-[#1455D9] via-[#1A62F5] to-[#2563EB] text-white font-semibold rounded-tr-xs shadow-blue-600/30'
+                  : 'bg-white border border-blue-100 text-gray-900 rounded-tl-xs shadow-blue-950/5'
               )}>
-                <p className="text-sm whitespace-pre-line leading-relaxed">{msg.text}</p>
+                {msg.sender === 'bot' ? (
+                  <FormattedMessage content={msg.text} />
+                ) : (
+                  <p className="text-sm whitespace-pre-line font-semibold text-white leading-relaxed">{msg.text}</p>
+                )}
               </div>
 
-              {/* Time */}
-              <p className={cn('text-[10px] mt-1 px-1', msg.sender === 'user' ? 'text-right text-gray-400' : 'text-gray-400')}>
-                {msg.time}
-              </p>
+              {/* Time & status */}
+              <div className={cn('text-[10px] font-bold mt-1 px-1.5 flex items-center gap-1', msg.sender === 'user' ? 'justify-end text-blue-600' : 'text-gray-400')}>
+                <span>{msg.time}</span>
+                {msg.sender === 'user' && <Check className="w-3 h-3 text-[#1455D9]" />}
+              </div>
 
               {/* Suggestion Chips */}
               {msg.sender === 'bot' && msg.suggestions && msg.suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2.5">
                   {msg.suggestions.map((s) => (
                     <button
                       key={s}
                       onClick={() => sendMessage(s)}
-                      className="px-3 py-1.5 text-[11px] bg-[#22C7E8]/8 text-[#0d7a8f] rounded-full hover:bg-[#22C7E8]/20 transition-colors font-medium border border-[#22C7E8]/15"
+                      className="px-3.5 py-1.5 text-xs bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-[#1455D9] hover:to-[#2563EB] text-[#1455D9] hover:text-white rounded-xl transition-all font-bold border border-blue-200/90 shadow-2xs hover:shadow-md hover:scale-105 cursor-pointer flex items-center gap-1.5"
                     >
-                      {s}
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{s}</span>
                     </button>
                   ))}
                 </div>
@@ -195,8 +268,8 @@ export function AIChatbot() {
 
             {/* User Avatar */}
             {msg.sender === 'user' && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-[#1455D9] flex items-center justify-center shadow-sm mt-1">
-                <span className="text-white text-xs font-bold">You</span>
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#2563EB] p-0.5 shrink-0 shadow-md shadow-blue-600/30 flex items-center justify-center text-white text-xs font-black mt-0.5">
+                You
               </div>
             )}
           </div>
@@ -204,19 +277,17 @@ export function AIChatbot() {
 
         {/* Typing Indicator */}
         {isTyping && (
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#22C7E8] to-[#1455D9] flex items-center justify-center shadow-sm">
-              <span className="text-sm">🤖</span>
-            </div>
-            <div className="bg-white border border-gray-100 rounded-2xl rounded-tl-md px-4 py-3 shadow-sm">
-              <div className="flex items-center gap-1.5">
-                <div className="flex gap-1">
-                  <span className="w-2 h-2 rounded-full bg-[#22C7E8] animate-bounce" style={{ animationDelay: '0ms', animationDuration: '0.6s' }} />
-                  <span className="w-2 h-2 rounded-full bg-[#22C7E8] animate-bounce" style={{ animationDelay: '150ms', animationDuration: '0.6s' }} />
-                  <span className="w-2 h-2 rounded-full bg-[#22C7E8] animate-bounce" style={{ animationDelay: '300ms', animationDuration: '0.6s' }} />
-                </div>
-                <span className="text-xs text-gray-400 ml-2">Typing...</span>
+          <div className="flex gap-3 animate-fade-in">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#071A3D] via-[#1455D9] to-[#00D2FF] p-0.5 shrink-0 shadow-md shadow-blue-500/20">
+              <div className="w-full h-full bg-[#071A3D] rounded-[14px] flex items-center justify-center text-cyan-300">
+                <Bot className="w-4.5 h-4.5" />
               </div>
+            </div>
+            <div className="bg-white border border-blue-100 rounded-3xl rounded-tl-xs px-5 py-3.5 shadow-md flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#1455D9] animate-bounce shadow-xs shadow-blue-500" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 rounded-full bg-[#00D2FF] animate-bounce shadow-xs shadow-cyan-500" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 rounded-full bg-[#F4C430] animate-bounce shadow-xs shadow-amber-500" style={{ animationDelay: '300ms' }} />
+              <span className="text-xs text-[#1455D9] ml-1 font-bold">Neural Engine analyzing query...</span>
             </div>
           </div>
         )}
@@ -225,7 +296,7 @@ export function AIChatbot() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white rounded-b-2xl border border-gray-200 border-t-0 px-4 py-3 shadow-lg">
+      <div className="bg-white border-t border-blue-100 px-5 py-4 shadow-xl">
         <div className="flex items-center gap-3">
           <input
             ref={inputRef}
@@ -233,8 +304,8 @@ export function AIChatbot() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your question about subjects, syllabus, exams, faculty..."
-            className="flex-1 px-4 py-3 rounded-xl bg-[#f8f9fc] border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#22C7E8]/40 focus:border-[#22C7E8] placeholder:text-gray-400 transition-all"
+            placeholder="Ask anything about subjects, syllabus, exams, faculty, placements..."
+            className="flex-1 px-4.5 py-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-sm text-[#071A3D] font-semibold focus:outline-none focus:ring-2 focus:ring-[#1455D9]/40 focus:border-[#1455D9] focus:bg-white placeholder:text-gray-400 transition-all shadow-inner"
             disabled={isTyping}
             autoComplete="off"
           />
@@ -242,19 +313,19 @@ export function AIChatbot() {
             onClick={() => sendMessage()}
             disabled={isTyping || !input.trim()}
             className={cn(
-              'w-11 h-11 rounded-xl flex items-center justify-center transition-all shadow-sm',
+              'w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-md cursor-pointer',
               input.trim() && !isTyping
-                ? 'bg-[#22C7E8] text-white hover:bg-[#1ab3cc] hover:shadow-md active:scale-95'
+                ? 'bg-gradient-to-tr from-[#071A3D] via-[#1455D9] to-[#00D2FF] text-white hover:scale-105 shadow-blue-600/40'
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             )}
             aria-label="Send message"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" />
-            </svg>
+            <Send className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-[10px] text-gray-300 text-center mt-2">V.S.B. AI & DS Chatbot — Powered by Department Knowledge Base</p>
+        <p className="text-[11px] font-bold text-gray-400 text-center mt-2.5">
+          V.S.B. AI &amp; DS Chatbot — Powered by Institutional Knowledge Base
+        </p>
       </div>
     </div>
   )
