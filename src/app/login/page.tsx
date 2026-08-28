@@ -522,14 +522,14 @@ export default function LoginPage() {
       {/* TOP HEADER: Centered Ultra-Luxury Branding */}
       <div className="w-full max-w-lg text-center space-y-1.5 sm:space-y-2.5 relative z-10 pt-1 pb-1">
         
-        {/* Accreditation Top Badge */}
-        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md anim-logo-reveal">
+        {/* Stage 1: Accreditation Top Badge */}
+        <div className="anim-stage-1 inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md">
           <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
           <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
         
-        {/* 3-LAYER CELESTIAL MASTER EMBLEM (SELF-CONTAINED & CLEAN) */}
-        <div className="relative flex items-center justify-center h-24 sm:h-28 my-1 anim-logo-reveal anim-medallion-levitate">
+        {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM */}
+        <div className="anim-stage-2 relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate">
           {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
           <div 
             className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-dashed border-[#06B6D4]/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] animate-spin" 
@@ -562,36 +562,43 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Master Branding Typography with Liquid Gold Shimmer */}
+        {/* Master Branding Typography with Staged Reveals */}
         <div className="space-y-1 w-full">
-          <h1 
-            className="text-base sm:text-2xl font-black tracking-tight uppercase"
-            style={{ letterSpacing: '0.02em', fontWeight: 900 }}
-          >
-            <span className="anim-word anim-word-1 mr-1 shimmer-liquid-gold">V.S.B.</span>
-            <span className="anim-word anim-word-2 mr-1 shimmer-liquid-gold">ENGINEERING</span>
-            <span className="anim-word anim-word-3 shimmer-liquid-gold">COLLEGE</span>
-          </h1>
+          {/* Stage 3: College Master Title */}
+          <div className="anim-stage-3">
+            <h1 
+              className="text-base sm:text-2xl font-black tracking-tight uppercase"
+              style={{ letterSpacing: '0.02em', fontWeight: 900 }}
+            >
+              <span className="mr-1 shimmer-liquid-gold">V.S.B.</span>
+              <span className="mr-1 shimmer-liquid-gold">ENGINEERING</span>
+              <span className="shimmer-liquid-gold">COLLEGE</span>
+            </h1>
+          </div>
 
-          <div>
+          {/* Stage 4: Autonomous Karur Tag */}
+          <div className="anim-stage-4">
             <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
               <GraduationCap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E]" />
               <span>Autonomous Institution · Karur</span>
             </p>
           </div>
 
-          {/* Glowing Golden Light Beam Separator */}
-          <div className="w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 opacity-80" />
+          {/* Stage 5: Glowing Golden Light Beam Separator */}
+          <div className="anim-stage-5 w-36 sm:w-44 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-0.5 opacity-80" />
 
-          {/* Department Name with Sapphire Cyan Holographic Glow */}
-          <h2 className="text-[11px] sm:text-sm font-black leading-tight">
-            <span className="block text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
-            <span className="block font-black shimmer-sapphire-cyan text-xs sm:text-base">
-              ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
-            </span>
-          </h2>
+          {/* Stage 6: Department Name */}
+          <div className="anim-stage-6">
+            <h2 className="text-[11px] sm:text-sm font-black leading-tight">
+              <span className="block text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
+              <span className="block font-black shimmer-sapphire-cyan text-xs sm:text-base">
+                ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
+              </span>
+            </h2>
+          </div>
 
-          <div className="pt-0.5 anim-cpu-badge flex items-center justify-center">
+          {/* Stage 7: Digital Academic Portal CPU Badge */}
+          <div className="anim-stage-7 pt-0.5 flex items-center justify-center">
             <span className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-[9px] sm:text-xs font-bold shadow-md border border-cyan-400/30">
               <Cpu className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-cyan-400 animate-pulse" />
               <span>Digital Academic Portal</span>
@@ -643,10 +650,10 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* ULTRA-LUXURY LOGIN CARD */}
+      {/* ULTRA-LUXURY LOGIN CARD (STAGE 8) */}
       <div 
         className={cn(
-          "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] anim-card-reveal transition-all duration-300",
+          "anim-stage-8 w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-300",
           authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-white/95',
           authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
         )}
@@ -1021,8 +1028,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* QUOTE */}
-      <div className="text-center space-y-1 relative z-10 pt-2 pb-1 anim-quote-reveal">
+      {/* QUOTE (STAGE 9) */}
+      <div className="anim-stage-9 text-center space-y-1 relative z-10 pt-2 pb-1">
         <div className="flex items-center justify-center gap-2">
           <div className="w-10 sm:w-16 h-px bg-gradient-to-r from-transparent via-[#E7B93E] to-slate-300" />
           <p 
@@ -1040,8 +1047,8 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* FOOTER */}
-      <footer className="w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 anim-footer-reveal px-2 text-center">
+      {/* FOOTER (STAGE 9) */}
+      <footer className="anim-stage-9 w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 px-2 text-center">
         <div className="flex items-center justify-center gap-3">
           <div className="flex items-center gap-1.5 bg-white/70 px-2.5 py-1 rounded-full border border-blue-100 shadow-2xs">
             <Brain className="w-3.5 h-3.5 text-[#1557C0] shrink-0" />

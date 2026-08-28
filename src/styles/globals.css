@@ -389,6 +389,28 @@ html, body {
 .anim-word-11 { animation-delay: 1.35s; }
 .anim-word-12 { animation-delay: 1.50s; }
 
+@keyframes slideDownFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Sequential 1-by-1 Luxury Staged Reveals */
+.anim-stage-1 { animation: slideDownFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards; }
+.anim-stage-2 { animation: scaleFadeInSmooth 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s backwards; }
+.anim-stage-3 { animation: slideUpFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.65s backwards; }
+.anim-stage-4 { animation: slideUpSmallFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.90s backwards; }
+.anim-stage-5 { animation: underlineCenterOut 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.10s backwards; }
+.anim-stage-6 { animation: slideUpFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.30s backwards; }
+.anim-stage-7 { animation: slideUpSmallFadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.55s backwards; }
+.anim-stage-8 { animation: cardScaleFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.80s backwards; }
+.anim-stage-9 { animation: slideUpSmallFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 2.10s backwards; }
+
 /* Helper Animation Utility Classes */
 .anim-bg-intro {
   background-color: #F8FAFD;
