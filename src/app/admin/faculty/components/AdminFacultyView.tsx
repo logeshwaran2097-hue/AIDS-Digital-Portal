@@ -186,6 +186,107 @@ export const ALL_SEMESTERS_LABS = {
   },
 }
 
+// Complete 8 Semesters Theory Curricula & Presets
+export const ALL_SEMESTERS_THEORY_SUBJECTS = {
+  sem1: {
+    semNumber: 1,
+    yearNumber: 1,
+    semLabel: 'Semester 1 (Year 1 - Odd)',
+    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    subjects: [
+      { id: 's1_math1', code: 'MA2101', name: 'Matrices and Calculus', shortName: 'Maths I', credits: 4, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Tue, Wed' },
+      { id: 's1_phys', code: 'PH2101', name: 'Engineering Physics', shortName: 'Physics', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu, Fri' },
+      { id: 's1_chem', code: 'CY2101', name: 'Engineering Chemistry', shortName: 'Chemistry', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Mon, Wed, Fri' },
+      { id: 's1_eng', code: 'HS2101', name: 'Professional English & Communication', shortName: 'English', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Tue, Thu' },
+      { id: 's1_py_th', code: 'GE2101', name: 'Problem Solving and Python Programming', shortName: 'Python Theory', credits: 3, defaultPeriods: 'Period 1, Period 4', defaultDays: 'Mon, Thu' },
+    ],
+  },
+  sem2: {
+    semNumber: 2,
+    yearNumber: 1,
+    semLabel: 'Semester 2 (Year 1 - Even)',
+    badgeColor: 'bg-teal-50 text-teal-800 border-teal-200',
+    subjects: [
+      { id: 's2_math2', code: 'MA2201', name: 'Differential Equations and Complex Analysis', shortName: 'Maths II', credits: 4, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Tue, Thu' },
+      { id: 's2_c_th', code: 'CS2201', name: 'C Programming & Data Structures', shortName: 'C Theory', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Mon, Wed, Fri' },
+      { id: 's2_bee_th', code: 'EE2201', name: 'Basic Electrical and Electronics Engineering', shortName: 'BEE Theory', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Tue, Thu' },
+      { id: 's2_evs', code: 'GE2201', name: 'Environmental Sciences & Sustainability', shortName: 'EVS', credits: 2, defaultPeriods: 'Period 5, Period 6', defaultDays: 'Wed, Fri' },
+    ],
+  },
+  sem3: {
+    semNumber: 3,
+    yearNumber: 2,
+    semLabel: 'Semester 3 (Year 2 - Odd)',
+    badgeColor: 'bg-blue-50 text-[#1455D9] border-blue-200',
+    subjects: [
+      { id: 's3_ds', code: 'AD2301', name: 'Data Structures and Algorithm Design', shortName: 'Data Structures', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Wed, Fri' },
+      { id: 's3_dbms_th', code: 'AD2302', name: 'Database Management Systems', shortName: 'DBMS Theory', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu' },
+      { id: 's3_oop_th', code: 'AD2303', name: 'Object Oriented Programming with Java/C++', shortName: 'OOP Theory', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Mon, Thu' },
+      { id: 's3_ai_th', code: 'AD2304', name: 'Artificial Intelligence Principles & Tech', shortName: 'AI Principles', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Wed, Fri' },
+      { id: 's3_math3', code: 'MA2301', name: 'Discrete Mathematics & Graph Theory', shortName: 'Discrete Maths', credits: 4, defaultPeriods: 'Period 1, Period 3', defaultDays: 'Tue, Fri' },
+    ],
+  },
+  sem4: {
+    semNumber: 4,
+    yearNumber: 2,
+    semLabel: 'Semester 4 (Year 2 - Even)',
+    badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+    subjects: [
+      { id: 's4_ml_th', code: 'AD2401', name: 'Machine Learning Fundamentals & Algorithms', shortName: 'ML Theory', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Wed, Fri' },
+      { id: 's4_os_th', code: 'AD2402', name: 'Operating Systems & System Architecture', shortName: 'OS Theory', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu' },
+      { id: 's4_cn', code: 'AD2403', name: 'Computer Networks and Protocols', shortName: 'Computer Networks', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Mon, Thu' },
+      { id: 's4_algo', code: 'AD2404', name: 'Design and Analysis of Algorithms', shortName: 'Algorithms (DAA)', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Tue, Fri' },
+      { id: 's4_prob', code: 'MA2401', name: 'Probability, Statistics & Linear Algebra', shortName: 'Probability & Stats', credits: 4, defaultPeriods: 'Period 1, Period 3', defaultDays: 'Wed, Fri' },
+    ],
+  },
+  sem5: {
+    semNumber: 5,
+    yearNumber: 3,
+    semLabel: 'Semester 5 (Year 3 - Odd)',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
+    subjects: [
+      { id: 's5_dl_th', code: 'AD2501', name: 'Deep Learning Architectures & Neural Nets', shortName: 'Deep Learning', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Wed' },
+      { id: 's5_bigdata_th', code: 'AD2502', name: 'Big Data Technologies & Ecosystems', shortName: 'Big Data Theory', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu' },
+      { id: 's5_cloud_th', code: 'AD2503', name: 'Cloud Computing Architecture and DevOps', shortName: 'Cloud Computing', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Mon, Fri' },
+      { id: 's5_se', code: 'AD2504', name: 'Software Engineering and Agile Methodologies', shortName: 'Software Engg', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Wed, Fri' },
+    ],
+  },
+  sem6: {
+    semNumber: 6,
+    yearNumber: 3,
+    semLabel: 'Semester 6 (Year 3 - Even)',
+    badgeColor: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+    subjects: [
+      { id: 's6_nlp_th', code: 'AD2601', name: 'Natural Language Processing and Speech', shortName: 'NLP Theory', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Thu' },
+      { id: 's6_cv_th', code: 'AD2602', name: 'Computer Vision & Visual Intelligence', shortName: 'Computer Vision', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Fri' },
+      { id: 's6_app_th', code: 'AD2603', name: 'Mobile & Modern Web App Development', shortName: 'Mobile App Dev', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Wed, Fri' },
+      { id: 's6_sec', code: 'AD2604', name: 'Cryptography and Information Security', shortName: 'Info Security', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Mon, Wed' },
+    ],
+  },
+  sem7: {
+    semNumber: 7,
+    yearNumber: 4,
+    semLabel: 'Semester 7 (Year 4 - Odd)',
+    badgeColor: 'bg-amber-50 text-amber-900 border-amber-300',
+    subjects: [
+      { id: 's7_rl', code: 'AD2701', name: 'Reinforcement Learning and Robotics', shortName: 'Reinforcement Learning', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Wed' },
+      { id: 's7_edge', code: 'AD2702', name: 'Edge AI and IoT Analytics', shortName: 'Edge AI & IoT', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu' },
+      { id: 's7_bi', code: 'AD2703', name: 'Business Intelligence and Data Mining', shortName: 'Business Intel', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Wed, Fri' },
+      { id: 's7_ethics', code: 'AD2704', name: 'Professional Ethics & AI Governance', shortName: 'AI Ethics', credits: 2, defaultPeriods: 'Period 5, Period 6', defaultDays: 'Thu, Fri' },
+    ],
+  },
+  sem8: {
+    semNumber: 8,
+    yearNumber: 4,
+    semLabel: 'Semester 8 (Year 4 - Even)',
+    badgeColor: 'bg-rose-50 text-rose-900 border-rose-300',
+    subjects: [
+      { id: 's8_genai', code: 'AD2801', name: 'Generative AI and Large Language Models (LLMs)', shortName: 'GenAI & LLMs', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Wed' },
+      { id: 's8_quantum', code: 'AD2802', name: 'Quantum Computing and AI Applications', shortName: 'Quantum AI', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Tue, Thu' },
+    ],
+  },
+}
+
 const DEFAULT_SUBJECT_HANDLERS = [
   { code: 'AD2311', name: 'Object Oriented Programming Laboratory', credits: 2, handler: 'Dr. S. Karthik', hours: 30, day: 'Tue', period: 'Lab Session (AN)', time: '01:20 PM - 04:30 PM' },
   { code: 'AD2312', name: 'Database Management Systems Laboratory', credits: 2, handler: 'Dr. M. Sowmya', hours: 30, day: 'Thu', period: 'Lab Session (FN)', time: '09:15 AM - 12:30 PM' },
@@ -376,8 +477,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     facultyType: 'advisor',
   })
 
-  // Quick Presets Modal Tab for Labs (Semesters 1 - 8)
+  // Quick Presets Modal Tab for Labs & Theory Courses (Semesters 1 - 8)
   const [quickLabTab, setQuickLabTab] = useState<string>('sem3')
+  const [quickTheoryTab, setQuickTheoryTab] = useState<string>('sem3')
 
   // Apply Quick Lab Preset into Form
   const applyLabPreset = (lab: {
@@ -395,6 +497,24 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       classPeriod: lab.defaultPeriod,
       classTime: lab.defaultTime,
       classDay: lab.defaultDays,
+    })
+  }
+
+  // Apply Quick Theory Subject Preset into Form
+  const applyTheoryPreset = (subject: {
+    code: string
+    name: string
+    shortName: string
+    defaultPeriods: string
+    defaultDays: string
+  }) => {
+    setFormData({
+      ...formData,
+      subjectName: subject.name,
+      subjects: subject.code,
+      classPeriod: subject.defaultPeriods,
+      classTime: '09:15 AM - 10:45 AM',
+      classDay: subject.defaultDays,
     })
   }
 
@@ -2229,12 +2349,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
 
             <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
-              {/* Role / Type Selector: Advisor, Subject Faculty, or Both */}
+              {/* Role / Type Selector: Advisor, Theory Subject, Lab Practical, or Both */}
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1.5">
                   Faculty Role / Allocation Type *
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, facultyType: 'advisor' })}
@@ -2245,9 +2365,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <UserCheck className="w-4 h-4" />
+                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
                     <span>Class Advisor</span>
-                    <span className="text-[10px] font-normal text-gray-400">Semesters 1 - 8</span>
+                    <span className="text-[10px] font-normal text-gray-400">Batch Mentor</span>
                   </button>
 
                   <button
@@ -2256,13 +2376,28 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'subject_handler'
+                        ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-xs ring-2 ring-indigo-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <BookOpen className="w-4 h-4 text-indigo-600" />
+                    <span>Theory Subject</span>
+                    <span className="text-[10px] font-normal text-gray-400">Course Instructor</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'lab_faculty' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'lab_faculty'
                         ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <FlaskConical className="w-4 h-4" />
-                    <span>Subject / Lab Faculty</span>
-                    <span className="text-[10px] font-normal text-gray-400">Course Teacher</span>
+                    <FlaskConical className="w-4 h-4 text-purple-600" />
+                    <span>Lab / Practical</span>
+                    <span className="text-[10px] font-normal text-gray-400">Lab In-Charge</span>
                   </button>
 
                   <button
@@ -2275,9 +2410,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <Sparkles className="w-4 h-4" />
-                    <span>Advisor &amp; Faculty</span>
-                    <span className="text-[10px] font-normal text-gray-400">Both Duties</span>
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Advisor &amp; Multi</span>
+                    <span className="text-[10px] font-normal text-gray-400">Combined Duties</span>
                   </button>
                 </div>
               </div>
@@ -2467,24 +2602,178 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Subject / Lab Handler Schedule & Details */}
+              {/* INDIVIDUAL ENTRY: 1. THEORY SUBJECT FACULTY */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3.5 animate-fade-in">
+                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                      <FlaskConical className="w-4 h-4 text-purple-700" />
-                      Subject / Lab Assignment &amp; Timetable:
+                      <BookOpen className="w-4 h-4 text-indigo-700" />
+                      Theory Subject Allocation &amp; Timetable:
                     </span>
-                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Semesters 1 to 8 Available
+                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
+                      Theory Sem 1 to 8
                     </span>
                   </div>
 
-                  {/* 1. INDIVIDUAL MANUAL INPUT FOR SUBJECT / LAB NAME & COURSE CODE */}
+                  {/* Manual Input for Theory Subject & Course Code */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Subject / Lab Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                        Theory Subject Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Data Structures & Algorithm Design"
+                        value={formData.subjectName}
+                        onChange={(e) => setFormData({ ...formData, subjectName: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-indigo-600 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Subject Code * <span className="text-gray-400 font-normal">(Type code)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. AD2301"
+                        value={formData.subjects}
+                        onChange={(e) => setFormData({ ...formData, subjects: e.target.value.toUpperCase() })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono font-bold text-indigo-800 focus:border-indigo-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick-Fill Theory Subject Presets across all 8 Semesters */}
+                  <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-amber-500" />
+                        Quick-Fill Theory Subject:
+                      </span>
+                      <div className="flex items-center gap-1 overflow-x-auto">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setQuickTheoryTab(`sem${s}`)}
+                            className={cn(
+                              'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                              quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white' : 'bg-gray-100 text-gray-600'
+                            )}
+                          >
+                            Sem {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {ALL_SEMESTERS_THEORY_SUBJECTS[quickTheoryTab as keyof typeof ALL_SEMESTERS_THEORY_SUBJECTS]?.subjects.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => applyTheoryPreset(s)}
+                          className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
+                          title={`Click to auto-fill ${s.name} (${s.code})`}
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>{s.shortName}</span>
+                          <span className="font-mono text-[9px] opacity-75">[{s.code}]</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Multiple Choice Theory Days Selector */}
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
+                      Theory Class Days (Select all days that apply):
+                    </label>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {DAYS_OF_WEEK.map((d) => {
+                        const isSelected = parsedSelectedDays.includes(d.code)
+                        return (
+                          <button
+                            key={d.code}
+                            type="button"
+                            onClick={() => toggleDaySelection(d.code)}
+                            className={cn(
+                              'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
+                              isSelected
+                                ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
+                            )}
+                          >
+                            <span>{d.code}</span>
+                            <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 8 Regular Theory Periods */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-bold text-gray-700 text-[11px]">
+                        Regular Theory Periods (Periods 1 through 8):
+                      </label>
+                      <span className="text-[10px] text-gray-500 font-semibold">
+                        {parsedSelectedPeriods.filter(p => !p.includes('Lab')).length} selected
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {PERIOD_LIST.filter(p => !p.isLab).map((p) => {
+                        const isSelected = parsedSelectedPeriods.includes(p.name)
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => togglePeriodSelection(p.name)}
+                            className={cn(
+                              'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
+                              isSelected
+                                ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
+                            )}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-extrabold">{p.name}</span>
+                              {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
+                            </div>
+                            <span className={cn(
+                              'text-[9px] font-mono mt-0.5',
+                              isSelected ? 'text-indigo-200' : 'text-gray-500'
+                            )}>
+                              {p.time}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* INDIVIDUAL ENTRY: 2. LABORATORY / PRACTICAL FACULTY */}
+              {(formData.facultyType === 'lab_faculty' || (formData.facultyType === 'both' && !formData.subjectName.toLowerCase().includes('laboratory'))) && (
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                      <FlaskConical className="w-4 h-4 text-purple-700" />
+                      Laboratory / Practical Allocation &amp; Timetable:
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                      Labs Sem 1 to 8
+                    </span>
+                  </div>
+
+                  {/* Manual Input for Lab Name & Course Code */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Laboratory Name * <span className="text-gray-400 font-normal">(Type any name)</span>
                       </label>
                       <input
                         type="text"
@@ -2496,7 +2785,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Course Code * <span className="text-gray-400 font-normal">(Type any code)</span>
+                        Lab Code * <span className="text-gray-400 font-normal">(Type code)</span>
                       </label>
                       <input
                         type="text"
@@ -2508,7 +2797,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 2. OPTIONAL QUICK-FILL PRESETS ACROSS ALL 8 SEMESTERS */}
+                  {/* Quick-Fill Lab Presets across all 8 Semesters */}
                   <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
@@ -2549,10 +2838,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 3. MULTIPLE CHOICE DAYS SELECTOR */}
+                  {/* Multiple Choice Lab Days Selector */}
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
-                      Class Days (Select all days that apply):
+                      Lab Practical Days (Select all days that apply):
                     </label>
                     <div className="grid grid-cols-6 gap-1.5">
                       {DAYS_OF_WEEK.map((d) => {
@@ -2565,8 +2854,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             className={cn(
                               'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
                               isSelected
-                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50/50'
+                                ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
                             )}
                           >
                             <span>{d.code}</span>
@@ -2577,49 +2866,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 4. 8 REGULAR PERIODS WITH EXACT TIMINGS */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block font-bold text-gray-700 text-[11px]">
-                        Regular Periods (Periods 1 through 8):
-                      </label>
-                      <span className="text-[10px] text-gray-500 font-semibold">
-                        {parsedSelectedPeriods.filter(p => !p.includes('Lab')).length} selected
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                      {PERIOD_LIST.filter(p => !p.isLab).map((p) => {
-                        const isSelected = parsedSelectedPeriods.includes(p.name)
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => togglePeriodSelection(p.name)}
-                            className={cn(
-                              'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
-                              isSelected
-                                ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
-                            )}
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <span className="font-extrabold">{p.name}</span>
-                              {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
-                            </div>
-                            <span className={cn(
-                              'text-[9px] font-mono mt-0.5',
-                              isSelected ? 'text-purple-200' : 'text-gray-500'
-                            )}>
-                              {p.time}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 5. 2 DEDICATED LAB SESSIONS: FN (09:15-12:30) & AN (01:20-04:30) */}
+                  {/* Dedicated Lab Sessions: FN (09:15-12:30) & AN (01:20-04:30) */}
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center gap-1.5">
                       <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
@@ -2659,8 +2906,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       })}
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* 6. CALCULATED TIME SLOTS */}
+              {/* COMBINED TIMINGS & LIVE SCHEDULE PREVIEW */}
+              {(formData.facultyType !== 'advisor') && (
+                <div className="space-y-2 p-3 rounded-2xl bg-gray-50 border border-gray-200">
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
                       Combined Time of Classes (Auto-calculated / Editable):
@@ -2674,10 +2925,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     />
                   </div>
 
-                  {/* 7. LIVE SCHEDULE PREVIEW */}
-                  <div className="p-2.5 rounded-xl bg-white border border-purple-200 flex items-center justify-between gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 text-[11px]">
                     <span className="text-gray-500 font-bold">Schedule Summary:</span>
-                    <span className="font-mono font-bold text-purple-900 text-right truncate">
+                    <span className="font-mono font-bold text-[#1455D9] text-right truncate">
                       {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
                     </span>
                   </div>
@@ -2725,12 +2975,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
 
             <form onSubmit={handleEditSubmit} className="space-y-3.5 text-xs">
-              {/* Role / Type Selector in Edit */}
+              {/* Role / Type Selector: Advisor, Theory Subject, Lab Practical, or Both */}
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1.5">
                   Faculty Role / Allocation Type *
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, facultyType: 'advisor' })}
@@ -2741,9 +2991,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <UserCheck className="w-4 h-4" />
+                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
                     <span>Class Advisor</span>
-                    <span className="text-[10px] font-normal text-gray-400">Semesters 1 - 8</span>
+                    <span className="text-[10px] font-normal text-gray-400">Batch Mentor</span>
                   </button>
 
                   <button
@@ -2752,13 +3002,28 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'subject_handler'
+                        ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-xs ring-2 ring-indigo-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <BookOpen className="w-4 h-4 text-indigo-600" />
+                    <span>Theory Subject</span>
+                    <span className="text-[10px] font-normal text-gray-400">Course Instructor</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, facultyType: 'lab_faculty' })}
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.facultyType === 'lab_faculty'
                         ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <FlaskConical className="w-4 h-4" />
-                    <span>Subject / Lab Faculty</span>
-                    <span className="text-[10px] font-normal text-gray-400">Course Teacher</span>
+                    <FlaskConical className="w-4 h-4 text-purple-600" />
+                    <span>Lab / Practical</span>
+                    <span className="text-[10px] font-normal text-gray-400">Lab In-Charge</span>
                   </button>
 
                   <button
@@ -2771,9 +3036,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                     )}
                   >
-                    <Sparkles className="w-4 h-4" />
-                    <span>Advisor &amp; Faculty</span>
-                    <span className="text-[10px] font-normal text-gray-400">Both Duties</span>
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Advisor &amp; Multi</span>
+                    <span className="text-[10px] font-normal text-gray-400">Combined Duties</span>
                   </button>
                 </div>
               </div>
@@ -2860,7 +3125,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 />
               </div>
 
-              {/* Class Advisor Assignment */}
+              {/* Class Advisor Assignment in Edit */}
               {(formData.facultyType === 'advisor' || formData.facultyType === 'both') && (
                 <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 animate-fade-in">
                   <span className="font-black text-[#071A3D] flex items-center gap-1.5">
@@ -2939,24 +3204,178 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* Subject / Lab Handler Schedule & Details */}
+              {/* INDIVIDUAL ENTRY: 1. THEORY SUBJECT FACULTY in EDIT MODAL */}
               {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3.5 animate-fade-in">
+                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                      <FlaskConical className="w-4 h-4 text-purple-700" />
-                      Subject / Lab Assignment &amp; Timetable:
+                      <BookOpen className="w-4 h-4 text-indigo-700" />
+                      Theory Subject Allocation &amp; Timetable:
                     </span>
-                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Semesters 1 to 8 Available
+                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
+                      Theory Sem 1 to 8
                     </span>
                   </div>
 
-                  {/* 1. INDIVIDUAL MANUAL INPUT FOR SUBJECT / LAB NAME & COURSE CODE */}
+                  {/* Manual Input for Theory Subject & Course Code */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Subject / Lab Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                        Theory Subject Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Data Structures & Algorithm Design"
+                        value={formData.subjectName}
+                        onChange={(e) => setFormData({ ...formData, subjectName: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-indigo-600 focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Subject Code * <span className="text-gray-400 font-normal">(Type code)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. AD2301"
+                        value={formData.subjects}
+                        onChange={(e) => setFormData({ ...formData, subjects: e.target.value.toUpperCase() })}
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white font-mono font-bold text-indigo-800 focus:border-indigo-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick-Fill Theory Subject Presets across all 8 Semesters */}
+                  <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
+                        <Zap className="w-3.5 h-3.5 text-amber-500" />
+                        Quick-Fill Theory Subject:
+                      </span>
+                      <div className="flex items-center gap-1 overflow-x-auto">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setQuickTheoryTab(`sem${s}`)}
+                            className={cn(
+                              'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                              quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white' : 'bg-gray-100 text-gray-600'
+                            )}
+                          >
+                            Sem {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {ALL_SEMESTERS_THEORY_SUBJECTS[quickTheoryTab as keyof typeof ALL_SEMESTERS_THEORY_SUBJECTS]?.subjects.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => applyTheoryPreset(s)}
+                          className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
+                          title={`Click to auto-fill ${s.name} (${s.code})`}
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>{s.shortName}</span>
+                          <span className="font-mono text-[9px] opacity-75">[{s.code}]</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Multiple Choice Theory Days Selector */}
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
+                      Theory Class Days (Select all days that apply):
+                    </label>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {DAYS_OF_WEEK.map((d) => {
+                        const isSelected = parsedSelectedDays.includes(d.code)
+                        return (
+                          <button
+                            key={d.code}
+                            type="button"
+                            onClick={() => toggleDaySelection(d.code)}
+                            className={cn(
+                              'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
+                              isSelected
+                                ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
+                            )}
+                          >
+                            <span>{d.code}</span>
+                            <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 8 Regular Theory Periods */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block font-bold text-gray-700 text-[11px]">
+                        Regular Theory Periods (Periods 1 through 8):
+                      </label>
+                      <span className="text-[10px] text-gray-500 font-semibold">
+                        {parsedSelectedPeriods.filter(p => !p.includes('Lab')).length} selected
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {PERIOD_LIST.filter(p => !p.isLab).map((p) => {
+                        const isSelected = parsedSelectedPeriods.includes(p.name)
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => togglePeriodSelection(p.name)}
+                            className={cn(
+                              'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
+                              isSelected
+                                ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
+                            )}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <span className="font-extrabold">{p.name}</span>
+                              {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
+                            </div>
+                            <span className={cn(
+                              'text-[9px] font-mono mt-0.5',
+                              isSelected ? 'text-indigo-200' : 'text-gray-500'
+                            )}>
+                              {p.time}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* INDIVIDUAL ENTRY: 2. LABORATORY / PRACTICAL FACULTY in EDIT MODAL */}
+              {(formData.facultyType === 'lab_faculty' || (formData.facultyType === 'both' && !formData.subjectName.toLowerCase().includes('laboratory'))) && (
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-[#071A3D] flex items-center gap-1.5">
+                      <FlaskConical className="w-4 h-4 text-purple-700" />
+                      Laboratory / Practical Allocation &amp; Timetable:
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                      Labs Sem 1 to 8
+                    </span>
+                  </div>
+
+                  {/* Manual Input for Lab Name & Course Code */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                        Laboratory Name * <span className="text-gray-400 font-normal">(Type any name)</span>
                       </label>
                       <input
                         type="text"
@@ -2968,7 +3387,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Course Code * <span className="text-gray-400 font-normal">(Type any code)</span>
+                        Lab Code * <span className="text-gray-400 font-normal">(Type code)</span>
                       </label>
                       <input
                         type="text"
@@ -2980,7 +3399,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 2. OPTIONAL QUICK-FILL PRESETS FOR 8 SEMESTERS IN EDIT MODAL */}
+                  {/* Quick-Fill Lab Presets across all 8 Semesters */}
                   <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
@@ -3011,6 +3430,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           type="button"
                           onClick={() => applyLabPreset(l)}
                           className="px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-600 hover:text-white text-purple-900 border border-purple-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
+                          title={`Click to auto-fill ${l.name} (${l.code})`}
                         >
                           <Plus className="w-3 h-3" />
                           <span>{l.shortName}</span>
@@ -3020,10 +3440,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 3. MULTIPLE CHOICE DAYS SELECTOR */}
+                  {/* Multiple Choice Lab Days Selector */}
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
-                      Class Days (Select all days that apply):
+                      Lab Practical Days (Select all days that apply):
                     </label>
                     <div className="grid grid-cols-6 gap-1.5">
                       {DAYS_OF_WEEK.map((d) => {
@@ -3036,8 +3456,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             className={cn(
                               'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
                               isSelected
-                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50/50'
+                                ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
                             )}
                           >
                             <span>{d.code}</span>
@@ -3048,49 +3468,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* 4. 8 REGULAR PERIODS WITH EXACT TIMINGS */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="block font-bold text-gray-700 text-[11px]">
-                        Regular Periods (Periods 1 through 8):
-                      </label>
-                      <span className="text-[10px] text-gray-500 font-semibold">
-                        {parsedSelectedPeriods.filter(p => !p.includes('Lab')).length} selected
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                      {PERIOD_LIST.filter(p => !p.isLab).map((p) => {
-                        const isSelected = parsedSelectedPeriods.includes(p.name)
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => togglePeriodSelection(p.name)}
-                            className={cn(
-                              'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
-                              isSelected
-                                ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
-                            )}
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <span className="font-extrabold">{p.name}</span>
-                              {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
-                            </div>
-                            <span className={cn(
-                              'text-[9px] font-mono mt-0.5',
-                              isSelected ? 'text-purple-200' : 'text-gray-500'
-                            )}>
-                              {p.time}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 5. 2 DEDICATED LAB SESSIONS: FN (09:15-12:30) & AN (01:20-04:30) */}
+                  {/* Dedicated Lab Sessions: FN (09:15-12:30) & AN (01:20-04:30) */}
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center gap-1.5">
                       <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
@@ -3130,8 +3508,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       })}
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* 6. CALCULATED TIME SLOTS */}
+              {/* COMBINED TIMINGS & LIVE SCHEDULE PREVIEW */}
+              {(formData.facultyType !== 'advisor') && (
+                <div className="space-y-2 p-3 rounded-2xl bg-gray-50 border border-gray-200">
                   <div>
                     <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
                       Combined Time of Classes (Auto-calculated / Editable):
@@ -3145,10 +3527,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     />
                   </div>
 
-                  {/* 7. LIVE SCHEDULE PREVIEW */}
-                  <div className="p-2.5 rounded-xl bg-white border border-purple-200 flex items-center justify-between gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 text-[11px]">
                     <span className="text-gray-500 font-bold">Schedule Summary:</span>
-                    <span className="font-mono font-bold text-purple-900 text-right truncate">
+                    <span className="font-mono font-bold text-[#1455D9] text-right truncate">
                       {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
                     </span>
                   </div>
