@@ -754,9 +754,9 @@ export default function LoginPage() {
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Register Number</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4 text-[#1557C0]" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                      <UserIcon className="w-4 h-4" />
                     </div>
                     <input
                       type="text"
@@ -765,7 +765,7 @@ export default function LoginPage() {
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
                     />
                   </div>
                 </div>
@@ -775,9 +775,9 @@ export default function LoginPage() {
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Password</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4 text-[#1557C0]" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                      <Lock className="w-4 h-4" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -786,7 +786,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
                     />
                     <button
                       type="button"
@@ -802,11 +802,11 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#0D3B82] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.01]"
+                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <LogIn className="w-4 h-4 text-[#E7B93E]" />
+                  <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
                   <span>{loading ? 'Authenticating...' : 'Login to Student Portal'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </>
             )}
@@ -819,9 +819,9 @@ export default function LoginPage() {
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Faculty ID</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4 text-[#1557C0]" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                      <UserIcon className="w-4 h-4" />
                     </div>
                     <input
                       type="text"
@@ -830,7 +830,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
                     />
                   </div>
                 </div>
@@ -840,9 +840,9 @@ export default function LoginPage() {
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Password</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4 text-[#1557C0]" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                      <Lock className="w-4 h-4" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -851,7 +851,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
                     />
                     <button
                       type="button"
@@ -867,11 +867,11 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#0D3B82] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.01]"
+                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <LogIn className="w-4 h-4 text-[#E7B93E]" />
+                  <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
                   <span>{loading ? 'Authenticating...' : 'Login to Faculty Portal'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </>
             )}
@@ -884,9 +884,9 @@ export default function LoginPage() {
                     <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Faculty ID</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <UserIcon className="w-4 h-4 text-[#1557C0]" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                      <UserIcon className="w-4 h-4" />
                     </div>
                     <input
                       type="text"
@@ -895,7 +895,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
                     />
                   </div>
                 </div>
@@ -905,9 +905,9 @@ export default function LoginPage() {
                     <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Password</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Lock className="w-4 h-4 text-[#1557C0]" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                      <Lock className="w-4 h-4" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -916,7 +916,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
                     />
                     <button
                       type="button"
@@ -932,11 +932,11 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#0D3B82] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.01]"
+                  className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <LogIn className="w-4 h-4 text-[#E7B93E]" />
+                  <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
                   <span>{loading ? 'Authenticating...' : 'Login to HOD Portal'}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </>
             )}
@@ -949,9 +949,9 @@ export default function LoginPage() {
                     <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
                     <span>Administrator Email</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <Mail className="w-4 h-4 text-[#1557C0]" />
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] transition-colors">
+                      <Mail className="w-4 h-4" />
                     </div>
                     <input
                       type="email"
@@ -960,7 +960,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       autoComplete="email"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/90 focus:outline-none focus:ring-2 focus:ring-[#1557C0] focus:border-transparent transition-all placeholder:text-slate-400 shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold text-slate-900 bg-white/95 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] focus:shadow-[0_0_16px_rgba(21,87,192,0.15)] transition-all placeholder:text-slate-400 shadow-xs"
                     />
                   </div>
                 </div>
@@ -970,9 +970,9 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleSendOTP}
                     disabled={loading || !email}
-                    className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#0D3B82] hover:from-[#05132E] hover:to-[#1557C0] shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.01]"
+                    className="group w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-lg hover:shadow-[0_10px_25px_rgba(21,87,192,0.4)] transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 border border-blue-400/30 hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    <Send className="w-4 h-4 text-[#E7B93E]" />
+                    <Send className="w-4 h-4 text-[#E7B93E] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     <span>{loading ? 'Sending OTP...' : 'Send Verification OTP'}</span>
                   </button>
                 ) : (
@@ -988,7 +988,7 @@ export default function LoginPage() {
                         maxLength={6}
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="w-full px-4 py-2.5 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-[#1557C0] transition-all shadow-inner"
+                        className="w-full px-4 py-2.5 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/70 focus:outline-none focus:ring-3 focus:ring-[#1557C0]/20 focus:border-[#1557C0] transition-all shadow-inner"
                       />
                     </div>
 
@@ -996,7 +996,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => handleVerifyOTP()}
                       disabled={loading}
-                      className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2"
+                      className="w-full font-black py-3 px-4 rounded-xl text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer text-xs sm:text-sm flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>{loading ? 'Verifying...' : 'Verify OTP & Login'}</span>
