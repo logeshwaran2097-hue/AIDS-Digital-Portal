@@ -91,30 +91,8 @@ interface StudentInClass {
   status: 'active' | 'warning' | 'critical'
 }
 
-// Complete 8 Semesters Practical Laboratories & Training Curricula
+// Active Odd Semesters (Semesters 3, 5, 7) Practical Laboratories & Training Curricula
 export const ALL_SEMESTERS_LABS = {
-  sem1: {
-    semNumber: 1,
-    yearNumber: 1,
-    semLabel: 'Semester 1 (Year 1 - Odd)',
-    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    labs: [
-      { id: 's1_python', code: 'GE2111', name: 'Problem Solving & Python Programming Laboratory', shortName: 'Python Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Monday' },
-      { id: 's1_phy_chem', code: 'BS2112', name: 'Physics and Chemistry Practical Laboratory', shortName: 'Physics/Chemistry Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Wednesday' },
-      { id: 's1_graphics', code: 'GE2113', name: 'Engineering Graphics & CAD Laboratory', shortName: 'Engineering Graphics Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Friday' },
-    ],
-  },
-  sem2: {
-    semNumber: 2,
-    yearNumber: 1,
-    semLabel: 'Semester 2 (Year 1 - Even)',
-    badgeColor: 'bg-teal-50 text-teal-800 border-teal-200',
-    labs: [
-      { id: 's2_c_prog', code: 'CS2211', name: 'C Programming & Data Structures Laboratory', shortName: 'C Programming Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Tuesday' },
-      { id: 's2_eee', code: 'EE2212', name: 'Basic Electrical & Electronics Laboratory', shortName: 'BEE Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Thursday' },
-      { id: 's2_workshop', code: 'GE2213', name: 'Workshop Practice & Digital Fabrication Laboratory', shortName: 'Workshop Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Friday' },
-    ],
-  },
   sem3: {
     semNumber: 3,
     yearNumber: 2,
@@ -124,17 +102,6 @@ export const ALL_SEMESTERS_LABS = {
       { id: 's3_oop', code: 'AD2311', name: 'Object Oriented Programming Laboratory', shortName: 'OOP Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Tuesday' },
       { id: 's3_dbms', code: 'AD2312', name: 'Database Management Systems Laboratory', shortName: 'DBMS Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Thursday' },
       { id: 's3_dsa', code: 'AD2313', name: 'Data Structures & Algorithms Laboratory', shortName: 'DSA Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Friday' },
-    ],
-  },
-  sem4: {
-    semNumber: 4,
-    yearNumber: 2,
-    semLabel: 'Semester 4 (Year 2 - Even)',
-    badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
-    labs: [
-      { id: 's4_ml', code: 'AD2411', name: 'Machine Learning Foundations Laboratory', shortName: 'ML Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Monday' },
-      { id: 's4_os', code: 'AD2412', name: 'Operating Systems & System Programming Laboratory', shortName: 'OS Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Wednesday' },
-      { id: 's4_java', code: 'AD2413', name: 'Java & Web Technologies Laboratory', shortName: 'Java Web Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Thursday' },
     ],
   },
   sem5: {
@@ -152,18 +119,6 @@ export const ALL_SEMESTERS_LABS = {
       { id: 's5_web', code: 'AD2517', name: 'Full Stack Web Development Laboratory', shortName: 'Web Dev Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Friday' },
     ],
   },
-  sem6: {
-    semNumber: 6,
-    yearNumber: 3,
-    semLabel: 'Semester 6 (Year 3 - Even)',
-    badgeColor: 'bg-indigo-50 text-indigo-800 border-indigo-200',
-    labs: [
-      { id: 's6_nlp', code: 'AD2611', name: 'Natural Language Processing Laboratory', shortName: 'NLP Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Tuesday' },
-      { id: 's6_cv', code: 'AD2612', name: 'Computer Vision & Image Processing Laboratory', shortName: 'Computer Vision Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Wednesday' },
-      { id: 's6_mobile', code: 'AD2613', name: 'Mobile Application Development Laboratory', shortName: 'Mobile App Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Friday' },
-      { id: 's6_mini', code: 'AD2614', name: 'Mini Project & Technical Seminar', shortName: 'Mini Project Phase', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Thursday' },
-    ],
-  },
   sem7: {
     semNumber: 7,
     yearNumber: 4,
@@ -174,45 +129,10 @@ export const ALL_SEMESTERS_LABS = {
       { id: 's7_place', code: 'AD2712', name: 'Placement & Industry Training Program', shortName: 'Placement & Training', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Monday, Thursday' },
     ],
   },
-  sem8: {
-    semNumber: 8,
-    yearNumber: 4,
-    semLabel: 'Semester 8 (Year 4 - Even)',
-    badgeColor: 'bg-rose-50 text-rose-900 border-rose-300',
-    labs: [
-      { id: 's8_proj2', code: 'AD2811', name: 'Project Work (Phase II) & Capstone Defense', shortName: 'Project Phase II', credits: 10, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Monday, Wednesday, Friday' },
-      { id: 's8_intern', code: 'AD2812', name: 'Industrial Internship & Viva-Voce', shortName: 'Industrial Internship', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Tuesday, Thursday' },
-    ],
-  },
 }
 
-// Complete 8 Semesters Theory Curricula & Presets
+// Active Odd Semesters (Semesters 3, 5, 7) Theory Curricula & Presets
 export const ALL_SEMESTERS_THEORY_SUBJECTS = {
-  sem1: {
-    semNumber: 1,
-    yearNumber: 1,
-    semLabel: 'Semester 1 (Year 1 - Odd)',
-    badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    subjects: [
-      { id: 's1_math1', code: 'MA2101', name: 'Matrices and Calculus', shortName: 'Maths I', credits: 4, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Tue, Wed' },
-      { id: 's1_phys', code: 'PH2101', name: 'Engineering Physics', shortName: 'Physics', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu, Fri' },
-      { id: 's1_chem', code: 'CY2101', name: 'Engineering Chemistry', shortName: 'Chemistry', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Mon, Wed, Fri' },
-      { id: 's1_eng', code: 'HS2101', name: 'Professional English & Communication', shortName: 'English', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Tue, Thu' },
-      { id: 's1_py_th', code: 'GE2101', name: 'Problem Solving and Python Programming', shortName: 'Python Theory', credits: 3, defaultPeriods: 'Period 1, Period 4', defaultDays: 'Mon, Thu' },
-    ],
-  },
-  sem2: {
-    semNumber: 2,
-    yearNumber: 1,
-    semLabel: 'Semester 2 (Year 1 - Even)',
-    badgeColor: 'bg-teal-50 text-teal-800 border-teal-200',
-    subjects: [
-      { id: 's2_math2', code: 'MA2201', name: 'Differential Equations and Complex Analysis', shortName: 'Maths II', credits: 4, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Tue, Thu' },
-      { id: 's2_c_th', code: 'CS2201', name: 'C Programming & Data Structures', shortName: 'C Theory', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Mon, Wed, Fri' },
-      { id: 's2_bee_th', code: 'EE2201', name: 'Basic Electrical and Electronics Engineering', shortName: 'BEE Theory', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Tue, Thu' },
-      { id: 's2_evs', code: 'GE2201', name: 'Environmental Sciences & Sustainability', shortName: 'EVS', credits: 2, defaultPeriods: 'Period 5, Period 6', defaultDays: 'Wed, Fri' },
-    ],
-  },
   sem3: {
     semNumber: 3,
     yearNumber: 2,
@@ -224,19 +144,6 @@ export const ALL_SEMESTERS_THEORY_SUBJECTS = {
       { id: 's3_oop_th', code: 'AD2303', name: 'Object Oriented Programming with Java/C++', shortName: 'OOP Theory', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Mon, Thu' },
       { id: 's3_ai_th', code: 'AD2304', name: 'Artificial Intelligence Principles & Tech', shortName: 'AI Principles', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Wed, Fri' },
       { id: 's3_math3', code: 'MA2301', name: 'Discrete Mathematics & Graph Theory', shortName: 'Discrete Maths', credits: 4, defaultPeriods: 'Period 1, Period 3', defaultDays: 'Tue, Fri' },
-    ],
-  },
-  sem4: {
-    semNumber: 4,
-    yearNumber: 2,
-    semLabel: 'Semester 4 (Year 2 - Even)',
-    badgeColor: 'bg-cyan-50 text-cyan-800 border-cyan-200',
-    subjects: [
-      { id: 's4_ml_th', code: 'AD2401', name: 'Machine Learning Fundamentals & Algorithms', shortName: 'ML Theory', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Wed, Fri' },
-      { id: 's4_os_th', code: 'AD2402', name: 'Operating Systems & System Architecture', shortName: 'OS Theory', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu' },
-      { id: 's4_cn', code: 'AD2403', name: 'Computer Networks and Protocols', shortName: 'Computer Networks', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Mon, Thu' },
-      { id: 's4_algo', code: 'AD2404', name: 'Design and Analysis of Algorithms', shortName: 'Algorithms (DAA)', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Tue, Fri' },
-      { id: 's4_prob', code: 'MA2401', name: 'Probability, Statistics & Linear Algebra', shortName: 'Probability & Stats', credits: 4, defaultPeriods: 'Period 1, Period 3', defaultDays: 'Wed, Fri' },
     ],
   },
   sem5: {
@@ -251,18 +158,6 @@ export const ALL_SEMESTERS_THEORY_SUBJECTS = {
       { id: 's5_se', code: 'AD2504', name: 'Software Engineering and Agile Methodologies', shortName: 'Software Engg', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Wed, Fri' },
     ],
   },
-  sem6: {
-    semNumber: 6,
-    yearNumber: 3,
-    semLabel: 'Semester 6 (Year 3 - Even)',
-    badgeColor: 'bg-indigo-50 text-indigo-800 border-indigo-200',
-    subjects: [
-      { id: 's6_nlp_th', code: 'AD2601', name: 'Natural Language Processing and Speech', shortName: 'NLP Theory', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Thu' },
-      { id: 's6_cv_th', code: 'AD2602', name: 'Computer Vision & Visual Intelligence', shortName: 'Computer Vision', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Fri' },
-      { id: 's6_app_th', code: 'AD2603', name: 'Mobile & Modern Web App Development', shortName: 'Mobile App Dev', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Wed, Fri' },
-      { id: 's6_sec', code: 'AD2604', name: 'Cryptography and Information Security', shortName: 'Info Security', credits: 3, defaultPeriods: 'Period 4, Period 5', defaultDays: 'Mon, Wed' },
-    ],
-  },
   sem7: {
     semNumber: 7,
     yearNumber: 4,
@@ -273,16 +168,6 @@ export const ALL_SEMESTERS_THEORY_SUBJECTS = {
       { id: 's7_edge', code: 'AD2702', name: 'Edge AI and IoT Analytics', shortName: 'Edge AI & IoT', credits: 3, defaultPeriods: 'Period 2, Period 3', defaultDays: 'Tue, Thu' },
       { id: 's7_bi', code: 'AD2703', name: 'Business Intelligence and Data Mining', shortName: 'Business Intel', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Wed, Fri' },
       { id: 's7_ethics', code: 'AD2704', name: 'Professional Ethics & AI Governance', shortName: 'AI Ethics', credits: 2, defaultPeriods: 'Period 5, Period 6', defaultDays: 'Thu, Fri' },
-    ],
-  },
-  sem8: {
-    semNumber: 8,
-    yearNumber: 4,
-    semLabel: 'Semester 8 (Year 4 - Even)',
-    badgeColor: 'bg-rose-50 text-rose-900 border-rose-300',
-    subjects: [
-      { id: 's8_genai', code: 'AD2801', name: 'Generative AI and Large Language Models (LLMs)', shortName: 'GenAI & LLMs', credits: 3, defaultPeriods: 'Period 1, Period 2', defaultDays: 'Mon, Wed' },
-      { id: 's8_quantum', code: 'AD2802', name: 'Quantum Computing and AI Applications', shortName: 'Quantum AI', credits: 3, defaultPeriods: 'Period 3, Period 4', defaultDays: 'Tue, Thu' },
     ],
   },
 }
@@ -316,32 +201,8 @@ const PERIOD_LIST = [
   { id: 'LAB_AN', name: 'Lab Session (AN)', time: '01:20 PM - 04:30 PM', isLab: true, duration: '3h 10m', session: 'Periods 5-8 Practical' },
 ]
 
-// Master Weekly Timetables across all 8 Semesters
+// Master Weekly Timetables across Active Odd Semesters (Sem 3, 5, 7)
 const MASTER_TIMETABLES_ALL_8_SEMS: Record<string, { title: string; room: string; advisor: string; rows: any[] }> = {
-  sem1: {
-    title: 'Semester 1 · Year 1 (Odd Semester)',
-    room: 'Room 101 · Science & Humanities Block',
-    advisor: 'Dr. R. Ramanathan (Professor)',
-    rows: [
-      { day: 'Monday', p1: 'Lab: GE2111 (Python)', p2: 'Lab: GE2111 (Python)', p3: 'Lab: GE2111 (Python)', p4: 'Lab: GE2111 (Python)', p5: 'MA2101 (Maths I)', p6: 'PH2101 (Physics)', p7: 'CY2101 (Chemistry)', p8: 'GE2101 (Problem Solving)' },
-      { day: 'Tuesday', p1: 'PH2101 (Physics)', p2: 'CY2101 (Chemistry)', p3: 'MA2101 (Maths I)', p4: 'HS2101 (English)', p5: 'GE2101 (Problem Solving)', p6: 'Mentorship', p7: 'Library Slot', p8: 'Sports' },
-      { day: 'Wednesday', p1: 'MA2101 (Maths I)', p2: 'GE2101 (Problem Solving)', p3: 'PH2101 (Physics)', p4: 'CY2101 (Chemistry)', p5: 'Lab: BS2112 (Phy/Chem)', p6: 'Lab: BS2112 (Phy/Chem)', p7: 'Lab: BS2112 (Phy/Chem)', p8: 'Lab: BS2112 (Phy/Chem)' },
-      { day: 'Thursday', p1: 'HS2101 (English)', p2: 'MA2101 (Maths I)', p3: 'GE2101 (Problem Solving)', p4: 'PH2101 (Physics)', p5: 'CY2101 (Chemistry)', p6: 'Problem Solving', p7: 'Self-Study', p8: 'Counseling' },
-      { day: 'Friday', p1: 'CY2101 (Chemistry)', p2: 'PH2101 (Physics)', p3: 'MA2101 (Maths I)', p4: 'HS2101 (English)', p5: 'Lab: GE2113 (Graphics)', p6: 'Lab: GE2113 (Graphics)', p7: 'Lab: GE2113 (Graphics)', p8: 'Lab: GE2113 (Graphics)' },
-    ],
-  },
-  sem2: {
-    title: 'Semester 2 · Year 1 (Even Semester)',
-    room: 'Room 102 · Science & Humanities Block',
-    advisor: 'Dr. K. Meenakshi (Associate Prof)',
-    rows: [
-      { day: 'Monday', p1: 'MA2201 (Maths II)', p2: 'CS2201 (C & Data Struct)', p3: 'EE2201 (Basic Electrical)', p4: 'GE2201 (Environmental)', p5: 'CS2201 (C Programming)', p6: 'Mentorship', p7: 'Coding Practice', p8: 'Club Activity' },
-      { day: 'Tuesday', p1: 'Lab: CS2211 (C Lab)', p2: 'Lab: CS2211 (C Lab)', p3: 'Lab: CS2211 (C Lab)', p4: 'Lab: CS2211 (C Lab)', p5: 'MA2201 (Maths II)', p6: 'EE2201 (Basic Electrical)', p7: 'GE2201 (Environmental)', p8: 'Placement Prep' },
-      { day: 'Wednesday', p1: 'EE2201 (Basic Electrical)', p2: 'MA2201 (Maths II)', p3: 'CS2201 (C & Data Struct)', p4: 'HS2201 (Comm English)', p5: 'Tutorial (Maths)', p6: 'Problem Solving', p7: 'Self-Study', p8: 'Sports' },
-      { day: 'Thursday', p1: 'CS2201 (C & Data Struct)', p2: 'HS2201 (Comm English)', p3: 'MA2201 (Maths II)', p4: 'EE2201 (Basic Electrical)', p5: 'Lab: EE2212 (BEE Lab)', p6: 'Lab: EE2212 (BEE Lab)', p7: 'Lab: EE2212 (BEE Lab)', p8: 'Lab: EE2212 (BEE Lab)' },
-      { day: 'Friday', p1: 'GE2201 (Environmental)', p2: 'CS2201 (C & Data Struct)', p3: 'EE2201 (Basic Electrical)', p4: 'MA2201 (Maths II)', p5: 'Lab: GE2213 (Workshop)', p6: 'Lab: GE2213 (Workshop)', p7: 'Lab: GE2213 (Workshop)', p8: 'Lab: GE2213 (Workshop)' },
-    ],
-  },
   sem3: {
     title: 'Semester 3 · Year 2 (Odd Semester)',
     room: 'Room 201 · AI & DS Academic Block',
@@ -352,18 +213,6 @@ const MASTER_TIMETABLES_ALL_8_SEMS: Record<string, { title: string; room: string
       { day: 'Wednesday', p1: 'MA2301 (Maths III)', p2: 'AD2304 (AI)', p3: 'AD2301 (DS)', p4: 'AD2302 (DBMS)', p5: 'Lab: AD2313 (DSA Lab)', p6: 'Lab: AD2313 (DSA Lab)', p7: 'Lab: AD2313 (DSA Lab)', p8: 'Lab: AD2313 (DSA Lab)' },
       { day: 'Thursday', p1: 'Lab: AD2312 (DBMS Lab)', p2: 'Lab: AD2312 (DBMS Lab)', p3: 'Lab: AD2312 (DBMS Lab)', p4: 'Lab: AD2312 (DBMS Lab)', p5: 'AD2303 (OOP)', p6: 'AD2304 (AI)', p7: 'Problem Solving', p8: 'Club Activity' },
       { day: 'Friday', p1: 'AD2302 (DBMS)', p2: 'MA2301 (Maths III)', p3: 'AD2304 (AI)', p4: 'AD2301 (DS)', p5: 'AD2303 (OOP)', p6: 'Mini-Project', p7: 'Counseling', p8: 'Mentorship' },
-    ],
-  },
-  sem4: {
-    title: 'Semester 4 · Year 2 (Even Semester)',
-    room: 'Room 202 · AI & DS Academic Block',
-    advisor: 'Dr. M. Sowmya (Associate Prof)',
-    rows: [
-      { day: 'Monday', p1: 'Lab: AD2411 (ML Lab)', p2: 'Lab: AD2411 (ML Lab)', p3: 'Lab: AD2411 (ML Lab)', p4: 'Lab: AD2411 (ML Lab)', p5: 'AD2401 (ML Foundations)', p6: 'AD2402 (Operating Systems)', p7: 'AD2403 (Java & Web)', p8: 'AD2404 (Algorithm Design)' },
-      { day: 'Tuesday', p1: 'AD2402 (Operating Systems)', p2: 'AD2401 (ML Foundations)', p3: 'AD2404 (Algorithm Design)', p4: 'AD2403 (Java & Web)', p5: 'Tutorial (ML)', p6: 'Mentorship', p7: 'Self-Study', p8: 'Skill Dev' },
-      { day: 'Wednesday', p1: 'AD2403 (Java & Web)', p2: 'AD2404 (Algorithm Design)', p3: 'AD2401 (ML Foundations)', p4: 'AD2402 (Operating Systems)', p5: 'Lab: AD2412 (OS Lab)', p6: 'Lab: AD2412 (OS Lab)', p7: 'Lab: AD2412 (OS Lab)', p8: 'Lab: AD2412 (OS Lab)' },
-      { day: 'Thursday', p1: 'AD2404 (Algorithm Design)', p2: 'AD2403 (Java & Web)', p3: 'AD2402 (Operating Systems)', p4: 'AD2401 (ML Foundations)', p5: 'Lab: AD2413 (Java Lab)', p6: 'Lab: AD2413 (Java Lab)', p7: 'Lab: AD2413 (Java Lab)', p8: 'Lab: AD2413 (Java Lab)' },
-      { day: 'Friday', p1: 'AD2401 (ML Foundations)', p2: 'AD2402 (Operating Systems)', p3: 'AD2403 (Java & Web)', p4: 'AD2404 (Algorithm Design)', p5: 'Mini Project Review', p6: 'Problem Solving', p7: 'Counseling', p8: 'Mentorship' },
     ],
   },
   sem5: {
@@ -378,18 +227,6 @@ const MASTER_TIMETABLES_ALL_8_SEMS: Record<string, { title: string; room: string
       { day: 'Friday', p1: 'Lab: AD2514 (BA Lab)', p2: 'Lab: AD2514 (BA Lab)', p3: 'Lab: AD2514 (BA Lab)', p4: 'Lab: AD2514 (BA Lab)', p5: 'Lab: AD2517 (Web Dev Lab)', p6: 'Lab: AD2517 (Web Dev Lab)', p7: 'Lab: AD2517 (Web Dev Lab)', p8: 'Lab: AD2517 (Web Dev Lab)' },
     ],
   },
-  sem6: {
-    title: 'Semester 6 · Year 3 (Even Semester)',
-    room: 'Room 303 · AI & DS Academic Block',
-    advisor: 'Mr. S. Arun (Assistant Prof)',
-    rows: [
-      { day: 'Monday', p1: 'AD2601 (NLP)', p2: 'AD2602 (Computer Vision)', p3: 'AD2603 (Mobile App Dev)', p4: 'AD2604 (Cyber Security in AI)', p5: 'Industry Guest Lecture', p6: 'Mentorship', p7: 'Placement Prep', p8: 'Club Activity' },
-      { day: 'Tuesday', p1: 'Lab: AD2611 (NLP Lab)', p2: 'Lab: AD2611 (NLP Lab)', p3: 'Lab: AD2611 (NLP Lab)', p4: 'Lab: AD2611 (NLP Lab)', p5: 'AD2601 (NLP)', p6: 'AD2602 (Computer Vision)', p7: 'AD2603 (Mobile App)', p8: 'AD2604 (Cyber Security)' },
-      { day: 'Wednesday', p1: 'AD2602 (Computer Vision)', p2: 'AD2601 (NLP)', p3: 'AD2604 (Cyber Security)', p4: 'AD2603 (Mobile App)', p5: 'Lab: AD2612 (CV Lab)', p6: 'Lab: AD2612 (CV Lab)', p7: 'Lab: AD2612 (CV Lab)', p8: 'Lab: AD2612 (CV Lab)' },
-      { day: 'Thursday', p1: 'AD2603 (Mobile App)', p2: 'AD2604 (Cyber Security)', p3: 'AD2601 (NLP)', p4: 'AD2602 (Computer Vision)', p5: 'Lab: AD2614 (Mini Project)', p6: 'Lab: AD2614 (Mini Project)', p7: 'Lab: AD2614 (Mini Project)', p8: 'Lab: AD2614 (Mini Project)' },
-      { day: 'Friday', p1: 'AD2604 (Cyber Security)', p2: 'AD2603 (Mobile App)', p3: 'AD2602 (Computer Vision)', p4: 'AD2601 (NLP)', p5: 'Lab: AD2613 (Mobile Lab)', p6: 'Lab: AD2613 (Mobile Lab)', p7: 'Lab: AD2613 (Mobile Lab)', p8: 'Lab: AD2613 (Mobile Lab)' },
-    ],
-  },
   sem7: {
     title: 'Semester 7 · Year 4 (Odd Semester)',
     room: 'Room 401 · Innovation & Placement Wing',
@@ -400,18 +237,6 @@ const MASTER_TIMETABLES_ALL_8_SEMS: Record<string, { title: string; room: string
       { day: 'Wednesday', p1: 'AD2703 (Elective IV)', p2: 'AD2704 (Elective V)', p3: 'AD2701 (AI Ethics & Law)', p4: 'AD2702 (Generative AI)', p5: 'Lab: AD2711 (Project Phase I)', p6: 'Lab: AD2711 (Project Phase I)', p7: 'Lab: AD2711 (Project Phase I)', p8: 'Lab: AD2711 (Project Phase I)' },
       { day: 'Thursday', p1: 'AD2704 (Elective V)', p2: 'AD2703 (Elective IV)', p3: 'AD2702 (Generative AI)', p4: 'AD2701 (AI Ethics & Law)', p5: 'AD2712 (Placement Training)', p6: 'AD2712 (Placement Training)', p7: 'AD2712 (Placement Training)', p8: 'AD2712 (Placement Training)' },
       { day: 'Friday', p1: 'AD2701 (AI Ethics & Law)', p2: 'AD2702 (Generative AI)', p3: 'AD2703 (Elective IV)', p4: 'AD2704 (Elective V)', p5: 'Lab: AD2711 (Project Phase I)', p6: 'Lab: AD2711 (Project Phase I)', p7: 'Lab: AD2711 (Project Phase I)', p8: 'Lab: AD2711 (Project Phase I)' },
-    ],
-  },
-  sem8: {
-    title: 'Semester 8 · Year 4 (Even Semester)',
-    room: 'Room 402 · R&D & Incubation Center',
-    advisor: 'Dr. S. Karthik (Professor & Head)',
-    rows: [
-      { day: 'Monday', p1: 'Lab: AD2811 (Project II)', p2: 'Lab: AD2811 (Project II)', p3: 'Lab: AD2811 (Project II)', p4: 'Lab: AD2811 (Project II)', p5: 'Lab: AD2811 (Project II)', p6: 'Lab: AD2811 (Project II)', p7: 'Lab: AD2811 (Project II)', p8: 'Lab: AD2811 (Project II)' },
-      { day: 'Tuesday', p1: 'Lab: AD2812 (Internship)', p2: 'Lab: AD2812 (Internship)', p3: 'Lab: AD2812 (Internship)', p4: 'Lab: AD2812 (Internship)', p5: 'Project Guide Review', p6: 'Patent Drafting', p7: 'Paper Writing', p8: 'Viva Prep' },
-      { day: 'Wednesday', p1: 'Lab: AD2811 (Project II)', p2: 'Lab: AD2811 (Project II)', p3: 'Lab: AD2811 (Project II)', p4: 'Lab: AD2811 (Project II)', p5: 'Lab: AD2811 (Project II)', p6: 'Lab: AD2811 (Project II)', p7: 'Lab: AD2811 (Project II)', p8: 'Lab: AD2811 (Project II)' },
-      { day: 'Thursday', p1: 'Lab: AD2812 (Internship)', p2: 'Lab: AD2812 (Internship)', p3: 'Lab: AD2812 (Internship)', p4: 'Lab: AD2812 (Internship)', p5: 'Industry Review Meeting', p6: 'Project Demo', p7: 'Code Inspection', p8: 'Mentorship' },
-      { day: 'Friday', p1: 'Lab: AD2811 (Project II)', p2: 'Lab: AD2811 (Project II)', p3: 'Lab: AD2811 (Project II)', p4: 'Lab: AD2811 (Project II)', p5: 'Lab: AD2811 (Project II)', p6: 'Lab: AD2811 (Project II)', p7: 'Lab: AD2811 (Project II)', p8: 'Lab: AD2811 (Project II)' },
     ],
   },
 }
@@ -967,13 +792,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              8 Semesters Complete Curriculum &amp; Labs
+              Active Odd Semesters (Sem 3, 5, 7)
             </span>
             <span className="text-xs text-gray-300 font-medium">· Department of AI &amp; DS</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; 8 Semesters Labs</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">Faculty Directorate &amp; Odd Semesters Labs</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Comprehensive management across all <strong>8 Semesters (Sem 1 to 8)</strong> · 8 Periods Daily (09:15 AM – 04:30 PM) · FN &amp; AN Lab Sessions.
+            Active curriculum management for <strong>Semesters 3, 5 &amp; 7 (Years 2, 3, 4)</strong> · 8 Periods Daily (09:15 AM – 04:30 PM) · FN &amp; AN Practical Lab Sessions.
           </p>
         </div>
 
@@ -1050,8 +875,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-[#071A3D]">Page 1: Class Advisors (8 Semesters)</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Batch Mentors across Semesters 1 to 8 &amp; Section Dossiers</p>
+                  <h4 className="font-black text-sm text-[#071A3D]">Page 1: Class Advisors (Semesters 3, 5 &amp; 7)</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Batch Mentors across Active Semesters (3, 5, 7) &amp; Section Dossiers</p>
                 </div>
               </div>
               <span className={cn(
@@ -1079,8 +904,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <FlaskConical className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-[#071A3D]">Page 2: 8 Semesters Labs &amp; Subject Handlers</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Available Labs (Sem 1 to 8), 8 Periods (09:15 - 04:30) &amp; Schedules</p>
+                  <h4 className="font-black text-sm text-[#071A3D]">Page 2: Labs &amp; Subject Handlers (Sem 3, 5, 7)</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Active Labs (Sem 3, 5, 7), 8 Periods (09:15 - 04:30) &amp; Schedules</p>
                 </div>
               </div>
               <span className={cn(
@@ -1093,14 +918,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           </div>
         </div>
 
-        {/* STEP 2: Filter by All 8 Semesters (When viewing Class Advisors) */}
+        {/* STEP 2: Filter by Semesters (When viewing Class Advisors) */}
         {activeTab === 'advisors' && (
           <div className="border-t border-gray-100 pt-3 space-y-2.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#F4C430] text-[#071A3D] text-[11px] font-black flex items-center justify-center">2</span>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
-                  Step 2: Filter by All 8 Semesters (Semesters 1 through 8)
+                  Step 2: Filter by Active Semesters (Semesters 3, 5 &amp; 7)
                 </h3>
               </div>
               {(semFilter !== 'ALL' || yearFilter !== 'ALL') && (
@@ -1113,21 +938,21 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               )}
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-9 gap-1.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 onClick={() => { setSemFilter('ALL'); setYearFilter('ALL'); }}
                 className={cn(
-                  'p-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-center items-center',
+                  'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-center items-center',
                   semFilter === 'ALL'
                     ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-xs'
                     : 'bg-gray-50 hover:bg-blue-50 border-gray-200 text-gray-700'
                 )}
               >
-                <span className="text-[11px] font-black">All 8 Sems</span>
+                <span className="text-xs font-black">All Active Sems (3, 5, 7)</span>
                 <span className="text-[9px] font-mono opacity-80">{facultyList.length} Total</span>
               </button>
 
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => {
+              {[3, 5, 7].map((s) => {
                 const isSelected = semFilter === String(s)
                 const yr = Math.ceil(s / 2)
                 const count = facultyList.filter(
@@ -1138,15 +963,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     key={s}
                     onClick={() => { setSemFilter(String(s)); setYearFilter(String(yr)); }}
                     className={cn(
-                      'p-2 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-center items-center',
+                      'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-center items-center',
                       isSelected
                         ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
                         : 'bg-gray-50/80 hover:bg-blue-50/50 border-gray-200 text-[#071A3D]'
                     )}
                   >
-                    <span className="text-xs font-black">Sem {s}</span>
-                    <span className={cn('text-[9px] font-bold', isSelected ? 'text-[#F4C430]' : 'text-gray-400')}>
-                      Year {yr} ({count})
+                    <span className="text-xs font-black">Semester {s}</span>
+                    <span className={cn('text-[10px] font-bold', isSelected ? 'text-[#F4C430]' : 'text-gray-400')}>
+                      Year {yr} ({count} Advisors)
                     </span>
                   </button>
                 )
@@ -1157,7 +982,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       </div>
 
       {/* ========================================================================= */}
-      {/* 8 SEMESTERS AVAILABLE LABS SHOWCASE & FILTER (FOR SUBJECT HANDLERS) */}
+      {/* ACTIVE SEMESTERS (3, 5, 7) AVAILABLE LABS SHOWCASE & FILTER */}
       {/* ========================================================================= */}
       {activeTab === 'handlers' && (
         <div className="bg-gradient-to-br from-purple-900/5 via-blue-900/5 to-amber-900/5 rounded-3xl p-5 border border-purple-200/80 shadow-xs space-y-4">
@@ -1168,9 +993,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </div>
               <div>
                 <h3 className="font-black text-sm text-[#071A3D] flex items-center gap-2">
-                  <span>Available Laboratories &amp; Practical Training (Semesters 1 to 8)</span>
+                  <span>Available Laboratories &amp; Practical Training (Semesters 3, 5 &amp; 7)</span>
                   <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
-                    8 Semesters Full Coverage
+                    Odd Semesters Active
                   </span>
                 </h3>
                 <p className="text-[11px] text-gray-500 font-medium">
@@ -1179,34 +1004,29 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </div>
             </div>
 
-            {/* Quick 8 Semester Filter buttons */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1">
+            {/* Active Semester Filter buttons */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
               <button
                 onClick={() => setLabSemesterFilter('ALL')}
                 className={cn(
-                  'px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                   labSemesterFilter === 'ALL'
                     ? 'bg-[#071A3D] text-white shadow-xs'
                     : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                 )}
               >
-                All 8 Sems
+                All Active Sems (3, 5, 7)
               </button>
               {[
-                { k: 'sem1', label: 'Sem 1 (Yr 1)' },
-                { k: 'sem2', label: 'Sem 2 (Yr 1)' },
                 { k: 'sem3', label: 'Sem 3 (Yr 2)' },
-                { k: 'sem4', label: 'Sem 4 (Yr 2)' },
                 { k: 'sem5', label: 'Sem 5 (Yr 3)' },
-                { k: 'sem6', label: 'Sem 6 (Yr 3)' },
                 { k: 'sem7', label: 'Sem 7 (Yr 4)' },
-                { k: 'sem8', label: 'Sem 8 (Yr 4)' },
               ].map((s) => (
                 <button
                   key={s.k}
                   onClick={() => setLabSemesterFilter(s.k)}
                   className={cn(
-                    'px-2 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer whitespace-nowrap',
+                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                     labSemesterFilter === s.k
                       ? 'bg-purple-700 text-white shadow-xs'
                       : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-50'
@@ -1218,10 +1038,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
           </div>
 
-          {/* 8 Semesters Labs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Active Semesters Labs Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             {Object.entries(ALL_SEMESTERS_LABS).filter(([k]) => labSemesterFilter === 'ALL' || labSemesterFilter === k).map(([key, sem]) => (
-              <div key={key} className="p-3.5 rounded-2xl bg-white border border-gray-200 shadow-2xs space-y-2 flex flex-col justify-between hover:border-purple-300 transition-all">
+              <div key={key} className="p-4 rounded-2xl bg-white border border-gray-200 shadow-2xs space-y-2 flex flex-col justify-between hover:border-purple-300 transition-all">
                 <div>
                   <div className="flex items-center justify-between gap-1 mb-1.5">
                     <span className={cn('px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border', sem.badgeColor)}>
@@ -1229,21 +1049,21 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </span>
                     <span className="text-[10px] text-gray-400 font-bold font-mono">{sem.labs.length} Labs</span>
                   </div>
-                  <h4 className="font-extrabold text-xs text-[#071A3D]">{sem.semLabel}</h4>
+                  <h4 className="font-extrabold text-sm text-[#071A3D]">{sem.semLabel}</h4>
 
-                  <ul className="mt-2 space-y-1.5 text-xs max-h-48 overflow-y-auto pr-1">
+                  <ul className="mt-2.5 space-y-2 text-xs max-h-56 overflow-y-auto pr-1">
                     {sem.labs.map((l) => (
-                      <li key={l.id} className="p-1.5 rounded-xl bg-gray-50 border border-gray-100 flex items-start gap-1.5">
+                      <li key={l.id} className="p-2 rounded-xl bg-gray-50 border border-gray-100 flex items-start gap-2">
                         <Code2 className="w-3.5 h-3.5 text-[#1455D9] shrink-0 mt-0.5" />
                         <div className="flex-1 min-w-0">
-                          <span className="font-bold text-[#071A3D] block text-[11px] truncate">{l.name}</span>
-                          <span className="text-[9px] text-gray-500 font-mono block">{l.code} · {l.defaultPeriod} ({l.defaultTime})</span>
+                          <span className="font-bold text-[#071A3D] block text-xs truncate">{l.name}</span>
+                          <span className="text-[10px] text-gray-500 font-mono block">{l.code} · {l.defaultPeriod} ({l.defaultTime})</span>
                         </div>
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className="pt-2 border-t border-gray-100 text-[10px] text-purple-700 font-bold flex items-center justify-between">
+                <div className="pt-2.5 border-t border-gray-100 text-xs text-purple-700 font-bold flex items-center justify-between">
                   <span>Practical Curricula</span>
                   <span className="font-mono">{sem.labs.reduce((a, b) => a + b.credits, 0)} Credits</span>
                 </div>
@@ -1254,7 +1074,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================================= */}
-      {/* COMPREHENSIVE BELL TIMINGS & 8 SEMESTERS MASTER TIMETABLE SECTION */}
+      {/* COMPREHENSIVE BELL TIMINGS & ODD SEMESTERS MASTER TIMETABLE SECTION */}
       {/* ========================================================================= */}
       <div className="bg-white rounded-3xl p-5 border border-blue-200 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3.5">
@@ -1265,14 +1085,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-black text-sm text-[#071A3D]">
-                  Institutional Bell Timings &amp; 8 Semesters Master Timetable
+                  Institutional Bell Timings &amp; Odd Semesters Master Timetable
                 </h3>
                 <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black">
                   8 Periods · 3 Breaks · FN/AN Labs
                 </span>
               </div>
               <p className="text-[11px] text-gray-500 font-medium">
-                Official institutional schedule (09:15 AM – 04:30 PM) across all 8 Semesters (Sem 1 to 8)
+                Official institutional schedule (09:15 AM – 04:30 PM) across Semesters 3, 5 &amp; 7
               </p>
             </div>
           </div>
@@ -1301,7 +1121,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               )}
             >
               <Calendar className="w-3.5 h-3.5" />
-              <span>2. 8 Semesters Timetable</span>
+              <span>2. Odd Semesters Timetable (Sem 3, 5, 7)</span>
             </button>
 
             <button
@@ -1437,28 +1257,23 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </div>
             )}
 
-            {/* VIEW 2: 8 SEMESTERS MASTER TIMETABLE MATRIX TABLE */}
+            {/* VIEW 2: ODD SEMESTERS MASTER TIMETABLE MATRIX TABLE */}
             {timetableTab === 'matrix' && (
               <div className="space-y-3.5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2 overflow-x-auto pb-1">
                     <span className="text-xs font-bold text-gray-600 whitespace-nowrap">Choose Semester:</span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {[
-                        { k: 'sem1', label: 'Sem 1 (Yr 1)' },
-                        { k: 'sem2', label: 'Sem 2 (Yr 1)' },
                         { k: 'sem3', label: 'Sem 3 (Yr 2)' },
-                        { k: 'sem4', label: 'Sem 4 (Yr 2)' },
                         { k: 'sem5', label: 'Sem 5 (Yr 3)' },
-                        { k: 'sem6', label: 'Sem 6 (Yr 3)' },
                         { k: 'sem7', label: 'Sem 7 (Yr 4)' },
-                        { k: 'sem8', label: 'Sem 8 (Yr 4)' },
                       ].map((s) => (
                         <button
                           key={s.k}
                           onClick={() => setTimetableSemester(s.k)}
                           className={cn(
-                            'px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                            'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                             timetableSemester === s.k
                               ? 'bg-[#1455D9] text-white shadow-xs'
                               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -1537,12 +1352,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         <div className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Class Advisors</p>
           <p className="text-2xl font-black text-green-700 mt-0.5">{advisorsList.length}</p>
-          <p className="text-[10px] text-green-700 font-medium mt-1">Semesters 1 to 8 · Sections A - D</p>
+          <p className="text-[10px] text-green-700 font-medium mt-1">Semesters 3, 5, 7 · Sections A - D</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">8 Semesters Labs</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">28 Courses</p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">Semesters 1 to 8 Complete Labs</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Active Semesters Labs</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">12 Courses</p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">Semesters 3, 5, 7 Active Labs</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
           <p className="text-[10px] text-gray-400 font-bold uppercase">Daily Matrix</p>
@@ -2547,7 +2362,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                        {[3, 5, 7].map((s) => (
                           <option key={s} value={s}>
                             Semester {s} (Year {Math.ceil(s / 2)})
                           </option>
@@ -2571,7 +2386,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
                       >
-                        <option value={1}>Year 1 (Freshman)</option>
                         <option value={2}>Year 2 (Sophomore)</option>
                         <option value={3}>Year 3 (Junior)</option>
                         <option value={4}>Year 4 (Senior)</option>
@@ -2611,7 +2425,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Theory Subject Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
-                      Theory Sem 1 to 8
+                      Theory Sem 3, 5, 7
                     </span>
                   </div>
 
@@ -2643,22 +2457,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Theory Subject Presets across all 8 Semesters */}
+                  {/* Quick-Fill Theory Subject Presets across Active Semesters (3, 5, 7) */}
                   <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
                         Quick-Fill Theory Subject:
                       </span>
-                      <div className="flex items-center gap-1 overflow-x-auto">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <div className="flex items-center gap-1.5 overflow-x-auto">
+                        {[3, 5, 7].map((s) => (
                           <button
                             key={s}
                             type="button"
                             onClick={() => setQuickTheoryTab(`sem${s}`)}
                             className={cn(
-                              'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap',
-                              quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white' : 'bg-gray-100 text-gray-600'
+                              'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                              quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             )}
                           >
                             Sem {s}
@@ -2765,7 +2579,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Laboratory / Practical Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Labs Sem 1 to 8
+                      Labs Sem 3, 5, 7
                     </span>
                   </div>
 
@@ -2797,22 +2611,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Lab Presets across all 8 Semesters */}
+                  {/* Quick-Fill Lab Presets across Active Semesters (3, 5, 7) */}
                   <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
                         Quick-Fill Lab from Semester:
                       </span>
-                      <div className="flex items-center gap-1 overflow-x-auto">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <div className="flex items-center gap-1.5 overflow-x-auto">
+                        {[3, 5, 7].map((s) => (
                           <button
                             key={s}
                             type="button"
                             onClick={() => setQuickLabTab(`sem${s}`)}
                             className={cn(
-                              'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap',
-                              quickLabTab === `sem${s}` ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                              'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                              quickLabTab === `sem${s}` ? 'bg-purple-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             )}
                           >
                             Sem {s}
@@ -3130,7 +2944,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 animate-fade-in">
                   <span className="font-black text-[#071A3D] flex items-center gap-1.5">
                     <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                    Class Advisor Allocation (All 8 Semesters):
+                    Class Advisor Allocation (Active Semesters 3, 5, 7):
                   </span>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
@@ -3149,7 +2963,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                        {[3, 5, 7].map((s) => (
                           <option key={s} value={s}>
                             Semester {s} (Year {Math.ceil(s / 2)})
                           </option>
@@ -3173,7 +2987,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
                       >
-                        <option value={1}>Year 1</option>
                         <option value={2}>Year 2</option>
                         <option value={3}>Year 3</option>
                         <option value={4}>Year 4</option>
@@ -3213,7 +3026,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Theory Subject Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
-                      Theory Sem 1 to 8
+                      Theory Sem 3, 5, 7
                     </span>
                   </div>
 
@@ -3245,22 +3058,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Theory Subject Presets across all 8 Semesters */}
+                  {/* Quick-Fill Theory Subject Presets across Active Semesters (3, 5, 7) */}
                   <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
                         Quick-Fill Theory Subject:
                       </span>
-                      <div className="flex items-center gap-1 overflow-x-auto">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <div className="flex items-center gap-1.5 overflow-x-auto">
+                        {[3, 5, 7].map((s) => (
                           <button
                             key={s}
                             type="button"
                             onClick={() => setQuickTheoryTab(`sem${s}`)}
                             className={cn(
-                              'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap',
-                              quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white' : 'bg-gray-100 text-gray-600'
+                              'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                              quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             )}
                           >
                             Sem {s}
@@ -3367,7 +3180,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Laboratory / Practical Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Labs Sem 1 to 8
+                      Labs Sem 3, 5, 7
                     </span>
                   </div>
 
@@ -3399,22 +3212,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Lab Presets across all 8 Semesters */}
+                  {/* Quick-Fill Lab Presets across Active Semesters (3, 5, 7) */}
                   <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
                         Quick-Fill Lab from Semester:
                       </span>
-                      <div className="flex items-center gap-1 overflow-x-auto">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <div className="flex items-center gap-1.5 overflow-x-auto">
+                        {[3, 5, 7].map((s) => (
                           <button
                             key={s}
                             type="button"
                             onClick={() => setQuickLabTab(`sem${s}`)}
                             className={cn(
-                              'px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap',
-                              quickLabTab === `sem${s}` ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                              'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                              quickLabTab === `sem${s}` ? 'bg-purple-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             )}
                           >
                             Sem {s}
