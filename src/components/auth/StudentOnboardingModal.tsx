@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Image from 'next/image'
 import {
   CheckCircle2,
   AlertCircle,
@@ -18,6 +19,9 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Award,
+  GraduationCap,
+  ChevronRight,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 
@@ -45,7 +49,7 @@ export function StudentOnboardingModal({
   onComplete,
   initialData,
 }: StudentOnboardingModalProps) {
-  // Steps: 1 (Fill remaining & new password) -> 2 (OTP verification) -> 3 (Final verified summary pop-up)
+  // Steps: 1 (Fill remaining & new password) -> 2 (OTP verification) -> 3 (Final verified summary)
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)
 
@@ -60,6 +64,7 @@ export function StudentOnboardingModal({
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // OTP state
   const [otp, setOtp] = useState('')
@@ -156,8 +161,8 @@ export function StudentOnboardingModal({
       const data = await res.json()
       if (res.ok && data.success) {
         setVerifiedUserData(data.user || {})
-        toast.success('Email verified & Password updated!')
-        setStep(3) // Transition to the final verification summary pop-up
+        toast.success('Email verified & Password updated successfully!')
+        setStep(3)
       } else {
         toast.error(data.message || 'Invalid or expired OTP. Please try again.')
       }
@@ -217,21 +222,78 @@ export function StudentOnboardingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden my-auto animate-fade-in">
-        {/* Accent Bar */}
-        <div className="h-1.5 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#E7B93E]" />
+    <div className="fixed inset-0 z-50 bg-[#071126]/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+      {/* Ambient background glow */}
+      <div className="absolute w-[500px] h-[500px] bg-gradient-to-tr from-[#1455D9]/30 to-[#E7B93E]/20 rounded-full blur-3xl pointer-events-none -top-20 -left-20" />
+      <div className="absolute w-[400px] h-[400px] bg-gradient-to-bl from-[#22C7E8]/25 to-[#1455D9]/20 rounded-full blur-3xl pointer-events-none -bottom-20 -right-20" />
+
+      <div className="relative bg-white/95 backdrop-blur-2xl rounded-[32px] max-w-[540px] w-full shadow-[0_25px_70px_rgba(7,26,61,0.35)] border border-white/60 overflow-hidden my-auto animate-fade-in transition-all">
+        
+        {/* Luxury Gold & Sapphire Top Shimmer Bar */}
+        <div className="h-2 bg-gradient-to-r from-[#1455D9] via-[#E7B93E] to-[#22C7E8]" />
+
+        {/* Header with College Emblem & Step Indicators */}
+        <div className="px-6 pt-6 pb-4 sm:px-8 border-b border-gray-100 bg-gradient-to-b from-slate-50/80 to-transparent">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {/* Premium Emblem with Gold Halo Ring */}
+              <div className="relative p-0.5 rounded-2xl bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_15px_rgba(231,185,62,0.4)]">
+                <div className="w-12 h-12 rounded-[14px] bg-[#071A3D] p-1.5 flex items-center justify-center overflow-hidden">
+                  <Image
+                    src="/college-emblem.png"
+                    alt="V.S.B. Crest"
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(231,185,62,0.8)]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black tracking-widest text-[#1455D9] uppercase">
+                    V.S.B. ENGINEERING COLLEGE
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-[#E7B93E]" />
+                  <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
+                    AI &amp; DS
+                  </span>
+                </div>
+                <h1 className="text-lg sm:text-xl font-black text-[#071A3D] tracking-tight">
+                  {step === 1 && 'First-Time Student Setup'}
+                  {step === 2 && 'Email Security Verification'}
+                  {step === 3 && 'Profile Verified & Ready'}
+                  {showCorrection && 'Request Profile Correction'}
+                </h1>
+              </div>
+            </div>
+
+            {/* Step Badge */}
+            {!showCorrection && (
+              <div className="hidden sm:flex flex-col items-end">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400">
+                  Step {step} of 3
+                </span>
+                <div className="flex gap-1 mt-1">
+                  <span className={`w-4 h-1.5 rounded-full transition-all ${step >= 1 ? 'bg-[#1455D9]' : 'bg-gray-200'}`} />
+                  <span className={`w-4 h-1.5 rounded-full transition-all ${step >= 2 ? 'bg-[#E7B93E]' : 'bg-gray-200'}`} />
+                  <span className={`w-4 h-1.5 rounded-full transition-all ${step >= 3 ? 'bg-emerald-500' : 'bg-gray-200'}`} />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* ========================================================================= */}
         {/* VIEW 1: CORRECTION REQUEST MODAL                                          */}
         {/* ========================================================================= */}
         {showCorrection ? (
-          <div className="p-6 sm:p-7 space-y-4">
+          <div className="p-6 sm:p-8 space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-black text-gray-900">Request Academic Correction</h3>
+                <h3 className="text-base font-extrabold text-gray-900">Official Change Request</h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Send an official edit request to the department administrator.
+                  Academic records can only be updated with Admin approval.
                 </p>
               </div>
               <button
@@ -239,43 +301,43 @@ export function StudentOnboardingModal({
                   setShowCorrection(false)
                   setCorrectionSubmitted(false)
                 }}
-                className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {correctionSubmitted ? (
-              <div className="py-6 text-center space-y-4">
-                <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
-                  <CheckCircle2 className="w-8 h-8" />
+              <div className="py-8 text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200 shadow-lg shadow-emerald-500/10">
+                  <CheckCircle2 className="w-9 h-9" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-extrabold text-gray-900 text-base">Request Submitted to Admin!</p>
+                  <p className="font-black text-gray-900 text-base">Correction Request Dispatched</p>
                   <p className="text-xs text-gray-500 max-w-xs mx-auto">
-                    The department administrator will review and verify your requested updates.
+                    The department administrator will verify university records and apply your update.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowCorrection(false)}
-                  className="px-6 py-2.5 bg-[#1455D9] hover:bg-[#1044b5] text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                  className="px-6 py-3 bg-[#1455D9] hover:bg-[#1044b5] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
                 >
-                  Continue Setup
+                  Return to Activation
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSendCorrectionRequest} className="space-y-3.5">
+              <form onSubmit={handleSendCorrectionRequest} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
                     Field to Correct
                   </label>
                   <select
                     value={correctionCategory}
                     onChange={(e) => setCorrectionCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#1455D9] bg-white"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/50"
                   >
-                    <option value="name">Full Name</option>
+                    <option value="name">Student Full Name</option>
                     <option value="department">Department</option>
                     <option value="section">Year / Semester / Section</option>
                     <option value="dateOfBirth">Date of Birth</option>
@@ -283,7 +345,7 @@ export function StudentOnboardingModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
                     Corrected Value <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -291,37 +353,37 @@ export function StudentOnboardingModal({
                     required
                     value={requestedValue}
                     onChange={(e) => setRequestedValue(e.target.value)}
-                    placeholder="Enter the correct value"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] bg-white"
+                    placeholder="Enter the official correction"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/50"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Reason / Note for Admin <span className="text-red-500">*</span>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                    Reason / Official Proof Note <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     required
                     rows={3}
                     value={correctionReason}
                     onChange={(e) => setCorrectionReason(e.target.value)}
-                    placeholder="Please mention why this needs to be updated..."
-                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] bg-white resize-none"
+                    placeholder="Provide details for admin verification..."
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/50 resize-none"
                   />
                 </div>
 
-                <div className="flex gap-2.5 pt-1">
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setShowCorrection(false)}
-                    className="w-1/3 px-3 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                    className="w-1/3 px-4 py-3 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-bold text-xs py-2.5 rounded-xl shadow-md transition-all"
+                    className="flex-1 flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-extrabold text-xs py-3 rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
                   >
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                     <span>Submit to Admin</span>
@@ -336,93 +398,105 @@ export function StudentOnboardingModal({
         {/* STEP 1: CHECK ADMIN DETAILS + ENTER REMAINING INFO + NEW PASSWORD         */}
         {/* ========================================================================= */}
         {!showCorrection && step === 1 && (
-          <form onSubmit={handleSendOtp} className="p-6 sm:p-7 space-y-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#1455D9] text-[11px] font-extrabold uppercase tracking-wider mb-1 border border-blue-100">
+          <form onSubmit={handleSendOtp} className="p-6 sm:p-8 space-y-4">
+            
+            {/* Top Verified Institutional Card */}
+            <div className="relative rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/80 via-white to-slate-50 p-4 shadow-sm overflow-hidden">
+              <div className="absolute right-0 top-0 w-24 h-24 bg-[#1455D9]/5 rounded-full blur-xl pointer-events-none" />
+              
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-[10px] font-black text-[#1455D9] uppercase tracking-wider">
                   <ShieldCheck className="w-3.5 h-3.5 text-[#1455D9]" />
-                  <span>First-Time Account Activation</span>
+                  <span>Admin Verified Record</span>
                 </div>
-                <h2 className="text-xl font-black text-gray-900 tracking-tight">
-                  Verify Profile &amp; Set Password
-                </h2>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Confirm your academic records, enter your active contacts, and create a new password.
-                </p>
-              </div>
-            </div>
-
-            {/* Read-Only Admin Details Summary Card */}
-            <div className="rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden bg-gray-50/70 text-xs">
-              <div className="flex items-center justify-between px-3.5 py-2 bg-blue-50/50">
-                <span className="font-semibold text-gray-500">Register Number</span>
-                <span className="font-mono font-black text-[#1455D9] text-sm">{initialData.registerNumber}</span>
-              </div>
-              <div className="flex items-center justify-between px-3.5 py-2">
-                <span className="font-semibold text-gray-500">Student Name</span>
-                <span className="font-bold text-gray-900">{initialData.name}</span>
-              </div>
-              <div className="flex items-center justify-between px-3.5 py-2">
-                <span className="font-semibold text-gray-500">Department</span>
-                <span className="font-bold text-gray-800 text-right max-w-[65%]">{initialData.department}</span>
-              </div>
-              <div className="flex items-center justify-between px-3.5 py-2 bg-blue-50/50">
-                <span className="font-semibold text-gray-500">Year / Sem / Sec</span>
-                <span className="font-bold text-[#1455D9]">
-                  Year {initialData.year} &middot; Sem {initialData.semester} &middot; Sec {initialData.section}
+                <span className="px-2 py-0.5 rounded-full bg-blue-100/70 text-[#1455D9] text-[10px] font-bold font-mono">
+                  {initialData.registerNumber}
                 </span>
               </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-[10px] font-medium text-gray-400 block">Student Name</span>
+                  <span className="font-extrabold text-[#071A3D] text-xs truncate block">
+                    {initialData.name}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-medium text-gray-400 block">Class &amp; Section</span>
+                  <span className="font-bold text-[#1455D9] text-xs block">
+                    Year {initialData.year} &middot; Sem {initialData.semester} &middot; Sec {initialData.section}
+                  </span>
+                </div>
+              </div>
             </div>
 
-            {/* Editable Contact Fields */}
-            <div className="space-y-3 pt-1">
+            {/* Editable Fields Section Header */}
+            <div className="pt-1">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D] flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-[#E7B93E]" />
+                <span>Complete Student Information &amp; Password</span>
+              </h3>
+            </div>
+
+            {/* Input Grid */}
+            <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Student Phone */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    📱 Student Phone <span className="text-red-500">*</span>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    📱 Student Mobile <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
-                  />
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      required
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
+                    />
+                  </div>
                 </div>
+
+                {/* Parent Phone */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
                     👨‍👩‍👧 Parent WhatsApp <span className="text-red-500">*</span>
                   </label>
+                  <div className="relative">
+                    <input
+                      type="tel"
+                      required
+                      value={parentPhone}
+                      onChange={(e) => setParentPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal Email */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                  ✉️ Personal Email (For Security OTP) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
                   <input
-                    type="tel"
+                    type="email"
                     required
-                    value={parentPhone}
-                    onChange={(e) => setParentPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="student.personal@gmail.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  ✉️ Personal Email (For OTP verification) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.name@gmail.com"
-                  className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
-                />
-              </div>
-
-              {/* New Password & Confirm Password */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Password Setup */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
                     🔒 New Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -433,12 +507,12 @@ export function StudentOnboardingModal({
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Min 6 characters"
-                      className="w-full px-3 py-2 pr-9 rounded-xl border border-gray-300 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
+                      className="w-full px-3.5 py-2.5 pr-9 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-700"
+                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-700 transition-colors"
                     >
                       {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
@@ -446,28 +520,37 @@ export function StudentOnboardingModal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
                     🔒 Confirm Password <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter password"
-                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      className="w-full px-3.5 py-2.5 pr-9 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-700 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-2 space-y-2.5">
+            <div className="pt-3 space-y-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] active:scale-[0.99] disabled:opacity-60 text-white font-extrabold text-sm py-3 rounded-2xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1455D9] via-[#0E44B8] to-[#1455D9] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] disabled:opacity-60 text-white font-black text-xs sm:text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/25 border border-blue-400/30 transition-all cursor-pointer"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -475,15 +558,16 @@ export function StudentOnboardingModal({
                   <Mail className="w-4 h-4 text-[#F4C430]" />
                 )}
                 <span>Send OTP &amp; Verify Email</span>
+                <ChevronRight className="w-4 h-4 ml-1 opacity-70" />
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowCorrection(true)}
-                className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#1455D9] transition-colors py-1 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#1455D9] transition-colors py-1 cursor-pointer"
               >
                 <FileEdit className="w-3.5 h-3.5 text-[#1455D9]" />
-                <span>Academic details incorrect? Request Correction from Admin</span>
+                <span>Academic records incorrect? Request Correction from Admin</span>
               </button>
             </div>
           </form>
@@ -493,20 +577,23 @@ export function StudentOnboardingModal({
         {/* STEP 2: ENTER 6-DIGIT EMAIL OTP                                           */}
         {/* ========================================================================= */}
         {!showCorrection && step === 2 && (
-          <form onSubmit={handleVerifyOtp} className="p-6 sm:p-7 space-y-5 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto border border-blue-100 shadow-sm">
-              <Mail className="w-7 h-7" />
+          <form onSubmit={handleVerifyOtp} className="p-6 sm:p-8 space-y-6 text-center">
+            <div className="relative mx-auto w-20 h-20">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] blur-xl opacity-40 animate-pulse" />
+              <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#0a358c] text-white flex items-center justify-center shadow-xl border border-blue-400/40">
+                <Mail className="w-9 h-9 text-[#F4C430]" />
+              </div>
             </div>
 
             <div>
-              <h2 className="text-xl font-black text-gray-900">Enter Verification Code</h2>
-              <p className="text-xs text-gray-500 mt-1">
-                We sent a 6-digit OTP code to: <br />
-                <span className="font-bold text-gray-900 text-sm">{email}</span>
+              <h2 className="text-xl font-black text-[#071A3D]">Enter Email Security Code</h2>
+              <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
+                A 6-digit OTP has been sent to your institutional email inbox: <br />
+                <span className="font-bold text-[#1455D9] text-xs">{email}</span>
               </p>
             </div>
 
-            <div className="py-2">
+            <div className="py-1">
               <input
                 type="text"
                 maxLength={6}
@@ -515,18 +602,18 @@ export function StudentOnboardingModal({
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                className="w-full text-center tracking-[0.4em] font-mono font-black text-3xl px-4 py-3.5 rounded-2xl border-2 border-gray-200 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white text-gray-900"
+                className="w-full text-center tracking-[0.45em] font-mono font-black text-3xl px-4 py-4 rounded-2xl border-2 border-blue-200 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-100 bg-blue-50/30 focus:bg-white text-[#071A3D] shadow-inner transition-all"
               />
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-3">
               <button
                 type="submit"
                 disabled={loading || otp.trim().length !== 6}
-                className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] active:scale-[0.99] disabled:opacity-60 text-white font-extrabold text-sm py-3 rounded-2xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1455D9] to-[#0E44B8] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] disabled:opacity-60 text-white font-black text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/25 transition-all cursor-pointer"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 text-[#F4C430]" />}
-                <span>Verify OTP &amp; Save Details</span>
+                <span>Verify Code &amp; Activate Account</span>
               </button>
 
               <button
@@ -537,7 +624,7 @@ export function StudentOnboardingModal({
                 }}
                 className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors py-1"
               >
-                &larr; Change Email or Mobile Number
+                &larr; Change Email or Phone Number
               </button>
             </div>
           </form>
@@ -547,47 +634,51 @@ export function StudentOnboardingModal({
         {/* STEP 3: FINAL VERIFIED POP-UP SUMMARY BEFORE ENTERING DASHBOARD           */}
         {/* ========================================================================= */}
         {!showCorrection && step === 3 && (
-          <div className="p-6 sm:p-7 space-y-5 animate-fade-in">
+          <div className="p-6 sm:p-8 space-y-6 animate-fade-in">
             <div className="text-center space-y-2">
-              <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200 shadow-sm">
-                <CheckCircle2 className="w-9 h-9" />
+              <div className="relative mx-auto w-20 h-20">
+                <div className="absolute inset-0 rounded-full bg-emerald-500/30 blur-xl animate-pulse" />
+                <div className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-xl border border-emerald-300">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
               </div>
-              <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-extrabold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5" />
+
+              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-black uppercase tracking-wider border border-emerald-200">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Verification Complete</span>
               </div>
-              <h2 className="text-xl font-black text-gray-900">Profile Activated!</h2>
-              <p className="text-xs text-gray-500">
-                Your contact details are linked and password has been set.
+              <h2 className="text-2xl font-black text-[#071A3D]">Account Fully Activated!</h2>
+              <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                Your institutional contacts are verified and your new secure password is in effect.
               </p>
             </div>
 
-            {/* Small Verified Summary Card */}
-            <div className="rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden bg-gray-50/70 text-xs">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/50">
+            {/* Verified Profile Card */}
+            <div className="rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden bg-slate-50/80 text-xs shadow-inner">
+              <div className="flex items-center justify-between px-4 py-3 bg-blue-50/50">
                 <span className="font-semibold text-gray-500">Register Number</span>
                 <span className="font-mono font-black text-[#1455D9] text-sm">{initialData.registerNumber}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5">
+              <div className="flex items-center justify-between px-4 py-3">
                 <span className="font-semibold text-gray-500">Student Name</span>
-                <span className="font-bold text-gray-900">{initialData.name}</span>
+                <span className="font-black text-[#071A3D]">{initialData.name}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5">
+              <div className="flex items-center justify-between px-4 py-3">
                 <span className="font-semibold text-gray-500">Verified Email</span>
-                <span className="font-bold text-[#1455D9]">{email}</span>
+                <span className="font-extrabold text-[#1455D9]">{email}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5">
-                <span className="font-semibold text-gray-500">Student Phone</span>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="font-semibold text-gray-500">Student Mobile</span>
                 <span className="font-mono font-bold text-gray-800">📱 {phone}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5">
+              <div className="flex items-center justify-between px-4 py-3">
                 <span className="font-semibold text-gray-500">Parent WhatsApp</span>
                 <span className="font-mono font-bold text-gray-800">👨‍👩‍👧 {parentPhone}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-50/50">
-                <span className="font-semibold text-emerald-800">Password Status</span>
-                <span className="font-bold text-emerald-700 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Updated &amp; Protected
+              <div className="flex items-center justify-between px-4 py-3 bg-emerald-50/50">
+                <span className="font-semibold text-emerald-800">Security Credentials</span>
+                <span className="font-black text-emerald-700 flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Password Secured
                 </span>
               </div>
             </div>
@@ -595,7 +686,7 @@ export function StudentOnboardingModal({
             <button
               type="button"
               onClick={handleFinalEnterDashboard}
-              className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] active:scale-[0.99] text-white font-extrabold text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-500/25 transition-all cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1455D9] via-[#0E44B8] to-[#1455D9] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] text-white font-black text-sm py-4 rounded-2xl shadow-xl shadow-blue-600/30 border border-blue-400/30 transition-all cursor-pointer"
             >
               <span>All Details Verified &middot; Enter Dashboard</span>
               <ArrowRight className="w-4 h-4 text-[#F4C430]" />
