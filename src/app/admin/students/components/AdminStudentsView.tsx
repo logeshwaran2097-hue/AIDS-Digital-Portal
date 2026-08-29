@@ -774,13 +774,14 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           </button>
                           <button
                             onClick={() => {
-                              const cleanEmail = s.email && !s.email.endsWith('@student.vsb.edu.in') ? s.email : ''
+                              const cleanEmail = s.email || ''
                               setSelectedStudent(s)
                               setFormData({
                                 registerNumber: s.registerNumber || '',
                                 name: s.name || '',
                                 email: cleanEmail,
                                 phone: s.phone || '',
+                                parentPhone: s.parentPhone || '',
                                 dateOfBirth: s.dateOfBirth || '',
                                 year: s.year || 1,
                                 semester: s.semester || 1,
