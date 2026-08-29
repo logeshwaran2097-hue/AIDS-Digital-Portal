@@ -726,14 +726,17 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       <td className="px-4 py-3 font-mono font-bold text-[#1455D9]">{s.registerNumber}</td>
                       <td className="px-4 py-3 font-bold text-[#071A3D]">{s.name}</td>
                       <td className="px-4 py-3 text-gray-500">
-                        <div className="flex flex-col text-[11px]">
-                          {s.email ? (
-                            <span>{s.email}</span>
+                        <div className="flex flex-col text-[11px] gap-0.5">
+                          {s.email && !s.email.endsWith('@student.vsb.edu.in') ? (
+                            <span className="text-[#1455D9] font-semibold">{s.email}</span>
                           ) : (
-                            <span className="text-gray-300 italic">No email</span>
+                            <span className="text-amber-500 italic text-[10px]">Email not verified</span>
                           )}
-                          {s.phone && <span className="text-gray-400 font-mono text-[10px]">Ph: {s.phone}</span>}
-                          {s.parentPhone && <span className="text-gray-400 font-mono text-[10px]">Parent: {s.parentPhone}</span>}
+                          {s.phone && <span className="text-gray-600 font-mono text-[10px]">📱 {s.phone}</span>}
+                          {s.parentPhone && <span className="text-gray-400 font-mono text-[10px]">👨‍👩‍👧 {s.parentPhone}</span>}
+                          {!s.phone && !s.parentPhone && (!s.email || s.email.endsWith('@student.vsb.edu.in')) && (
+                            <span className="text-gray-300 italic text-[10px]">No contact info yet</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -1486,10 +1489,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </div>
 
               <div className="space-y-2">
-                {selectedStudent.email && (
+                {selectedStudent.email && !selectedStudent.email.endsWith('@student.vsb.edu.in') ? (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-4 h-4 text-[#1455D9]" />
-                    <span>{selectedStudent.email}</span>
+                    <span className="font-semibold">{selectedStudent.email}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-amber-500">
+                    <Mail className="w-4 h-4" />
+                    <span className="italic text-xs">Email not verified yet</span>
                   </div>
                 )}
                 {selectedStudent.phone && (
