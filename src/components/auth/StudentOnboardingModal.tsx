@@ -1,7 +1,7 @@
-﻿'use client'
+'use client'
 
 import React, { useState } from 'react'
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 
 interface StudentOnboardingModalProps {
@@ -28,27 +28,18 @@ export function StudentOnboardingModal({
   initialData,
 }: StudentOnboardingModalProps) {
   const [step, setStep] = useState<1 | 2>(1)
-  const [name, setName] = useState(initialData.name || '')
-  const [phone, setPhone] = useState(initialData.phone || '')
-  const [dateOfBirth, setDateOfBirth] = useState(initialData.dateOfBirth || '')
   const [loading, setLoading] = useState(false)
 
   if (!isOpen) return null
 
   const handleConfirmAndEnter = async () => {
-    if (!name.trim()) {
-      toast.error('Please enter your full name.')
-      return
-    }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/student/complete-onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim(),
-          dateOfBirth: dateOfBirth || undefined,
+          name: initialData.name,
           skipEmailVerification: true,
         }),
       })
@@ -109,54 +100,27 @@ export function StudentOnboardingModal({
                   <span className="font-semibold text-gray-800 text-xs">{initialData.advisorName}</span>
                 </div>
               )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">Correct if wrong</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your full name"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white transition-all"
-                />
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs text-gray-500">Name</span>
+                <span className="font-semibold text-gray-800 text-xs">{initialData.name || '—'}</span>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Phone</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white transition-all"
-                  />
+              {initialData.phone && (
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                  <span className="text-xs text-gray-500">Phone</span>
+                  <span className="font-semibold text-gray-800 text-xs">{initialData.phone}</span>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white transition-all"
-                  />
+              )}
+              {initialData.dateOfBirth && (
+                <div className="flex items-center justify-between px-4 py-2.5">
+                  <span className="text-xs text-gray-500">Date of Birth</span>
+                  <span className="font-semibold text-gray-800 text-xs">{initialData.dateOfBirth}</span>
                 </div>
-              </div>
+              )}
             </div>
 
-            <div className="flex items-start gap-2 text-xs text-gray-500">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-amber-400" />
-              <span>If any admin-entered detail above is wrong, contact your department coordinator.</span>
-            </div>
+            <p className="text-xs text-gray-400 text-center">
+              If anything looks wrong, contact your department coordinator.
+            </p>
 
             <button
               type="button"
