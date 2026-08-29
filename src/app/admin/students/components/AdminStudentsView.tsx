@@ -726,12 +726,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       <td className="px-4 py-3 font-bold text-[#071A3D]">{s.name}</td>
                       <td className="px-4 py-3 text-gray-500">
                         <div className="flex flex-col text-[11px]">
-                          {s.email && !s.email.endsWith('@student.vsb.edu.in') ? (
+                          {s.email ? (
                             <span>{s.email}</span>
                           ) : (
                             <span className="text-gray-300 italic">No email</span>
                           )}
-                          {s.phone && <span className="text-gray-400">{s.phone}</span>}
+                          {s.phone && <span className="text-gray-400 font-mono text-[10px]">Ph: {s.phone}</span>}
+                          {s.parentPhone && <span className="text-gray-400 font-mono text-[10px]">Parent: {s.parentPhone}</span>}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -1484,16 +1485,22 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </div>
 
               <div className="space-y-2">
-                {selectedStudent.email && !selectedStudent.email.endsWith('@student.vsb.edu.in') ? (
+                {selectedStudent.email && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-4 h-4 text-[#1455D9]" />
                     <span>{selectedStudent.email}</span>
                   </div>
-                ) : null}
+                )}
                 {selectedStudent.phone && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Phone className="w-4 h-4 text-[#1455D9]" />
                     <span>{selectedStudent.phone}</span>
+                  </div>
+                )}
+                {selectedStudent.parentPhone && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-4 h-4 text-amber-500" />
+                    <span>{selectedStudent.parentPhone} (Parent)</span>
                   </div>
                 )}
                 {selectedStudent.dateOfBirth && (
