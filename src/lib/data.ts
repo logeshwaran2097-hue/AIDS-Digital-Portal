@@ -35,6 +35,7 @@ export async function getStudentData(userId: string) {
         section: 'A',
         batch: '2024 - 2028',
         advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+        parentPhone: null,
       }
     }
 
