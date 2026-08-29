@@ -811,6 +811,25 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               </span>
             </Link>
 
+            {/* Install App Button (PWA) */}
+            <button
+              onClick={() => {
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                  // Service worker is active, prompt to install
+                  navigator.serviceWorker.ready.then((registration) => {
+                    registration.showInstallPrompt?.()
+                  })
+                }
+                // Fallback: show download page info
+                window.location.href = '/download'
+              }}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-cyan-200/80 bg-cyan-50 hover:bg-cyan-100 text-cyan-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102"
+              title="Install VSB AI & DS Portal as app"
+            >
+              <Smartphone className="w-4 h-4" />
+              <span className="hidden sm:inline">Install App</span>
+            </button>
+
             {/* Top Header Direct Logout Action */}
             <button
               type="button"
