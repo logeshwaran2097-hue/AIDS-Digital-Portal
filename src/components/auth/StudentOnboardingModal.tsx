@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { CheckCircle2, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, ArrowRight, ShieldCheck, Send, FileEdit, X } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 
 interface StudentOnboardingModalProps {
@@ -28,408 +28,324 @@ export function StudentOnboardingModal({
   onComplete,
   initialData,
 }: StudentOnboardingModalProps) {
-  const [step, setStep] = useState<1 | 1.5 | 3 | 4>(1)
+  const [showCorrection, setShowCorrection] = useState(false)
   const [loading, setLoading] = useState(false)
-  
-  // Edit State
-  const [name, setName] = useState(initialData.name || '')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState(initialData.phone || '')
-  const [parentPhone, setParentPhone] = useState(initialData.parentPhone || '')
-  const [dateOfBirth, setDateOfBirth] = useState(initialData.dateOfBirth || '')
-  const [isWhatsapp, setIsWhatsapp] = useState(false)
-  
-  // OTP State
-  const [otp, setOtp] = useState('')
+  const [correctionCategory, setCorrectionCategory] = useState('name')
+  const [requestedValue, setRequestedValue] = useState('')
+  const [correctionReason, setCorrectionReason] = useState('')
+  const [correctionSubmitted, setCorrectionSubmitted] = useState(false)
 
   if (!isOpen) return null
 
-  // Fast path (Save and enter)
+  // Fast Confirmation: Accept Details & Enter Dashboard
   const handleConfirmAndEnter = async () => {
     setLoading(true)
     try {
-      const finalEmail = email.trim() || (initialData.email && !initialData.email.endsWith('@student.vsb.edu.in') ? initialData.email : '')
-      const finalPhone = phone.trim() || initialData.phone || ''
-      const finalParentPhone = parentPhone.trim() || initialData.parentPhone || ''
-      const finalDob = dateOfBirth || initialData.dateOfBirth || ''
-
       const res = await fetch('/api/auth/student/complete-onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim() || initialData.name,
-          email: finalEmail || undefined,
-          phone: finalPhone || undefined,
-          parentPhone: finalParentPhone || undefined,
-          dateOfBirth: finalDob || undefined,
+          name: initialData.name,
           skipEmailVerification: true,
         }),
       })
       const data = await res.json()
-      setStep(4)
-      toast.success('Contact details saved!')
-      setTimeout(() => onComplete(res.ok && data.success ? data.user || {} : {}), 900)
+      toast.success('Details confirmed! Entering portal...')
+      setTimeout(() => onComplete(res.ok && data.success ? data.user || {} : {}), 500)
     } catch {
-      setStep(4)
-      toast.success('Details confirmed!')
-      setTimeout(() => onComplete({}), 900)
+      toast.success('Details confirmed! Entering portal...')
+      setTimeout(() => onComplete({}), 500)
     } finally {
       setLoading(false)
     }
   }
 
-  // Edit details -> Send OTP
-  const handleSaveAndSendOtp = async (e: React.FormEvent) => {
+  // Submit Official Correction Request to Admin
+  const handleSendCorrectionRequest = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !email.trim()) {
-      toast.error('Name and Email are required.')
+    if (!requestedValue.trim()) {
+      toast.error('Please enter the requested corrected value.')
       return
     }
-    if (parentPhone.trim() && !isWhatsapp) {
-      toast.error('Please provide a WhatsApp enabled number for important college alerts.')
+    if (!correctionReason.trim()) {
+      toast.error('Please provide a reason or note for the administrator.')
       return
     }
 
     setLoading(true)
     try {
-      const res = await fetch('/api/auth/student/send-email-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), name: name.trim(), regNo: initialData.registerNumber }),
-      })
-      const data = await res.json()
-      if (res.ok && data.success) {
-        toast.success(`OTP sent to ${email}`)
-        setStep(3)
-      } else {
-        toast.error(data.message || 'Failed to send OTP')
-      }
-    } catch (error) {
-      toast.error('An error occurred. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Verify OTP & Complete
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (otp.length !== 6) {
-      toast.error('Please enter a valid 6-digit OTP.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const res = await fetch('/api/auth/student/complete-onboarding', {
+      const res = await fetch('/api/students/profile-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim(),
-          parentPhone: parentPhone.trim(),
-          dateOfBirth: dateOfBirth || undefined,
-          otp: otp.trim(),
+          registerNumber: initialData.registerNumber,
+          studentName: initialData.name,
+          requestedData: {
+            [correctionCategory]: requestedValue.trim(),
+          },
+          currentData: {
+            name: initialData.name,
+            department: initialData.department,
+            year: initialData.year,
+            semester: initialData.semester,
+            section: initialData.section,
+            phone: initialData.phone,
+            parentPhone: initialData.parentPhone,
+          },
+          reason: `Requested ${correctionCategory.toUpperCase()} correction: ${correctionReason.trim()}`,
         }),
       })
+
       const data = await res.json()
       if (res.ok && data.success) {
-        toast.success('Details updated and confirmed!')
-        setStep(4)
-        setTimeout(() => onComplete(data.user || {}), 900)
+        setCorrectionSubmitted(true)
+        toast.success('Correction request submitted to Admin!')
       } else {
-        toast.error(data.message || 'Verification failed')
+        toast.error(data.message || 'Failed to submit correction request.')
       }
-    } catch (error) {
-      toast.error('An error occurred during verification.')
+    } catch {
+      toast.error('Network error submitting request.')
     } finally {
       setLoading(false)
     }
   }
 
-  const isEmailPlaceholder = !initialData.email || initialData.email.endsWith('@student.vsb.edu.in')
+  const cleanEmail =
+    initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
+      ? initialData.email
+      : null
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 overflow-hidden animate-fade-in">
-        <div className="h-1.5 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430]" />
+      <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden animate-fade-in">
+        {/* Top Header Accent */}
+        <div className="h-1.5 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#E7B93E]" />
 
-        {/* STEP 1: Quick Review & Contact Info Setup */}
-        {step === 1 && (
-          <div className="p-6 space-y-4">
-            <div>
-              <p className="text-[11px] font-bold text-[#1455D9] uppercase tracking-widest mb-1">
-                Student Profile Confirmation
-              </p>
-              <h2 className="text-lg font-extrabold text-gray-900">Review &amp; Contact Details</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Verify your academic details and provide your active contact numbers.
-              </p>
+        {!showCorrection ? (
+          /* READ-ONLY VIEW OF ADMIN-ENTERED PROFILE */
+          <div className="p-6 sm:p-7 space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#1455D9] text-[11px] font-extrabold uppercase tracking-wider mb-1 border border-blue-100">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#1455D9]" />
+                  <span>Official Academic Records</span>
+                </div>
+                <h2 className="text-xl font-black text-gray-900 tracking-tight">Student Profile Verification</h2>
+                <p className="text-xs text-gray-500 mt-0.5 font-medium">
+                  Review the official information entered by the department administrator.
+                </p>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden bg-gray-50/50">
-              <div className="flex items-center justify-between px-3.5 py-2">
-                <span className="text-xs text-gray-500 font-medium">Register No.</span>
-                <span className="font-bold text-[#1455D9] font-mono text-sm">{initialData.registerNumber}</span>
+            {/* Read-Only Details Card */}
+            <div className="rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden bg-gray-50/50 shadow-xs">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/40">
+                <span className="text-xs font-semibold text-gray-500">Register Number</span>
+                <span className="font-mono font-black text-[#1455D9] text-sm tracking-wide">
+                  {initialData.registerNumber}
+                </span>
               </div>
-              <div className="flex items-center justify-between px-3.5 py-2">
-                <span className="text-xs text-gray-500 font-medium">Department</span>
-                <span className="font-bold text-gray-800 text-xs text-right max-w-[65%]">{initialData.department}</span>
+
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs font-semibold text-gray-500">Student Name</span>
+                <span className="font-black text-gray-900 text-sm">
+                  {initialData.name || '—'}
+                </span>
               </div>
-              <div className="flex items-center justify-between px-3.5 py-2 bg-blue-50/50">
-                <span className="text-xs text-gray-500 font-medium">Year / Sem / Sec</span>
+
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs font-semibold text-gray-500">Department</span>
+                <span className="font-bold text-gray-800 text-xs text-right max-w-[65%]">
+                  {initialData.department}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/40">
+                <span className="text-xs font-semibold text-gray-500">Year / Semester / Section</span>
                 <span className="font-bold text-[#1455D9] text-xs">
                   Year {initialData.year} &middot; Sem {initialData.semester} &middot; Sec {initialData.section}
                 </span>
               </div>
-              <div className="flex items-center justify-between px-3.5 py-2">
-                <span className="text-xs text-gray-500 font-medium">Full Name</span>
-                <span className="font-bold text-gray-900 text-xs">{initialData.name || '—'}</span>
-              </div>
-            </div>
 
-            {/* Quick Contact Numbers Input Fields */}
-            <div className="space-y-3 pt-1">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  📱 Student Mobile Number
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  👨‍👩‍👧 Parent / Guardian Mobile Number
-                </label>
-                <input
-                  type="tel"
-                  value={parentPhone}
-                  onChange={(e) => setParentPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  ✉️ Personal Email Address (Optional)
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="personal.email@gmail.com"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={handleConfirmAndEnter}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-bold text-sm py-2.5 rounded-xl shadow-md transition-all active:scale-[0.99]"
-              >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4" />
-                )}
-                {loading ? 'Saving...' : 'Save & Enter Dashboard'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStep(1.5)}
-                disabled={loading}
-                className="w-full text-xs font-semibold text-gray-500 hover:text-[#1455D9] transition-colors py-1"
-              >
-                Need to edit department or date of birth? Click here
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 1.5: Edit Details */}
-        {step === 1.5 && (
-          <form onSubmit={handleSaveAndSendOtp} className="p-6 space-y-5">
-            <div>
-              <p className="text-[11px] font-semibold text-[#1455D9] uppercase tracking-widest mb-1">
-                Edit Details
-              </p>
-              <h2 className="text-lg font-bold text-gray-900">Update Your Profile</h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                We will send an OTP to your email to verify these changes.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Full Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Email Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="personal.email@example.com"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Your Phone</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white"
-                  />
+              {initialData.advisorName && (
+                <div className="flex items-center justify-between px-4 py-2.5">
+                  <span className="text-xs font-semibold text-gray-500">Class Advisor</span>
+                  <span className="font-bold text-gray-800 text-xs">
+                    {initialData.advisorName}
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white"
-                  />
-                </div>
+              )}
+
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs font-semibold text-gray-500">Personal Phone</span>
+                <span className="font-mono font-bold text-gray-800 text-xs">
+                  {initialData.phone ? `📱 ${initialData.phone}` : <span className="text-gray-400 font-normal italic">Not specified</span>}
+                </span>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Parent / Guardian Mobile
-                </label>
-                <input
-                  type="tel"
-                  value={parentPhone}
-                  onChange={(e) => setParentPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white"
-                />
+              <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50/40">
+                <span className="text-xs font-semibold text-gray-500">Parent / Guardian Contact</span>
+                <span className="font-mono font-bold text-gray-800 text-xs">
+                  {initialData.parentPhone ? `👨‍👩‍👧 ${initialData.parentPhone}` : <span className="text-gray-400 font-normal italic">Not specified</span>}
+                </span>
               </div>
 
-              {parentPhone.trim() && (
-                <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                  <label className="flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isWhatsapp}
-                      onChange={(e) => setIsWhatsapp(e.target.checked)}
-                      className="mt-0.5 rounded text-[#1455D9] focus:ring-[#1455D9]"
-                    />
-                    <span className="text-xs text-amber-900 font-medium">
-                      I confirm this is a valid WhatsApp number.
-                    </span>
-                  </label>
-                  {!isWhatsapp && (
-                    <p className="mt-2 text-[10px] text-amber-700 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      Please provide a WhatsApp enabled number for important college alerts.
-                    </p>
+              <div className="flex items-center justify-between px-4 py-2.5">
+                <span className="text-xs font-semibold text-gray-500">Email Address</span>
+                <span className="font-medium text-gray-800 text-xs truncate max-w-[60%]">
+                  {cleanEmail ? (
+                    <span className="text-[#1455D9] font-bold">{cleanEmail}</span>
+                  ) : (
+                    <span className="text-amber-600 font-semibold italic text-[11px]">Email not registered yet</span>
                   )}
+                </span>
+              </div>
+
+              {initialData.dateOfBirth && (
+                <div className="flex items-center justify-between px-4 py-2.5">
+                  <span className="text-xs font-semibold text-gray-500">Date of Birth</span>
+                  <span className="font-mono font-bold text-gray-800 text-xs">
+                    {initialData.dateOfBirth}
+                  </span>
                 </div>
               )}
             </div>
 
-            <div className="flex gap-3">
+            {/* Action Buttons */}
+            <div className="space-y-3 pt-1">
               <button
                 type="button"
-                onClick={() => setStep(1)}
-                className="w-1/3 px-4 py-2.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                onClick={handleConfirmAndEnter}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] active:scale-[0.99] disabled:opacity-60 text-white font-extrabold text-sm py-3 rounded-2xl shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
               >
-                Back
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-[#F4C430]" />
+                )}
+                <span>All Details Verified · Enter Dashboard</span>
               </button>
+
               <button
-                type="submit"
-                disabled={loading || (parentPhone.trim().length > 0 && !isWhatsapp)}
-                className="flex-1 flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
+                type="button"
+                onClick={() => setShowCorrection(true)}
+                className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-slate-600 hover:text-[#1455D9] transition-colors py-1 cursor-pointer"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save & Send OTP'}
+                <FileEdit className="w-3.5 h-3.5 text-[#1455D9]" />
+                <span>Found an error? Request Correction from Admin</span>
               </button>
             </div>
-          </form>
-        )}
-
-        {/* STEP 3: OTP Verification */}
-        {step === 3 && (
-          <form onSubmit={handleVerifyOtp} className="p-6 space-y-5 text-center">
-            <div className="w-12 h-12 rounded-full bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto mb-2">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Verify Email</h2>
-              <p className="text-xs text-gray-500 mt-1">
-                Enter the 6-digit code sent to <br /><span className="font-semibold text-gray-800">{email}</span>
-              </p>
-            </div>
-
-            <div className="pt-2">
-              <input
-                type="text"
-                maxLength={6}
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                className="w-full text-center tracking-[0.5em] font-mono text-2xl px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-[#1455D9]/10 bg-gray-50 focus:bg-white"
-              />
+          </div>
+        ) : (
+          /* CORRECTION REQUEST TO ADMIN MODAL */
+          <div className="p-6 sm:p-7 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-black text-gray-900">Request Profile Correction</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Send an official edit request to the department administrator.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowCorrection(false)
+                  setCorrectionSubmitted(false)
+                }}
+                className="p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading || otp.length !== 6}
-              className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify & Enter Dashboard'}
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => { setStep(1.5); setOtp(''); }}
-              className="w-full text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
-            >
-              Change Email Address
-            </button>
-          </form>
-        )}
+            {correctionSubmitted ? (
+              <div className="py-8 text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <p className="font-extrabold text-gray-900 text-base">Correction Request Sent!</p>
+                  <p className="text-xs text-gray-500 max-w-xs mx-auto">
+                    Your request has been forwarded to the department administrator for verification.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleConfirmAndEnter}
+                  className="px-6 py-2.5 bg-[#1455D9] hover:bg-[#1044b5] text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                >
+                  Proceed to Dashboard
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSendCorrectionRequest} className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Select Field to Correct
+                  </label>
+                  <select
+                    value={correctionCategory}
+                    onChange={(e) => setCorrectionCategory(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#1455D9] bg-white"
+                  >
+                    <option value="name">Full Name</option>
+                    <option value="phone">Personal Mobile Number</option>
+                    <option value="parentPhone">Parent / Guardian Mobile Number</option>
+                    <option value="email">Personal Email Address</option>
+                    <option value="dateOfBirth">Date of Birth</option>
+                    <option value="section">Section / Semester</option>
+                  </select>
+                </div>
 
-        {/* STEP 4: Success */}
-        {step === 4 && (
-          <div className="p-10 text-center space-y-3">
-            <div className="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-7 h-7" />
-            </div>
-            <p className="font-bold text-gray-800">Details Confirmed!</p>
-            <p className="text-xs text-gray-500">Opening your dashboard...</p>
-            <div className="w-8 h-8 border-[3px] border-[#1455D9] border-t-transparent rounded-full animate-spin mx-auto" />
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Corrected Value <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={requestedValue}
+                    onChange={(e) => setRequestedValue(e.target.value)}
+                    placeholder="Enter the correct value"
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Reason / Note for Admin <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={correctionReason}
+                    onChange={(e) => setCorrectionReason(e.target.value)}
+                    placeholder="Please mention why this needs to be updated..."
+                    className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] bg-white resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowCorrection(false)}
+                    className="w-1/3 px-3 py-2.5 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-bold text-xs py-2.5 rounded-xl shadow-md transition-all"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    <span>Submit to Admin</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
-
       </div>
     </div>
   )
