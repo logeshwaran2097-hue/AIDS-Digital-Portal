@@ -58,7 +58,6 @@ export function StudentSettingsView({
     }
     return 'light'
   })
-  const [defaultLanding, setDefaultLanding] = useState('dashboard')
   const [showSavedToast, setShowSavedToast] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -510,51 +509,44 @@ export function StudentSettingsView({
               <Laptop className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-sm text-[#071A3D]">Display &amp; Interface Preferences</h3>
-              <p className="text-[11px] text-gray-400">Customize dashboard starting views and visual themes</p>
+              <h3 className="font-black text-sm text-[#071A3D]">Display &amp; Theme Preferences</h3>
+              <p className="text-[11px] text-gray-400">Choose your preferred visual theme for the student portal</p>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 text-xs">
-            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
-              <label className="font-bold text-[#071A3D] block">Default Starting Module</label>
-              <select
-                value={defaultLanding}
-                onChange={(e) => setDefaultLanding(e.target.value)}
-                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
-              >
-                <option value="dashboard">Home Dashboard Overview</option>
-                <option value="attendance">Biometric Attendance Log</option>
-                <option value="study">Study Details &amp; Syllabus</option>
-                <option value="resources">Digital Library &amp; E-Books</option>
-              </select>
-              <p className="text-[10px] text-gray-400">Page to load after student sign-in</p>
+          <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-xs text-[#071A3D] block">Color Theme</label>
+              <span className="text-[10px] text-gray-400 font-medium">Applied immediately across all devices</span>
             </div>
-
-            <div className="p-4 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
-              <label className="font-bold text-[#071A3D] block">Theme Appearance</label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {[
-                  { id: 'light', label: 'Light' },
-                  { id: 'midnight', label: 'Navy' },
-                  { id: 'system', label: 'System' },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => handleThemeChange(t.id as any)}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {[
+                { id: 'light', label: 'Light Mode', desc: 'Clean white aesthetic' },
+                { id: 'midnight', label: 'Midnight Navy', desc: 'Deep dark blue theme' },
+                { id: 'system', label: 'System Default', desc: 'Syncs with device OS' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => handleThemeChange(t.id as any)}
+                  className={cn(
+                    'p-3 rounded-2xl text-left border transition-all cursor-pointer space-y-1',
+                    themeMode === t.id
+                      ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-md shadow-blue-500/20'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                  )}
+                >
+                  <p className="font-bold text-xs leading-none">{t.label}</p>
+                  <p
                     className={cn(
-                      'py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer text-center',
-                      themeMode === t.id
-                        ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'
+                      'text-[10px] font-medium',
+                      themeMode === t.id ? 'text-blue-100' : 'text-gray-400'
                     )}
                   >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[10px] text-gray-400">Portal color scheme palette</p>
+                    {t.desc}
+                  </p>
+                </button>
+              ))}
             </div>
           </div>
         </CardContent>
