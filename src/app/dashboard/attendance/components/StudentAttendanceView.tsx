@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { ApplyODPermissionModal } from './ApplyODPermissionModal'
 
 export interface SubjectAttendanceItem {
   code: string
@@ -313,90 +314,14 @@ export function StudentAttendanceView({
         </CardContent>
       </Card>
 
-      {/* On-Duty / Medical Leave Modal */}
-      {showODModal && (
-        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-gray-200 space-y-5 animate-scale-up">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
-                  Institutional Permission
-                </span>
-              </div>
-              <h3 className="text-xl font-black text-[#071A3D]">Apply for On-Duty (OD) / Leave</h3>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Submit formal OD application to Class Advisor &amp; HOD for approval
-              </p>
-            </div>
-
-            {odSubmitted ? (
-              <div className="p-4 rounded-2xl bg-green-50 border border-green-200 text-center space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto" />
-                <p className="text-xs font-bold text-green-800">OD Request Dispatched Successfully!</p>
-                <p className="text-[10px] text-green-700">Forwarded to Class Advisor for digital approval.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleODSubmit} className="space-y-4">
-                <div>
-                  <label className="text-[11px] font-bold text-gray-600 block mb-1">Application Type</label>
-                  <select className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 font-semibold focus:outline-none focus:border-[#1455D9]">
-                    <option>Technical Hackathon / Competition OD</option>
-                    <option>Paper Presentation / Conference OD</option>
-                    <option>Sports / Cultural Event OD</option>
-                    <option>Medical Leave (ML)</option>
-                    <option>Official College Duty</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-600 block mb-1">From Date</label>
-                    <input
-                      type="date"
-                      required
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 font-semibold focus:outline-none focus:border-[#1455D9]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-600 block mb-1">To Date</label>
-                    <input
-                      type="date"
-                      required
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 font-semibold focus:outline-none focus:border-[#1455D9]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[11px] font-bold text-gray-600 block mb-1">Reason / Event Details</label>
-                  <textarea
-                    rows={3}
-                    required
-                    placeholder="Provide details of event, college name, or medical explanation..."
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowODModal(false)}
-                    className="px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-700 cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 rounded-xl bg-[#1455D9] hover:bg-[#0f44b3] text-white text-xs font-bold shadow-md cursor-pointer"
-                  >
-                    Submit Application
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Dynamic Proof-Based On-Duty (OD) / Leave Modal */}
+      <ApplyODPermissionModal
+        isOpen={showODModal}
+        onClose={() => setShowODModal(false)}
+        student={student}
+        userName={user.name}
+      />
     </div>
   )
 }
+
