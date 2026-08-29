@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
@@ -147,6 +148,10 @@ export async function POST(request: Request) {
         advisorName: advisorName ? String(advisorName).trim() : null,
       } as any,
     })
+
+    // Invalidate caches
+    revalidatePath('/admin/students')
+    revalidatePath('/admin/dashboard')
 
     return NextResponse.json({
       success: true,
@@ -340,6 +345,10 @@ export async function PUT(request: Request) {
       } as any,
     })
 
+    // Invalidate caches
+    revalidatePath('/admin/students')
+    revalidatePath('/admin/dashboard')
+
     return NextResponse.json({
       success: true,
       message: 'Student record saved successfully in database',
@@ -408,6 +417,10 @@ export async function DELETE(request: Request) {
       // Direct user delete
       await prisma.user.delete({ where: { id: id } }).catch(() => null)
     }
+
+    // Invalidate caches
+    revalidatePath('/admin/students')
+    revalidatePath('/admin/dashboard')
 
     return NextResponse.json({
       success: true,
