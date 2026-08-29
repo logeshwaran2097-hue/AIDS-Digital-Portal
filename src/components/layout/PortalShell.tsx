@@ -119,7 +119,11 @@ export function Sidebar({ role }: { role: string }) {
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-navy text-white hidden lg:flex flex-col">
       <div className="flex items-center gap-3 p-5 border-b border-white/10">
-        <Image src="/logo.svg" alt="V.S.B. Engineering College Logo" width={40} height={40} className="border-rounded-lg" />
+        <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_12px_rgba(231,185,62,0.4)] flex items-center justify-center shrink-0">
+          <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden">
+            <Image src="/college-emblem.png" alt="V.S.B. Engineering College Logo" width={38} height={38} className="object-contain" priority />
+          </div>
+        </div>
         <div className="min-w-0">
           <p className="text-sm font-bold text-white leading-tight">V.S.B. Engineering College</p>
           <p className="text-xs text-gold">AI &amp; DS Digital Portal</p>
@@ -174,7 +178,11 @@ export function TopBar({ role, userName }: { role: string; userName: string }) {
           </svg>
         </button>
         <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="College Logo" width={32} height={32} className="rounded-full" />
+          <div className="w-8 h-8 rounded-full p-0.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_8px_rgba(231,185,62,0.4)] flex items-center justify-center shrink-0">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden">
+              <Image src="/college-emblem.png" alt="College Logo" width={30} height={30} className="object-contain" priority />
+            </div>
+          </div>
           <span className="hidden sm:inline text-sm font-semibold text-navy">V.S.B. AI &amp; DS Portal</span>
         </div>
         <div className="ml-auto flex items-center gap-2">

@@ -1,8 +1,10 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getSession, createToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP } from '@/lib/utils'
 import bcrypt from 'bcryptjs'
+
+import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,31 +18,55 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification } = body
 
+    const isCustomEmail = email && !email.endsWith('@student.vsb.edu.in') && email.includes('@')
+
     // ─────────────────────────────────────────────────────────────────────
     // FAST PATH: Student confirms details only — no email/OTP/password required
     // ─────────────────────────────────────────────────────────────────────
     if (skipEmailVerification) {
+      const userUpdateData: any = {
+        name: name ? name.trim() : session.name,
+        mustChangePassword: false,
+        updatedAt: new Date(),
+      }
+      if (phone !== undefined) userUpdateData.phone = phone ? phone.trim() : null
+      if (isCustomEmail) {
+        userUpdateData.email = email.trim().toLowerCase()
+        userUpdateData.emailVerified = true
+      }
+
       const updatedUser = await prisma.user.update({
         where: { id: session.userId },
-        data: {
-          name: name ? name.trim() : session.name,
-          phone: phone ? phone.trim() : undefined,
-          mustChangePassword: false,
-          updatedAt: new Date(),
-        },
+        data: userUpdateData,
       }).catch(() => null)
 
       // Update DOB and Parent Phone in Student record if provided
       const studentUpdateData: any = {}
       if (dateOfBirth) studentUpdateData.dateOfBirth = new Date(dateOfBirth)
-      if (parentPhone) studentUpdateData.parentPhone = parentPhone.trim()
+      if (parentPhone !== undefined) studentUpdateData.parentPhone = parentPhone ? parentPhone.trim() : null
 
       if (Object.keys(studentUpdateData).length > 0) {
-        await prisma.student.update({
+        let student = await prisma.student.update({
           where: { userId: session.userId },
           data: studentUpdateData,
-        }).catch(() => {})
+        }).catch(() => null)
+
+        if (!student && session.registerNumber) {
+          await prisma.student.update({
+            where: { registerNumber: session.registerNumber.trim().toUpperCase() },
+            data: {
+              ...studentUpdateData,
+              userId: session.userId,
+            },
+          }).catch(() => {})
+        }
       }
+
+      // Invalidate admin cache so admin sees newly entered contact details immediately
+      revalidatePath('/admin/students')
+      revalidatePath('/admin/dashboard')
+      revalidatePath('/dashboard')
+      revalidatePath('/dashboard/profile')
 
       // Audit log
       await prisma.auditLog.create({
@@ -48,7 +74,7 @@ export async function POST(request: NextRequest) {
           userName: updatedUser?.name || session.name || 'Student',
           action: 'onboarding_details_confirmed',
           module: 'student_portal',
-          details: `Student ${session.registerNumber || name} confirmed their details and entered the portal.`,
+          details: `Student ${session.registerNumber || name} confirmed their contact details and entered the portal.`,
           status: 'success',
         },
       }).catch(() => {})
@@ -56,7 +82,7 @@ export async function POST(request: NextRequest) {
       // Re-issue token so mustChangePassword is false
       const newToken = await createToken({
         userId: session.userId,
-        email: session.email,
+        email: updatedUser?.email || session.email,
         role: 'student',
         name: updatedUser?.name || session.name,
         registerNumber: session.registerNumber,

@@ -44,21 +44,30 @@ export function StudentOnboardingModal({
 
   if (!isOpen) return null
 
-  // Fast path (Skip editing)
+  // Fast path (Save and enter)
   const handleConfirmAndEnter = async () => {
     setLoading(true)
     try {
+      const finalEmail = email.trim() || (initialData.email && !initialData.email.endsWith('@student.vsb.edu.in') ? initialData.email : '')
+      const finalPhone = phone.trim() || initialData.phone || ''
+      const finalParentPhone = parentPhone.trim() || initialData.parentPhone || ''
+      const finalDob = dateOfBirth || initialData.dateOfBirth || ''
+
       const res = await fetch('/api/auth/student/complete-onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: initialData.name,
+          name: name.trim() || initialData.name,
+          email: finalEmail || undefined,
+          phone: finalPhone || undefined,
+          parentPhone: finalParentPhone || undefined,
+          dateOfBirth: finalDob || undefined,
           skipEmailVerification: true,
         }),
       })
       const data = await res.json()
       setStep(4)
-      toast.success('Details confirmed!')
+      toast.success('Contact details saved!')
       setTimeout(() => onComplete(res.ok && data.success ? data.user || {} : {}), 900)
     } catch {
       setStep(4)
@@ -139,101 +148,111 @@ export function StudentOnboardingModal({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-xl border border-gray-200 overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-[#1455D9] to-[#22C7E8]" />
+  const isEmailPlaceholder = !initialData.email || initialData.email.endsWith('@student.vsb.edu.in')
 
-        {/* STEP 1: Read Only view */}
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-200 overflow-hidden animate-fade-in">
+        <div className="h-1.5 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430]" />
+
+        {/* STEP 1: Quick Review & Contact Info Setup */}
         {step === 1 && (
-          <div className="p-6 space-y-5">
+          <div className="p-6 space-y-4">
             <div>
-              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">
-                First-Time Verification
+              <p className="text-[11px] font-bold text-[#1455D9] uppercase tracking-widest mb-1">
+                Student Profile Confirmation
               </p>
-              <h2 className="text-lg font-bold text-gray-900">Check Your Details</h2>
+              <h2 className="text-lg font-extrabold text-gray-900">Review &amp; Contact Details</h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                Verify the information below is correct.
+                Verify your academic details and provide your active contact numbers.
               </p>
             </div>
 
-            <div className="rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
-                <span className="text-xs text-gray-500">Register No.</span>
-                <span className="font-semibold text-gray-800 font-mono text-sm">{initialData.registerNumber}</span>
+            <div className="rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden bg-gray-50/50">
+              <div className="flex items-center justify-between px-3.5 py-2">
+                <span className="text-xs text-gray-500 font-medium">Register No.</span>
+                <span className="font-bold text-[#1455D9] font-mono text-sm">{initialData.registerNumber}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5">
-                <span className="text-xs text-gray-500">Department</span>
-                <span className="font-semibold text-gray-800 text-xs text-right max-w-[60%]">{initialData.department}</span>
+              <div className="flex items-center justify-between px-3.5 py-2">
+                <span className="text-xs text-gray-500 font-medium">Department</span>
+                <span className="font-bold text-gray-800 text-xs text-right max-w-[65%]">{initialData.department}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
-                <span className="text-xs text-gray-500">Year / Sem / Sec</span>
-                <span className="font-semibold text-[#1455D9] text-xs">
+              <div className="flex items-center justify-between px-3.5 py-2 bg-blue-50/50">
+                <span className="text-xs text-gray-500 font-medium">Year / Sem / Sec</span>
+                <span className="font-bold text-[#1455D9] text-xs">
                   Year {initialData.year} &middot; Sem {initialData.semester} &middot; Sec {initialData.section}
                 </span>
               </div>
-              {initialData.batch && (
-                <div className="flex items-center justify-between px-4 py-2.5">
-                  <span className="text-xs text-gray-500">Batch</span>
-                  <span className="font-semibold text-gray-800 text-xs">{initialData.batch}</span>
-                </div>
-              )}
-              {initialData.advisorName && (
-                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
-                  <span className="text-xs text-gray-500">Class Advisor</span>
-                  <span className="font-semibold text-gray-800 text-xs">{initialData.advisorName}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between px-4 py-2.5">
-                <span className="text-xs text-gray-500">Name</span>
-                <span className="font-semibold text-gray-800 text-xs">{initialData.name || '—'}</span>
+              <div className="flex items-center justify-between px-3.5 py-2">
+                <span className="text-xs text-gray-500 font-medium">Full Name</span>
+                <span className="font-bold text-gray-900 text-xs">{initialData.name || '—'}</span>
               </div>
-              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
-                <span className="text-xs text-gray-500">Email</span>
-                <span className="font-semibold text-gray-800 text-xs">{initialData.email || '—'}</span>
-              </div>
-              {initialData.phone && (
-                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
-                  <span className="text-xs text-gray-500">Phone</span>
-                  <span className="font-semibold text-gray-800 text-xs">{initialData.phone}</span>
-                </div>
-              )}
-              {initialData.dateOfBirth && (
-                <div className="flex items-center justify-between px-4 py-2.5">
-                  <span className="text-xs text-gray-500">Date of Birth</span>
-                  <span className="font-semibold text-gray-800 text-xs">{initialData.dateOfBirth}</span>
-                </div>
-              )}
-              {initialData.parentPhone && (
-                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
-                  <span className="text-xs text-gray-500">Parent Mobile</span>
-                  <span className="font-semibold text-gray-800 text-xs">{initialData.parentPhone}</span>
-                </div>
-              )}
             </div>
 
-            <div className="flex flex-col gap-3">
+            {/* Quick Contact Numbers Input Fields */}
+            <div className="space-y-3 pt-1">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  📱 Student Mobile Number
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  👨‍👩‍👧 Parent / Guardian Mobile Number
+                </label>
+                <input
+                  type="tel"
+                  value={parentPhone}
+                  onChange={(e) => setParentPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  ✉️ Personal Email Address (Optional)
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="personal.email@gmail.com"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/10 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={handleConfirmAndEnter}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-semibold text-sm py-2.5 rounded-xl transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-bold text-sm py-2.5 rounded-xl shadow-md transition-all active:scale-[0.99]"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <CheckCircle2 className="w-4 h-4" />
                 )}
-                {loading ? 'Confirming...' : 'All Correct — Enter Dashboard'}
+                {loading ? 'Saving...' : 'Save & Enter Dashboard'}
               </button>
 
               <button
                 type="button"
                 onClick={() => setStep(1.5)}
                 disabled={loading}
-                className="w-full text-xs font-semibold text-[#1455D9] hover:text-[#0a3287] transition-colors"
+                className="w-full text-xs font-semibold text-gray-500 hover:text-[#1455D9] transition-colors py-1"
               >
-                Information is incorrect? Edit Details
+                Need to edit department or date of birth? Click here
               </button>
             </div>
           </div>

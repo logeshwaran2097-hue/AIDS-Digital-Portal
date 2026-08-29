@@ -40,6 +40,7 @@ export async function GET(request: Request) {
         name: u?.name || s.registerNumber,
         email: cleanEmail,
         phone: u?.phone || '',
+        parentPhone: (s as any).parentPhone || '',
         dateOfBirth: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,
         department: s.department || 'Artificial Intelligence & Data Science',
         year: s.year,
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
       email,
       password,
       phone,
+      parentPhone,
       dateOfBirth,
       department = 'Artificial Intelligence & Data Science',
       year = 1,
@@ -146,6 +148,7 @@ export async function POST(request: Request) {
         batch: batch ? String(batch).trim() : null,
         section: section || 'A',
         advisorName: advisorName ? String(advisorName).trim() : null,
+        parentPhone: parentPhone ? String(parentPhone).trim() : null,
       } as any,
     })
 
@@ -194,6 +197,7 @@ export async function PUT(request: Request) {
       email,
       password,
       phone,
+      parentPhone,
       dateOfBirth,
       department,
       year,
@@ -247,6 +251,7 @@ export async function PUT(request: Request) {
           ...(batch !== undefined ? { batch: String(batch).trim() } : {}),
           ...(section !== undefined ? { section: section.trim() } : {}),
           ...(advisorName !== undefined ? { advisorName: String(advisorName).trim() } : {}),
+          ...(parentPhone !== undefined ? { parentPhone: parentPhone ? String(parentPhone).trim() : null } : {}),
           ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
         } as any,
       })
@@ -277,6 +282,7 @@ export async function PUT(request: Request) {
           name: updatedUser.name,
           email: isEmailCustom ? updatedUser.email : '',
           phone: updatedUser.phone || '',
+          parentPhone: (updatedStudent as any).parentPhone || '',
           dateOfBirth: updatedStudent.dateOfBirth ? updatedStudent.dateOfBirth.toISOString().split('T')[0] : null,
           department: updatedStudent.department,
           year: updatedStudent.year,

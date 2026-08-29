@@ -486,19 +486,23 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         {/* Drawer Header with Official Emblem */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-white p-0.5 shadow-md flex items-center justify-center shrink-0">
-              <Image
-                src="/college-emblem.png"
-                alt="V.S.B. Engineering College Official Emblem"
-                width={36}
-                height={36}
-                className="w-full h-full object-contain rounded-full"
-                priority
-              />
+            <div className="relative group">
+              <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_16px_rgba(231,185,62,0.45)] ring-2 ring-white/30 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_22px_rgba(231,185,62,0.7)]">
+                <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+                  <Image
+                    src="/college-emblem.png"
+                    alt="V.S.B. Engineering College Official Emblem"
+                    width={42}
+                    height={42}
+                    className="w-full h-full object-contain rounded-full drop-shadow-xs"
+                    priority
+                  />
+                </div>
+              </div>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-white leading-tight truncate">V.S.B. Engineering</p>
-              <p className="text-xs text-[#22C7E8] font-semibold truncate">AI &amp; DS Department</p>
+              <p className="text-sm font-black text-white leading-tight tracking-wide truncate">V.S.B. ENGINEERING</p>
+              <p className="text-xs text-[#22C7E8] font-bold tracking-wider truncate">AI &amp; DS DEPARTMENT</p>
             </div>
           </div>
           {/* Close button on mobile */}
@@ -657,14 +661,18 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
             </button>
 
             <Link href={role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
-              <Image
-                src="/college-emblem.png"
-                alt="V.S.B. Emblem"
-                width={32}
-                height={32}
-                className="rounded-full object-contain"
-              />
-              <span className="text-sm font-bold text-[#071A3D]">VSB AI &amp; DS</span>
+              <div className="w-8 h-8 rounded-full p-0.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_10px_rgba(231,185,62,0.4)] flex items-center justify-center shrink-0">
+                <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden">
+                  <Image
+                    src="/college-emblem.png"
+                    alt="V.S.B. Emblem"
+                    width={30}
+                    height={30}
+                    className="rounded-full object-contain"
+                  />
+                </div>
+              </div>
+              <span className="text-sm font-black text-[#071A3D] tracking-tight">VSB AI &amp; DS</span>
             </Link>
           </div>
 
