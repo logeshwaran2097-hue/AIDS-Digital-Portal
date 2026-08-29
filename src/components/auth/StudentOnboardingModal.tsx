@@ -19,6 +19,7 @@ interface StudentOnboardingModalProps {
     dateOfBirth?: string
     advisorName?: string
     batch?: string
+    parentPhone?: string
   }
 }
 
@@ -104,10 +105,20 @@ export function StudentOnboardingModal({
                 <span className="text-xs text-gray-500">Name</span>
                 <span className="font-semibold text-gray-800 text-xs">{initialData.name || '—'}</span>
               </div>
+              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                <span className="text-xs text-gray-500">Email</span>
+                <span className="font-semibold text-gray-800 text-xs">{initialData.email || '—'}</span>
+              </div>
               {initialData.phone && (
-                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs text-gray-500">Phone</span>
                   <span className="font-semibold text-gray-800 text-xs">{initialData.phone}</span>
+                </div>
+              )}
+              {initialData.parentPhone && (
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                  <span className="text-xs text-gray-500">Parent Mobile</span>
+                  <span className="font-semibold text-gray-800 text-xs">{initialData.parentPhone}</span>
                 </div>
               )}
               {initialData.dateOfBirth && (

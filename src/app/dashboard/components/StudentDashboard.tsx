@@ -135,6 +135,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             : undefined,
           advisorName: (data.student as any).advisorName || undefined,
           batch: (data.student as any).batch || undefined,
+          parentPhone: (data.student as any).parentPhone || undefined,
         }}
       />
 

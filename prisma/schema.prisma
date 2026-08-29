@@ -39,6 +39,7 @@ model Student {
   section        String
   batch          String?
   advisorName    String?
+  parentPhone    String?
 
   @@index([registerNumber])
   @@index([department])
