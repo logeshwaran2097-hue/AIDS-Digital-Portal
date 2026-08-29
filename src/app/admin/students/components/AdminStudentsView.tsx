@@ -45,6 +45,7 @@ export interface StudentRecord {
   section: string
   batch?: string | null
   advisorName?: string | null
+  parentPhone?: string | null
   status: string
 }
 
