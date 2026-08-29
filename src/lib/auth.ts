@@ -274,20 +274,7 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     }).catch(() => {})
   }
 
-  // 7. Check if password must be changed (temp password flow)
-  const mustChangePassword = user.mustChangePassword
-  const seventyTwoDaysMs = 72 * 24 * 60 * 60 * 1000
-  const passwordExpiryElapsed = mustChangePassword && user.lastLogin && new Date().getTime() - new Date(user.lastLogin).getTime() > seventyTwoDaysMs
-
-  // If password expiry elapsed, reset mustChangePassword state
-  if (passwordExpiryElapsed) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { mustChangePassword: false },
-    }).catch(() => {})
-  }
-
-  // 8. Verify Password
+  // 7. Verify Password
   let isValid = false
   let passwordChangeRequired = false
 
@@ -361,18 +348,12 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     } catch {}
   }
 
-  // G. Handle mustChangePassword logic
-  if (mustChangePassword && !passwordChangeRequired) {
-    // If this is a temp password login attempt
-    if (isValid && !passwordExpiryElapsed) {
+  // G. Handle mustChangePassword logic (temp password flow)
+  // If mustChangePassword is set, allow login but flag that password change is required
+  if (user.mustChangePassword && !passwordChangeRequired) {
+    if (isValid) {
       // Allow login but require password change
       passwordChangeRequired = true
-      // Don't mark as invalid - just flag that change is needed
-    } else if (!isValid) {
-      // Temp password invalid - return error
-      if (!isValid) {
-        return { success: false, message: 'Invalid Register Number or Password. Password change required.' }
-      }
     }
   }
 
