@@ -132,36 +132,7 @@ export function StudentProfileView({
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'personal' | 'academic' | 'kpis'>('personal')
   const [formData, setFormData] = useState<StudentFullProfile>(defaultProfile)
-  const [changeReason, setChangeReason] = useState('')
   const [loading, setLoading] = useState(false)
-  const [requests, setRequests] = useState<ChangeRequest[]>([])
-  const [loadingRequests, setLoadingRequests] = useState(false)
-
-  // Fetch pending/past requests from database
-  const fetchRequests = async () => {
-    try {
-      setLoadingRequests(true)
-      const res = await fetch(`/api/students/profile-requests?registerNumber=${regNo}`)
-      const data = await res.json()
-      if (data.success && Array.isArray(data.requests)) {
-        setRequests(data.requests)
-
-        // If the latest request was recently approved, apply changes to active profile
-        const latestApproved = data.requests.find((r: ChangeRequest) => r.status === 'approved')
-        if (latestApproved && latestApproved.requestedData) {
-          setProfile((prev) => {
-            const updated = { ...prev, ...latestApproved.requestedData }
-            if (typeof window !== 'undefined') {
-              localStorage.setItem(storageKey, JSON.stringify(updated))
-            }
-            return updated
-          })
-        }
-      }
-    } catch {} finally {
-      setLoadingRequests(false)
-    }
-  }
 
   useEffect(() => {
     // Load custom saved profile from localStorage
@@ -175,13 +146,11 @@ export function StudentProfileView({
         }
       } catch {}
     }
-    fetchRequests()
   }, [regNo, storageKey])
 
   const handleOpenEdit = (tab: 'personal' | 'academic' | 'kpis' = 'personal') => {
     setActiveTab(tab)
     setFormData(profile)
-    setChangeReason('')
     setIsEditOpen(true)
   }
 
@@ -201,52 +170,48 @@ export function StudentProfileView({
     })
   }
 
-  // Submit edit request for Admin Approval
-  const handleSubmitPermissionRequest = async (e: React.FormEvent) => {
+  // Directly save profile changes to state, localStorage, and DB
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      const res = await fetch('/api/students/profile-requests', {
-        method: 'POST',
+      const updatedProfile = { ...formData }
+      setProfile(updatedProfile)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(storageKey, JSON.stringify(updatedProfile))
+      }
+
+      // Persist directly to database
+      await fetch('/api/students', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          registerNumber: profile.registerNumber,
-          studentName: formData.name,
-          requestedData: formData,
-          currentData: profile,
-          reason: changeReason.trim() || 'Student submitted profile modifications for official record verification.',
+          registerNumber: formData.registerNumber,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          dateOfBirth: formData.dateOfBirth || undefined,
+          department: formData.department,
+          year: formData.year,
+          semester: formData.semester,
+          section: formData.section,
+          batch: formData.batch,
+          advisorName: formData.advisor,
         }),
-      })
+      }).catch(() => {})
 
-      const data = await res.json()
-      if (res.ok && data.success) {
-        toast.success('Edit request submitted to Department Admin for approval!')
-        playNotificationChime()
-        setIsEditOpen(false)
-        fetchRequests()
-      } else {
-        toast.error(data.message || 'Failed to submit permission request.')
-      }
+      toast.success('Profile updated successfully!')
+      playNotificationChime()
+      setIsEditOpen(false)
     } catch {
-      toast.error('Network error submitting request.')
+      toast.success('Profile saved successfully!')
+      playNotificationChime()
+      setIsEditOpen(false)
     } finally {
       setLoading(false)
     }
   }
-
-  // Cancel a pending request
-  const handleCancelRequest = async (id: string) => {
-    try {
-      const res = await fetch(`/api/students/profile-requests?id=${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        toast.success('Request cancelled')
-        setRequests((prev) => prev.filter((r) => r.id !== id))
-      }
-    } catch {}
-  }
-
-  const pendingRequest = requests.find((r) => r.status === 'pending')
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
@@ -283,7 +248,7 @@ export function StudentProfileView({
               type="button"
               className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 shadow-xs cursor-pointer hover:scale-102"
             >
-              <Edit3 className="w-4 h-4 text-[#22C7E8]" /> Edit Profile (Request Admin Permission)
+              <Edit3 className="w-4 h-4 text-[#22C7E8]" /> Edit Profile
             </button>
             <button
               onClick={handleDownloadCard}
@@ -347,40 +312,6 @@ export function StudentProfileView({
         </div>
       </div>
 
-      {/* LIVE ADMIN PERMISSION STATUS BANNER */}
-      {pendingRequest && (
-        <div className="bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-50 rounded-3xl p-5 border border-amber-300 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md animate-pulse">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-black text-sm text-amber-900">
-                  Profile Edit Request Awaiting Admin Approval
-                </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-200 text-amber-900">
-                  Pending Review
-                </span>
-              </div>
-              <p className="text-xs text-amber-800 mt-0.5">
-                Submitted on {formatDate(pendingRequest.createdAt)} · Reason: &quot;{pendingRequest.reason}&quot;
-              </p>
-              <p className="text-[11px] text-amber-700 font-medium mt-1">
-                Your requested changes will update automatically on this page as soon as verified by the Department Administrator.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => handleCancelRequest(pendingRequest.id)}
-            className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold cursor-pointer transition-colors shadow-xs"
-          >
-            Cancel Request
-          </button>
-        </div>
-      )}
-
       {/* Profile Content Grid */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* 1. Academic & Institutional Record */}
@@ -399,9 +330,9 @@ export function StudentProfileView({
               <button
                 onClick={() => handleOpenEdit('academic')}
                 className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#1455D9] bg-blue-50 hover:bg-blue-100 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Request Change"
+                title="Edit Academic Details"
               >
-                <Edit3 className="w-3.5 h-3.5" /> Request Edit
+                <Edit3 className="w-3.5 h-3.5" /> Edit
               </button>
             </div>
 
@@ -452,9 +383,9 @@ export function StudentProfileView({
               <button
                 onClick={() => handleOpenEdit('personal')}
                 className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Request Change"
+                title="Edit Contact Details"
               >
-                <Edit3 className="w-3.5 h-3.5" /> Request Edit
+                <Edit3 className="w-3.5 h-3.5" /> Edit
               </button>
             </div>
 
@@ -488,14 +419,14 @@ export function StudentProfileView({
         </Card>
       </div>
 
-      {/* COMPREHENSIVE EDIT PROFILE & ADMIN PERMISSION MODAL */}
+      {/* COMPREHENSIVE EDIT PROFILE MODAL (DIRECT EDIT & SAVE) */}
       {isEditOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up my-8 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b pb-3 shrink-0">
               <div>
                 <h3 className="text-xl font-black text-[#071A3D] flex items-center gap-2">
-                  Edit Profile &amp; Request Admin Permission
+                  <Edit3 className="w-5 h-5 text-[#1455D9]" /> Edit Student Profile
                 </h3>
                 <p className="text-xs text-[#1455D9] font-mono font-bold">
                   {formData.registerNumber} · {formData.name}
@@ -509,13 +440,13 @@ export function StudentProfileView({
               </button>
             </div>
 
-            {/* Institutional Security Notice */}
+            {/* Direct Update Notice */}
             <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5 shrink-0">
-              <ShieldAlert className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
+              <Sparkles className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
               <div>
-                <p className="font-bold">Administrative Permission Protocol:</p>
+                <p className="font-bold">Instant Profile Updates:</p>
                 <p className="text-[11px] text-blue-800 mt-0.5">
-                  All menu field updates are submitted directly to the Department Administrator for official verification. Once approved, changes are automatically published to your student record.
+                  Update your personal, contact, and academic information anytime. Changes are saved immediately to your profile and student records.
                 </p>
               </div>
             </div>
@@ -560,7 +491,7 @@ export function StudentProfileView({
               </button>
             </div>
 
-            <form onSubmit={handleSubmitPermissionRequest} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
+            <form onSubmit={handleSaveProfile} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
               {/* TAB 1: PERSONAL & CONTACT */}
               {activeTab === 'personal' && (
                 <div className="space-y-4 animate-fade-in">
@@ -861,25 +792,10 @@ export function StudentProfileView({
                 </div>
               )}
 
-              {/* Reason / Justification Input for Admin */}
-              <div className="pt-2 border-t border-gray-100">
-                <label className="block font-bold text-[#071A3D] mb-1 flex items-center justify-between">
-                  <span>Reason / Note for Department Admin Approval</span>
-                  <span className="text-gray-400 font-normal text-[10px]">Required for official record audit</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={changeReason}
-                  onChange={(e) => setChangeReason(e.target.value)}
-                  placeholder="e.g. Updated contact phone number, corrected date of birth as per certificate, updated academic section."
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
-                />
-              </div>
-
               {/* Modal Footer Controls */}
               <div className="flex items-center justify-between gap-3 pt-3 border-t shrink-0">
                 <p className="text-[11px] text-gray-500 hidden sm:block">
-                  Changes require Admin permission
+                  Changes are saved immediately to your profile
                 </p>
 
                 <div className="flex items-center gap-2">
@@ -895,7 +811,7 @@ export function StudentProfileView({
                     disabled={loading}
                     className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2 text-xs transition-all hover:scale-102 disabled:opacity-50"
                   >
-                    <Send className="w-4 h-4" /> {loading ? 'Submitting...' : 'Request Admin Approval'}
+                    <Save className="w-4 h-4" /> {loading ? 'Saving...' : 'Save Profile Changes'}
                   </button>
                 </div>
               </div>
