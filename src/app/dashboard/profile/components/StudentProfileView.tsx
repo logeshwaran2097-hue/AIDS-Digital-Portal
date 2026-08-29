@@ -165,8 +165,13 @@ export function StudentProfileView({
       email: profile.email,
       phone: profile.phone,
       dob: formatDate(profile.dateOfBirth),
+      bloodGroup: profile.bloodGroup,
+      residencyStatus: profile.residencyStatus,
       cgpa: profile.cgpa,
       attendance: profile.attendance,
+      degreeProgram: profile.degreeProgram,
+      regulation: profile.regulation,
+      batch: profile.batch,
     })
   }
 

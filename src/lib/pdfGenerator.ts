@@ -679,8 +679,13 @@ export function downloadStudentCardPDF(student: {
   email: string
   phone: string
   dob: string
+  bloodGroup: string
+  residencyStatus: string
   cgpa: string
   attendance: string
+  degreeProgram: string
+  regulation: string
+  batch: string
 }) {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -737,7 +742,7 @@ export function downloadStudentCardPDF(student: {
   doc.setFontSize(11.5)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(student.name, width / 2, 80, { align: 'center' })
+  doc.text(student.name, width / 2, 77, { align: 'center' })
 
   doc.setFontSize(9)
   doc.setFont('helvetica', 'bold')
@@ -746,16 +751,20 @@ export function downloadStudentCardPDF(student: {
 
   // Details Table
   doc.setFillColor(248, 250, 252)
-  doc.roundedRect(8, 90, width - 16, 48, 2, 2, 'F')
+  doc.roundedRect(8, 90, width - 16, 68, 2, 2, 'F')
   doc.setDrawColor(230, 235, 245)
-  doc.roundedRect(8, 90, width - 16, 48, 2, 2, 'S')
+  doc.roundedRect(8, 90, width - 16, 68, 2, 2, 'S')
 
   const items = [
-    ['PROGRAM:', 'B.Tech AI & DS (Regulation 2021)'],
+    ['PROGRAM:', student.degreeProgram],
+    ['REGULATION:', student.regulation],
+    ['BATCH:', student.batch],
     ['YEAR & SEM:', `Year ${student.year} / Sem ${student.semester} (Sec ${student.section})`],
     ['COLLEGE EMAIL:', student.email],
     ['PHONE:', student.phone],
     ['DATE OF BIRTH:', student.dob],
+    ['BLOOD GROUP:', student.bloodGroup],
+    ['RESIDENCY:', student.residencyStatus],
     ['CGPA / ATTEND:', `${student.cgpa} CGPA  |  ${student.attendance} Attendance`],
   ]
 
