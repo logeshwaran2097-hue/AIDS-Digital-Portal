@@ -781,7 +781,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 name: s.name || '',
                                 email: cleanEmail,
                                 phone: s.phone || '',
-                                parentPhone: s.parentPhone || '',
                                 dateOfBirth: s.dateOfBirth || '',
                                 year: s.year || 1,
                                 semester: s.semester || 1,
