@@ -177,9 +177,18 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
 
   // Register Service Worker and check notification permission
+  // Handle native notification permission on load
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setPushPermission(getNotificationPermissionStatus())
+      const currentPerm = getNotificationPermissionStatus()
+      setPushPermission(currentPerm)
+
+      // Auto-request permission by default if undecided
+      if (currentPerm === 'default' && 'Notification' in window) {
+        requestNotificationPermission().then((perm) => {
+          setPushPermission(perm)
+        }).catch(() => {})
+      }
 
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch((err) => {
@@ -217,7 +226,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
           }
           isInitialSyncDone.current = true
         } else {
-          // Detect brand new notifications
+          // Detect brand new real-time notifications
           const newItems = fetchedList.filter((n: any) => !knownNotificationIds.current.has(n.id))
           if (newItems.length > 0) {
             newItems.forEach((n: any) => {
@@ -271,49 +280,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
     if (perm === 'granted') {
       playNotificationChime()
       triggerDeviceVibration([200, 100, 200])
-      dispatchNativeNotification({
-        id: 'test_welcome',
-        title: '🔔 Notifications Active!',
-        message: 'You will now receive real-time mobile & browser alerts from V.S.B. AI & DS Department.',
-      })
-    }
-  }
-
-  // Trigger Instant Test Alert
-  const handleSendTestPush = async () => {
-    setIsTestingPush(true)
-    try {
-      // Play sound & vibration immediately
-      playNotificationChime()
-      triggerDeviceVibration([200, 100, 200])
-
-      // Push to API to trigger multi-client sync
-      await fetch('/api/notifications/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: '⚡ Live Mobile Real-Time Alert',
-          message: `Department broadcast test at ${new Date().toLocaleTimeString()} received successfully!`,
-          target: role,
-        }),
-      })
-
-      // Immediate local dispatch
-      dispatchNativeNotification({
-        id: 'test_' + Date.now(),
-        title: '⚡ Live Mobile Real-Time Alert',
-        message: `Department broadcast test at ${new Date().toLocaleTimeString()} received successfully!`,
-      })
-
-      setRealtimeToast({
-        id: 'test_' + Date.now(),
-        title: '⚡ Live Mobile Real-Time Alert',
-        message: `Department broadcast test at ${new Date().toLocaleTimeString()} received successfully!`,
-        createdByName: 'V.S.B. Alert System',
-      })
-    } catch {
-    } finally {
-      setIsTestingPush(false)
     }
   }
 
@@ -733,36 +699,23 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                       )}
                     </div>
 
-                    {/* Mobile Push Notification Status Banner & Instant Trigger Button */}
-                    <div className="p-3 bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border-b border-blue-100 flex items-center justify-between gap-2">
+                    {/* Real-Time Live Notification Status Banner */}
+                    <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50/90 via-slate-50 to-blue-50/90 border-b border-blue-100 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className={cn(
-                          'w-2.5 h-2.5 rounded-full shrink-0',
-                          pushPermission === 'granted' ? 'bg-emerald-500 ring-2 ring-emerald-200 animate-pulse' : 'bg-amber-500'
-                        )} />
-                        <span className="text-xs font-black text-[#071A41] truncate">
-                          {pushPermission === 'granted' ? 'Mobile Push Active' : 'Mobile Alerts Inactive'}
+                        <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-500 ring-2 ring-emerald-200 animate-pulse" />
+                        <span className="text-[11px] font-black text-[#071A41] truncate">
+                          Live Real-Time Alerts Active
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {pushPermission !== 'granted' ? (
-                          <button
-                            onClick={handleEnablePush}
-                            className="px-3 py-1.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-                          >
-                            Enable Push
-                          </button>
-                        ) : (
-                          <button
-                            onClick={handleSendTestPush}
-                            disabled={isTestingPush}
-                            className="px-3 py-1.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A41] text-xs font-black transition-all shadow-xs cursor-pointer disabled:opacity-50"
-                          >
-                            {isTestingPush ? 'Ringing...' : '⚡ Test Alert'}
-                          </button>
-                        )}
-                      </div>
+                      {pushPermission !== 'granted' && (
+                        <button
+                          onClick={handleEnablePush}
+                          className="px-2.5 py-1 rounded-lg bg-[#1557C0] hover:bg-[#0e44b5] text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer"
+                        >
+                          Enable Browser Push
+                        </button>
+                      )}
                     </div>
 
                     {/* Notification Items List */}
