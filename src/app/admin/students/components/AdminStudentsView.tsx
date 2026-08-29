@@ -40,6 +40,8 @@ export interface StudentRecord {
   email: string
   phone?: string | null
   dateOfBirth?: string | null
+  bloodGroup?: string | null
+  residencyStatus?: string | null
   year: number
   semester: number
   section: string
@@ -47,6 +49,8 @@ export interface StudentRecord {
   advisorName?: string | null
   parentPhone?: string | null
   status: string
+  cgpa?: string | null
+  attendance?: string | null
 }
 
 export function AdminStudentsView({ initialStudents }: { initialStudents: StudentRecord[] }) {
@@ -147,12 +151,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     password: '',
     phone: '',
     dateOfBirth: '',
+    bloodGroup: '',
+    residencyStatus: '',
     year: 1,
     semester: 1,
     batch: '',
     section: 'A',
     advisorName: '',
     status: 'active',
+    cgpa: '',
+    attendance: '',
   })
 
   // 8 Semesters Definition
@@ -737,6 +745,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           {!s.phone && !s.parentPhone && (!s.email || s.email.endsWith('@student.vsb.edu.in')) && (
                             <span className="text-gray-300 italic text-[10px]">No contact info yet</span>
                           )}
+                          {s.bloodGroup && (
+                            <span className="text-gray-500 font-mono text-[10px]">🅑 {s.bloodGroup}</span>
+                          )}
+                          {s.residencyStatus && (
+                            <span className="text-gray-400 font-mono text-[10px]">🏠 {s.residencyStatus}</span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -749,6 +763,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                               {s.batch}
                             </span>
                           ) : null}
+                          {s.residencyStatus && (
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
+                              {s.residencyStatus}
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center font-bold text-[#071A3D]">Sec {s.section}</td>
@@ -785,12 +804,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 email: cleanEmail,
                                 phone: s.phone || '',
                                 dateOfBirth: s.dateOfBirth || '',
+                                bloodGroup: s.bloodGroup || '',
+                                residencyStatus: s.residencyStatus || '',
                                 year: s.year || 1,
                                 semester: s.semester || 1,
                                 batch: s.batch || '',
                                 section: s.section || 'A',
                                 advisorName: s.advisorName || '',
                                 status: s.status || 'active',
+                                cgpa: s.cgpa || '',
+                                attendance: s.attendance || '',
                                 password: '',
                               })
                               setIsEditModalOpen(true)
@@ -1150,6 +1173,40 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Blood Group</label>
+                  <select
+                    value={formData.bloodGroup}
+                    onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="">Select Blood Group</option>
+                    <option value="O +ve">O +ve</option>
+                    <option value="O -ve">O -ve</option>
+                    <option value="A +ve">A +ve</option>
+                    <option value="A -ve">A -ve</option>
+                    <option value="B +ve">B +ve</option>
+                    <option value="B -ve">B -ve</option>
+                    <option value="AB +ve">AB +ve</option>
+                    <option value="AB -ve">AB -ve</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Residency Status</label>
+                  <select
+                    value={formData.residencyStatus}
+                    onChange={(e) => setFormData({ ...formData, residencyStatus: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="">Select Residency Status</option>
+                    <option value="Day Scholar">Day Scholar</option>
+                    <option value="Hosteller">Hosteller</option>
+                    <option value="Foreign Student">Foreign Student</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-4 gap-2 sm:gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
@@ -1203,7 +1260,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
                     Class Advisor / Mentor Name
@@ -1226,6 +1283,29 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">CGPA</label>
+                  <input
+                    type="text"
+                    value={formData.cgpa}
+                    onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    placeholder="e.g. 8.84 / 10.0"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Attendance</label>
+                  <input
+                    type="text"
+                    value={formData.attendance}
+                    onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    placeholder="e.g. 92.5%"
+                  />
                 </div>
               </div>
 
@@ -1344,6 +1424,63 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Blood Group</label>
+                  <select
+                    value={formData.bloodGroup}
+                    onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="">Select Blood Group</option>
+                    <option value="O +ve">O +ve</option>
+                    <option value="O -ve">O -ve</option>
+                    <option value="A +ve">A +ve</option>
+                    <option value="A -ve">A -ve</option>
+                    <option value="B +ve">B +ve</option>
+                    <option value="B -ve">B -ve</option>
+                    <option value="AB +ve">AB +ve</option>
+                    <option value="AB -ve">AB -ve</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Residency Status</label>
+                  <select
+                    value={formData.residencyStatus}
+                    onChange={(e) => setFormData({ ...formData, residencyStatus: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="">Select Residency Status</option>
+                    <option value="Day Scholar">Day Scholar</option>
+                    <option value="Hosteller">Hosteller</option>
+                    <option value="Foreign Student">Foreign Student</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">CGPA</label>
+                  <input
+                    type="text"
+                    value={formData.cgpa}
+                    onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    placeholder="e.g. 8.84 / 10.0"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Attendance</label>
+                  <input
+                    type="text"
+                    value={formData.attendance}
+                    onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    placeholder="e.g. 92.5%"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-4 gap-2 sm:gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
@@ -1397,7 +1534,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">
                     Class Advisor / Mentor Name
@@ -1516,6 +1653,30 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <div className="flex items-center gap-2 text-gray-600">
                     <Calendar className="w-4 h-4 text-[#1455D9]" />
                     <span>Date of Birth: {selectedStudent.dateOfBirth}</span>
+                  </div>
+                )}
+                {selectedStudent.bloodGroup && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <div className="w-3 h-3 rounded-full bg-red-300 text-red-300 flex items-center justify-center text-[1px]" />
+                    <span className="font-semibold text-gray-600">{selectedStudent.bloodGroup}</span>
+                  </div>
+                )}
+                {selectedStudent.residencyStatus && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <div className="w-3 h-3 rounded-full bg-blue-300 text-blue-300 flex items-center justify-center text-[1px]" />
+                    <span className="font-semibold text-gray-600">{selectedStudent.residencyStatus}</span>
+                  </div>
+                )}
+                {selectedStudent.cgpa && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="text-gray-500 font-mono text-xs">CGPA:</span>
+                    <span className="font-bold text-[#1455D9]">{selectedStudent.cgpa}</span>
+                  </div>
+                )}
+                {selectedStudent.attendance && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="text-gray-500 font-mono text-xs">Attendance:</span>
+                    <span className="font-bold text-[#1455D9]">{selectedStudent.attendance}</span>
                   </div>
                 )}
               </div>
