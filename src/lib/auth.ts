@@ -274,8 +274,22 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     }).catch(() => {})
   }
 
-  // 7. Verify Password
+  // 7. Check if password must be changed (temp password flow)
+  const mustChangePassword = user.mustChangePassword
+  const seventyTwoDaysMs = 72 * 24 * 60 * 60 * 1000
+  const passwordExpiryElapsed = mustChangePassword && user.lastLogin && new Date().getTime() - new Date(user.lastLogin).getTime() > seventyTwoDaysMs
+
+  // If password expiry elapsed, reset mustChangePassword state
+  if (passwordExpiryElapsed) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { mustChangePassword: false },
+    }).catch(() => {})
+  }
+
+  // 8. Verify Password
   let isValid = false
+  let passwordChangeRequired = false
 
   // A. If user has no passwordHash set yet, accept and save entered password
   if (!user.passwordHash && trimmedPassword) {
@@ -347,8 +361,41 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     } catch {}
   }
 
-  if (!isValid) {
+  // G. Handle mustChangePassword logic
+  if (mustChangePassword && !passwordChangeRequired) {
+    // If this is a temp password login attempt
+    if (isValid && !passwordExpiryElapsed) {
+      // Allow login but require password change
+      passwordChangeRequired = true
+      // Don't mark as invalid - just flag that change is needed
+    } else if (!isValid) {
+      // Temp password invalid - return error
+      if (!isValid) {
+        return { success: false, message: 'Invalid Register Number or Password. Password change required.' }
+      }
+    }
+  }
+
+  if (!isValid && !passwordChangeRequired) {
     return { success: false, message: 'Invalid Register Number or Password.' }
+  }
+
+  // If password change is required, update lastLogin and create temp token
+  if (passwordChangeRequired) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLogin: new Date(), status: 'active' },
+    }).catch(() => {})
+
+    const token = await createToken({
+      userId: user.id,
+      email: user.email,
+      role: 'student',
+      name: user.name,
+      registerNumber: student?.registerNumber || normalizedReg,
+    })
+
+    return { success: true, token, user, student, mustChangePassword: true }
   }
 
   await prisma.user.update({
