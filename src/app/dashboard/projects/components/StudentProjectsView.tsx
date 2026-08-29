@@ -36,8 +36,8 @@ export function StudentProjectsView({
   projects,
   activeBatch = '2024 - 2028',
   batchLabel = 'II Year (Semester 4)',
-  studentName = 'Logeshwaran G',
-  registerNumber = '922525243103',
+  studentName = 'Student',
+  registerNumber = '',
 }: {
   projects: ProjectRecord[]
   activeBatch?: string

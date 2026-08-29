@@ -62,13 +62,46 @@ export function StudentSettingsView({
   const [showSavedToast, setShowSavedToast] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
+  // Helper to provide clean input placeholders without forcing dummy values
+  const getLinkPlaceholder = (id: string) => {
+    switch (id) {
+      case 'github':
+        return 'https://github.com/your-username'
+      case 'linkedin':
+        return 'https://linkedin.com/in/your-profile'
+      case 'leetcode':
+        return 'https://leetcode.com/u/your-username'
+      case 'portfolio':
+        return 'https://your-portfolio-site.vercel.app'
+      case 'annauniv':
+        return 'https://coe1.annauniv.edu'
+      case 'vsbcollege':
+        return 'https://vsbec.com'
+      default:
+        return 'https://...'
+    }
+  }
+
   // Editable Links State
   const [links, setLinks] = useState<CustomLink[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('vsb_student_links')
       if (saved) {
         try {
-          return JSON.parse(saved)
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            // Clean up any stale placeholder links from earlier builds
+            return parsed.map((item: CustomLink) => {
+              if (
+                item.url &&
+                (item.url.includes('logeshwaran') ||
+                  item.url.includes('example.com'))
+              ) {
+                return { ...item, url: '' }
+              }
+              return item
+            })
+          }
         } catch {
           // fallback
         }
@@ -78,37 +111,37 @@ export function StudentSettingsView({
       {
         id: 'github',
         title: 'GitHub Developer Profile',
-        url: 'https://github.com/logeshwaran2097-hue',
+        url: '',
         category: 'coding',
       },
       {
         id: 'linkedin',
         title: 'LinkedIn Professional Profile',
-        url: 'https://linkedin.com/in/logeshwaran-g',
+        url: '',
         category: 'portfolio',
       },
       {
         id: 'leetcode',
         title: 'LeetCode Problem Solving Profile',
-        url: 'https://leetcode.com/u/logeshwaran',
+        url: '',
         category: 'coding',
       },
       {
         id: 'portfolio',
         title: 'Personal Portfolio & Resume',
-        url: 'https://logeshwaran-portfolio.vercel.app',
+        url: '',
         category: 'portfolio',
       },
       {
         id: 'annauniv',
         title: 'Anna University CoE Examination Portal',
-        url: 'https://coe1.annauniv.edu',
+        url: '',
         category: 'academic',
       },
       {
         id: 'vsbcollege',
         title: 'V.S.B. Engineering College Official Site',
-        url: 'https://vsbec.com',
+        url: '',
         category: 'academic',
       },
     ]
@@ -211,7 +244,7 @@ export function StudentSettingsView({
   const handleExportData = () => {
     generateAndDownloadPDF({
       title: 'OFFICIAL STUDENT ACADEMIC DOSSIER & RECORD',
-      subtitle: `${user.name} (${student.registerNumber}) · B.Tech Artificial Intelligence & Data Science · Batch 2023 - 2027`,
+      subtitle: `${user.name} (${student.registerNumber}) · B.Tech Artificial Intelligence & Data Science`,
       author: 'Office of the Academic Registrar & HOD',
       category: 'Institutional Transcript Dossier',
       sections: [
@@ -224,21 +257,22 @@ export function StudentSettingsView({
             `Academic Regulation: R-2021 (Autonomous Framework)`,
             `Current Standing: Year ${student.year} · Semester ${student.semester} · Section ${student.section}`,
             `Institutional Email: ${user.email}`,
-            `Verified Contact Phone: ${user.phone || '+91 90252 10001'}`,
+            `Verified Contact Phone: ${user.phone || 'Not Provided'}`,
           ],
         },
         {
-          heading: '2. ACADEMIC PERFORMANCE & CGPA STANDING',
+          heading: '2. ACADEMIC & INSTITUTIONAL SUMMARY',
           body: [
-            'Cumulative Grade Point Average (CGPA): 8.84 / 10.00 (First Class with Distinction)',
-            'Total Credits Earned: 52 Credits (Semesters I & II Cleared with 0 Arrears)',
-            'Batch Academic Standing: Rank 4 / 68 Students (Top 6% Percentile)',
-            'Overall Department Attendance Record: 92.5% (Safe Compliance >75% Norm)',
+            `Current Standing: Year ${student.year} · Semester ${student.semester} · Section ${student.section}`,
+            `Department: B.Tech Artificial Intelligence & Data Science`,
+            'Status: Active Student Academic Record',
           ],
         },
         {
           heading: '3. VERIFIED PORTFOLIO & PROFILES',
-          body: links.map((l) => `${l.title}: ${l.url}`),
+          body: links.filter(l => l.url).length > 0
+            ? links.filter(l => l.url).map((l) => `${l.title}: ${l.url}`)
+            : ['No custom portfolio links configured yet.'],
         },
       ],
       fileName: `Academic_Dossier_${student.registerNumber}`,
@@ -328,31 +362,47 @@ export function StudentSettingsView({
                     {/* Copy Link Button */}
                     <button
                       type="button"
+                      disabled={!link.url}
                       onClick={() => handleCopyLink(link.id, link.url)}
-                      className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-[#1455D9] transition-colors"
-                      title="Copy URL"
+                      className={cn(
+                        'p-1.5 rounded-lg bg-white border transition-colors',
+                        link.url
+                          ? 'border-gray-200 text-gray-500 hover:text-[#1455D9] cursor-pointer'
+                          : 'border-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                      )}
+                      title={link.url ? 'Copy URL' : 'Enter a URL first'}
                     >
                       {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
 
                     {/* Test & Open Link */}
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1 text-[11px] font-bold"
-                      title="Open in new tab"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Open</span>
-                    </a>
+                    {link.url ? (
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg bg-white border border-gray-200 text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-1 text-[11px] font-bold cursor-pointer"
+                        title="Open in new tab"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Open</span>
+                      </a>
+                    ) : (
+                      <span
+                        className="p-1.5 rounded-lg bg-gray-100 border border-gray-200 text-gray-400 flex items-center gap-1 text-[11px] font-bold cursor-not-allowed opacity-50"
+                        title="Enter a URL first"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Open</span>
+                      </span>
+                    )}
 
                     {/* Delete Custom Link */}
                     {link.id.startsWith('custom-') && (
                       <button
                         type="button"
                         onClick={() => handleDeleteLink(link.id)}
-                        className="p-1.5 rounded-lg bg-white border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-lg bg-white border border-red-200 text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                         title="Delete Link"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -367,7 +417,7 @@ export function StudentSettingsView({
                     type="url"
                     value={link.url}
                     onChange={(e) => handleLinkChange(link.id, e.target.value)}
-                    placeholder="https://..."
+                    placeholder={getLinkPlaceholder(link.id)}
                     className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-mono font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#1455D9] focus:border-transparent transition-all"
                   />
                 </div>
