@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState } from 'react'
 import { CheckCircle2, AlertCircle, Loader2, ArrowRight } from 'lucide-react'
@@ -188,6 +188,10 @@ export function StudentOnboardingModal({
                 <span className="text-xs text-gray-500">Name</span>
                 <span className="font-semibold text-gray-800 text-xs">{initialData.name || '—'}</span>
               </div>
+              <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                <span className="text-xs text-gray-500">Email</span>
+                <span className="font-semibold text-gray-800 text-xs">{initialData.email || '—'}</span>
+              </div>
               {initialData.phone && (
                 <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
                   <span className="text-xs text-gray-500">Phone</span>
@@ -198,6 +202,12 @@ export function StudentOnboardingModal({
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs text-gray-500">Date of Birth</span>
                   <span className="font-semibold text-gray-800 text-xs">{initialData.dateOfBirth}</span>
+                </div>
+              )}
+              {initialData.parentPhone && (
+                <div className="flex items-center justify-between px-4 py-2.5 bg-gray-50">
+                  <span className="text-xs text-gray-500">Parent Mobile</span>
+                  <span className="font-semibold text-gray-800 text-xs">{initialData.parentPhone}</span>
                 </div>
               )}
             </div>
