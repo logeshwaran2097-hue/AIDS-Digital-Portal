@@ -22,14 +22,14 @@ export default async function AdminStudentsPage() {
   const studentsList: StudentRecord[] = dbStudents.map((s) => {
     const user = userMap.get(s.userId)
     const rawEmail = user?.email || ''
-    const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
     return {
       id: s.id,
       userId: s.userId,
       registerNumber: s.registerNumber,
       name: user?.name || s.registerNumber,
-      email: cleanEmail,
+      email: rawEmail,
       phone: user?.phone || '',
+      parentPhone: (s as any).parentPhone || '',
       dateOfBirth: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,
       year: s.year,
       semester: s.semester,
