@@ -167,11 +167,27 @@ export async function POST(request: NextRequest) {
     if (parentPhone) studentUpdateData.parentPhone = parentPhone.trim()
 
     if (Object.keys(studentUpdateData).length > 0) {
-      await prisma.student.update({
+      let student = await prisma.student.update({
         where: { userId: session.userId },
         data: studentUpdateData,
-      }).catch(() => {})
+      }).catch(() => null)
+
+      if (!student && session.registerNumber) {
+        await prisma.student.update({
+          where: { registerNumber: session.registerNumber.trim().toUpperCase() },
+          data: {
+            ...studentUpdateData,
+            userId: session.userId,
+          },
+        }).catch(() => {})
+      }
     }
+
+    // Invalidate caches
+    revalidatePath('/admin/students')
+    revalidatePath('/admin/dashboard')
+    revalidatePath('/dashboard')
+    revalidatePath('/dashboard/profile')
 
     // Audit Log
     await prisma.auditLog.create({
@@ -179,7 +195,7 @@ export async function POST(request: NextRequest) {
         userName: updatedUser.name,
         action: 'onboarding_complete',
         module: 'student_portal',
-        details: `Student ${session.registerNumber || updatedUser.name} completed first-time email verification.`,
+        details: `Student ${session.registerNumber || updatedUser.name} completed first-time email verification and password setup.`,
         status: 'success',
       },
     }).catch(() => {})
