@@ -2,14 +2,53 @@ import { prisma } from '@/lib/prisma'
 
 export async function getStudentData(userId: string) {
   try {
-    let student = await prisma.student.findUnique({ where: { userId } }).catch(() => null)
     let user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null)
+    let student = await prisma.student.findUnique({ where: { userId } }).catch(() => null)
+
+    if (!student && user) {
+      // Try resolving by email prefix or name if userId wasn't directly linked
+      const emailPrefix = user.email ? user.email.split('@')[0].toUpperCase() : ''
+      student = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { userId: user.id },
+            { registerNumber: emailPrefix },
+            { registerNumber: emailPrefix.toLowerCase() },
+            { registerNumber: { contains: emailPrefix } },
+          ],
+        },
+      }).catch(() => null)
+
+      // Automatically link student to user if found
+      if (student && student.userId !== user.id) {
+        await prisma.student.update({
+          where: { id: student.id },
+          data: { userId: user.id },
+        }).catch(() => {})
+      }
+    }
+
+    if (!student) {
+      // Check if userId itself is a registerNumber
+      student = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { registerNumber: userId.trim().toUpperCase() },
+            { registerNumber: userId.trim() },
+          ],
+        },
+      }).catch(() => null)
+
+      if (student && !user) {
+        user = await prisma.user.findUnique({ where: { id: student.userId } }).catch(() => null)
+      }
+    }
 
     if (!user) {
       user = {
         id: userId,
-        name: 'Student Portal User',
-        email: 'student@vsb.edu.in',
+        name: student ? `Student (${student.registerNumber})` : 'Student Portal User',
+        email: student ? `${student.registerNumber.toLowerCase()}@student.vsb.edu.in` : 'student@vsb.edu.in',
         phone: null,
         role: 'student',
         status: 'active',
@@ -27,7 +66,7 @@ export async function getStudentData(userId: string) {
       student = {
         id: 'student-default',
         userId: userId,
-        registerNumber: '922525243103',
+        registerNumber: user?.email ? user.email.split('@')[0].toUpperCase() : '922525243103',
         dateOfBirth: new Date('2006-02-09'),
         department: 'Artificial Intelligence & Data Science',
         year: 2,
