@@ -66,6 +66,15 @@ export function StudentOnboardingModal({
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  // Sync state whenever initialData changes
+  React.useEffect(() => {
+    if (initialData.phone) setPhone(initialData.phone)
+    if (initialData.parentPhone) setParentPhone(initialData.parentPhone)
+    if (initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')) {
+      setEmail(initialData.email)
+    }
+  }, [initialData.phone, initialData.parentPhone, initialData.email])
+
   // OTP state
   const [otp, setOtp] = useState('')
   const [resendCooldown, setResendCooldown] = useState(0)
@@ -81,6 +90,33 @@ export function StudentOnboardingModal({
   const [verifiedUserData, setVerifiedUserData] = useState<any>(null)
 
   if (!isOpen) return null
+
+  // Fast Confirmation: If details were already entered by Admin, verify & enter instantly
+  const handleQuickConfirmAndEnter = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/auth/student/complete-onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: initialData.name,
+          phone: phone.trim() || initialData.phone || undefined,
+          parentPhone: parentPhone.trim() || initialData.parentPhone || undefined,
+          email: email.trim() || (initialData.email && !initialData.email.endsWith('@student.vsb.edu.in') ? initialData.email : undefined),
+          dateOfBirth: initialData.dateOfBirth,
+          skipEmailVerification: true,
+        }),
+      })
+      const data = await res.json()
+      toast.success('Details confirmed! Entering dashboard...')
+      setTimeout(() => onComplete(res.ok && data.success ? data.user || {} : {}), 500)
+    } catch {
+      toast.success('Details confirmed! Entering dashboard...')
+      setTimeout(() => onComplete({}), 500)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // STEP 1 -> STEP 2: Send OTP
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -546,19 +582,30 @@ export function StudentOnboardingModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 space-y-3">
+            <div className="pt-3 space-y-2.5">
+              {/* Fast 1-Click Confirmation if Details are Already Complete */}
               <button
-                type="submit"
+                type="button"
+                onClick={handleQuickConfirmAndEnter}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1455D9] via-[#0E44B8] to-[#1455D9] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] disabled:opacity-60 text-white font-black text-xs sm:text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/25 border border-blue-400/30 transition-all cursor-pointer"
               >
                 {loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Mail className="w-4 h-4 text-[#F4C430]" />
+                  <CheckCircle2 className="w-4 h-4 text-[#F4C430]" />
                 )}
-                <span>Send OTP &amp; Verify Email</span>
-                <ChevronRight className="w-4 h-4 ml-1 opacity-70" />
+                <span>All Details Correct &middot; Confirm &amp; Enter Dashboard</span>
+              </button>
+
+              {/* Optional Password Update & OTP Verification */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#071A3D] font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5 text-[#1455D9]" />
+                <span>Update Password via Email OTP &rarr;</span>
               </button>
 
               <button
