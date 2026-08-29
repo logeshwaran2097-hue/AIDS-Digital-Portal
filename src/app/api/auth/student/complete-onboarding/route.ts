@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { getSession, createToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP } from '@/lib/utils'
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, dateOfBirth, email, otp, newPassword, skipEmailVerification } = body
+    const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification } = body
 
     // ─────────────────────────────────────────────────────────────────────
     // FAST PATH: Student confirms details only — no email/OTP/password required
@@ -30,11 +30,15 @@ export async function POST(request: NextRequest) {
         },
       }).catch(() => null)
 
-      // Update DOB in Student record if corrected
-      if (dateOfBirth) {
+      // Update DOB and Parent Phone in Student record if provided
+      const studentUpdateData: any = {}
+      if (dateOfBirth) studentUpdateData.dateOfBirth = new Date(dateOfBirth)
+      if (parentPhone) studentUpdateData.parentPhone = parentPhone.trim()
+
+      if (Object.keys(studentUpdateData).length > 0) {
         await prisma.student.update({
           where: { userId: session.userId },
-          data: { dateOfBirth: new Date(dateOfBirth) },
+          data: studentUpdateData,
         }).catch(() => {})
       }
 
@@ -82,14 +86,10 @@ export async function POST(request: NextRequest) {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // FULL PATH: Email OTP verification + password change (legacy flow)
+    // FULL PATH: Email OTP verification (optional password change)
     // ─────────────────────────────────────────────────────────────────────
     if (!email || !email.includes('@')) {
       return NextResponse.json({ success: false, message: 'A valid email address is required.' }, { status: 400 })
-    }
-
-    if (!newPassword || newPassword.length < 6) {
-      return NextResponse.json({ success: false, message: 'New password must be at least 6 characters long.' }, { status: 400 })
     }
 
     const normalizedEmail = email.trim().toLowerCase()
@@ -115,28 +115,35 @@ export async function POST(request: NextRequest) {
       data: { used: true },
     })
 
-    // Hash new password
-    const passwordHash = await bcrypt.hash(newPassword.trim(), 10)
+    const userUpdateData: any = {
+      name: name ? name.trim() : session.name,
+      email: normalizedEmail,
+      phone: phone ? phone.trim() : undefined,
+      emailVerified: true,
+      mustChangePassword: false,
+      updatedAt: new Date(),
+    }
+
+    // Hash new password if provided (for legacy flow)
+    if (newPassword && newPassword.length >= 6) {
+      userUpdateData.passwordHash = await bcrypt.hash(newPassword.trim(), 10)
+    }
 
     // Update User
     const updatedUser = await prisma.user.update({
       where: { id: session.userId },
-      data: {
-        name: name ? name.trim() : session.name,
-        email: normalizedEmail,
-        phone: phone ? phone.trim() : undefined,
-        emailVerified: true,
-        mustChangePassword: false,
-        passwordHash,
-        updatedAt: new Date(),
-      },
+      data: userUpdateData,
     })
 
-    // Update Student DOB
-    if (dateOfBirth) {
+    // Update Student DOB & Parent Phone
+    const studentUpdateData: any = {}
+    if (dateOfBirth) studentUpdateData.dateOfBirth = new Date(dateOfBirth)
+    if (parentPhone) studentUpdateData.parentPhone = parentPhone.trim()
+
+    if (Object.keys(studentUpdateData).length > 0) {
       await prisma.student.update({
         where: { userId: session.userId },
-        data: { dateOfBirth: new Date(dateOfBirth) },
+        data: studentUpdateData,
       }).catch(() => {})
     }
 
@@ -146,7 +153,7 @@ export async function POST(request: NextRequest) {
         userName: updatedUser.name,
         action: 'onboarding_complete',
         module: 'student_portal',
-        details: `Student ${session.registerNumber || updatedUser.name} completed first-time email verification and password change.`,
+        details: `Student ${session.registerNumber || updatedUser.name} completed first-time email verification.`,
         status: 'success',
       },
     }).catch(() => {})
@@ -169,7 +176,7 @@ export async function POST(request: NextRequest) {
         emailVerified: true,
         mustChangePassword: false,
       },
-      message: 'Onboarding complete! Your credentials and email have been saved.',
+      message: 'Onboarding complete! Your details have been saved.',
     })
 
     response.cookies.set('auth-token', newToken, {
