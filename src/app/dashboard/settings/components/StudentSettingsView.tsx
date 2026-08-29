@@ -72,8 +72,7 @@ export function StudentSettingsView({
         return 'https://leetcode.com/u/your-username'
       case 'portfolio':
         return 'https://your-portfolio-site.vercel.app'
-      case 'annauniv':
-        return 'https://coe1.annauniv.edu'
+
       case 'vsbcollege':
         return 'https://vsbec.com'
       default:
