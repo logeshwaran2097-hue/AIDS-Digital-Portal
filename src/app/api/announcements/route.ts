@@ -38,6 +38,20 @@ export async function POST(request: Request) {
         isPublished: true,
       },
     })
+
+    const author = body.createdByName || 'Department Directorate'
+
+    // Automatically broadcast notification for students
+    await prisma.notification.create({
+      data: {
+        title: `📢 Announcement: ${body.title}`,
+        message: `${body.content ? body.content.substring(0, 140) : 'New departmental notice'}. Category: ${body.category || 'General'}. Published by ${author}.`,
+        target: 'all',
+        createdByName: author,
+        status: 'published',
+      },
+    }).catch(() => {})
+
     return NextResponse.json({ success: true, announcement }, { status: 201 })
   } catch (error) {
     console.error('Announcements API error:', error)

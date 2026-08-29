@@ -71,6 +71,17 @@ export async function POST(request: Request) {
       },
     })
 
+    // Notify students of newly uploaded academic study material
+    await prisma.notification.create({
+      data: {
+        title: `📚 New Study Material: ${title}`,
+        message: `${resourceType ? resourceType.toUpperCase() : 'Notes'} uploaded for your course. Available in Study Resources.`,
+        target: 'all',
+        createdByName: 'Faculty Member',
+        status: 'published',
+      },
+    }).catch(() => {})
+
     return NextResponse.json({
       success: true,
       resource,

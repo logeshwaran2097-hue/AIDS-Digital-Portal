@@ -38,11 +38,24 @@ export async function POST(request: Request) {
         venue: body.venue || 'Main Auditorium',
         createdByName: body.createdByName || body.organizer || 'Administrator',
         registrationInfo: body.targetSemester || body.registrationInfo || 'ALL',
-        registrationUrl: body.registrationUrl || null,
         status: 'published',
         isPublished: true,
       },
     })
+
+    const author = body.createdByName || body.organizer || 'Department Directorate'
+    
+    // Automatically broadcast notification for students
+    await prisma.notification.create({
+      data: {
+        title: `📅 New Event: ${body.name}`,
+        message: `${body.category || 'Event'} scheduled on ${body.date ? new Date(body.date).toLocaleDateString('en-GB') : 'Upcoming'} at ${body.venue || 'Campus'}. Published by ${author}.`,
+        target: 'all',
+        createdByName: author,
+        status: 'published',
+      },
+    }).catch(() => {})
+
     return NextResponse.json({ success: true, event }, { status: 201 })
   } catch (error) {
     console.error('Events API error:', error)

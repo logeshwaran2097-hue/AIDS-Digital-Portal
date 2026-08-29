@@ -266,10 +266,10 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
     } catch {}
   }
 
-  // Polling loop for sub-second / 4s real-time alert updates
+  // Polling loop: checks every 15s for genuine newly posted events, announcements, or materials
   useEffect(() => {
     syncNotifications()
-    const interval = setInterval(syncNotifications, 4000)
+    const interval = setInterval(syncNotifications, 15000)
     return () => clearInterval(interval)
   }, [role])
 
