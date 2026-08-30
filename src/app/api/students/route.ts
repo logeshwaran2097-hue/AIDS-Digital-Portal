@@ -49,6 +49,10 @@ export async function GET(request: Request) {
         section: s.section,
         advisorName: (s as any).advisorName || '',
         status: u?.status || 'active',
+        bloodGroup: (s as any).bloodGroup,
+        residencyStatus: (s as any).residencyStatus,
+        cgpa: (s as any).cgpa,
+        attendance: (s as any).attendance,
       }
     })
 
@@ -80,6 +84,10 @@ export async function POST(request: Request) {
       section = 'A',
       advisorName,
       status = 'active',
+      bloodGroup,
+      residencyStatus,
+      cgpa,
+      attendance,
     } = data
 
     if (!registerNumber || !name || !password?.trim()) {
@@ -136,7 +144,7 @@ export async function POST(request: Request) {
       },
     })
 
-    // Create Student with manual values only
+    // Create Student with manual values including new fields
     const student = await prisma.student.create({
       data: {
         userId: user.id,
@@ -149,6 +157,10 @@ export async function POST(request: Request) {
         section: section || 'A',
         advisorName: advisorName ? String(advisorName).trim() : null,
         parentPhone: parentPhone ? String(parentPhone).trim() : null,
+        bloodGroup,
+        residencyStatus,
+        cgpa: typeof cgpa === 'number' ? cgpa : undefined,
+        attendance,
       } as any,
     })
 
@@ -174,6 +186,10 @@ export async function POST(request: Request) {
         section: student.section,
         advisorName: (student as any).advisorName || '',
         status: user.status,
+        bloodGroup: student.bloodGroup,
+        residencyStatus: student.residencyStatus,
+        cgpa: student.cgpa,
+        attendance: student.attendance,
       },
       message: 'Student registered successfully in database',
     })
@@ -206,6 +222,10 @@ export async function PUT(request: Request) {
       section,
       advisorName,
       status,
+      bloodGroup,
+      residencyStatus,
+      cgpa,
+      attendance,
     } = data
 
     const regUpper = registerNumber ? String(registerNumber).trim().toUpperCase() : null
@@ -253,6 +273,10 @@ export async function PUT(request: Request) {
           ...(advisorName !== undefined ? { advisorName: String(advisorName).trim() } : {}),
           ...(parentPhone !== undefined ? { parentPhone: parentPhone ? String(parentPhone).trim() : null } : {}),
           ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+          ...(bloodGroup !== undefined ? { bloodGroup } : {}),
+          ...(residencyStatus !== undefined ? { residencyStatus } : {}),
+          ...(cgpa !== undefined ? { cgpa } : {}),
+          ...(attendance !== undefined ? { attendance } : {}),
         } as any,
       })
 
@@ -291,6 +315,10 @@ export async function PUT(request: Request) {
           section: updatedStudent.section,
           advisorName: (updatedStudent as any).advisorName || '',
           status: updatedUser.status,
+          bloodGroup: updatedStudent.bloodGroup,
+          residencyStatus: updatedStudent.residencyStatus,
+          cgpa: updatedStudent.cgpa,
+          attendance: updatedStudent.attendance,
         },
         user: {
           id: updatedUser.id,
@@ -322,9 +350,12 @@ export async function PUT(request: Request) {
         phone: phone ? phone.trim() : null,
         role: 'student',
         status: status || 'active',
-        passwordHash: defaultPassHash,
         emailVerified: isEmailCustom,
-        mustChangePassword: true,
+        ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
+        ...(bloodGroup !== undefined ? { bloodGroup } : {}),
+        ...(residencyStatus !== undefined ? { residencyStatus } : {}),
+        ...(cgpa !== undefined ? { cgpa } : {}),
+        ...(attendance !== undefined ? { attendance } : {}),
       },
     })
 
@@ -338,6 +369,10 @@ export async function PUT(request: Request) {
         section: section || 'A',
         advisorName: advisorName ? String(advisorName).trim() : null,
         ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+        ...(bloodGroup !== undefined ? { bloodGroup } : {}),
+        ...(residencyStatus !== undefined ? { residencyStatus } : {}),
+        ...(cgpa !== undefined ? { cgpa } : {}),
+        ...(attendance !== undefined ? { attendance } : {}),
       } as any,
       create: {
         userId: user.id,
@@ -349,6 +384,10 @@ export async function PUT(request: Request) {
         batch: batch ? String(batch).trim() : null,
         section: section || 'A',
         advisorName: advisorName ? String(advisorName).trim() : null,
+        ...(bloodGroup !== undefined ? { bloodGroup } : {}),
+        ...(residencyStatus !== undefined ? { residencyStatus } : {}),
+        ...(cgpa !== undefined ? { cgpa } : {}),
+        ...(attendance !== undefined ? { attendance } : {}),
       } as any,
     })
 

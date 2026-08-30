@@ -40,6 +40,10 @@ model Student {
   batch          String?
   advisorName    String?
   parentPhone    String?
+  bloodGroup     String?
+  residencyStatus String?
+  cgpa           Float?
+  attendance     String?
 
   @@index([registerNumber])
   @@index([department])
