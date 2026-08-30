@@ -217,16 +217,20 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   }, [])
 
   const handleDirectInstall = async () => {
-    if (deferredInstallPrompt.current) {
+    // Try the globally stored native browser install prompt first
+    const globalPrompt = (window as any).__pwaInstallPrompt
+    const prompt = globalPrompt || deferredInstallPrompt.current
+    if (prompt) {
       setInstalling(true)
       try {
-        deferredInstallPrompt.current.prompt()
-        const { outcome } = await deferredInstallPrompt.current.userChoice
+        await prompt.prompt()
+        const { outcome } = await prompt.userChoice
         if (outcome === 'accepted') {
           setIsAppInstalled(true)
           setCanInstall(false)
+          deferredInstallPrompt.current = null
+          ;(window as any).__pwaInstallPrompt = null
         }
-        deferredInstallPrompt.current = null
       } catch (err) {
         console.error('Install prompt error:', err)
       } finally {

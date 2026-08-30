@@ -142,6 +142,27 @@ export default function LoginPage() {
   }, [])
 
   const handleDirectInstall = async () => {
+    // Try the globally stored native browser install prompt first
+    const prompt = (window as any).__pwaInstallPrompt
+    if (prompt) {
+      setInstalling(true)
+      try {
+        await prompt.prompt()
+        const { outcome } = await prompt.userChoice
+        if (outcome === 'accepted') {
+          setIsAppInstalled(true)
+          setCanInstall(false)
+          ;(window as any).__pwaInstallPrompt = null
+        }
+      } catch (err) {
+        console.error('Install prompt error:', err)
+      } finally {
+        setInstalling(false)
+      }
+      return
+    }
+
+    // Fallback: use own ref if available
     if (deferredInstallPrompt.current) {
       setInstalling(true)
       try {
