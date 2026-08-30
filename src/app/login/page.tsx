@@ -33,6 +33,7 @@ import {
   AlertCircle,
   Users,
   Pencil,
+  Download,
 } from 'lucide-react'
 
 export default function LoginPage() {
@@ -101,7 +102,63 @@ export default function LoginPage() {
   // Deterministic 1-by-1 Staged Appearance Controller
   const [animStage, setAnimStage] = React.useState(0)
 
+  // Direct 1-Click PWA App Installation
+  const deferredInstallPrompt = React.useRef<any>(null)
+  const [canInstall, setCanInstall] = React.useState(false)
+  const [isAppInstalled, setIsAppInstalled] = React.useState(false)
+  const [installing, setInstalling] = React.useState(false)
+
   const router = useRouter()
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Check if already opened in standalone installed mode
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
+    if (standalone) {
+      setIsAppInstalled(true)
+      return
+    }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault()
+      deferredInstallPrompt.current = e
+      setCanInstall(true)
+    }
+
+    const handleAppInstalled = () => {
+      deferredInstallPrompt.current = null
+      setCanInstall(false)
+      setIsAppInstalled(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  const handleDirectInstall = async () => {
+    if (deferredInstallPrompt.current) {
+      setInstalling(true)
+      try {
+        deferredInstallPrompt.current.prompt()
+        const { outcome } = await deferredInstallPrompt.current.userChoice
+        if (outcome === 'accepted') {
+          setIsAppInstalled(true)
+          setCanInstall(false)
+        }
+        deferredInstallPrompt.current = null
+      } catch (err) {
+        console.error('Install prompt error:', err)
+      } finally {
+        setInstalling(false)
+      }
+    }
+  }
 
   React.useEffect(() => {
     // Progressive staged entrance timers
@@ -1098,6 +1155,15 @@ export default function LoginPage() {
               <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
               <span>Admin Support</span>
             </span>
+            {!isAppInstalled && canInstall && (
+              <>
+                <span className="text-slate-300">|</span>
+                <span onClick={handleDirectInstall} className="flex items-center gap-1 cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold animate-pulse">
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{installing ? 'Installing...' : 'Install App'}</span>
+                </span>
+              </>
+            )}
           </div>
 
         </div>
