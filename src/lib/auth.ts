@@ -176,90 +176,19 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     }).catch(() => null)
   }
 
-  // 3. If neither Student nor User exists, auto-provision
+  // 3. If neither Student nor User exists — only admin-added students can login
   if (!student && !user) {
-    if (/^[0-9A-Z]{4,20}$/i.test(normalizedReg)) {
-      try {
-        const passwordHash = trimmedPassword ? await bcrypt.hash(trimmedPassword, 10) : await bcrypt.hash('vsb@123', 10)
-        user = await prisma.user.create({
-          data: {
-            name: `Student (${normalizedReg})`,
-            email: `${normalizedReg.toLowerCase()}@student.vsb.edu.in`,
-            role: 'student',
-            passwordHash,
-            status: 'active',
-            mustChangePassword: false,
-          },
-        })
-        student = await prisma.student.create({
-          data: {
-            userId: user.id,
-            registerNumber: normalizedReg,
-            dateOfBirth: new Date('2006-08-15'),
-            department: 'Artificial Intelligence & Data Science',
-            year: 2,
-            semester: 4,
-            section: 'A',
-          },
-        })
-        const token = await createToken({
-          userId: user.id,
-          email: user.email,
-          role: 'student',
-          name: user.name,
-          registerNumber: student.registerNumber,
-        })
-        return { success: true, token, user, student }
-      } catch (e) {
-        console.error('Auto student provision error:', e)
-      }
-    }
-    return { success: false, message: 'Invalid Register Number or Password.' }
+    return { success: false, message: 'Invalid Register Number or Password. Please contact your administrator.' }
   }
 
-  // 4. If student exists but user doesn't, create linked user
+  // 4. If student exists but user record is missing — data integrity issue
   if (student && !user) {
-    try {
-      const passwordHash = trimmedPassword ? await bcrypt.hash(trimmedPassword, 10) : await bcrypt.hash('vsb@123', 10)
-      user = await prisma.user.create({
-        data: {
-          id: student.userId || undefined,
-          name: `Student (${normalizedReg})`,
-          email: `${normalizedReg.toLowerCase()}@student.vsb.edu.in`,
-          role: 'student',
-          passwordHash,
-          status: 'active',
-          mustChangePassword: false,
-        },
-      })
-      if (student.userId !== user.id) {
-        await prisma.student.update({
-          where: { id: student.id },
-          data: { userId: user.id },
-        }).catch(() => {})
-      }
-    } catch (e) {
-      console.error('Error creating user for existing student:', e)
-    }
+    return { success: false, message: 'Account not fully set up. Please contact your administrator.' }
   }
 
-  // 5. If user exists but student doesn't, create linked student
+  // 5. If user exists but no student record — not a valid student
   if (user && !student) {
-    try {
-      student = await prisma.student.create({
-        data: {
-          userId: user.id,
-          registerNumber: normalizedReg,
-          dateOfBirth: new Date('2006-08-15'),
-          department: 'Artificial Intelligence & Data Science',
-          year: 2,
-          semester: 4,
-          section: 'A',
-        },
-      })
-    } catch (e) {
-      console.error('Error creating student record for user:', e)
-    }
+    return { success: false, message: 'Invalid Register Number or Password.' }
   }
 
   if (!user) {
@@ -336,17 +265,8 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     }
   }
 
-  // F. If the student was added to DB with any password, allow login and update hash
-  if (!isValid && trimmedPassword.length >= 3) {
-    try {
-      const newHash = await bcrypt.hash(trimmedPassword, 10)
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { passwordHash: newHash },
-      }).catch(() => {})
-      isValid = true
-    } catch {}
-  }
+  // F. Password is strictly verified — no fallback accept-anything
+  // If isValid is still false here, reject login.
 
   // G. Handle mustChangePassword logic (temp password flow)
   // If mustChangePassword is set, allow login but flag that password change is required
