@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
+import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
 import { RealtimeNotificationToast, RealtimeToastData } from '@/components/notifications/RealtimeNotificationToast'
 import {
   playNotificationChime,
@@ -159,6 +160,7 @@ const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {
 export function PortalLayout({ role, userName, userEmail, navItems, children }: PortalLayoutProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
   const [activePath, setActivePath] = useState('')
   const [notifications, setNotifications] = useState<NotificationItem[]>(
@@ -644,13 +646,25 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
           })}
         </nav>
 
-        {/* Drawer Footer with Logout */}
-        <div className="p-3 border-t border-white/10 bg-white/5">
+        {/* Drawer Footer with Download App and Logout */}
+        <div className="p-3 border-t border-white/10 bg-white/5 space-y-2">
+          <button
+            type="button"
+            onClick={() => {
+              setIsDrawerOpen(false)
+              setIsDownloaderOpen(true)
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#22C7E8] bg-white/10 hover:bg-white/15 transition-all duration-200 cursor-pointer shadow-xs"
+          >
+            <Smartphone className="h-4 w-4" />
+            <span>Download Portal App</span>
+          </button>
+
           <button
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
@@ -688,7 +702,17 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
           </div>
 
           {/* Desktop Right Profile & Notification Actions */}
-          <div className="flex items-center gap-3 ml-auto relative" ref={notificationRef}>
+          <div className="flex items-center gap-2.5 sm:gap-3 ml-auto relative" ref={notificationRef}>
+            {/* Real-time App Downloader button */}
+            <button
+              onClick={() => setIsDownloaderOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-xs font-bold shadow-xs hover:opacity-95 transition-all cursor-pointer"
+              title="Download &amp; Install Real-Time Portal App"
+            >
+              <Download className="w-3.5 h-3.5 text-[#F4C430]" />
+              <span className="hidden sm:inline">Download App</span>
+              <span className="sm:hidden">App</span>
+            </button>
             {/* Interactive Notification Bell */}
             <div className="relative">
               <button
@@ -951,6 +975,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
 
       {/* Floating AI Chatbot Bottom-Right Icon */}
       <FloatingChatbot />
+
+      {/* Real-Time App Downloader Modal */}
+      <RealtimeAppDownloader
+        isOpen={isDownloaderOpen}
+        onClose={() => setIsDownloaderOpen(false)}
+      />
     </div>
   )
 }

@@ -34,10 +34,13 @@ import {
   Users,
   Pencil,
   Download,
+  Smartphone,
 } from 'lucide-react'
+import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'hod' | 'admin'>('student')
+  const [showDownloader, setShowDownloader] = React.useState(false)
   const [registerNumber, setRegisterNumber] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
@@ -579,13 +582,24 @@ export default function LoginPage() {
       {/* TOP HEADER: Centered Ultra-Luxury Branding */}
       <div className="w-full max-w-lg text-center space-y-1.5 sm:space-y-2.5 relative z-10 pt-1 pb-1">
         
-        {/* Stage 1: Accreditation Top Badge */}
-        <div className={cn(
-          "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-700 ease-out transform",
-          animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-        )}>
-          <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
-          <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
+        {/* Stage 1: Accreditation Top Badge & App Downloader Button */}
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className={cn(
+            "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-700 ease-out transform",
+            animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+          )}>
+            <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
+            <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowDownloader(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-blue-50/95 border border-blue-200/80 text-[9px] sm:text-xs font-black text-[#1557C0] shadow-xs hover:bg-blue-100 transition-all cursor-pointer"
+          >
+            <Download className="w-3 h-3 text-[#E7B93E]" />
+            <span>Download Portal App</span>
+          </button>
         </div>
         
         {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (PICTURE LOGO) */}
@@ -1681,6 +1695,12 @@ export default function LoginPage() {
           </div>
         </div>
       )}
+
+      {/* Real-Time App Downloader Modal */}
+      <RealtimeAppDownloader
+        isOpen={showDownloader}
+        onClose={() => setShowDownloader(false)}
+      />
     </div>
   )
 }
