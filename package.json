@@ -13,6 +13,14 @@
     "db:seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate"
   },
+  "allowScripts": {
+    "@prisma/client": true,
+    "@prisma/engines": true,
+    "core-js": true,
+    "esbuild": true,
+    "prisma": true,
+    "unrs-resolver": true
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "3.9.0",
