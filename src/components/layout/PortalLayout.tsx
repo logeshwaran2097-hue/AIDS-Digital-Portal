@@ -232,9 +232,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
       } finally {
         setInstalling(false)
       }
-    } else {
-      // If browser doesn't offer direct prompt, take to download/instructions page
-      window.location.href = '/download'
     }
   }
 
