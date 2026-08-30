@@ -21,6 +21,7 @@ import {
   Calendar,
   Sparkles,
   ExternalLink,
+  Smartphone,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
@@ -814,14 +815,11 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
             {/* Install App Button (PWA) */}
             <button
               onClick={() => {
-                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                  // Service worker is active, prompt to install
-                  navigator.serviceWorker.ready.then((registration) => {
-                    registration.showInstallPrompt?.()
-                  })
-                }
-                // Fallback: show download page info
-                window.location.href = '/download'
+                try {
+                  if (typeof window !== 'undefined') {
+                    window.location.href = '/download'
+                  }
+                } catch {}
               }}
               className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-cyan-200/80 bg-cyan-50 hover:bg-cyan-100 text-cyan-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102"
               title="Install VSB AI & DS Portal as app"
