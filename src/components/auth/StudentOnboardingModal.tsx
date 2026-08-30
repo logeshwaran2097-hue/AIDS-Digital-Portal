@@ -77,7 +77,15 @@ export function StudentOnboardingModal({
 
   // OTP state
   const [otp, setOtp] = useState('')
+  const [demoOtp, setDemoOtp] = useState<string | null>(null)
   const [resendCooldown, setResendCooldown] = useState(0)
+
+  // Auto-decrement cooldown
+  React.useEffect(() => {
+    if (resendCooldown <= 0) return
+    const t = setInterval(() => setResendCooldown((c) => c - 1), 1000)
+    return () => clearInterval(t)
+  }, [resendCooldown])
 
   // Correction request state
   const [showCorrection, setShowCorrection] = useState(false)
@@ -158,6 +166,9 @@ export function StudentOnboardingModal({
       const data = await res.json()
       if (res.ok && data.success) {
         toast.success(`Verification OTP sent to ${email.trim()}`)
+        if (data.demoOtp) {
+          setDemoOtp(data.demoOtp)
+        }
         setStep(2)
         setResendCooldown(60)
       } else {
@@ -653,6 +664,22 @@ export function StudentOnboardingModal({
               />
             </div>
 
+            {demoOtp && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-center justify-between text-xs">
+                <div>
+                  <span className="font-bold text-amber-900 block">Security Code Sent:</span>
+                  <span className="font-mono font-bold text-amber-800 text-sm tracking-wider">{demoOtp}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOtp(demoOtp)}
+                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[11px] cursor-pointer"
+                >
+                  Auto-Fill OTP
+                </button>
+              </div>
+            )}
+
             <div className="space-y-3">
               <button
                 type="submit"
@@ -663,16 +690,27 @@ export function StudentOnboardingModal({
                 <span>Verify Code &amp; Activate Account</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setStep(1)
-                  setOtp('')
-                }}
-                className="text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors py-1"
-              >
-                &larr; Change Email or Phone Number
-              </button>
+              <div className="flex items-center justify-between text-xs pt-1 px-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep(1)
+                    setOtp('')
+                  }}
+                  className="font-bold text-gray-500 hover:text-gray-900 transition-colors py-1 cursor-pointer"
+                >
+                  &larr; Edit Details
+                </button>
+
+                <button
+                  type="button"
+                  disabled={resendCooldown > 0 || loading}
+                  onClick={(e) => handleSendOtp(e as any)}
+                  className="font-bold text-[#1455D9] hover:underline disabled:text-gray-400 cursor-pointer"
+                >
+                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
+                </button>
+              </div>
             </div>
           </form>
         )}

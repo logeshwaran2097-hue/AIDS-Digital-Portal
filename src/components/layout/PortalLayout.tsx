@@ -21,11 +21,12 @@ import {
   Calendar,
   Sparkles,
   ExternalLink,
+  Download,
+  Smartphone,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
 import { RealtimeNotificationToast, RealtimeToastData } from '@/components/notifications/RealtimeNotificationToast'
-import { PWAInstaller } from '@/components/PWAInstaller'
 import {
   playNotificationChime,
   triggerDeviceVibration,
@@ -176,6 +177,66 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   const [accentColor, setAccentColor] = useState('#1455D9')
   const [visibleMenuMap, setVisibleMenuMap] = useState<Record<string, boolean>>({})
   const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
+
+  // Direct 1-Click PWA App Installation
+  const deferredInstallPrompt = useRef<any>(null)
+  const [canInstall, setCanInstall] = useState(false)
+  const [isAppInstalled, setIsAppInstalled] = useState(false)
+  const [installing, setInstalling] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Check if already opened in standalone installed mode
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
+    if (standalone) {
+      setIsAppInstalled(true)
+      return
+    }
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault()
+      deferredInstallPrompt.current = e
+      setCanInstall(true)
+    }
+
+    const handleAppInstalled = () => {
+      deferredInstallPrompt.current = null
+      setCanInstall(false)
+      setIsAppInstalled(true)
+      playNotificationChime()
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  const handleDirectInstall = async () => {
+    if (deferredInstallPrompt.current) {
+      setInstalling(true)
+      try {
+        deferredInstallPrompt.current.prompt()
+        const { outcome } = await deferredInstallPrompt.current.userChoice
+        if (outcome === 'accepted') {
+          setIsAppInstalled(true)
+          setCanInstall(false)
+        }
+        deferredInstallPrompt.current = null
+      } catch (err) {
+        console.error('Install prompt error:', err)
+      } finally {
+        setInstalling(false)
+      }
+    } else {
+      // If browser doesn't offer direct prompt, take to download/instructions page
+      window.location.href = '/download'
+    }
+  }
 
   // Register Service Worker and check notification permission
   useEffect(() => {
@@ -798,6 +859,20 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               )}
             </div>
 
+            {/* Direct 1-Click Install App Action (Hidden when already installed) */}
+            {!isAppInstalled && (
+              <button
+                type="button"
+                onClick={handleDirectInstall}
+                disabled={installing}
+                title="Install VSB AI & DS Portal App"
+                className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-emerald-300/80 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 shadow-xs active:scale-95"
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="hidden sm:inline">{installing ? 'Installing...' : 'Install App'}</span>
+              </button>
+            )}
+
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
@@ -906,9 +981,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
 
       {/* Floating AI Chatbot Bottom-Right Icon */}
       <FloatingChatbot />
-
-      {/* PWA Installer */}
-      <PWAInstaller />
     </div>
   )
 }

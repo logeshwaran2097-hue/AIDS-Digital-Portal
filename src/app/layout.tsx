@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import { Toaster } from '@/components/ui/Toast'
-import { PWAInstall } from '@/components/PWAInstall'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { MobileAppSplashScreen } from '@/components/MobileAppSplashScreen'
 
@@ -53,7 +52,6 @@ export default function RootLayout({
           <MobileAppSplashScreen />
           {children}
           <Toaster />
-          <PWAInstall />
         </ThemeProvider>
       </body>
     </html>
