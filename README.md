@@ -62,6 +62,46 @@ graph TD
 
 ---
 
+## 🗺️ Page Workflows & Navigation Paths
+
+### 🎓 Student Workflow (From Login to Resources)
+1. **Login (`/login`)**: Authenticate using Register Number (e.g. `922525243103`) and Password.
+2. **Onboarding (First Login)**: Complete 2-step verification including Email OTP verification, permanent password setup, profile validation, and updating personal details (Mobile, Parent Mobile, WhatsApp check, DOB, Blood group, Residency, Transport details).
+3. **Dashboard (`/dashboard`)**: Central hub showing current semester progress, recent announcements, and quick access cards.
+4. **Resources (`/dashboard/resources`)**: Access course materials, PDFs, lab manuals, and slide decks uploaded by faculty.
+5. **Attendance (`/dashboard/attendance`)**: View real-time attendance across 8 periods & overall percentages.
+6. **Other Features**: 
+   - **Academics & Marks** (`/dashboard/study`)
+   - **Projects & Capstone** (`/dashboard/projects`)
+   - **Question Papers Bank** (`/dashboard/question-papers`)
+   - **Events & OD** (`/dashboard/events`) - Apply for On-Duty and leave.
+   - **Live AI Chat** - Float widget to instantly query curriculum or timetable.
+
+### 👨‍🏫 Faculty Workflow
+1. **Login (`/login`)**: Use Faculty ID (e.g. `FAC001`) and assigned password.
+2. **Dashboard (`/faculty-dashboard`)**: Overview of daily schedule, classes assigned, and advisory statistics.
+3. **Resources Management (`/faculty-dashboard/resources`)**: Upload and distribute study materials, lecture notes, and syllabus to specific batches and semesters.
+4. **Attendance Management (`/faculty-dashboard/attendance`)**: Mark period-wise attendance for assigned subjects/labs.
+5. **Students View (`/faculty-dashboard/students`)**: Class Advisors can monitor student academic performance, attendance shortages, and approve OD applications.
+6. **Other Features**: Manage Question Papers, Mentor Capstone Projects, and broadcast Announcements.
+
+### 👑 HOD Workflow
+1. **Login (`/login`)**: Use HOD ID (e.g. `HOD001`) and credentials.
+2. **Dashboard (`/hod-dashboard`)**: High-level department-wide statistics, total students, active faculty, overall attendance metrics.
+3. **Faculty Management (`/hod-dashboard/faculty`)**: Assign subjects, map class advisors, and track faculty workload and subjects.
+4. **Resource Oversight (`/hod-dashboard/resources`)**: Ensure curriculum delivery and review all uploaded department materials across all semesters.
+5. **Academics & Reports (`/hod-dashboard/academics`, `/hod-dashboard/reports`)**: View comprehensive academic reports, placement stats, and generate printable PDF audits.
+
+### 🛡️ Admin Workflow
+1. **Login (`/login`)**: Super admin email (e.g. `lonelyboy44y@gmail.com`) and secure password.
+2. **Dashboard (`/admin/dashboard`)**: Live system metrics, active users, DB health, and activity logs.
+3. **User Provisioning (`/admin/students`, `/admin/faculty`, `/admin/hod`)**: Add new user records manually, configure temporary passwords, and handle password resets for locked accounts.
+4. **System Settings (`/admin/settings`)**: Configure global parameters like academic year, current semester, portal name, and maintenance mode.
+5. **Global Resources (`/admin/resources`)**: Master view to manage, audit, and delete all files and resources across the portal.
+
+---
+
+
 ## 🔬 Complete 8-Semester Laboratory Curriculum
 
 | Semester | Code | Practical Laboratory Course | Schedule / Session |
