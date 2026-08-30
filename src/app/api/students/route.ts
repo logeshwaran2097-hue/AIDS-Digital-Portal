@@ -162,8 +162,8 @@ export async function POST(request: Request) {
           parentPhone: parentPhone ? String(parentPhone).trim() : (existingStudent as any).parentPhone,
           bloodGroup: bloodGroup !== undefined ? bloodGroup : (existingStudent as any).bloodGroup,
           residencyStatus: residencyStatus !== undefined ? residencyStatus : (existingStudent as any).residencyStatus,
-          cgpa: cgpa !== undefined ? cgpa : (existingStudent as any).cgpa,
-          attendance: attendance !== undefined ? attendance : (existingStudent as any).attendance,
+          cgpa: cgpa !== undefined ? (cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : null) : (existingStudent as any).cgpa,
+          attendance: attendance !== undefined ? (attendance !== '' ? String(attendance) : null) : (existingStudent as any).attendance,
         } as any,
       })
 
@@ -358,8 +358,8 @@ export async function PUT(request: Request) {
           ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
           ...(bloodGroup !== undefined ? { bloodGroup } : {}),
           ...(residencyStatus !== undefined ? { residencyStatus } : {}),
-          ...(cgpa !== undefined ? { cgpa } : {}),
-          ...(attendance !== undefined ? { attendance } : {}),
+          ...(cgpa !== undefined ? { cgpa: cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : null } : {}),
+          ...(attendance !== undefined ? { attendance: attendance !== '' ? String(attendance) : null } : {}),
         } as any,
       })
 
@@ -456,8 +456,8 @@ export async function PUT(request: Request) {
         parentPhone: parentPhone ? String(parentPhone).trim() : null,
         ...(bloodGroup !== undefined ? { bloodGroup } : {}),
         ...(residencyStatus !== undefined ? { residencyStatus } : {}),
-        ...(cgpa !== undefined ? { cgpa } : {}),
-        ...(attendance !== undefined ? { attendance } : {}),
+        ...(cgpa !== undefined ? { cgpa: cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : null } : {}),
+        ...(attendance !== undefined ? { attendance: attendance !== '' ? String(attendance) : null } : {}),
       } as any,
       create: {
         userId: user.id,
@@ -472,8 +472,8 @@ export async function PUT(request: Request) {
         parentPhone: parentPhone ? String(parentPhone).trim() : null,
         ...(bloodGroup !== undefined ? { bloodGroup } : {}),
         ...(residencyStatus !== undefined ? { residencyStatus } : {}),
-        ...(cgpa !== undefined ? { cgpa } : {}),
-        ...(attendance !== undefined ? { attendance } : {}),
+        ...(cgpa !== undefined ? { cgpa: cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : null } : {}),
+        ...(attendance !== undefined ? { attendance: attendance !== '' ? String(attendance) : null } : {}),
       } as any,
     })
 
