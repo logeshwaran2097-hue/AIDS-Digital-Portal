@@ -55,7 +55,7 @@ export default function LoginPage() {
 
   // MULTI-STEP ONBOARDING WIZARD STATE
   const [showOnboardingModal, setShowOnboardingModal] = React.useState(false)
-  const [onboardingStep, setOnboardingStep] = React.useState<1 | 2>(1) // 1: Check Details & Corrections, 2: Password & Email OTP
+  const [onboardingStep, setOnboardingStep] = React.useState<1 | 2 | 3>(1) // 1: Details, 2: Password & Email OTP, 3: Final Review Popup
   const [onboardingUser, setOnboardingUser] = React.useState<any>(null)
   
   // Form State for Details Review & Password Setup
@@ -64,6 +64,9 @@ export default function LoginPage() {
     registerNumber: '',
     phone: '',
     parentPhone: '',
+    bloodGroup: '',
+    address: '',
+    busDetails: '',
     dateOfBirth: '',
     department: 'B.Tech Artificial Intelligence & Data Science',
     year: 'Year 2 (Sophomore)',

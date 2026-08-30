@@ -40,8 +40,15 @@ model Student {
   batch          String?
   advisorName    String?
   parentPhone    String?
+  isParentWhatsapp Boolean @default(false)
   bloodGroup     String?
   residencyStatus String?
+  hostelBlock    String?
+  roomNo         String?
+  busNo          String?
+  boardingPoint  String?
+  address        String?
+  busDetails     String?
   cgpa           Float?
   attendance     String?
 

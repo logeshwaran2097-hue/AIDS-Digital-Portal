@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
       semester,
       section,
       advisorName,
+      bloodGroup,
+      address,
+      busDetails,
       newPassword,
       qualification,
       specialization,
@@ -132,7 +135,11 @@ export async function POST(request: NextRequest) {
             year: parsedYear,
             semester: parsedSem,
             section: parsedSection,
-          },
+            ...(parentPhone !== undefined ? { parentPhone: parentPhone ? parentPhone.trim() : null } : {}),
+            ...(bloodGroup !== undefined && bloodGroup !== '' ? { bloodGroup } : {}),
+            ...(address !== undefined && address !== '' ? { address: address.trim() } : {}),
+            ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
+          } as any,
         }).catch((err) => console.warn('Student update warning:', err))
       } else if (targetRegNumber) {
         await prisma.student.create({
@@ -144,7 +151,11 @@ export async function POST(request: NextRequest) {
             year: parsedYear,
             semester: parsedSem,
             section: parsedSection,
-          },
+            ...(parentPhone !== undefined && parentPhone ? { parentPhone: parentPhone.trim() } : {}),
+            ...(bloodGroup !== undefined && bloodGroup !== '' ? { bloodGroup } : {}),
+            ...(address !== undefined && address !== '' ? { address: address.trim() } : {}),
+            ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
+          } as any,
         }).catch((err) => console.warn('Student create warning:', err))
       }
     }

@@ -55,6 +55,13 @@ export function StudentOnboardingModal({
     phone: initialData.phone || '',
     parentPhone: initialData.parentPhone || '',
     dateOfBirth: initialData.dateOfBirth || '2006-08-15',
+    isParentWhatsapp: false,
+    bloodGroup: '',
+    residencyStatus: '',
+    busNo: '',
+    boardingPoint: '',
+    hostelBlock: '',
+    roomNo: '',
     hasCorrectionRequest: false,
     correctionRemarks: '',
     detailsConfirmed: false,
@@ -195,6 +202,13 @@ export function StudentOnboardingModal({
           phone: form.phone.trim(),
           parentPhone: form.parentPhone.trim(),
           dateOfBirth: form.dateOfBirth,
+          isParentWhatsapp: form.isParentWhatsapp,
+          bloodGroup: form.bloodGroup,
+          residencyStatus: form.residencyStatus,
+          busNo: form.busNo,
+          boardingPoint: form.boardingPoint,
+          hostelBlock: form.hostelBlock,
+          roomNo: form.roomNo,
           newPassword: form.newPassword.trim(),
           otp: form.emailOtp.trim(),
         }),
@@ -428,6 +442,15 @@ export function StudentOnboardingModal({
                     onChange={(e) => setForm({ ...form, parentPhone: e.target.value })}
                     className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                   />
+                  <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.isParentWhatsapp}
+                      onChange={(e) => setForm({ ...form, isParentWhatsapp: e.target.checked })}
+                      className="rounded border-gray-300 text-[#16a34a] focus:ring-[#16a34a] w-3 h-3"
+                    />
+                    <span className="text-[10px] font-semibold text-gray-600">Available on WhatsApp</span>
+                  </label>
                 </div>
 
                 <div>
@@ -442,6 +465,105 @@ export function StudentOnboardingModal({
                     className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2.5">
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Blood Group
+                  </label>
+                  <select
+                    value={form.bloodGroup}
+                    onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })}
+                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                  >
+                    <option value="">Select Blood Group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Residency Status
+                  </label>
+                  <select
+                    value={form.residencyStatus}
+                    onChange={(e) => setForm({ ...form, residencyStatus: e.target.value, busNo: '', boardingPoint: '', hostelBlock: '', roomNo: '' })}
+                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                  >
+                    <option value="">Select Residency Status</option>
+                    <option value="Day Scholar">Day Scholar</option>
+                    <option value="Hostel">Hostel</option>
+                  </select>
+                </div>
+
+                {form.residencyStatus === 'Day Scholar' && (
+                  <>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Bus No.
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 15"
+                        value={form.busNo}
+                        onChange={(e) => setForm({ ...form, busNo: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Boarding Point
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Karur Bus Stand"
+                        value={form.boardingPoint}
+                        onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {form.residencyStatus === 'Hostel' && (
+                  <>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Hostel Block
+                      </label>
+                      <select
+                        value={form.hostelBlock}
+                        onChange={(e) => setForm({ ...form, hostelBlock: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="">Select Block</option>
+                        <option value="Boys Hostel 1">Boys Hostel 1</option>
+                        <option value="Boys Hostel 2">Boys Hostel 2</option>
+                        <option value="Girls Hostel">Girls Hostel</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Room No.
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 102"
+                        value={form.roomNo}
+                        onChange={(e) => setForm({ ...form, roomNo: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

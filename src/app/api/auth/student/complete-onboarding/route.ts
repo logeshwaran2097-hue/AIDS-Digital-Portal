@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification } = body
+    const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification, residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint } = body
 
     const isCustomEmail = email && !email.endsWith('@student.vsb.edu.in') && email.includes('@')
 
@@ -44,6 +44,13 @@ export async function POST(request: NextRequest) {
       const studentUpdateData: any = {}
       if (dateOfBirth) studentUpdateData.dateOfBirth = new Date(dateOfBirth)
       if (parentPhone !== undefined) studentUpdateData.parentPhone = parentPhone ? parentPhone.trim() : null
+      if (isParentWhatsapp !== undefined) studentUpdateData.isParentWhatsapp = Boolean(isParentWhatsapp)
+      if (bloodGroup !== undefined) studentUpdateData.bloodGroup = bloodGroup
+      if (residencyStatus !== undefined) studentUpdateData.residencyStatus = residencyStatus
+      if (hostelBlock !== undefined) studentUpdateData.hostelBlock = hostelBlock
+      if (roomNo !== undefined) studentUpdateData.roomNo = roomNo
+      if (busNo !== undefined) studentUpdateData.busNo = busNo
+      if (boardingPoint !== undefined) studentUpdateData.boardingPoint = boardingPoint
 
       if (Object.keys(studentUpdateData).length > 0) {
         let student = await prisma.student.update({
@@ -165,6 +172,13 @@ export async function POST(request: NextRequest) {
     const studentUpdateData: any = {}
     if (dateOfBirth) studentUpdateData.dateOfBirth = new Date(dateOfBirth)
     if (parentPhone) studentUpdateData.parentPhone = parentPhone.trim()
+    if (isParentWhatsapp !== undefined) studentUpdateData.isParentWhatsapp = Boolean(isParentWhatsapp)
+    if (bloodGroup !== undefined) studentUpdateData.bloodGroup = bloodGroup
+    if (residencyStatus !== undefined) studentUpdateData.residencyStatus = residencyStatus
+    if (hostelBlock !== undefined) studentUpdateData.hostelBlock = hostelBlock
+    if (roomNo !== undefined) studentUpdateData.roomNo = roomNo
+    if (busNo !== undefined) studentUpdateData.busNo = busNo
+    if (boardingPoint !== undefined) studentUpdateData.boardingPoint = boardingPoint
 
     if (Object.keys(studentUpdateData).length > 0) {
       let student = await prisma.student.update({
