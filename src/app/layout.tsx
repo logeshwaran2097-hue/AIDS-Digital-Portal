@@ -47,6 +47,18 @@ export default function RootLayout({
         <meta name="application-name" content="Digital Portal of AI&DS" />
         <meta name="apple-mobile-web-app-title" content="Digital Portal of AI&DS" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className={inter.className}>
         <ThemeProvider>

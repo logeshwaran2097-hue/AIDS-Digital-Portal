@@ -1,19 +1,19 @@
 {
-  "id": "vsb-aids-digital-portal",
+  "id": "/?source=pwa",
   "name": "Digital Portal of AI&DS",
-  "short_name": "Digital Portal of AI&DS",
+  "short_name": "VSB AI&DS",
   "description": "V.S.B. Engineering College - Department of Artificial Intelligence & Data Science Digital Portal, Karur, Tamil Nadu",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
-  "orientation": "portrait",
+  "display_override": ["standalone", "minimal-ui", "window-controls-overlay", "browser"],
+  "orientation": "portrait-primary",
   "background_color": "#071A41",
   "theme_color": "#071A41",
-  "lang": "en",
+  "lang": "en-US",
   "dir": "ltr",
   "prefer_related_applications": false,
-  "categories": ["education", "academic", "productivity"],
+  "categories": ["education", "productivity", "utilities"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -46,16 +46,36 @@
       "purpose": "any"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "VSB AI & DS Portal Desktop Dashboard"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "VSB AI & DS Portal Mobile Attendance and Study View"
+    }
+  ],
   "shortcuts": [
     {
       "name": "Student Login",
+      "short_name": "Login",
       "url": "/login",
-      "description": "Login to Student Portal"
+      "description": "Sign in to your Student Account",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Dashboard",
+      "short_name": "Dashboard",
       "url": "/dashboard",
-      "description": "View Student Academic Dashboard"
+      "description": "View Student Academic Dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
