@@ -41,6 +41,7 @@ import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'hod' | 'admin'>('student')
   const [showDownloader, setShowDownloader] = React.useState(false)
+  const [isAppInstalled, setIsAppInstalled] = React.useState(false)
   const [registerNumber, setRegisterNumber] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
@@ -51,6 +52,29 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = React.useState(false)
   const [otpCooldown, setOtpCooldown] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const standalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true
+      setIsAppInstalled(standalone)
+    }
+  }, [])
+
+  const handleDirectInstall = () => {
+    if (typeof window !== 'undefined') {
+      if ((window as any).__triggerPwaInstall) {
+        ;(window as any).__triggerPwaInstall()
+      } else if ((window as any).__openAppDownloader) {
+        ;(window as any).__openAppDownloader()
+      } else {
+        setShowDownloader(true)
+      }
+    } else {
+      setShowDownloader(true)
+    }
+  }
 
   // LUXURY AUTHENTICATION ANIMATION STATES
   const [authStatus, setAuthStatus] = React.useState<'idle' | 'success' | 'error'>('idle')
@@ -104,42 +128,7 @@ export default function LoginPage() {
 
   // Deterministic 1-by-1 Staged Appearance Controller
   const [animStage, setAnimStage] = React.useState(0)
-
-  // Direct 1-Click PWA App Installation
-  const deferredInstallPrompt = React.useRef<any>(null)
-  const [canInstall, setCanInstall] = React.useState(false)
-  const [isAppInstalled, setIsAppInstalled] = React.useState(false)
-  const [installing, setInstalling] = React.useState(false)
-
   const router = useRouter()
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    // Check if already opened in standalone installed mode
-    const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
-    if (standalone) {
-      setIsAppInstalled(true)
-      return
-    }
-
-    const handleAppInstalled = () => {
-      setIsAppInstalled(true)
-    }
-
-    window.addEventListener('appinstalled', handleAppInstalled)
-
-    return () => {
-      window.removeEventListener('appinstalled', handleAppInstalled)
-    }
-  }, [])
-
-
-  const handleDirectInstall = async () => {
-    if (typeof window !== 'undefined' && window.__triggerPwaInstall) {
-      window.__triggerPwaInstall()
-    }
-  }
 
   React.useEffect(() => {
     // Progressive staged entrance timers
@@ -1150,10 +1139,14 @@ export default function LoginPage() {
             {!isAppInstalled && (
               <>
                 <span className="text-slate-300">|</span>
-                <span onClick={handleDirectInstall} className="flex items-center gap-1 cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold animate-pulse">
+                <button 
+                  type="button"
+                  onClick={handleDirectInstall} 
+                  className="inline-flex items-center gap-1 cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold transition-all hover:scale-105"
+                >
                   <Download className="w-3.5 h-3.5" />
-                  <span>{installing ? 'Installing...' : 'Install App'}</span>
-                </span>
+                  <span>Install App</span>
+                </button>
               </>
             )}
           </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Download, X, Share, PlusSquare, Sparkles } from 'lucide-react'
 import Image from 'next/image'
+import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -13,6 +14,7 @@ declare global {
   interface Window {
     __pwaInstallPrompt?: BeforeInstallPromptEvent | null
     __triggerPwaInstall?: () => void
+    __openAppDownloader?: () => void
   }
 }
 
@@ -22,6 +24,7 @@ export function PWAInstall() {
   const [isIOS, setIsIOS] = useState(false)
   const [showIOSGuide, setShowIOSGuide] = useState(false)
   const [installing, setInstalling] = useState(false)
+  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
@@ -43,6 +46,11 @@ export function PWAInstall() {
       return
     }
 
+    // Global opener for the Real-Time App Downloader
+    window.__openAppDownloader = () => {
+      setIsDownloaderOpen(true)
+    }
+
     // Expose a global trigger function any button can call
     window.__triggerPwaInstall = async () => {
       const prompt = promptRef.current || window.__pwaInstallPrompt
@@ -60,16 +68,18 @@ export function PWAInstall() {
             setShowBanner(false)
             promptRef.current = null
             window.__pwaInstallPrompt = null
+          } else {
+            setIsDownloaderOpen(true)
           }
         } catch (e) {
           console.error(e)
+          setIsDownloaderOpen(true)
         } finally {
           setInstalling(false)
         }
       } else {
-        // Prompt not yet available — show the banner to wait for it
-        // On mobile Chrome it usually fires within seconds
-        setShowBanner(true)
+        // Prompt not directly available in browser — open active downloader modal
+        setIsDownloaderOpen(true)
       }
     }
 
@@ -79,11 +89,8 @@ export function PWAInstall() {
       promptRef.current = evt
       window.__pwaInstallPrompt = evt
 
-      // Auto show banner on mobile immediately when prompt is ready
-      const isMobile = /android|iphone|ipad|ipod/i.test(ua)
-      if (isMobile) {
-        setShowBanner(true)
-      }
+      // Show banner when prompt is ready
+      setShowBanner(true)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -91,6 +98,7 @@ export function PWAInstall() {
     window.addEventListener('appinstalled', () => {
       setIsInstalled(true)
       setShowBanner(false)
+      setIsDownloaderOpen(false)
       promptRef.current = null
       window.__pwaInstallPrompt = null
     })
@@ -98,14 +106,22 @@ export function PWAInstall() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       window.__triggerPwaInstall = undefined
+      window.__openAppDownloader = undefined
     }
   }, [])
 
   const handleInstall = async () => {
-    if (isIOS) { setShowIOSGuide(true); return }
+    if (isIOS) { 
+      setShowIOSGuide(true)
+      return 
+    }
 
     const prompt = promptRef.current || window.__pwaInstallPrompt
-    if (!prompt) return
+    if (!prompt) {
+      // Fallback directly to Realtime App Downloader
+      setIsDownloaderOpen(true)
+      return
+    }
 
     setInstalling(true)
     try {
@@ -116,9 +132,12 @@ export function PWAInstall() {
         setShowBanner(false)
         promptRef.current = null
         window.__pwaInstallPrompt = null
+      } else {
+        setIsDownloaderOpen(true)
       }
     } catch (e) {
       console.error(e)
+      setIsDownloaderOpen(true)
     } finally {
       setInstalling(false)
     }
@@ -205,6 +224,12 @@ export function PWAInstall() {
           </div>
         </div>
       )}
+
+      {/* Real-Time App Downloader Modal */}
+      <RealtimeAppDownloader
+        isOpen={isDownloaderOpen}
+        onClose={() => setIsDownloaderOpen(false)}
+      />
     </>
   )
 }
