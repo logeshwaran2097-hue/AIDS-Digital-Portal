@@ -547,7 +547,10 @@ export function StudentOnboardingModal({
                         <option value="">Select Block</option>
                         <option value="Boys Hostel 1">Boys Hostel 1</option>
                         <option value="Boys Hostel 2">Boys Hostel 2</option>
-                        <option value="Girls Hostel">Girls Hostel</option>
+                        <option value="Boys Hostel 3">Boys Hostel 3</option>
+                        <option value="Girls Hostel 1">Girls Hostel 1</option>
+                        <option value="Girls Hostel 2">Girls Hostel 2</option>
+                        <option value="Girls Hostel 3">Girls Hostel 3</option>
                       </select>
                     </div>
                     <div>
