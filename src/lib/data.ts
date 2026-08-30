@@ -2,8 +2,8 @@ import { prisma } from '@/lib/prisma'
 
 export async function getStudentData(userId: string) {
   try {
-    let user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null)
-    let student = await prisma.student.findUnique({ where: { userId } }).catch(() => null)
+    let user: any = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null)
+    let student: any = await prisma.student.findUnique({ where: { userId } }).catch(() => null)
 
     if (!student && user) {
       // Try resolving by email prefix or name if userId wasn't directly linked
@@ -66,14 +66,14 @@ export async function getStudentData(userId: string) {
       student = {
         id: 'student-default',
         userId: userId,
-        registerNumber: user?.email ? user.email.split('@')[0].toUpperCase() : '922525243103',
-        dateOfBirth: new Date('2006-02-09'),
+        registerNumber: user?.email ? user.email.split('@')[0].toUpperCase() : 'STUDENT01',
+        dateOfBirth: new Date('2004-01-01'),
         department: 'Artificial Intelligence & Data Science',
-        year: 2,
-        semester: 4,
+        year: 1,
+        semester: 1,
         section: 'A',
         batch: '2024 - 2028',
-        advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+        advisorName: 'Assigned Faculty Mentor',
         parentPhone: null,
       }
     }

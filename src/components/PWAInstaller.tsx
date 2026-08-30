@@ -15,7 +15,7 @@ export function PWAInstaller() {
 
   React.useEffect(() => {
     const ua = navigator.userAgent
-    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !window.MSStream
+    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream
     setIsIOS(isIOSDevice)
 
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches

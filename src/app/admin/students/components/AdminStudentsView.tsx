@@ -387,12 +387,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 password: '',
                 phone: '',
                 dateOfBirth: '',
+                bloodGroup: '',
+                residencyStatus: '',
                 year: 1,
                 semester: 1,
                 batch: '',
                 section: 'A',
                 advisorName: '',
                 status: 'active',
+                cgpa: '',
+                attendance: '',
               })
               setIsAddModalOpen(true)
             }}
