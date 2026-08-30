@@ -691,16 +691,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
 
           {/* Desktop Right Profile & Notification Actions */}
           <div className="flex items-center gap-2.5 sm:gap-3 ml-auto relative" ref={notificationRef}>
-            {/* Real-time App Downloader button */}
-            <button
-              onClick={() => setIsDownloaderOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#071A41] to-[#1557C0] text-white text-xs font-bold shadow-xs hover:opacity-95 transition-all cursor-pointer"
-              title="Download &amp; Install Real-Time Portal App"
-            >
-              <Download className="w-3.5 h-3.5 text-[#F4C430]" />
-              <span className="hidden sm:inline">Download App</span>
-              <span className="sm:hidden">App</span>
-            </button>
             {/* Interactive Notification Bell */}
             <div className="relative">
               <button
