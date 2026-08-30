@@ -843,20 +843,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               )}
             </div>
 
-            {/* Direct 1-Click Install App Action (Hidden when already installed) */}
-            {!isAppInstalled && (
-              <button
-                type="button"
-                onClick={handleDirectInstall}
-                disabled={installing}
-                title="Install VSB AI & DS Portal App"
-                className="px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-emerald-300/80 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 shadow-xs active:scale-95"
-              >
-                <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span className="hidden sm:inline">{installing ? 'Installing...' : 'Install App'}</span>
-              </button>
-            )}
-
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
