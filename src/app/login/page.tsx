@@ -120,26 +120,17 @@ export default function LoginPage() {
       return
     }
 
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault()
-      deferredInstallPrompt.current = e
-      setCanInstall(true)
-    }
-
     const handleAppInstalled = () => {
-      deferredInstallPrompt.current = null
-      setCanInstall(false)
       setIsAppInstalled(true)
     }
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
     window.addEventListener('appinstalled', handleAppInstalled)
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
+
 
   const handleDirectInstall = async () => {
     if (typeof window !== 'undefined' && window.__triggerPwaInstall) {
@@ -1142,7 +1133,7 @@ export default function LoginPage() {
               <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
               <span>Admin Support</span>
             </span>
-            {!isAppInstalled && canInstall && (
+            {!isAppInstalled && (
               <>
                 <span className="text-slate-300">|</span>
                 <span onClick={handleDirectInstall} className="flex items-center gap-1 cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold animate-pulse">

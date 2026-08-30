@@ -255,6 +255,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           section: 'A',
           advisorName: '',
           status: 'active',
+          bloodGroup: '',
+          residencyStatus: '',
+          cgpa: '',
+          attendance: '',
         })
         toast.success('Student registered successfully in database!')
       } else {
