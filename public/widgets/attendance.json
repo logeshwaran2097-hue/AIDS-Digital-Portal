@@ -1,0 +1,64 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "V.S.B. AI & DS Portal",
+      "weight": "Bolder",
+      "size": "Medium",
+      "color": "Accent"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Institutional 8-Period Attendance & Timetable Matrix",
+      "isSubtle": true,
+      "wrap": true
+    },
+    {
+      "type": "FactSet",
+      "facts": [
+        {
+          "title": "Period 1",
+          "value": "09:15 AM - 10:00 AM"
+        },
+        {
+          "title": "Period 2",
+          "value": "10:00 AM - 10:45 AM"
+        },
+        {
+          "title": "Period 3",
+          "value": "11:00 AM - 11:45 AM"
+        },
+        {
+          "title": "Period 4",
+          "value": "11:45 AM - 12:30 PM"
+        },
+        {
+          "title": "Period 5",
+          "value": "01:20 PM - 02:05 PM"
+        },
+        {
+          "title": "Period 6",
+          "value": "02:05 PM - 02:50 PM"
+        },
+        {
+          "title": "Period 7",
+          "value": "03:05 PM - 03:50 PM"
+        },
+        {
+          "title": "Period 8",
+          "value": "03:50 PM - 04:30 PM"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.OpenUrl",
+      "title": "Open Student Portal",
+      "url": "https://aids-digital-portal-71nvmp9aa-kannan15.vercel.app/login"
+    }
+  ]
+}
