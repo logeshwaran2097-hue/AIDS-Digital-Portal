@@ -16,7 +16,11 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
     outputFileTracingIncludes: {
-      '/**': ['./prisma/dev.db', './prisma/schema.prisma'],
+      '/api/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
+      '/admin/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
+      '/dashboard/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
+      '/faculty-dashboard/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
+      '/hod-dashboard/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
     },
   },
   async headers() {
