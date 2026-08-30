@@ -889,8 +889,10 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
       ]
     : []
 
+  const officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
+
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `V.S.B. AI & DS Portal <${smtpUser}>`,
+    from: officialFrom,
     to: defaultDestination,
     subject: `V.S.B. AI & DS Portal — Admin Login OTP [${otp}]`,
     attachments,
@@ -922,16 +924,16 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 3px 0; color: #64748b; font-weight: 600; width: 140px;">👤 Admin Name:</td>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600; width: 140px;">👤 Authorized User:</td>
                   <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">${name}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">📧 Login Email ID:</td>
-                  <td style="padding: 3px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${email}</td>
                 </tr>
                 <tr>
                   <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🛡️ Access Role:</td>
                   <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">System Administrator (Super Admin)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🔒 Security Status:</td>
+                  <td style="padding: 3px 0; color: #16a34a; font-weight: 700;">Active 2-Factor Authentication</td>
                 </tr>
               </table>
             </div>
@@ -1017,8 +1019,10 @@ export async function sendStudentVerificationEmail(email: string, otp: string, s
       ]
     : []
 
+  const officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
+
   const mailOptions = {
-    from: process.env.EMAIL_FROM || `V.S.B. AI & DS Portal <${smtpUser}>`,
+    from: officialFrom,
     to: recipientEmail,
     subject: `V.S.B. AI & DS Portal — Email Verification OTP [${otp}]`,
     attachments,
@@ -1058,13 +1062,13 @@ export async function sendStudentVerificationEmail(email: string, otp: string, s
                   <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">${studentName}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">📧 Email ID:</td>
-                  <td style="padding: 3px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${recipientEmail}</td>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+                  <td style="padding: 3px 0; color: #1455D9; font-weight: 700;">B.Tech Artificial Intelligence &amp; Data Science</td>
                 </tr>
               </table>
             </div>
 
-            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your student portal to verify your institutional email and proceed to set your new permanent password:</p>
+            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your student portal to verify your institutional account and proceed to set your new permanent password:</p>
             
             <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; text-align: center; margin: 16px 0;">
               <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
