@@ -7,23 +7,20 @@ import {
   AlertCircle,
   Loader2,
   ArrowRight,
+  ArrowLeft,
   ShieldCheck,
   Send,
-  FileEdit,
   X,
   Lock,
   Mail,
   Phone,
-  UserCheck,
-  KeyRound,
+  Pencil,
   Eye,
   EyeOff,
-  Sparkles,
-  Award,
   GraduationCap,
-  ChevronRight,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
+import { cn } from '@/lib/utils'
 
 interface StudentOnboardingModalProps {
   isOpen: boolean
@@ -49,105 +46,86 @@ export function StudentOnboardingModal({
   onComplete,
   initialData,
 }: StudentOnboardingModalProps) {
-  // Steps: 1 (Fill remaining & new password) -> 2 (OTP verification) -> 3 (Final verified summary)
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  // Steps: 1: Review Academic Details -> 2: Set Password & Email OTP Verification
+  const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1)
   const [loading, setLoading] = useState(false)
 
-  // Input states
-  const [phone, setPhone] = useState(initialData.phone || '')
-  const [parentPhone, setParentPhone] = useState(initialData.parentPhone || '')
-  const [email, setEmail] = useState(
-    initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
-      ? initialData.email
-      : ''
-  )
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  // Form State
+  const [form, setForm] = useState({
+    phone: initialData.phone || '',
+    parentPhone: initialData.parentPhone || '',
+    dateOfBirth: initialData.dateOfBirth || '2006-08-15',
+    hasCorrectionRequest: false,
+    correctionRemarks: '',
+    detailsConfirmed: false,
+    email:
+      initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
+        ? initialData.email
+        : '',
+    newPassword: '',
+    confirmPassword: '',
+    emailOtp: '',
+  })
+
+  const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [emailOtpSent, setEmailOtpSent] = useState(false)
+  const [emailOtpCooldown, setEmailOtpCooldown] = useState(0)
+  const [demoOtp, setDemoOtp] = useState<string | null>(null)
 
   // Sync state whenever initialData changes
   React.useEffect(() => {
-    if (initialData.phone) setPhone(initialData.phone)
-    if (initialData.parentPhone) setParentPhone(initialData.parentPhone)
-    if (initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')) {
-      setEmail(initialData.email)
-    }
-  }, [initialData.phone, initialData.parentPhone, initialData.email])
+    setForm((prev) => ({
+      ...prev,
+      phone: initialData.phone || prev.phone,
+      parentPhone: initialData.parentPhone || prev.parentPhone,
+      dateOfBirth: initialData.dateOfBirth || prev.dateOfBirth,
+      email:
+        initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
+          ? initialData.email
+          : prev.email,
+    }))
+  }, [initialData.phone, initialData.parentPhone, initialData.email, initialData.dateOfBirth])
 
-  // OTP state
-  const [otp, setOtp] = useState('')
-  const [demoOtp, setDemoOtp] = useState<string | null>(null)
-  const [resendCooldown, setResendCooldown] = useState(0)
-
-  // Auto-decrement cooldown
+  // Cooldown countdown timer
   React.useEffect(() => {
-    if (resendCooldown <= 0) return
-    const t = setInterval(() => setResendCooldown((c) => c - 1), 1000)
-    return () => clearInterval(t)
-  }, [resendCooldown])
+    if (emailOtpCooldown <= 0) return
+    const timer = setInterval(() => setEmailOtpCooldown((prev) => prev - 1), 1000)
+    return () => clearInterval(timer)
+  }, [emailOtpCooldown])
 
-  // Correction request state
-  const [showCorrection, setShowCorrection] = useState(false)
+  // Correction Modal state
+  const [showCorrectionModal, setShowCorrectionModal] = useState(false)
   const [correctionCategory, setCorrectionCategory] = useState('name')
   const [requestedValue, setRequestedValue] = useState('')
   const [correctionReason, setCorrectionReason] = useState('')
+  const [correctionSubmitting, setCorrectionSubmitting] = useState(false)
   const [correctionSubmitted, setCorrectionSubmitted] = useState(false)
-
-  // Completed user payload
-  const [verifiedUserData, setVerifiedUserData] = useState<any>(null)
 
   if (!isOpen) return null
 
-  // Fast Confirmation: If details were already entered by Admin, verify & enter instantly
-  const handleQuickConfirmAndEnter = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/auth/student/complete-onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: initialData.name,
-          phone: phone.trim() || initialData.phone || undefined,
-          parentPhone: parentPhone.trim() || initialData.parentPhone || undefined,
-          email: email.trim() || (initialData.email && !initialData.email.endsWith('@student.vsb.edu.in') ? initialData.email : undefined),
-          dateOfBirth: initialData.dateOfBirth,
-          skipEmailVerification: true,
-        }),
-      })
-      const data = await res.json()
-      toast.success('Details confirmed! Entering dashboard...')
-      setTimeout(() => onComplete(res.ok && data.success ? data.user || {} : {}), 500)
-    } catch {
-      toast.success('Details confirmed! Entering dashboard...')
-      setTimeout(() => onComplete({}), 500)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // STEP 1 -> STEP 2: Send OTP
-  const handleSendOtp = async (e: React.FormEvent) => {
+  // STEP 1 -> STEP 2: Proceed to Security Step
+  const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!phone.trim()) {
+    if (!form.phone.trim()) {
       toast.error('Please enter your personal mobile number.')
       return
     }
-    if (!parentPhone.trim()) {
-      toast.error('Please enter your parent/guardian mobile number.')
+    if (!form.parentPhone.trim()) {
+      toast.error('Please enter parent/guardian mobile number.')
       return
     }
-    if (!email.trim() || !email.includes('@')) {
-      toast.error('Please enter a valid personal email address for OTP verification.')
+    if (!form.detailsConfirmed) {
+      toast.error('Please confirm that you have reviewed your student details.')
       return
     }
-    if (!newPassword || newPassword.length < 6) {
-      toast.error('New password must be at least 6 characters long.')
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error('New password and confirm password do not match.')
+    setOnboardingStep(2)
+  }
+
+  // Send Email OTP
+  const handleSendEmailOTP = async () => {
+    if (!form.email.trim() || !form.email.includes('@')) {
+      toast.error('Please enter a valid personal email address.')
       return
     }
 
@@ -157,7 +135,7 @@ export function StudentOnboardingModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email.trim().toLowerCase(),
+          email: form.email.trim().toLowerCase(),
           name: initialData.name,
           regNo: initialData.registerNumber,
         }),
@@ -165,12 +143,12 @@ export function StudentOnboardingModal({
 
       const data = await res.json()
       if (res.ok && data.success) {
-        toast.success(`Verification OTP sent to ${email.trim()}`)
+        setEmailOtpSent(true)
+        setEmailOtpCooldown(60)
         if (data.demoOtp) {
           setDemoOtp(data.demoOtp)
         }
-        setStep(2)
-        setResendCooldown(60)
+        toast.success(`Verification OTP sent to ${form.email.trim()}`)
       } else {
         toast.error(data.message || 'Failed to send OTP')
       }
@@ -181,11 +159,28 @@ export function StudentOnboardingModal({
     }
   }
 
-  // STEP 2 -> STEP 3: Verify OTP & Save all details to database
-  const handleVerifyOtp = async (e: React.FormEvent) => {
+  // STEP 2: Complete Onboarding & Activate Account
+  const handleCompleteOnboarding = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (otp.trim().length !== 6) {
-      toast.error('Please enter the complete 6-digit OTP.')
+
+    if (!form.newPassword || form.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long.')
+      return
+    }
+    if (form.newPassword !== form.confirmPassword) {
+      toast.error('New password and confirm password do not match.')
+      return
+    }
+    if (!form.email.trim() || !form.email.includes('@')) {
+      toast.error('Please enter a valid email address.')
+      return
+    }
+    if (!emailOtpSent) {
+      toast.error('Please click "Send OTP" to receive your verification code.')
+      return
+    }
+    if (!form.emailOtp || form.emailOtp.trim().length !== 6) {
+      toast.error('Please enter the complete 6-digit OTP code.')
       return
     }
 
@@ -196,34 +191,29 @@ export function StudentOnboardingModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: initialData.name,
-          email: email.trim().toLowerCase(),
-          phone: phone.trim(),
-          parentPhone: parentPhone.trim(),
-          dateOfBirth: initialData.dateOfBirth,
-          newPassword: newPassword.trim(),
-          otp: otp.trim(),
+          email: form.email.trim().toLowerCase(),
+          phone: form.phone.trim(),
+          parentPhone: form.parentPhone.trim(),
+          dateOfBirth: form.dateOfBirth,
+          newPassword: form.newPassword.trim(),
+          otp: form.emailOtp.trim(),
         }),
       })
 
       const data = await res.json()
       if (res.ok && data.success) {
-        setVerifiedUserData(data.user || {})
-        toast.success('Email verified & Password updated successfully!')
-        setStep(3)
+        toast.success('Account fully verified & Password saved!')
+        setTimeout(() => {
+          onComplete(data.user || {})
+        }, 600)
       } else {
         toast.error(data.message || 'Invalid or expired OTP. Please try again.')
       }
     } catch {
-      toast.error('Network error during verification.')
+      toast.error('Network error completing verification.')
     } finally {
       setLoading(false)
     }
-  }
-
-  // STEP 3: Final confirmation click -> enter portal
-  const handleFinalEnterDashboard = () => {
-    toast.success('Welcome to your student portal!')
-    onComplete(verifiedUserData || {})
   }
 
   // Send Correction Request to Admin
@@ -234,7 +224,7 @@ export function StudentOnboardingModal({
       return
     }
 
-    setLoading(true)
+    setCorrectionSubmitting(true)
     try {
       const res = await fetch('/api/students/profile-requests', {
         method: 'POST',
@@ -264,326 +254,309 @@ export function StudentOnboardingModal({
     } catch {
       toast.error('Network error submitting request.')
     } finally {
-      setLoading(false)
+      setCorrectionSubmitting(false)
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#071126]/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-      {/* Ambient background glow */}
-      <div className="absolute w-[500px] h-[500px] bg-gradient-to-tr from-[#1455D9]/30 to-[#E7B93E]/20 rounded-full blur-3xl pointer-events-none -top-20 -left-20" />
-      <div className="absolute w-[400px] h-[400px] bg-gradient-to-bl from-[#22C7E8]/25 to-[#1455D9]/20 rounded-full blur-3xl pointer-events-none -bottom-20 -right-20" />
-
-      <div className="relative bg-white/95 backdrop-blur-2xl rounded-[32px] max-w-[540px] w-full shadow-[0_25px_70px_rgba(7,26,61,0.35)] border border-white/60 overflow-hidden my-auto animate-fade-in transition-all">
+    <div className="fixed inset-0 z-50 bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto animate-in zoom-in-95 duration-200">
         
-        {/* Luxury Gold & Sapphire Top Shimmer Bar */}
-        <div className="h-2 bg-gradient-to-r from-[#1455D9] via-[#E7B93E] to-[#22C7E8]" />
+        {/* Modal Header with Progress Step Indicator (Exact Match with Image 1) */}
+        <div className="border-b border-gray-100 pb-3">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1557C0] text-[10px] font-black uppercase tracking-wider">
+              INITIAL PROFILE VERIFICATION &amp; SECURITY SETUP
+            </span>
+            <span className="text-[11px] font-mono font-bold text-slate-500">
+              {initialData.registerNumber}
+            </span>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg sm:text-xl font-black text-[#071A41]">
+              {onboardingStep === 1 ? 'Step 1: Review Your Academic Details' : 'Step 2: Password & Email OTP Verification'}
+            </h3>
+            <span className="text-xs font-black text-[#1557C0] bg-blue-50 px-2.5 py-1 rounded-xl">
+              Step {onboardingStep} of 2
+            </span>
+          </div>
 
-        {/* Header with College Emblem & Step Indicators */}
-        <div className="px-6 pt-6 pb-4 sm:px-8 border-b border-gray-100 bg-gradient-to-b from-slate-50/80 to-transparent">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {/* Premium Emblem with Gold Halo Ring */}
-              <div className="relative p-0.5 rounded-2xl bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_15px_rgba(231,185,62,0.4)]">
-                <div className="w-12 h-12 rounded-[14px] bg-[#071A3D] p-1.5 flex items-center justify-center overflow-hidden">
-                  <Image
-                    src="/college-emblem.png"
-                    alt="V.S.B. Crest"
-                    width={40}
-                    height={40}
-                    className="w-full h-full object-contain filter drop-shadow-[0_2px_6px_rgba(231,185,62,0.8)]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black tracking-widest text-[#1455D9] uppercase">
-                    V.S.B. ENGINEERING COLLEGE
-                  </span>
-                  <span className="w-1 h-1 rounded-full bg-[#E7B93E]" />
-                  <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">
-                    AI &amp; DS
-                  </span>
-                </div>
-                <h1 className="text-lg sm:text-xl font-black text-[#071A3D] tracking-tight">
-                  {step === 1 && 'First-Time Student Setup'}
-                  {step === 2 && 'Email Security Verification'}
-                  {step === 3 && 'Profile Verified & Ready'}
-                  {showCorrection && 'Request Profile Correction'}
-                </h1>
-              </div>
-            </div>
-
-            {/* Step Badge */}
-            {!showCorrection && (
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-gray-400">
-                  Step {step} of 3
-                </span>
-                <div className="flex gap-1 mt-1">
-                  <span className={`w-4 h-1.5 rounded-full transition-all ${step >= 1 ? 'bg-[#1455D9]' : 'bg-gray-200'}`} />
-                  <span className={`w-4 h-1.5 rounded-full transition-all ${step >= 2 ? 'bg-[#E7B93E]' : 'bg-gray-200'}`} />
-                  <span className={`w-4 h-1.5 rounded-full transition-all ${step >= 3 ? 'bg-emerald-500' : 'bg-gray-200'}`} />
-                </div>
-              </div>
-            )}
+          {/* Visual Step Bar */}
+          <div className="grid grid-cols-2 gap-2 mt-2.5">
+            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep >= 1 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
+            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep === 2 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
           </div>
         </div>
 
         {/* ========================================================================= */}
-        {/* VIEW 1: CORRECTION REQUEST MODAL                                          */}
+        {/* STEP 1: REVIEW & EDIT STUDENT PARTICULARS / REQUEST CORRECTION */}
         {/* ========================================================================= */}
-        {showCorrection ? (
-          <div className="p-6 sm:p-8 space-y-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-extrabold text-gray-900">Official Change Request</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Academic records can only be updated with Admin approval.
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setShowCorrection(false)
-                  setCorrectionSubmitted(false)
-                }}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        {onboardingStep === 1 && (
+          <form onSubmit={handleProceedToSecurityStep} className="space-y-4 text-xs">
+            <p className="text-[11px] text-gray-500 font-medium">
+              Please carefully verify your official enrollment records below. If any academic details are incorrect, you can request an instant admin correction.
+            </p>
 
-            {correctionSubmitted ? (
-              <div className="py-8 text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200 shadow-lg shadow-emerald-500/10">
-                  <CheckCircle2 className="w-9 h-9" />
+            {/* Official Academic Record (Locked by Admin) */}
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3.5 shadow-xs">
+              <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-[#1557C0]/10 flex items-center justify-center text-[#1557C0]">
+                    <GraduationCap className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="font-black text-[#071A41] text-xs block">Official Academic Record</span>
+                    <span className="text-[10px] font-bold text-slate-500">Verified &amp; Configured by Department Administrator</span>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="font-black text-gray-900 text-base">Correction Request Dispatched</p>
-                  <p className="text-xs text-gray-500 max-w-xs mx-auto">
-                    The department administrator will verify university records and apply your update.
-                  </p>
-                </div>
+
                 <button
                   type="button"
-                  onClick={() => setShowCorrection(false)}
-                  className="px-6 py-3 bg-[#1455D9] hover:bg-[#1044b5] text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
+                  onClick={() => setShowCorrectionModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300/80 text-amber-900 hover:bg-amber-100 text-[11px] font-black transition-all shadow-xs cursor-pointer"
                 >
-                  Return to Activation
+                  <Pencil className="w-3 h-3 text-amber-700" />
+                  <span>Request Admin Correction</span>
                 </button>
               </div>
-            ) : (
-              <form onSubmit={handleSendCorrectionRequest} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Field to Correct
-                  </label>
-                  <select
-                    value={correctionCategory}
-                    onChange={(e) => setCorrectionCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/50"
-                  >
-                    <option value="name">Student Full Name</option>
-                    <option value="department">Department</option>
-                    <option value="section">Year / Semester / Section</option>
-                    <option value="dateOfBirth">Date of Birth</option>
-                  </select>
+
+              {/* Pending Correction Alert */}
+              {correctionSubmitted && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2 text-emerald-900 text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                  <div>
+                    <span className="font-black block">Correction Request Pending Admin Review</span>
+                    <span className="text-[11px] text-emerald-700">
+                      Your request to modify academic details has been submitted. The Administrator will review and update official records.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* 6 High-Contrast Locked Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Register Number */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">REGISTER NUMBER</span>
+                    <span className="font-mono font-black text-xs text-[#071A41]">{initialData.registerNumber}</span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <Lock className="w-2.5 h-2.5" /> Verified
+                  </span>
                 </div>
 
+                {/* Full Name */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">FULL NAME</span>
+                    <span className="font-bold text-xs text-[#071A41]">{initialData.name}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Program / Department */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">PROGRAM / DEPARTMENT</span>
+                    <span className="font-bold text-xs text-[#1557C0]">{initialData.department || 'B.Tech Artificial Intelligence & Data Science'}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Year & Semester */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">YEAR &amp; SEMESTER</span>
+                    <span className="font-bold text-xs text-[#071A41]">Year {initialData.year} · Semester {initialData.semester}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Assigned Section */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">ASSIGNED SECTION</span>
+                    <span className="font-bold text-xs text-[#071A41]">Section {initialData.section}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Class Advisor */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">CLASS ADVISOR / MENTOR</span>
+                    <span className="font-bold text-xs text-[#1557C0]">{initialData.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Contact & Personal Particulars (Editable) */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
+              <div className="flex items-center gap-1.5 pb-2 border-b border-blue-200/60 text-xs font-black text-[#071A41]">
+                <Phone className="w-4 h-4 text-[#1557C0]" />
+                <span>Contact &amp; Personal Particulars (Editable)</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Corrected Value <span className="text-red-500">*</span>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Student Mobile *
                   </label>
                   <input
-                    type="text"
+                    type="tel"
                     required
-                    value={requestedValue}
-                    onChange={(e) => setRequestedValue(e.target.value)}
-                    placeholder="Enter the official correction"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/50"
+                    placeholder="Enter 10-digit mobile"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                    Reason / Official Proof Note <span className="text-red-500">*</span>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Parent Mobile *
                   </label>
-                  <textarea
+                  <input
+                    type="tel"
                     required
-                    rows={3}
-                    value={correctionReason}
-                    onChange={(e) => setCorrectionReason(e.target.value)}
-                    placeholder="Provide details for admin verification..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/50 resize-none"
+                    placeholder="Enter parent / guardian mobile"
+                    value={form.parentPhone}
+                    onChange={(e) => setForm({ ...form, parentPhone: e.target.value })}
+                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                   />
                 </div>
 
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowCorrection(false)}
-                    className="w-1/3 px-4 py-3 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 bg-[#1455D9] hover:bg-[#1044b5] disabled:opacity-60 text-white font-extrabold text-xs py-3 rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                    <span>Submit to Admin</span>
-                  </button>
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={form.dateOfBirth}
+                    onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                  />
                 </div>
-              </form>
-            )}
-          </div>
-        ) : null}
+              </div>
+            </div>
 
-        {/* ========================================================================= */}
-        {/* STEP 1: CHECK ADMIN DETAILS + ENTER REMAINING INFO + NEW PASSWORD         */}
-        {/* ========================================================================= */}
-        {!showCorrection && step === 1 && (
-          <form onSubmit={handleSendOtp} className="p-6 sm:p-8 space-y-4">
-            
-            {/* Top Verified Institutional Card */}
-            <div className="relative rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/80 via-white to-slate-50 p-4 shadow-sm overflow-hidden">
-              <div className="absolute right-0 top-0 w-24 h-24 bg-[#1455D9]/5 rounded-full blur-xl pointer-events-none" />
-              
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5 text-[10px] font-black text-[#1455D9] uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#1455D9]" />
-                  <span>Admin Verified Record</span>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-blue-100/70 text-[#1455D9] text-[10px] font-bold font-mono">
-                  {initialData.registerNumber}
+            {/* Option: Request Admin Correction */}
+            <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.hasCorrectionRequest}
+                  onChange={(e) => setForm({ ...form, hasCorrectionRequest: e.target.checked })}
+                  className="w-4 h-4 rounded text-[#1557C0] focus:ring-[#1557C0]"
+                />
+                <span className="font-bold text-amber-900 text-xs flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  Any academic details wrong? Request Admin Correction
                 </span>
-              </div>
+              </label>
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="text-[10px] font-medium text-gray-400 block">Student Name</span>
-                  <span className="font-extrabold text-[#071A3D] text-xs truncate block">
-                    {initialData.name}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-medium text-gray-400 block">Class &amp; Section</span>
-                  <span className="font-bold text-[#1455D9] text-xs block">
-                    Year {initialData.year} &middot; Sem {initialData.semester} &middot; Sec {initialData.section}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Editable Fields Section Header */}
-            <div className="pt-1">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D] flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-[#E7B93E]" />
-                <span>Complete Student Information &amp; Password</span>
-              </h3>
-            </div>
-
-            {/* Input Grid */}
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Student Phone */}
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    📱 Student Mobile <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+91 98765 43210"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-
-                {/* Parent Phone */}
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    👨‍👩‍👧 Parent WhatsApp <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      required
-                      value={parentPhone}
-                      onChange={(e) => setParentPhone(e.target.value)}
-                      placeholder="+91 98765 43210"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Personal Email */}
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                  ✉️ Personal Email (For Security OTP) <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student.personal@gmail.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
+              {form.hasCorrectionRequest && (
+                <div className="pt-1 animate-in fade-in">
+                  <textarea
+                    rows={2}
+                    placeholder="Describe the correction needed (e.g. My section should be B, or correction in name spelling...)"
+                    value={form.correctionRemarks}
+                    onChange={(e) => setForm({ ...form, correctionRemarks: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-medium text-[#071A41] focus:outline-none focus:ring-2 focus:ring-amber-500"
                   />
                 </div>
+              )}
+            </div>
+
+            {/* Details Confirmed Checkbox */}
+            <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={form.detailsConfirmed}
+                  onChange={(e) => setForm({ ...form, detailsConfirmed: e.target.checked })}
+                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
+                />
+                <span className="text-xs font-bold text-[#071A41]">
+                  I confirm that I have reviewed my student particulars, mobile numbers, and academic record.
+                </span>
+              </label>
+            </div>
+
+            {/* Next Button */}
+            <div className="pt-2 border-t border-gray-100 flex justify-end">
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all"
+              >
+                <span>Next: Set Password &amp; Verify Email</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 2: SET PERMANENT PASSWORD & EMAIL OTP VERIFICATION */}
+        {/* ========================================================================= */}
+        {onboardingStep === 2 && (
+          <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
+            
+            {/* 1. Permanent Password Section */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
+                <span className="font-black text-amber-900 flex items-center gap-1.5 text-xs">
+                  <ShieldCheck className="w-4 h-4 text-amber-600" />
+                  Create Permanent Secure Password *
+                </span>
+                <span className="text-[10px] font-bold text-amber-700">Min 6 characters</span>
               </div>
 
-              {/* Password Setup */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    🔒 New Password <span className="text-red-500">*</span>
-                  </label>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">New Password *</label>
                   <div className="relative">
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showNewPassword ? 'text' : 'password'}
                       required
                       minLength={6}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Min 6 characters"
-                      className="w-full px-3.5 py-2.5 pr-9 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
+                      placeholder="Create strong password"
+                      value={form.newPassword}
+                      onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-700 transition-colors"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    🔒 Confirm Password <span className="text-red-500">*</span>
-                  </label>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">Confirm Password *</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
                       minLength={6}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Re-enter password"
-                      className="w-full px-3.5 py-2.5 pr-9 rounded-xl border border-gray-200 text-xs font-semibold text-gray-900 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-50 bg-gray-50/60 focus:bg-white transition-all"
+                      placeholder="Repeat password"
+                      value={form.confirmPassword}
+                      onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-700 transition-colors"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
                       {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
@@ -592,193 +565,215 @@ export function StudentOnboardingModal({
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="pt-3 space-y-2.5">
-              {/* Fast 1-Click Confirmation if Details are Already Complete */}
+            {/* 2. Email Verification via OTP */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-blue-200">
+                <span className="font-black text-[#071A41] flex items-center gap-1.5 text-xs">
+                  <Mail className="w-4 h-4 text-[#1557C0]" />
+                  Verify Student Email via OTP *
+                </span>
+                <span className="text-[10px] font-bold text-blue-700">Official Communication</span>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                  Email Address *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. yourname@gmail.com or student@vsb.edu.in"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendEmailOTP}
+                    disabled={loading || emailOtpCooldown > 0}
+                    className="px-4 py-2.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send OTP'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Demo OTP Helper if generated */}
+              {demoOtp && (
+                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-amber-900 block">Security Code Sent:</span>
+                    <span className="font-mono font-bold text-amber-800 text-sm tracking-wider">{demoOtp}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, emailOtp: demoOtp })}
+                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[11px] cursor-pointer"
+                  >
+                    Auto-Fill OTP
+                  </button>
+                </div>
+              )}
+
+              {/* OTP Input Section */}
+              {emailOtpSent && (
+                <div className="space-y-1.5 animate-in fade-in">
+                  <label className="block font-bold text-gray-700 text-[11px]">
+                    Enter 6-Digit Email Verification Code *
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={form.emailOtp}
+                    onChange={(e) => setForm({ ...form, emailOtp: e.target.value.replace(/\D/g, '') })}
+                    placeholder="000000"
+                    className="w-full text-center tracking-[0.4em] font-mono font-black text-2xl p-2.5 rounded-xl border border-gray-300 bg-white text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none shadow-inner"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
               <button
                 type="button"
-                onClick={handleQuickConfirmAndEnter}
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1455D9] via-[#0E44B8] to-[#1455D9] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] disabled:opacity-60 text-white font-black text-xs sm:text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/25 border border-blue-400/30 transition-all cursor-pointer"
+                onClick={() => setOnboardingStep(1)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
               >
-                {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4 text-[#F4C430]" />
-                )}
-                <span>All Details Correct &middot; Confirm &amp; Enter Dashboard</span>
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Details</span>
               </button>
 
-              {/* Optional Password Update & OTP Verification */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[#071A3D] font-bold text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+                className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0e44b5] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all disabled:opacity-60"
               >
-                <Mail className="w-3.5 h-3.5 text-[#1455D9]" />
-                <span>Update Password via Email OTP &rarr;</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowCorrection(true)}
-                className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#1455D9] transition-colors py-1 cursor-pointer"
-              >
-                <FileEdit className="w-3.5 h-3.5 text-[#1455D9]" />
-                <span>Academic records incorrect? Request Correction from Admin</span>
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>Verify OTP &amp; Enter Dashboard</span>
               </button>
             </div>
           </form>
         )}
 
-        {/* ========================================================================= */}
-        {/* STEP 2: ENTER 6-DIGIT EMAIL OTP                                           */}
-        {/* ========================================================================= */}
-        {!showCorrection && step === 2 && (
-          <form onSubmit={handleVerifyOtp} className="p-6 sm:p-8 space-y-6 text-center">
-            <div className="relative mx-auto w-20 h-20">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] blur-xl opacity-40 animate-pulse" />
-              <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#0a358c] text-white flex items-center justify-center shadow-xl border border-blue-400/40">
-                <Mail className="w-9 h-9 text-[#F4C430]" />
-              </div>
-            </div>
+      </div>
 
-            <div>
-              <h2 className="text-xl font-black text-[#071A3D]">Enter Email Security Code</h2>
-              <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-                A 6-digit OTP has been sent to your institutional email inbox: <br />
-                <span className="font-bold text-[#1455D9] text-xs">{email}</span>
-              </p>
-            </div>
-
-            <div className="py-1">
-              <input
-                type="text"
-                maxLength={6}
-                autoFocus
-                required
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                className="w-full text-center tracking-[0.45em] font-mono font-black text-3xl px-4 py-4 rounded-2xl border-2 border-blue-200 focus:outline-none focus:border-[#1455D9] focus:ring-4 focus:ring-blue-100 bg-blue-50/30 focus:bg-white text-[#071A3D] shadow-inner transition-all"
-              />
-            </div>
-
-            {demoOtp && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-amber-900 block">Security Code Sent:</span>
-                  <span className="font-mono font-bold text-amber-800 text-sm tracking-wider">{demoOtp}</span>
+      {/* ========================================================================= */}
+      {/* 📝 OFFICIAL ACADEMIC CORRECTION REQUEST MODAL TO ADMIN */}
+      {/* ========================================================================= */}
+      {showCorrectionModal && (
+        <div className="fixed inset-0 z-60 bg-[#071A41]/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-amber-200 animate-in zoom-in-95 duration-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                  <Pencil className="w-4 h-4" />
                 </div>
+                <div>
+                  <h4 className="font-black text-[#071A41] text-sm">Request Official Academic Correction</h4>
+                  <p className="text-[10px] text-slate-500 font-bold">Requires Verification &amp; Approval by Department Admin</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCorrectionModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {correctionSubmitted ? (
+              <div className="py-6 text-center space-y-3 animate-in fade-in">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <h5 className="font-black text-sm text-[#071A41]">Correction Request Submitted</h5>
+                <p className="text-xs text-slate-500">
+                  Your request has been forwarded to the Department Admin. Changes will reflect once verified against university records.
+                </p>
                 <button
                   type="button"
-                  onClick={() => setOtp(demoOtp)}
-                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[11px] cursor-pointer"
+                  onClick={() => setShowCorrectionModal(false)}
+                  className="px-5 py-2.5 rounded-xl bg-[#1557C0] text-white font-bold text-xs cursor-pointer shadow-sm"
                 >
-                  Auto-Fill OTP
+                  Close
                 </button>
               </div>
+            ) : (
+              <form onSubmit={handleSendCorrectionRequest} className="space-y-3 text-xs">
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Select Detail to Correct *
+                  </label>
+                  <select
+                    value={correctionCategory}
+                    onChange={(e) => setCorrectionCategory(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-bold text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  >
+                    <option value="name">Full Name (Spelling / Initials)</option>
+                    <option value="department">Program / Department</option>
+                    <option value="year">Year of Study</option>
+                    <option value="semester">Current Semester</option>
+                    <option value="section">Assigned Section (A / B / C)</option>
+                    <option value="advisorName">Class Advisor / Mentor</option>
+                    <option value="dateOfBirth">Date of Birth</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Requested / Corrected Value *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter the correct value"
+                    value={requestedValue}
+                    onChange={(e) => setRequestedValue(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Reason / Official Proof Notes *
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    placeholder="Briefly state reason (e.g. as per 10th marksheet, allotment order...)"
+                    value={correctionReason}
+                    onChange={(e) => setCorrectionReason(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowCorrectionModal(false)}
+                    className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 cursor-pointer text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={correctionSubmitting}
+                    className="px-5 py-2 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm disabled:opacity-50"
+                  >
+                    {correctionSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                    <span>Submit to Admin</span>
+                  </button>
+                </div>
+              </form>
             )}
 
-            <div className="space-y-3">
-              <button
-                type="submit"
-                disabled={loading || otp.trim().length !== 6}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1455D9] to-[#0E44B8] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] disabled:opacity-60 text-white font-black text-sm py-3.5 rounded-2xl shadow-xl shadow-blue-600/25 transition-all cursor-pointer"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 text-[#F4C430]" />}
-                <span>Verify Code &amp; Activate Account</span>
-              </button>
-
-              <div className="flex items-center justify-between text-xs pt-1 px-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep(1)
-                    setOtp('')
-                  }}
-                  className="font-bold text-gray-500 hover:text-gray-900 transition-colors py-1 cursor-pointer"
-                >
-                  &larr; Edit Details
-                </button>
-
-                <button
-                  type="button"
-                  disabled={resendCooldown > 0 || loading}
-                  onClick={(e) => handleSendOtp(e as any)}
-                  className="font-bold text-[#1455D9] hover:underline disabled:text-gray-400 cursor-pointer"
-                >
-                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : 'Resend Code'}
-                </button>
-              </div>
-            </div>
-          </form>
-        )}
-
-        {/* ========================================================================= */}
-        {/* STEP 3: FINAL VERIFIED POP-UP SUMMARY BEFORE ENTERING DASHBOARD           */}
-        {/* ========================================================================= */}
-        {!showCorrection && step === 3 && (
-          <div className="p-6 sm:p-8 space-y-6 animate-fade-in">
-            <div className="text-center space-y-2">
-              <div className="relative mx-auto w-20 h-20">
-                <div className="absolute inset-0 rounded-full bg-emerald-500/30 blur-xl animate-pulse" />
-                <div className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-xl border border-emerald-300">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
-              </div>
-
-              <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-black uppercase tracking-wider border border-emerald-200">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Verification Complete</span>
-              </div>
-              <h2 className="text-2xl font-black text-[#071A3D]">Account Fully Activated!</h2>
-              <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                Your institutional contacts are verified and your new secure password is in effect.
-              </p>
-            </div>
-
-            {/* Verified Profile Card */}
-            <div className="rounded-2xl border border-gray-200 divide-y divide-gray-100 overflow-hidden bg-slate-50/80 text-xs shadow-inner">
-              <div className="flex items-center justify-between px-4 py-3 bg-blue-50/50">
-                <span className="font-semibold text-gray-500">Register Number</span>
-                <span className="font-mono font-black text-[#1455D9] text-sm">{initialData.registerNumber}</span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="font-semibold text-gray-500">Student Name</span>
-                <span className="font-black text-[#071A3D]">{initialData.name}</span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="font-semibold text-gray-500">Verified Email</span>
-                <span className="font-extrabold text-[#1455D9]">{email}</span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="font-semibold text-gray-500">Student Mobile</span>
-                <span className="font-mono font-bold text-gray-800">📱 {phone}</span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3">
-                <span className="font-semibold text-gray-500">Parent WhatsApp</span>
-                <span className="font-mono font-bold text-gray-800">👨‍👩‍👧 {parentPhone}</span>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3 bg-emerald-50/50">
-                <span className="font-semibold text-emerald-800">Security Credentials</span>
-                <span className="font-black text-emerald-700 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Password Secured
-                </span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleFinalEnterDashboard}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#1455D9] via-[#0E44B8] to-[#1455D9] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] text-white font-black text-sm py-4 rounded-2xl shadow-xl shadow-blue-600/30 border border-blue-400/30 transition-all cursor-pointer"
-            >
-              <span>All Details Verified &middot; Enter Dashboard</span>
-              <ArrowRight className="w-4 h-4 text-[#F4C430]" />
-            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
