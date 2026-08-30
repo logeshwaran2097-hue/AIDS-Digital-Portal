@@ -928,6 +928,10 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
                   <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">${name}</td>
                 </tr>
                 <tr>
+                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">📧 Login Email ID:</td>
+                  <td style="padding: 3px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${email}</td>
+                </tr>
+                <tr>
                   <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🛡️ Access Role:</td>
                   <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">System Administrator (Super Admin)</td>
                 </tr>
