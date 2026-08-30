@@ -99,17 +99,16 @@ export async function POST(request: Request) {
 
     const regUpper = registerNumber.trim().toUpperCase()
 
-    // Check if student with same registerNumber already exists
-    const existingStudent = await prisma.student.findUnique({
-      where: { registerNumber: regUpper },
+    // 1. Check if student with same registerNumber exists
+    const existingStudent = await prisma.student.findFirst({
+      where: {
+        OR: [
+          { registerNumber: regUpper },
+          { registerNumber: registerNumber.trim() },
+          { registerNumber: regUpper.toLowerCase() },
+        ],
+      },
     })
-
-    if (existingStudent) {
-      return NextResponse.json(
-        { success: false, message: `Student with Register No. ${regUpper} already exists` },
-        { status: 400 }
-      )
-    }
 
     const isEmailCustom = Boolean(email?.trim())
     const finalEmail = isEmailCustom
@@ -120,8 +119,86 @@ export async function POST(request: Request) {
     const initialPassword = password.trim()
     const passwordHash = await bcrypt.hash(initialPassword, 10)
 
-    // Upsert User
-    const user = await prisma.user.upsert({
+    let user: any = null
+
+    // If an existing student record exists, update both Student and User
+    if (existingStudent) {
+      user = await prisma.user.upsert({
+        where: { id: existingStudent.userId },
+        update: {
+          name: name.trim(),
+          phone: phone ? phone.trim() : null,
+          role: 'student',
+          status: status || 'active',
+          passwordHash,
+          email: finalEmail,
+          emailVerified: isEmailCustom,
+          mustChangePassword: true,
+        },
+        create: {
+          id: existingStudent.userId,
+          email: finalEmail,
+          name: name.trim(),
+          phone: phone ? phone.trim() : null,
+          role: 'student',
+          status: status || 'active',
+          passwordHash,
+          emailVerified: isEmailCustom,
+          mustChangePassword: true,
+        },
+      })
+
+      const updatedStudent = await prisma.student.update({
+        where: { id: existingStudent.id },
+        data: {
+          registerNumber: regUpper,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : existingStudent.dateOfBirth,
+          department: department || existingStudent.department,
+          year: Number(year) || existingStudent.year,
+          semester: Number(semester) || existingStudent.semester,
+          batch: batch ? String(batch).trim() : (existingStudent as any).batch,
+          section: section || existingStudent.section,
+          advisorName: advisorName ? String(advisorName).trim() : (existingStudent as any).advisorName,
+          parentPhone: parentPhone ? String(parentPhone).trim() : (existingStudent as any).parentPhone,
+          bloodGroup: bloodGroup !== undefined ? bloodGroup : (existingStudent as any).bloodGroup,
+          residencyStatus: residencyStatus !== undefined ? residencyStatus : (existingStudent as any).residencyStatus,
+          cgpa: cgpa !== undefined ? cgpa : (existingStudent as any).cgpa,
+          attendance: attendance !== undefined ? attendance : (existingStudent as any).attendance,
+        } as any,
+      })
+
+      revalidatePath('/admin/students')
+      revalidatePath('/admin/dashboard')
+
+      return NextResponse.json({
+        success: true,
+        message: 'Student record updated with temporary password in database',
+        student: {
+          id: updatedStudent.id,
+          userId: user.id,
+          registerNumber: updatedStudent.registerNumber,
+          name: user.name,
+          email: isEmailCustom ? user.email : '',
+          phone: user.phone || '',
+          parentPhone: (updatedStudent as any).parentPhone || '',
+          dateOfBirth: updatedStudent.dateOfBirth ? updatedStudent.dateOfBirth.toISOString().split('T')[0] : null,
+          department: updatedStudent.department,
+          year: updatedStudent.year,
+          semester: updatedStudent.semester,
+          batch: (updatedStudent as any).batch || '',
+          section: updatedStudent.section,
+          advisorName: (updatedStudent as any).advisorName || '',
+          status: user.status,
+          bloodGroup: (updatedStudent as any).bloodGroup,
+          residencyStatus: (updatedStudent as any).residencyStatus,
+          cgpa: (updatedStudent as any).cgpa,
+          attendance: (updatedStudent as any).attendance,
+        },
+      })
+    }
+
+    // Otherwise create brand new user and student
+    user = await prisma.user.upsert({
       where: { email: finalEmail },
       update: {
         name: name.trim(),
@@ -144,7 +221,7 @@ export async function POST(request: Request) {
       },
     })
 
-    // Create Student with manual values including new fields
+    // Create Student
     const student = await prisma.student.create({
       data: {
         userId: user.id,
@@ -159,8 +236,8 @@ export async function POST(request: Request) {
         parentPhone: parentPhone ? String(parentPhone).trim() : null,
         bloodGroup,
         residencyStatus,
-        cgpa: typeof cgpa === 'number' ? cgpa : undefined,
-        attendance,
+        cgpa: cgpa ? parseFloat(String(cgpa)) : null,
+        attendance: attendance ? String(attendance) : null,
       } as any,
     })
 
@@ -170,12 +247,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      message: 'Student registered successfully in database',
       student: {
         id: student.id,
         userId: user.id,
         registerNumber: student.registerNumber,
         name: user.name,
-        email: finalEmail,
+        email: isEmailCustom ? user.email : '',
         phone: user.phone || '',
         parentPhone: (student as any).parentPhone || '',
         dateOfBirth: student.dateOfBirth ? student.dateOfBirth.toISOString().split('T')[0] : null,
@@ -186,15 +264,20 @@ export async function POST(request: Request) {
         section: student.section,
         advisorName: (student as any).advisorName || '',
         status: user.status,
-        bloodGroup: student.bloodGroup,
-        residencyStatus: student.residencyStatus,
-        cgpa: student.cgpa,
-        attendance: student.attendance,
+        bloodGroup: (student as any).bloodGroup,
+        residencyStatus: (student as any).residencyStatus,
+        cgpa: (student as any).cgpa,
+        attendance: (student as any).attendance,
       },
-      message: 'Student registered successfully in database',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: isEmailCustom ? user.email : '',
+        phone: user.phone || '',
+      },
     })
   } catch (error) {
-    console.error('Create student error:', error)
+    console.error('Error creating student:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to create student: ' + String(error) },
       { status: 500 }
@@ -296,6 +379,9 @@ export async function PUT(request: Request) {
         },
       })
 
+      revalidatePath('/admin/students')
+      revalidatePath('/admin/dashboard')
+
       return NextResponse.json({
         success: true,
         message: 'Student profile updated successfully in database',
@@ -350,25 +436,24 @@ export async function PUT(request: Request) {
         phone: phone ? phone.trim() : null,
         role: 'student',
         status: status || 'active',
+        passwordHash: defaultPassHash,
         emailVerified: isEmailCustom,
-        ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
-        ...(bloodGroup !== undefined ? { bloodGroup } : {}),
-        ...(residencyStatus !== undefined ? { residencyStatus } : {}),
-        ...(cgpa !== undefined ? { cgpa } : {}),
-        ...(attendance !== undefined ? { attendance } : {}),
+        mustChangePassword: true,
       },
     })
 
     const newStudent = await prisma.student.upsert({
       where: { registerNumber: finalRegNo },
       update: {
+        userId: user.id,
+        ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
         department: department || 'Artificial Intelligence & Data Science',
         year: Number(year) || 1,
         semester: Number(semester) || 1,
         batch: batch ? String(batch).trim() : null,
         section: section || 'A',
         advisorName: advisorName ? String(advisorName).trim() : null,
-        ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+        parentPhone: parentPhone ? String(parentPhone).trim() : null,
         ...(bloodGroup !== undefined ? { bloodGroup } : {}),
         ...(residencyStatus !== undefined ? { residencyStatus } : {}),
         ...(cgpa !== undefined ? { cgpa } : {}),
@@ -384,6 +469,7 @@ export async function PUT(request: Request) {
         batch: batch ? String(batch).trim() : null,
         section: section || 'A',
         advisorName: advisorName ? String(advisorName).trim() : null,
+        parentPhone: parentPhone ? String(parentPhone).trim() : null,
         ...(bloodGroup !== undefined ? { bloodGroup } : {}),
         ...(residencyStatus !== undefined ? { residencyStatus } : {}),
         ...(cgpa !== undefined ? { cgpa } : {}),
@@ -391,7 +477,6 @@ export async function PUT(request: Request) {
       } as any,
     })
 
-    // Invalidate caches
     revalidatePath('/admin/students')
     revalidatePath('/admin/dashboard')
 
@@ -405,6 +490,7 @@ export async function PUT(request: Request) {
         name: user.name,
         email: isEmailCustom ? user.email : '',
         phone: user.phone || '',
+        parentPhone: (newStudent as any).parentPhone || '',
         dateOfBirth: newStudent.dateOfBirth ? newStudent.dateOfBirth.toISOString().split('T')[0] : null,
         department: newStudent.department,
         year: newStudent.year,
@@ -413,6 +499,10 @@ export async function PUT(request: Request) {
         section: newStudent.section,
         advisorName: (newStudent as any).advisorName || '',
         status: user.status,
+        bloodGroup: (newStudent as any).bloodGroup,
+        residencyStatus: (newStudent as any).residencyStatus,
+        cgpa: (newStudent as any).cgpa,
+        attendance: (newStudent as any).attendance,
       },
       user: {
         id: user.id,
@@ -436,6 +526,8 @@ export async function DELETE(request: Request) {
     if (clearAll === 'true') {
       await prisma.student.deleteMany({})
       await prisma.user.deleteMany({ where: { role: 'student' } })
+      revalidatePath('/admin/students')
+      revalidatePath('/admin/dashboard')
       return NextResponse.json({ success: true, message: 'All students cleared successfully' })
     }
 
@@ -446,36 +538,76 @@ export async function DELETE(request: Request) {
       )
     }
 
-    // Find student by student.id or userId or registerNumber
-    let student = await prisma.student.findUnique({ where: { id } }).catch(() => null)
-    if (!student) {
-      student = await prisma.student.findFirst({ where: { userId: id } }).catch(() => null)
-    }
-    if (!student) {
-      student = await prisma.student.findUnique({ where: { registerNumber: id } }).catch(() => null)
+    const trimmedId = id.trim()
+    const regUpper = trimmedId.toUpperCase()
+
+    // 1. Find all student records that match ID, userId, or registerNumber
+    const matchedStudents = await prisma.student.findMany({
+      where: {
+        OR: [
+          { id: trimmedId },
+          { userId: trimmedId },
+          { registerNumber: regUpper },
+          { registerNumber: trimmedId },
+          { registerNumber: regUpper.toLowerCase() },
+        ],
+      },
+    })
+
+    const userIdsToDelete = new Set<string>()
+    const studentIdsToDelete = new Set<string>()
+
+    matchedStudents.forEach((s) => {
+      studentIdsToDelete.add(s.id)
+      if (s.userId) userIdsToDelete.add(s.userId)
+    })
+
+    // Also check if any User matches by id, email prefix, or name
+    const matchedUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { id: trimmedId },
+          { email: `${regUpper.toLowerCase()}@student.vsb.edu.in` },
+          { email: `${trimmedId.toLowerCase()}@student.vsb.edu.in` },
+        ],
+      },
+    })
+
+    matchedUsers.forEach((u) => {
+      userIdsToDelete.add(u.id)
+    })
+
+    // Delete Student records
+    if (studentIdsToDelete.size > 0) {
+      await prisma.student.deleteMany({
+        where: { id: { in: Array.from(studentIdsToDelete) } },
+      })
+    } else if (regUpper) {
+      await prisma.student.deleteMany({
+        where: { registerNumber: regUpper },
+      }).catch(() => {})
     }
 
-    if (student) {
-      const userId = student.userId
-      await prisma.student.delete({ where: { id: student.id } }).catch(() => null)
-      await prisma.user.delete({ where: { id: userId } }).catch(() => null)
-    } else {
-      // Direct user delete
-      await prisma.user.delete({ where: { id: id } }).catch(() => null)
+    // Delete User records
+    if (userIdsToDelete.size > 0) {
+      await prisma.user.deleteMany({
+        where: { id: { in: Array.from(userIdsToDelete) } },
+      })
     }
 
     // Invalidate caches
     revalidatePath('/admin/students')
     revalidatePath('/admin/dashboard')
+    revalidatePath('/dashboard')
 
     return NextResponse.json({
       success: true,
-      message: 'Student record deleted successfully from database',
+      message: 'Student record instantly deleted from database',
     })
   } catch (error) {
     console.error('Delete student error:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to delete student' },
+      { success: false, message: 'Failed to delete student: ' + String(error) },
       { status: 500 }
     )
   }

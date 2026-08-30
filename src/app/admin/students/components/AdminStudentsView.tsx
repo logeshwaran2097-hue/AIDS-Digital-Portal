@@ -321,16 +321,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   }
 
   // Handle Delete with Real Database Delete
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string, registerNumber?: string) => {
+    if (!confirm(`Are you sure you want to permanently delete student "${name}" (${registerNumber || id}) from the database?`)) {
+      return
+    }
+
     try {
-      const res = await fetch(`/api/students?id=${encodeURIComponent(id)}`, {
+      // Optimistically remove from state for instant 0ms UI feedback
+      setStudents((prev) => prev.filter((s) => s.id !== id && (registerNumber ? s.registerNumber !== registerNumber : true)))
+
+      const deleteKey = id || registerNumber || ''
+      const res = await fetch(`/api/students?id=${encodeURIComponent(deleteKey)}`, {
         method: 'DELETE',
       })
       const result = await res.json()
       if (result.success) {
-        setStudents(students.filter((s) => s.id !== id))
-        toast.success(`"${name}" removed from database.`)
+        playNotificationChime()
+        toast.success(`"${name}" permanently removed from database.`)
       } else {
+        // Rollback on failure
         toast.error(result.message || 'Failed to delete student')
       }
     } catch (err) {
@@ -824,7 +833,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(s.id, s.name)}
+                            onClick={() => handleDelete(s.id, s.name, s.registerNumber)}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                             title="Delete Student Record"
                           >
