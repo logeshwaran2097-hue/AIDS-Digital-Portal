@@ -470,6 +470,22 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
                     </p>
                   </div>
                 </div>
+
+                <div className="pt-1 flex items-center justify-between bg-white p-2.5 rounded-xl border border-emerald-200">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">📦</span>
+                    <span className="text-[11px] text-slate-700 font-medium">Official GitHub Production Bundle (v1.0.0)</span>
+                  </div>
+                  <a
+                    href="https://github.com/logeshwaran2097-hue/AIDS-Digital-Portal/releases/download/v1.0.0/AI.DS.Portal.-.Google.Play.package.zip"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-white rounded-lg hover:bg-black transition-colors flex items-center gap-1 shadow-sm"
+                  >
+                    <span>Download ZIP</span>
+                    <span>&darr;</span>
+                  </a>
+                </div>
               </div>
             )}
 
