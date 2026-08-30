@@ -21,11 +21,11 @@ import {
   Calendar,
   Sparkles,
   ExternalLink,
-  Smartphone,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
 import { RealtimeNotificationToast, RealtimeToastData } from '@/components/notifications/RealtimeNotificationToast'
+import { PWAInstaller } from '@/components/PWAInstaller'
 import {
   playNotificationChime,
   triggerDeviceVibration,
@@ -178,7 +178,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
 
   // Register Service Worker and check notification permission
-  // Handle native notification permission on load
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const currentPerm = getNotificationPermissionStatus()
@@ -812,22 +811,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               </span>
             </Link>
 
-            {/* Install App Button (PWA) */}
-            <button
-              onClick={() => {
-                try {
-                  if (typeof window !== 'undefined') {
-                    window.location.href = '/download'
-                  }
-                } catch {}
-              }}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-cyan-200/80 bg-cyan-50 hover:bg-cyan-100 text-cyan-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102"
-              title="Install VSB AI & DS Portal as app"
-            >
-              <Smartphone className="w-4 h-4" />
-              <span className="hidden sm:inline">Install App</span>
-            </button>
-
             {/* Top Header Direct Logout Action */}
             <button
               type="button"
@@ -923,6 +906,9 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
 
       {/* Floating AI Chatbot Bottom-Right Icon */}
       <FloatingChatbot />
+
+      {/* PWA Installer */}
+      <PWAInstaller />
     </div>
   )
 }
