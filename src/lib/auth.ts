@@ -134,6 +134,8 @@ import bcrypt from 'bcryptjs'
 export async function authenticateStudent(registerNumber: string, passwordInput: string) {
   const normalizedReg = registerNumber.trim().toUpperCase()
   const trimmedPassword = passwordInput.trim()
+  let isValid = false
+  let passwordChangeRequired = false
 
   // 1. Look for existing student record
   let student = await prisma.student.findFirst({
