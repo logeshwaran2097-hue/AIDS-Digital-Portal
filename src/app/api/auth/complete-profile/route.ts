@@ -121,16 +121,16 @@ export async function POST(request: NextRequest) {
         where: { OR: [{ userId: targetUserId }, { registerNumber: targetRegNumber }] },
       })
 
-      const parsedDob = dateOfBirth ? new Date(dateOfBirth) : new Date('2006-08-15')
-      const parsedYear = typeof year === 'string' && year.includes('Year') ? parseInt(year.replace(/\D/g, '')) || 2 : Number(year) || 2
-      const parsedSem = typeof semester === 'string' && semester.includes('Semester') ? parseInt(semester.replace(/\D/g, '')) || 4 : Number(semester) || 4
-      const parsedSection = section ? section.replace('Section ', '').trim() : 'A'
+      const parsedDob = dateOfBirth ? new Date(dateOfBirth) : (studentRec?.dateOfBirth || null)
+      const parsedYear = year ? (typeof year === 'string' && year.includes('Year') ? parseInt(year.replace(/\D/g, '')) || (studentRec?.year ?? 1) : Number(year) || (studentRec?.year ?? 1)) : (studentRec?.year ?? 1)
+      const parsedSem = semester ? (typeof semester === 'string' && semester.includes('Semester') ? parseInt(semester.replace(/\D/g, '')) || (studentRec?.semester ?? 1) : Number(semester) || (studentRec?.semester ?? 1)) : (studentRec?.semester ?? 1)
+      const parsedSection = section ? section.replace('Section ', '').trim() : (studentRec?.section || 'A')
 
       if (studentRec) {
         await prisma.student.update({
           where: { id: studentRec.id },
           data: {
-            dateOfBirth: parsedDob,
+            ...(parsedDob ? { dateOfBirth: parsedDob } : {}),
             department: department || studentRec.department || 'Artificial Intelligence & Data Science',
             year: parsedYear,
             semester: parsedSem,
@@ -139,6 +139,7 @@ export async function POST(request: NextRequest) {
             ...(bloodGroup !== undefined && bloodGroup !== '' ? { bloodGroup } : {}),
             ...(address !== undefined && address !== '' ? { address: address.trim() } : {}),
             ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
+            ...(advisorName !== undefined && advisorName !== '' ? { advisorName: advisorName.trim() } : {}),
           } as any,
         }).catch((err) => console.warn('Student update warning:', err))
       } else if (targetRegNumber) {
@@ -146,7 +147,7 @@ export async function POST(request: NextRequest) {
           data: {
             userId: targetUserId,
             registerNumber: targetRegNumber,
-            dateOfBirth: parsedDob,
+            dateOfBirth: parsedDob || new Date('2004-01-01'),
             department: department || 'Artificial Intelligence & Data Science',
             year: parsedYear,
             semester: parsedSem,
@@ -155,6 +156,7 @@ export async function POST(request: NextRequest) {
             ...(bloodGroup !== undefined && bloodGroup !== '' ? { bloodGroup } : {}),
             ...(address !== undefined && address !== '' ? { address: address.trim() } : {}),
             ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
+            ...(advisorName !== undefined && advisorName !== '' ? { advisorName: advisorName.trim() } : {}),
           } as any,
         }).catch((err) => console.warn('Student create warning:', err))
       }
@@ -196,9 +198,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    response.cookies.set({
-      name: 'auth_token',
-      value: token,
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60,
+    })
+    response.cookies.set('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

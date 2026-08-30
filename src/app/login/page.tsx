@@ -204,7 +204,7 @@ export default function LoginPage() {
 
         setOnboardingUser(data.user)
         setOnboardingForm({
-          name: cleanName,
+          name: cleanName || rawName,
           registerNumber: studentReg,
           phone: data.user.phone || '',
           parentPhone: data.user.parentPhone || '',
@@ -212,15 +212,15 @@ export default function LoginPage() {
           address: data.user.address || '',
           busDetails: data.user.busDetails || '',
           dateOfBirth: data.user.dateOfBirth ? String(data.user.dateOfBirth).split('T')[0] : '',
-          department: 'B.Tech Artificial Intelligence & Data Science',
-          year: data.user.year ? `Year ${data.user.year}` : 'Year 2 (Sophomore)',
-          semester: data.user.semester ? `Semester ${data.user.semester}` : 'Semester 4',
-          section: data.user.section ? `Section ${data.user.section}` : 'Section A',
-          advisorName: 'Dr. S. Karthik (Professor · AI & DS)',
+          department: data.user.department || 'Artificial Intelligence & Data Science',
+          year: data.user.year ? `Year ${data.user.year}` : '',
+          semester: data.user.semester ? `Semester ${data.user.semester}` : '',
+          section: data.user.section ? `Section ${data.user.section}` : '',
+          advisorName: data.user.advisorName || 'Assigned Department Faculty',
           hasCorrectionRequest: false,
           correctionRemarks: '',
           detailsConfirmed: false,
-          email: cleanEmail,
+          email: cleanEmail || rawEmail,
           newPassword: '',
           confirmPassword: '',
           emailOtp: '',
@@ -228,7 +228,7 @@ export default function LoginPage() {
         })
         setOnboardingStep(1)
         setShowOnboardingModal(true)
-        toast.success('Welcome! Please fill and review your official student profile.')
+        toast.success('Welcome! Please review your official profile and set your permanent password.')
         return
       }
 
@@ -380,7 +380,7 @@ export default function LoginPage() {
       toast.error('New password and confirmation do not match.')
       return
     }
-    if (!onboardingForm.emailOtp || onboardingForm.emailOtp.length !== 6) {
+    if (emailOtpSent && (!onboardingForm.emailOtp || onboardingForm.emailOtp.length !== 6)) {
       toast.error('Please enter the complete 6-digit OTP sent to your email.')
       return
     }

@@ -54,7 +54,7 @@ export function StudentOnboardingModal({
   const [form, setForm] = useState({
     phone: initialData.phone || '',
     parentPhone: initialData.parentPhone || '',
-    dateOfBirth: initialData.dateOfBirth || '2006-08-15',
+    dateOfBirth: initialData.dateOfBirth || '',
     isParentWhatsapp: false,
     bloodGroup: '',
     residencyStatus: '',
@@ -401,7 +401,7 @@ export function StudentOnboardingModal({
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">CLASS ADVISOR / MENTOR</span>
-                    <span className="font-bold text-xs text-[#1557C0]">{initialData.advisorName || 'Dr. S. Karthik (Professor · AI & DS)'}</span>
+                    <span className="font-bold text-xs text-[#1557C0]">{initialData.advisorName || 'Assigned Faculty Mentor'}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
                 </div>
