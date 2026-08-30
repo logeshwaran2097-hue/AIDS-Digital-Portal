@@ -280,7 +280,21 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
   }
 
   // 7. Verify Password
-  // A. If user has no passwordHash set yet, accept and save entered password
+  // A. Check bcrypt passwordHash
+  if (user.passwordHash) {
+    try {
+      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+    } catch {}
+  }
+
+  // B. Check direct match (if stored as plain text)
+  if (!isValid && user.passwordHash) {
+    if (user.passwordHash === trimmedPassword || user.passwordHash.toLowerCase() === trimmedPassword.toLowerCase()) {
+      isValid = true
+    }
+  }
+
+  // C. If user has no passwordHash set yet, accept and save entered password
   if (!user.passwordHash && trimmedPassword) {
     const newHash = await bcrypt.hash(trimmedPassword, 10)
     await prisma.user.update({
@@ -290,73 +304,43 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     isValid = true
   }
 
-  // B. Check bcrypt passwordHash
-  if (!isValid && user.passwordHash) {
-    try {
-      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
-    } catch {}
-  }
-
-  // C. Check direct match (if stored as plain text or case-insensitive)
-  if (!isValid && user.passwordHash) {
-    if (user.passwordHash === trimmedPassword || user.passwordHash.toLowerCase() === trimmedPassword.toLowerCase()) {
-      isValid = true
-    }
-  }
-
-  // D. Default passwords fallback
-  if (!isValid) {
+  // D. First-time login fallbacks (only if user mustChangePassword is true)
+  if (!isValid && user.mustChangePassword) {
     const defaultPwds = [
       'vsb@123',
       'student@123',
       'abc@123',
       'welcome@123',
       'password123',
-      '123456',
-      '1234',
-      'admin123',
-      'abc',
       normalizedReg.toLowerCase(),
       normalizedReg,
     ]
     if (defaultPwds.includes(trimmedPassword.toLowerCase())) {
       isValid = true
     }
-  }
 
-  // E. Date of Birth comparison
-  if (!isValid && student?.dateOfBirth) {
-    const inputDob = normalizeDate(trimmedPassword)
-    const studentDob = normalizeDate(student.dateOfBirth)
-    if (inputDob && studentDob && inputDob === studentDob) {
-      isValid = true
-    }
-    const cleanInput = trimmedPassword.replace(/\D/g, '')
-    const cleanDob = studentDob.replace(/-/g, '')
-    const ddmmyyyy = studentDob.split('-').reverse().join('')
-    if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
-      isValid = true
-    }
-  }
-
-  // F. If still not valid, allow any valid length password for initial setup
-  if (!isValid && trimmedPassword && trimmedPassword.length >= 3) {
-    const newHash = await bcrypt.hash(trimmedPassword, 10)
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: newHash, mustChangePassword: false },
-    }).catch(() => {})
-    isValid = true
-  }
-
-  // G. Handle mustChangePassword logic (temp password flow)
-  if (user.mustChangePassword && !passwordChangeRequired) {
-    if (isValid) {
-      passwordChangeRequired = true
+    // Date of Birth comparison
+    if (!isValid && student?.dateOfBirth) {
+      const inputDob = normalizeDate(trimmedPassword)
+      const studentDob = normalizeDate(student.dateOfBirth)
+      if (inputDob && studentDob && inputDob === studentDob) {
+        isValid = true
+      }
+      const cleanInput = trimmedPassword.replace(/\D/g, '')
+      const cleanDob = studentDob.replace(/-/g, '')
+      const ddmmyyyy = studentDob.split('-').reverse().join('')
+      if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
+        isValid = true
+      }
     }
   }
 
-  if (!isValid && !passwordChangeRequired) {
+  // E. Handle mustChangePassword logic (temp password flow)
+  if (user.mustChangePassword && isValid) {
+    passwordChangeRequired = true
+  }
+
+  if (!isValid) {
     return { success: false, message: 'Invalid Register Number or Password.' }
   }
 
