@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v2'
+const CACHE_NAME = 'vsb-aids-portal-v3'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -6,7 +6,12 @@ const STATIC_ASSETS = [
   '/college-emblem.png',
   '/icon-192.png',
   '/icon-512.png',
-  '/apple-touch-icon.png'
+  '/maskable-icon-192.png',
+  '/maskable-icon-512.png',
+  '/shortcut-icon-96.png',
+  '/apple-touch-icon.png',
+  '/screenshot-desktop.png',
+  '/screenshot-mobile.png'
 ]
 
 // Install event - caching shell assets
@@ -31,6 +36,28 @@ self.addEventListener('activate', (event) => {
       )
     }).then(() => self.clients.claim())
   )
+})
+
+// Background Sync API
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-attendance' || event.tag === 'sync-messages' || event.tag === 'background-sync') {
+    event.waitUntil(
+      fetch('/api/announcements')
+        .then((res) => res.json())
+        .catch(() => Promise.resolve())
+    )
+  }
+})
+
+// Periodic Background Sync API
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'get-latest-announcements' || event.tag === 'update-timetable' || event.tag === 'periodic-sync') {
+    event.waitUntil(
+      fetch('/api/announcements')
+        .then((res) => res.json())
+        .catch(() => Promise.resolve())
+    )
+  }
 })
 
 // Push Notification Event (Web Push API)
