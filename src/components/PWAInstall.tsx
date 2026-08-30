@@ -54,18 +54,6 @@ export function PWAInstall() {
       setDeferredPrompt(null)
     })
 
-    // Auto-prompt on mobile devices after 1.5s
-    const isMobile = /android|iphone|ipad|ipod/i.test(userAgent)
-    if (isMobile) {
-      const timer = setTimeout(() => {
-        setShowPrompt(true)
-      }, 1500)
-      return () => {
-        clearTimeout(timer)
-        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      }
-    }
-
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     }
@@ -86,9 +74,6 @@ export function PWAInstall() {
       setDeferredPrompt(null)
       return
     }
-
-    // If browser didn't emit beforeinstallprompt, show friendly guide
-    setShowDirectGuide(true)
   }
 
   const handleDismiss = () => {
@@ -137,42 +122,6 @@ export function PWAInstall() {
         </div>
       )}
 
-      {/* Android Chrome Direct Manual Install Modal */}
-      {showDirectGuide && (
-        <div className="fixed inset-0 z-[10000] bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white text-slate-900 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Smartphone className="w-5 h-5 text-[#1557C0]" />
-                <h3 className="text-sm font-black text-[#071A41]">Install on Android / Chrome</h3>
-              </div>
-              <button onClick={() => setShowDirectGuide(false)} className="text-slate-400 hover:text-slate-600 p-1">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-3 text-xs text-slate-600">
-              <p className="flex items-center gap-2.5 font-semibold">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">1</span>
-                <span>Tap the <strong>three dots menu (⋮)</strong> at top right of Chrome</span>
-              </p>
-              <p className="flex items-center gap-2.5 font-semibold">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">2</span>
-                <span>Tap <strong>&ldquo;Install app&rdquo;</strong> or <strong>&ldquo;Add to Home screen&rdquo;</strong></span>
-              </p>
-              <p className="flex items-center gap-2.5 font-semibold">
-                <span className="w-6 h-6 rounded-full bg-blue-100 text-[#1557C0] font-black flex items-center justify-center shrink-0">3</span>
-                <span>Tap <strong>Install</strong> to add VSB AI&amp;DS to your home screen</span>
-              </p>
-            </div>
-            <button
-              onClick={() => setShowDirectGuide(false)}
-              className="w-full py-2.5 bg-[#071A41] text-white font-black text-xs rounded-xl shadow-md cursor-pointer hover:bg-[#1557C0] transition-colors"
-            >
-              Got it!
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* iOS Add to Home Screen Instructions Modal */}
       {showIOSGuide && (
