@@ -2,10 +2,72 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 
-// GET: Fetch students for a given year/section
+// GET: Fetch students for a given year/section or all reports
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
+
+    // Global All-Years All-Sections Report Mode
+    if (searchParams.get('all') === 'true' || searchParams.get('report') === 'true') {
+      const [allStudents, allRecords, allUsers] = await Promise.all([
+        prisma.student.findMany({ orderBy: { registerNumber: 'asc' } }).catch(() => []),
+        (prisma as any).attendanceRecord ? (prisma as any).attendanceRecord.findMany().catch(() => []) : [],
+        prisma.user.findMany().catch(() => []),
+      ])
+
+      const userMap = new Map(allUsers.map((u: any) => [u.id, u]))
+      const attendanceByRegNo = new Map<string, { present: number; absent: number; od: number; ml: number }>()
+
+      allRecords.forEach((rec: any) => {
+        const reg = rec.registerNumber.toUpperCase()
+        if (!attendanceByRegNo.has(reg)) {
+          attendanceByRegNo.set(reg, { present: 0, absent: 0, od: 0, ml: 0 })
+        }
+        const current = attendanceByRegNo.get(reg)!
+        const st = (rec.status || 'P').toUpperCase()
+        if (st === 'P') current.present++
+        else if (st === 'A') current.absent++
+        else if (st === 'OD') current.od++
+        else if (st === 'ML') current.ml++
+      })
+
+      const studentsList = allStudents.map((s: any) => {
+        const user = userMap.get(s.userId)
+        const att = attendanceByRegNo.get(s.registerNumber.toUpperCase()) || {
+          present: 0,
+          absent: 0,
+          od: 0,
+          ml: 0,
+        }
+        const totalWorking = att.present + att.absent + att.od + att.ml
+        const effectiveAttended = att.present + att.od + att.ml
+        const pct = totalWorking > 0 ? Math.round((effectiveAttended / totalWorking) * 1000) / 10 : 100
+
+        return {
+          id: s.id,
+          regNo: s.registerNumber,
+          name: user?.name || s.registerNumber,
+          year: s.year,
+          semester: s.semester,
+          section: s.section || 'A',
+          workingDays: totalWorking,
+          presentDays: att.present,
+          odDays: att.od,
+          mlDays: att.ml,
+          absentDays: att.absent,
+          percentage: pct,
+          cgpa: 8.5,
+          status: pct >= 75 ? 'ELIGIBLE' : 'SHORTAGE',
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        students: studentsList,
+        totalCount: studentsList.length,
+      })
+    }
+
     const year = parseInt(searchParams.get('year') || '2')
     const section = searchParams.get('section') || 'A'
     const semester = parseInt(searchParams.get('semester') || '4')

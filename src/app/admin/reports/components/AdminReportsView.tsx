@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -67,7 +67,7 @@ export function AdminReportsView({
   // Filters State
   const [selectedYear, setSelectedYear] = useState<number | 'ALL'>('ALL')
   const [selectedSemester, setSelectedSemester] = useState<number | 'ALL'>('ALL')
-  const [selectedSection, setSelectedSection] = useState<'ALL' | 'A' | 'B'>('ALL')
+  const [selectedSection, setSelectedSection] = useState<'ALL' | 'A' | 'B' | 'C' | 'D'>('ALL')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'SHORTAGE' | 'ELIGIBLE' | 'OD_ONLY' | 'ML_ONLY'>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [startDate, setStartDate] = useState('2026-01-05')
@@ -77,6 +77,24 @@ export function AdminReportsView({
   const [activeTab, setActiveTab] = useState<'bargraphs' | 'diagrams' | 'register'>('bargraphs')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedMessage, setGeneratedMessage] = useState('')
+
+  // Live real-time student and morning attendance sync
+  const [studentsList, setStudentsList] = useState<StudentAttendanceRecord[]>(initialStudents || [])
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch('/api/attendance?all=true', { cache: 'no-store' })
+        const data = await res.json()
+        if (data.success && Array.isArray(data.students) && data.students.length > 0) {
+          setStudentsList(data.students)
+        }
+      } catch {}
+    }
+
+    const interval = setInterval(fetchLatest, 3000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Quick Preset Setter
   const handlePresetSelect = (preset: 'semester' | 'month' | 'last30' | 'custom') => {
@@ -123,7 +141,7 @@ export function AdminReportsView({
 
   // Filtered Students (ALWAYS ABSENTS FIRST)
   const filteredStudents = useMemo(() => {
-    return (initialStudents || []).filter((s) => {
+    return (studentsList || []).filter((s) => {
       const matchesYear = selectedYear === 'ALL' || s.year === selectedYear
       const matchesSemester = selectedSemester === 'ALL' || s.semester === selectedSemester
       const matchesSection = selectedSection === 'ALL' || s.section === selectedSection
@@ -139,7 +157,7 @@ export function AdminReportsView({
 
       return matchesYear && matchesSemester && matchesSection && matchesSearch && matchesStatus
     }).sort((a, b) => b.absentDays - a.absentDays || a.percentage - b.percentage)
-  }, [initialStudents, selectedYear, selectedSemester, selectedSection, statusFilter, searchQuery])
+  }, [studentsList, selectedYear, selectedSemester, selectedSection, statusFilter, searchQuery])
 
   // Summary Metrics
   const summary = useMemo(() => {
@@ -375,21 +393,22 @@ export function AdminReportsView({
     },
   ]
 
-  // 4 Clean Attendance Categories for Bar Chart (Absents, Medical Leave, On-Duty, Presents)
+  // 5 Clean Categories for Bar Chart (Total Students, Presents, Absents, On-Duty, Medical Leave)
   const verticalBarCategories = useMemo(() => {
     if (chartMode === 'students') {
       return [
-        { label: 'Category A', title: 'Absents (A)', short: 'Absents (A)', value: summary.shortageCount, unit: 'Students', color: '#DC2626' }, // Red
-        { label: 'Category B', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.mlClaimantsCount, unit: 'Students', color: '#EAB308' }, // Yellow
-        { label: 'Category C', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.odClaimantsCount, unit: 'Students', color: '#16A34A' }, // Green
-        { label: 'Category D', title: 'Presents (P)', short: 'Presents (P)', value: summary.eligibleCount, unit: 'Students', color: '#2563EB' }, // Blue
+        { label: 'Category A', title: 'Total Students', short: 'Total Students', value: summary.totalStudents, unit: 'Students', color: '#1455D9' }, // Royal Blue
+        { label: 'Category B', title: 'Presents (P)', short: 'Presents (P)', value: summary.eligibleCount, unit: 'Students', color: '#16A34A' }, // Green
+        { label: 'Category C', title: 'Absents (A)', short: 'Absents (A)', value: summary.shortageCount, unit: 'Students', color: '#DC2626' }, // Red
+        { label: 'Category D', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.odClaimantsCount, unit: 'Students', color: '#0284C7' }, // Cyan
+        { label: 'Category E', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.mlClaimantsCount, unit: 'Students', color: '#EAB308' }, // Amber
       ]
     } else {
       return [
-        { label: 'Category A', title: 'Absents (A)', short: 'Absents (A)', value: summary.avgAbsentDays, unit: 'Days', color: '#DC2626' }, // Red
-        { label: 'Category B', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.avgMLDays, unit: 'Days', color: '#EAB308' }, // Yellow
-        { label: 'Category C', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.avgODDays, unit: 'Days', color: '#16A34A' }, // Green
-        { label: 'Category D', title: 'Presents (P)', short: 'Presents (P)', value: summary.avgPresentDays, unit: 'Days', color: '#2563EB' }, // Blue
+        { label: 'Category A', title: 'Presents (P)', short: 'Presents (P)', value: summary.avgPresentDays, unit: 'Days', color: '#16A34A' }, // Green
+        { label: 'Category B', title: 'Absents (A)', short: 'Absents (A)', value: summary.avgAbsentDays, unit: 'Days', color: '#DC2626' }, // Red
+        { label: 'Category C', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.avgODDays, unit: 'Days', color: '#0284C7' }, // Cyan
+        { label: 'Category D', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.avgMLDays, unit: 'Days', color: '#EAB308' }, // Amber
       ]
     }
   }, [chartMode, summary])
@@ -564,7 +583,7 @@ export function AdminReportsView({
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Live breakdown: <strong>Absents (A)</strong>, <strong>Medical (ML)</strong>, <strong>On-Duty (OD)</strong> &amp; <strong>Presents (P)</strong>
+              Live breakdown: <strong>Total Students</strong>, <strong>Presents (P)</strong>, <strong>Absents (A)</strong>, <strong>On-Duty (OD)</strong> &amp; <strong>Medical (ML)</strong>
             </p>
           </div>
 
@@ -589,8 +608,8 @@ export function AdminReportsView({
           </div>
         </div>
 
-        {/* Legend Box with 4 Clean Categories (Absents, ML, OD, Presents) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 bg-gray-50/80 p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 text-xs">
+        {/* Legend Box with Dynamic Grid (5 columns for student count, 4 for days) */}
+        <div className={`grid grid-cols-2 sm:grid-cols-3 ${chartMode === 'students' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'} gap-2 sm:gap-3 bg-gray-50/80 p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 text-xs`}>
           {verticalBarCategories.map((cat, idx) => (
             <div key={idx} className="flex items-center gap-1.5">
               <span
@@ -791,9 +810,11 @@ export function AdminReportsView({
                 onChange={(e) => setSelectedSection(e.target.value as any)}
                 className="w-full px-3 py-2 rounded-xl border border-gray-200 font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9] shadow-2xs"
               >
-                <option value="ALL">All Sections (A &amp; B)</option>
-                <option value="A">Section A Only</option>
-                <option value="B">Section B Only</option>
+                <option value="ALL">All 4 Sections (A, B, C &amp; D)</option>
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+                <option value="C">Section C</option>
+                <option value="D">Section D</option>
               </select>
             </div>
 
