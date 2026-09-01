@@ -320,7 +320,7 @@ export function StudentProfileView({
                 <Camera className="w-3.5 h-3.5" />
                 <input
                   type="file"
-                  accept="image/png, image/jpeg, image/webp"
+                  accept="image/png, image/jpeg, image/jpg"
                   onChange={(e) => {
                     const f = e.target.files?.[0]
                     if (f) handlePhotoUpload(f)
@@ -642,7 +642,7 @@ export function StudentProfileView({
                         <span>{formData.profileImage ? 'Change Photo' : 'Upload Photo'}</span>
                         <input
                           type="file"
-                          accept="image/png, image/jpeg, image/webp"
+                          accept="image/png, image/jpeg, image/jpg"
                           onChange={(e) => {
                             const f = e.target.files?.[0]
                             if (f) {

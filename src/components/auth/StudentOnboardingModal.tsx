@@ -561,13 +561,13 @@ export function StudentOnboardingModal({
                     <span>{form.profileImage ? 'Change Photo' : 'Upload Passport Photo'}</span>
                     <input
                       type="file"
-                      accept="image/png, image/jpeg, image/webp"
+                      accept="image/png, image/jpeg, image/jpg"
                       onChange={handlePhotoUpload}
                       className="hidden"
                     />
                   </label>
                   <p className="text-[11px] text-gray-600">
-                    Upload a clear frontal passport size photograph (JPG, PNG, WebP). This will appear on your Student Portal &amp; downloadable Digital ID Card.
+                    Upload a clear frontal passport size photograph (JPG, PNG). This will appear on your Student Portal &amp; downloadable Digital ID Card.
                   </p>
                 </div>
               </div>
