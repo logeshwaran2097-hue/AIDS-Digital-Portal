@@ -33,6 +33,9 @@ import {
   AlertCircle,
   ShieldAlert,
   Info,
+  Bus,
+  Car,
+  Home,
 } from 'lucide-react'
 import { downloadStudentCardPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -46,6 +49,14 @@ interface StudentFullProfile {
   dateOfBirth: string
   bloodGroup: string
   residencyStatus: string
+  residencyType?: 'Day Scholar' | 'Hosteller'
+  dayScholarType?: 'College Bus' | 'Out Bus'
+  busNo?: string
+  boardingPoint?: string
+  outBusMode?: string
+  address?: string
+  hostelBlock?: string
+  roomNo?: string
   registerNumber: string
   department: string
   degreeProgram: string
@@ -197,6 +208,13 @@ export function StudentProfileView({
           email: formData.email,
           phone: formData.phone,
           dateOfBirth: formData.dateOfBirth || undefined,
+          bloodGroup: formData.bloodGroup,
+          residencyStatus: formData.residencyStatus,
+          hostelBlock: formData.hostelBlock,
+          roomNo: formData.roomNo,
+          busNo: formData.busNo,
+          boardingPoint: formData.boardingPoint,
+          address: formData.address,
           department: formData.department,
           year: formData.year,
           semester: formData.semester,
@@ -415,9 +433,18 @@ export function StudentProfileView({
                 <span className="font-bold text-red-600 font-mono">{profile.bloodGroup}</span>
               </div>
 
-              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
-                <span className="font-bold text-gray-500">Residency Status:</span>
-                <span className="font-bold text-[#071A3D] text-right">{profile.residencyStatus}</span>
+              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span className="font-bold text-gray-500">Residency &amp; Transport:</span>
+                <span className="font-bold text-[#071A3D] text-left sm:text-right flex items-center gap-1.5">
+                  {profile.residencyStatus?.toLowerCase().includes('hostel') ? (
+                    <Building className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                  ) : profile.residencyStatus?.toLowerCase().includes('out bus') ? (
+                    <Car className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  ) : (
+                    <Bus className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                  )}
+                  {profile.residencyStatus || 'Not Specified (Click Edit)'}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -565,15 +592,302 @@ export function StudentProfileView({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-[#071A3D] mb-1">Residency Status &amp; Transport/Hostel Details</label>
-                    <input
-                      type="text"
-                      value={formData.residencyStatus}
-                      onChange={(e) => setFormData({ ...formData, residencyStatus: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                      placeholder="e.g. Day Scholar (College Bus Route 14) or Hosteller (Kaveri Hostel Room 204)"
-                    />
+                  {/* RESIDENCY & TRANSPORT SETUP */}
+                  <div className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-black text-[#071A3D] text-xs uppercase tracking-wider">
+                        Residency &amp; Accommodation
+                      </label>
+                      <span className="text-[11px] text-gray-400 font-medium">Select your accommodation</span>
+                    </div>
+
+                    {/* Radio Type Selector: Day Scholar vs Hosteller */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newType = 'Day Scholar'
+                          const isCollegeBus = formData.dayScholarType !== 'Out Bus'
+                          const bNo = formData.busNo || 'Route 12'
+                          const stop = formData.boardingPoint || 'Karur Bus Stand'
+                          const outM = formData.outBusMode || 'Public Bus'
+                          const newSummary = isCollegeBus
+                            ? `Day Scholar · College Bus ${bNo} · Boarding: ${stop}`
+                            : `Day Scholar · Out Bus (${outM}) · From: ${stop}`
+                          setFormData({
+                            ...formData,
+                            residencyType: newType,
+                            dayScholarType: isCollegeBus ? 'College Bus' : 'Out Bus',
+                            busNo: isCollegeBus ? bNo : formData.busNo,
+                            boardingPoint: stop,
+                            residencyStatus: newSummary,
+                          })
+                        }}
+                        className={cn(
+                          'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
+                          (formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel')))
+                            ? 'bg-blue-50/80 border-[#1455D9] ring-2 ring-[#1455D9]/20 text-[#071A3D]'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center shrink-0">
+                          <Bus className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs">Day Scholar</p>
+                          <p className="text-[10px] text-gray-500">College Bus / Out Bus</p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newType = 'Hosteller'
+                          const block = formData.hostelBlock || 'Boys Hostel Block A (Ganga)'
+                          const room = formData.roomNo || 'Room 101'
+                          const newSummary = `Hosteller · ${block} · ${room}`
+                          setFormData({
+                            ...formData,
+                            residencyType: newType,
+                            hostelBlock: block,
+                            roomNo: room,
+                            residencyStatus: newSummary,
+                          })
+                        }}
+                        className={cn(
+                          'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
+                          (formData.residencyType === 'Hosteller' || formData.residencyStatus?.toLowerCase().includes('hostel'))
+                            ? 'bg-purple-50/80 border-purple-600 ring-2 ring-purple-600/20 text-[#071A3D]'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                          <Building className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs">Hosteller</p>
+                          <p className="text-[10px] text-gray-500">College Hostel Residence</p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* DAY SCHOLAR SUB-OPTIONS: College Bus User vs Out Bus User */}
+                    {(formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
+                      <div className="p-3.5 rounded-2xl bg-white border border-blue-100 space-y-3">
+                        <label className="block font-bold text-gray-700 text-[11px]">
+                          Day Scholar Transport Option:
+                        </label>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const bNo = formData.busNo || 'Route 12'
+                              const stop = formData.boardingPoint || 'Karur Bus Stand'
+                              setFormData({
+                                ...formData,
+                                dayScholarType: 'College Bus',
+                                busNo: bNo,
+                                boardingPoint: stop,
+                                residencyStatus: `Day Scholar · College Bus ${bNo} · Boarding: ${stop}`,
+                              })
+                            }}
+                            className={cn(
+                              'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
+                              formData.dayScholarType !== 'Out Bus'
+                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                            )}
+                          >
+                            <Bus className="w-4 h-4" /> College Bus User
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const mode = formData.outBusMode || 'Public Bus (TNSTC / Private)'
+                              const stop = formData.boardingPoint || 'Local Stop'
+                              setFormData({
+                                ...formData,
+                                dayScholarType: 'Out Bus',
+                                outBusMode: mode,
+                                boardingPoint: stop,
+                                residencyStatus: `Day Scholar · Out Bus (${mode}) · From: ${stop}`,
+                              })
+                            }}
+                            className={cn(
+                              'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
+                              formData.dayScholarType === 'Out Bus'
+                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                            )}
+                          >
+                            <Car className="w-4 h-4" /> Out Bus / Own Transport
+                          </button>
+                        </div>
+
+                        {/* If College Bus User */}
+                        {formData.dayScholarType !== 'Out Bus' ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <div>
+                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                College Bus Route / Bus No.
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Bus No. 12 - Karur or Route 08 - Trichy"
+                                value={formData.busNo || ''}
+                                onChange={(e) => {
+                                  const bNo = e.target.value
+                                  setFormData({
+                                    ...formData,
+                                    busNo: bNo,
+                                    residencyStatus: `Day Scholar · College Bus ${bNo} · Boarding: ${formData.boardingPoint || 'Main Stop'}`,
+                                  })
+                                }}
+                                className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                Boarding Point / Stop Name
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Karur Bus Stand / Tollgate"
+                                value={formData.boardingPoint || ''}
+                                onChange={(e) => {
+                                  const pt = e.target.value
+                                  setFormData({
+                                    ...formData,
+                                    boardingPoint: pt,
+                                    residencyStatus: `Day Scholar · College Bus ${formData.busNo || 'Bus'} · Boarding: ${pt}`,
+                                  })
+                                }}
+                                className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          /* If Out Bus User */
+                          <div className="space-y-3 pt-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                  Out Bus Transport Mode
+                                </label>
+                                <select
+                                  value={formData.outBusMode || 'Public Bus (TNSTC / Private)'}
+                                  onChange={(e) => {
+                                    const m = e.target.value
+                                    setFormData({
+                                      ...formData,
+                                      outBusMode: m,
+                                      residencyStatus: `Day Scholar · Out Bus (${m}) · From: ${formData.boardingPoint || 'Local Stop'}`,
+                                    })
+                                  }}
+                                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs bg-white"
+                                >
+                                  <option value="Public Bus (TNSTC / Private)">Public Bus (TNSTC / Private)</option>
+                                  <option value="Own Two-Wheeler / Bike">Own Two-Wheeler / Bike</option>
+                                  <option value="Private Van / Auto">Private Van / Auto</option>
+                                  <option value="Walking / Nearby Resident">Walking / Nearby Resident</option>
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                  Starting Location / Stop
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. Thanthonimalai / Velliyanai"
+                                  value={formData.boardingPoint || ''}
+                                  onChange={(e) => {
+                                    const pt = e.target.value
+                                    setFormData({
+                                      ...formData,
+                                      boardingPoint: pt,
+                                      residencyStatus: `Day Scholar · Out Bus (${formData.outBusMode || 'Public/Own'}) · From: ${pt}`,
+                                    })
+                                  }}
+                                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                Residential Address (Optional)
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Door No, Street Name, Area, City, Pincode"
+                                value={formData.address || ''}
+                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* HOSTELLER SUB-OPTIONS */}
+                    {(formData.residencyType === 'Hosteller' || (!formData.residencyType && formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
+                      <div className="p-3.5 rounded-2xl bg-white border border-purple-100 space-y-3">
+                        <label className="block font-bold text-gray-700 text-[11px]">
+                          Hostel Allocation Details:
+                        </label>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                              Hostel Block
+                            </label>
+                            <select
+                              value={formData.hostelBlock || 'Boys Hostel Block A (Ganga)'}
+                              onChange={(e) => {
+                                const b = e.target.value
+                                setFormData({
+                                  ...formData,
+                                  hostelBlock: b,
+                                  residencyStatus: `Hosteller · ${b} · ${formData.roomNo || 'Room'}`,
+                                })
+                              }}
+                              className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-purple-600 text-xs bg-white font-semibold"
+                            >
+                              <option value="Boys Hostel Block A (Ganga)">Boys Hostel Block A (Ganga)</option>
+                              <option value="Boys Hostel Block B (Yamuna)">Boys Hostel Block B (Yamuna)</option>
+                              <option value="Boys Hostel Block C (Kaveri)">Boys Hostel Block C (Kaveri)</option>
+                              <option value="Girls Hostel Block A (Thamarai)">Girls Hostel Block A (Thamarai)</option>
+                              <option value="Girls Hostel Block B (Malligai)">Girls Hostel Block B (Malligai)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                              Room Number
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Room 204"
+                              value={formData.roomNo || ''}
+                              onChange={(e) => {
+                                const r = e.target.value
+                                setFormData({
+                                  ...formData,
+                                  roomNo: r,
+                                  residencyStatus: `Hosteller · ${formData.hostelBlock || 'Boys Hostel'} · ${r}`,
+                                })
+                              }}
+                              className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-purple-600 text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
