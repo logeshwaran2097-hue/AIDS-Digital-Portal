@@ -52,6 +52,8 @@ if (process.env.DATABASE_URL?.startsWith('file:') || !process.env.DATABASE_URL) 
     prisma.$queryRawUnsafe('PRAGMA synchronous = NORMAL;').catch(() => {})
     prisma.$queryRawUnsafe('PRAGMA busy_timeout = 10000;').catch(() => {})
     prisma.$queryRawUnsafe('PRAGMA temp_store = MEMORY;').catch(() => {})
+    prisma.$queryRawUnsafe('PRAGMA cache_size = -64000;').catch(() => {})
+    prisma.$queryRawUnsafe('PRAGMA mmap_size = 30000000000;').catch(() => {})
   } catch {}
 }
 

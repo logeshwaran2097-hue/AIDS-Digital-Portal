@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -81,6 +81,33 @@ export function HODAnnouncementsView({
   const [selectedStudentReg, setSelectedStudentReg] = useState(studentList[0]?.registerNumber || '23AD001')
   const [content, setContent] = useState('')
   const [priority, setPriority] = useState('NORMAL')
+
+  // Auto-sync HOD announcements in real-time
+  useEffect(() => {
+    const fetchFreshAnnouncements = async () => {
+      try {
+        const res = await fetch('/api/announcements', { cache: 'no-store' })
+        const data = await res.json()
+        if (data.success && Array.isArray(data.announcements)) {
+          setAnnouncements(
+            data.announcements.map((a: any) => ({
+              id: a.id,
+              title: a.title,
+              content: a.content,
+              category: a.category,
+              target: a.target,
+              createdByName: a.createdByName,
+              isPublished: a.isPublished !== false,
+              createdAt: new Date(a.createdAt),
+            }))
+          )
+        }
+      } catch {}
+    }
+
+    const timer = setInterval(fetchFreshAnnouncements, 3500)
+    return () => clearInterval(timer)
+  }, [])
 
   const filtered = useMemo(() => {
     return announcements.filter((a) => {

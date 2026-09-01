@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -145,6 +145,34 @@ export function AdminAnnouncementsView({
     target: 'ALL',
     targetSpecific: '',
   })
+
+  // Live real-time sync for announcements from database
+  useEffect(() => {
+    const fetchFreshAnnouncements = async () => {
+      try {
+        const res = await fetch('/api/announcements', { cache: 'no-store' })
+        const data = await res.json()
+        if (data.success && Array.isArray(data.announcements)) {
+          setAnnouncements(
+            data.announcements.map((a: any) => ({
+              id: a.id,
+              title: a.title,
+              content: a.content,
+              category: a.category,
+              target: a.target,
+              targetSpecific: a.targetSpecific || null,
+              createdByName: a.createdByName || 'System Administrator',
+              isPublished: a.isPublished !== false,
+              createdAt: a.createdAt ? String(a.createdAt).split('T')[0] : new Date().toISOString().split('T')[0],
+            }))
+          )
+        }
+      } catch {}
+    }
+
+    const timer = setInterval(fetchFreshAnnouncements, 3500)
+    return () => clearInterval(timer)
+  }, [])
 
   const filteredAnnouncements = announcements.filter((a) => {
     const matchesTarget = targetFilter === 'ALL' || a.target === targetFilter
