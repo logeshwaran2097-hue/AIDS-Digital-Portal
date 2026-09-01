@@ -66,13 +66,29 @@ export async function GET() {
       extendedInfo = admin || {}
     }
 
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        profileImage: true,
+        mustChangePassword: true,
+      },
+    })
+
     return NextResponse.json({
       success: true,
       user: {
         id: session.userId,
-        name: session.name,
-        email: session.email,
+        name: dbUser?.name || session.name,
+        email: dbUser?.email || session.email,
+        phone: dbUser?.phone || '',
+        profileImage: dbUser?.profileImage || null,
         role: session.role,
+        mustChangePassword: dbUser?.mustChangePassword ?? false,
         ...extendedInfo,
       },
     })

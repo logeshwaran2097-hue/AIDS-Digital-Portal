@@ -99,8 +99,8 @@ export async function POST(request: Request) {
 
     const regUpper = registerNumber.trim().toUpperCase()
 
-    // 1. Check if student with same registerNumber exists
-    const existingStudent = await prisma.student.findFirst({
+    // 1. Find existing student by registerNumber or existing user by email
+    let existingStudent = await prisma.student.findFirst({
       where: {
         OR: [
           { registerNumber: regUpper },
@@ -119,24 +119,36 @@ export async function POST(request: Request) {
     const initialPassword = password.trim()
     const passwordHash = await bcrypt.hash(initialPassword, 10)
 
+    let existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: finalEmail },
+          { email: `${regUpper.toLowerCase()}@student.vsb.edu.in` },
+          ...(existingStudent ? [{ id: existingStudent.userId }] : []),
+        ],
+      },
+    })
+
     let user: any = null
 
-    // If an existing student record exists, update both Student and User
-    if (existingStudent) {
-      user = await prisma.user.upsert({
-        where: { id: existingStudent.userId },
-        update: {
+    // Upsert User with explicit Name and Password
+    if (existingUser) {
+      user = await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
           name: name.trim(),
-          phone: phone ? phone.trim() : null,
+          email: finalEmail,
+          phone: phone ? phone.trim() : existingUser.phone,
           role: 'student',
           status: status || 'active',
           passwordHash,
-          email: finalEmail,
           emailVerified: isEmailCustom,
           mustChangePassword: true,
         },
-        create: {
-          id: existingStudent.userId,
+      })
+    } else {
+      user = await prisma.user.create({
+        data: {
           email: finalEmail,
           name: name.trim(),
           phone: phone ? phone.trim() : null,
@@ -147,10 +159,15 @@ export async function POST(request: Request) {
           mustChangePassword: true,
         },
       })
+    }
 
-      const updatedStudent = await prisma.student.update({
+    // Upsert Student with proper userId and registerNumber
+    let student: any = null
+    if (existingStudent) {
+      student = await prisma.student.update({
         where: { id: existingStudent.id },
         data: {
+          userId: user.id,
           registerNumber: regUpper,
           dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : existingStudent.dateOfBirth,
           department: department || existingStudent.department,
@@ -162,86 +179,53 @@ export async function POST(request: Request) {
           parentPhone: parentPhone ? String(parentPhone).trim() : (existingStudent as any).parentPhone,
           bloodGroup: bloodGroup !== undefined ? bloodGroup : (existingStudent as any).bloodGroup,
           residencyStatus: residencyStatus !== undefined ? residencyStatus : (existingStudent as any).residencyStatus,
-          cgpa: cgpa !== undefined ? (cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : null) : (existingStudent as any).cgpa,
-          attendance: attendance !== undefined ? (attendance !== '' ? String(attendance) : null) : (existingStudent as any).attendance,
+          cgpa: cgpa !== undefined && cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : (existingStudent as any).cgpa,
+          attendance: attendance !== undefined && attendance !== '' ? String(attendance) : (existingStudent as any).attendance,
         } as any,
       })
-
-      revalidatePath('/admin/students')
-      revalidatePath('/admin/dashboard')
-
-      return NextResponse.json({
-        success: true,
-        message: 'Student record updated with temporary password in database',
-        student: {
-          id: updatedStudent.id,
-          userId: user.id,
-          registerNumber: updatedStudent.registerNumber,
-          name: user.name,
-          email: isEmailCustom ? user.email : '',
-          phone: user.phone || '',
-          parentPhone: (updatedStudent as any).parentPhone || '',
-          dateOfBirth: updatedStudent.dateOfBirth ? updatedStudent.dateOfBirth.toISOString().split('T')[0] : null,
-          department: updatedStudent.department,
-          year: updatedStudent.year,
-          semester: updatedStudent.semester,
-          batch: (updatedStudent as any).batch || '',
-          section: updatedStudent.section,
-          advisorName: (updatedStudent as any).advisorName || '',
-          status: user.status,
-          bloodGroup: (updatedStudent as any).bloodGroup,
-          residencyStatus: (updatedStudent as any).residencyStatus,
-          cgpa: (updatedStudent as any).cgpa,
-          attendance: (updatedStudent as any).attendance,
-        },
+    } else {
+      // Check if orphaned student with this userId exists
+      const studentByUserId = await prisma.student.findUnique({
+        where: { userId: user.id },
       })
+
+      if (studentByUserId) {
+        student = await prisma.student.update({
+          where: { id: studentByUserId.id },
+          data: {
+            registerNumber: regUpper,
+            department: department || studentByUserId.department,
+            year: Number(year) || studentByUserId.year,
+            semester: Number(semester) || studentByUserId.semester,
+            batch: batch ? String(batch).trim() : (studentByUserId as any).batch,
+            section: section || studentByUserId.section,
+            advisorName: advisorName ? String(advisorName).trim() : (studentByUserId as any).advisorName,
+            parentPhone: parentPhone ? String(parentPhone).trim() : (studentByUserId as any).parentPhone,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : studentByUserId.dateOfBirth,
+          } as any,
+        })
+      } else {
+        student = await prisma.student.create({
+          data: {
+            userId: user.id,
+            registerNumber: regUpper,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2004-01-01'),
+            department: department || 'Artificial Intelligence & Data Science',
+            year: Number(year) || 1,
+            semester: Number(semester) || 1,
+            batch: batch ? String(batch).trim() : null,
+            section: section || 'A',
+            advisorName: advisorName ? String(advisorName).trim() : null,
+            parentPhone: parentPhone ? String(parentPhone).trim() : null,
+            bloodGroup,
+            residencyStatus,
+            cgpa: cgpa ? parseFloat(String(cgpa)) : null,
+            attendance: attendance ? String(attendance) : null,
+          } as any,
+        })
+      }
     }
 
-    // Otherwise create brand new user and student
-    user = await prisma.user.upsert({
-      where: { email: finalEmail },
-      update: {
-        name: name.trim(),
-        phone: phone ? phone.trim() : null,
-        role: 'student',
-        status: status || 'active',
-        passwordHash,
-        emailVerified: isEmailCustom,
-        mustChangePassword: true,
-      },
-      create: {
-        email: finalEmail,
-        name: name.trim(),
-        phone: phone ? phone.trim() : null,
-        role: 'student',
-        status: status || 'active',
-        passwordHash,
-        emailVerified: isEmailCustom,
-        mustChangePassword: true,
-      },
-    })
-
-    // Create Student
-    const student = await prisma.student.create({
-      data: {
-        userId: user.id,
-        registerNumber: regUpper,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2000-01-01'),
-        department: department || 'Artificial Intelligence & Data Science',
-        year: Number(year) || 1,
-        semester: Number(semester) || 1,
-        batch: batch ? String(batch).trim() : null,
-        section: section || 'A',
-        advisorName: advisorName ? String(advisorName).trim() : null,
-        parentPhone: parentPhone ? String(parentPhone).trim() : null,
-        bloodGroup,
-        residencyStatus,
-        cgpa: cgpa ? parseFloat(String(cgpa)) : null,
-        attendance: attendance ? String(attendance) : null,
-      } as any,
-    })
-
-    // Invalidate caches
     revalidatePath('/admin/students')
     revalidatePath('/admin/dashboard')
 
