@@ -460,6 +460,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   }
 
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const handleLogout = async () => {
     if (isLoggingOut) return
@@ -650,12 +651,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         <div className="p-3 border-t border-white/10 bg-white/5">
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={() => setShowLogoutConfirm(true)}
             disabled={isLoggingOut}
             className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
-            <span>{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -861,13 +862,13 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
             {/* Top Header Direct Logout Action */}
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutConfirm(true)}
               disabled={isLoggingOut}
               title="Logout from portal"
               className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-red-200/80 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 disabled:opacity-50"
             >
               <LogOut className="w-4 h-4 text-red-500" />
-              <span className="hidden sm:inline">{isLoggingOut ? 'Logging out...' : 'Logout'}</span>
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>
@@ -959,6 +960,53 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         isOpen={isDownloaderOpen}
         onClose={() => setIsDownloaderOpen(false)}
       />
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3D]/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200 text-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 shadow-inner ring-8 ring-red-50">
+              <LogOut className="w-8 h-8" />
+            </div>
+
+            <h3 className="text-lg sm:text-xl font-black text-[#071A3D] mb-1">
+              Confirm Sign Out
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-500 mb-6 leading-relaxed">
+              Are you sure you want to end your current session for <strong className="text-[#071A3D] font-bold">{userName}</strong> ({role.toUpperCase()})?
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                disabled={isLoggingOut}
+                className="px-4 py-3 rounded-2xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="px-4 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-md shadow-red-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isLoggingOut ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Signing out...
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="w-4 h-4" />
+                    Yes, Sign Out
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
