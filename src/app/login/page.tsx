@@ -1081,19 +1081,16 @@ export default function LoginPage() {
               <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
               <span>Admin Support</span>
             </span>
-            {!isAppInstalled && (
-              <>
-                <span className="text-slate-300">|</span>
-                <button 
-                  type="button"
-                  onClick={handleDirectInstall} 
-                  className="inline-flex items-center gap-1 cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold transition-all hover:scale-105"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Install App</span>
-                </button>
-              </>
-            )}
+            <span className="text-slate-300">|</span>
+            <a 
+              href="/Digital-Portal-of-AI-and-DS.apk" 
+              download="Digital-Portal-of-AI-and-DS.apk"
+              className="inline-flex items-center gap-1 cursor-pointer text-emerald-600 hover:text-emerald-700 font-extrabold transition-all hover:scale-105"
+              title="Download & Install Official Android APK (3.9 MB)"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download APK</span>
+            </a>
           </div>
 
         </div>

@@ -47,34 +47,14 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
       }
     }
 
-    // 2. Fallback / Direct Standalone Download
+    // 2. Direct Standalone Native Android APK Download
     try {
-      const apkHeader = 'PK\x03\x04\x14\x00\x08\x00\x08\x00'
-      const manifestData = JSON.stringify(
-        {
-          package: 'in.edu.vsb.aidsportal',
-          applicationName: 'Digital Portal of AI&DS',
-          versionName: '1.0.0',
-          institution: 'V.S.B. Engineering College (Autonomous)',
-          department: 'Department of Artificial Intelligence & Data Science',
-          serverUrl: typeof window !== 'undefined' ? window.location.origin : 'https://aids-digital-portal.vercel.app',
-        },
-        null,
-        2
-      )
-
-      const blob = new Blob([apkHeader, '\n# VSB AI&DS Android Package\n', manifestData], {
-        type: 'application/vnd.android.package-archive',
-      })
-
-      const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url
-      a.download = 'VSB-AI-DS-Portal.apk'
+      a.href = '/Digital-Portal-of-AI-and-DS.apk'
+      a.download = 'Digital-Portal-of-AI-and-DS.apk'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
-      URL.revokeObjectURL(url)
 
       setInstalled(true)
     } catch {}
