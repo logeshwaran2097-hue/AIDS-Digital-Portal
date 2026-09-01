@@ -720,37 +720,96 @@ export function StudentProfileView({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Date of Birth (YYYY-MM-DD)</label>
-                      <input
-                        type="date"
-                        min="1980-01-01"
-                        max="2015-12-31"
-                        placeholder="YYYY-MM-DD"
-                        value={formData.dateOfBirth}
-                        onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Blood Group</label>
+                  <div className="pt-2 border-t border-gray-100">
+                    <label className="block font-bold text-[#071A3D] mb-1.5 flex items-center justify-between">
+                      <span>Date of Birth (Day / Month / Year)</span>
+                      {formData.dateOfBirth && formData.dateOfBirth.includes('-') && (
+                        <span className="text-[10px] font-bold text-[#1455D9] bg-blue-50 px-2 py-0.5 rounded-md">
+                          Selected: {formData.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(formData.dateOfBirth.split('-')[1], 10)] || formData.dateOfBirth.split('-')[1]}-{formData.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
+                        </span>
+                      )}
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
                       <select
-                        value={formData.bloodGroup}
-                        onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-semibold"
+                        value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[2] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (formData.dateOfBirth || '2005-01-01').split('-')
+                          const y = parts[0] || '2005'
+                          const m = parts[1] || '01'
+                          setFormData({ ...formData, dateOfBirth: `${y}-${m}-${e.target.value.padStart(2, '0')}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-xs"
                       >
-                        <option value="O +ve">O +ve</option>
-                        <option value="O -ve">O -ve</option>
-                        <option value="A +ve">A +ve</option>
-                        <option value="A -ve">A -ve</option>
-                        <option value="B +ve">B +ve</option>
-                        <option value="B -ve">B -ve</option>
-                        <option value="AB +ve">AB +ve</option>
-                        <option value="AB -ve">AB -ve</option>
+                        <option value="">Day (DD)</option>
+                        {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[1] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (formData.dateOfBirth || '2005-01-01').split('-')
+                          const y = parts[0] || '2005'
+                          const d = parts[2] || '01'
+                          setFormData({ ...formData, dateOfBirth: `${y}-${e.target.value.padStart(2, '0')}-${d}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-xs"
+                      >
+                        <option value="">Month (MM)</option>
+                        {[
+                          { val: '01', label: '01 - Jan' },
+                          { val: '02', label: '02 - Feb' },
+                          { val: '03', label: '03 - Mar' },
+                          { val: '04', label: '04 - Apr' },
+                          { val: '05', label: '05 - May' },
+                          { val: '06', label: '06 - Jun' },
+                          { val: '07', label: '07 - Jul' },
+                          { val: '08', label: '08 - Aug' },
+                          { val: '09', label: '09 - Sep' },
+                          { val: '10', label: '10 - Oct' },
+                          { val: '11', label: '11 - Nov' },
+                          { val: '12', label: '12 - Dec' },
+                        ].map((m) => (
+                          <option key={m.val} value={m.val}>{m.label}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[0] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (formData.dateOfBirth || '2005-01-01').split('-')
+                          const m = parts[1] || '01'
+                          const d = parts[2] || '01'
+                          setFormData({ ...formData, dateOfBirth: `${e.target.value}-${m}-${d}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-xs"
+                      >
+                        <option value="">Year (YYYY)</option>
+                        {Array.from({ length: 30 }, (_, i) => String(2012 - i)).map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
                       </select>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Blood Group</label>
+                    <select
+                      value={formData.bloodGroup}
+                      onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-semibold"
+                    >
+                      <option value="">Select Blood Group</option>
+                      <option value="O +ve">O +ve</option>
+                      <option value="O -ve">O -ve</option>
+                      <option value="A +ve">A +ve</option>
+                      <option value="A -ve">A -ve</option>
+                      <option value="B +ve">B +ve</option>
+                      <option value="B -ve">B -ve</option>
+                      <option value="AB +ve">AB +ve</option>
+                      <option value="AB -ve">AB -ve</option>
+                    </select>
                   </div>
 
                   {/* RESIDENCY & TRANSPORT SETUP */}

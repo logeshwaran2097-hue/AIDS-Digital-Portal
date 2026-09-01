@@ -618,20 +618,92 @@ export function StudentOnboardingModal({
                   </label>
                 </div>
 
-                <div>
-                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Date of Birth (YYYY-MM-DD) *
+                <div className="sm:col-span-3 pt-1 border-t border-blue-200/50">
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center justify-between">
+                    <span>Date of Birth (Day / Month / Year) *</span>
+                    {form.dateOfBirth && form.dateOfBirth.includes('-') && (
+                      <span className="text-[10px] font-bold text-[#1557C0] bg-blue-100/70 px-2 py-0.5 rounded-md">
+                        Selected: {form.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(form.dateOfBirth.split('-')[1], 10)] || form.dateOfBirth.split('-')[1]}-{form.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
+                      </span>
+                    )}
                   </label>
-                  <input
-                    type="date"
-                    required
-                    min="1980-01-01"
-                    max="2015-12-31"
-                    placeholder="YYYY-MM-DD"
-                    value={form.dateOfBirth}
-                    onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Day Selector */}
+                    <div>
+                      <select
+                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[2] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (form.dateOfBirth || '2005-01-01').split('-')
+                          const y = parts[0] || '2005'
+                          const m = parts[1] || '01'
+                          setForm({ ...form, dateOfBirth: `${y}-${m}-${e.target.value.padStart(2, '0')}` })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="">Day (DD)</option>
+                        {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Month Selector */}
+                    <div>
+                      <select
+                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[1] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (form.dateOfBirth || '2005-01-01').split('-')
+                          const y = parts[0] || '2005'
+                          const d = parts[2] || '01'
+                          setForm({ ...form, dateOfBirth: `${y}-${e.target.value.padStart(2, '0')}-${d}` })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="">Month (MM)</option>
+                        {[
+                          { val: '01', label: '01 - January' },
+                          { val: '02', label: '02 - February' },
+                          { val: '03', label: '03 - March' },
+                          { val: '04', label: '04 - April' },
+                          { val: '05', label: '05 - May' },
+                          { val: '06', label: '06 - June' },
+                          { val: '07', label: '07 - July' },
+                          { val: '08', label: '08 - August' },
+                          { val: '09', label: '09 - September' },
+                          { val: '10', label: '10 - October' },
+                          { val: '11', label: '11 - November' },
+                          { val: '12', label: '12 - December' },
+                        ].map((m) => (
+                          <option key={m.val} value={m.val}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Year Selector */}
+                    <div>
+                      <select
+                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[0] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (form.dateOfBirth || '2005-01-01').split('-')
+                          const m = parts[1] || '01'
+                          const d = parts[2] || '01'
+                          setForm({ ...form, dateOfBirth: `${e.target.value}-${m}-${d}` })
+                        }}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="">Year (YYYY)</option>
+                        {Array.from({ length: 30 }, (_, i) => String(2012 - i)).map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
 
