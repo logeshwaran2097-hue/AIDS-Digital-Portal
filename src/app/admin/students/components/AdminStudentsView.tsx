@@ -27,10 +27,13 @@ import {
   FileText,
   ShieldAlert,
   Send,
+  UploadCloud,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { playNotificationChime } from '@/lib/notificationEngine'
 import { toast } from '@/components/ui/Toast'
+import { BulkImportModal } from './BulkImportModal'
 
 export interface StudentRecord {
   id: string
@@ -139,9 +142,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+
+  const fetchStudents = async () => {
+    setIsLoading(true)
+    try {
+      const res = await fetch('/api/students')
+      const data = await res.json()
+      if (data.success && Array.isArray(data.students)) {
+        setStudents(data.students)
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Form state
   const [formData, setFormData] = useState({
@@ -373,6 +392,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
           <button
+            onClick={() => setIsBulkImportOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
+          >
+            <UploadCloud className="w-4 h-4 text-[#071A3D]" /> 📁 Bulk Import (Excel / CSV / 1000 Seed)
+          </button>
+          <button
             onClick={handleExportPDF}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
           >
@@ -402,7 +427,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             }}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
           >
-            <Plus className="w-4 h-4" /> + Add New Student
+            <Plus className="w-4 h-4" /> + Add Single Student
           </button>
         </div>
       </div>
@@ -1710,6 +1735,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </div>
         </div>
       )}
+
+      {/* MODAL: BULK IMPORT (EXCEL / CSV / QUICK 1000 SEED) */}
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setIsBulkImportOpen(false)}
+        onSuccess={fetchStudents}
+      />
     </div>
   )
 }
