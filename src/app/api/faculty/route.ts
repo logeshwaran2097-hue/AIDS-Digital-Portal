@@ -175,6 +175,19 @@ export async function POST(request: Request) {
       subjectsArr = []
     }
 
+    // Broadcast real-time notification for Department Directorate & Students
+    await prisma.notification.create({
+      data: {
+        title: `👨‍🏫 Faculty Directorate: ${name.trim()}`,
+        message: `${designation} appointed. ${advisorYear && advisorSec ? `Assigned as Class Advisor for Year ${advisorYear} (Sec ${advisorSec}).` : `Specialization: ${specialization}.`}`,
+        target: 'all',
+        createdByName: 'Department Directorate',
+        status: 'published',
+        publishedAt: new Date(),
+        readBy: '[]',
+      },
+    }).catch(() => {})
+
     return NextResponse.json({
       success: true,
       faculty: {

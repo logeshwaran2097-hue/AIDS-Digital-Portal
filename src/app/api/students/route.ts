@@ -228,6 +228,19 @@ export async function POST(request: Request) {
       }
     }
 
+    // Broadcast real-time enrollment notification
+    await prisma.notification.create({
+      data: {
+        title: `🎓 Student Enrolled: ${name.trim()} (${regUpper})`,
+        message: `Registered into Year ${year} (Section ${section}) · ${department}. Advisor: ${advisorName || 'Assigned'}.`,
+        target: 'all',
+        createdByName: 'Department Directorate',
+        status: 'published',
+        publishedAt: new Date(),
+        readBy: '[]',
+      },
+    }).catch(() => {})
+
     revalidatePath('/admin/students')
     revalidatePath('/admin/dashboard')
 
