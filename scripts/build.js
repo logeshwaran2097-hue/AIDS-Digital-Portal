@@ -18,11 +18,20 @@ console.log(`[BUILD] Environment: ${process.env.NODE_ENV || 'production'}`)
 console.log(`[BUILD] Database URL: ${process.env.DATABASE_URL}`)
 
 try {
+  // Sync dev.db across root and prisma directory
+  const rootDb = path.join(process.cwd(), 'dev.db')
+  const prismaDb = path.join(process.cwd(), 'prisma', 'dev.db')
+  if (fs.existsSync(prismaDb) && !fs.existsSync(rootDb)) {
+    fs.copyFileSync(prismaDb, rootDb)
+  } else if (fs.existsSync(rootDb) && !fs.existsSync(prismaDb)) {
+    fs.copyFileSync(rootDb, prismaDb)
+  }
+
   console.log('[BUILD] [1/3] Running prisma generate...')
   execSync('npx prisma generate', { stdio: 'inherit', env: process.env })
 
   console.log('[BUILD] [2/3] Running prisma db push...')
-  execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit', env: process.env })
+  execSync('npx prisma db push --skip-generate', { stdio: 'inherit', env: process.env })
 
   console.log('[BUILD] [3/3] Running next build...')
   execSync('npx next build', { stdio: 'inherit', env: process.env })
