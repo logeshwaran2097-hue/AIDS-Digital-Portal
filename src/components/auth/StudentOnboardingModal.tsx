@@ -18,6 +18,10 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
+  Camera,
+  Upload,
+  Trash2,
+  User as UserIcon,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
@@ -38,6 +42,7 @@ interface StudentOnboardingModalProps {
     advisorName?: string
     batch?: string
     parentPhone?: string
+    profileImage?: string
   }
 }
 
@@ -65,6 +70,7 @@ export function StudentOnboardingModal({
     hasCorrectionRequest: false,
     correctionRemarks: '',
     detailsConfirmed: false,
+    profileImage: initialData.profileImage || '',
     email:
       initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
         ? initialData.email
@@ -91,8 +97,9 @@ export function StudentOnboardingModal({
         initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
           ? initialData.email
           : prev.email,
+      profileImage: initialData.profileImage || prev.profileImage,
     }))
-  }, [initialData.phone, initialData.parentPhone, initialData.email, initialData.dateOfBirth])
+  }, [initialData.phone, initialData.parentPhone, initialData.email, initialData.dateOfBirth, initialData.profileImage])
 
   // Cooldown countdown timer
   React.useEffect(() => {
@@ -108,6 +115,50 @@ export function StudentOnboardingModal({
   const [correctionReason, setCorrectionReason] = useState('')
   const [correctionSubmitting, setCorrectionSubmitting] = useState(false)
   const [correctionSubmitted, setCorrectionSubmitted] = useState(false)
+
+  // Handle photo upload and compression
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = document.createElement('img')
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxDim = 300
+        let w = img.width
+        let h = img.height
+        if (w > h) {
+          if (w > maxDim) {
+            h = Math.round((h * maxDim) / w)
+            w = maxDim
+          }
+        } else {
+          if (h > maxDim) {
+            w = Math.round((w * maxDim) / h)
+            h = maxDim
+          }
+        }
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h)
+          const base64 = canvas.toDataURL('image/jpeg', 0.85)
+          setForm((prev) => ({ ...prev, profileImage: base64 }))
+          toast.success('Passport photograph uploaded!')
+        }
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
 
   if (!isOpen) return null
 
@@ -211,6 +262,7 @@ export function StudentOnboardingModal({
           roomNo: form.roomNo,
           newPassword: form.newPassword.trim(),
           otp: form.emailOtp.trim(),
+          profileImage: form.profileImage || undefined,
         }),
       })
 
@@ -404,6 +456,62 @@ export function StudentOnboardingModal({
                     <span className="font-bold text-xs text-[#1557C0]">{initialData.advisorName || 'Assigned Faculty Mentor'}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Student Passport Photograph Upload Section */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-200/80 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-blue-200/60">
+                <div className="flex items-center gap-1.5 text-xs font-black text-[#071A41]">
+                  <Camera className="w-4 h-4 text-[#1557C0]" />
+                  <span>Student Passport Photograph (Pre-filled on ID Card)</span>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Embeds on ID Card
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative group">
+                  {form.profileImage ? (
+                    <img
+                      src={form.profileImage}
+                      alt="Student Photo"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#1557C0] shadow-md shrink-0 bg-white"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-dashed border-blue-300 flex flex-col items-center justify-center text-blue-500 shadow-inner shrink-0">
+                      <UserIcon className="w-8 h-8 opacity-40 mb-1" />
+                      <span className="text-[9px] font-bold text-gray-500">No Photo</span>
+                    </div>
+                  )}
+                  {form.profileImage && (
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, profileImage: '' }))}
+                      className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-1 shadow-md hover:bg-red-700 transition-all cursor-pointer"
+                      title="Remove Photo"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 space-y-1.5 text-center sm:text-left">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1557C0] hover:bg-[#0f44b0] text-white font-bold text-xs cursor-pointer shadow-sm transition-all">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{form.profileImage ? 'Change Photo' : 'Upload Passport Photo'}</span>
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-[11px] text-gray-600">
+                    Upload a clear frontal passport size photograph (JPG, PNG, WebP). This will appear on your Student Portal &amp; downloadable Digital ID Card.
+                  </p>
                 </div>
               </div>
             </div>

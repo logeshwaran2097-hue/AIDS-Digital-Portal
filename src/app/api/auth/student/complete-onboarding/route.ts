@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification, residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint } = body
+    const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification, residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint, profileImage } = body
 
     const isCustomEmail = email && !email.endsWith('@student.vsb.edu.in') && email.includes('@')
 
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date(),
       }
       if (phone !== undefined) userUpdateData.phone = phone ? phone.trim() : null
+      if (profileImage !== undefined) userUpdateData.profileImage = profileImage
       if (isCustomEmail) {
         userUpdateData.email = email.trim().toLowerCase()
         userUpdateData.emailVerified = true
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
           name: updatedUser?.name || session.name,
           email: updatedUser?.email || session.email,
           phone: updatedUser?.phone || phone || '',
+          profileImage: updatedUser?.profileImage || null,
           emailVerified: updatedUser?.emailVerified ?? false,
           mustChangePassword: false,
         },
@@ -156,6 +158,7 @@ export async function POST(request: NextRequest) {
       mustChangePassword: false,
       updatedAt: new Date(),
     }
+    if (profileImage !== undefined) userUpdateData.profileImage = profileImage
 
     // Hash new password if provided (for legacy flow)
     if (newPassword && newPassword.length >= 6) {
@@ -229,6 +232,7 @@ export async function POST(request: NextRequest) {
         name: updatedUser.name,
         email: updatedUser.email,
         phone: updatedUser.phone,
+        profileImage: updatedUser.profileImage || null,
         emailVerified: true,
         mustChangePassword: false,
       },

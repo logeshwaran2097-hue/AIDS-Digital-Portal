@@ -686,7 +686,7 @@ export function downloadStudentCardPDF(student: {
   degreeProgram: string
   regulation: string
   batch: string
-  profileImage?: string
+  profileImage?: string | null
 }) {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -734,11 +734,12 @@ export function downloadStudentCardPDF(student: {
   doc.setLineWidth(1)
   doc.roundedRect(width / 2 - 14, 46, 28, 28, 3, 3, 'S')
 
-  if (student.profileImage && student.profileImage.startsWith('data:image')) {
+  if (student.profileImage && (student.profileImage.startsWith('data:image') || student.profileImage.startsWith('http'))) {
     try {
-      const imgFormat = student.profileImage.includes('png') ? 'PNG' : 'JPEG'
-      doc.addImage(student.profileImage, imgFormat, width / 2 - 13.5, 46.5, 27, 27)
-    } catch {
+      const format = student.profileImage.includes('png') ? 'PNG' : 'JPEG'
+      doc.addImage(student.profileImage, format, width / 2 - 13.5, 46.5, 27, 27)
+    } catch (e) {
+      console.error('Failed to embed student photo in card:', e)
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(18)
       doc.setTextColor(7, 26, 61)

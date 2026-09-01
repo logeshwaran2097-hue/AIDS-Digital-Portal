@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
@@ -38,6 +38,7 @@ import {
   Home,
   Camera,
   Upload,
+  Trash2,
 } from 'lucide-react'
 import { downloadStudentCardPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -59,7 +60,6 @@ interface StudentFullProfile {
   address?: string
   hostelBlock?: string
   roomNo?: string
-  profileImage?: string
   registerNumber: string
   department: string
   degreeProgram: string
@@ -78,6 +78,7 @@ interface StudentFullProfile {
   arrears: string
   arrearRemark: string
   enrollmentStatus: string
+  profileImage?: string | null
 }
 
 interface ChangeRequest {
@@ -117,7 +118,6 @@ export function StudentProfileView({
     name: initialUser.name || '',
     email: (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in')) ? initialUser.email : '',
     phone: initialUser.phone || '',
-    profileImage: initialUser.profileImage || '',
     dateOfBirth: initialStudent.dateOfBirth
       ? new Date(initialStudent.dateOfBirth).toISOString().split('T')[0]
       : '',
@@ -141,6 +141,7 @@ export function StudentProfileView({
     arrears: '',
     arrearRemark: '',
     enrollmentStatus: 'Enrolled & Active',
+    profileImage: initialUser.profileImage || null,
   }
 
   const [profile, setProfile] = useState<StudentFullProfile>(defaultProfile)
@@ -148,7 +149,6 @@ export function StudentProfileView({
   const [activeTab, setActiveTab] = useState<'personal' | 'academic' | 'kpis'>('personal')
   const [formData, setFormData] = useState<StudentFullProfile>(defaultProfile)
   const [loading, setLoading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Load custom saved profile from localStorage
@@ -164,54 +164,60 @@ export function StudentProfileView({
     }
   }, [regNo, storageKey])
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file (PNG / JPG / WEBP).')
-      return
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be under 5MB.')
-      return
-    }
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string
-      if (base64) {
-        setProfile((prev) => ({ ...prev, profileImage: base64 }))
-        setFormData((prev) => ({ ...prev, profileImage: base64 }))
-        toast.success('Profile & ID Card photo updated successfully!')
-        playNotificationChime()
-
-        // Auto-save to localStorage
-        if (typeof window !== 'undefined') {
-          const current = localStorage.getItem(storageKey)
-          const parsed = current ? JSON.parse(current) : {}
-          localStorage.setItem(storageKey, JSON.stringify({ ...parsed, profileImage: base64 }))
-        }
-
-        // Persist to server
-        fetch('/api/students', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            registerNumber: regNo,
-            profileImage: base64,
-          }),
-        }).catch(() => {})
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-
   const handleOpenEdit = (tab: 'personal' | 'academic' | 'kpis' = 'personal') => {
     setActiveTab(tab)
     setFormData(profile)
     setIsEditOpen(true)
+  }
+
+  const handlePhotoUpload = (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = document.createElement('img')
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxDim = 300
+        let w = img.width
+        let h = img.height
+        if (w > h) {
+          if (w > maxDim) {
+            h = Math.round((h * maxDim) / w)
+            w = maxDim
+          }
+        } else {
+          if (h > maxDim) {
+            w = Math.round((w * maxDim) / h)
+            h = maxDim
+          }
+        }
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h)
+          const base64 = canvas.toDataURL('image/jpeg', 0.85)
+          setProfile((prev) => {
+            const upd = { ...prev, profileImage: base64 }
+            if (typeof window !== 'undefined') localStorage.setItem(storageKey, JSON.stringify(upd))
+            return upd
+          })
+          setFormData((prev) => ({ ...prev, profileImage: base64 }))
+          fetch('/api/students', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ registerNumber: profile.registerNumber, profileImage: base64 }),
+          }).catch(() => {})
+          toast.success('Passport photograph updated!')
+          playNotificationChime()
+        }
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
   }
 
   const handleDownloadCard = () => {
@@ -265,13 +271,13 @@ export function StudentProfileView({
           busNo: formData.busNo,
           boardingPoint: formData.boardingPoint,
           address: formData.address,
-          profileImage: formData.profileImage,
           department: formData.department,
           year: formData.year,
           semester: formData.semester,
           section: formData.section,
           batch: formData.batch,
           advisorName: formData.advisor,
+          profileImage: formData.profileImage || undefined,
         }),
       }).catch(() => {})
 
@@ -289,15 +295,6 @@ export function StudentProfileView({
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
-      {/* Hidden Global Photo Input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handlePhotoUpload}
-        accept="image/*"
-        className="hidden"
-      />
-
       {/* Hero Identity Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white p-6 sm:p-8 shadow-xl">
         <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
@@ -305,21 +302,32 @@ export function StudentProfileView({
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="relative group shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-xl border-4 border-white/20 overflow-hidden">
-                {profile.profileImage ? (
-                  <img src={profile.profileImage} alt={profile.name} className="w-full h-full object-cover" />
-                ) : (
-                  profile.name.charAt(0) || 'M'
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                title="Upload / Change Student Photo"
-                className="absolute -bottom-1 -right-1 p-2 rounded-2xl bg-[#F4C430] hover:bg-yellow-400 text-[#071A3D] shadow-lg border-2 border-[#071A3D] cursor-pointer transition-all hover:scale-110 flex items-center justify-center"
+              {profile.profileImage ? (
+                <img
+                  src={profile.profileImage}
+                  alt={profile.name}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover shadow-xl border-4 border-white/20 shrink-0 bg-white"
+                />
+              ) : (
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-xl border-4 border-white/20 shrink-0">
+                  {profile.name.charAt(0) || 'M'}
+                </div>
+              )}
+              <label
+                className="absolute -bottom-1 -right-1 bg-[#22C7E8] hover:bg-white text-[#071A3D] p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] group-hover:scale-110 flex items-center justify-center"
+                title="Upload / Change Photo"
               >
                 <Camera className="w-3.5 h-3.5" />
-              </button>
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) handlePhotoUpload(f)
+                  }}
+                  className="hidden"
+                />
+              </label>
             </div>
 
             <div>
@@ -601,43 +609,79 @@ export function StudentProfileView({
               {/* TAB 1: PERSONAL & CONTACT */}
               {activeTab === 'personal' && (
                 <div className="space-y-4 animate-fade-in">
-                  {/* Photo Upload Card */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-100 flex flex-col sm:flex-row items-center gap-4">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl flex items-center justify-center shadow-md border-2 border-white overflow-hidden shrink-0">
+                  {/* Photo Upload in Edit Modal */}
+                  <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/80 flex items-center gap-4">
+                    <div className="relative group shrink-0">
                       {formData.profileImage ? (
-                        <img src={formData.profileImage} alt="Profile preview" className="w-full h-full object-cover" />
+                        <img
+                          src={formData.profileImage}
+                          alt="Preview"
+                          className="w-16 h-16 rounded-2xl object-cover border-2 border-[#1455D9] shadow-sm bg-white"
+                        />
                       ) : (
-                        formData.name?.charAt(0) || 'M'
+                        <div className="w-16 h-16 rounded-2xl bg-white border-2 border-dashed border-blue-300 flex items-center justify-center text-blue-500 font-bold text-lg shadow-inner">
+                          {formData.name.charAt(0) || 'S'}
+                        </div>
                       )}
-                    </div>
-                    <div className="flex-1 text-center sm:text-left space-y-1">
-                      <h4 className="font-bold text-[#071A3D] flex items-center justify-center sm:justify-start gap-1.5">
-                        <Camera className="w-3.5 h-3.5 text-[#1455D9]" /> Profile &amp; ID Card Photo
-                      </h4>
-                      <p className="text-[11px] text-gray-500">
-                        Upload your official portrait. Appears on your digital portal profile and downloaded ID card.
-                      </p>
-                      <div className="flex items-center gap-2 pt-1 justify-center sm:justify-start">
+                      {formData.profileImage && (
                         <button
                           type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-xs transition-all hover:scale-102"
+                          onClick={() => setFormData((prev) => ({ ...prev, profileImage: null }))}
+                          className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 cursor-pointer"
+                          title="Remove Photo"
                         >
-                          <Upload className="w-3.5 h-3.5" /> Choose / Take Photo
+                          <Trash2 className="w-3 h-3" />
                         </button>
-                        {formData.profileImage && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({ ...prev, profileImage: '' }))
-                              setProfile((prev) => ({ ...prev, profileImage: '' }))
-                            }}
-                            className="px-2.5 py-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-[11px] cursor-pointer"
-                          >
-                            Remove Photo
-                          </button>
-                        )}
-                      </div>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-bold text-[#071A3D] text-xs">Student Passport Photograph</p>
+                      <p className="text-[10px] text-gray-500">Appears on Student Profile &amp; Pre-filled on ID Card PDF</p>
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold text-[11px] cursor-pointer shadow-xs transition-all">
+                        <Upload className="w-3 h-3" />
+                        <span>{formData.profileImage ? 'Change Photo' : 'Upload Photo'}</span>
+                        <input
+                          type="file"
+                          accept="image/png, image/jpeg, image/webp"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) {
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
+                                const img = document.createElement('img')
+                                img.onload = () => {
+                                  const canvas = document.createElement('canvas')
+                                  const maxDim = 300
+                                  let w = img.width
+                                  let h = img.height
+                                  if (w > h) {
+                                    if (w > maxDim) {
+                                      h = Math.round((h * maxDim) / w)
+                                      w = maxDim
+                                    }
+                                  } else {
+                                    if (h > maxDim) {
+                                      w = Math.round((w * maxDim) / h)
+                                      h = maxDim
+                                    }
+                                  }
+                                  canvas.width = w
+                                  canvas.height = h
+                                  const ctx = canvas.getContext('2d')
+                                  if (ctx) {
+                                    ctx.drawImage(img, 0, 0, w, h)
+                                    const base64 = canvas.toDataURL('image/jpeg', 0.85)
+                                    setFormData((prev) => ({ ...prev, profileImage: base64 }))
+                                  }
+                                }
+                                img.src = event.target?.result as string
+                              }
+                              reader.readAsDataURL(f)
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
                   </div>
 
