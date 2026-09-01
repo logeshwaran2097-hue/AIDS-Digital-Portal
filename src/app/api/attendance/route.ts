@@ -321,6 +321,33 @@ export async function POST(request: Request) {
       console.warn('Attendance DB save note:', e)
     }
 
+    // Real-Time Notification Broadcast for Admin, HOD, Faculty, Students
+    try {
+      const scopeLabel = sessionType === 'morning'
+        ? `Morning Attendance · Year ${year} (Section ${section})`
+        : `${subjectCode || 'Subject'} · Year ${year} (Section ${section})`
+
+      const actionTitle = isLocked
+        ? `🔒 Attendance Locked: ${scopeLabel}`
+        : `📋 Attendance Recorded: ${scopeLabel}`
+
+      const actionMessage = `${session.name || 'Class Advisor'} posted attendance for ${date}. Present: ${presentCount} | Absent: ${absentCount} | OD: ${odCount} | ML: ${mlCount} (Total: ${totalStudents} students).`
+
+      await prisma.notification.create({
+        data: {
+          title: actionTitle,
+          message: actionMessage,
+          target: 'all',
+          createdByName: session.name || 'Class Advisor',
+          status: 'published',
+          publishedAt: new Date(),
+          readBy: '[]',
+        },
+      }).catch(() => {})
+    } catch (notifErr) {
+      console.debug('Notification broadcast note:', notifErr)
+    }
+
     return NextResponse.json({
       success: true,
       message: isLocked ? 'Attendance locked and submitted successfully.' : 'Attendance saved successfully.',

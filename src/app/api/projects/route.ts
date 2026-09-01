@@ -53,6 +53,19 @@ export async function POST(request: Request) {
         teamMembers: body.teamMembers || 'B.Tech AI & DS Team',
       },
     })
+    // Automatically broadcast real-time notification
+    await prisma.notification.create({
+      data: {
+        title: `🚀 New Capstone Project: ${body.title}`,
+        message: `Project proposal submitted in ${body.domain || 'AI & DS'} (Year ${body.year || 4}) by ${body.teamMembers || 'Student Team'}. Guide: ${body.guideName || 'Faculty'}.`,
+        target: 'all',
+        createdByName: body.teamMembers || 'Project Team',
+        status: 'published',
+        publishedAt: new Date(),
+        readBy: '[]',
+      },
+    }).catch(() => {})
+
     return NextResponse.json({ success: true, project }, { status: 201 })
   } catch (error) {
     console.error('Projects API error:', error)
@@ -87,6 +100,20 @@ export async function PUT(request: Request) {
         teamMembers: body.teamMembers !== undefined ? body.teamMembers : undefined,
       },
     })
+
+    // Automatically broadcast real-time notification on status/progress update
+    await prisma.notification.create({
+      data: {
+        title: `🔄 Project Updated: ${project.title}`,
+        message: `Project status is now "${project.status}" (${project.domain || 'AI & DS'}). Guide: ${project.guideName || 'Faculty'}.`,
+        target: 'all',
+        createdByName: project.guideName || 'Project Directorate',
+        status: 'published',
+        publishedAt: new Date(),
+        readBy: '[]',
+      },
+    }).catch(() => {})
+
     return NextResponse.json({ success: true, project })
   } catch (error) {
     console.error('Update project error:', error)
