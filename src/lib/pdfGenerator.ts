@@ -686,6 +686,7 @@ export function downloadStudentCardPDF(student: {
   degreeProgram: string
   regulation: string
   batch: string
+  profileImage?: string
 }) {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -733,10 +734,22 @@ export function downloadStudentCardPDF(student: {
   doc.setLineWidth(1)
   doc.roundedRect(width / 2 - 14, 46, 28, 28, 3, 3, 'S')
 
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(18)
-  doc.setTextColor(7, 26, 61)
-  doc.text(student.name.charAt(0) || 'K', width / 2, 63, { align: 'center' })
+  if (student.profileImage && student.profileImage.startsWith('data:image')) {
+    try {
+      const imgFormat = student.profileImage.includes('png') ? 'PNG' : 'JPEG'
+      doc.addImage(student.profileImage, imgFormat, width / 2 - 13.5, 46.5, 27, 27)
+    } catch {
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(18)
+      doc.setTextColor(7, 26, 61)
+      doc.text(student.name.charAt(0) || 'K', width / 2, 63, { align: 'center' })
+    }
+  } else {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(18)
+    doc.setTextColor(7, 26, 61)
+    doc.text(student.name.charAt(0) || 'K', width / 2, 63, { align: 'center' })
+  }
 
   // Name & Reg No
   doc.setFontSize(11.5)

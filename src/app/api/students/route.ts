@@ -380,6 +380,7 @@ export async function PUT(request: Request) {
           email: targetEmail,
           emailVerified: isEmailCustom,
           ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
+          ...(data.profileImage !== undefined ? { profileImage: data.profileImage } : {}),
           ...(status ? { status } : {}),
           ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
         },

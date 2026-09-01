@@ -144,8 +144,12 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         <div className="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-[#22C7E8]/10 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#22C7E8]/40 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg">
-              {currentUser.name.charAt(0)}
+            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#22C7E8]/40 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg overflow-hidden">
+              {currentUser.profileImage ? (
+                <img src={currentUser.profileImage} alt={currentUser.name} className="w-full h-full object-cover" />
+              ) : (
+                currentUser.name.charAt(0)
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">

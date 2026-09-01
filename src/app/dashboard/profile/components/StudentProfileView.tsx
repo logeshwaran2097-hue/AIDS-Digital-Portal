@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
@@ -36,6 +36,8 @@ import {
   Bus,
   Car,
   Home,
+  Camera,
+  Upload,
 } from 'lucide-react'
 import { downloadStudentCardPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -57,6 +59,7 @@ interface StudentFullProfile {
   address?: string
   hostelBlock?: string
   roomNo?: string
+  profileImage?: string
   registerNumber: string
   department: string
   degreeProgram: string
@@ -95,7 +98,7 @@ export function StudentProfileView({
   user: initialUser,
   student: initialStudent,
 }: {
-  user: { name: string; email: string; phone?: string | null }
+  user: { name: string; email: string; phone?: string | null; profileImage?: string | null }
   student: {
     registerNumber: string
     department: string
@@ -114,6 +117,7 @@ export function StudentProfileView({
     name: initialUser.name || '',
     email: (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in')) ? initialUser.email : '',
     phone: initialUser.phone || '',
+    profileImage: initialUser.profileImage || '',
     dateOfBirth: initialStudent.dateOfBirth
       ? new Date(initialStudent.dateOfBirth).toISOString().split('T')[0]
       : '',
@@ -144,6 +148,7 @@ export function StudentProfileView({
   const [activeTab, setActiveTab] = useState<'personal' | 'academic' | 'kpis'>('personal')
   const [formData, setFormData] = useState<StudentFullProfile>(defaultProfile)
   const [loading, setLoading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     // Load custom saved profile from localStorage
@@ -158,6 +163,50 @@ export function StudentProfileView({
       } catch {}
     }
   }, [regNo, storageKey])
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select a valid image file (PNG / JPG / WEBP).')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be under 5MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string
+      if (base64) {
+        setProfile((prev) => ({ ...prev, profileImage: base64 }))
+        setFormData((prev) => ({ ...prev, profileImage: base64 }))
+        toast.success('Profile & ID Card photo updated successfully!')
+        playNotificationChime()
+
+        // Auto-save to localStorage
+        if (typeof window !== 'undefined') {
+          const current = localStorage.getItem(storageKey)
+          const parsed = current ? JSON.parse(current) : {}
+          localStorage.setItem(storageKey, JSON.stringify({ ...parsed, profileImage: base64 }))
+        }
+
+        // Persist to server
+        fetch('/api/students', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            registerNumber: regNo,
+            profileImage: base64,
+          }),
+        }).catch(() => {})
+      }
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleOpenEdit = (tab: 'personal' | 'academic' | 'kpis' = 'personal') => {
     setActiveTab(tab)
@@ -183,6 +232,7 @@ export function StudentProfileView({
       degreeProgram: profile.degreeProgram,
       regulation: profile.regulation,
       batch: profile.batch,
+      profileImage: profile.profileImage,
     })
   }
 
@@ -215,6 +265,7 @@ export function StudentProfileView({
           busNo: formData.busNo,
           boardingPoint: formData.boardingPoint,
           address: formData.address,
+          profileImage: formData.profileImage,
           department: formData.department,
           year: formData.year,
           semester: formData.semester,
@@ -238,14 +289,37 @@ export function StudentProfileView({
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+      {/* Hidden Global Photo Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handlePhotoUpload}
+        accept="image/*"
+        className="hidden"
+      />
+
       {/* Hero Identity Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white p-6 sm:p-8 shadow-xl">
         <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-xl border-4 border-white/20 shrink-0">
-              {profile.name.charAt(0) || 'M'}
+            <div className="relative group shrink-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-xl border-4 border-white/20 overflow-hidden">
+                {profile.profileImage ? (
+                  <img src={profile.profileImage} alt={profile.name} className="w-full h-full object-cover" />
+                ) : (
+                  profile.name.charAt(0) || 'M'
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                title="Upload / Change Student Photo"
+                className="absolute -bottom-1 -right-1 p-2 rounded-2xl bg-[#F4C430] hover:bg-yellow-400 text-[#071A3D] shadow-lg border-2 border-[#071A3D] cursor-pointer transition-all hover:scale-110 flex items-center justify-center"
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             <div>
@@ -527,6 +601,46 @@ export function StudentProfileView({
               {/* TAB 1: PERSONAL & CONTACT */}
               {activeTab === 'personal' && (
                 <div className="space-y-4 animate-fade-in">
+                  {/* Photo Upload Card */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-100 flex flex-col sm:flex-row items-center gap-4">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl flex items-center justify-center shadow-md border-2 border-white overflow-hidden shrink-0">
+                      {formData.profileImage ? (
+                        <img src={formData.profileImage} alt="Profile preview" className="w-full h-full object-cover" />
+                      ) : (
+                        formData.name?.charAt(0) || 'M'
+                      )}
+                    </div>
+                    <div className="flex-1 text-center sm:text-left space-y-1">
+                      <h4 className="font-bold text-[#071A3D] flex items-center justify-center sm:justify-start gap-1.5">
+                        <Camera className="w-3.5 h-3.5 text-[#1455D9]" /> Profile &amp; ID Card Photo
+                      </h4>
+                      <p className="text-[11px] text-gray-500">
+                        Upload your official portrait. Appears on your digital portal profile and downloaded ID card.
+                      </p>
+                      <div className="flex items-center gap-2 pt-1 justify-center sm:justify-start">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1.5 cursor-pointer shadow-xs transition-all hover:scale-102"
+                        >
+                          <Upload className="w-3.5 h-3.5" /> Choose / Take Photo
+                        </button>
+                        {formData.profileImage && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, profileImage: '' }))
+                              setProfile((prev) => ({ ...prev, profileImage: '' }))
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-[11px] cursor-pointer"
+                          >
+                            Remove Photo
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
                     <input
