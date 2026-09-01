@@ -40,6 +40,7 @@ export async function POST(request: Request) {
         venue: body.venue || 'Main Auditorium',
         createdByName: body.createdByName || body.organizer || 'Administrator',
         registrationInfo: body.targetSemester || body.registrationInfo || 'ALL',
+        registrationUrl: body.registrationUrl?.trim() || null,
         status: 'published',
         isPublished: true,
       },

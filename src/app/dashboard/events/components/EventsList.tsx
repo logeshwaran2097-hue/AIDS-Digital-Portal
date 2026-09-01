@@ -496,18 +496,31 @@ export default function EventsList({ events }: { events: Event[] }) {
                   </div>
 
                   {/* Action Footer */}
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap">
                     <span className="px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full font-bold text-[10px]">
                       Open for Registrations
                     </span>
 
-                    <button
-                      onClick={() => setRegisteredModalEvent(e)}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0"
-                    >
-                      <span>Register</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {e.registrationUrl && (
+                        <a
+                          href={e.registrationUrl.startsWith('http') ? e.registrationUrl : `https://${e.registrationUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-black flex items-center gap-1 transition-colors border border-emerald-200"
+                        >
+                          <span>Direct Form</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                      <button
+                        onClick={() => setRegisteredModalEvent(e)}
+                        className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
+                      >
+                        <span>Register</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

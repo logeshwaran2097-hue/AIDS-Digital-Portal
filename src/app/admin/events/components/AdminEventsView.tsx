@@ -26,6 +26,10 @@ import {
   AlertTriangle,
   Flame,
   ShieldAlert,
+  Link2,
+  ExternalLink,
+  Send,
+  Eye,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -130,11 +134,13 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     description: '',
     category: 'Workshop',
     targetSemester: 'sem3',
+    registrationUrl: '',
     date: '2026-09-20',
     time: '09:30 AM - 04:30 PM',
     venue: 'AI & DS Academic Block',
     organizer: 'Department of AI & DS',
   })
+  const [modalMode, setModalMode] = useState<'edit' | 'preview'>('edit')
 
   // When year filter changes, auto-adjust semester filter
   const handleSelectYear = (yr: string) => {
@@ -285,6 +291,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         body: JSON.stringify({
           ...formData,
           registrationInfo: formData.targetSemester,
+          registrationUrl: formData.registrationUrl.trim() || null,
         }),
       })
       const result = await res.json()
@@ -297,6 +304,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         semester: formData.targetSemester,
         semesterLabel: semLabel,
         academicYear: yrKey,
+        registrationUrl: formData.registrationUrl.trim() || null,
         date: formData.date,
         time: formData.time,
         venue: formData.venue.trim() || 'AI & DS Academic Block',
@@ -306,11 +314,13 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
 
       setEvents([newEv, ...events])
       setIsAddModalOpen(false)
+      setModalMode('edit')
       setFormData({
         name: '',
         description: '',
         category: 'Workshop',
         targetSemester: 'sem3',
+        registrationUrl: '',
         date: '2026-09-20',
         time: '09:30 AM - 04:30 PM',
         venue: 'AI & DS Academic Block',
@@ -759,13 +769,26 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => handleDownloadBrochure(ev)}
-                    className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" /> Event Brochure (PDF)
-                  </button>
+                <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => handleDownloadBrochure(ev)}
+                      className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Event Brochure (PDF)
+                    </button>
+                    {ev.registrationUrl && (
+                      <a
+                        href={ev.registrationUrl.startsWith('http') ? ev.registrationUrl : `https://${ev.registrationUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-black flex items-center gap-1.5 transition-colors border border-emerald-200"
+                        title={ev.registrationUrl}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Register Link
+                      </a>
+                    )}
+                  </div>
 
                   <button
                     onClick={() => setEventToDelete(ev)}
@@ -912,15 +935,21 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: ADD EVENT WITH 8-SEMESTER & YEAR SELECTION */}
+      {/* MODAL: ADD EVENT WITH PREVIEW & PUBLISH AND REGISTRATION LINK */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Schedule Semester Event</h3>
-                <p className="text-xs text-gray-500">Configure technical programs across 8 semesters and all academic years</p>
+                <h3 className="text-lg font-black text-[#071A3D]">
+                  {modalMode === 'preview' ? 'Official Event Preview & Verification' : 'Schedule Semester Event'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {modalMode === 'preview'
+                    ? 'Review official brochure details before publishing to institutional portal'
+                    : 'Configure technical programs across 8 semesters and all academic years'}
+                </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -930,132 +959,272 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
-              {/* Target Semester */}
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Target Semester (Semesters 1 – 8) *</label>
-                <select
-                  value={formData.targetSemester}
-                  onChange={(e) => setFormData({ ...formData, targetSemester: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="ALL">All 8 Semesters (Department-Wide)</option>
-                  <option value="sem1">Semester 1 · Year 1 (Freshman - Odd)</option>
-                  <option value="sem2">Semester 2 · Year 1 (Freshman - Even)</option>
-                  <option value="sem3">Semester 3 · Year 2 (Sophomore - Odd)</option>
-                  <option value="sem4">Semester 4 · Year 2 (Sophomore - Even)</option>
-                  <option value="sem5">Semester 5 · Year 3 (Junior - Odd)</option>
-                  <option value="sem6">Semester 6 · Year 3 (Junior - Even)</option>
-                  <option value="sem7">Semester 7 · Year 4 (Senior - Odd)</option>
-                  <option value="sem8">Semester 8 · Year 4 (Senior - Even)</option>
-                </select>
-              </div>
+            {modalMode === 'preview' ? (
+              /* High-Fidelity Official Event Preview Card */
+              <div className="space-y-4 animate-fade-in">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/70 via-white to-indigo-50/50 border border-blue-200 shadow-xs space-y-4">
+                  {/* Institutional Header Banner */}
+                  <div className="flex items-center justify-between border-b border-blue-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-[#071A3D] text-[#F4C430] font-black text-xs flex items-center justify-center shadow-xs">
+                        VSB
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black text-[#071A3D] uppercase tracking-wider">
+                          V.S.B. Engineering College
+                        </p>
+                        <p className="text-[10px] text-gray-500 font-semibold">
+                          Department of Artificial Intelligence &amp; Data Science
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-[#1455D9] bg-blue-100 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                      EVENT PREVIEW
+                    </span>
+                  </div>
 
-              {/* Event Title */}
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Event Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Deep Learning & Computer Vision Hackathon 2026"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
-                />
-              </div>
+                  {/* Category & Semester Badges */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-[#1455D9] border border-blue-200">
+                      🏷️ {formData.category}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200">
+                      🎓 {formData.targetSemester === 'ALL' ? 'All 8 Semesters' : `Semester ${formData.targetSemester.replace('sem', '')}`}
+                    </span>
+                  </div>
 
-              {/* Category & Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                  {/* Title */}
+                  <h3 className="font-black text-lg text-[#071A3D] leading-snug">
+                    {formData.name || 'Untitled Event'}
+                  </h3>
+
+                  {/* Description Box */}
+                  <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-line bg-white p-3.5 rounded-xl border border-gray-200 font-medium shadow-xs">
+                    {formData.description || 'No detailed description provided.'}
+                  </div>
+
+                  {/* Logistics Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Calendar className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                      <span className="font-mono font-bold">{formData.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Clock className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                      <span className="font-mono">{formData.time}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <MapPin className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                      <span className="truncate">{formData.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Users className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span className="truncate font-semibold">{formData.organizer}</span>
+                    </div>
+                  </div>
+
+                  {/* Registration Link Preview Pill */}
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <Link2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                      <div className="truncate">
+                        <span className="font-bold text-emerald-900 block text-[11px]">Direct Registration Link:</span>
+                        <span className="font-mono text-[10px] text-emerald-700 truncate block">
+                          {formData.registrationUrl || 'Standard In-Portal Student Entry'}
+                        </span>
+                      </div>
+                    </div>
+                    {formData.registrationUrl && (
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-200 text-emerald-900 font-bold text-[10px] shrink-0">
+                        External URL Active
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Authority Stamp */}
+                  <div className="flex items-center justify-between text-[10px] text-gray-400 pt-2 font-medium border-t border-blue-100">
+                    <span>Authorized Convener: <strong className="text-[#071A3D]">{formData.organizer}</strong></span>
+                    <span className="font-mono">Department of AI &amp; DS</span>
+                  </div>
+                </div>
+
+                {/* Preview Action Buttons */}
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalMode('edit')}
+                    className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
                   >
-                    <option value="Workshop">Hands-on Workshop</option>
-                    <option value="Hackathon">National Hackathon</option>
-                    <option value="Seminar">Guest Seminar / Webinar</option>
-                    <option value="Symposium">Technical Symposium</option>
+                    ← Back to Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddSubmit}
+                    disabled={isLoading}
+                    className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold text-xs cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>{isLoading ? 'Publishing...' : '✓ Confirm & Publish Event'}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Event Edit Form */
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!formData.name.trim()) {
+                    toast.error('Please enter Event Title')
+                    return
+                  }
+                  setModalMode('preview')
+                }}
+                className="space-y-4 text-xs"
+              >
+                {/* Target Semester */}
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Target Semester (Semesters 1 – 8) *</label>
+                  <select
+                    value={formData.targetSemester}
+                    onChange={(e) => setFormData({ ...formData, targetSemester: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="ALL">All 8 Semesters (Department-Wide)</option>
+                    <option value="sem1">Semester 1 · Year 1 (Freshman - Odd)</option>
+                    <option value="sem2">Semester 2 · Year 1 (Freshman - Even)</option>
+                    <option value="sem3">Semester 3 · Year 2 (Sophomore - Odd)</option>
+                    <option value="sem4">Semester 4 · Year 2 (Sophomore - Even)</option>
+                    <option value="sem5">Semester 5 · Year 3 (Junior - Odd)</option>
+                    <option value="sem6">Semester 6 · Year 3 (Junior - Even)</option>
+                    <option value="sem7">Semester 7 · Year 4 (Senior - Odd)</option>
+                    <option value="sem8">Semester 8 · Year 4 (Senior - Even)</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Event Date (Determines Month)</label>
-                  <input
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
-                  />
-                </div>
-              </div>
 
-              {/* Time & Venue */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Event Title */}
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Event Timings</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Event Title *</label>
                   <input
                     type="text"
-                    placeholder="e.g. 09:30 AM - 04:30 PM"
-                    value={formData.time}
-                    onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                    required
+                    placeholder="e.g. Deep Learning & Computer Vision Hackathon 2026"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
                   />
                 </div>
+
+                {/* Category & Date */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                    >
+                      <option value="Workshop">Hands-on Workshop</option>
+                      <option value="Hackathon">National Hackathon</option>
+                      <option value="Seminar">Guest Seminar / Webinar</option>
+                      <option value="Symposium">Technical Symposium</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Event Date (Determines Month)</label>
+                    <input
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Time & Venue */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Event Timings</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 09:30 AM - 04:30 PM"
+                      value={formData.time}
+                      onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Venue Location</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. AI Innovation Hub / Lab 1"
+                      value={formData.venue}
+                      onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Individual Registration Link (URL) */}
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Venue Location</label>
+                  <label className="block font-bold text-[#071A3D] mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Link2 className="w-3.5 h-3.5 text-[#1455D9]" />
+                      Registration / Application Link (URL)
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-normal">Google Form / External Portal Link</span>
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="e.g. https://forms.gle/xYz123 or https://event.vsb.ac.in/register"
+                    value={formData.registrationUrl}
+                    onChange={(e) => setFormData({ ...formData, registrationUrl: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono text-xs text-[#071A3D]"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">Optional. If provided, students will receive this direct link to register for the event.</p>
+                </div>
+
+                {/* Organizer */}
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Faculty Convener / Organizer</label>
                   <input
                     type="text"
-                    placeholder="e.g. AI Innovation Hub / Lab 1"
-                    value={formData.venue}
-                    onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
+                    placeholder="e.g. Dr. S. Karthik · Head of Department"
+                    value={formData.organizer}
+                    onChange={(e) => setFormData({ ...formData, organizer: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
                   />
                 </div>
-              </div>
 
-              {/* Organizer */}
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Faculty Convener / Organizer</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Dr. S. Karthik · Head of Department"
-                  value={formData.organizer}
-                  onChange={(e) => setFormData({ ...formData, organizer: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
-                />
-              </div>
+                {/* Description */}
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Program Description</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Brief description of the event, objectives, and agenda..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                  />
+                </div>
 
-              {/* Description */}
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Program Description</label>
-                <textarea
-                  rows={2}
-                  placeholder="Brief description of the event, objectives, and agenda..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{isLoading ? 'Saving...' : 'Publish Event'}</span>
-                </button>
-              </div>
-            </form>
+                <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-1.5"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>👁️ Preview &amp; Confirm Event</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
