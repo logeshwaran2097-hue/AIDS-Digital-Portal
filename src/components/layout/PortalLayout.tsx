@@ -514,8 +514,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-black text-white leading-tight tracking-wide truncate">V.S.B. ENGINEERING</p>
-              <p className="text-xs text-[#22C7E8] font-bold tracking-wider truncate">AI &amp; DS DEPARTMENT</p>
+              <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
+              <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
             </div>
           </div>
           {/* Close button on mobile */}
@@ -685,7 +685,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                   />
                 </div>
               </div>
-              <span className="text-sm font-black text-[#071A3D] tracking-tight">VSB AI &amp; DS</span>
+              <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital Portal of AI&amp;DS</span>
             </Link>
           </div>
 

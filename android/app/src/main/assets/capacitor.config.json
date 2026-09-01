@@ -1,6 +1,6 @@
 {
 	"appId": "in.edu.vsb.aidsportal",
-	"appName": "VSB AI & DS Portal",
+	"appName": "Digital Portal of AI&DS",
 	"webDir": "out",
 	"bundledWebRuntime": false,
 	"server": {

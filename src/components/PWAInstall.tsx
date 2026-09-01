@@ -158,7 +158,7 @@ export function PWAInstall() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="text-sm font-black text-white leading-tight truncate">Install VSB AI&amp;DS Portal</p>
+                <p className="text-sm font-black text-white leading-tight truncate">Install Digital Portal of AI&amp;DS</p>
                 <Sparkles className="w-3 h-3 text-[#E7B93E] shrink-0" />
               </div>
               <p className="text-[11px] text-cyan-200 font-semibold truncate mt-0.5">
