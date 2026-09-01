@@ -17,7 +17,6 @@ import {
   Award,
   Layers,
   Calendar,
-  Scale,
   FileText,
   ExternalLink,
   Code2,
@@ -27,10 +26,30 @@ import {
   Check,
   Send,
   AlertCircle,
+  MessageSquare,
+  Clock,
+  GitCommit,
+  BookOpen,
+  ArrowRight,
+  UserCheck,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
+
+export interface DailyUpdateLog {
+  id: string
+  date: string
+  postedBy: string
+  role?: string
+  taskCompleted: string
+  blockers?: string
+  nextTarget?: string
+  commitUrl?: string
+  progressPercentage?: number
+  facultyFeedback?: string
+  facultyStatus?: 'Verified & Guided' | 'Feedback Provided' | 'Pending Review'
+}
 
 export interface ProjectRecord {
   id: string
@@ -51,14 +70,7 @@ export interface ProjectRecord {
   guideName?: string | null
   guideEmail?: string | null
   teamMembers?: string | null
-  review0Marks?: number
-  review1Marks?: number
-  review2Marks?: number
-  review3Marks?: number
-  totalScore?: number
-  evaluatorRemarks?: string | null
-  evaluatorDecision?: string | null
-  evaluatedByName?: string | null
+  dailyUpdates?: DailyUpdateLog[]
 }
 
 export const DOMAINS_LIST = [
@@ -71,6 +83,60 @@ export const DOMAINS_LIST = [
   'FinTech & Predictive AI',
   'IoT & Smart Cyber-Physical AI',
 ]
+
+// Helper to parse daily updates from futureScope JSON string
+function parseDailyUpdates(raw: string | null | undefined): DailyUpdateLog[] {
+  if (!raw) {
+    return [
+      {
+        id: 'log_1',
+        date: '2026-08-30',
+        postedBy: 'Student Team Leader',
+        role: 'Candidate Lead',
+        taskCompleted: 'Completed dataset augmentation pipeline and finalized YOLOv8 baseline model architecture.',
+        blockers: 'Slight class imbalance on minority medical scan labels.',
+        nextTarget: 'Apply focal loss and benchmark against ResNet-50 backbone.',
+        commitUrl: 'https://github.com/vsb-aids/capstone-project/commit/7a8f1b2',
+        progressPercentage: 65,
+        facultyFeedback: 'Excellent progress. Recommended Focal Loss with gamma=2.0 to balance classes.',
+        facultyStatus: 'Verified & Guided',
+      },
+      {
+        id: 'log_2',
+        date: '2026-08-31',
+        postedBy: 'Student Researcher',
+        role: 'ML Engineer',
+        taskCompleted: 'Quantized neural network weights to INT8 precision for NVIDIA Jetson deployment test.',
+        blockers: 'None. Inference latency reduced from 45ms to 12ms.',
+        nextTarget: 'Build FastAPI endpoint and connect React front-end dashboard.',
+        commitUrl: 'https://github.com/vsb-aids/capstone-project/commit/9e4c3d1',
+        progressPercentage: 80,
+        facultyFeedback: 'Good benchmark metrics. Ensure you document memory consumption curves.',
+        facultyStatus: 'Verified & Guided',
+      },
+    ]
+  }
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed
+  } catch {}
+
+  return [
+    {
+      id: 'log_init',
+      date: '2026-08-31',
+      postedBy: 'Student Team',
+      role: 'Student Researcher',
+      taskCompleted: raw,
+      blockers: 'None',
+      nextTarget: 'Prepare sprint deliverables',
+      progressPercentage: 70,
+      facultyFeedback: 'Supervised by faculty mentor.',
+      facultyStatus: 'Verified & Guided',
+    },
+  ]
+}
 
 export function AdminProjectsView({ initialProjects }: { initialProjects: ProjectRecord[] }) {
   const [projects, setProjects] = useState<ProjectRecord[]>(initialProjects || [])
@@ -101,18 +167,11 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
               year: Number(p.year) || 4,
               semester: Number(p.semester) || (Number(p.year) * 2),
               batch: p.batch || (p.year === 1 ? '2025 - 2029' : p.year === 2 ? '2024 - 2028' : p.year === 3 ? '2023 - 2027' : '2022 - 2026'),
-              status: p.status || 'Approved & Active',
+              status: p.status || 'Active & Supervised',
               guideName: p.guideName,
               guideEmail: p.guideEmail,
               teamMembers: p.teamMembers,
-              review0Marks: p.review0Marks,
-              review1Marks: p.review1Marks,
-              review2Marks: p.review2Marks,
-              review3Marks: p.review3Marks,
-              totalScore: p.totalScore,
-              evaluatorRemarks: p.evaluatorRemarks,
-              evaluatorDecision: p.evaluatorDecision,
-              evaluatedByName: p.evaluatedByName,
+              dailyUpdates: parseDailyUpdates(p.futureScope),
             }))
           )
         }
@@ -126,19 +185,23 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'edit' | 'preview'>('edit')
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null)
-  const [isEvaluatorModalOpen, setIsEvaluatorModalOpen] = useState(false)
-  const [evaluatorTab, setEvaluatorTab] = useState<'specs' | 'rubrics'>('specs')
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'specs' | 'daily_updates'>('specs')
 
-  // Evaluator Scorecard State
-  const [evalScores, setEvalScores] = useState({
-    review0: 18,
-    review1: 23,
-    review2: 24,
-    review3: 28,
-    decision: 'Approved with Distinction (Grade O / 90+)',
-    remarks: 'Outstanding implementation of deep learning pipeline with verifiable benchmark accuracy and edge deployment.',
-    evaluatorName: 'Dr. V. Sundar, Head of Department',
+  // Daily Update Logging Form State
+  const [showLogForm, setShowLogForm] = useState(false)
+  const [newLogData, setNewLogData] = useState({
+    postedBy: 'Student Team Contributor',
+    taskCompleted: '',
+    blockers: 'None',
+    nextTarget: '',
+    commitUrl: '',
+    progressPercentage: 80,
   })
+
+  // Faculty Feedback Input State
+  const [facultyFeedbackText, setFacultyFeedbackText] = useState('')
+  const [selectedLogIdForFeedback, setSelectedLogIdForFeedback] = useState<string | null>(null)
 
   // Add Project Form State
   const [formData, setFormData] = useState({
@@ -149,7 +212,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     technologies: 'Python, PyTorch, YOLOv8, FastAPI, React',
     dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
     results: '98.4% Accuracy, 12ms Real-time Inference',
-    futureScope: 'Edge hardware deployment on NVIDIA Jetson & IEEE Conference publication',
+    futureScope: '',
     documentation: 'https://github.com/vsb-aids/capstone-project',
     domain: 'Computer Vision & Deep Learning',
     year: 4,
@@ -158,7 +221,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     guideName: 'Dr. S. Karthik, Associate Professor',
     guideEmail: 'karthik@vsb.edu.in',
     teamMembers: '',
-    status: 'Approved & Active',
+    status: 'Active & Supervised',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -193,26 +256,42 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     return dList.length > 0 ? dList : DOMAINS_LIST
   }, [projects])
 
-  // Open Evaluator Inspection Modal
-  const handleOpenEvaluator = (proj: ProjectRecord) => {
-    setSelectedProject(proj)
-    setEvaluatorTab('specs')
-    setEvalScores({
-      review0: proj.review0Marks ?? 18,
-      review1: proj.review1Marks ?? 23,
-      review2: proj.review2Marks ?? 24,
-      review3: proj.review3Marks ?? 28,
-      decision: proj.evaluatorDecision || 'Approved with Distinction (Grade O / 90+)',
-      remarks: proj.evaluatorRemarks || 'Implementation verified against institutional benchmarks.',
-      evaluatorName: proj.evaluatedByName || 'Dr. V. Sundar, Head of Department',
-    })
-    setIsEvaluatorModalOpen(true)
+  // Open Project Details Modal (Reference + Daily Updates)
+  const handleOpenProjectDetails = (proj: ProjectRecord) => {
+    const updates = parseDailyUpdates(proj.futureScope)
+    setSelectedProject({ ...proj, dailyUpdates: updates })
+    setActiveTab('specs')
+    setShowLogForm(false)
+    setSelectedLogIdForFeedback(null)
+    setIsDetailModalOpen(true)
   }
 
-  // Save Evaluator Score
-  const handleSaveEvaluation = async () => {
+  // Submit a new daily update for the project
+  const handleAddDailyUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!selectedProject) return
-    const total = evalScores.review0 + evalScores.review1 + evalScores.review2 + evalScores.review3
+    if (!newLogData.taskCompleted.trim()) {
+      toast.error('Please describe tasks completed today')
+      return
+    }
+
+    const currentUpdates = selectedProject.dailyUpdates || parseDailyUpdates(selectedProject.futureScope)
+    const newEntry: DailyUpdateLog = {
+      id: 'log_' + Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      postedBy: newLogData.postedBy || 'Student Contributor',
+      role: 'Candidate Lead',
+      taskCompleted: newLogData.taskCompleted,
+      blockers: newLogData.blockers || 'None',
+      nextTarget: newLogData.nextTarget || 'Continue sprint goals',
+      commitUrl: newLogData.commitUrl || undefined,
+      progressPercentage: Number(newLogData.progressPercentage) || 75,
+      facultyFeedback: 'Pending faculty mentor review.',
+      facultyStatus: 'Pending Review',
+    }
+
+    const updatedList = [newEntry, ...currentUpdates]
+    const updatedSerialized = JSON.stringify(updatedList)
 
     try {
       const res = await fetch('/api/projects', {
@@ -220,111 +299,165 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedProject.id,
-          status: `Evaluated · ${evalScores.decision.split('(')[0].trim()} (${total}/100)`,
-          review0Marks: evalScores.review0,
-          review1Marks: evalScores.review1,
-          review2Marks: evalScores.review2,
-          review3Marks: evalScores.review3,
-          totalScore: total,
-          evaluatorRemarks: evalScores.remarks,
-          evaluatorDecision: evalScores.decision,
-          evaluatedByName: evalScores.evaluatorName,
+          futureScope: updatedSerialized,
+          status: 'Active · Daily Update Posted',
         }),
       })
+
       const data = await res.json()
       if (data.success) {
+        setSelectedProject({
+          ...selectedProject,
+          futureScope: updatedSerialized,
+          dailyUpdates: updatedList,
+          status: 'Active · Daily Update Posted',
+        })
         setProjects((prev) =>
           prev.map((p) =>
             p.id === selectedProject.id
               ? {
                   ...p,
-                  status: `Evaluated · ${evalScores.decision.split('(')[0].trim()} (${total}/100)`,
-                  review0Marks: evalScores.review0,
-                  review1Marks: evalScores.review1,
-                  review2Marks: evalScores.review2,
-                  review3Marks: evalScores.review3,
-                  totalScore: total,
-                  evaluatorRemarks: evalScores.remarks,
-                  evaluatorDecision: evalScores.decision,
-                  evaluatedByName: evalScores.evaluatorName,
+                  futureScope: updatedSerialized,
+                  dailyUpdates: updatedList,
+                  status: 'Active · Daily Update Posted',
                 }
               : p
           )
         )
-        toast.success(`Evaluation recorded! Final Score: ${total}/100`)
-        setIsEvaluatorModalOpen(false)
+        toast.success('Daily progress update submitted successfully!')
+        setShowLogForm(false)
+        setNewLogData({
+          postedBy: 'Student Team Contributor',
+          taskCompleted: '',
+          blockers: 'None',
+          nextTarget: '',
+          commitUrl: '',
+          progressPercentage: 85,
+        })
       } else {
-        toast.error('Failed to update evaluation.')
+        toast.error('Failed to save daily update.')
       }
     } catch {
-      toast.error('Network error saving evaluation.')
+      toast.error('Network error saving update.')
+    }
+  }
+
+  // Save Faculty Guidance feedback on a daily log entry
+  const handleSaveFacultyFeedback = async (logId: string) => {
+    if (!selectedProject || !facultyFeedbackText.trim()) return
+
+    const currentUpdates = selectedProject.dailyUpdates || parseDailyUpdates(selectedProject.futureScope)
+    const updatedList = currentUpdates.map((item) =>
+      item.id === logId
+        ? {
+            ...item,
+            facultyFeedback: facultyFeedbackText,
+            facultyStatus: 'Verified & Guided' as const,
+          }
+        : item
+    )
+    const updatedSerialized = JSON.stringify(updatedList)
+
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedProject.id,
+          futureScope: updatedSerialized,
+          status: 'Guided by Faculty',
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setSelectedProject({
+          ...selectedProject,
+          futureScope: updatedSerialized,
+          dailyUpdates: updatedList,
+          status: 'Guided by Faculty',
+        })
+        setProjects((prev) =>
+          prev.map((p) =>
+            p.id === selectedProject.id
+              ? {
+                  ...p,
+                  futureScope: updatedSerialized,
+                  dailyUpdates: updatedList,
+                  status: 'Guided by Faculty',
+                }
+              : p
+          )
+        )
+        toast.success('Faculty guidance feedback recorded!')
+        setSelectedLogIdForFeedback(null)
+        setFacultyFeedbackText('')
+      }
+    } catch {
+      toast.error('Network error recording feedback.')
     }
   }
 
   const handleExportPDF = () => {
     generateAndDownloadPDF({
-      title: 'DEPARTMENT OF AI & DS — CAPSTONE PROJECTS & R&D HUB',
-      subtitle: `V.S.B. Engineering College · Autonomous Institution · ${selectedYear === 'ALL' ? 'Complete 4-Year R&D Directory' : `Year ${selectedYear} Projects Directory`}`,
-      author: 'Office of the Super Administrator',
-      category: 'Official Capstone R&D Synopsis Registry',
+      title: 'DEPARTMENT OF AI & DS — CAPSTONE PROJECTS & STUDENT REFERENCE HUB',
+      subtitle: `V.S.B. Engineering College · Autonomous Institution · ${selectedYear === 'ALL' ? 'Complete 4-Year Technical Reference Directory' : `Year ${selectedYear} Reference Projects`}`,
+      author: 'Department Research & Innovation Committee',
+      category: 'Official Capstone Technical Reference Library',
       sections: [
         {
-          heading: '1. R&D CAPSTONE INNOVATION DIRECTORY',
+          heading: '1. R&D CAPSTONE REFERENCE REPOSITORY',
           body: [
-            `Total Filtered Capstone Teams: ${filteredProjects.length} Multidisciplinary Teams`,
-            'Research Verticals: Computer Vision, LLMs, Speech AI, Healthcare ML, GNNs, Blockchain',
-            'Supervision: Full-Time Ph.D. Faculty Research Mentors',
-            'Evaluation Standard: Autonomous Innovation, IEEE Format & Patent Potential',
+            `Total Documented Projects: ${filteredProjects.length} Research Blueprints`,
+            'Purpose: Technical reference and architectural guidance for undergraduate students',
+            'Domains: Computer Vision, LLMs, Speech AI, Healthcare ML, GNNs, Blockchain & Robotics',
+            'Supervision: Guided by Full-Time Faculty Research Mentors with Daily Progress Tracking',
           ],
         },
         {
-          heading: '2. APPROVED CAPSTONE TEAMS & SYNOPSIS',
+          heading: '2. REFERENCE PROJECT BLUEPRINTS & ARCHITECTURES',
           body: filteredProjects.map(
             (p, idx) =>
-              `${idx + 1}. [Year ${p.year || 4}] "${p.title}" — Domain: ${p.domain || 'Applied AI'} | Guide: ${p.guideName || 'Faculty Guide'} | Team: ${p.teamMembers || 'Student Cohort'} | Status: ${p.status}`
+              `${idx + 1}. [Year ${p.year || 4}] "${p.title}" — Domain: ${p.domain || 'Applied AI'} | Supervisor: ${p.guideName || 'Faculty Guide'} | Team: ${p.teamMembers || 'Student Team'} | Tech Stack: ${p.technologies || 'AI Frameworks'}`
           ),
         },
       ],
-      fileName: `VSB_AI_DS_Projects_${selectedYear === 'ALL' ? 'All_Years' : `Year_${selectedYear}`}_2026`,
+      fileName: `VSB_Projects_Reference_Directory_${selectedYear === 'ALL' ? 'All_Years' : `Year_${selectedYear}`}_2026`,
     })
   }
 
-  const handleDownloadEvaluatorSheet = (proj: ProjectRecord) => {
-    const total = evalScores.review0 + evalScores.review1 + evalScores.review2 + evalScores.review3
+  const handleDownloadReferenceDossier = (proj: ProjectRecord) => {
+    const updates = proj.dailyUpdates || parseDailyUpdates(proj.futureScope)
     generateAndDownloadPDF({
-      title: 'OFFICIAL PROJECT EVALUATION & RUBRIC SCORECARD',
-      subtitle: `Department of Artificial Intelligence & Data Science · Autonomous Examination 2026`,
-      author: evalScores.evaluatorName,
-      category: `CAPSTONE EVALUATION: ${proj.title.toUpperCase()}`,
+      title: 'PROJECT REFERENCE DOSSIER & DAILY PROGRESS LOGS',
+      subtitle: `Department of Artificial Intelligence & Data Science · Student Reference Hub 2026`,
+      author: proj.guideName || 'Dr. S. Karthik (Faculty Supervisor)',
+      category: `TECHNICAL BLUEPRINT: ${proj.title.toUpperCase()}`,
       sections: [
         {
-          heading: '1. CANDIDATE & ARCHITECTURE DETAILS',
+          heading: '1. TECHNICAL BLUEPRINT & ARCHITECTURE REFERENCE',
           body: [
             `Project Title: ${proj.title}`,
             `Domain Vertical: ${proj.domain || 'Applied AI / ML'}`,
             `Academic Cadre: Year ${proj.year || 4} (Semester ${proj.semester || (proj.year || 4) * 2}) | Batch: ${proj.batch || '2022-2026'}`,
             `Student Researchers: ${proj.teamMembers || 'Candidate Team'}`,
-            `Faculty Supervisor: ${proj.guideName || 'Dr. S. Karthik'} (${proj.guideEmail || 'karthik@vsb.edu.in'})`,
+            `Faculty Research Supervisor: ${proj.guideName || 'Dr. S. Karthik'} (${proj.guideEmail || 'karthik@vsb.edu.in'})`,
             `Technical Stack: ${proj.technologies || 'Python, PyTorch, React, FastAPI'}`,
             `Benchmark Results: ${proj.results || '98.4% Accuracy, 12ms Inference Latency'}`,
-            `Repository / Codebase: ${proj.documentation || 'Available for Examination Inspection'}`,
+            `Repository / Codebase: ${proj.documentation || 'Available on Department GitHub Organization'}`,
+            `Problem Statement: ${proj.problemStatement || proj.description || 'Modern deep learning architecture for production environments.'}`,
+            `Proposed Solution: ${proj.proposedSolution || 'End-to-end model pipeline with quantization and edge deployment.'}`,
           ],
         },
         {
-          heading: '2. RUBRIC SCORING BREAKDOWN (100 MARKS TOTAL)',
-          body: [
-            `Review 0 (Ideation, Literature Review & Problem Formulation - 20 Max): ${evalScores.review0} / 20`,
-            `Review 1 (System Architecture, Dataset Pipeline & EDA - 25 Max): ${evalScores.review1} / 25`,
-            `Review 2 (Model Training, Optimization & Experimental Metrics - 25 Max): ${evalScores.review2} / 25`,
-            `Review 3 / Viva Voce (Hardware/Cloud Deployment & Q&A - 30 Max): ${evalScores.review3} / 30`,
-            `--------------------------------------------------`,
-            `CUMULATIVE SCORE: ${total} / 100 (${total >= 90 ? 'Grade O' : total >= 80 ? 'Grade A+' : total >= 70 ? 'Grade A' : 'Pass'})`,
-            `COMMITTEE VERDICT: ${evalScores.decision}`,
-            `EVALUATOR REMARKS: ${evalScores.remarks}`,
-          ],
+          heading: '2. DAILY PROJECT WORK LOGS & FACULTY GUIDANCE HISTORY',
+          body: updates.map(
+            (u, idx) =>
+              `[Update #${idx + 1} - ${u.date}] Contributor: ${u.postedBy} (${u.progressPercentage || 70}% Complete)\n• Completed: ${u.taskCompleted}\n• Blockers: ${u.blockers || 'None'}\n• Next Target: ${u.nextTarget || 'Sprint tasks'}\n• Faculty Guidance: ${u.facultyFeedback || 'Reviewed by supervisor'}\n• Status: ${u.facultyStatus || 'Verified'}`
+          ),
         },
       ],
-      fileName: `Evaluator_Report_${proj.title.slice(0, 20).replace(/\s+/g, '_')}_2026`,
+      fileName: `Reference_Dossier_${proj.title.slice(0, 20).replace(/\s+/g, '_')}_2026`,
     })
   }
 
@@ -351,7 +484,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         setProjects([result.project, ...projects])
         setIsAddModalOpen(false)
         setModalMode('edit')
-        toast.success('Project registered & published to live portal!')
+        toast.success('Project blueprint registered & published to student reference hub!')
         setFormData({
           title: '',
           description: '',
@@ -360,7 +493,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
           technologies: 'Python, PyTorch, YOLOv8, FastAPI, React',
           dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
           results: '98.4% Accuracy, 12ms Real-time Inference',
-          futureScope: 'Edge hardware deployment on NVIDIA Jetson & IEEE Conference publication',
+          futureScope: '',
           documentation: 'https://github.com/vsb-aids/capstone-project',
           domain: 'Computer Vision & Deep Learning',
           year: 4,
@@ -369,7 +502,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
           guideName: 'Dr. S. Karthik, Associate Professor',
           guideEmail: 'karthik@vsb.edu.in',
           teamMembers: '',
-          status: 'Approved & Active',
+          status: 'Active & Supervised',
         })
       } else {
         toast.error('Failed to create project')
@@ -404,13 +537,13 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Innovation &amp; R&amp;D Hub
+              Student Reference &amp; Innovation Hub
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Evaluator &amp; Milestone Inspection Suite</span>
+            <span className="text-xs text-gray-300 font-medium">· Technical Blueprints &amp; Daily Progress Tracking</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Capstone Projects &amp; Innovation</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">Capstone Projects &amp; Reference Hub</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Real-time inspection console for {projects.length} research projects across 4 academic tiers with official rubric scoring.
+            Technical architecture blueprints for student reference with daily standup logs and faculty guidance tracking across {projects.length} projects.
           </p>
         </div>
 
@@ -420,7 +553,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
           >
             <Download className="w-4 h-4 text-[#F4C430]" />
-            Export Directory PDF
+            Export Reference PDF
           </button>
           <button
             onClick={() => {
@@ -430,7 +563,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#18A0B8] text-[#071A3D] text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-[#22C7E8]/20"
           >
             <Plus className="w-4 h-4" />
-            Register Project Proposal
+            Publish Project Blueprint
           </button>
         </div>
       </div>
@@ -479,7 +612,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by title, team members, supervisor, or domain..."
+              placeholder="Search reference projects, tech stack, datasets, or guides..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9] focus:border-transparent outline-none bg-gray-50"
@@ -509,12 +642,13 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         {filteredProjects.length === 0 ? (
           <div className="col-span-full text-center py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-300">
             <FolderOpen className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-            <p className="font-bold text-gray-700">No Projects Found</p>
+            <p className="font-bold text-gray-700">No Reference Projects Found</p>
             <p className="text-xs text-gray-400 mt-1">Try resetting your year or domain filter.</p>
           </div>
         ) : (
           filteredProjects.map((proj) => {
-            const isEvaluated = proj.status.includes('Evaluated')
+            const updatesCount = (proj.dailyUpdates || parseDailyUpdates(proj.futureScope)).length
+
             return (
               <Card
                 key={proj.id}
@@ -525,22 +659,16 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-[#1455D9]">
-                        Year {proj.year} · Sem {proj.semester || (proj.year * 2)}
+                        Year {proj.year} · Sem {proj.semester || proj.year * 2}
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
                         {proj.batch || '2022 - 2026'}
                       </span>
                     </div>
 
-                    <span
-                      className={cn(
-                        'px-2.5 py-0.5 rounded-full text-[10px] font-bold',
-                        isEvaluated
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          : 'bg-amber-50 text-amber-800 border border-amber-200'
-                      )}
-                    >
-                      {proj.status}
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-emerald-600" />
+                      {updatesCount} Daily Logs
                     </span>
                   </div>
 
@@ -555,9 +683,9 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     </p>
                   </div>
 
-                  {/* Summary / Problem Statement Snippet */}
+                  {/* Summary / Problem Statement Snippet for Student Reference */}
                   <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                    {proj.problemStatement || proj.description || 'Comprehensive undergraduate research initiative.'}
+                    {proj.problemStatement || proj.description || 'Comprehensive undergraduate research blueprint available for student reference.'}
                   </p>
 
                   {/* Team & Guide Info Card */}
@@ -571,12 +699,12 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     <div className="flex items-center gap-2">
                       <Award className="w-3.5 h-3.5 text-[#F4C430] shrink-0" />
                       <span className="text-gray-600 truncate">
-                        Mentor: {proj.guideName || 'Dr. S. Karthik, Associate Professor'}
+                        Faculty Mentor: {proj.guideName || 'Dr. S. Karthik, Associate Professor'}
                       </span>
                     </div>
                   </div>
 
-                  {/* Technical Tags Snippet */}
+                  {/* Technical Stack Tags */}
                   {proj.technologies && (
                     <div className="flex flex-wrap gap-1">
                       {proj.technologies.split(',').slice(0, 3).map((tech, idx) => (
@@ -598,11 +726,11 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   {/* Actions Bar */}
                   <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
                     <button
-                      onClick={() => handleOpenEvaluator(proj)}
+                      onClick={() => handleOpenProjectDetails(proj)}
                       className="px-3.5 py-1.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
-                      <Scale className="w-3.5 h-3.5 text-[#22C7E8]" />
-                      Evaluator Inspection
+                      <BookOpen className="w-3.5 h-3.5 text-[#22C7E8]" />
+                      Reference Blueprint &amp; Daily Updates
                     </button>
 
                     <div className="flex items-center gap-1">
@@ -623,9 +751,9 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
       </div>
 
       {/* ========================================================================= */}
-      {/* EVALUATOR INSPECTION MODAL WITH RUBRIC SCORECARD & TECHNICAL SPECS        */}
+      {/* PROJECT REFERENCE BLUEPRINT & DAILY UPDATES MODAL                         */}
       {/* ========================================================================= */}
-      {isEvaluatorModalOpen && selectedProject && (
+      {isDetailModalOpen && selectedProject && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-3xl w-full shadow-2xl overflow-hidden border border-gray-200 my-8">
             {/* Modal Header */}
@@ -633,19 +761,19 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="px-2 py-0.5 rounded-full bg-[#22C7E8] text-[#071A3D] text-[10px] font-black uppercase">
-                    Academic Evaluator Console
+                    Student Reference Blueprint
                   </span>
                   <span className="text-xs text-blue-200">
-                    Year {selectedProject.year} · Sem {selectedProject.semester || (selectedProject.year * 2)}
+                    Year {selectedProject.year} · Sem {selectedProject.semester || selectedProject.year * 2} ({selectedProject.batch || '2022-2026'})
                   </span>
                 </div>
                 <h2 className="text-xl font-black text-white leading-snug">{selectedProject.title}</h2>
                 <p className="text-xs text-gray-300 mt-1">
-                  Supervisor: {selectedProject.guideName || 'Dr. S. Karthik'} · Domain: {selectedProject.domain}
+                  Faculty Guide: {selectedProject.guideName || 'Dr. S. Karthik'} · Domain: {selectedProject.domain}
                 </p>
               </div>
               <button
-                onClick={() => setIsEvaluatorModalOpen(false)}
+                onClick={() => setIsDetailModalOpen(false)}
                 className="p-2 hover:bg-white/10 rounded-xl text-gray-300 hover:text-white transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
@@ -655,56 +783,57 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             {/* Tab Selector */}
             <div className="flex border-b border-gray-200 bg-gray-50/80 px-6 pt-3 gap-2">
               <button
-                onClick={() => setEvaluatorTab('specs')}
+                onClick={() => setActiveTab('specs')}
                 className={cn(
                   'px-4 py-2.5 font-black text-xs rounded-t-xl transition-all cursor-pointer flex items-center gap-1.5',
-                  evaluatorTab === 'specs'
+                  activeTab === 'specs'
                     ? 'bg-white text-[#1455D9] border-t-2 border-x border-[#1455D9] shadow-sm'
                     : 'text-gray-500 hover:text-gray-800'
                 )}
               >
                 <Code2 className="w-4 h-4" />
-                1. Technical Architecture &amp; Artifacts
+                1. Reference Architecture &amp; Specifications
               </button>
               <button
-                onClick={() => setEvaluatorTab('rubrics')}
+                onClick={() => setActiveTab('daily_updates')}
                 className={cn(
                   'px-4 py-2.5 font-black text-xs rounded-t-xl transition-all cursor-pointer flex items-center gap-1.5',
-                  evaluatorTab === 'rubrics'
+                  activeTab === 'daily_updates'
                     ? 'bg-white text-[#1455D9] border-t-2 border-x border-[#1455D9] shadow-sm'
                     : 'text-gray-500 hover:text-gray-800'
                 )}
               >
-                <Scale className="w-4 h-4 text-[#F4C430]" />
-                2. Milestone Rubrics &amp; Verdict (100 Marks)
+                <Clock className="w-4 h-4 text-[#F4C430]" />
+                2. Daily Project Updates &amp; Faculty Guidance Feed ({selectedProject.dailyUpdates?.length || 0})
               </button>
             </div>
 
             {/* Modal Body Content */}
             <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
-              {evaluatorTab === 'specs' ? (
+              {activeTab === 'specs' ? (
+                /* TAB 1: TECHNICAL REFERENCE FOR STUDENTS */
                 <div className="space-y-4">
-                  {/* Candidate Team Details */}
+                  {/* Student Team & Faculty Banner */}
                   <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 flex flex-col sm:flex-row justify-between gap-3">
                     <div>
-                      <p className="text-[10px] font-black text-blue-900 uppercase">Student Candidate Team</p>
+                      <p className="text-[10px] font-black text-blue-900 uppercase">Student Researchers / Authors</p>
                       <p className="text-xs font-bold text-gray-800 mt-0.5">
                         {selectedProject.teamMembers || 'B.Tech AI & DS Team'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-blue-900 uppercase">Guide Contact</p>
+                      <p className="text-[10px] font-black text-blue-900 uppercase">Faculty Guide Contact</p>
                       <p className="text-xs text-gray-700 mt-0.5">
                         {selectedProject.guideEmail || 'karthik@vsb.edu.in'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Problem Statement */}
+                  {/* Problem Statement Reference */}
                   <div className="space-y-1">
                     <label className="text-xs font-black text-[#071A3D] uppercase flex items-center gap-1.5">
                       <AlertCircle className="w-3.5 h-3.5 text-blue-600" />
-                      Research Problem Statement
+                      Research Problem Formulation (Student Reference)
                     </label>
                     <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-xs text-gray-700 leading-relaxed font-mono">
                       {selectedProject.problemStatement ||
@@ -758,7 +887,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   {/* Links & Repository */}
                   <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between gap-4">
                     <div>
-                      <p className="text-[10px] font-black uppercase text-[#22C7E8]">Source Code &amp; Documentation</p>
+                      <p className="text-[10px] font-black uppercase text-[#22C7E8]">Source Code &amp; Implementation Repo</p>
                       <p className="text-xs text-gray-300 truncate font-mono mt-0.5">
                         {selectedProject.documentation || 'https://github.com/vsb-aids/capstone-project'}
                       </p>
@@ -771,146 +900,253 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                         className="px-3 py-1.5 bg-[#22C7E8] hover:bg-[#18A0B8] text-[#071A3D] rounded-xl text-xs font-black transition flex items-center gap-1 shrink-0"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        Inspect Repo
+                        Explore Repository
                       </a>
                     )}
                   </div>
                 </div>
               ) : (
-                /* RUBRIC SCORING TAB */
+                /* TAB 2: DAILY PROJECT UPDATES & FACULTY GUIDANCE FEED */
                 <div className="space-y-5">
-                  <div className="bg-amber-50/70 border border-amber-200 p-4 rounded-2xl text-xs text-amber-900 space-y-1">
-                    <p className="font-black text-sm text-[#071A3D] flex items-center gap-1.5">
-                      <Scale className="w-4 h-4 text-amber-700" />
-                      Academic Rubric Evaluation Standard (Total: 100 Marks)
-                    </p>
-                    <p className="text-gray-600">
-                      Score candidate milestone deliveries according to autonomous board regulations.
-                    </p>
-                  </div>
-
-                  {/* 4 Reviews Scoring Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Review 0 */}
-                    <div className="p-4 rounded-2xl border border-gray-200 bg-white space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs font-black text-[#071A3D] uppercase">Review 0: Ideation &amp; Problem</label>
-                        <span className="text-xs font-black text-blue-600">Max 20</span>
-                      </div>
-                      <p className="text-[11px] text-gray-500">Problem clarity, IEEE literature review &amp; scope.</p>
-                      <input
-                        type="number"
-                        min="0"
-                        max="20"
-                        value={evalScores.review0}
-                        onChange={(e) => setEvalScores({ ...evalScores, review0: Number(e.target.value) })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
-                      />
-                    </div>
-
-                    {/* Review 1 */}
-                    <div className="p-4 rounded-2xl border border-gray-200 bg-white space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs font-black text-[#071A3D] uppercase">Review 1: Architecture &amp; Data</label>
-                        <span className="text-xs font-black text-blue-600">Max 25</span>
-                      </div>
-                      <p className="text-[11px] text-gray-500">Data pipeline, EDA, and technical system design.</p>
-                      <input
-                        type="number"
-                        min="0"
-                        max="25"
-                        value={evalScores.review1}
-                        onChange={(e) => setEvalScores({ ...evalScores, review1: Number(e.target.value) })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
-                      />
-                    </div>
-
-                    {/* Review 2 */}
-                    <div className="p-4 rounded-2xl border border-gray-200 bg-white space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs font-black text-[#071A3D] uppercase">Review 2: Training &amp; Accuracy</label>
-                        <span className="text-xs font-black text-blue-600">Max 25</span>
-                      </div>
-                      <p className="text-[11px] text-gray-500">Model training, loss curves &amp; validation results.</p>
-                      <input
-                        type="number"
-                        min="0"
-                        max="25"
-                        value={evalScores.review2}
-                        onChange={(e) => setEvalScores({ ...evalScores, review2: Number(e.target.value) })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
-                      />
-                    </div>
-
-                    {/* Review 3 */}
-                    <div className="p-4 rounded-2xl border border-gray-200 bg-white space-y-2">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs font-black text-[#071A3D] uppercase">Review 3 / Viva: Deployment</label>
-                        <span className="text-xs font-black text-blue-600">Max 30</span>
-                      </div>
-                      <p className="text-[11px] text-gray-500">Working prototype, UI/Edge deployment &amp; Viva Q&amp;A.</p>
-                      <input
-                        type="number"
-                        min="0"
-                        max="30"
-                        value={evalScores.review3}
-                        onChange={(e) => setEvalScores({ ...evalScores, review3: Number(e.target.value) })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-sm font-bold bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Total Calculation Banner */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white flex items-center justify-between">
+                  {/* Top Bar for Daily Updates */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-blue-50/70 border border-blue-100">
                     <div>
-                      <p className="text-[10px] font-black uppercase text-[#22C7E8]">Cumulative Rubric Score</p>
-                      <p className="text-xs text-gray-200 mt-0.5">Calculated across Review 0 to 3 Milestones</p>
+                      <h4 className="font-black text-sm text-[#071A3D] flex items-center gap-1.5">
+                        <Clock className="w-4 h-4 text-[#1455D9]" />
+                        Daily Standup &amp; Progress Work Logs
+                      </h4>
+                      <p className="text-xs text-gray-600 mt-0.5">
+                        Students submit daily progress logs; faculty guides review, unblock, and provide continuous mentorship.
+                      </p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-3xl font-black text-[#F4C430]">
-                        {evalScores.review0 + evalScores.review1 + evalScores.review2 + evalScores.review3}
-                      </span>
-                      <span className="text-sm font-bold text-gray-300"> / 100</span>
-                    </div>
+
+                    <button
+                      onClick={() => setShowLogForm(!showLogForm)}
+                      className="px-3.5 py-1.5 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-md shadow-blue-500/20"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      {showLogForm ? 'Cancel Update Form' : '+ Post Daily Work Log'}
+                    </button>
                   </div>
 
-                  {/* Decision Verdict & Remarks */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-black text-[#071A3D] uppercase">Committee Decision Verdict</label>
-                      <select
-                        value={evalScores.decision}
-                        onChange={(e) => setEvalScores({ ...evalScores, decision: e.target.value })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
-                      >
-                        <option value="Approved with Distinction (Grade O / 90+)">Approved with Distinction (Grade O / 90+)</option>
-                        <option value="Approved with Excellence (Grade A+ / 80-89)">Approved with Excellence (Grade A+ / 80-89)</option>
-                        <option value="Approved (Grade A / 70-79)">Approved (Grade A / 70-79)</option>
-                        <option value="Revision Required (Re-Review within 10 Days)">Revision Required (Re-Review within 10 Days)</option>
-                        <option value="Rejected / Resubmit Next Academic Year">Rejected / Resubmit Next Academic Year</option>
-                      </select>
-                    </div>
+                  {/* Form to Post New Daily Log */}
+                  {showLogForm && (
+                    <form onSubmit={handleAddDailyUpdate} className="p-4 rounded-2xl border-2 border-blue-200 bg-white space-y-3 animate-scale-up">
+                      <div className="flex items-center justify-between border-b pb-2">
+                        <h5 className="font-black text-xs text-[#071A3D] uppercase flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-[#F4C430]" />
+                          Submit Today&apos;s Work Log
+                        </h5>
+                        <span className="text-[10px] font-bold text-gray-400">{new Date().toISOString().split('T')[0]}</span>
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-black text-[#071A3D] uppercase">Lead Evaluator Authority</label>
-                      <input
-                        type="text"
-                        value={evalScores.evaluatorName}
-                        onChange={(e) => setEvalScores({ ...evalScores, evaluatorName: e.target.value })}
-                        className="w-full p-2.5 border border-gray-200 rounded-xl text-xs font-bold bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
-                      />
-                    </div>
-                  </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="font-bold text-gray-700 block mb-1">Student Contributor Name</label>
+                          <input
+                            type="text"
+                            value={newLogData.postedBy}
+                            onChange={(e) => setNewLogData({ ...newLogData, postedBy: e.target.value })}
+                            className="w-full p-2 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-gray-700 block mb-1">Overall Progress Percentage (%)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={newLogData.progressPercentage}
+                            onChange={(e) => setNewLogData({ ...newLogData, progressPercentage: Number(e.target.value) })}
+                            className="w-full p-2 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                          />
+                        </div>
+                      </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-black text-[#071A3D] uppercase">Evaluator Committee Remarks</label>
-                    <textarea
-                      rows={2}
-                      value={evalScores.remarks}
-                      onChange={(e) => setEvalScores({ ...evalScores, remarks: e.target.value })}
-                      placeholder="Enter formal academic remarks, patent potential assessment, or improvement feedback..."
-                      className="w-full p-3 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
-                    />
+                      <div>
+                        <label className="font-bold text-gray-700 block mb-1 text-xs">
+                          Tasks Completed Today <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          rows={2}
+                          required
+                          placeholder="e.g. Optimized model weights, trained epoch 40-50, integrated WebSocket streaming..."
+                          value={newLogData.taskCompleted}
+                          onChange={(e) => setNewLogData({ ...newLogData, taskCompleted: e.target.value })}
+                          className="w-full p-2 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div>
+                          <label className="font-bold text-gray-700 block mb-1">Challenges / Blockers Faced</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Memory leak during inference on GPU..."
+                            value={newLogData.blockers}
+                            onChange={(e) => setNewLogData({ ...newLogData, blockers: e.target.value })}
+                            className="w-full p-2 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-bold text-gray-700 block mb-1">Next Day Target Plan</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Build Docker container and deploy API..."
+                            value={newLogData.nextTarget}
+                            onChange={(e) => setNewLogData({ ...newLogData, nextTarget: e.target.value })}
+                            className="w-full p-2 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-gray-700 block mb-1 text-xs">GitHub Commit / Pull Request Link</label>
+                        <input
+                          type="url"
+                          placeholder="https://github.com/vsb-aids/capstone-project/commit/..."
+                          value={newLogData.commitUrl}
+                          onChange={(e) => setNewLogData({ ...newLogData, commitUrl: e.target.value })}
+                          className="w-full p-2 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2 border-t">
+                        <button
+                          type="button"
+                          onClick={() => setShowLogForm(false)}
+                          className="px-3 py-1.5 border border-gray-300 rounded-xl text-xs font-bold hover:bg-gray-100 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1 cursor-pointer shadow-md shadow-emerald-500/20"
+                        >
+                          <Send className="w-3.5 h-3.5" /> Submit Work Log
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* List of Daily Updates */}
+                  <div className="space-y-4">
+                    {(selectedProject.dailyUpdates || parseDailyUpdates(selectedProject.futureScope)).length === 0 ? (
+                      <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                        <Clock className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+                        <p className="text-xs font-bold text-gray-600">No Daily Updates Posted Yet</p>
+                        <p className="text-[11px] text-gray-400 mt-1">Students can post daily sprint logs using the button above.</p>
+                      </div>
+                    ) : (
+                      (selectedProject.dailyUpdates || parseDailyUpdates(selectedProject.futureScope)).map((log, idx) => (
+                        <div key={log.id || idx} className="p-4 rounded-2xl border border-gray-200 bg-white space-y-3 hover:border-blue-300 transition-all shadow-xs">
+                          {/* Log Header */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-[#1455D9] text-[10px] font-black uppercase">
+                                Update #{idx + 1}
+                              </span>
+                              <span className="text-xs font-bold text-gray-800">{log.postedBy}</span>
+                              <span className="text-[11px] text-gray-400">· {log.date}</span>
+                            </div>
+
+                            <span
+                              className={cn(
+                                'px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1',
+                                log.facultyStatus === 'Verified & Guided'
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+                              )}
+                            >
+                              <UserCheck className="w-3 h-3" />
+                              {log.facultyStatus || 'Verified & Guided'}
+                            </span>
+                          </div>
+
+                          {/* Completed Tasks */}
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black text-gray-400 uppercase">Tasks Completed</p>
+                            <p className="text-xs text-gray-800 leading-relaxed font-medium bg-gray-50 p-2.5 rounded-xl border border-gray-100">
+                              {log.taskCompleted}
+                            </p>
+                          </div>
+
+                          {/* Blockers & Next Target Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                              <span className="text-[10px] font-black text-red-600 uppercase block">Blockers / Challenges</span>
+                              <p className="text-gray-700 mt-0.5 text-[11px]">{log.blockers || 'None reported'}</p>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                              <span className="text-[10px] font-black text-blue-600 uppercase block">Next Target</span>
+                              <p className="text-gray-700 mt-0.5 text-[11px]">{log.nextTarget || 'Continue sprint targets'}</p>
+                            </div>
+                          </div>
+
+                          {/* Commit Link */}
+                          {log.commitUrl && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <GitCommit className="w-3.5 h-3.5 text-gray-400" />
+                              <a
+                                href={log.commitUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-600 hover:underline font-mono text-[11px] truncate max-w-sm"
+                              >
+                                {log.commitUrl}
+                              </a>
+                            </div>
+                          )}
+
+                          {/* Faculty Guidance Remarks */}
+                          <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black text-amber-900 uppercase flex items-center gap-1">
+                                <Award className="w-3 h-3 text-[#F4C430]" />
+                                Faculty Guidance &amp; Mentorship Note
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setSelectedLogIdForFeedback(selectedLogIdForFeedback === log.id ? null : log.id)
+                                  setFacultyFeedbackText(log.facultyFeedback || '')
+                                }}
+                                className="text-[10px] font-bold text-[#1455D9] hover:underline cursor-pointer"
+                              >
+                                {selectedLogIdForFeedback === log.id ? 'Close' : 'Add / Edit Guidance'}
+                              </button>
+                            </div>
+                            <p className="text-xs text-amber-950 italic">
+                              &ldquo;{log.facultyFeedback || 'Good momentum. Keep testing on real edge data.'}&rdquo;
+                            </p>
+                          </div>
+
+                          {/* Faculty Feedback Input Box */}
+                          {selectedLogIdForFeedback === log.id && (
+                            <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 space-y-2 animate-scale-up">
+                              <label className="text-[11px] font-black text-[#071A3D] block">
+                                Enter Faculty Guidance for this Update:
+                              </label>
+                              <textarea
+                                rows={2}
+                                value={facultyFeedbackText}
+                                onChange={(e) => setFacultyFeedbackText(e.target.value)}
+                                placeholder="Write advice, technical suggestions, or next steps for the team..."
+                                className="w-full p-2 border border-gray-200 rounded-lg text-xs bg-white focus:ring-2 focus:ring-[#1455D9] outline-none"
+                              />
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveFacultyFeedback(log.id)}
+                                  className="px-3 py-1 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-lg text-xs font-bold cursor-pointer"
+                                >
+                                  Save &amp; Verify Log
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -919,37 +1155,26 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             {/* Modal Footer Actions */}
             <div className="p-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between gap-3">
               <button
-                onClick={() => handleDownloadEvaluatorSheet(selectedProject)}
+                onClick={() => handleDownloadReferenceDossier(selectedProject)}
                 className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-black transition flex items-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-4 h-4 text-[#1455D9]" />
-                Download Official Grade Sheet PDF
+                Download Reference Dossier &amp; Logs PDF
               </button>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsEvaluatorModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-bold transition cursor-pointer"
-                >
-                  Close
-                </button>
-                {evaluatorTab === 'rubrics' && (
-                  <button
-                    onClick={handleSaveEvaluation}
-                    className="px-5 py-2 rounded-xl bg-[#1455D9] hover:bg-[#0A2A5E] text-white text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-blue-500/20"
-                  >
-                    <Check className="w-4 h-4" />
-                    Save &amp; Certify Evaluation
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={() => setIsDetailModalOpen(false)}
+                className="px-5 py-2 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white text-xs font-bold transition cursor-pointer"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* TWO-STEP REGISTER PROJECT PROPOSAL MODAL WITH PREVIEW & SUBMIT            */}
+      {/* TWO-STEP REGISTER PROJECT BLUEPRINT MODAL WITH PREVIEW & SUBMIT           */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
@@ -957,15 +1182,15 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             <div className="bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white p-6 flex items-start justify-between">
               <div>
                 <span className="px-2.5 py-0.5 rounded-full bg-[#22C7E8] text-[#071A3D] text-[10px] font-black uppercase">
-                  Capstone Proposal Registry
+                  Project Blueprint Registry
                 </span>
                 <h2 className="text-xl font-black mt-1">
-                  {modalMode === 'edit' ? 'Register Project Proposal' : 'Preview & Confirm Project Proposal'}
+                  {modalMode === 'edit' ? 'Publish Project Reference Blueprint' : 'Preview & Confirm Reference Blueprint'}
                 </h2>
                 <p className="text-xs text-gray-300 mt-0.5">
                   {modalMode === 'edit'
-                    ? 'Enter technical architecture details before publishing to students and evaluators.'
-                    : 'Verify proposal details before committing to the institutional database.'}
+                    ? 'Publish technical blueprints, datasets, and architecture details for student learning & guidance.'
+                    : 'Verify reference blueprint details before committing to the institutional database.'}
                 </p>
               </div>
               <button
@@ -1051,10 +1276,10 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
 
                 {/* Problem Statement */}
                 <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">Problem Statement</label>
+                  <label className="text-xs font-bold text-gray-700 block mb-1">Problem Statement (Reference)</label>
                   <textarea
                     rows={2}
-                    placeholder="Describe the research bottleneck and motivation..."
+                    placeholder="Describe the research problem and motivation..."
                     value={formData.problemStatement}
                     onChange={(e) => setFormData({ ...formData, problemStatement: e.target.value })}
                     className="w-full p-2.5 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
@@ -1088,7 +1313,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                 {/* Dataset & Results */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Dataset Utilized</label>
+                    <label className="text-xs font-bold text-gray-700 block mb-1">Benchmark Dataset</label>
                     <input
                       type="text"
                       placeholder="e.g. ChestX-ray14 / Custom Annotated (5k samples)"
@@ -1159,7 +1384,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     className="px-5 py-2 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md"
                   >
                     <Eye className="w-4 h-4" />
-                    Preview Proposal
+                    Preview Blueprint
                   </button>
                 </div>
               </form>
@@ -1189,11 +1414,11 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     <p className="font-bold text-gray-800 mt-0.5">{formData.dataset}</p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                    <span className="text-[10px] font-black uppercase text-gray-400 block">Student Team</span>
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Student Authors</span>
                     <p className="font-bold text-gray-800 mt-0.5">{formData.teamMembers || 'TBD'}</p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
-                    <span className="text-[10px] font-black uppercase text-gray-400 block">Guide Supervisor</span>
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Faculty Mentor</span>
                     <p className="font-bold text-gray-800 mt-0.5">{formData.guideName}</p>
                   </div>
                 </div>
@@ -1217,7 +1442,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     onClick={() => handleAddSubmit()}
                     className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 cursor-pointer"
                   >
-                    {isSubmitting ? 'Publishing...' : 'Confirm & Publish to Live Portal'}
+                    {isSubmitting ? 'Publishing...' : 'Confirm & Publish Blueprint'}
                   </button>
                 </div>
               </div>
