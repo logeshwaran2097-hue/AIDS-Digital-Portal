@@ -616,37 +616,26 @@ export default function LoginPage() {
             animStage >= 5 ? "opacity-80 scale-x-100" : "opacity-0 scale-x-0"
           )} />
 
-          {/* Stage 6: VSB AI&DS Hero Badge & Department Name */}
+          {/* Stage 6: Prominent Digital Portal of AI&DS Master Title */}
           <div className={cn(
-            "space-y-1 transition-all duration-700 ease-out transform",
+            "space-y-2 transition-all duration-700 ease-out transform",
             animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            {/* HERO VSB AI&DS BADGE */}
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-2xl bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] text-white shadow-[0_8px_20px_-4px_rgba(7,26,65,0.4)] border border-cyan-400/40 hover:scale-105 transition-transform duration-300">
-              <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
-              <span className="text-sm sm:text-base font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-white to-cyan-300 drop-shadow-xs">
-                VSB AI&amp;DS
+            {/* MASTER APP TITLE HERO PILL */}
+            <div className="inline-flex items-center gap-2.5 px-6 py-2 rounded-2xl bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] text-white shadow-[0_12px_28px_-4px_rgba(7,26,65,0.45)] border-2 border-cyan-400/60 hover:scale-105 transition-transform duration-300">
+              <Cpu className="w-5 h-5 text-cyan-300 animate-pulse shrink-0" />
+              <span className="text-base sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-white to-cyan-200 drop-shadow-md">
+                Digital Portal of AI&amp;DS
               </span>
-              <Sparkles className="w-3.5 h-3.5 text-[#E7B93E]" />
+              <Sparkles className="w-4 h-4 text-[#E7B93E] shrink-0" />
             </div>
 
-            <h2 className="text-[11px] sm:text-sm font-black leading-tight">
-              <span className="block text-slate-500 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
-              <span className="block font-black shimmer-sapphire-cyan text-xs sm:text-base">
+            <h2 className="text-xs sm:text-sm font-bold leading-tight">
+              <span className="block text-slate-500 text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider mb-0.5">Department of</span>
+              <span className="block font-black text-[#1557C0] text-xs sm:text-base tracking-wide">
                 ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE
               </span>
             </h2>
-          </div>
-
-          {/* Stage 7: Digital Portal of AI&DS Badge */}
-          <div className={cn(
-            "pt-0.5 flex items-center justify-center transition-all duration-700 ease-out transform",
-            animStage >= 7 ? "opacity-100 scale-100" : "opacity-0 scale-75"
-          )}>
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-0.5 rounded-full bg-slate-900/90 text-cyan-300 text-[9px] sm:text-[10px] font-bold shadow-xs border border-cyan-500/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>Digital Portal of AI&amp;DS</span>
-            </span>
           </div>
         </div>
       </div>
