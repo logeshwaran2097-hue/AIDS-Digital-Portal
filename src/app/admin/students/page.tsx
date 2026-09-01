@@ -4,6 +4,8 @@ import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminStudentsView, StudentRecord } from './components/AdminStudentsView'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 export default async function AdminStudentsPage() {
   const session = await requireRoleSession(['admin'])

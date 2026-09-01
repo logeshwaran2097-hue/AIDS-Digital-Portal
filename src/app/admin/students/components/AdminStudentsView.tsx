@@ -85,11 +85,33 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     } catch {}
   }
 
+  const fetchStudents = async () => {
+    try {
+      const res = await fetch('/api/students')
+      const data = await res.json()
+      if (data.success && Array.isArray(data.students)) {
+        setStudents(data.students)
+      }
+    } catch (err) {
+      console.error('Error fetching students:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   useEffect(() => {
+    if (initialStudents && initialStudents.length > 0) {
+      setStudents(initialStudents)
+    }
+    fetchStudents()
     fetchProfileRequests()
-    const interval = setInterval(fetchProfileRequests, 5000)
+
+    const interval = setInterval(() => {
+      fetchStudents()
+      fetchProfileRequests()
+    }, 4000)
     return () => clearInterval(interval)
-  }, [])
+  }, [initialStudents])
 
   const handleReviewRequest = async (id: string, action: 'approve' | 'reject') => {
     setProcessingRequestId(id)
@@ -148,21 +170,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-
-  const fetchStudents = async () => {
-    setIsLoading(true)
-    try {
-      const res = await fetch('/api/students')
-      const data = await res.json()
-      if (data.success && Array.isArray(data.students)) {
-        setStudents(data.students)
-      }
-    } catch (err) {
-      console.error('Error fetching students:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   // Form state
   const [formData, setFormData] = useState({

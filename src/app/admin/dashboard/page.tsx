@@ -5,6 +5,8 @@ import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminDashboardView, AdminDashboardData } from './components/AdminDashboardView'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 export default async function AdminDashboardPage() {
   const session = await requireRoleSession(['admin'])

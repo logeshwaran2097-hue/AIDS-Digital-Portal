@@ -244,6 +244,25 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [labSemesterFilter, setLabSemesterFilter] = useState<string>('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
+  const fetchFaculty = async () => {
+    try {
+      const res = await fetch('/api/faculty')
+      const data = await res.json()
+      if (data.success && Array.isArray(data.faculty)) {
+        setFacultyList(data.faculty)
+      }
+    } catch {}
+  }
+
+  useEffect(() => {
+    if (initialFaculty && initialFaculty.length > 0) {
+      setFacultyList(initialFaculty)
+    }
+    fetchFaculty()
+    const interval = setInterval(fetchFaculty, 4000)
+    return () => clearInterval(interval)
+  }, [initialFaculty])
+
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedFaculty, setSelectedFaculty] = useState<FacultyRecord | null>(null)
