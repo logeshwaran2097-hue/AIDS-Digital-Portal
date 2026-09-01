@@ -1,0 +1,23 @@
+{
+	"appId": "in.edu.vsb.aidsportal",
+	"appName": "VSB AI & DS Portal",
+	"webDir": "out",
+	"bundledWebRuntime": false,
+	"server": {
+		"url": "https://vsb-aids.vercel.app",
+		"cleartext": true
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 2000,
+			"backgroundColor": "#071A3D",
+			"showSpinner": true,
+			"spinnerColor": "#F4C430"
+		}
+	},
+	"android": {
+		"allowMixedContent": true,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": true
+	}
+}
