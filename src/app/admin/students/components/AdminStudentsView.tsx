@@ -12,6 +12,7 @@ import {
   Trash2,
   CheckCircle2,
   Eye,
+  EyeOff,
   X,
   Mail,
   Phone,
@@ -146,6 +147,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const fetchStudents = async () => {
     setIsLoading(true)
@@ -1176,18 +1178,41 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Temporary Password *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    name="student_password_entry"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#1455D9] font-mono font-medium text-[#071A3D]"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-[#071A3D]">
+                      Temporary Password *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-[11px] text-[#1455D9] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      {showPassword ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" /> Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3.5 h-3.5" /> Show
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      autoComplete="new-password"
+                      name="student_password_entry"
+                      placeholder="e.g. Student@123 or your choice"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#1455D9] font-mono font-medium text-[#071A3D]"
+                    />
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-1">
+                    You can decide any password. The student will use this to log in immediately.
+                  </p>
                 </div>
               </div>
 
