@@ -375,23 +375,21 @@ export function AdminReportsView({
     },
   ]
 
-  // 5 Clean Categories for Bar Chart (Explicitly Named: Total Students, Absents, ML, OD, Presents)
+  // 4 Clean Attendance Categories for Bar Chart (Absents, Medical Leave, On-Duty, Presents)
   const verticalBarCategories = useMemo(() => {
     if (chartMode === 'students') {
       return [
-        { label: 'Category A', title: 'Total Students', short: 'Total Students', value: summary.totalStudents, unit: 'Students', color: '#DC2626' }, // Red
-        { label: 'Category B', title: 'Absents (A)', short: 'Absents (A)', value: summary.shortageCount, unit: 'Students', color: '#EA580C' }, // Orange - Explicitly Absents (A)
-        { label: 'Category C', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.mlClaimantsCount, unit: 'Students', color: '#EAB308' }, // Yellow
-        { label: 'Category D', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.odClaimantsCount, unit: 'Students', color: '#16A34A' }, // Green
-        { label: 'Category E', title: 'Presents (P)', short: 'Presents (P)', value: summary.eligibleCount, unit: 'Students', color: '#2563EB' }, // Blue
+        { label: 'Category A', title: 'Absents (A)', short: 'Absents (A)', value: summary.shortageCount, unit: 'Students', color: '#DC2626' }, // Red
+        { label: 'Category B', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.mlClaimantsCount, unit: 'Students', color: '#EAB308' }, // Yellow
+        { label: 'Category C', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.odClaimantsCount, unit: 'Students', color: '#16A34A' }, // Green
+        { label: 'Category D', title: 'Presents (P)', short: 'Presents (P)', value: summary.eligibleCount, unit: 'Students', color: '#2563EB' }, // Blue
       ]
     } else {
       return [
-        { label: 'Category A', title: 'Total Working Days', short: 'Total Days', value: summary.totalWorking, unit: 'Days', color: '#DC2626' }, // Red
-        { label: 'Category B', title: 'Absents (A)', short: 'Absents (A)', value: summary.avgAbsentDays, unit: 'Days', color: '#EA580C' }, // Orange
-        { label: 'Category C', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.avgMLDays, unit: 'Days', color: '#EAB308' }, // Yellow
-        { label: 'Category D', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.avgODDays, unit: 'Days', color: '#16A34A' }, // Green
-        { label: 'Category E', title: 'Presents (P)', short: 'Presents (P)', value: summary.avgPresentDays, unit: 'Days', color: '#2563EB' }, // Blue
+        { label: 'Category A', title: 'Absents (A)', short: 'Absents (A)', value: summary.avgAbsentDays, unit: 'Days', color: '#DC2626' }, // Red
+        { label: 'Category B', title: 'Medical (ML)', short: 'Medical (ML)', value: summary.avgMLDays, unit: 'Days', color: '#EAB308' }, // Yellow
+        { label: 'Category C', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: summary.avgODDays, unit: 'Days', color: '#16A34A' }, // Green
+        { label: 'Category D', title: 'Presents (P)', short: 'Presents (P)', value: summary.avgPresentDays, unit: 'Days', color: '#2563EB' }, // Blue
       ]
     }
   }, [chartMode, summary])
@@ -566,7 +564,7 @@ export function AdminReportsView({
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Live breakdown: <strong>Total Students</strong>, <strong>Absents (A)</strong>, <strong>Medical (ML)</strong>, <strong>On-Duty (OD)</strong> &amp; <strong>Presents (P)</strong>
+              Live breakdown: <strong>Absents (A)</strong>, <strong>Medical (ML)</strong>, <strong>On-Duty (OD)</strong> &amp; <strong>Presents (P)</strong>
             </p>
           </div>
 
@@ -591,8 +589,8 @@ export function AdminReportsView({
           </div>
         </div>
 
-        {/* Legend Box with 5 Categories (Category B is Absents (A)) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 bg-gray-50/80 p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 text-xs">
+        {/* Legend Box with 4 Clean Categories (Absents, ML, OD, Presents) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 bg-gray-50/80 p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 text-xs">
           {verticalBarCategories.map((cat, idx) => (
             <div key={idx} className="flex items-center gap-1.5">
               <span

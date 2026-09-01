@@ -452,13 +452,12 @@ export function generateAttendanceBarGraphPDF(options: {
   doc.setTextColor(7, 26, 61)
   doc.text('Bar Chart', chartBoxX + 8, chartBoxY + 10)
 
-  // 5 Clean Categories
+  // 4 Clean Attendance Categories (Absents, ML, OD, Presents)
   const barCategories = [
-    { label: 'Category A', title: 'Total Students', short: 'Total Students', value: options.totalStudents, color: [225, 29, 72] }, // Red
-    { label: 'Category B', title: 'Absents (A)', short: 'Absents (A)', value: options.totalAbsents, color: [249, 115, 22] }, // Orange
-    { label: 'Category C', title: 'Medical (ML)', short: 'Medical (ML)', value: options.totalMLs, color: [245, 158, 11] }, // Yellow
-    { label: 'Category D', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: options.totalODs, color: [16, 185, 129] }, // Green
-    { label: 'Category E', title: 'Presents (P)', short: 'Presents (P)', value: options.totalPresents, color: [37, 99, 235] }, // Blue
+    { label: 'Category A', title: 'Absents (A)', short: 'Absents (A)', value: options.totalAbsents, color: [225, 29, 72] }, // Red
+    { label: 'Category B', title: 'Medical (ML)', short: 'Medical (ML)', value: options.totalMLs, color: [245, 158, 11] }, // Yellow
+    { label: 'Category C', title: 'On-Duty (OD)', short: 'On-Duty (OD)', value: options.totalODs, color: [16, 185, 129] }, // Green
+    { label: 'Category D', title: 'Presents (P)', short: 'Presents (P)', value: options.totalPresents, color: [37, 99, 235] }, // Blue
   ]
 
   // Top-Right Legend Box
