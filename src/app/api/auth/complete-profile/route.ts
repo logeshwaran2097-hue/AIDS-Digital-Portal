@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
         ...(name && name.trim() ? { name: name.trim() } : {}),
         ...(normalizedEmail ? { email: normalizedEmail } : {}),
         ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
+        ...(body.profileImage ? { profileImage: body.profileImage } : {}),
         ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
         emailVerified: true,
         updatedAt: new Date(),
