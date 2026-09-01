@@ -62,23 +62,20 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
       'Name',
       'Email',
       'Password',
-      'DateOfBirth',
       'Year',
       'Semester',
       'Section',
       'Batch',
       'Phone',
       'ParentPhone',
+      'DateOfBirth',
       'BloodGroup',
-      'ResidencyStatus',
-      'CGPA',
-      'Attendance',
     ]
 
     const sampleRows = [
-      '922524104001,Aakash Kumar,922524104001@student.vsb.edu.in,Student@123,2006-05-14,2,4,A,2024-2028,9876543210,9876543211,O+,Day Scholar,8.65,94%',
-      '922524104002,Abirami Sundaram,922524104002@student.vsb.edu.in,Student@123,2006-08-22,2,4,A,2024-2028,9876543212,9876543213,B+,Hostel,9.10,96%',
-      '922523104001,Balaji Mani,922523104001@student.vsb.edu.in,Student@123,2005-03-10,3,6,B,2023-2027,9876543214,9876543215,A+,College Bus,8.20,89%',
+      '922524104001,Aakash Kumar,922524104001@student.vsb.edu.in,Student@123,2,4,A,2024-2028,9876543210,9876543211,2006-05-14,O+',
+      '922524104002,Abirami Sundaram,922524104002@student.vsb.edu.in,Student@123,2,4,A,2024-2028,9876543212,9876543213,2006-08-22,B+',
+      '922523104001,Balaji Mani,922523104001@student.vsb.edu.in,Student@123,3,6,B,2023-2027,9876543214,9876543215,2005-03-10,A+',
     ]
 
     const csvContent = [headers.join(','), ...sampleRows].join('\n')

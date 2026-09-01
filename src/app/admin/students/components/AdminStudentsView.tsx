@@ -1218,18 +1218,94 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Student Phone <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
                   <input
                     type="text"
                     autoComplete="off"
                     name="student_phone_entry"
+                    placeholder="e.g. +91 98765 43210"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Parent / Guardian Phone <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    name="student_parent_phone_entry"
+                    placeholder="e.g. +91 98765 43211"
+                    value={(formData as any).parentPhone || ''}
+                    onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value } as any)}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Year *</label>
+                  <select
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value={1}>Year 1</option>
+                    <option value={2}>Year 2</option>
+                    <option value={3}>Year 3</option>
+                    <option value={4}>Year 4</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester *</label>
+                  <select
+                    value={formData.semester}
+                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                      <option key={sem} value={sem}>
+                        Sem {sem}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Section *</label>
+                  <select
+                    value={formData.section}
+                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  >
+                    <option value="A">Sec A</option>
+                    <option value="B">Sec B</option>
+                    <option value="C">Sec C</option>
+                    <option value="D">Sec D</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    placeholder="e.g. 2024-2028"
+                    value={formData.batch}
+                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Date of Birth <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
                   <input
                     type="date"
                     autoComplete="off"
@@ -1238,11 +1314,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Blood Group</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Blood Group <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
                   <select
                     value={formData.bloodGroup}
                     onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
@@ -1259,121 +1334,24 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="AB -ve">AB -ve</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Residency Status</label>
-                  <select
-                    value={formData.residencyStatus}
-                    onChange={(e) => setFormData({ ...formData, residencyStatus: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="">Select Residency Status</option>
-                    <option value="Day Scholar">Day Scholar</option>
-                    <option value="Hosteller">Hosteller</option>
-                    <option value="Foreign Student">Foreign Student</option>
-                  </select>
-                </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
-                  <select
-                    value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                      <option key={sem} value={sem}>
-                        Sem {sem}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value={1}>Year 1</option>
-                    <option value={2}>Year 2</option>
-                    <option value={3}>Year 3</option>
-                    <option value={4}>Year 4</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    value={formData.batch}
-                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Section</label>
-                  <select
-                    value={formData.section}
-                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="A">Sec A</option>
-                    <option value="B">Sec B</option>
-                    <option value="C">Sec C</option>
-                    <option value="D">Sec D</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">
+                  Class Advisor / Mentor Name <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  autoComplete="off"
+                  placeholder="e.g. Dr. S. K. Vijay Anand"
+                  value={formData.advisorName}
+                  onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
+                />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Class Advisor / Mentor Name
-                  </label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    value={formData.advisorName}
-                    onChange={(e) => setFormData({ ...formData, advisorName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">CGPA</label>
-                  <input
-                    type="text"
-                    value={formData.cgpa}
-                    onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                    placeholder="e.g. 8.84 / 10.0"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Attendance</label>
-                  <input
-                    type="text"
-                    value={formData.attendance}
-                    onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                    placeholder="e.g. 92.5%"
-                  />
-                </div>
+              <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-[11px] text-blue-800">
+                💡 <strong>Note:</strong> Residency status, hostel/bus details, and address can be filled directly by the student after logging in.
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
