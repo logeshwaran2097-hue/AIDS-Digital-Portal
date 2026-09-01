@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Award,
   UserCheck,
+  Eye,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -126,7 +127,21 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
   const [filterGuide, setFilterGuide] = useState<'ALL' | 'MY_PROJECTS'>('ALL')
   const [selectedProject, setSelectedProject] = useState<FacultyProjectItem | null>(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
+  const [assignModalMode, setAssignModalMode] = useState<'edit' | 'preview'>('edit')
   const [modalTab, setModalTab] = useState<'specs' | 'daily_updates'>('specs')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Form State for Assign Modal
+  const [assignFormData, setAssignFormData] = useState({
+    title: '',
+    domain: 'Computer Vision & Deep Learning',
+    technologies: 'Python, PyTorch, FastAPI, OpenCV',
+    guideName: 'Dr. S. Karthik (Associate Professor)',
+    teamMembers: '',
+    problemStatement: '',
+    proposedSolution: 'Multi-tier deep learning architecture deployed on edge hardware.',
+    dataset: 'Custom Annotated Dataset',
+  })
 
   // Feedback State
   const [feedbackLogId, setFeedbackLogId] = useState<string | null>(null)
@@ -257,6 +272,53 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
     }
   }
 
+  // Final submit after preview
+  const handleFinalAssignSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: assignFormData.title,
+          domain: assignFormData.domain,
+          technologies: assignFormData.technologies,
+          problemStatement: assignFormData.problemStatement,
+          proposedSolution: assignFormData.proposedSolution,
+          dataset: assignFormData.dataset,
+          teamMembers: assignFormData.teamMembers,
+          guideName: assignFormData.guideName,
+          year: 4,
+          status: 'Active & Supervised',
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success && data.project) {
+        setProjects([data.project, ...projects])
+        setShowAssignModal(false)
+        setAssignModalMode('edit')
+        setAssignFormData({
+          title: '',
+          domain: 'Computer Vision & Deep Learning',
+          technologies: 'Python, PyTorch, FastAPI, OpenCV',
+          guideName: 'Dr. S. Karthik (Associate Professor)',
+          teamMembers: '',
+          problemStatement: '',
+          proposedSolution: 'Multi-tier deep learning architecture deployed on edge hardware.',
+          dataset: 'Custom Annotated Dataset',
+        })
+        toast.success('🎉 Project blueprint assigned & published!')
+      } else {
+        toast.error('Failed to assign project')
+      }
+    } catch {
+      toast.error('Network error creating project')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleDownloadDossier = (p: FacultyProjectItem) => {
     const updates = p.dailyUpdates || parseDailyUpdates(p.futureScope)
     generateAndDownloadPDF({
@@ -308,7 +370,10 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
         </div>
 
         <button
-          onClick={() => setShowAssignModal(true)}
+          onClick={() => {
+            setAssignModalMode('edit')
+            setShowAssignModal(true)
+          }}
           className="px-5 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
         >
           <Plus className="w-4 h-4" /> Propose / Assign Blueprint
@@ -615,94 +680,208 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
         </div>
       )}
 
-      {/* Propose / Assign Project Modal */}
+      {/* ========================================================================= */}
+      {/* TWO-STEP PROPOSE / ASSIGN PROJECT MODAL (EDIT -> PREVIEW & CONFIRM)       */}
+      {/* ========================================================================= */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-start justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-gray-200 my-8">
+            <div className="bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white p-6 flex items-start justify-between">
               <div>
-                <h3 className="text-base font-bold text-[#071A3D]">Assign Capstone Project Blueprint</h3>
-                <p className="text-xs text-gray-500">Create research project title and allocate student team</p>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#22C7E8] text-[#071A3D] text-[10px] font-black uppercase">
+                  Faculty Project Registry
+                </span>
+                <h3 className="text-xl font-black mt-1">
+                  {assignModalMode === 'edit'
+                    ? 'Propose & Assign Capstone Blueprint'
+                    : 'Preview & Confirm Blueprint Assignment'}
+                </h3>
+                <p className="text-xs text-gray-300 mt-0.5">
+                  {assignModalMode === 'edit'
+                    ? 'Create research project title, assign student cohort, and configure technical domain.'
+                    : 'Verify blueprint and assigned student team before publishing to live portal.'}
+                </p>
               </div>
-              <button onClick={() => setShowAssignModal(false)} className="p-1 text-gray-400 hover:text-gray-700">✕</button>
+              <button
+                onClick={() => setShowAssignModal(false)}
+                className="p-2 hover:bg-white/10 rounded-xl text-gray-300 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault()
-                toast.success('Project blueprint assigned to research team!')
-                setShowAssignModal(false)
-              }}
-              className="space-y-3 text-xs"
-            >
-              <div>
-                <label className="font-bold text-gray-700 block mb-1">Project Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Edge AI for Real-Time Solar Panel Defect Detection"
-                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
+            {assignModalMode === 'edit' ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!assignFormData.title.trim()) {
+                    toast.error('Please enter a project title')
+                    return
+                  }
+                  setAssignModalMode('preview')
+                }}
+                className="p-6 space-y-4 max-h-[70vh] overflow-y-auto"
+              >
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">Domain</label>
-                  <select className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold">
-                    <option>Computer Vision</option>
-                    <option>Natural Language Processing</option>
-                    <option>Generative AI</option>
-                    <option>Healthcare AI</option>
-                    <option>Deep Learning</option>
-                    <option>Blockchain &amp; Security</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="font-bold text-gray-700 block mb-1">Faculty Guide</label>
+                  <label className="font-bold text-gray-700 block mb-1 text-xs">
+                    Project Title <span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
-                    defaultValue="Dr. S. Karthik (Associate Professor)"
-                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                    required
+                    placeholder="e.g. Edge AI for Real-Time Solar Panel Defect Detection"
+                    value={assignFormData.title}
+                    onChange={(e) => setAssignFormData({ ...assignFormData, title: e.target.value })}
+                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="font-bold text-gray-700 block mb-1">Allocated Team Members</label>
-                <input
-                  type="text"
-                  placeholder="e.g. K. Aishwarya (23AD001), R. Deepak (23AD002)"
-                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs"
-                  required
-                />
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Domain</label>
+                    <select
+                      value={assignFormData.domain}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, domain: e.target.value })}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    >
+                      <option>Computer Vision &amp; Deep Learning</option>
+                      <option>Natural Language Processing &amp; GenAI</option>
+                      <option>Healthcare &amp; Biomedical AI</option>
+                      <option>Robotics &amp; Edge AI</option>
+                      <option>Blockchain &amp; Security</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Faculty Supervisor</label>
+                    <input
+                      type="text"
+                      value={assignFormData.guideName}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, guideName: e.target.value })}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="font-bold text-gray-700 block mb-1">Problem Statement</label>
-                <textarea
-                  rows={3}
-                  placeholder="Brief summary of research problem and technical goals..."
-                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs"
-                  required
-                />
-              </div>
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1 text-xs">
+                    Allocated Team Members (Names &amp; Reg Nos)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. K. Aishwarya (23AD001), R. Deepak (23AD002)"
+                    value={assignFormData.teamMembers}
+                    onChange={(e) => setAssignFormData({ ...assignFormData, teamMembers: e.target.value })}
+                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    required
+                  />
+                </div>
 
-              <div className="pt-3 border-t flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAssignModal(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5]"
-                >
-                  Assign Blueprint
-                </button>
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1 text-xs">Problem Statement</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Brief summary of research problem and technical goals..."
+                    value={assignFormData.problemStatement}
+                    onChange={(e) => setAssignFormData({ ...assignFormData, problemStatement: e.target.value })}
+                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Technologies (comma-separated)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Python, PyTorch, FastAPI, OpenCV"
+                      value={assignFormData.technologies}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, technologies: e.target.value })}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Dataset</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Solar PV Thermal Dataset"
+                      value={assignFormData.dataset}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, dataset: e.target.value })}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAssignModal(false)}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-200 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview Blueprint
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* PREVIEW CONFIRMATION VIEW */
+              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9] text-white text-[10px] font-black uppercase">
+                      Year 4 · Capstone
+                    </span>
+                    <span className="text-xs font-bold text-blue-700">{assignFormData.domain}</span>
+                  </div>
+                  <h3 className="text-base font-black text-[#071A3D]">{assignFormData.title}</h3>
+                  <p className="text-xs text-gray-700 font-mono">
+                    Problem: {assignFormData.problemStatement || 'Not specified'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Tech Stack</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{assignFormData.technologies}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Dataset</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{assignFormData.dataset}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Assigned Team</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{assignFormData.teamMembers || 'TBD'}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Faculty Supervisor</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{assignFormData.guideName}</p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-gray-200 flex justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAssignModalMode('edit')}
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                  >
+                    ← Back to Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={handleFinalAssignSubmit}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    {isSubmitting ? 'Assigning...' : 'Confirm & Assign Blueprint'}
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

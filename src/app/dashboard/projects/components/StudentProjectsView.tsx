@@ -22,6 +22,8 @@ import {
   Award,
   UserCheck,
   X,
+  Eye,
+  Check,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -137,6 +139,7 @@ export function StudentProjectsView({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProject, setSelectedProject] = useState<StudentProjectRecord | null>(null)
   const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [submitModalMode, setSubmitModalMode] = useState<'edit' | 'preview'>('edit')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [modalTab, setModalTab] = useState<'specs' | 'daily_updates'>('specs')
 
@@ -196,12 +199,13 @@ export function StudentProjectsView({
     domain: 'Computer Vision & Deep Learning',
     technologies: 'Python, PyTorch, FastAPI, React',
     teamMembers: defaultMemberText,
+    guideName: 'Dr. S. Karthik, Associate Professor',
     description: '',
     problemStatement: '',
     proposedSolution: '',
-    dataset: 'Custom Annotated Dataset',
+    dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
     results: 'Initial prototype running on local GPU',
-    documentation: '',
+    documentation: 'https://github.com/vsb-aids/capstone-project',
   })
 
   const domains = useMemo(() => {
@@ -307,13 +311,8 @@ export function StudentProjectsView({
     }
   }
 
-  const handleSubmitProposal = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.title.trim()) {
-      toast.error('Please enter a project title.')
-      return
-    }
-
+  // Final Publish Proposal after preview
+  const handleFinalSubmitProposal = async () => {
     setIsSubmitting(true)
     try {
       const res = await fetch('/api/projects', {
@@ -332,7 +331,7 @@ export function StudentProjectsView({
           teamMembers: formData.teamMembers,
           year: 2,
           status: 'Active & Supervised',
-          guideName: 'Dr. S. Karthik, Associate Professor',
+          guideName: formData.guideName || 'Dr. S. Karthik, Associate Professor',
           guideEmail: 'karthik@vsb.edu.in',
         }),
       })
@@ -341,19 +340,21 @@ export function StudentProjectsView({
       if (data.success && data.project) {
         setProjectsList([data.project, ...projectsList])
         setShowSubmitModal(false)
+        setSubmitModalMode('edit')
         setFormData({
           title: '',
           domain: 'Computer Vision & Deep Learning',
           technologies: 'Python, PyTorch, FastAPI, React',
           teamMembers: defaultMemberText,
+          guideName: 'Dr. S. Karthik, Associate Professor',
           description: '',
           problemStatement: '',
           proposedSolution: '',
-          dataset: 'Custom Annotated Dataset',
+          dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
           results: 'Initial prototype running on local GPU',
-          documentation: '',
+          documentation: 'https://github.com/vsb-aids/capstone-project',
         })
-        toast.success('🎉 Project blueprint submitted successfully!')
+        toast.success('🎉 Project blueprint published to Live Portal!')
       } else {
         toast.error(data.message || 'Failed to submit proposal.')
       }
@@ -417,7 +418,10 @@ export function StudentProjectsView({
         </div>
 
         <button
-          onClick={() => setShowSubmitModal(true)}
+          onClick={() => {
+            setSubmitModalMode('edit')
+            setShowSubmitModal(true)
+          }}
           className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-colors shadow-md shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" /> + Submit Project Blueprint
@@ -538,7 +542,10 @@ export function StudentProjectsView({
             Click &quot;+ Submit Project Blueprint&quot; to register your team&apos;s capstone or mini-project.
           </p>
           <button
-            onClick={() => setShowSubmitModal(true)}
+            onClick={() => {
+              setSubmitModalMode('edit')
+              setShowSubmitModal(true)
+            }}
             className="px-6 py-3 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
           >
             <Plus className="w-4 h-4" /> + Submit Blueprint
@@ -827,110 +834,235 @@ export function StudentProjectsView({
       )}
 
       {/* ========================================================================= */}
-      {/* SUBMIT PROPOSAL MODAL                                                     */}
+      {/* TWO-STEP SUBMIT PROPOSAL MODAL (EDIT -> PREVIEW & CONFIRM)                */}
       {/* ========================================================================= */}
       {showSubmitModal && (
         <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 my-8">
-            <div className="flex items-center justify-between border-b pb-3">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-gray-200 my-8">
+            <div className="bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white p-6 flex items-start justify-between">
               <div>
-                <h3 className="text-base font-bold text-[#071A3D]">Submit Capstone Project Blueprint</h3>
-                <p className="text-[11px] text-gray-400">Department R&amp;D and Student Reference Hub</p>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#22C7E8] text-[#071A3D] text-[10px] font-black uppercase">
+                  Project Blueprint Registry
+                </span>
+                <h2 className="text-xl font-black mt-1">
+                  {submitModalMode === 'edit'
+                    ? 'Submit Capstone Project Blueprint'
+                    : 'Preview & Confirm Reference Blueprint'}
+                </h2>
+                <p className="text-xs text-gray-300 mt-0.5">
+                  {submitModalMode === 'edit'
+                    ? 'Enter technical details, dataset, and architecture before reviewing your submission.'
+                    : 'Verify reference blueprint details before committing to the institutional database.'}
+                </p>
               </div>
-              <button onClick={() => setShowSubmitModal(false)} className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer">
-                ✕
+              <button
+                onClick={() => setShowSubmitModal(false)}
+                className="p-2 hover:bg-white/10 rounded-xl text-gray-300 hover:text-white transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSubmitProposal} className="space-y-3 text-xs max-h-[70vh] overflow-y-auto pr-1">
-              <div>
-                <label className="font-bold text-gray-600 block mb-1">Project Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Edge AI for Agricultural Drones"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
+            {submitModalMode === 'edit' ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!formData.title.trim()) {
+                    toast.error('Please enter a project title')
+                    return
+                  }
+                  setSubmitModalMode('preview')
+                }}
+                className="p-6 space-y-4 max-h-[70vh] overflow-y-auto"
+              >
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1 text-xs">
+                    Project Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Edge AI for Agricultural Drones"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
 
-              <div>
-                <label className="font-bold text-gray-600 block mb-1">Domain</label>
-                <select
-                  value={formData.domain}
-                  onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="Computer Vision & Deep Learning">Computer Vision &amp; Deep Learning</option>
-                  <option value="Large Language Models & GenAI">Large Language Models &amp; GenAI</option>
-                  <option value="Healthcare & Biomedical AI">Healthcare &amp; Biomedical AI</option>
-                  <option value="Robotics & Autonomous Edge AI">Robotics &amp; Edge AI</option>
-                  <option value="Blockchain & Secure AI Systems">Blockchain &amp; Secure AI</option>
-                </select>
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Research Domain</label>
+                    <select
+                      value={formData.domain}
+                      onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    >
+                      <option value="Computer Vision & Deep Learning">Computer Vision &amp; Deep Learning</option>
+                      <option value="Large Language Models & GenAI">Large Language Models &amp; GenAI</option>
+                      <option value="Healthcare & Biomedical AI">Healthcare &amp; Biomedical AI</option>
+                      <option value="Robotics & Autonomous Edge AI">Robotics &amp; Edge AI</option>
+                      <option value="Blockchain & Secure AI Systems">Blockchain &amp; Secure AI</option>
+                    </select>
+                  </div>
 
-              <div>
-                <label className="font-bold text-gray-600 block mb-1">Technologies (Comma separated)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. PyTorch, YOLOv8, FastAPI, React"
-                  value={formData.technologies}
-                  onChange={(e) => setFormData({ ...formData, technologies: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Faculty Research Mentor</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Dr. S. Karthik, Associate Professor"
+                      value={formData.guideName}
+                      onChange={(e) => setFormData({ ...formData, guideName: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="font-bold text-gray-600 block mb-1">Team Members (Names &amp; Reg Nos)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Logeshwaran G (92252524185)"
-                  value={formData.teamMembers}
-                  onChange={(e) => setFormData({ ...formData, teamMembers: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Technologies (comma-separated)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. PyTorch, YOLOv8, FastAPI, React"
+                      value={formData.technologies}
+                      onChange={(e) => setFormData({ ...formData, technologies: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
 
-              <div>
-                <label className="font-bold text-gray-600 block mb-1">Problem Statement</label>
-                <textarea
-                  rows={2}
-                  placeholder="Describe problem statement and motivation..."
-                  value={formData.problemStatement}
-                  onChange={(e) => setFormData({ ...formData, problemStatement: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Student Authors / Team Members</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Logeshwaran G (92252524185)"
+                      value={formData.teamMembers}
+                      onChange={(e) => setFormData({ ...formData, teamMembers: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="font-bold text-gray-600 block mb-1">Proposed Solution &amp; Methodology</label>
-                <textarea
-                  rows={2}
-                  placeholder="Proposed architecture and pipeline..."
-                  value={formData.proposedSolution}
-                  onChange={(e) => setFormData({ ...formData, proposedSolution: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1 text-xs">Problem Statement</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Describe research problem, industry bottleneck, and motivation..."
+                    value={formData.problemStatement}
+                    onChange={(e) => setFormData({ ...formData, problemStatement: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
 
-              <div className="pt-3 border-t flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowSubmitModal(false)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5] shadow-md cursor-pointer disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Blueprint'}
-                </button>
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1 text-xs">Proposed Solution &amp; Methodology</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Proposed architecture, deep learning models, and pipeline..."
+                    value={formData.proposedSolution}
+                    onChange={(e) => setFormData({ ...formData, proposedSolution: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Dataset</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Custom Annotated Dataset / Kaggle"
+                      value={formData.dataset}
+                      onChange={(e) => setFormData({ ...formData, dataset: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">GitHub / Code Repository URL</label>
+                    <input
+                      type="url"
+                      placeholder="https://github.com/vsb-aids/..."
+                      value={formData.documentation}
+                      onChange={(e) => setFormData({ ...formData, documentation: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSubmitModal(false)}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview Blueprint
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* PREVIEW CONFIRMATION VIEW */
+              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9] text-white text-[10px] font-black uppercase">
+                      Year 2 · Sem 4 ({activeBatch})
+                    </span>
+                    <span className="text-xs font-bold text-blue-700">{formData.domain}</span>
+                  </div>
+                  <h3 className="text-base font-black text-[#071A3D]">{formData.title}</h3>
+                  <p className="text-xs text-gray-700 font-mono">
+                    Problem: {formData.problemStatement || 'Not specified'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Tech Stack</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{formData.technologies}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Dataset</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{formData.dataset}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Student Authors</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{formData.teamMembers || 'TBD'}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Faculty Mentor</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{formData.guideName}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+                  <span className="text-[10px] font-black uppercase text-gray-400 block">Repo Link</span>
+                  <p className="font-mono text-blue-600 truncate mt-0.5">{formData.documentation || 'N/A'}</p>
+                </div>
+
+                <div className="pt-3 border-t border-gray-200 flex justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSubmitModalMode('edit')}
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                  >
+                    ← Back to Edit
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={handleFinalSubmitProposal}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    {isSubmitting ? 'Publishing...' : 'Confirm & Publish Blueprint'}
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}

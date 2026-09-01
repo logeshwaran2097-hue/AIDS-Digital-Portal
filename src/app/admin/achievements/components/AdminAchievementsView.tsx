@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -20,8 +20,10 @@ import {
   Star,
   Layers,
   GraduationCap,
+  Check,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import toast from 'react-hot-toast'
 
 export interface AchievementRecord {
   id: string
@@ -41,6 +43,7 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [addModalMode, setAddModalMode] = useState<'edit' | 'preview'>('edit')
   const [selectedAch, setSelectedAch] = useState<AchievementRecord | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
 
@@ -54,6 +57,34 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
     awardName: '1st Prize & Gold Medal',
     prizeAmount: '',
   })
+
+  // Real-time synchronization
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch('/api/achievements', { cache: 'no-store' })
+        const data = await res.json()
+        if (data.success && Array.isArray(data.achievements)) {
+          setAchievements(
+            data.achievements.map((a: any) => ({
+              id: a.id,
+              title: a.title,
+              description: a.description,
+              recipientName: a.recipientName || 'B.Tech AI & DS Student',
+              category: a.category || 'Hackathon & Competitions',
+              year: a.year || 3,
+              date: a.date ? new Date(a.date).toISOString().split('T')[0] : '2026-03-15',
+              awardName: a.awardName || 'Distinction',
+              prizeAmount: a.prizeAmount || '',
+            }))
+          )
+        }
+      } catch {}
+    }
+
+    const interval = setInterval(fetchLatest, 4000)
+    return () => clearInterval(interval)
+  }, [])
 
   const yearCadres = [
     { year: 1, name: 'Year I', label: '1st Year Freshman Honors' },
@@ -99,44 +130,38 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
           heading: '2. CATALOG OF HONOREES & DISTINCTIONS',
           body: filteredAchievements.map(
             (a, idx) =>
-              `${idx + 1}. [Year ${a.year || 'All'}] "${a.title}" — Honoree: ${a.recipientName} | Category: ${a.category} | Award: ${a.awardName || 'Gold Medal'} (${a.date})`
+              `${idx + 1}. [Year ${a.year || 3}] "${a.title}" — Honoree: ${a.recipientName} | Award: ${a.awardName || 'Distinction'} ${a.prizeAmount ? `(${a.prizeAmount})` : ''} | Date: ${a.date}`
           ),
         },
       ],
-      fileName: `VSB_AI_DS_Achievements_${selectedYear === 'ALL' ? 'HallOfFame' : `Year_${selectedYear}`}_2026`,
+      fileName: `VSB_AI_DS_Hall_of_Fame_${selectedYear === 'ALL' ? 'All_Years' : `Year_${selectedYear}`}_2026`,
     })
   }
 
   const handleDownloadCertificate = (ach: AchievementRecord) => {
     generateAndDownloadPDF({
-      title: 'CERTIFICATE OF INSTITUTIONAL EXCELLENCE',
-      subtitle: 'V.S.B. Engineering College · Department of AI & DS · Honors Board',
-      author: 'Principal & Head of the Department',
-      category: 'Official Distinction & Honor Certificate',
+      title: 'CERTIFICATE OF MERIT & DISTINCTION',
+      subtitle: 'Department of Artificial Intelligence & Data Science · V.S.B. Engineering College',
+      author: 'Office of the Principal & Head of Department',
+      category: 'Institutional Certificate of Honor',
       sections: [
         {
-          heading: `THIS IS PROUDLY CONFERRED TO: ${ach.recipientName.toUpperCase()}`,
+          heading: 'HONOR CITATION',
           body: [
-            `In recognition of outstanding triumph: "${ach.title}"`,
-            `Academic Cadre: Year ${ach.year || 3}`,
-            `Category of Distinction: ${ach.category}`,
-            `Award & Recognition: ${ach.awardName || '1st Place & Gold Medal'} ${ach.prizeAmount ? `(${ach.prizeAmount})` : ''}`,
+            `This official distinction certifies that ${ach.recipientName} has achieved:`,
+            `"${ach.awardName || 'Excellence Award'}" in ${ach.title}.`,
+            `Category: ${ach.category} | Academic Cadre: Year ${ach.year || 3}`,
+            ach.prizeAmount ? `Cash Award: ${ach.prizeAmount}` : 'Conferred with High Commendation',
             `Date of Distinction: ${ach.date}`,
-            ach.description || 'Demonstrated exemplary technological innovation, research excellence and leadership representing VSB Engineering College at the national level.',
+            ach.description || 'Demonstrated technological brilliance, team leadership, and innovative research solving complex engineering challenges.',
           ],
         },
       ],
-      fileName: `Certificate_${ach.recipientName.replace(/\s+/g, '_')}`,
+      fileName: `Honor_Certificate_${ach.recipientName.replace(/\s+/g, '_')}_2026`,
     })
   }
 
-  const handleAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.title || !formData.recipientName) {
-      alert('Please fill in Title and Recipient Name')
-      return
-    }
-
+  const handleFinalAddSubmit = async () => {
     const newAch: AchievementRecord = {
       id: 'ach_' + Date.now(),
       title: formData.title,
@@ -149,8 +174,18 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
       prizeAmount: formData.prizeAmount,
     }
 
+    try {
+      await fetch('/api/achievements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAch),
+      })
+    } catch {}
+
     setAchievements([newAch, ...achievements])
     setIsAddModalOpen(false)
+    setAddModalMode('edit')
+    toast.success('🎉 Achievement published to live Hall of Fame!')
     setFormData({
       title: '',
       description: '',
@@ -163,9 +198,13 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
     })
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this achievement record?')) {
+      try {
+        await fetch(`/api/achievements?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+      } catch {}
       setAchievements(achievements.filter((a) => a.id !== id))
+      toast.success('Achievement deleted.')
     }
   }
 
@@ -179,398 +218,361 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Department Hall of Fame
+              Student Accolades &amp; Honors
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Year-Wise Laurels &amp; Awards</span>
+            <span className="text-xs text-gray-300 font-medium">· Year-Wise Hall of Fame</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Student &amp; Faculty Achievements</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">Department Hall of Fame</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Official record of Smart India Hackathon wins, IEEE best papers &amp; coding championships
+            Celebrating {achievements.length} national hackathons, IEEE paper prizes, and academic distinctions
           </p>
         </div>
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
           <button
             onClick={handleExportPDF}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
           >
-            <Download className="w-4 h-4" /> Export Hall of Fame (PDF)
+            <Download className="w-4 h-4 text-[#F4C430]" />
+            Export Hall of Fame PDF
           </button>
           <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
+            onClick={() => {
+              setAddModalMode('edit')
+              setIsAddModalOpen(true)
+            }}
+            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#18A0B8] text-[#071A3D] text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-lg shadow-[#22C7E8]/20"
           >
-            <Plus className="w-4 h-4" /> + Add Achievement
+            <Plus className="w-4 h-4" />
+            Publish Achievement
           </button>
         </div>
       </div>
 
-      {/* YEAR-WISE INTERACTIVE SELECTOR CARDS */}
-      <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm space-y-3">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-[#F4C430]" />
-            <h2 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
-              Select Academic Cadre (Year-Wise)
-            </h2>
-          </div>
-          <button
-            onClick={() => setSelectedYear('ALL')}
-            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedYear === 'ALL'
-                ? 'bg-[#071A3D] text-white shadow-xs'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Show All 4 Years ({achievements.length})
-          </button>
-        </div>
+      {/* Year-Wise Tab Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {yearCadres.map((cadre) => {
+          const isSelected = selectedYear === cadre.year
+          const count = getYearCount(cadre.year)
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {yearCadres.map((yc) => {
-            const count = getYearCount(yc.year)
-            const isSelected = selectedYear === yc.year
-            return (
+          return (
+            <button
+              key={cadre.year}
+              onClick={() => setSelectedYear(isSelected ? 'ALL' : cadre.year)}
+              className={`p-4 rounded-2xl border-2 text-left transition-all duration-200 cursor-pointer flex flex-col justify-between relative overflow-hidden ${
+                isSelected
+                  ? 'border-[#1455D9] bg-blue-50/60 shadow-md ring-2 ring-blue-500/20'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+              }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span
+                    className={`text-xs font-black uppercase px-2 py-0.5 rounded-lg ${
+                      isSelected ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {cadre.name}
+                  </span>
+                  <span className="text-xs font-bold text-gray-500">{count} Accolades</span>
+                </div>
+                <h3 className="font-black text-sm text-[#071A3D] line-clamp-1">{cadre.label}</h3>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Search & Filter Strip */}
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="relative w-full md:w-96">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search by student, award, event name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9] focus:border-transparent outline-none bg-gray-50"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+            <span className="text-xs font-bold text-gray-500 whitespace-nowrap">Filter:</span>
+            {['ALL', 'Hackathon', 'Research', 'Coding'].map((cat) => (
               <button
-                key={yc.year}
-                onClick={() => setSelectedYear(isSelected ? 'ALL' : yc.year)}
-                className={`p-4 rounded-2xl border transition-all text-left cursor-pointer flex flex-col justify-between ${
-                  isSelected
-                    ? 'bg-gradient-to-b from-[#1455D9] to-[#071A3D] text-white border-[#1455D9] shadow-md ring-2 ring-[#1455D9]/30 scale-102'
-                    : 'bg-gray-50/70 hover:bg-blue-50/60 border-gray-200 text-gray-700'
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                  categoryFilter === cat
+                    ? 'bg-[#1455D9] text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                <div>
-                  <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md inline-block mb-1 ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    {yc.name}
-                  </span>
-                  <h3 className="text-xs font-black line-clamp-1">{yc.label}</h3>
-                </div>
-
-                <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between">
-                  <span className={`text-xs font-black ${isSelected ? 'text-[#F4C430]' : 'text-[#1455D9]'}`}>
-                    {count} {count === 1 ? 'Distinction' : 'Distinctions'}
-                  </span>
-                  <span className="text-[10px] opacity-70 font-semibold">View ➔</span>
-                </div>
+                {cat === 'ALL' ? 'All Categories' : cat}
               </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Metrics Row (Dynamic) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Total Honors</p>
-          <p className="text-2xl font-black text-[#071A3D] mt-0.5">{filteredAchievements.length}</p>
-          <p className="text-[10px] text-[#1455D9] font-medium mt-1">
-            {selectedYear === 'ALL' ? 'All 4 Years' : `Year ${selectedYear} Cohort`}
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Hackathon Honors</p>
-          <p className="text-2xl font-black text-amber-700 mt-0.5">{hackathonCount}</p>
-          <p className="text-[10px] text-amber-700 font-medium mt-1">SIH &amp; National Marathons</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Research Distinctions</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">{researchCount}</p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">IEEE &amp; Scopus Publications</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Cadre Scope</p>
-          <p className="text-lg font-black text-emerald-700 mt-0.5">
-            {selectedYear === 'ALL' ? 'All 4 Batches' : `Year ${selectedYear} Scholars`}
-          </p>
-          <p className="text-[10px] text-emerald-700 font-medium mt-1">AI &amp; DS Hall of Fame</p>
-        </div>
-      </div>
-
-      {/* Search & Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search achievement, recipient name, award..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20"
-          />
-        </div>
-
-        <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto">
-          {/* Year Filter Dropdown */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-black uppercase text-gray-400">Year:</span>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
-              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
-            >
-              <option value="ALL">All Academic Years</option>
-              <option value={1}>Year I (Freshman)</option>
-              <option value={2}>Year II (Sophomore)</option>
-              <option value={3}>Year III (Junior)</option>
-              <option value={4}>Year IV (Senior)</option>
-            </select>
+            ))}
           </div>
+        </CardContent>
+      </Card>
 
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+      {/* Achievements Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredAchievements.map((ach) => (
+          <Card
+            key={ach.id}
+            className="rounded-3xl border border-gray-200 hover:shadow-lg transition-all duration-300 bg-white overflow-hidden flex flex-col justify-between group relative"
           >
-            <option value="ALL">All Categories</option>
-            <option value="Hackathon">Hackathons &amp; Competitions</option>
-            <option value="Research">Research &amp; Publications</option>
-            <option value="Coding">Coding Contests</option>
-            <option value="Academic">Academic Merits</option>
-          </select>
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-100 text-[#1455D9]">
+                  Year {ach.year || 3}
+                </span>
+                <span className="text-xs text-gray-400 font-bold">{ach.date}</span>
+              </div>
 
-          <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
-            Showing {filteredAchievements.length} of {achievements.length} Honors
-          </span>
-        </div>
+              <div>
+                <h3 className="font-black text-base text-[#071A3D] group-hover:text-[#1455D9] transition-colors leading-snug">
+                  {ach.title}
+                </h3>
+                <p className="text-xs font-bold text-green-700 mt-1 flex items-center gap-1">
+                  <Medal className="w-3.5 h-3.5" />
+                  {ach.awardName || 'Excellence Distinction'}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 rounded-2xl p-3 text-xs space-y-1">
+                <p className="font-bold text-[#071A3D]">Honoree: {ach.recipientName}</p>
+                {ach.prizeAmount && <p className="text-emerald-700 font-bold">Prize: {ach.prizeAmount}</p>}
+                <p className="text-gray-500 text-[11px] line-clamp-2">{ach.description}</p>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedAch(ach)
+                    setIsViewModalOpen(true)
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <Eye className="w-3.5 h-3.5" /> View Details
+                </button>
+                <button
+                  onClick={() => handleDelete(ach.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-600 rounded-lg cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Achievements Cards Grid / Empty State */}
-      {filteredAchievements.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {filteredAchievements.map((a) => (
-            <div
-              key={a.id}
-              className="p-6 rounded-3xl bg-white border border-gray-200 hover:border-[#1455D9]/40 hover:shadow-xl transition-all duration-200 flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black shrink-0 shadow-xs">
-                      <Trophy className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black text-amber-800 px-2 py-0.5 rounded-lg bg-amber-100 uppercase">
-                          {a.category}
-                        </span>
-                        <span className="text-[10px] font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
-                          Year {a.year || 3}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <span className="font-mono text-xs font-black text-green-700 bg-green-50 px-2.5 py-1 rounded-xl border border-green-200 shrink-0">
-                    {a.awardName || '1st Prize'}
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-base text-[#071A3D] line-clamp-2">{a.title}</h3>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{a.description}</p>
-                </div>
-
-                <div className="space-y-1.5 text-xs text-gray-600 bg-gray-50 p-3.5 rounded-2xl border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400 font-medium">Recipient / Team:</span>
-                    <span className="text-[#071A3D] font-bold">{a.recipientName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400 font-medium">Date:</span>
-                    <span className="text-[#1455D9] font-bold">{a.date}</span>
-                  </div>
-                  {a.prizeAmount && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-400 font-medium">Prize Grant:</span>
-                      <span className="text-emerald-700 font-black">{a.prizeAmount}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
-                <button
-                  onClick={() => handleDownloadCertificate(a)}
-                  className="px-3.5 py-1.5 rounded-xl bg-blue-50 text-[#1455D9] hover:bg-blue-100 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" /> Download Certificate
-                </button>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => {
-                      setSelectedAch(a)
-                      setIsViewModalOpen(true)
-                    }}
-                    className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                    title="View Details"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(a.id)}
-                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center shadow-xs">
-          <Trophy className="w-12 h-12 text-amber-400 mx-auto mb-3" />
-          <h3 className="font-bold text-base text-[#071A3D] mb-1">No Achievements in Current Selection</h3>
-          <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
-            {selectedYear !== 'ALL'
-              ? `No student or faculty distinctions recorded for Year ${selectedYear} yet.`
-              : 'The Hall of Fame is clean and ready for real competition and research triumphs.'}
-          </p>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-6 py-3 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
-          >
-            <Plus className="w-4 h-4" /> + Add First Achievement
-          </button>
-        </div>
-      )}
-
-      {/* MODAL: ADD ACHIEVEMENT */}
+      {/* ========================================================================= */}
+      {/* TWO-STEP PUBLISH ACHIEVEMENT MODAL (EDIT -> PREVIEW & CONFIRM)            */}
+      {/* ========================================================================= */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden border border-gray-200 my-8">
+            <div className="bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white p-6 flex items-start justify-between">
               <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Register New Distinction</h3>
-                <p className="text-xs text-gray-500">Department Hall of Fame Entry</p>
+                <span className="px-2.5 py-0.5 rounded-full bg-[#22C7E8] text-[#071A3D] text-[10px] font-black uppercase">
+                  Hall of Fame Registry
+                </span>
+                <h2 className="text-xl font-black mt-1">
+                  {addModalMode === 'edit' ? 'Publish Student Achievement' : 'Preview & Confirm Distinction'}
+                </h2>
+                <p className="text-xs text-gray-300 mt-0.5">
+                  {addModalMode === 'edit'
+                    ? 'Enter accolade details, student team, and prize before reviewing.'
+                    : 'Verify accolade details before committing to the institutional Hall of Fame.'}
+                </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                className="p-2 hover:bg-white/10 rounded-xl text-gray-300 hover:text-white transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Achievement / Event Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Smart India Hackathon (SIH 2026) 1st Prize Winners"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            {addModalMode === 'edit' ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!formData.title || !formData.recipientName) {
+                    toast.error('Title and recipient name are required')
+                    return
+                  }
+                  setAddModalMode('preview')
+                }}
+                className="p-6 space-y-4 max-h-[70vh] overflow-y-auto"
+              >
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value={1}>Year I (Freshman)</option>
-                    <option value={2}>Year II (Sophomore)</option>
-                    <option value={3}>Year III (Junior)</option>
-                    <option value={4}>Year IV (Senior)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="Hackathon & Competitions">Hackathon &amp; Competitions</option>
-                    <option value="Research & Publications">Research &amp; Publications</option>
-                    <option value="Coding Contests">Coding Contests</option>
-                    <option value="Academic Merits">Academic Merits</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Recipient Name / Student Team *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. K. Aishwarya &amp; Team Quantum"
-                  value={formData.recipientName}
-                  onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Award / Honor Conferred</label>
+                  <label className="block font-bold text-gray-700 mb-1 text-xs">Achievement / Event Title *</label>
                   <input
                     type="text"
-                    placeholder="e.g. 1st Prize &amp; Gold Medal"
-                    value={formData.awardName}
-                    onChange={(e) => setFormData({ ...formData, awardName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    required
+                    placeholder="e.g. Smart India Hackathon (SIH 2026) 1st Prize Winners"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
                   />
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1 text-xs">Academic Year</label>
+                    <select
+                      value={formData.year}
+                      onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-bold text-[#1455D9] bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    >
+                      <option value={1}>Year I (Freshman)</option>
+                      <option value={2}>Year II (Sophomore)</option>
+                      <option value={3}>Year III (Junior)</option>
+                      <option value={4}>Year IV (Senior)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1 text-xs">Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    >
+                      <option value="Hackathon & Competitions">Hackathon &amp; Competitions</option>
+                      <option value="Research & Publications">Research &amp; Publications</option>
+                      <option value="Coding Contests">Coding Contests</option>
+                      <option value="Academic Merits">Academic Merits</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Prize Cash Amount (Optional)</label>
+                  <label className="block font-bold text-gray-700 mb-1 text-xs">Recipient Name / Student Team *</label>
                   <input
                     type="text"
-                    placeholder="e.g. ₹1,00,000 Cash Grant"
-                    value={formData.prizeAmount}
-                    onChange={(e) => setFormData({ ...formData, prizeAmount: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    required
+                    placeholder="e.g. K. Aishwarya &amp; Team Quantum"
+                    value={formData.recipientName}
+                    onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Date of Achievement</label>
-                <input
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1 text-xs">Award / Honor Conferred</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 1st Prize &amp; Gold Medal"
+                      value={formData.awardName}
+                      onChange={(e) => setFormData({ ...formData, awardName: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 mb-1 text-xs">Prize Cash Amount (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. ₹1,00,000 Cash Grant"
+                      value={formData.prizeAmount}
+                      onChange={(e) => setFormData({ ...formData, prizeAmount: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Description / Summary</label>
-                <textarea
-                  rows={2}
-                  placeholder="Context, problem solved, host institution..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1 text-xs">Date of Achievement</label>
+                  <input
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                  />
+                </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md"
-                >
-                  Save Achievement
-                </button>
+                <div>
+                  <label className="block font-bold text-gray-700 mb-1 text-xs">Description / Summary</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Context, problem solved, host institution..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-3 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Preview Distinction
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* PREVIEW CONFIRMATION VIEW */
+              <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9] text-white text-[10px] font-black uppercase">
+                      Year {formData.year} · {formData.category}
+                    </span>
+                    <span className="text-xs font-bold text-amber-900">{formData.date}</span>
+                  </div>
+                  <h3 className="text-base font-black text-[#071A3D]">{formData.title}</h3>
+                  <p className="text-xs text-green-700 font-bold flex items-center gap-1">
+                    <Medal className="w-4 h-4" /> {formData.awardName || 'Excellence Distinction'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Honoree / Team</span>
+                    <p className="font-bold text-gray-800 mt-0.5">{formData.recipientName}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Prize Amount</span>
+                    <p className="font-bold text-emerald-700 mt-0.5">{formData.prizeAmount || 'Certificate of Distinction'}</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs">
+                  <span className="text-[10px] font-black uppercase text-gray-400 block">Citation / Summary</span>
+                  <p className="text-gray-700 mt-0.5">{formData.description || 'Demonstrated exemplary innovation.'}</p>
+                </div>
+
+                <div className="pt-3 border-t flex justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAddModalMode('edit')}
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                  >
+                    ← Back to Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleFinalAddSubmit}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" /> Confirm &amp; Publish to Hall of Fame
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}
