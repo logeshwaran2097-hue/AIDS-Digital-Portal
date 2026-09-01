@@ -149,21 +149,21 @@ export function PWAInstall() {
     <>
       {/* ── Bottom install banner (Android Chrome & Desktop) ── */}
       {showBanner && (
-        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[470px] z-[99999] bg-[#071A41] text-white p-4 sm:p-5 rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_rgba(7,26,65,0.9)] border-2 border-cyan-400 flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[490px] z-[99999] bg-white text-[#071A3D] p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-[0_15px_45px_rgba(7,26,65,0.18)] border-2 border-[#1455D9] flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="relative w-12 h-12 rounded-2xl p-0.5 bg-gradient-to-tr from-[#E7B93E] via-yellow-200 to-cyan-400 shadow-md shrink-0">
-              <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden p-0.5">
-                <Image src="/icon-192.png" alt="Digital Portal of AI&DS" width={42} height={42} className="object-contain" />
+            <div className="relative w-11 h-11 rounded-xl p-0.5 bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] shadow-sm shrink-0">
+              <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center overflow-hidden p-0.5">
+                <Image src="/icon-192.png" alt="Digital Portal of AI&DS" width={38} height={38} className="object-contain" />
               </div>
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <p className="text-sm sm:text-base font-black text-white leading-tight tracking-tight drop-shadow-xs truncate">
+                <p className="text-xs sm:text-sm font-black text-[#071A3D] leading-tight whitespace-nowrap">
                   Install Digital Portal of AI&amp;DS
                 </p>
-                <Sparkles className="w-4 h-4 text-[#F4C430] shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-[#E7B93E] shrink-0" />
               </div>
-              <p className="text-[11px] sm:text-xs text-cyan-300 font-bold tracking-wide truncate mt-0.5">
+              <p className="text-[10px] sm:text-[11px] text-gray-500 font-semibold truncate mt-0.5">
                 V.S.B. Engineering College · Offline Ready
               </p>
             </div>
@@ -172,17 +172,17 @@ export function PWAInstall() {
             <button
               onClick={handleInstall}
               disabled={installing}
-              className="px-4 py-2.5 bg-gradient-to-r from-[#F4C430] via-amber-400 to-[#E5A910] text-[#071A3D] text-xs sm:text-sm font-black rounded-xl hover:brightness-110 active:scale-95 transition-all shadow-[0_4px_16px_rgba(244,196,48,0.6)] cursor-pointer flex items-center gap-1.5 disabled:opacity-60 shrink-0 border border-amber-200"
+              className="px-3.5 py-2 bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black rounded-xl active:scale-95 transition-all shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-60 shrink-0"
             >
-              <Download className="w-4 h-4 stroke-[3]" />
+              <Download className="w-3.5 h-3.5 stroke-[2.5]" />
               <span>{installing ? 'Installing…' : 'Install'}</span>
             </button>
             <button
               onClick={() => setShowBanner(false)}
-              className="p-2 text-gray-300 hover:text-white rounded-xl hover:bg-white/15 transition-colors cursor-pointer shrink-0"
+              className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
               aria-label="Dismiss"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>

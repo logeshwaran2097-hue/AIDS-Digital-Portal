@@ -621,13 +621,13 @@ export default function LoginPage() {
             "space-y-2 transition-all duration-700 ease-out transform",
             animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            {/* MASTER APP TITLE HERO PILL */}
-            <div className="inline-flex items-center gap-2.5 px-6 py-2 rounded-2xl bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] text-white shadow-[0_12px_28px_-4px_rgba(7,26,65,0.45)] border-2 border-cyan-400/60 hover:scale-105 transition-transform duration-300">
-              <Cpu className="w-5 h-5 text-cyan-300 animate-pulse shrink-0" />
-              <span className="text-base sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-white to-cyan-200 drop-shadow-md">
+            {/* PRESTIGIOUS ROYAL SAPPHIRE & GOLD APP TITLE BADGE */}
+            <div className="inline-flex items-center gap-2.5 px-6 py-2 rounded-2xl bg-gradient-to-r from-[#1455D9] via-[#1E60E6] to-[#0F44B8] text-white shadow-[0_10px_25px_-3px_rgba(20,85,217,0.4)] border-2 border-[#E7B93E] hover:scale-105 transition-all duration-300">
+              <Cpu className="w-5 h-5 text-[#FFF3B8] animate-pulse shrink-0" />
+              <span className="text-base sm:text-2xl font-black tracking-wider text-white drop-shadow-sm">
                 Digital Portal of AI&amp;DS
               </span>
-              <Sparkles className="w-4 h-4 text-[#E7B93E] shrink-0" />
+              <Sparkles className="w-4 h-4 text-[#F4C430] shrink-0" />
             </div>
 
             <h2 className="text-xs sm:text-sm font-bold leading-tight">
