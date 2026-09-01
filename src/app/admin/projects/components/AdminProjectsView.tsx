@@ -225,9 +225,9 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
   // Daily Update Logging Form State
   const [showLogForm, setShowLogForm] = useState(false)
   const [newLogData, setNewLogData] = useState({
-    postedBy: 'Student Team Contributor',
+    postedBy: '',
     taskCompleted: '',
-    blockers: 'None',
+    blockers: '',
     nextTarget: '',
     commitUrl: '',
     progressPercentage: 80,
@@ -368,12 +368,12 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         toast.success('Daily progress update submitted successfully!')
         setShowLogForm(false)
         setNewLogData({
-          postedBy: 'Student Team Contributor',
+          postedBy: '',
           taskCompleted: '',
-          blockers: 'None',
+          blockers: '',
           nextTarget: '',
           commitUrl: '',
-          progressPercentage: 85,
+          progressPercentage: 80,
         })
       } else {
         toast.error('Failed to save daily update.')

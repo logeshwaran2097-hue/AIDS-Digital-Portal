@@ -231,7 +231,7 @@ export function StudentProjectsView({
   const [newLogData, setNewLogData] = useState({
     postedBy: registerNumber ? `${studentName} (${registerNumber})` : studentName,
     taskCompleted: '',
-    blockers: 'None',
+    blockers: '',
     nextTarget: '',
     commitUrl: '',
     progressPercentage: 80,
@@ -351,10 +351,10 @@ export function StudentProjectsView({
         setNewLogData({
           postedBy: registerNumber ? `${studentName} (${registerNumber})` : studentName,
           taskCompleted: '',
-          blockers: 'None',
+          blockers: '',
           nextTarget: '',
           commitUrl: '',
-          progressPercentage: 85,
+          progressPercentage: 80,
         })
       } else {
         toast.error('Failed to submit daily update.')

@@ -133,12 +133,12 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
     name: '',
     description: '',
     category: 'Workshop',
-    targetSemester: 'sem3',
+    targetSemester: 'ALL',
     registrationUrl: '',
-    date: '2026-09-20',
-    time: '09:30 AM - 04:30 PM',
-    venue: 'AI & DS Academic Block',
-    organizer: 'Department of AI & DS',
+    date: new Date().toISOString().split('T')[0],
+    time: '',
+    venue: '',
+    organizer: '',
   })
   const [modalMode, setModalMode] = useState<'edit' | 'preview'>('edit')
 
@@ -319,12 +319,12 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
         name: '',
         description: '',
         category: 'Workshop',
-        targetSemester: 'sem3',
+        targetSemester: 'ALL',
         registrationUrl: '',
-        date: '2026-09-20',
-        time: '09:30 AM - 04:30 PM',
-        venue: 'AI & DS Academic Block',
-        organizer: 'Department of AI & DS',
+        date: new Date().toISOString().split('T')[0],
+        time: '',
+        venue: '',
+        organizer: '',
       })
       toast.success(`Event "${newEv.name}" published for ${semLabel}!`)
     } catch (err) {

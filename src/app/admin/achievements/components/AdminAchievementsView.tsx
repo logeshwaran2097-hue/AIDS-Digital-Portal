@@ -54,7 +54,7 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
     category: 'Hackathon & Competitions',
     year: 3,
     date: new Date().toISOString().split('T')[0],
-    awardName: '1st Prize & Gold Medal',
+    awardName: '',
     prizeAmount: '',
   })
 
@@ -193,7 +193,7 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
       category: 'Hackathon & Competitions',
       year: 3,
       date: new Date().toISOString().split('T')[0],
-      awardName: '1st Prize & Gold Medal',
+      awardName: '',
       prizeAmount: '',
     })
   }
