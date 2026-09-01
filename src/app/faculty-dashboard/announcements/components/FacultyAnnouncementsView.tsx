@@ -47,7 +47,12 @@ export function FacultyAnnouncementsView({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [createSuccess, setCreateSuccess] = useState(false)
+  const [createStep, setCreateStep] = useState<'edit' | 'preview'>('edit')
+  const [formTitle, setFormTitle] = useState('')
+  const [formCategory, setFormCategory] = useState('Academic')
+  const [formTarget, setFormTarget] = useState('All Students')
+  const [formContent, setFormContent] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [broadcastSuccess, setBroadcastSuccess] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
@@ -98,13 +103,49 @@ export function FacultyAnnouncementsView({
     setTimeout(() => setBroadcastSuccess(null), 3000)
   }
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setCreateSuccess(true)
-    setTimeout(() => {
-      setCreateSuccess(false)
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/announcements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: formTitle,
+          content: formContent,
+          category: formCategory,
+          target: formTarget,
+          createdByName: 'Dr. S. Karthik (Faculty Advisor)',
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success && data.announcement) {
+        setAnnouncements((prev) => [
+          {
+            id: data.announcement.id,
+            title: data.announcement.title,
+            content: data.announcement.content,
+            category: data.announcement.category,
+            target: data.announcement.target,
+            createdByName: data.announcement.createdByName,
+            isPublished: true,
+            createdAt: new Date(),
+          },
+          ...prev,
+        ])
+      }
+      setBroadcastSuccess(`Successfully Published Circular for ${formTarget}!`)
+      setTimeout(() => setBroadcastSuccess(null), 3500)
       setShowCreateModal(false)
-    }, 2000)
+      setCreateStep('edit')
+      setFormTitle('')
+      setFormContent('')
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -269,59 +310,170 @@ export function FacultyAnnouncementsView({
       {/* Create Announcement Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between border-b pb-3">
               <div>
-                <h3 className="text-base font-bold text-[#071A3D]">Issue Department Circular</h3>
-                <p className="text-xs text-gray-500">Publish notice to students and faculty notice board</p>
+                <h3 className="text-base font-bold text-[#071A3D]">
+                  {createStep === 'preview' ? 'Verify & Confirm Official Circular' : 'Issue Department Circular'}
+                </h3>
+                <p className="text-xs text-gray-500">
+                  {createStep === 'preview' ? 'Review before dispatching to student notice boards' : 'Publish notice to students and faculty notice board'}
+                </p>
               </div>
-              <button onClick={() => setShowCreateModal(false)} className="p-1 text-gray-400 hover:text-gray-700">✕</button>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false)
+                  setCreateStep('edit')
+                }}
+                className="p-1 text-gray-400 hover:text-gray-700"
+              >
+                ✕
+              </button>
             </div>
 
-            {createSuccess ? (
-              <div className="py-6 text-center space-y-2">
-                <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-6 h-6" />
+            {createStep === 'preview' ? (
+              /* High-Fidelity Official Circular Preview */
+              <div className="space-y-4 animate-in fade-in duration-200">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/50 via-white to-amber-50/30 border-2 border-blue-200 shadow-md space-y-3">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[#1455D9] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                        🏛️
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black text-[#071A3D] uppercase tracking-wider">V.S.B. Engineering College</p>
+                        <p className="text-[10px] text-gray-500 font-semibold">Department of Artificial Intelligence & Data Science</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-[#1455D9] bg-blue-100 px-2 py-0.5 rounded-full">
+                      FACULTY PREVIEW
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-[#1455D9] border border-blue-200">
+                      🏷️ {formCategory}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      👥 {formTarget}
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-base text-[#071A3D] leading-snug">
+                    {formTitle || 'Untitled Circular'}
+                  </h3>
+
+                  <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50 p-4 rounded-xl border border-gray-200 font-medium">
+                    {formContent || 'No circular content entered.'}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 font-medium border-t border-gray-100">
+                    <span>Authorized by: <strong className="text-[#071A3D]">Dr. S. Karthik (Faculty Advisor)</strong></span>
+                    <span className="font-mono">Official Circular · V.S.B. AI &amp; DS</span>
+                  </div>
                 </div>
-                <h4 className="text-sm font-bold text-[#071A3D]">Circular Published!</h4>
-                <p className="text-xs text-gray-500">The notice is now active and pushed to student notifications.</p>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreateStep('edit')}
+                    className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    ← Back to Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateSubmit}
+                    disabled={submitting}
+                    className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white font-bold text-xs cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4" /> {submitting ? 'Publishing...' : '✓ Confirm & Publish Circular'}
+                  </button>
+                </div>
               </div>
             ) : (
-              <form onSubmit={handleCreateSubmit} className="space-y-3 text-xs">
+              /* Edit Form */
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!formTitle.trim() || !formContent.trim()) {
+                    alert('Please enter Circular Subject and Content')
+                    return
+                  }
+                  setCreateStep('preview')
+                }}
+                className="space-y-3 text-xs"
+              >
                 <div>
                   <label className="font-bold text-gray-700 block mb-1">Circular Subject / Title</label>
-                  <input type="text" placeholder="e.g. Schedule for Lab External Practical Examinations" className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" required />
+                  <input
+                    type="text"
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    placeholder="e.g. Schedule for Lab External Practical Examinations"
+                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs"
+                    required
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="font-bold text-gray-700 block mb-1">Category</label>
-                    <select className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold">
-                      <option>Academic</option>
-                      <option>Examinations</option>
-                      <option>Placements</option>
-                      <option>Symposium</option>
+                    <select
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                    >
+                      <option value="Academic">Academic</option>
+                      <option value="Examinations">Examinations</option>
+                      <option value="Placements">Placements</option>
+                      <option value="Symposium">Symposium</option>
                     </select>
                   </div>
                   <div>
                     <label className="font-bold text-gray-700 block mb-1">Target Audience</label>
-                    <select className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold">
-                      <option>All Students</option>
-                      <option>Year II (Sem 3)</option>
-                      <option>Year III (Sem 5)</option>
-                      <option>Placement Eligible</option>
+                    <select
+                      value={formTarget}
+                      onChange={(e) => setFormTarget(e.target.value)}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                    >
+                      <option value="All Students">All Students</option>
+                      <option value="Year II (Sem 3)">Year II (Sem 3)</option>
+                      <option value="Year III (Sem 5)">Year III (Sem 5)</option>
+                      <option value="Placement Eligible">Placement Eligible</option>
                     </select>
                   </div>
                 </div>
 
                 <div>
                   <label className="font-bold text-gray-700 block mb-1">Circular Content &amp; Instructions</label>
-                  <textarea rows={4} placeholder="Full notice details, instructions, room allocations, dates..." className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" required />
+                  <textarea
+                    rows={4}
+                    value={formContent}
+                    onChange={(e) => setFormContent(e.target.value)}
+                    placeholder="Full notice details, instructions, room allocations, dates..."
+                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs"
+                    required
+                  />
                 </div>
 
                 <div className="pt-3 border-t flex justify-end gap-2">
-                  <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Cancel</button>
-                  <button type="submit" className="px-5 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5]">Publish Circular</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setCreateStep('edit')
+                    }}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5]"
+                  >
+                    <span>👁️ Preview &amp; Confirm Notice</span>
+                  </button>
                 </div>
               </form>
             )}

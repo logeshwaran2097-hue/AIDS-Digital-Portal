@@ -135,6 +135,7 @@ export function AdminAnnouncementsView({
   const [targetFilter, setTargetFilter] = useState('ALL')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<'edit' | 'preview'>('edit')
   const [isLoading, setIsLoading] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -487,112 +488,189 @@ export function AdminAnnouncementsView({
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">
-                  Issue Official Department Circular
+                  {modalMode === 'preview' ? 'Verify & Confirm Official Circular' : 'Issue Official Department Circular'}
                 </h3>
-                <p className="text-xs text-gray-500">Instant multi-target broadcast across all 8 semesters</p>
+                <p className="text-xs text-gray-500">
+                  {modalMode === 'preview' ? 'Review before dispatching to student and staff portals' : 'Instant multi-target broadcast across all 8 semesters'}
+                </p>
               </div>
               <button
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={() => {
+                  setIsAddModalOpen(false)
+                  setModalMode('edit')
+                }}
                 className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Circular Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Schedule for Anna University End-Semester Practical Examinations"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
-                />
-              </div>
+            {modalMode === 'preview' ? (
+              /* High-Fidelity Official Circular Preview */
+              <div className="space-y-4 animate-in fade-in duration-200">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-50/50 via-white to-amber-50/30 border-2 border-[#1455D9]/20 shadow-md space-y-3">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[#1455D9] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                        🏛️
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black text-[#071A3D] uppercase tracking-wider">V.S.B. Engineering College</p>
+                        <p className="text-[10px] text-gray-500 font-semibold">Department of Artificial Intelligence & Data Science</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-[#1455D9] bg-blue-100 px-2 py-0.5 rounded-full">
+                      PREVIEW MODE
+                    </span>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Target Audience *</label>
-                  <select
-                    value={formData.target}
-                    onChange={(e) => setFormData({ ...formData, target: e.target.value, targetSpecific: '' })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D] bg-white"
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${getCategoryBadgeStyle(formData.category)}`}>
+                      {getCategoryLabel(formData.category)}
+                    </span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${getAudienceBadgeStyle(formData.target)}`}>
+                      👥 {getAudienceLabel(formData.target)}
+                    </span>
+                  </div>
+
+                  <h3 className="font-black text-base text-[#071A3D] leading-snug">
+                    {formData.title || 'Untitled Notice'}
+                  </h3>
+
+                  <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50 p-4 rounded-xl border border-gray-200 font-medium">
+                    {formData.content || 'No notice content entered.'}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 font-medium border-t border-gray-100">
+                    <span>Authorized by: <strong className="text-[#071A3D]">System Super Administrator</strong></span>
+                    <span className="font-mono">Ref: VSB/AIDS/CIR/2026</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalMode('edit')}
+                    className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
                   >
-                    {TARGET_AUDIENCE_OPTIONS.map((grp) => (
-                      <optgroup key={grp.group} label={grp.group}>
-                        {grp.options.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    ← Back to Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddSubmit}
+                    disabled={isLoading}
+                    className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold text-xs cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4" /> {isLoading ? 'Publishing to Database...' : '✓ Confirm & Publish Notice'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Edit Form */
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!formData.title.trim() || !formData.content.trim()) {
+                    toast.error('Please provide Title and Content')
+                    return
+                  }
+                  setModalMode('preview')
+                }}
+                className="space-y-4 text-xs"
+              >
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Circular Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Schedule for Anna University End-Semester Practical Examinations"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Target Audience *</label>
+                    <select
+                      value={formData.target}
+                      onChange={(e) => setFormData({ ...formData, target: e.target.value, targetSpecific: '' })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D] bg-white"
+                    >
+                      {TARGET_AUDIENCE_OPTIONS.map((grp) => (
+                        <optgroup key={grp.group} label={grp.group}>
+                          {grp.options.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Notice Category *</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D] bg-white"
+                    >
+                      {CIRCULAR_CATEGORIES.map((grp) => (
+                        <optgroup key={grp.group} label={grp.group}>
+                          {grp.options.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Target & Category Summary Preview */}
+                <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-[#1455D9] flex items-center justify-between text-[11px] font-bold">
+                  <span className="truncate">Recipient: <strong>{getAudienceLabel(formData.target)}</strong></span>
+                  <span className="font-extrabold shrink-0 ml-2 px-2 py-0.5 rounded-md bg-white border border-blue-200 text-[10px]">
+                    {getCategoryLabel(formData.category)}
+                  </span>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Notice Category *</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D] bg-white"
-                  >
-                    {CIRCULAR_CATEGORIES.map((grp) => (
-                      <optgroup key={grp.group} label={grp.group}>
-                        {grp.options.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                  <label className="block font-bold text-[#071A3D] mb-1">Circular Content *</label>
+                  <textarea
+                    rows={4}
+                    required
+                    placeholder="Detailed instructions, dates, deadlines and compliance notes..."
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                  />
                 </div>
-              </div>
 
-              {/* Target & Category Summary Preview */}
-              <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-[#1455D9] flex items-center justify-between text-[11px] font-bold">
-                <span className="truncate">Recipient: <strong>{getAudienceLabel(formData.target)}</strong></span>
-                <span className="font-extrabold shrink-0 ml-2 px-2 py-0.5 rounded-md bg-white border border-blue-200 text-[10px]">
-                  {getCategoryLabel(formData.category)}
-                </span>
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Circular Content *</label>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="Detailed instructions, dates, deadlines and compliance notes..."
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-1.5"
-                >
-                  <Send className="w-4 h-4" /> {isLoading ? 'Dispatching...' : 'Dispatch Notice to Database'}
-                </button>
-              </div>
-            </form>
+                <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-1.5"
+                  >
+                    <span>👁️ Preview & Confirm Notice</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

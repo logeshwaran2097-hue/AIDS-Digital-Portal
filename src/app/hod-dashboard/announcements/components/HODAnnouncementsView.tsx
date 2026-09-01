@@ -69,6 +69,7 @@ export function HODAnnouncementsView({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedAudienceFilter, setSelectedAudienceFilter] = useState('ALL')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [createStep, setCreateStep] = useState<'edit' | 'preview'>('edit')
   const [broadcastAlert, setBroadcastAlert] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -422,144 +423,223 @@ export function HODAnnouncementsView({
               <button onClick={() => setShowCreateModal(false)} className="p-1 text-gray-400 hover:text-gray-700">✕</button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} className="space-y-3.5 text-xs">
-              <div>
-                <label className="font-bold text-gray-700 block mb-1">Announcement Title / Subject</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Schedule for Academic Council Meeting / Lab External Review"
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#1455D9]/20"
-                  required
-                />
-              </div>
+            {createStep === 'preview' ? (
+              /* High-Fidelity HOD Official Circular Preview */
+              <div className="space-y-4 animate-in fade-in duration-200">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/50 via-white to-amber-50/30 border-2 border-indigo-200 shadow-md space-y-3">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-[#071A3D] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                        🏛️
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black text-[#071A3D] uppercase tracking-wider">V.S.B. Engineering College</p>
+                        <p className="text-[10px] text-gray-500 font-semibold">Office of Head of Department · AI & DS</p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
+                      HOD PREVIEW
+                    </span>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="font-bold text-gray-700 block mb-1">Category</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold"
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-800 border border-indigo-200">
+                      🏷️ {category}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-[#1455D9] border border-blue-200">
+                      👥 {targetType === 'STUDENTS' ? 'All Students' : targetType === 'FACULTY' ? 'All Faculty' : targetType === 'ALL' ? 'All Department' : targetType === 'PARTICULAR_FACULTY' ? `Specific Faculty: ${selectedFacultyId}` : `Specific Student: ${selectedStudentReg}`}
+                    </span>
+                    {priority === 'URGENT' && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-100 text-red-700 border border-red-200 animate-pulse">
+                        ⚠️ URGENT
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="font-black text-base text-[#071A3D] leading-snug">
+                    {title || 'Untitled Announcement'}
+                  </h3>
+
+                  <div className="text-xs text-gray-700 leading-relaxed whitespace-pre-line bg-gray-50 p-4 rounded-xl border border-gray-200 font-medium">
+                    {content || 'No directives entered.'}
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 font-medium border-t border-gray-100">
+                    <span>Authorized by: <strong className="text-[#071A3D]">Prof. Dr. V. Sundar (Head of Department)</strong></span>
+                    <span className="font-mono">Ref: VSB/HOD/2026</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreateStep('edit')}
+                    className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer"
                   >
-                    <option value="Academic">Academic</option>
-                    <option value="Examination">Examination</option>
-                    <option value="Placement">Placement</option>
-                    <option value="Administrative">Administrative</option>
-                    <option value="Disciplinary">Disciplinary</option>
-                    <option value="Symposium">Symposium &amp; Event</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="font-bold text-gray-700 block mb-1">Priority Level</label>
-                  <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-red-600"
+                    ← Back to Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCreateSubmit}
+                    disabled={submitting}
+                    className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white font-bold text-xs cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50"
                   >
-                    <option value="NORMAL">Normal Priority</option>
-                    <option value="URGENT">⚠️ Urgent / Critical Alert</option>
-                  </select>
+                    <Send className="w-4 h-4" /> {submitting ? 'Publishing...' : '✓ Confirm & Broadcast Circular'}
+                  </button>
                 </div>
               </div>
-
-              {/* Target Audience Selector */}
-              <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2.5">
-                <label className="font-bold text-[#071A3D] block text-xs">Target Recipient Scope</label>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {[
-                    { id: 'STUDENTS', label: '🎓 All Students' },
-                    { id: 'FACULTY', label: '📚 All Faculty' },
-                    { id: 'ALL', label: '🏛️ All Dept' },
-                    { id: 'PARTICULAR_FACULTY', label: '👨‍🏫 Specific Faculty' },
-                    { id: 'PARTICULAR_STUDENT', label: '🎯 Specific Student' },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTargetType(t.id as any)}
-                      className={cn(
-                        'px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer text-center',
-                        targetType === t.id
-                          ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
-                          : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                      )}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
+            ) : (
+              /* Edit Form */
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (!title.trim() || !content.trim()) {
+                    alert('Please fill in Title and Content')
+                    return
+                  }
+                  setCreateStep('preview')
+                }}
+                className="space-y-3.5 text-xs"
+              >
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Announcement Title / Subject</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Schedule for Academic Council Meeting / Lab External Review"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#1455D9]/20"
+                    required
+                  />
                 </div>
 
-                {/* Specific Faculty Selector */}
-                {targetType === 'PARTICULAR_FACULTY' && (
-                  <div className="pt-2 border-t border-blue-200/60 space-y-1 animate-in fade-in">
-                    <label className="font-bold text-purple-800 block text-[11px]">Select Specific Faculty Member:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">Category</label>
                     <select
-                      value={selectedFacultyId}
-                      onChange={(e) => setSelectedFacultyId(e.target.value)}
-                      className="w-full bg-white border border-purple-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold"
                     >
-                      {facultyList.map((f) => (
-                        <option key={f.id} value={f.facultyId}>
-                          {f.name} ({f.facultyId} - {f.designation})
-                        </option>
-                      ))}
+                      <option value="Academic">Academic</option>
+                      <option value="Examination">Examination</option>
+                      <option value="Placement">Placement</option>
+                      <option value="Administrative">Administrative</option>
+                      <option value="Disciplinary">Disciplinary</option>
+                      <option value="Symposium">Symposium &amp; Event</option>
                     </select>
                   </div>
-                )}
 
-                {/* Specific Student Selector */}
-                {targetType === 'PARTICULAR_STUDENT' && (
-                  <div className="pt-2 border-t border-blue-200/60 space-y-1 animate-in fade-in">
-                    <label className="font-bold text-amber-800 block text-[11px]">Select Specific Student:</label>
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1">Priority Level</label>
                     <select
-                      value={selectedStudentReg}
-                      onChange={(e) => setSelectedStudentReg(e.target.value)}
-                      className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
+                      value={priority}
+                      onChange={(e) => setPriority(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-red-600"
                     >
-                      {studentList.map((s) => (
-                        <option key={s.id} value={s.registerNumber}>
-                          {s.registerNumber} — {s.name}
-                        </option>
-                      ))}
+                      <option value="NORMAL">Normal Priority</option>
+                      <option value="URGENT">⚠️ Urgent / Critical Alert</option>
                     </select>
                   </div>
-                )}
-              </div>
+                </div>
 
-              <div>
-                <label className="font-bold text-gray-700 block mb-1">Notice Content &amp; Directives</label>
-                <textarea
-                  rows={4}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Detailed instructions, room allocations, timings, required attachments, or submission deadlines..."
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#1455D9]/20"
-                  required
-                />
-              </div>
+                {/* Target Audience Selector */}
+                <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2.5">
+                  <label className="font-bold text-[#071A3D] block text-xs">Target Recipient Scope</label>
 
-              <div className="pt-3 border-t flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer disabled:opacity-50"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{submitting ? 'Broadcasting...' : 'Publish & Broadcast'}</span>
-                </button>
-              </div>
-            </form>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                    {[
+                      { id: 'STUDENTS', label: '🎓 All Students' },
+                      { id: 'FACULTY', label: '📚 All Faculty' },
+                      { id: 'ALL', label: '🏛️ All Dept' },
+                      { id: 'PARTICULAR_FACULTY', label: '👨‍🏫 Specific Faculty' },
+                      { id: 'PARTICULAR_STUDENT', label: '🎯 Specific Student' },
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTargetType(t.id as any)}
+                        className={cn(
+                          'px-2.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all cursor-pointer text-center',
+                          targetType === t.id
+                            ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                        )}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Specific Faculty Selector */}
+                  {targetType === 'PARTICULAR_FACULTY' && (
+                    <div className="pt-2 border-t border-blue-200/60 space-y-1 animate-in fade-in">
+                      <label className="font-bold text-purple-800 block text-[11px]">Select Specific Faculty Member:</label>
+                      <select
+                        value={selectedFacultyId}
+                        onChange={(e) => setSelectedFacultyId(e.target.value)}
+                        className="w-full bg-white border border-purple-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
+                      >
+                        {facultyList.map((f) => (
+                          <option key={f.id} value={f.facultyId}>
+                            {f.name} ({f.facultyId} - {f.designation})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Specific Student Selector */}
+                  {targetType === 'PARTICULAR_STUDENT' && (
+                    <div className="pt-2 border-t border-blue-200/60 space-y-1 animate-in fade-in">
+                      <label className="font-bold text-amber-800 block text-[11px]">Select Specific Student:</label>
+                      <select
+                        value={selectedStudentReg}
+                        onChange={(e) => setSelectedStudentReg(e.target.value)}
+                        className="w-full bg-white border border-amber-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
+                      >
+                        {studentList.map((s) => (
+                          <option key={s.id} value={s.registerNumber}>
+                            {s.registerNumber} — {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="font-bold text-gray-700 block mb-1">Notice Content &amp; Directives</label>
+                  <textarea
+                    rows={4}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="Detailed instructions, room allocations, timings, required attachments, or submission deadlines..."
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-[#1455D9]/20"
+                    required
+                  />
+                </div>
+
+                <div className="pt-3 border-t flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateModal(false)
+                      setCreateStep('edit')
+                    }}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <span>👁️ Preview &amp; Confirm Notice</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
