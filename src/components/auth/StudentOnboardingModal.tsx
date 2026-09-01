@@ -620,11 +620,14 @@ export function StudentOnboardingModal({
 
                 <div>
                   <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Date of Birth
+                    Date of Birth (YYYY-MM-DD) *
                   </label>
                   <input
                     type="date"
                     required
+                    min="1980-01-01"
+                    max="2015-12-31"
+                    placeholder="YYYY-MM-DD"
                     value={form.dateOfBirth}
                     onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
                     className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"

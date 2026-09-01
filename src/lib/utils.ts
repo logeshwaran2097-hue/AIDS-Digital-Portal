@@ -5,8 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: Date | string, format: string = 'dd/MM/yyyy'): string {
+export function formatDate(date: Date | string | null | undefined, format: string = 'dd/MM/yyyy'): string {
+  if (!date) return 'Not Specified'
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+    const [y, m, d] = date.trim().split('-')
+    return `${d}/${m}/${y}`
+  }
   const d = new Date(date)
+  if (isNaN(d.getTime())) return String(date)
   return format
     .replace('dd', String(d.getDate()).padStart(2, '0'))
     .replace('MM', String(d.getMonth() + 1).padStart(2, '0'))

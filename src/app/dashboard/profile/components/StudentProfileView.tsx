@@ -722,12 +722,15 @@ export function StudentProfileView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
+                      <label className="block font-bold text-[#071A3D] mb-1">Date of Birth (YYYY-MM-DD)</label>
                       <input
                         type="date"
+                        min="1980-01-01"
+                        max="2015-12-31"
+                        placeholder="YYYY-MM-DD"
                         value={formData.dateOfBirth}
                         onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
                       />
                     </div>
 
