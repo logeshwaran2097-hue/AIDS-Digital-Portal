@@ -84,6 +84,50 @@ const quickAccess = [
 export default function StudentDashboard({ data }: { data: DashboardData }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentUser, setCurrentUser] = useState(data.user)
+  const [liveAnnouncements, setLiveAnnouncements] = useState(data.announcements)
+  const [liveEvents, setLiveEvents] = useState(data.events)
+
+  // Real-time live sync for student announcements and events
+  React.useEffect(() => {
+    const fetchFreshContent = async () => {
+      try {
+        const [annRes, evRes] = await Promise.all([
+          fetch('/api/announcements', { cache: 'no-store' }),
+          fetch('/api/events', { cache: 'no-store' }),
+        ])
+        const [annData, evData] = await Promise.all([annRes.json(), evRes.json()])
+
+        if (annData.success && Array.isArray(annData.announcements)) {
+          setLiveAnnouncements(
+            annData.announcements.map((a: any) => ({
+              id: a.id,
+              title: a.title,
+              category: a.category,
+              content: a.content,
+              createdAt: new Date(a.createdAt),
+            }))
+          )
+        }
+
+        if (evData.success && Array.isArray(evData.events)) {
+          setLiveEvents(
+            evData.events.map((e: any) => ({
+              id: e.id,
+              name: e.name,
+              description: e.description,
+              date: new Date(e.date),
+              time: e.time,
+              venue: e.venue,
+              category: e.category,
+            }))
+          )
+        }
+      } catch {}
+    }
+
+    const interval = setInterval(fetchFreshContent, 3500)
+    return () => clearInterval(interval)
+  }, [])
 
   const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(isInitialNeedsOnboarding)
@@ -361,7 +405,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             </Link>
           </div>
 
-          {data.events.length === 0 ? (
+          {liveEvents.length === 0 ? (
             <Card className="rounded-2xl border-gray-200">
               <CardContent className="py-10 text-center text-sm text-gray-500">
                 No upcoming events scheduled.
@@ -369,7 +413,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             </Card>
           ) : (
             <div className="space-y-3">
-              {data.events.slice(0, 2).map((e) => (
+              {liveEvents.slice(0, 2).map((e) => (
                 <Card key={e.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
                   <CardContent className="p-4 flex items-center justify-between gap-3">
                     <div className="space-y-1 min-w-0 flex-1">
@@ -412,7 +456,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             </Link>
           </div>
 
-          {data.announcements.length === 0 ? (
+          {liveAnnouncements.length === 0 ? (
             <Card className="rounded-2xl border-gray-200">
               <CardContent className="py-10 text-center text-sm text-gray-500">
                 No announcements published yet.
@@ -420,7 +464,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             </Card>
           ) : (
             <div className="space-y-3">
-              {data.announcements.slice(0, 2).map((a) => (
+              {liveAnnouncements.slice(0, 2).map((a) => (
                 <Card key={a.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
                   <CardContent className="p-4 flex items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0 flex-1">

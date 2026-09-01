@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
+
 export async function POST(request: Request) {
   try {
     const data = await request.formData()
@@ -45,14 +49,25 @@ export async function POST(request: Request) {
         fileType: fileType,
         fileSize: fileSize,
         fileUrl: `/uploads/${fileName}`,
-        status: 'pending',
+        status: 'published',
       },
     })
+
+    // Instant notification to students about new question paper
+    await prisma.notification.create({
+      data: {
+        title: `📄 Question Paper Uploaded: ${title || examType}`,
+        message: `Official question paper for Semester ${semester || 'Curriculum'} is now available in Question Papers Bank.`,
+        target: 'all',
+        createdByName: 'Faculty Advisory',
+        status: 'published',
+      },
+    }).catch(() => {})
 
     return NextResponse.json({
       success: true,
       questionPaper,
-      message: 'Question paper uploaded successfully, pending approval',
+      message: 'Question paper uploaded successfully',
     })
   } catch (error) {
     console.error('Question paper upload error:', error)

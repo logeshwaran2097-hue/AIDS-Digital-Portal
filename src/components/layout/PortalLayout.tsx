@@ -313,10 +313,10 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
     } catch {}
   }
 
-  // Polling loop: checks every 15s for genuine newly posted events, announcements, or materials
+  // Polling loop: checks every 3.5s for genuine newly posted events, announcements, or materials
   useEffect(() => {
     syncNotifications()
-    const interval = setInterval(syncNotifications, 15000)
+    const interval = setInterval(syncNotifications, 3500)
     return () => clearInterval(interval)
   }, [role])
 

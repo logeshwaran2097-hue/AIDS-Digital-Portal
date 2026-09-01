@@ -8,6 +8,8 @@ import { formatDate } from '@/lib/utils'
 import { Megaphone, Calendar, User, FileText, Pin, AlertCircle, Sparkles } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 export default async function AnnouncementsPage() {
   const session = await requireRoleSession(['student'])

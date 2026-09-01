@@ -18,12 +18,37 @@ interface NotificationItem {
 
 
 
-export function StudentNotificationsView({ notifications }: { notifications: NotificationItem[] }) {
+export function StudentNotificationsView({ notifications: initialNotifications }: { notifications: NotificationItem[] }) {
+  const [items, setItems] = useState<NotificationItem[]>(initialNotifications)
   const [filter, setFilter] = useState('ALL')
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
 
+  // Auto-sync notifications in real time every 3.5s
+  useEffect(() => {
+    const fetchLive = async () => {
+      try {
+        const res = await fetch('/api/notifications?role=student', { cache: 'no-store' })
+        const data = await res.json()
+        if (data.success && Array.isArray(data.notifications)) {
+          setItems(
+            data.notifications.map((n: any) => ({
+              id: n.id,
+              title: n.title,
+              message: n.message,
+              createdByName: n.createdByName,
+              createdAt: new Date(n.createdAt),
+            }))
+          )
+        }
+      } catch {}
+    }
+
+    const timer = setInterval(fetchLive, 3500)
+    return () => clearInterval(timer)
+  }, [])
+
   const handleMarkAllRead = () => {
-    setReadIds(new Set(notifications.map((n) => n.id)))
+    setReadIds(new Set(items.map((n) => n.id)))
   }
 
   const handleToggleRead = (id: string) => {
@@ -35,7 +60,7 @@ export function StudentNotificationsView({ notifications }: { notifications: Not
     })
   }
 
-  const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length
+  const unreadCount = items.filter((n) => !readIds.has(n.id)).length
 
   return (
     <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
@@ -74,7 +99,7 @@ export function StudentNotificationsView({ notifications }: { notifications: Not
       <NotificationSettingsUI role="student" />
 
       {/* Notifications List */}
-      {notifications.length === 0 ? (
+      {items.length === 0 ? (
         <Card className="rounded-3xl border-gray-200">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-14 h-14 rounded-full bg-blue-50 text-[#1455D9] flex items-center justify-center mb-3">
@@ -86,7 +111,7 @@ export function StudentNotificationsView({ notifications }: { notifications: Not
         </Card>
       ) : (
         <div className="space-y-3">
-          {notifications.map((item) => {
+          {items.map((item) => {
             const isRead = readIds.has(item.id)
             return (
               <Card
