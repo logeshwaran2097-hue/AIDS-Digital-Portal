@@ -790,3 +790,143 @@ html.dark textarea::placeholder {
   background: var(--primary-accent, #1455D9);
   color: #ffffff;
 }
+
+/* =========================================================
+   ✨ ULTRA-LUXURY CYBER & GOLDEN SECURITY ANIMATIONS
+   ========================================================= */
+@keyframes luxGoldPulse {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(244, 196, 48, 0.35), 0 0 60px rgba(16, 185, 129, 0.25), inset 0 0 20px rgba(244, 196, 48, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(244, 196, 48, 0.6), 0 0 90px rgba(34, 199, 232, 0.4), inset 0 0 35px rgba(244, 196, 48, 0.4);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes luxOrbitCW {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes luxOrbitCCW {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes luxScannerSweep {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes luxLaserProgress {
+  0% {
+    width: 0%;
+    background-position: 0% 50%;
+  }
+  50% {
+    width: 70%;
+    background-position: 100% 50%;
+  }
+  100% {
+    width: 100%;
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes luxShimmerGold {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes luxCardEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+    filter: blur(10px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes luxFloatingOrb {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+}
+
+.anim-lux-card {
+  animation: luxCardEnter 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-lux-pulse {
+  animation: luxGoldPulse 3s infinite ease-in-out;
+}
+
+.anim-lux-orbit-cw {
+  animation: luxOrbitCW 10s linear infinite;
+}
+
+.anim-lux-orbit-ccw {
+  animation: luxOrbitCCW 7s linear infinite;
+}
+
+.anim-lux-orbit-fast {
+  animation: luxOrbitCW 4s linear infinite;
+}
+
+.anim-lux-scanner {
+  animation: luxScannerSweep 2.2s ease-in-out infinite;
+}
+
+.anim-lux-progress {
+  animation: luxLaserProgress 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  background-size: 200% 200%;
+}
+
+.anim-lux-floating {
+  animation: luxFloatingOrb 12s ease-in-out infinite;
+}
+
+.lux-gold-text {
+  background: linear-gradient(135deg, #FFF6D1 0%, #F4C430 40%, #FFE885 70%, #E5A800 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lux-cyan-text {
+  background: linear-gradient(135deg, #E0FCFF 0%, #22C7E8 50%, #1455D9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

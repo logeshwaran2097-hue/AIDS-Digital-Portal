@@ -206,10 +206,10 @@ export default function LoginPage() {
       setAuthMessage(`Identity Verified · Entering ${selectedRole.toUpperCase()} Digital Portal...`)
       toast.success('Login verified! Entering portal...')
 
-      // Instant navigation
+      // Luxury transition animation timing
       setTimeout(() => {
         window.location.href = targetUrl
-      }, 250)
+      }, 1100)
     } catch {
       setAuthStatus('error')
       setAuthMessage('Network Connection Error · Unable to Reach Campus Server')
@@ -641,43 +641,97 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* FULL-SCREEN QUANTUM SUCCESS PORTAL MODAL */}
+      {/* FULL-SCREEN QUANTUM ULTRA-LUXURY SUCCESS PORTAL MODAL */}
       {authStatus === 'success' && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-[#071A41]/85 backdrop-blur-2xl text-white select-none animate-fade-in">
-          {/* Rotating Success Energy Halo */}
-          <div className="absolute w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-gradient-to-tr from-emerald-500/30 via-cyan-400/30 to-[#E7B93E]/30 blur-3xl animate-pulse" />
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-[#030B1C]/90 backdrop-blur-3xl text-white select-none animate-fade-in overflow-hidden">
           
-          <div className="relative z-10 w-full max-w-md mx-auto flex flex-col items-center text-center space-y-5 p-8 rounded-[2.5rem] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_30px_90px_rgba(0,0,0,0.5)] anim-success-portal">
+          {/* Ambient Celestial Light Halos */}
+          <div className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-[#1455D9]/30 via-[#22C7E8]/20 to-[#F4C430]/25 blur-[120px] anim-lux-floating pointer-events-none" />
+          <div className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full bg-emerald-500/20 blur-[100px] pointer-events-none" />
+          <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-amber-500/20 blur-[100px] pointer-events-none" />
+
+          {/* Micro Geometric Hologram Matrix Grid */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-40" />
+
+          {/* Master Luxury Glass Container */}
+          <div className="relative z-10 w-full max-w-lg mx-auto flex flex-col items-center text-center space-y-6 p-7 sm:p-10 rounded-[2.75rem] bg-gradient-to-b from-white/[0.14] via-[#0A1A3A]/80 to-[#051126]/95 backdrop-blur-3xl border border-amber-400/30 shadow-[0_25px_100px_rgba(0,0,0,0.8),0_0_60px_rgba(244,196,48,0.25)_inset] anim-lux-card overflow-hidden">
             
-            {/* Holographic Glowing Checkmark Crest */}
-            <div className="relative flex items-center justify-center my-2">
-              <div className="absolute w-36 h-36 rounded-full border-2 border-dashed border-emerald-400/60 animate-spin" style={{ animationDuration: '6s' }} />
-              <div className="absolute w-32 h-32 rounded-full border-2 border-dotted border-[#E7B93E]/60 animate-spin" style={{ animationDuration: '8s', animationDirection: 'reverse' }} />
-              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 p-1 shadow-[0_0_40px_rgba(16,185,129,0.6)] flex items-center justify-center">
-                <div className="w-full h-full rounded-full bg-[#071A41] flex items-center justify-center">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-bounce" />
+            {/* Top Light Ray Beam */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#F4C430] to-transparent shadow-[0_0_20px_#F4C430]" />
+
+            {/* Stage 1: Holographic Gyroscope Scanner Crest */}
+            <div className="relative flex items-center justify-center my-3">
+              {/* Outer Golden Laser Ring with rotating ticks */}
+              <div className="absolute w-44 h-44 rounded-full border border-amber-400/40 anim-lux-orbit-cw flex items-center justify-center">
+                <div className="absolute top-0 w-2.5 h-2.5 bg-[#F4C430] rounded-full shadow-[0_0_12px_#F4C430]" />
+                <div className="absolute bottom-0 w-2.5 h-2.5 bg-[#22C7E8] rounded-full shadow-[0_0_12px_#22C7E8]" />
+              </div>
+
+              {/* Middle Cyan Electric Ring */}
+              <div className="absolute w-36 h-36 rounded-full border-2 border-dashed border-[#22C7E8]/60 anim-lux-orbit-ccw" />
+              
+              {/* Inner Diamond Hologram Hexagon Ring */}
+              <div className="absolute w-28 h-28 rounded-full border border-emerald-400/50 anim-lux-orbit-fast" />
+
+              {/* Center Radiant 3D Shield Orb */}
+              <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#071A3D] via-[#0F3577] to-[#1455D9] p-1 shadow-[0_0_50px_rgba(34,199,232,0.6)] flex items-center justify-center border border-amber-400/50 anim-lux-pulse">
+                {/* Laser Scanning Line */}
+                <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-[#22C7E8] to-transparent shadow-[0_0_10px_#22C7E8] anim-lux-scanner pointer-events-none" />
+                
+                <div className="w-full h-full rounded-[1.35rem] bg-[#051126]/90 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 via-transparent to-amber-400/20" />
+                  <CheckCircle2 className="w-12 h-12 text-[#22C7E8] drop-shadow-[0_0_16px_rgba(34,199,232,0.9)] animate-pulse" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5 text-[#E7B93E]" />
-                <span>ACCESS GRANTED</span>
+            {/* Stage 2: Luxury Security Typography & Role Clearance */}
+            <div className="space-y-3">
+              {/* Golden Authorization Pill */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 via-emerald-500/20 to-cyan-500/20 border border-amber-400/40 text-amber-300 text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(244,196,48,0.2)]">
+                <Sparkles className="w-3.5 h-3.5 text-[#F4C430] animate-spin" style={{ animationDuration: '4s' }} />
+                <span className="lux-gold-text tracking-wider">BIOMETRIC 2FA CLEARANCE GRANTED</span>
               </div>
-              
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+
+              {/* Main Headline */}
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight lux-gold-text">
                 Security Verified
               </h2>
-              
-              <p className="text-xs text-slate-300 font-semibold px-2">
+
+              {/* Role Elevated Clearance Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-bold text-cyan-200 shadow-inner">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>
+                  {selectedRole === 'admin' && '👑 Super Administrator Console'}
+                  {selectedRole === 'hod' && '🏛️ Head of Department Directorate'}
+                  {selectedRole === 'faculty' && '📚 Faculty Academic Suite'}
+                  {selectedRole === 'student' && '🎓 Student Intelligence Portal'}
+                </span>
+              </div>
+
+              {/* Dynamic Handshake Subtitle */}
+              <p className="text-xs text-slate-300 font-medium px-4 leading-relaxed">
                 {authMessage}
               </p>
             </div>
 
-            {/* Quantum Warp Streamer Bar */}
-            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden p-0.5 shadow-inner">
-              <div className="h-full bg-gradient-to-r from-emerald-400 via-cyan-400 to-[#E7B93E] rounded-full animate-progress-bar" />
+            {/* Stage 3: Hyper-Luxury Laser Progress Streamer */}
+            <div className="w-full space-y-2 pt-1">
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 font-bold px-1">
+                <span className="flex items-center gap-1 text-emerald-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
+                  TLS 1.3 / AES-256 GCM
+                </span>
+                <span className="text-[#F4C430] font-black">100% SECURE</span>
+              </div>
+
+              <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/20 shadow-inner relative">
+                <div className="h-full bg-gradient-to-r from-[#1455D9] via-[#22C7E8] via-[#10B981] to-[#F4C430] rounded-full anim-lux-progress shadow-[0_0_15px_#22C7E8]" />
+              </div>
+
+              <p className="text-[10px] text-slate-400 font-mono tracking-wider pt-0.5">
+                Establishing High-Speed Encrypted Session · Redirecting Now...
+              </p>
             </div>
           </div>
         </div>
