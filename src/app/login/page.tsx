@@ -194,51 +194,13 @@ export default function LoginPage() {
         return
       }
 
-      // Check if user must complete profile verification
-      if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty' || selectedRole === 'hod')) {
-        const studentReg = data.user.registerNumber || registerNumber.trim().toUpperCase()
-        const rawName = data.user.name || ''
-        const cleanName = rawName.startsWith('Student (') ? '' : rawName
-        const rawEmail = data.user.email || ''
-        const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
-
-        setOnboardingUser(data.user)
-        setOnboardingForm({
-          name: cleanName || rawName,
-          registerNumber: studentReg,
-          phone: data.user.phone || '',
-          parentPhone: data.user.parentPhone || '',
-          bloodGroup: data.user.bloodGroup || '',
-          address: data.user.address || '',
-          busDetails: data.user.busDetails || '',
-          dateOfBirth: data.user.dateOfBirth ? String(data.user.dateOfBirth).split('T')[0] : '',
-          department: data.user.department || 'Artificial Intelligence & Data Science',
-          year: data.user.year ? `Year ${data.user.year}` : '',
-          semester: data.user.semester ? `Semester ${data.user.semester}` : '',
-          section: data.user.section ? `Section ${data.user.section}` : '',
-          advisorName: data.user.advisorName || 'Assigned Department Faculty',
-          hasCorrectionRequest: false,
-          correctionRemarks: '',
-          detailsConfirmed: false,
-          email: cleanEmail || rawEmail,
-          newPassword: '',
-          confirmPassword: '',
-          emailOtp: '',
-          otpChallenge: '',
-        })
-        setOnboardingStep(1)
-        setShowOnboardingModal(true)
-        toast.success('Welcome! Please review your official profile and set your permanent password.')
-        return
-      }
-
-      // Success Luxury Animation & Warp Navigation
+      // Success Luxury Animation & Immediate Navigation
       const dashboardMap: Record<string, string> = {
         student: '/dashboard',
         faculty: '/faculty-dashboard',
         hod: '/hod-dashboard',
       }
-      const targetUrl = dashboardMap[selectedRole]
+      const targetUrl = dashboardMap[selectedRole] || '/dashboard'
       setSuccessDestination(targetUrl)
       setAuthStatus('success')
       setAuthMessage(`Identity Verified · Entering ${selectedRole.toUpperCase()} Digital Portal...`)
@@ -246,7 +208,7 @@ export default function LoginPage() {
 
       setTimeout(() => {
         window.location.href = targetUrl
-      }, 1400)
+      }, 1000)
     } catch {
       setAuthStatus('error')
       setAuthMessage('Network Connection Error · Unable to Reach Campus Server')
