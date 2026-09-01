@@ -401,16 +401,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
           <button
-            onClick={() => setIsBulkImportOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
-          >
-            <UploadCloud className="w-4 h-4 text-[#071A3D]" /> 📁 Bulk Import (Excel / CSV / 1000 Seed)
-          </button>
-          <button
             onClick={handleExportPDF}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-2 transition-all border border-white/20 shadow-sm cursor-pointer hover:scale-105"
           >
-            <Download className="w-4 h-4" /> Export Roster (PDF)
+            <Download className="w-4 h-4 text-[#F4C430]" /> Download Student List (PDF)
           </button>
           <button
             onClick={() => {
@@ -434,9 +428,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               })
               setIsAddModalOpen(true)
             }}
-            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
+            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] text-xs font-black flex items-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105"
           >
-            <Plus className="w-4 h-4" /> + Add Single Student
+            <Plus className="w-4 h-4 text-[#071A3D]" /> + Add Student
           </button>
         </div>
       </div>
@@ -1745,13 +1739,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </div>
         </div>
       )}
-
-      {/* MODAL: BULK IMPORT (EXCEL / CSV / QUICK 1000 SEED) */}
-      <BulkImportModal
-        isOpen={isBulkImportOpen}
-        onClose={() => setIsBulkImportOpen(false)}
-        onSuccess={fetchStudents}
-      />
     </div>
   )
 }
