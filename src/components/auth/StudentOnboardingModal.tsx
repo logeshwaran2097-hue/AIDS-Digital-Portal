@@ -63,13 +63,15 @@ export function StudentOnboardingModal({
     isParentWhatsapp: false,
     bloodGroup: '',
     residencyStatus: '',
+    dayScholarType: 'College Bus' as 'College Bus' | 'Out Bus' | '',
+    outBusMode: 'Public Bus (TNSTC)',
     busNo: '',
     boardingPoint: '',
     hostelBlock: '',
     roomNo: '',
     hasCorrectionRequest: false,
     correctionRemarks: '',
-    detailsConfirmed: false,
+    detailsConfirmed: true,
     profileImage: initialData.profileImage || '',
     email:
       initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
@@ -162,6 +164,65 @@ export function StudentOnboardingModal({
 
   if (!isOpen) return null
 
+  // Fast 1-Click Save & Direct Entry to Portal
+  const handleDirectConfirm = async () => {
+    if (!form.phone.trim()) {
+      toast.error('Please enter your personal mobile number.')
+      return
+    }
+    if (!form.parentPhone.trim()) {
+      toast.error('Please enter parent/guardian mobile number.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const finalResidency = form.residencyStatus === 'Day Scholar'
+        ? (form.dayScholarType === 'College Bus'
+            ? `Day Scholar · College Bus ${form.busNo ? `No. ${form.busNo}` : ''} ${form.boardingPoint ? `(${form.boardingPoint})` : ''}`.trim()
+            : `Day Scholar · Out Bus (${form.outBusMode || 'Public Bus'}) ${form.boardingPoint ? `From: ${form.boardingPoint}` : ''}`.trim())
+        : (form.residencyStatus === 'Hostel'
+            ? `Hosteller · ${form.hostelBlock || 'Hostel'} ${form.roomNo ? `Room ${form.roomNo}` : ''}`.trim()
+            : '')
+
+      const res = await fetch('/api/auth/student/complete-onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: initialData.name,
+          phone: form.phone.trim(),
+          parentPhone: form.parentPhone.trim(),
+          dateOfBirth: form.dateOfBirth,
+          isParentWhatsapp: form.isParentWhatsapp,
+          bloodGroup: form.bloodGroup,
+          residencyStatus: finalResidency || form.residencyStatus,
+          busNo: form.busNo,
+          boardingPoint: form.boardingPoint,
+          hostelBlock: form.hostelBlock,
+          roomNo: form.roomNo,
+          profileImage: form.profileImage || undefined,
+          skipEmailVerification: true,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        toast.success('Welcome! Student profile confirmed.')
+        onComplete(data.user || {
+          phone: form.phone.trim(),
+          parentPhone: form.parentPhone.trim(),
+          profileImage: form.profileImage,
+        })
+      } else {
+        toast.error(data.message || 'Failed to save details.')
+      }
+    } catch {
+      toast.error('Network error saving details.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // STEP 1 -> STEP 2: Proceed to Security Step
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
@@ -171,10 +232,6 @@ export function StudentOnboardingModal({
     }
     if (!form.parentPhone.trim()) {
       toast.error('Please enter parent/guardian mobile number.')
-      return
-    }
-    if (!form.detailsConfirmed) {
-      toast.error('Please confirm that you have reviewed your student details.')
       return
     }
     setOnboardingStep(2)
@@ -599,83 +656,130 @@ export function StudentOnboardingModal({
 
                 <div>
                   <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Residency Status
+                    Residency &amp; Transport
                   </label>
                   <select
                     value={form.residencyStatus}
                     onChange={(e) => setForm({ ...form, residencyStatus: e.target.value, busNo: '', boardingPoint: '', hostelBlock: '', roomNo: '' })}
                     className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                   >
-                    <option value="">Select Residency Status</option>
-                    <option value="Day Scholar">Day Scholar</option>
-                    <option value="Hostel">Hostel</option>
+                    <option value="">Select Residency</option>
+                    <option value="Day Scholar">Day Scholar (College Bus / Out Bus)</option>
+                    <option value="Hostel">Hostel (Campus Resident)</option>
                   </select>
                 </div>
-
-                {form.residencyStatus === 'Day Scholar' && (
-                  <>
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                        Bus No.
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 15"
-                        value={form.busNo}
-                        onChange={(e) => setForm({ ...form, busNo: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                        Boarding Point
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Karur Bus Stand"
-                        value={form.boardingPoint}
-                        onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      />
-                    </div>
-                  </>
-                )}
-
-                {form.residencyStatus === 'Hostel' && (
-                  <>
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                        Hostel Block
-                      </label>
-                      <select
-                        value={form.hostelBlock}
-                        onChange={(e) => setForm({ ...form, hostelBlock: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      >
-                        <option value="">Select Block</option>
-                        <option value="Boys Hostel 1">Boys Hostel 1</option>
-                        <option value="Boys Hostel 2">Boys Hostel 2</option>
-                        <option value="Boys Hostel 3">Boys Hostel 3</option>
-                        <option value="Girls Hostel 1">Girls Hostel 1</option>
-                        <option value="Girls Hostel 2">Girls Hostel 2</option>
-                        <option value="Girls Hostel 3">Girls Hostel 3</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                        Room No.
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 102"
-                        value={form.roomNo}
-                        onChange={(e) => setForm({ ...form, roomNo: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      />
-                    </div>
-                  </>
-                )}
               </div>
+
+              {/* Day Scholar Sub-Options */}
+              {form.residencyStatus === 'Day Scholar' && (
+                <div className="p-3 rounded-xl bg-blue-100/60 border border-blue-200 space-y-2.5 animate-in fade-in">
+                  <div className="flex items-center gap-4">
+                    <span className="text-[11px] font-bold text-gray-700">Transport Type:</span>
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-bold text-[#071A41]">
+                      <input
+                        type="radio"
+                        name="dayScholarType"
+                        checked={form.dayScholarType === 'College Bus'}
+                        onChange={() => setForm({ ...form, dayScholarType: 'College Bus' })}
+                        className="text-[#1557C0]"
+                      />
+                      🚌 College Bus User
+                    </label>
+                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-bold text-[#071A41]">
+                      <input
+                        type="radio"
+                        name="dayScholarType"
+                        checked={form.dayScholarType === 'Out Bus'}
+                        onChange={() => setForm({ ...form, dayScholarType: 'Out Bus' })}
+                        className="text-[#1557C0]"
+                      />
+                      🚗 Out Bus / Own Transport
+                    </label>
+                  </div>
+
+                  {form.dayScholarType === 'College Bus' ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">College Bus / Route No.</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Bus No. 12 / Route 08"
+                          value={form.busNo}
+                          onChange={(e) => setForm({ ...form, busNo: e.target.value })}
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">Boarding Point / Stop</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Karur Central Bus Stand"
+                          value={form.boardingPoint}
+                          onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">Travel Mode</label>
+                        <select
+                          value={form.outBusMode}
+                          onChange={(e) => setForm({ ...form, outBusMode: e.target.value })}
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                        >
+                          <option value="Public Bus (TNSTC)">Public Bus (TNSTC / Private)</option>
+                          <option value="Own Two-Wheeler / Bike">Own Two-Wheeler / Bike</option>
+                          <option value="Private Van / Auto">Private Van / Auto</option>
+                          <option value="Walking / Nearby">Walking / Nearby</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">Starting Point / Location</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Thanthonimalai / Velliyanai"
+                          value={form.boardingPoint}
+                          onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Hosteller Sub-Options */}
+              {form.residencyStatus === 'Hostel' && (
+                <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in">
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[10px] mb-1">Hostel Block</label>
+                    <select
+                      value={form.hostelBlock}
+                      onChange={(e) => setForm({ ...form, hostelBlock: e.target.value })}
+                      className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                    >
+                      <option value="">Select Block</option>
+                      <option value="Boys Hostel Block A">Boys Hostel Block A</option>
+                      <option value="Boys Hostel Block B">Boys Hostel Block B</option>
+                      <option value="Boys Hostel Block C">Boys Hostel Block C</option>
+                      <option value="Girls Hostel Block A">Girls Hostel Block A</option>
+                      <option value="Girls Hostel Block B">Girls Hostel Block B</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[10px] mb-1">Room No.</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Room 204"
+                      value={form.roomNo}
+                      onChange={(e) => setForm({ ...form, roomNo: e.target.value })}
+                      className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Option: Request Admin Correction */}
@@ -722,13 +826,23 @@ export function StudentOnboardingModal({
               </label>
             </div>
 
-            {/* Next Button */}
-            <div className="pt-2 border-t border-gray-100 flex justify-end">
+            {/* Action Buttons */}
+            <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleDirectConfirm}
+                disabled={loading}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>Confirm &amp; Enter Student Portal</span>
+              </button>
+
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all"
+                className="w-full sm:w-auto px-5 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-sm cursor-pointer hover:scale-[1.02] transition-all text-xs"
               >
-                <span>Next: Set Password &amp; Verify Email</span>
+                <span>Set Custom Password &amp; Email</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
