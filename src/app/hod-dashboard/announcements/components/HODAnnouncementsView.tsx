@@ -76,7 +76,9 @@ export function HODAnnouncementsView({
   // Form State
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('Academic')
-  const [targetType, setTargetType] = useState<'ALL' | 'STUDENTS' | 'FACULTY' | 'PARTICULAR_FACULTY' | 'PARTICULAR_STUDENT'>('STUDENTS')
+  const [targetType, setTargetType] = useState<
+    'ALL' | 'STUDENTS' | 'FACULTY' | 'ALL_ADVISORS' | 'ADVISORS_Y1' | 'ADVISORS_Y2' | 'ADVISORS_Y3' | 'ADVISORS_Y4' | 'PARTICULAR_FACULTY' | 'PARTICULAR_STUDENT'
+  >('STUDENTS')
   const [selectedFacultyId, setSelectedFacultyId] = useState(facultyList[0]?.facultyId || 'AI001')
   const [selectedStudentReg, setSelectedStudentReg] = useState(studentList[0]?.registerNumber || '23AD001')
   const [content, setContent] = useState('')
@@ -179,6 +181,16 @@ export function HODAnnouncementsView({
       finalTarget = 'All Students'
     } else if (targetType === 'FACULTY') {
       finalTarget = 'All Faculty Members'
+    } else if (targetType === 'ALL_ADVISORS') {
+      finalTarget = 'All Class Advisors (Years 1 - 4)'
+    } else if (targetType === 'ADVISORS_Y1') {
+      finalTarget = 'Year 1 Class Advisors'
+    } else if (targetType === 'ADVISORS_Y2') {
+      finalTarget = 'Year 2 Class Advisors'
+    } else if (targetType === 'ADVISORS_Y3') {
+      finalTarget = 'Year 3 Class Advisors'
+    } else if (targetType === 'ADVISORS_Y4') {
+      finalTarget = 'Year 4 Class Advisors'
     } else if (targetType === 'PARTICULAR_FACULTY') {
       const f = facultyList.find((fac) => fac.facultyId === selectedFacultyId)
       finalTarget = f ? `Faculty: ${f.name} (${f.facultyId})` : `Faculty (${selectedFacultyId})`
@@ -579,7 +591,12 @@ export function HODAnnouncementsView({
                       { id: 'STUDENTS', label: '🎓 All Students' },
                       { id: 'FACULTY', label: '📚 All Faculty' },
                       { id: 'ALL', label: '🏛️ All Dept' },
-                      { id: 'PARTICULAR_FACULTY', label: '👨‍🏫 Specific Faculty' },
+                      { id: 'ALL_ADVISORS', label: '⭐ All Advisors (1-4)' },
+                      { id: 'ADVISORS_Y1', label: '👨‍🏫 Year 1 Advisors' },
+                      { id: 'ADVISORS_Y2', label: '👨‍🏫 Year 2 Advisors' },
+                      { id: 'ADVISORS_Y3', label: '👨‍🏫 Year 3 Advisors' },
+                      { id: 'ADVISORS_Y4', label: '👨‍🏫 Year 4 Advisors' },
+                      { id: 'PARTICULAR_FACULTY', label: '👤 Specific Faculty' },
                       { id: 'PARTICULAR_STUDENT', label: '🎯 Specific Student' },
                     ].map((t) => (
                       <button

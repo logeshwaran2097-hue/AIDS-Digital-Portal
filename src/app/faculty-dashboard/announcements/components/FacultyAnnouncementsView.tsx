@@ -464,10 +464,13 @@ export function FacultyAnnouncementsView({
                       onChange={(e) => setFormTarget(e.target.value)}
                       className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
                     >
-                      <option value="All Students">All Students</option>
-                      <option value="Year II (Sem 3)">Year II (Sem 3)</option>
-                      <option value="Year III (Sem 5)">Year III (Sem 5)</option>
-                      <option value="Placement Eligible">Placement Eligible</option>
+                      <option value="All Students">All Students (Years 1 to 4)</option>
+                      <option value="All Class Advisors">⭐ All Class Advisors</option>
+                      <option value="Year I (Sem 1 & 2)">Year I (Sem 1 &amp; 2)</option>
+                      <option value="Year II (Sem 3 & 4)">Year II (Sem 3 &amp; 4)</option>
+                      <option value="Year III (Sem 5 & 6)">Year III (Sem 5 &amp; 6)</option>
+                      <option value="Year IV (Sem 7 & 8)">Year IV (Sem 7 &amp; 8)</option>
+                      <option value="Placement Eligible">Placement Eligible Students</option>
                     </select>
                   </div>
                 </div>

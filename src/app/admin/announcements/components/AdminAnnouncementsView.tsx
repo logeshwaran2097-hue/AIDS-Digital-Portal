@@ -51,8 +51,17 @@ export const TARGET_AUDIENCE_OPTIONS = [
       { value: 'students', label: 'All Students (Years 1 to 4)', icon: 'graduation' },
       { value: 'faculty', label: 'All Faculty & Instructors', icon: 'briefcase' },
       { value: 'hod', label: 'Head of Department (HOD)', icon: 'award' },
-      { value: 'advisors', label: 'Class Advisors Only', icon: 'user-check' },
+      { value: 'all_advisors', label: '⭐ All Class Advisors (Years 1 to 4)', icon: 'user-check' },
       { value: 'lab_handlers', label: 'Lab Instructors & Subject Handlers', icon: 'flask' },
+    ],
+  },
+  {
+    group: 'Class Advisors (Year-Wise)',
+    options: [
+      { value: 'advisors_year1', label: 'Year 1 Class Advisors (Freshman · Sem 1 & 2)', icon: 'user-check' },
+      { value: 'advisors_year2', label: 'Year 2 Class Advisors (Sophomore · Sem 3 & 4)', icon: 'user-check' },
+      { value: 'advisors_year3', label: 'Year 3 Class Advisors (Junior · Sem 5 & 6)', icon: 'user-check' },
+      { value: 'advisors_year4', label: 'Year 4 Class Advisors (Senior · Sem 7 & 8)', icon: 'user-check' },
     ],
   },
   {
@@ -218,7 +227,7 @@ export function AdminAnnouncementsView({
     if (t === 'students') return 'bg-emerald-50 text-emerald-700 border-emerald-200'
     if (t === 'faculty') return 'bg-purple-50 text-purple-700 border-purple-200'
     if (t === 'hod') return 'bg-amber-50 text-amber-800 border-amber-300'
-    if (t === 'advisors') return 'bg-indigo-50 text-indigo-700 border-indigo-200'
+    if (t.includes('advisor')) return 'bg-indigo-50 text-indigo-700 border-indigo-200'
     if (t === 'lab_handlers') return 'bg-rose-50 text-rose-700 border-rose-200'
     if (t.startsWith('year')) return 'bg-teal-50 text-teal-800 border-teal-200'
     if (t.startsWith('sem')) return 'bg-cyan-50 text-cyan-800 border-cyan-200'

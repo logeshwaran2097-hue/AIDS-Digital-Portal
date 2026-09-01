@@ -1049,14 +1049,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           </div>
         </div>
 
-        {/* STEP 2: Filter by Semesters (When viewing Class Advisors) */}
+        {/* STEP 2: Filter Advisors by Academic Year (Years I – IV) */}
         {activeTab === 'advisors' && (
           <div className="border-t border-gray-100 pt-3 space-y-2.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-[#F4C430] text-[#071A3D] text-[11px] font-black flex items-center justify-center">2</span>
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
-                  Step 2: Filter by Active Semesters (Semesters 3, 5 &amp; 7)
+                  Step 2: Filter Advisors by Academic Year (Years I, II, III &amp; IV)
                 </h3>
               </div>
               {(semFilter !== 'ALL' || yearFilter !== 'ALL') && (
@@ -1064,45 +1064,50 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   onClick={() => { setSemFilter('ALL'); setYearFilter('ALL'); }}
                   className="text-[11px] font-bold text-[#1455D9] hover:underline cursor-pointer"
                 >
-                  Clear All Filters
+                  Show All 4 Years
                 </button>
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
               <button
                 onClick={() => { setSemFilter('ALL'); setYearFilter('ALL'); }}
                 className={cn(
                   'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-center items-center',
-                  semFilter === 'ALL'
+                  yearFilter === 'ALL'
                     ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-xs'
                     : 'bg-gray-50 hover:bg-blue-50 border-gray-200 text-gray-700'
                 )}
               >
-                <span className="text-xs font-black">All Active Sems (3, 5, 7)</span>
-                <span className="text-[9px] font-mono opacity-80">{facultyList.length} Total</span>
+                <span className="text-xs font-black">All Advisors (Years 1 - 4)</span>
+                <span className="text-[9px] font-mono opacity-80">{advisorsList.length} Active</span>
               </button>
 
-              {[3, 5, 7].map((s) => {
-                const isSelected = semFilter === String(s)
-                const yr = Math.ceil(s / 2)
+              {[
+                { yr: 1, label: 'Year I (Freshman)', sems: 'Sem 1 & 2', bg: 'hover:bg-blue-50' },
+                { yr: 2, label: 'Year II (Sophomore)', sems: 'Sem 3 & 4', bg: 'hover:bg-indigo-50' },
+                { yr: 3, label: 'Year III (Junior)', sems: 'Sem 5 & 6', bg: 'hover:bg-purple-50' },
+                { yr: 4, label: 'Year IV (Senior)', sems: 'Sem 7 & 8', bg: 'hover:bg-amber-50' },
+              ].map((item) => {
+                const isSelected = yearFilter === String(item.yr)
                 const count = facultyList.filter(
-                  (f) => String(f.advisorSem) === String(s) || (f.advisorBatch && f.advisorBatch.includes(`Sem ${s}`))
+                  (f) => Number(f.advisorYear) === item.yr || (f.advisorBatch && (f.advisorBatch.includes(`Year ${item.yr}`) || f.advisorBatch.includes(`Year ${['I', 'II', 'III', 'IV'][item.yr - 1]}`)))
                 ).length
+
                 return (
                   <button
-                    key={s}
-                    onClick={() => { setSemFilter(String(s)); setYearFilter(String(yr)); }}
+                    key={item.yr}
+                    onClick={() => { setYearFilter(String(item.yr)); setSemFilter('ALL'); }}
                     className={cn(
                       'p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col justify-center items-center',
                       isSelected
                         ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
-                        : 'bg-gray-50/80 hover:bg-blue-50/50 border-gray-200 text-[#071A3D]'
+                        : `bg-gray-50/80 ${item.bg} border-gray-200 text-[#071A3D]`
                     )}
                   >
-                    <span className="text-xs font-black">Semester {s}</span>
+                    <span className="text-xs font-black">{item.label}</span>
                     <span className={cn('text-[10px] font-bold', isSelected ? 'text-[#F4C430]' : 'text-gray-400')}>
-                      Year {yr} ({count} Advisors)
+                      {item.sems} ({count} Advisors)
                     </span>
                   </button>
                 )
@@ -2230,7 +2235,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
                       >
-                        {[3, 5, 7].map((s) => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                           <option key={s} value={s}>
                             Semester {s} (Year {Math.ceil(s / 2)})
                           </option>
@@ -2254,6 +2259,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
                       >
+                        <option value={1}>Year 1 (Freshman)</option>
                         <option value={2}>Year 2 (Sophomore)</option>
                         <option value={3}>Year 3 (Junior)</option>
                         <option value={4}>Year 4 (Senior)</option>
@@ -2831,7 +2837,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
                       >
-                        {[3, 5, 7].map((s) => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                           <option key={s} value={s}>
                             Semester {s} (Year {Math.ceil(s / 2)})
                           </option>
@@ -2855,9 +2861,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
                       >
-                        <option value={2}>Year 2</option>
-                        <option value={3}>Year 3</option>
-                        <option value={4}>Year 4</option>
+                        <option value={1}>Year 1 (Freshman)</option>
+                        <option value={2}>Year 2 (Sophomore)</option>
+                        <option value={3}>Year 3 (Junior)</option>
+                        <option value={4}>Year 4 (Senior)</option>
                       </select>
                     </div>
 
