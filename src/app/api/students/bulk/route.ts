@@ -166,24 +166,45 @@ export async function POST(request: Request) {
                 },
               })
 
-              await prisma.student.create({
-                data: {
-                  userId: user.id,
-                  registerNumber: regUpper,
-                  dateOfBirth: dob,
-                  department,
-                  year: parsedYear,
-                  semester: parsedSem,
-                  batch,
-                  section,
-                  advisorName: st.advisorName ? String(st.advisorName).trim() : null,
-                  parentPhone: st.parentPhone ? String(st.parentPhone).trim() : null,
-                  bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : 'O+',
-                  residencyStatus: st.residencyStatus ? String(st.residencyStatus).trim() : 'Day Scholar',
-                  cgpa: st.cgpa !== undefined && st.cgpa !== '' && !isNaN(parseFloat(String(st.cgpa))) ? parseFloat(String(st.cgpa)) : 8.0,
-                  attendance: st.attendance !== undefined && st.attendance !== '' ? String(st.attendance) : '90%',
-                } as any,
+              const existingStudentByUserId = await prisma.student.findUnique({
+                where: { userId: user.id },
               })
+
+              if (existingStudentByUserId) {
+                await prisma.student.update({
+                  where: { id: existingStudentByUserId.id },
+                  data: {
+                    registerNumber: regUpper,
+                    dateOfBirth: dob,
+                    department,
+                    year: parsedYear,
+                    semester: parsedSem,
+                    batch,
+                    section,
+                    advisorName: st.advisorName ? String(st.advisorName).trim() : (existingStudentByUserId as any).advisorName,
+                    parentPhone: st.parentPhone ? String(st.parentPhone).trim() : (existingStudentByUserId as any).parentPhone,
+                  } as any,
+                })
+              } else {
+                await prisma.student.create({
+                  data: {
+                    userId: user.id,
+                    registerNumber: regUpper,
+                    dateOfBirth: dob,
+                    department,
+                    year: parsedYear,
+                    semester: parsedSem,
+                    batch,
+                    section,
+                    advisorName: st.advisorName ? String(st.advisorName).trim() : null,
+                    parentPhone: st.parentPhone ? String(st.parentPhone).trim() : null,
+                    bloodGroup: st.bloodGroup ? String(st.bloodGroup).trim() : 'O+',
+                    residencyStatus: st.residencyStatus ? String(st.residencyStatus).trim() : 'Day Scholar',
+                    cgpa: st.cgpa !== undefined && st.cgpa !== '' && !isNaN(parseFloat(String(st.cgpa))) ? parseFloat(String(st.cgpa)) : 8.0,
+                    attendance: st.attendance !== undefined && st.attendance !== '' ? String(st.attendance) : '90%',
+                  } as any,
+                })
+              }
 
               createdCount++
             }
