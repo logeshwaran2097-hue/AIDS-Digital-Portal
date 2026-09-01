@@ -12,6 +12,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-1000": "node scripts/seed_1000_students.js",
+    "db:seed-faculty": "node scripts/seed_50_faculty.js",
     "postinstall": "prisma generate"
   },
   "allowScripts": {
