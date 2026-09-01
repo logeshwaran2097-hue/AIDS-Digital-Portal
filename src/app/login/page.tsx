@@ -206,9 +206,10 @@ export default function LoginPage() {
       setAuthMessage(`Identity Verified · Entering ${selectedRole.toUpperCase()} Digital Portal...`)
       toast.success('Login verified! Entering portal...')
 
+      // Instant navigation
       setTimeout(() => {
         window.location.href = targetUrl
-      }, 1000)
+      }, 250)
     } catch {
       setAuthStatus('error')
       setAuthMessage('Network Connection Error · Unable to Reach Campus Server')

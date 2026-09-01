@@ -45,6 +45,16 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 })
 
+// Enable ultra-fast SQLite WAL mode & concurrency optimizations
+if (process.env.DATABASE_URL?.startsWith('file:') || !process.env.DATABASE_URL) {
+  try {
+    prisma.$queryRawUnsafe('PRAGMA journal_mode = WAL;').catch(() => {})
+    prisma.$queryRawUnsafe('PRAGMA synchronous = NORMAL;').catch(() => {})
+    prisma.$queryRawUnsafe('PRAGMA busy_timeout = 10000;').catch(() => {})
+    prisma.$queryRawUnsafe('PRAGMA temp_store = MEMORY;').catch(() => {})
+  } catch {}
+}
+
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 export default prisma
