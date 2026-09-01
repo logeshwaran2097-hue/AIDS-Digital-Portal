@@ -27,6 +27,7 @@ import {
   Award,
   UserCheck,
   Eye,
+  Globe,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -65,6 +66,50 @@ export interface FacultyProjectItem {
   teamMembers: string
   createdAt: Date
   dailyUpdates?: DailyUpdateLog[]
+}
+
+export const PRESET_DOMAINS = [
+  'Computer Vision & Deep Learning',
+  'Large Language Models & GenAI',
+  'Healthcare & Biomedical AI',
+  'Robotics & Autonomous Edge AI',
+  'NLP & Speech Intelligence',
+  'Blockchain & Secure AI Systems',
+  'FinTech & Predictive AI',
+  'IoT & Smart Cyber-Physical AI',
+  'Custom Domain / Other',
+]
+
+// Helper to extract GitHub & Live Demo URLs
+export function extractProjectLinks(docStr: string | null | undefined): { githubUrl: string; liveUrl: string } {
+  if (!docStr) return { githubUrl: '', liveUrl: '' }
+  try {
+    const parsed = JSON.parse(docStr)
+    if (parsed && typeof parsed === 'object') {
+      return {
+        githubUrl: parsed.github || parsed.githubUrl || '',
+        liveUrl: parsed.live || parsed.liveUrl || '',
+      }
+    }
+  } catch {}
+
+  if (docStr.includes('||')) {
+    const [gh, lv] = docStr.split('||')
+    return { githubUrl: gh?.trim() || '', liveUrl: lv?.trim() || '' }
+  }
+
+  if (docStr.includes('github.com')) {
+    return { githubUrl: docStr, liveUrl: '' }
+  }
+
+  return { githubUrl: '', liveUrl: docStr }
+}
+
+export function formatProjectLinks(githubUrl: string, liveUrl: string): string {
+  if (githubUrl && liveUrl) {
+    return JSON.stringify({ github: githubUrl.trim(), live: liveUrl.trim() })
+  }
+  return githubUrl ? githubUrl.trim() : liveUrl ? liveUrl.trim() : ''
 }
 
 function parseDailyUpdates(raw: string | null | undefined): DailyUpdateLog[] {
@@ -131,17 +176,25 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
   const [modalTab, setModalTab] = useState<'specs' | 'daily_updates'>('specs')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Form State for Assign Modal
+  // Form State for Assign Modal with Custom Domain and Live URL
   const [assignFormData, setAssignFormData] = useState({
     title: '',
-    domain: 'Computer Vision & Deep Learning',
+    domainSelection: 'Computer Vision & Deep Learning',
+    customDomain: '',
     technologies: 'Python, PyTorch, FastAPI, OpenCV',
     guideName: 'Dr. S. Karthik (Associate Professor)',
     teamMembers: '',
     problemStatement: '',
     proposedSolution: 'Multi-tier deep learning architecture deployed on edge hardware.',
     dataset: 'Custom Annotated Dataset',
+    githubUrl: 'https://github.com/vsb-aids/capstone-project',
+    liveUrl: '',
   })
+
+  const effectiveDomain =
+    assignFormData.domainSelection === 'Custom Domain / Other'
+      ? assignFormData.customDomain.trim() || 'Applied Artificial Intelligence'
+      : assignFormData.domainSelection
 
   // Feedback State
   const [feedbackLogId, setFeedbackLogId] = useState<string | null>(null)
@@ -274,20 +327,24 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
 
   // Final submit after preview
   const handleFinalAssignSubmit = async () => {
+    const finalDomain = effectiveDomain
+    const combinedDocs = formatProjectLinks(assignFormData.githubUrl, assignFormData.liveUrl)
+
     setIsSubmitting(true)
     try {
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: assignFormData.title,
-          domain: assignFormData.domain,
+          title: assignFormData.title.trim(),
+          domain: finalDomain,
           technologies: assignFormData.technologies,
           problemStatement: assignFormData.problemStatement,
           proposedSolution: assignFormData.proposedSolution,
           dataset: assignFormData.dataset,
           teamMembers: assignFormData.teamMembers,
           guideName: assignFormData.guideName,
+          documentation: combinedDocs,
           year: 4,
           status: 'Active & Supervised',
         }),
@@ -300,13 +357,16 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
         setAssignModalMode('edit')
         setAssignFormData({
           title: '',
-          domain: 'Computer Vision & Deep Learning',
+          domainSelection: 'Computer Vision & Deep Learning',
+          customDomain: '',
           technologies: 'Python, PyTorch, FastAPI, OpenCV',
           guideName: 'Dr. S. Karthik (Associate Professor)',
           teamMembers: '',
           problemStatement: '',
           proposedSolution: 'Multi-tier deep learning architecture deployed on edge hardware.',
           dataset: 'Custom Annotated Dataset',
+          githubUrl: 'https://github.com/vsb-aids/capstone-project',
+          liveUrl: '',
         })
         toast.success('🎉 Project blueprint assigned & published!')
       } else {
@@ -321,6 +381,8 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
 
   const handleDownloadDossier = (p: FacultyProjectItem) => {
     const updates = p.dailyUpdates || parseDailyUpdates(p.futureScope)
+    const links = extractProjectLinks(p.documentation)
+
     generateAndDownloadPDF({
       title: 'CAPSTONE PROJECT REFERENCE DOSSIER & DAILY PROGRESS LOGS',
       subtitle: `${p.title} · Domain: ${p.domain}`,
@@ -337,7 +399,8 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
             `Technology Stack: ${p.technologies}`,
             `Problem Statement: ${p.problemStatement || p.description || 'Formulating scalable intelligence frameworks.'}`,
             `Proposed Solution: ${p.proposedSolution || 'End-to-end algorithmic pipeline deployed on edge hardware.'}`,
-            `Code Repository: ${p.documentation || 'Available on Department GitHub Organization'}`,
+            `GitHub Repository: ${links.githubUrl || 'Available on Department GitHub Organization'}`,
+            `Live Deployment: ${links.liveUrl || 'Available in local deployment'}`,
           ],
         },
         {
@@ -453,6 +516,7 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
       <div className="grid gap-4 sm:grid-cols-2">
         {filtered.map((p) => {
           const updatesCount = (p.dailyUpdates || parseDailyUpdates(p.futureScope)).length
+          const links = extractProjectLinks(p.documentation)
 
           return (
             <Card
@@ -481,7 +545,7 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                   <p className="font-mono text-[11px] text-[#1455D9] font-bold">Stack: {p.technologies}</p>
                 </div>
 
-                <div className="pt-3 border-t flex items-center justify-between gap-2">
+                <div className="pt-3 border-t flex items-center justify-between gap-2 flex-wrap">
                   <button
                     onClick={() => handleOpenDetails(p)}
                     className="px-3.5 py-1.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
@@ -489,12 +553,36 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                     <BookOpen className="w-3.5 h-3.5 text-[#22C7E8]" /> Blueprint &amp; Daily Updates
                   </button>
 
-                  <button
-                    onClick={() => handleDownloadDossier(p)}
-                    className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 text-[#1455D9]" /> Dossier PDF
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {links.liveUrl && (
+                      <a
+                        href={links.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition"
+                        title="Open Live Deployment"
+                      >
+                        <Globe className="w-4 h-4" />
+                      </a>
+                    )}
+                    {links.githubUrl && (
+                      <a
+                        href={links.githubUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+                        title="Open GitHub Repository"
+                      >
+                        <Code2 className="w-4 h-4" />
+                      </a>
+                    )}
+                    <button
+                      onClick={() => handleDownloadDossier(p)}
+                      className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5 text-[#1455D9]" /> Dossier PDF
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -575,6 +663,42 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                       <p className="font-bold text-purple-700 mt-0.5">{selectedProject.dataset || 'Curated Dataset'}</p>
                     </div>
                   </div>
+
+                  {(() => {
+                    const links = extractProjectLinks(selectedProject.documentation)
+                    return (
+                      <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase">Deployment &amp; Repository</p>
+                          <p className="text-xs font-mono text-gray-700 truncate max-w-sm">
+                            {links.liveUrl || links.githubUrl || 'Available on Department organization'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {links.liveUrl && (
+                            <a
+                              href={links.liveUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition flex items-center gap-1"
+                            >
+                              <Globe className="w-3.5 h-3.5" /> Launch Live App
+                            </a>
+                          )}
+                          {links.githubUrl && (
+                            <a
+                              href={links.githubUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 bg-[#071A3D] text-white rounded-xl text-xs font-bold hover:bg-[#1455D9] transition flex items-center gap-1"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 text-[#22C7E8]" /> GitHub Repo
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </div>
               ) : (
                 /* TAB 2: DAILY UPDATES FEED WITH MENTORSHIP FEEDBACK INPUT */
@@ -718,6 +842,10 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                     toast.error('Please enter a project title')
                     return
                   }
+                  if (assignFormData.domainSelection === 'Custom Domain / Other' && !assignFormData.customDomain.trim()) {
+                    toast.error('Please type your custom domain name')
+                    return
+                  }
                   setAssignModalMode('preview')
                 }}
                 className="p-6 space-y-4 max-h-[70vh] overflow-y-auto"
@@ -740,15 +868,15 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                   <div>
                     <label className="font-bold text-gray-700 block mb-1 text-xs">Domain</label>
                     <select
-                      value={assignFormData.domain}
-                      onChange={(e) => setAssignFormData({ ...assignFormData, domain: e.target.value })}
+                      value={assignFormData.domainSelection}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, domainSelection: e.target.value })}
                       className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-[#1455D9] outline-none"
                     >
-                      <option>Computer Vision &amp; Deep Learning</option>
-                      <option>Natural Language Processing &amp; GenAI</option>
-                      <option>Healthcare &amp; Biomedical AI</option>
-                      <option>Robotics &amp; Edge AI</option>
-                      <option>Blockchain &amp; Security</option>
+                      {PRESET_DOMAINS.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -761,6 +889,23 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                     />
                   </div>
                 </div>
+
+                {/* Custom Domain Input */}
+                {assignFormData.domainSelection === 'Custom Domain / Other' && (
+                  <div className="animate-scale-up p-3 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-1">
+                    <label className="text-xs font-bold text-blue-900 block">
+                      Enter Custom Research Domain Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Brain-Computer Interfaces, Neuromorphic AI..."
+                      value={assignFormData.customDomain}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, customDomain: e.target.value })}
+                      className="w-full p-2.5 border border-blue-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="font-bold text-gray-700 block mb-1 text-xs">
@@ -811,6 +956,33 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs flex items-center gap-1">
+                      <Code2 className="w-3.5 h-3.5 text-gray-500" /> GitHub Repository URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://github.com/vsb-aids/..."
+                      value={assignFormData.githubUrl}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, githubUrl: e.target.value })}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-emerald-700 block mb-1 text-xs flex items-center gap-1">
+                      <Globe className="w-3.5 h-3.5 text-emerald-600" /> Live Demo URL (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://live-app.vercel.app"
+                      value={assignFormData.liveUrl}
+                      onChange={(e) => setAssignFormData({ ...assignFormData, liveUrl: e.target.value })}
+                      className="w-full bg-emerald-50/40 border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-600 outline-none"
+                    />
+                  </div>
+                </div>
+
                 <div className="pt-3 border-t flex justify-end gap-2">
                   <button
                     type="button"
@@ -836,7 +1008,7 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                     <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9] text-white text-[10px] font-black uppercase">
                       Year 4 · Capstone
                     </span>
-                    <span className="text-xs font-bold text-blue-700">{assignFormData.domain}</span>
+                    <span className="text-xs font-bold text-blue-700">{effectiveDomain}</span>
                   </div>
                   <h3 className="text-base font-black text-[#071A3D]">{assignFormData.title}</h3>
                   <p className="text-xs text-gray-700 font-mono">
@@ -860,6 +1032,21 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
                     <span className="text-[10px] font-black uppercase text-gray-400 block">Faculty Supervisor</span>
                     <p className="font-bold text-gray-800 mt-0.5">{assignFormData.guideName}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block flex items-center gap-1">
+                      <Code2 className="w-3 h-3 text-gray-500" /> GitHub Repository
+                    </span>
+                    <p className="font-mono text-blue-600 truncate mt-0.5">{assignFormData.githubUrl || 'N/A'}</p>
+                  </div>
+                  <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-200">
+                    <span className="text-[10px] font-black uppercase text-emerald-800 block flex items-center gap-1">
+                      <Globe className="w-3 h-3 text-emerald-600" /> Live Demo Deployment
+                    </span>
+                    <p className="font-mono text-emerald-700 truncate mt-0.5">{assignFormData.liveUrl || 'Not configured'}</p>
                   </div>
                 </div>
 

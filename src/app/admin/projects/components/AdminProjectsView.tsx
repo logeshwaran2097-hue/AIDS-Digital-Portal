@@ -32,6 +32,7 @@ import {
   BookOpen,
   ArrowRight,
   UserCheck,
+  Globe,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { cn } from '@/lib/utils'
@@ -73,7 +74,7 @@ export interface ProjectRecord {
   dailyUpdates?: DailyUpdateLog[]
 }
 
-export const DOMAINS_LIST = [
+export const PRESET_DOMAINS = [
   'Computer Vision & Deep Learning',
   'Large Language Models & GenAI',
   'Healthcare & Biomedical AI',
@@ -82,7 +83,40 @@ export const DOMAINS_LIST = [
   'Blockchain & Secure AI Systems',
   'FinTech & Predictive AI',
   'IoT & Smart Cyber-Physical AI',
+  'Custom Domain / Other',
 ]
+
+// Helper to extract GitHub & Live Demo URLs
+export function extractProjectLinks(docStr: string | null | undefined): { githubUrl: string; liveUrl: string } {
+  if (!docStr) return { githubUrl: '', liveUrl: '' }
+  try {
+    const parsed = JSON.parse(docStr)
+    if (parsed && typeof parsed === 'object') {
+      return {
+        githubUrl: parsed.github || parsed.githubUrl || '',
+        liveUrl: parsed.live || parsed.liveUrl || '',
+      }
+    }
+  } catch {}
+
+  if (docStr.includes('||')) {
+    const [gh, lv] = docStr.split('||')
+    return { githubUrl: gh?.trim() || '', liveUrl: lv?.trim() || '' }
+  }
+
+  if (docStr.includes('github.com')) {
+    return { githubUrl: docStr, liveUrl: '' }
+  }
+
+  return { githubUrl: '', liveUrl: docStr }
+}
+
+export function formatProjectLinks(githubUrl: string, liveUrl: string): string {
+  if (githubUrl && liveUrl) {
+    return JSON.stringify({ github: githubUrl.trim(), live: liveUrl.trim() })
+  }
+  return githubUrl ? githubUrl.trim() : liveUrl ? liveUrl.trim() : ''
+}
 
 // Helper to parse daily updates from futureScope JSON string
 function parseDailyUpdates(raw: string | null | undefined): DailyUpdateLog[] {
@@ -203,7 +237,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
   const [facultyFeedbackText, setFacultyFeedbackText] = useState('')
   const [selectedLogIdForFeedback, setSelectedLogIdForFeedback] = useState<string | null>(null)
 
-  // Add Project Form State
+  // Add Project Form State (with Live Link & Custom Domain)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -213,8 +247,10 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
     results: '98.4% Accuracy, 12ms Real-time Inference',
     futureScope: '',
-    documentation: 'https://github.com/vsb-aids/capstone-project',
-    domain: 'Computer Vision & Deep Learning',
+    githubUrl: 'https://github.com/vsb-aids/capstone-project',
+    liveUrl: 'https://project-demo.vsb.edu.in',
+    domainSelection: 'Computer Vision & Deep Learning',
+    customDomain: '',
     year: 4,
     semester: 8,
     batch: '2022 - 2026',
@@ -224,6 +260,11 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     status: 'Active & Supervised',
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const effectiveDomain =
+    formData.domainSelection === 'Custom Domain / Other'
+      ? formData.customDomain.trim() || 'Applied Artificial Intelligence'
+      : formData.domainSelection
 
   const yearCategories = [
     { year: 1, name: 'Year I', label: 'Mini Projects & Ideation', sems: 'Sem 1 & 2', color: 'blue' },
@@ -253,7 +294,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
 
   const domains = useMemo(() => {
     const dList = Array.from(new Set(projects.map((p) => p.domain).filter(Boolean))) as string[]
-    return dList.length > 0 ? dList : DOMAINS_LIST
+    return dList.length > 0 ? dList : PRESET_DOMAINS.filter((d) => d !== 'Custom Domain / Other')
   }, [projects])
 
   // Open Project Details Modal (Reference + Daily Updates)
@@ -416,10 +457,10 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         },
         {
           heading: '2. REFERENCE PROJECT BLUEPRINTS & ARCHITECTURES',
-          body: filteredProjects.map(
-            (p, idx) =>
-              `${idx + 1}. [Year ${p.year || 4}] "${p.title}" — Domain: ${p.domain || 'Applied AI'} | Supervisor: ${p.guideName || 'Faculty Guide'} | Team: ${p.teamMembers || 'Student Team'} | Tech Stack: ${p.technologies || 'AI Frameworks'}`
-          ),
+          body: filteredProjects.map((p, idx) => {
+            const links = extractProjectLinks(p.documentation)
+            return `${idx + 1}. [Year ${p.year || 4}] "${p.title}" — Domain: ${p.domain || 'Applied AI'} | Supervisor: ${p.guideName || 'Faculty Guide'} | Team: ${p.teamMembers || 'Student Team'} | Stack: ${p.technologies || 'AI Frameworks'} ${links.liveUrl ? `| Live Demo: ${links.liveUrl}` : ''}`
+          }),
         },
       ],
       fileName: `VSB_Projects_Reference_Directory_${selectedYear === 'ALL' ? 'All_Years' : `Year_${selectedYear}`}_2026`,
@@ -428,6 +469,8 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
 
   const handleDownloadReferenceDossier = (proj: ProjectRecord) => {
     const updates = proj.dailyUpdates || parseDailyUpdates(proj.futureScope)
+    const links = extractProjectLinks(proj.documentation)
+
     generateAndDownloadPDF({
       title: 'PROJECT REFERENCE DOSSIER & DAILY PROGRESS LOGS',
       subtitle: `Department of Artificial Intelligence & Data Science · Student Reference Hub 2026`,
@@ -444,7 +487,8 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             `Faculty Research Supervisor: ${proj.guideName || 'Dr. S. Karthik'} (${proj.guideEmail || 'karthik@vsb.edu.in'})`,
             `Technical Stack: ${proj.technologies || 'Python, PyTorch, React, FastAPI'}`,
             `Benchmark Results: ${proj.results || '98.4% Accuracy, 12ms Inference Latency'}`,
-            `Repository / Codebase: ${proj.documentation || 'Available on Department GitHub Organization'}`,
+            `GitHub Repository: ${links.githubUrl || 'Available on Department GitHub'}`,
+            `Live Demo / Deployment: ${links.liveUrl || 'Available in lab'}`,
             `Problem Statement: ${proj.problemStatement || proj.description || 'Modern deep learning architecture for production environments.'}`,
             `Proposed Solution: ${proj.proposedSolution || 'End-to-end model pipeline with quantization and edge deployment.'}`,
           ],
@@ -461,12 +505,14 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     })
   }
 
-  const handleAddSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    if (!formData.title) {
+  const handleAddSubmit = async () => {
+    if (!formData.title.trim()) {
       toast.error('Please enter project title')
       return
     }
+
+    const finalDomain = effectiveDomain
+    const combinedDocs = formatProjectLinks(formData.githubUrl, formData.liveUrl)
 
     setIsSubmitting(true)
     try {
@@ -474,9 +520,23 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
+          title: formData.title.trim(),
+          description: formData.description,
+          problemStatement: formData.problemStatement,
+          proposedSolution: formData.proposedSolution,
+          technologies: formData.technologies,
+          dataset: formData.dataset,
+          results: formData.results,
+          futureScope: formData.futureScope,
+          documentation: combinedDocs,
+          domain: finalDomain,
           year: Number(formData.year),
           semester: Number(formData.semester),
+          batch: formData.batch,
+          guideName: formData.guideName,
+          guideEmail: formData.guideEmail,
+          teamMembers: formData.teamMembers,
+          status: formData.status,
         }),
       })
       const result = await res.json()
@@ -484,7 +544,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         setProjects([result.project, ...projects])
         setIsAddModalOpen(false)
         setModalMode('edit')
-        toast.success('Project blueprint registered & published to student reference hub!')
+        toast.success('Project blueprint registered & published to live portal!')
         setFormData({
           title: '',
           description: '',
@@ -494,8 +554,10 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
           dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
           results: '98.4% Accuracy, 12ms Real-time Inference',
           futureScope: '',
-          documentation: 'https://github.com/vsb-aids/capstone-project',
-          domain: 'Computer Vision & Deep Learning',
+          githubUrl: 'https://github.com/vsb-aids/capstone-project',
+          liveUrl: 'https://project-demo.vsb.edu.in',
+          domainSelection: 'Computer Vision & Deep Learning',
+          customDomain: '',
           year: 4,
           semester: 8,
           batch: '2022 - 2026',
@@ -648,6 +710,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
         ) : (
           filteredProjects.map((proj) => {
             const updatesCount = (proj.dailyUpdates || parseDailyUpdates(proj.futureScope)).length
+            const links = extractProjectLinks(proj.documentation)
 
             return (
               <Card
@@ -724,16 +787,38 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   )}
 
                   {/* Actions Bar */}
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 flex-wrap">
                     <button
                       onClick={() => handleOpenProjectDetails(proj)}
                       className="px-3.5 py-1.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white text-xs font-black transition flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <BookOpen className="w-3.5 h-3.5 text-[#22C7E8]" />
-                      Reference Blueprint &amp; Daily Updates
+                      Blueprint &amp; Daily Updates
                     </button>
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                      {links.liveUrl && (
+                        <a
+                          href={links.liveUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition"
+                          title="Open Live Deployment"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                      )}
+                      {links.githubUrl && (
+                        <a
+                          href={links.githubUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+                          title="Open GitHub Repository"
+                        >
+                          <Code2 className="w-4 h-4" />
+                        </a>
+                      )}
                       <button
                         onClick={() => handleDelete(proj.id, proj.title)}
                         className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
@@ -884,31 +969,48 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     </div>
                   </div>
 
-                  {/* Links & Repository */}
-                  <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between gap-4">
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-[#22C7E8]">Source Code &amp; Implementation Repo</p>
-                      <p className="text-xs text-gray-300 truncate font-mono mt-0.5">
-                        {selectedProject.documentation || 'https://github.com/vsb-aids/capstone-project'}
-                      </p>
-                    </div>
-                    {selectedProject.documentation && (
-                      <a
-                        href={selectedProject.documentation}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-3 py-1.5 bg-[#22C7E8] hover:bg-[#18A0B8] text-[#071A3D] rounded-xl text-xs font-black transition flex items-center gap-1 shrink-0"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        Explore Repository
-                      </a>
-                    )}
-                  </div>
+                  {/* Links & Repositories Card */}
+                  {(() => {
+                    const links = extractProjectLinks(selectedProject.documentation)
+                    return (
+                      <div className="p-4 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase text-[#22C7E8]">Source Code &amp; Live Deployment</p>
+                          <p className="text-xs text-gray-300 truncate font-mono">
+                            {links.githubUrl || links.liveUrl || 'Available on Department GitHub'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {links.liveUrl && (
+                            <a
+                              href={links.liveUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-900 rounded-xl text-xs font-black transition flex items-center gap-1.5"
+                            >
+                              <Globe className="w-3.5 h-3.5" />
+                              Launch Live App
+                            </a>
+                          )}
+                          {links.githubUrl && (
+                            <a
+                              href={links.githubUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 bg-[#22C7E8] hover:bg-[#18A0B8] text-[#071A3D] rounded-xl text-xs font-black transition flex items-center gap-1.5"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              GitHub Repo
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </div>
               ) : (
                 /* TAB 2: DAILY PROJECT UPDATES & FACULTY GUIDANCE FEED */
                 <div className="space-y-5">
-                  {/* Top Bar for Daily Updates */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-2xl bg-blue-50/70 border border-blue-100">
                     <div>
                       <h4 className="font-black text-sm text-[#071A3D] flex items-center gap-1.5">
@@ -1205,8 +1307,12 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
-                  if (!formData.title) {
+                  if (!formData.title.trim()) {
                     toast.error('Project title is required')
+                    return
+                  }
+                  if (formData.domainSelection === 'Custom Domain / Other' && !formData.customDomain.trim()) {
+                    toast.error('Please type your custom domain name')
                     return
                   }
                   setModalMode('preview')
@@ -1261,11 +1367,11 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   <div>
                     <label className="text-xs font-bold text-gray-700 block mb-1">Research Domain</label>
                     <select
-                      value={formData.domain}
-                      onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                      value={formData.domainSelection}
+                      onChange={(e) => setFormData({ ...formData, domainSelection: e.target.value })}
                       className="w-full p-2.5 border border-gray-200 rounded-xl text-xs bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
                     >
-                      {DOMAINS_LIST.map((d) => (
+                      {PRESET_DOMAINS.map((d) => (
                         <option key={d} value={d}>
                           {d}
                         </option>
@@ -1273,6 +1379,23 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     </select>
                   </div>
                 </div>
+
+                {/* Custom Domain Input when "Custom Domain / Other" is selected */}
+                {formData.domainSelection === 'Custom Domain / Other' && (
+                  <div className="animate-scale-up p-3 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-1">
+                    <label className="text-xs font-bold text-blue-900 block">
+                      Enter Custom Research Domain Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Quantum Computing & Neural Cryptography, Brain-Computer Interfaces..."
+                      value={formData.customDomain}
+                      onChange={(e) => setFormData({ ...formData, customDomain: e.target.value })}
+                      className="w-full p-2.5 border border-blue-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                )}
 
                 {/* Problem Statement */}
                 <div>
@@ -1358,16 +1481,34 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   </div>
                 </div>
 
-                {/* GitHub Repo Link */}
-                <div>
-                  <label className="text-xs font-bold text-gray-700 block mb-1">GitHub / Documentation URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://github.com/vsb-aids/capstone-project"
-                    value={formData.documentation}
-                    onChange={(e) => setFormData({ ...formData, documentation: e.target.value })}
-                    className="w-full p-2.5 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
-                  />
+                {/* GitHub Repo Link & Live Demo URL */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-gray-700 block mb-1 flex items-center gap-1">
+                      <Code2 className="w-3.5 h-3.5 text-gray-500" />
+                      GitHub / Code Repository URL
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://github.com/vsb-aids/capstone-project"
+                      value={formData.githubUrl}
+                      onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+                      className="w-full p-2.5 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-emerald-700 block mb-1 flex items-center gap-1">
+                      <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                      Project Live Demo / Production URL (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://my-app.vercel.app or https://huggingface.co/..."
+                      value={formData.liveUrl}
+                      onChange={(e) => setFormData({ ...formData, liveUrl: e.target.value })}
+                      className="w-full p-2.5 border border-emerald-200 bg-emerald-50/30 rounded-xl text-xs focus:ring-2 focus:ring-emerald-600 outline-none"
+                    />
+                  </div>
                 </div>
 
                 {/* Form Buttons */}
@@ -1375,13 +1516,13 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   <button
                     type="button"
                     onClick={() => setIsAddModalOpen(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50 cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md"
+                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0A2A5E] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer"
                   >
                     <Eye className="w-4 h-4" />
                     Preview Blueprint
@@ -1396,7 +1537,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9] text-white text-[10px] font-black uppercase">
                       Year {formData.year} · Sem {formData.semester} ({formData.batch})
                     </span>
-                    <span className="text-xs font-bold text-blue-700">{formData.domain}</span>
+                    <span className="text-xs font-bold text-blue-700">{effectiveDomain}</span>
                   </div>
                   <h3 className="text-base font-black text-[#071A3D]">{formData.title}</h3>
                   <p className="text-xs text-gray-700 font-mono">
@@ -1423,9 +1564,19 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                   </div>
                 </div>
 
-                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs">
-                  <span className="text-[10px] font-black uppercase text-gray-400 block">Repo Link</span>
-                  <p className="font-mono text-blue-600 truncate mt-0.5">{formData.documentation || 'N/A'}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block flex items-center gap-1">
+                      <Code2 className="w-3 h-3 text-gray-500" /> GitHub Repository
+                    </span>
+                    <p className="font-mono text-blue-600 truncate mt-0.5">{formData.githubUrl || 'N/A'}</p>
+                  </div>
+                  <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-200">
+                    <span className="text-[10px] font-black uppercase text-emerald-800 block flex items-center gap-1">
+                      <Globe className="w-3 h-3 text-emerald-600" /> Live Demo Deployment
+                    </span>
+                    <p className="font-mono text-emerald-700 truncate mt-0.5">{formData.liveUrl || 'Not configured'}</p>
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-gray-200 flex justify-between gap-2">

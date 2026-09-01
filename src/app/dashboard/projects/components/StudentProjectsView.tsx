@@ -24,6 +24,7 @@ import {
   X,
   Eye,
   Check,
+  Globe,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -66,6 +67,50 @@ export interface StudentProjectRecord {
   teamMembers: string
   createdAt?: Date
   dailyUpdates?: DailyUpdateLog[]
+}
+
+export const PRESET_DOMAINS = [
+  'Computer Vision & Deep Learning',
+  'Large Language Models & GenAI',
+  'Healthcare & Biomedical AI',
+  'Robotics & Autonomous Edge AI',
+  'NLP & Speech Intelligence',
+  'Blockchain & Secure AI Systems',
+  'FinTech & Predictive AI',
+  'IoT & Smart Cyber-Physical AI',
+  'Custom Domain / Other',
+]
+
+// Helper to extract GitHub & Live Demo URLs
+export function extractProjectLinks(docStr: string | null | undefined): { githubUrl: string; liveUrl: string } {
+  if (!docStr) return { githubUrl: '', liveUrl: '' }
+  try {
+    const parsed = JSON.parse(docStr)
+    if (parsed && typeof parsed === 'object') {
+      return {
+        githubUrl: parsed.github || parsed.githubUrl || '',
+        liveUrl: parsed.live || parsed.liveUrl || '',
+      }
+    }
+  } catch {}
+
+  if (docStr.includes('||')) {
+    const [gh, lv] = docStr.split('||')
+    return { githubUrl: gh?.trim() || '', liveUrl: lv?.trim() || '' }
+  }
+
+  if (docStr.includes('github.com')) {
+    return { githubUrl: docStr, liveUrl: '' }
+  }
+
+  return { githubUrl: '', liveUrl: docStr }
+}
+
+export function formatProjectLinks(githubUrl: string, liveUrl: string): string {
+  if (githubUrl && liveUrl) {
+    return JSON.stringify({ github: githubUrl.trim(), live: liveUrl.trim() })
+  }
+  return githubUrl ? githubUrl.trim() : liveUrl ? liveUrl.trim() : ''
 }
 
 function parseDailyUpdates(raw: string | null | undefined): DailyUpdateLog[] {
@@ -194,9 +239,11 @@ export function StudentProjectsView({
 
   const defaultMemberText = registerNumber ? `${studentName} (${registerNumber})` : studentName
 
+  // Proposal Form State with Custom Domain and Live URL
   const [formData, setFormData] = useState({
     title: '',
-    domain: 'Computer Vision & Deep Learning',
+    domainSelection: 'Computer Vision & Deep Learning',
+    customDomain: '',
     technologies: 'Python, PyTorch, FastAPI, React',
     teamMembers: defaultMemberText,
     guideName: 'Dr. S. Karthik, Associate Professor',
@@ -205,8 +252,14 @@ export function StudentProjectsView({
     proposedSolution: '',
     dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
     results: 'Initial prototype running on local GPU',
-    documentation: 'https://github.com/vsb-aids/capstone-project',
+    githubUrl: 'https://github.com/vsb-aids/capstone-project',
+    liveUrl: '',
   })
+
+  const effectiveDomain =
+    formData.domainSelection === 'Custom Domain / Other'
+      ? formData.customDomain.trim() || 'Applied Artificial Intelligence'
+      : formData.domainSelection
 
   const domains = useMemo(() => {
     const set = new Set(projectsList.map((p) => p.domain).filter(Boolean))
@@ -313,6 +366,9 @@ export function StudentProjectsView({
 
   // Final Publish Proposal after preview
   const handleFinalSubmitProposal = async () => {
+    const finalDomain = effectiveDomain
+    const combinedDocs = formatProjectLinks(formData.githubUrl, formData.liveUrl)
+
     setIsSubmitting(true)
     try {
       const res = await fetch('/api/projects', {
@@ -320,14 +376,14 @@ export function StudentProjectsView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: formData.title.trim(),
-          domain: formData.domain,
+          domain: finalDomain,
           technologies: formData.technologies,
           description: formData.description,
           problemStatement: formData.problemStatement,
           proposedSolution: formData.proposedSolution,
           dataset: formData.dataset,
           results: formData.results,
-          documentation: formData.documentation,
+          documentation: combinedDocs,
           teamMembers: formData.teamMembers,
           year: 2,
           status: 'Active & Supervised',
@@ -343,7 +399,8 @@ export function StudentProjectsView({
         setSubmitModalMode('edit')
         setFormData({
           title: '',
-          domain: 'Computer Vision & Deep Learning',
+          domainSelection: 'Computer Vision & Deep Learning',
+          customDomain: '',
           technologies: 'Python, PyTorch, FastAPI, React',
           teamMembers: defaultMemberText,
           guideName: 'Dr. S. Karthik, Associate Professor',
@@ -352,7 +409,8 @@ export function StudentProjectsView({
           proposedSolution: '',
           dataset: 'Custom Annotated Dataset / Kaggle Benchmark',
           results: 'Initial prototype running on local GPU',
-          documentation: 'https://github.com/vsb-aids/capstone-project',
+          githubUrl: 'https://github.com/vsb-aids/capstone-project',
+          liveUrl: '',
         })
         toast.success('🎉 Project blueprint published to Live Portal!')
       } else {
@@ -367,6 +425,8 @@ export function StudentProjectsView({
 
   const handleDownloadDossier = (proj: StudentProjectRecord) => {
     const updates = proj.dailyUpdates || parseDailyUpdates(proj.futureScope)
+    const links = extractProjectLinks(proj.documentation)
+
     generateAndDownloadPDF({
       title: 'PROJECT REFERENCE DOSSIER & DAILY PROGRESS LOGS',
       subtitle: `Department of Artificial Intelligence & Data Science · Student Reference Hub 2026`,
@@ -383,7 +443,8 @@ export function StudentProjectsView({
             `Faculty Research Mentor: ${proj.guideName || 'Dr. S. Karthik'} (${proj.guideEmail || 'karthik@vsb.edu.in'})`,
             `Technical Stack: ${proj.technologies || 'Python, PyTorch, React, FastAPI'}`,
             `Benchmark Results: ${proj.results || 'Verified on local test split'}`,
-            `Code Repository: ${proj.documentation || 'Available on Department GitHub'}`,
+            `GitHub Repository: ${links.githubUrl || 'Available on Department GitHub'}`,
+            `Live Deployment URL: ${links.liveUrl || 'Available in local environment'}`,
             `Problem Statement: ${proj.problemStatement || proj.description || 'Engineering AI solutions for real-world automation.'}`,
             `Proposed Methodology: ${proj.proposedSolution || 'End-to-end pipeline with transformer architectures.'}`,
           ],
@@ -493,6 +554,7 @@ export function StudentProjectsView({
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProjects.map((p) => {
             const updatesCount = (p.dailyUpdates || parseDailyUpdates(p.futureScope)).length
+            const links = extractProjectLinks(p.documentation)
 
             return (
               <div
@@ -529,6 +591,16 @@ export function StudentProjectsView({
                       {p.technologies}
                     </span>
                   </div>
+                  {links.liveUrl && (
+                    <div className="flex items-center justify-between text-emerald-700 pt-1">
+                      <span className="flex items-center gap-1 font-bold">
+                        <Globe className="w-3 h-3" /> Live Demo:
+                      </span>
+                      <span className="font-mono text-[10px] truncate max-w-[160px] underline">
+                        {links.liveUrl.replace('https://', '')}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -646,21 +718,37 @@ export function StudentProjectsView({
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
+                  <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
                     <p className="text-[#071A3D] font-semibold">Student Authors: {selectedProject.teamMembers}</p>
                     <p className="text-gray-500">Supervisor: {selectedProject.guideName || 'Dr. S. Karthik'}</p>
-                    {selectedProject.documentation && (
-                      <div className="pt-2">
-                        <a
-                          href={selectedProject.documentation}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#071A3D] text-white text-xs font-black hover:bg-[#1455D9] transition"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5 text-[#22C7E8]" /> Explore Source Code Repository
-                        </a>
-                      </div>
-                    )}
+                    
+                    {(() => {
+                      const links = extractProjectLinks(selectedProject.documentation)
+                      return (
+                        <div className="pt-2 flex items-center gap-2 flex-wrap">
+                          {links.liveUrl && (
+                            <a
+                              href={links.liveUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 transition"
+                            >
+                              <Globe className="w-3.5 h-3.5" /> Launch Live App Demo
+                            </a>
+                          )}
+                          {links.githubUrl && (
+                            <a
+                              href={links.githubUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#071A3D] text-white text-xs font-black hover:bg-[#1455D9] transition"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 text-[#22C7E8]" /> Explore GitHub Repository
+                            </a>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </div>
                 </div>
               ) : (
@@ -871,6 +959,10 @@ export function StudentProjectsView({
                     toast.error('Please enter a project title')
                     return
                   }
+                  if (formData.domainSelection === 'Custom Domain / Other' && !formData.customDomain.trim()) {
+                    toast.error('Please type your custom domain name')
+                    return
+                  }
                   setSubmitModalMode('preview')
                 }}
                 className="p-6 space-y-4 max-h-[70vh] overflow-y-auto"
@@ -893,15 +985,15 @@ export function StudentProjectsView({
                   <div>
                     <label className="font-bold text-gray-700 block mb-1 text-xs">Research Domain</label>
                     <select
-                      value={formData.domain}
-                      onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
+                      value={formData.domainSelection}
+                      onChange={(e) => setFormData({ ...formData, domainSelection: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
                     >
-                      <option value="Computer Vision & Deep Learning">Computer Vision &amp; Deep Learning</option>
-                      <option value="Large Language Models & GenAI">Large Language Models &amp; GenAI</option>
-                      <option value="Healthcare & Biomedical AI">Healthcare &amp; Biomedical AI</option>
-                      <option value="Robotics & Autonomous Edge AI">Robotics &amp; Edge AI</option>
-                      <option value="Blockchain & Secure AI Systems">Blockchain &amp; Secure AI</option>
+                      {PRESET_DOMAINS.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -916,6 +1008,23 @@ export function StudentProjectsView({
                     />
                   </div>
                 </div>
+
+                {/* Custom Domain Input when selected */}
+                {formData.domainSelection === 'Custom Domain / Other' && (
+                  <div className="animate-scale-up p-3 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-1">
+                    <label className="text-xs font-bold text-blue-900 block">
+                      Enter Custom Research Domain Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Quantum AI & Cryptography, Neuromorphic Edge Computing..."
+                      value={formData.customDomain}
+                      onChange={(e) => setFormData({ ...formData, customDomain: e.target.value })}
+                      className="w-full p-2.5 border border-blue-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-[#1455D9] outline-none"
+                    />
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -976,13 +1085,43 @@ export function StudentProjectsView({
                   </div>
 
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1 text-xs">GitHub / Code Repository URL</label>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs">Empirical Results</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 98.4% Accuracy, 12ms Latency"
+                      value={formData.results}
+                      onChange={(e) => setFormData({ ...formData, results: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+                </div>
+
+                {/* GitHub Repo & Live Demo Links */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-gray-700 block mb-1 text-xs flex items-center gap-1">
+                      <Code2 className="w-3.5 h-3.5 text-gray-500" />
+                      GitHub / Code Repository URL
+                    </label>
                     <input
                       type="url"
                       placeholder="https://github.com/vsb-aids/..."
-                      value={formData.documentation}
-                      onChange={(e) => setFormData({ ...formData, documentation: e.target.value })}
+                      value={formData.githubUrl}
+                      onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-emerald-700 block mb-1 text-xs flex items-center gap-1">
+                      <Globe className="w-3.5 h-3.5 text-emerald-600" />
+                      Project Live Demo / Production URL (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://my-app.vercel.app or Streamlit link"
+                      value={formData.liveUrl}
+                      onChange={(e) => setFormData({ ...formData, liveUrl: e.target.value })}
+                      className="w-full bg-emerald-50/40 border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-600 outline-none"
                     />
                   </div>
                 </div>
@@ -1012,7 +1151,7 @@ export function StudentProjectsView({
                     <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9] text-white text-[10px] font-black uppercase">
                       Year 2 · Sem 4 ({activeBatch})
                     </span>
-                    <span className="text-xs font-bold text-blue-700">{formData.domain}</span>
+                    <span className="text-xs font-bold text-blue-700">{effectiveDomain}</span>
                   </div>
                   <h3 className="text-base font-black text-[#071A3D]">{formData.title}</h3>
                   <p className="text-xs text-gray-700 font-mono">
@@ -1039,9 +1178,19 @@ export function StudentProjectsView({
                   </div>
                 </div>
 
-                <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 text-xs">
-                  <span className="text-[10px] font-black uppercase text-gray-400 block">Repo Link</span>
-                  <p className="font-mono text-blue-600 truncate mt-0.5">{formData.documentation || 'N/A'}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block flex items-center gap-1">
+                      <Code2 className="w-3 h-3 text-gray-500" /> GitHub Repository
+                    </span>
+                    <p className="font-mono text-blue-600 truncate mt-0.5">{formData.githubUrl || 'N/A'}</p>
+                  </div>
+                  <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-200">
+                    <span className="text-[10px] font-black uppercase text-emerald-800 block flex items-center gap-1">
+                      <Globe className="w-3 h-3 text-emerald-600" /> Live Demo Deployment
+                    </span>
+                    <p className="font-mono text-emerald-700 truncate mt-0.5">{formData.liveUrl || 'Not configured'}</p>
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t border-gray-200 flex justify-between gap-2">
