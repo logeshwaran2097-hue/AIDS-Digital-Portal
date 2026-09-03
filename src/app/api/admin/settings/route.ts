@@ -37,6 +37,14 @@ const DEFAULT_SETTINGS = {
   notifyLowAttendance: true,
   notifyODSubmitted: true,
   notifyNewStudent: true,
+  // SMS & WhatsApp Gateway Configuration
+  smsProvider: 'twilio', // 'twilio' | 'fast2sms' | 'custom'
+  smsApiKey: '',
+  smsSenderId: 'VSBEDU',
+  whatsappEnabled: true,
+  whatsappPhoneNumberId: '',
+  whatsappBusinessAccountId: '',
+  whatsappAccessToken: '',
   // Menu Item Visibility
   visibleMenus: {
     dashboard: true,
