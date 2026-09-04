@@ -57,6 +57,8 @@ model Student {
   @@index([year])
   @@index([semester])
   @@index([section])
+  @@index([year, section, semester])
+  @@index([department, year, semester, section])
 }
 
 model Faculty {
@@ -525,6 +527,7 @@ model AttendanceRecord {
   @@index([studentId])
   @@index([registerNumber])
   @@index([status])
+  @@index([studentId, status])
 }
 
 model ProfileChangeRequest {
