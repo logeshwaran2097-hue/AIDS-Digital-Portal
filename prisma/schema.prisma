@@ -224,6 +224,8 @@ model Note {
 
   @@index([subjectId])
   @@index([status])
+  @@index([subjectId, status])
+  @@index([createdAt])
 }
 
 model LabManual {
@@ -242,6 +244,8 @@ model LabManual {
 
   @@index([subjectId])
   @@index([status])
+  @@index([subjectId, status])
+  @@index([createdAt])
 }
 
 model ImportantQuestion {
@@ -259,6 +263,8 @@ model ImportantQuestion {
 
   @@index([subjectId])
   @@index([status])
+  @@index([subjectId, status])
+  @@index([createdAt])
 }
 
 model QuestionPaper {
@@ -288,6 +294,9 @@ model QuestionPaper {
   @@index([year])
   @@index([semester])
   @@index([status])
+  @@index([year, semester, examType])
+  @@index([subjectId, examType])
+  @@index([createdAt])
 }
 
 model Project {

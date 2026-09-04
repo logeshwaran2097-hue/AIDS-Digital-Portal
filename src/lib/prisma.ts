@@ -40,12 +40,41 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  datasources: process.env.DATABASE_URL ? { db: { url: process.env.DATABASE_URL } } : undefined,
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-})
+// Compute optimized connection pooling parameters for PostgreSQL (Supabase / Render)
+function getOptimizedDatabaseUrl(): string | undefined {
+  const url = process.env.DATABASE_URL
+  if (!url) return undefined
+  if (url.startsWith('file:')) return url
 
-// Enable ultra-fast SQLite WAL mode & concurrency optimizations
+  // Ensure high-concurrency pool limits and connection timeouts are tuned
+  try {
+    const parsed = new URL(url)
+    // In serverless / high concurrency, 5-10 connections per worker avoids pool exhaustion
+    if (!parsed.searchParams.has('connection_limit')) {
+      parsed.searchParams.set('connection_limit', process.env.VERCEL ? '5' : '10')
+    }
+    if (!parsed.searchParams.has('pool_timeout')) {
+      parsed.searchParams.set('pool_timeout', '10')
+    }
+    if (!parsed.searchParams.has('connect_timeout')) {
+      parsed.searchParams.set('connect_timeout', '10')
+    }
+    return parsed.toString()
+  } catch {
+    return url
+  }
+}
+
+const optimizedUrl = getOptimizedDatabaseUrl()
+
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    datasources: optimizedUrl ? { db: { url: optimizedUrl } } : undefined,
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+  })
+
+// Enable ultra-fast SQLite WAL mode & concurrency optimizations if on SQLite
 if (process.env.DATABASE_URL?.startsWith('file:') || !process.env.DATABASE_URL) {
   try {
     prisma.$queryRawUnsafe('PRAGMA journal_mode = WAL;').catch(() => {})
