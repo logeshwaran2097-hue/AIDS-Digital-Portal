@@ -39,7 +39,7 @@ import {
 import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
 
 export default function LoginPage() {
-  const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'hod' | 'admin'>('student')
+  const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'advisor' | 'hod' | 'admin'>('student')
   const [showDownloader, setShowDownloader] = React.useState(false)
   const [isAppInstalled, setIsAppInstalled] = React.useState(false)
   const [registerNumber, setRegisterNumber] = React.useState('')
@@ -169,7 +169,7 @@ export default function LoginPage() {
       if (selectedRole === 'student') {
         endpoint = '/api/auth/student'
         payload = { registerNumber: registerNumber.trim(), password }
-      } else if (selectedRole === 'faculty') {
+      } else if (selectedRole === 'faculty' || selectedRole === 'advisor') {
         endpoint = '/api/auth/faculty'
         payload = { facultyId: facultyId.trim(), password }
       } else if (selectedRole === 'hod') {
@@ -198,6 +198,7 @@ export default function LoginPage() {
       const dashboardMap: Record<string, string> = {
         student: '/dashboard',
         faculty: '/faculty-dashboard',
+        advisor: '/faculty-dashboard/students',
         hod: '/hod-dashboard',
       }
       const targetUrl = dashboardMap[selectedRole] || '/dashboard'
@@ -702,7 +703,8 @@ export default function LoginPage() {
                 <span>
                   {selectedRole === 'admin' && '👑 Super Administrator Console'}
                   {selectedRole === 'hod' && '🏛️ Head of Department Directorate'}
-                  {selectedRole === 'faculty' && '📚 Faculty Academic Suite'}
+                  {selectedRole === 'advisor' && '🛡️ Class Advisor Mentorship Suite'}
+                  {selectedRole === 'faculty' && '📚 Course Faculty Portal'}
                   {selectedRole === 'student' && '🎓 Student Intelligence Portal'}
                 </span>
               </div>
@@ -757,10 +759,11 @@ export default function LoginPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-5 gap-1 sm:gap-1.5">
             {[
               { id: 'student', label: 'Student', icon: '🎓' },
               { id: 'faculty', label: 'Faculty', icon: '📚' },
+              { id: 'advisor', label: 'Advisor', icon: '🛡️' },
               { id: 'hod', label: 'HOD', icon: '🏛️' },
               { id: 'admin', label: 'Admin', icon: '⚙️' },
             ].map((role) => (
@@ -778,21 +781,21 @@ export default function LoginPage() {
                   setAuthStatus('idle')
                 }}
                 className={cn(
-                  'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2.5 px-1 text-xs font-bold transition-all duration-300 cursor-pointer border shadow-xs',
+                  'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-0.5 text-xs font-bold transition-all duration-300 cursor-pointer border shadow-xs',
                   selectedRole === role.id
                     ? 'bg-gradient-to-b from-[#1557C0] via-[#0D3B82] to-[#071A41] text-white border-cyan-400/40 shadow-[0_10px_20px_-3px_rgba(21,87,192,0.4)] scale-[1.03]'
                     : 'bg-white/80 hover:bg-white text-[#071A41] hover:border-slate-300 border-slate-200/80 hover:scale-[1.01]'
                 )}
               >
                 {selectedRole === role.id && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center shadow-md">
-                    <Check className="w-2.5 h-2.5 stroke-[3.5]" />
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center shadow-md">
+                    <Check className="w-2 h-2 stroke-[3.5]" />
                   </span>
                 )}
-                <span className="text-xl drop-shadow-xs">{role.icon}</span>
-                <span className="text-[10px] sm:text-[11px] font-black">{role.label}</span>
+                <span className="text-lg sm:text-xl drop-shadow-xs">{role.icon}</span>
+                <span className="text-[9px] sm:text-[10px] font-black truncate">{role.label}</span>
                 {selectedRole === role.id && (
-                  <span className="w-5 h-0.5 bg-[#E7B93E] rounded-full mt-0.5 animate-pulse" />
+                  <span className="w-4 h-0.5 bg-[#E7B93E] rounded-full mt-0.5 animate-pulse" />
                 )}
               </button>
             ))}
@@ -971,6 +974,80 @@ export default function LoginPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform" />
                   <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
                   <span>{loading ? 'Authenticating...' : 'Login to Faculty Portal'}</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </>
+            )}
+
+            {/* Class Advisor */}
+            {selectedRole === 'advisor' && (
+              <>
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Class Advisor Name</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                      Batch Mentor
+                    </span>
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
+                      <UserIcon className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="e.g. Dr. S. Karthik or karthik@vsb.edu.in"
+                      value={facultyId}
+                      onChange={(e) => setFacultyId(e.target.value)}
+                      required
+                      autoComplete="username"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-[#1557C0]" />
+                      <span>Password</span>
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400">Encrypted</span>
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-[#1557C0] hover:scale-110 focus:outline-none cursor-pointer transition-all"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative overflow-hidden w-full font-black py-3 sm:py-3.5 px-4 rounded-xl text-white bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#071A41] shadow-[0_10px_25px_rgba(21,87,192,0.35)] hover:shadow-[0_15px_30px_rgba(21,87,192,0.5)] transition-all duration-300 cursor-pointer text-xs sm:text-sm mt-2 flex items-center justify-center gap-2 border border-cyan-400/30 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform" />
+                  <LogIn className="w-4 h-4 text-[#E7B93E] group-hover:rotate-12 transition-transform" />
+                  <span>{loading ? 'Authenticating...' : 'Login to Advisor Portal (Full Class Dossier)'}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </>

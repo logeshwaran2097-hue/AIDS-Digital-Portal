@@ -20,6 +20,7 @@ import {
   Percent,
   X,
   FileSpreadsheet,
+  MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -130,7 +131,15 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href="https://chat.whatsapp.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 border border-emerald-400/30"
+          >
+            <span className="text-sm">💬</span> AI&amp;DS WhatsApp Group
+          </a>
           <button
             onClick={handleDownloadRosterPDF}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
@@ -287,12 +296,23 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
                       </td>
 
                       <td className="py-3.5 px-5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-2">
+                          {s.phone && (
+                            <a
+                              href={`https://wa.me/${s.phone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                              title="Chat on WhatsApp"
+                            >
+                              <span className="text-xs">💬</span> WhatsApp
+                            </a>
+                          )}
                           {!isSafe && (
                             <button
                               onClick={() => handleSendParentAlert(s)}
                               className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
-                              title="Send SMS to Parent"
+                              title="Send Alert to Parent"
                             >
                               <Send className="w-3 h-3" /> Alert Parent
                             </button>
@@ -360,7 +380,15 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
               </div>
             </div>
 
-            <div className="pt-3 border-t flex justify-end gap-2">
+            <div className="pt-3 border-t flex flex-wrap justify-end gap-2">
+              <a
+                href={`https://wa.me/91${(selectedStudent.parentPhone || selectedStudent.phone || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, Greetings from Department of AI&DS (VSBEC). Update regarding ${selectedStudent.name} (${selectedStudent.registerNumber}): Attendance: ${selectedStudent.attendance.toFixed(1)}%, CGPA: ${selectedStudent.cgpa.toFixed(2)}.`)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition"
+              >
+                <MessageSquare className="w-3.5 h-3.5" /> WhatsApp Parent
+              </a>
               <button
                 onClick={() => {
                   handleSendParentAlert(selectedStudent)

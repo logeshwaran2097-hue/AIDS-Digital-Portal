@@ -668,7 +668,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
       userName: user.name,
       action: 'login',
       module: 'auth',
-      details: `HOD login: ${facultyId}`,
+      details: `HOD login: ${hod.facultyId}`,
       status: 'success',
     },
   })
@@ -874,49 +874,53 @@ export async function verifyAdminOTP(email: string, otp: string, challenge?: str
     } as any))
   }
 
+  const activeAdmin = admin!
+
   let user = await prisma.user.findUnique({
-    where: { id: admin.userId },
+    where: { id: activeAdmin.userId },
   }).catch(() => null)
 
   if (!user) {
     user = await prisma.user.findUnique({
-      where: { email: admin.email },
+      where: { email: activeAdmin.email },
     }).catch(() => null)
   }
 
   if (!user) {
-    user = await prisma.user.create({
+    user = (await prisma.user.create({
       data: {
-        id: admin.userId,
-        email: admin.email,
-        name: admin.name,
+        id: activeAdmin.userId,
+        email: activeAdmin.email,
+        name: activeAdmin.name,
         role: 'admin',
         status: 'active',
       },
-    }).catch(() => ({
-      id: admin.userId,
-      email: admin.email,
-      name: admin.name,
+    }).catch(() => null)) || ({
+      id: activeAdmin.userId,
+      email: activeAdmin.email,
+      name: activeAdmin.name,
       role: 'admin',
       status: 'active',
-    } as any))
+    } as any)
   }
+
+  const activeUser = user!
 
   try {
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: activeUser.id },
       data: { lastLogin: new Date() },
     })
   } catch {}
 
   const token = await createToken({
-    userId: admin.userId,
-    email: user.email,
+    userId: activeAdmin.userId,
+    email: activeUser.email,
     role: 'admin',
-    name: admin.name,
+    name: activeAdmin.name,
   })
 
-  return { success: true, token, user, admin }
+  return { success: true, token, user: activeUser, admin: activeAdmin }
 }
 
 async function sendOTPEmail(email: string, otp: string, name: string) {
