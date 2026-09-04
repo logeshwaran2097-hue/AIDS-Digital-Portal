@@ -378,9 +378,11 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
   return { success: true, token, user, student }
 }
 
-export async function authenticateFaculty(facultyId: string, passwordInput: string) {
-  const rawId = facultyId.trim()
-  const normalizedId = rawId.toUpperCase()
+export async function authenticateFaculty(facultyIdOrName: string, passwordInput: string) {
+  const rawInput = facultyIdOrName.trim()
+  const normalizedId = rawInput.toUpperCase()
+
+  // 1. Try finding by facultyId
   let faculty = await prisma.faculty.findUnique({
     where: { facultyId: normalizedId },
   })
@@ -391,13 +393,25 @@ export async function authenticateFaculty(facultyId: string, passwordInput: stri
       where: { id: faculty.userId },
     })
   } else {
-    // Check if entered value is an email address
+    // 2. Try finding by email
     user = await prisma.user.findFirst({
       where: {
         role: 'faculty',
-        email: rawId.toLowerCase(),
+        email: rawInput.toLowerCase(),
       },
     })
+    if (!user) {
+      // 3. Try finding by Faculty Name (case-insensitive)
+      user = await prisma.user.findFirst({
+        where: {
+          role: 'faculty',
+          name: {
+            equals: rawInput,
+            mode: 'insensitive',
+          },
+        },
+      })
+    }
     if (user) {
       faculty = await prisma.faculty.findFirst({
         where: { userId: user.id },
@@ -517,13 +531,48 @@ export async function authenticateFaculty(facultyId: string, passwordInput: stri
   return { success: true, token, user, faculty }
 }
 
-export async function authenticateHOD(facultyId: string, passwordInput: string) {
-  const normalizedId = facultyId.trim().toUpperCase()
+export async function authenticateHOD(facultyIdOrName: string, passwordInput: string) {
+  const rawInput = facultyIdOrName.trim()
+  const normalizedId = rawInput.toUpperCase()
+
+  // 1. Try finding by facultyId
   let hod = await prisma.hOD.findUnique({
     where: { facultyId: normalizedId },
   })
 
-  if (!hod) {
+  let user = null
+  if (hod) {
+    user = await prisma.user.findUnique({
+      where: { id: hod.userId },
+    })
+  } else {
+    // 2. Try finding by email
+    user = await prisma.user.findFirst({
+      where: {
+        role: 'hod',
+        email: rawInput.toLowerCase(),
+      },
+    })
+    if (!user) {
+      // 3. Try finding by HOD Name (case-insensitive)
+      user = await prisma.user.findFirst({
+        where: {
+          role: 'hod',
+          name: {
+            equals: rawInput,
+            mode: 'insensitive',
+          },
+        },
+      })
+    }
+    if (user) {
+      hod = await prisma.hOD.findFirst({
+        where: { userId: user.id },
+      })
+    }
+  }
+
+  if (!hod || !user) {
     const trimmedPw = passwordInput.trim()
     const isDefaultPw = ['nitr', 'vsb@123', 'hod@123', 'password123', normalizedId.toLowerCase(), normalizedId].includes(trimmedPw)
     if (/^[0-9A-Z]{3,18}$/i.test(normalizedId) && isDefaultPw) {
@@ -560,15 +609,11 @@ export async function authenticateHOD(facultyId: string, passwordInput: string) 
         console.error('Auto HOD provision error:', e)
       }
     }
-    return { success: false, message: 'Invalid HOD ID or Password.' }
+    return { success: false, message: 'Invalid HOD Name / ID or Password.' }
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: hod.userId },
-  })
-
-  if (!user || user.status !== 'active') {
-    return { success: false, message: 'Invalid HOD ID or Password.' }
+  if (user.status !== 'active') {
+    return { success: false, message: 'HOD account is suspended or inactive.' }
   }
 
   const trimmedPassword = passwordInput.trim()

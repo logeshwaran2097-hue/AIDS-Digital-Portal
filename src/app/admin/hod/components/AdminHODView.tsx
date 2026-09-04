@@ -451,26 +451,15 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Phone Number</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. +91 94431 87654"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Phone Number <span className="text-gray-400 font-normal">(Optional)</span></label>
+                <input
+                  type="text"
+                  placeholder="e.g. +91 94431 87654"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                />
               </div>
 
               <div className="grid grid-cols-3 gap-3">

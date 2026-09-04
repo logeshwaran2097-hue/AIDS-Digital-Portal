@@ -911,7 +911,7 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>Faculty ID or Email</span>
+                      <span>Faculty Name</span>
                     </span>
                     <span className="text-[9px] font-bold text-slate-400">Staff Portal</span>
                   </label>
@@ -921,7 +921,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. FAC001 or karthik@vsb.edu.in"
+                      placeholder="e.g. Dr. S. Karthik or karthik@vsb.edu.in"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
@@ -983,7 +983,7 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>Faculty ID</span>
+                      <span>HOD Name</span>
                     </span>
                     <span className="text-[9px] font-bold text-slate-400">Head of Department</span>
                   </label>
@@ -993,7 +993,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. HOD001"
+                      placeholder="e.g. Prof. Dr. V. Sundar or hod.ai@vsb.edu.in"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
