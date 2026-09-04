@@ -6,6 +6,9 @@ const DEFAULT_POSTGRES_URL = 'postgresql://aifactorytwin_user:JxcJgNvRKl3rZDnLCX
 if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
   process.env.DATABASE_URL = DEFAULT_POSTGRES_URL
 }
+if (!process.env.DIRECT_URL || process.env.DIRECT_URL.startsWith('file:')) {
+  process.env.DIRECT_URL = process.env.DATABASE_URL
+}
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
