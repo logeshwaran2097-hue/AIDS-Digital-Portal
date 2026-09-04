@@ -23,13 +23,15 @@ export function StudentNotificationsView({ notifications: initialNotifications }
   const [filter, setFilter] = useState('ALL')
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
 
-  // Auto-sync notifications in real time every 3.5s
+  // High-performance real-time synchronization (1.5s active sync, immediate on tab focus)
   useEffect(() => {
+    let isMounted = true
     const fetchLive = async () => {
+      if (typeof document !== 'undefined' && document.hidden) return
       try {
         const res = await fetch('/api/notifications?role=student', { cache: 'no-store' })
         const data = await res.json()
-        if (data.success && Array.isArray(data.notifications)) {
+        if (isMounted && data.success && Array.isArray(data.notifications)) {
           setItems(
             data.notifications.map((n: any) => ({
               id: n.id,
@@ -43,8 +45,18 @@ export function StudentNotificationsView({ notifications: initialNotifications }
       } catch {}
     }
 
-    const timer = setInterval(fetchLive, 3500)
-    return () => clearInterval(timer)
+    fetchLive()
+    const timer = setInterval(fetchLive, 1500)
+    const onVisibility = () => {
+      if (!document.hidden) fetchLive()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
+    return () => {
+      isMounted = false
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
 
   const handleMarkAllRead = () => {

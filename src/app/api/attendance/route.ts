@@ -84,24 +84,29 @@ export async function GET(request: Request) {
     let studentDetails: any[] = []
 
     if (students.length > 0) {
-      studentDetails = await Promise.all(
-        students.map(async (s) => {
-          const user = await prisma.user.findUnique({ where: { id: s.userId } }).catch(() => null)
-          return {
-            id: s.id,
-            userId: s.userId,
-            registerNumber: s.registerNumber,
-            name: user?.name || s.registerNumber,
-            email: user?.email || `${s.registerNumber.toLowerCase()}@vsb.edu.in`,
-            phone: user?.phone || '',
-            gender: (s.registerNumber.endsWith('2') || s.registerNumber.endsWith('4') || s.registerNumber.endsWith('6') || s.registerNumber.endsWith('8') || s.registerNumber.endsWith('0')) ? 'F' : 'M',
-            section: s.section,
-            year: s.year,
-            semester: s.semester,
-            cumulativeAttendance: 100,
-          }
-        })
-      )
+      const userIds = students.map((s) => s.userId).filter(Boolean)
+      const users = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, email: true, phone: true },
+      }).catch(() => [])
+      const userMap = new Map(users.map((u) => [u.id, u]))
+
+      studentDetails = students.map((s) => {
+        const user = userMap.get(s.userId)
+        return {
+          id: s.id,
+          userId: s.userId,
+          registerNumber: s.registerNumber,
+          name: user?.name || s.registerNumber,
+          email: user?.email || `${s.registerNumber.toLowerCase()}@vsb.edu.in`,
+          phone: user?.phone || '',
+          gender: (s.registerNumber.endsWith('2') || s.registerNumber.endsWith('4') || s.registerNumber.endsWith('6') || s.registerNumber.endsWith('8') || s.registerNumber.endsWith('0')) ? 'F' : 'M',
+          section: s.section,
+          year: s.year,
+          semester: s.semester,
+          cumulativeAttendance: 100,
+        }
+      })
     }
 
     let existingSession: any = null
