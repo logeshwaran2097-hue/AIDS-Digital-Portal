@@ -1,20 +1,12 @@
 {
-  "id": "/?source=pwa",
+  "id": "/",
   "name": "Digital Portal of AI&DS",
   "short_name": "Digital Portal of AI&DS",
   "description": "V.S.B. Engineering College - Department of Artificial Intelligence & Data Science Digital Portal, Karur, Tamil Nadu",
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["tabbed", "standalone", "window-controls-overlay", "minimal-ui", "browser"],
-  "tab_strip": {
-    "home_tab": {
-      "scope": "/"
-    },
-    "new_tab_button": {
-      "url": "/dashboard"
-    }
-  },
+  "display_override": ["standalone", "window-controls-overlay"],
   "orientation": "portrait-primary",
   "background_color": "#071A41",
   "theme_color": "#071A41",

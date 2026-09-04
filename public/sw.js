@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v3'
+const CACHE_NAME = 'vsb-aids-portal-v4'
 const STATIC_ASSETS = [
   '/',
   '/login',
