@@ -40,19 +40,14 @@ export interface StudentRosterItem {
   parentPhone: string
 }
 
-const DEFAULT_STUDENTS: StudentRosterItem[] = [
-  { id: '1', name: 'K. Aishwarya', registerNumber: '23AD001', email: '23ad001@vsb.edu.in', phone: '+91 90252 10001', year: 2, semester: 3, section: 'A', cgpa: 8.84, attendance: 92.5, arrears: 0, parentPhone: '+91 98421 23456' },
-  { id: '2', name: 'R. Deepak', registerNumber: '23AD002', email: '23ad002@vsb.edu.in', phone: '+91 90252 10002', year: 2, semester: 3, section: 'A', cgpa: 8.62, attendance: 85.0, arrears: 0, parentPhone: '+91 98421 23457' },
-  { id: '3', name: 'S. Kavitha', registerNumber: '23AD003', email: '23ad003@vsb.edu.in', phone: '+91 90252 10003', year: 2, semester: 3, section: 'A', cgpa: 7.95, attendance: 78.4, arrears: 0, parentPhone: '+91 98421 23458' },
-  { id: '4', name: 'M. Praveen', registerNumber: '23AD004', email: '23ad004@vsb.edu.in', phone: '+91 90252 10004', year: 2, semester: 3, section: 'A', cgpa: 7.20, attendance: 71.0, arrears: 1, parentPhone: '+91 98421 23459' },
-  { id: '5', name: 'T. Divya', registerNumber: '23AD005', email: '23ad005@vsb.edu.in', phone: '+91 90252 10005', year: 2, semester: 3, section: 'A', cgpa: 8.91, attendance: 88.2, arrears: 0, parentPhone: '+91 98421 23460' },
-  { id: '6', name: 'N. Sandhiya', registerNumber: '23AD006', email: '23ad006@vsb.edu.in', phone: '+91 90252 10006', year: 2, semester: 3, section: 'A', cgpa: 9.12, attendance: 95.6, arrears: 0, parentPhone: '+91 98421 23461' },
-  { id: '7', name: 'V. Karthikeyan', registerNumber: '23AD007', email: '23ad007@vsb.edu.in', phone: '+91 90252 10007', year: 2, semester: 3, section: 'A', cgpa: 8.35, attendance: 89.0, arrears: 0, parentPhone: '+91 98421 23462' },
-  { id: '8', name: 'P. Sneha', registerNumber: '23AD008', email: '23ad008@vsb.edu.in', phone: '+91 90252 10008', year: 2, semester: 3, section: 'A', cgpa: 8.48, attendance: 91.2, arrears: 0, parentPhone: '+91 98421 23463' },
-]
-
-export function FacultyStudentsView({ initialStudents }: { initialStudents?: StudentRosterItem[] }) {
-  const students = initialStudents && initialStudents.length > 0 ? initialStudents : DEFAULT_STUDENTS
+export function FacultyStudentsView({
+  initialStudents = [],
+  advisorDetails,
+}: {
+  initialStudents?: StudentRosterItem[]
+  advisorDetails?: { facultyName: string; advisorBatch: string }
+}) {
+  const students = initialStudents
 
   const [searchQuery, setSearchQuery] = useState('')
   const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'SAFE' | 'WARNING'>('ALL')
@@ -77,14 +72,21 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
     })
   }, [students, searchQuery, attendanceFilter])
 
+  const avgCgpa = useMemo(() => {
+    const validStudents = students.filter(s => s.cgpa > 0)
+    if (validStudents.length === 0) return '—'
+    const sum = validStudents.reduce((acc, curr) => acc + curr.cgpa, 0)
+    return (sum / validStudents.length).toFixed(2)
+  }, [students])
+
   const handleDownloadRosterPDF = () => {
     const sections = [
       {
         heading: 'CLASS BATCH & ADVISOR DETAILS',
         body: [
           'Department: Artificial Intelligence & Data Science (AI & DS)',
-          'Academic Batch: Year II / Semester 3 (Section A) · Regulation 2021',
-          'Faculty Class Advisor: Dr. S. Karthik (Professor - Room 201)',
+          `Academic Batch: ${advisorDetails?.advisorBatch || 'B.Tech AI & DS'}`,
+          `Faculty Class Advisor: ${advisorDetails?.facultyName || 'Class Advisor'}`,
           `Total Students on Roll: ${students.length} Students`,
           `Attendance Compliant (>75%): ${students.filter((s) => s.attendance >= 75).length} Students`,
           `Attendance Condonation Risk (<75%): ${students.filter((s) => s.attendance < 75).length} Students`,
@@ -94,23 +96,28 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
         heading: 'STUDENT ROSTER & ACADEMIC PERFORMANCE SUMMARY',
         body: filteredStudents.map(
           (s) =>
-            `${s.registerNumber} - ${s.name}: CGPA: ${s.cgpa.toFixed(2)} | Attendance: ${s.attendance.toFixed(1)}% | Arrears: ${s.arrears} | Phone: ${s.phone}`
+            `${s.registerNumber} - ${s.name}: CGPA: ${s.cgpa > 0 ? s.cgpa.toFixed(2) : 'N/A'} | Attendance: ${s.attendance > 0 ? `${s.attendance.toFixed(1)}%` : 'N/A'} | Arrears: ${s.arrears} | Phone: ${s.phone || 'N/A'}`
         ),
       },
     ]
 
     generateAndDownloadPDF({
       title: 'OFFICIAL STUDENT BATCH ROSTER & ATTENDANCE STATEMENT',
-      subtitle: 'Class Advisor Roster · B.Tech Artificial Intelligence & Data Science · Semester 3 (Section A)',
-      author: 'Dr. S. Karthik (Class Advisor)',
+      subtitle: `Class Advisor Roster · B.Tech Artificial Intelligence & Data Science · ${advisorDetails?.advisorBatch || 'Official Batch'}`,
+      author: advisorDetails?.facultyName || 'Class Advisor',
       category: 'Student Batch Registry',
       sections,
-      fileName: 'Class_Roster_Year2_Sem3_SecA',
+      fileName: 'Class_Roster_AI_DS',
     })
   }
 
   const handleSendParentAlert = (student: StudentRosterItem) => {
-    setAlertSuccess(`Dispatched Automated SMS Alert to Parent (${student.parentPhone}) for ${student.name}!`)
+    if (!student.parentPhone) {
+      setAlertSuccess(`Parent contact phone not registered for ${student.name}.`)
+      setTimeout(() => setAlertSuccess(null), 3000)
+      return
+    }
+    setAlertSuccess(`Dispatched SMS Alert to Parent (${student.parentPhone}) for ${student.name}!`)
     setTimeout(() => setAlertSuccess(null), 3000)
   }
 
@@ -123,11 +130,11 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Class Advisor Registry
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Year II / Semester 3 (Section A)</span>
+            <span className="text-xs text-gray-300 font-medium">· {advisorDetails?.advisorBatch || 'AI & DS Student Batch'}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Student Registry &amp; Academic Roster</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Dr. S. Karthik · Monitor student attendance, CGPA rankings, arrears &amp; parent communications
+            {advisorDetails?.facultyName || 'Faculty Advisor'} · Monitor student attendance, CGPA rankings, arrears &amp; parent communications
           </p>
         </div>
 
@@ -140,12 +147,14 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
           >
             <span className="text-sm">💬</span> AI&amp;DS WhatsApp Group
           </a>
-          <button
-            onClick={handleDownloadRosterPDF}
-            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
-          >
-            <Download className="w-4 h-4" /> Download Class Roster (PDF)
-          </button>
+          {students.length > 0 && (
+            <button
+              onClick={handleDownloadRosterPDF}
+              className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
+            >
+              <Download className="w-4 h-4" /> Download Class Roster (PDF)
+            </button>
+          )}
         </div>
       </div>
 
@@ -154,8 +163,8 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
         <div className="bg-white p-5 rounded-3xl border border-blue-200/80 shadow-xs flex items-center justify-between">
           <div>
             <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Enrolled</p>
-            <p className="text-2xl font-black text-[#1455D9] mt-0.5">{students.length} Students</p>
-            <p className="text-[10px] text-gray-400">Semester 3 Sec-A</p>
+            <p className="text-2xl font-black text-[#1455D9] mt-0.5">{students.length} Student{students.length === 1 ? '' : 's'}</p>
+            <p className="text-[10px] text-gray-400">{advisorDetails?.advisorBatch || 'Registered'}</p>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black">
             <Users className="w-5 h-5" />
@@ -173,15 +182,15 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
         <div className="bg-white p-5 rounded-3xl border border-red-200/80 shadow-xs bg-red-50/20">
           <p className="text-[10px] text-red-700 font-bold uppercase tracking-wider">Attendance Risk (&lt;75%)</p>
           <p className="text-2xl font-black text-red-600 mt-0.5">
-            {students.filter((s) => s.attendance < 75).length} Students
+            {students.filter((s) => s.attendance < 75 && s.attendance > 0).length} Students
           </p>
           <p className="text-[10px] text-red-700 font-semibold">Requires Condonation</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-purple-200/80 shadow-xs bg-purple-50/20">
           <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">Batch Avg CGPA</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">8.42 / 10.0</p>
-          <p className="text-[10px] text-purple-600 font-semibold">First Class Distinction</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">{avgCgpa !== '—' ? `${avgCgpa} / 10.0` : '—'}</p>
+          <p className="text-[10px] text-purple-600 font-semibold">Performance Average</p>
         </div>
       </div>
 
@@ -244,90 +253,108 @@ export function FacultyStudentsView({ initialStudents }: { initialStudents?: Stu
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 font-medium">
-                {filteredStudents.map((s, i) => {
-                  const isSafe = s.attendance >= 75
-                  return (
-                    <tr key={s.id} className="hover:bg-gray-50/80 transition-colors group">
-                      <td className="py-3.5 px-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                            {s.name.charAt(0)}
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-gray-400">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <Users className="w-8 h-8 text-gray-300" />
+                        <p className="text-xs font-bold text-gray-600">
+                          {searchQuery || attendanceFilter !== 'ALL'
+                            ? 'No students matching the current filter criteria'
+                            : 'No students enrolled in this batch yet'}
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          Students added by the Admin or Department will appear in this class roster.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((s, i) => {
+                    const isSafe = s.attendance >= 75
+                    return (
+                      <tr key={s.id} className="hover:bg-gray-50/80 transition-colors group">
+                        <td className="py-3.5 px-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                              {s.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-bold text-xs text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
+                                {s.name}
+                              </p>
+                              <p className="text-[11px] text-gray-400">{s.email}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-xs text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
-                              {s.name}
-                            </p>
-                            <p className="text-[11px] text-gray-400">{s.email}</p>
-                          </div>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#1455D9]">
-                        {s.registerNumber}
-                      </td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#1455D9]">
+                          {s.registerNumber}
+                        </td>
 
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="font-black text-[#071A3D] text-xs px-2 py-0.5 rounded-lg bg-gray-100">
-                          {s.cgpa.toFixed(2)}
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center">
-                        <span
-                          className={cn(
-                            'font-black text-xs px-2.5 py-1 rounded-full',
-                            isSafe ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          )}
-                        >
-                          {s.attendance.toFixed(1)}%
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center">
-                        {s.arrears === 0 ? (
-                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                            0 Arrears (Clean)
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="font-black text-[#071A3D] text-xs px-2 py-0.5 rounded-lg bg-gray-100">
+                            {s.cgpa > 0 ? s.cgpa.toFixed(2) : '—'}
                           </span>
-                        ) : (
-                          <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
-                            {s.arrears} Arrear
-                          </span>
-                        )}
-                      </td>
+                        </td>
 
-                      <td className="py-3.5 px-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {s.phone && (
-                            <a
-                              href={`https://wa.me/${s.phone.replace(/[^0-9]/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
-                              title="Chat on WhatsApp"
-                            >
-                              <span className="text-xs">💬</span> WhatsApp
-                            </a>
-                          )}
-                          {!isSafe && (
-                            <button
-                              onClick={() => handleSendParentAlert(s)}
-                              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
-                              title="Send Alert to Parent"
-                            >
-                              <Send className="w-3 h-3" /> Alert Parent
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setSelectedStudent(s)}
-                            className="px-3 py-1 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-lg text-[10.5px] font-bold transition-all cursor-pointer shadow-xs"
+                        <td className="py-3.5 px-4 text-center">
+                          <span
+                            className={cn(
+                              'font-black text-xs px-2.5 py-1 rounded-full',
+                              s.attendance === 0 ? 'bg-gray-100 text-gray-600' : isSafe ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            )}
                           >
-                            Profile Details
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
+                            {s.attendance > 0 ? `${s.attendance.toFixed(1)}%` : '—'}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-center">
+                          {s.arrears === 0 ? (
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                              0 Arrears (Clean)
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
+                              {s.arrears} Arrear{s.arrears > 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-3.5 px-5 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {s.phone && (
+                              <a
+                                href={`https://wa.me/${s.phone.replace(/[^0-9]/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                                title="Chat on WhatsApp"
+                              >
+                                <span className="text-xs">💬</span> WhatsApp
+                              </a>
+                            )}
+                            {!isSafe && s.attendance > 0 && (
+                              <button
+                                onClick={() => handleSendParentAlert(s)}
+                                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10.5px] font-bold transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+                                title="Send Alert to Parent"
+                              >
+                                <Send className="w-3 h-3" /> Alert Parent
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setSelectedStudent(s)}
+                              className="px-3 py-1 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-lg text-[10.5px] font-bold transition-all cursor-pointer shadow-xs"
+                            >
+                              Profile Details
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>

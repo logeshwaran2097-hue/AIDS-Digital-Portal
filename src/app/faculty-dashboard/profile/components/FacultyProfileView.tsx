@@ -247,12 +247,19 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
             </h3>
 
             <div className="space-y-2.5 text-xs">
-              {data.allocatedCourses.map((c, idx) => (
-                <div key={idx} className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0" />
-                  <span className="font-bold text-[#071A3D]">{c}</span>
+              {data.allocatedCourses.length === 0 ? (
+                <div className="p-4 rounded-2xl bg-gray-50 border text-center text-gray-400">
+                  <p className="font-semibold text-gray-600">No subjects allocated yet</p>
+                  <p className="text-[11px] mt-0.5">Courses assigned by HOD will be displayed here.</p>
                 </div>
-              ))}
+              ) : (
+                data.allocatedCourses.map((c, idx) => (
+                  <div key={idx} className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0" />
+                    <span className="font-bold text-[#071A3D]">{c}</span>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

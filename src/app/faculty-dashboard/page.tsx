@@ -21,40 +21,110 @@ export default async function FacultyDashboardPage() {
     status: 'active',
   }
 
-  const totalStudents = await prisma.student.count().catch(() => 68)
-  const totalSubjects = await prisma.subject.count().catch(() => 7)
+  let parsedSubjectCodes: string[] = []
+  if (faculty?.subjects) {
+    try {
+      parsedSubjectCodes = JSON.parse(faculty.subjects)
+    } catch {
+      parsedSubjectCodes = []
+    }
+  }
+
+  // Fetch real subjects allocated to this faculty member from DB
+  const dbSubjects = await prisma.subject.findMany({
+    where: parsedSubjectCodes.length > 0 ? { code: { in: parsedSubjectCodes } } : undefined,
+    orderBy: { code: 'asc' },
+  }).catch(() => [])
+
+  // If faculty has advisor batch, count students in that batch, else count total students in department
+  const advisorBatchFilter = faculty?.advisorYear && faculty?.advisorSec ? {
+    year: faculty.advisorYear,
+    section: faculty.advisorSec,
+  } : undefined
+
+  const totalStudents = await prisma.student.count({
+    where: advisorBatchFilter,
+  }).catch(() => 0)
+
+  const totalSubjectsCount = parsedSubjectCodes.length > 0 ? parsedSubjectCodes.length : (faculty ? 0 : await prisma.subject.count().catch(() => 0))
   const resourcesCount = await prisma.resource.count({
     where: faculty?.id ? { uploadedById: faculty.id } : undefined,
-  }).catch(() => 8)
-  const questionPapersCount = await prisma.questionPaper.count().catch(() => 12)
+  }).catch(() => 0)
+  const questionPapersCount = await prisma.questionPaper.count({
+    where: faculty?.id ? { uploadedById: faculty.id } : undefined,
+  }).catch(() => 0)
+
+  // Fetch real attendance average if sessions exist
+  const attendanceSessions = await prisma.attendanceSession.findMany({
+    where: faculty?.id ? { takenByFacultyId: faculty.id } : undefined,
+    include: { records: true },
+    take: 20,
+    orderBy: { createdAt: 'desc' },
+  }).catch(() => [])
+
+  let attendanceAvg = '0.0%'
+  if (attendanceSessions.length > 0) {
+    let totalRecs = 0
+    let presentRecs = 0
+    for (const sess of attendanceSessions) {
+      for (const rec of sess.records) {
+        totalRecs++
+        if (rec.status === 'P' || rec.status === 'OD') presentRecs++
+      }
+    }
+    if (totalRecs > 0) {
+      attendanceAvg = `${((presentRecs / totalRecs) * 100).toFixed(1)}%`
+    }
+  }
+
+  const assignedSubjects = dbSubjects.map((s) => ({
+    code: s.code,
+    name: s.name,
+    batch: faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} (Sec ${faculty.advisorSec || 'A'})` : 'B.Tech AI & DS'),
+    students: totalStudents,
+    hoursConducted: attendanceSessions.filter(sess => sess.subjectCode === s.code).length,
+    nextClass: faculty?.classDay && faculty?.classTime ? `${faculty.classDay}, ${faculty.classTime}` : 'Not scheduled',
+    attendanceAvg: attendanceAvg !== '0.0%' ? attendanceAvg : '—',
+  }))
+
+  const timetableSlots = faculty?.classDay && faculty?.classTime ? [
+    {
+      time: faculty.classTime,
+      subject: `${faculty.subjectName || (dbSubjects[0]?.name) || 'Allocated Course'}`,
+      room: faculty.classPeriod || 'LH / Lab',
+      type: 'Scheduled Session',
+      status: 'Upcoming',
+    }
+  ] : []
 
   const facultyData = {
     user: {
       name: user.name || session.name || 'Faculty Member',
       email: user.email || session.email || 'faculty@vsb.edu.in',
-      phone: user.phone || '+91 98765 43210',
+      phone: user.phone || '',
     },
     faculty: faculty
       ? {
           facultyId: faculty.facultyId,
-          designation: faculty.designation,
-          qualification: faculty.qualification,
-          experience: faculty.experience,
-          specialization: faculty.specialization,
-          subjects: faculty.subjects,
+          designation: faculty.designation || 'Assistant Professor',
+          qualification: faculty.qualification || 'M.Tech / Ph.D',
+          experience: faculty.experience || 0,
+          specialization: faculty.specialization || 'AI & Data Science',
+          subjects: faculty.subjects || '[]',
+          advisorBatch: faculty.advisorBatch || null,
+          advisorYear: faculty.advisorYear || null,
+          advisorSem: faculty.advisorSem || null,
+          advisorSec: faculty.advisorSec || null,
+          facultyType: faculty.facultyType || 'both',
         }
-      : {
-          facultyId: session.facultyId || 'FAC-001',
-          designation: 'Associate Professor',
-          qualification: 'Ph.D in Artificial Intelligence',
-          experience: 10,
-          specialization: 'Deep Learning & NLP',
-          subjects: '["AD2301", "AD2302"]',
-        },
-    totalStudents: totalStudents || 68,
-    totalSubjects: totalSubjects || 7,
-    resourcesCount: resourcesCount || 8,
-    questionPapersCount: questionPapersCount || 12,
+      : null,
+    totalStudents,
+    totalSubjects: totalSubjectsCount,
+    resourcesCount,
+    questionPapersCount,
+    attendanceAvg,
+    assignedSubjects,
+    todayTimetable: timetableSlots,
   }
 
   return (

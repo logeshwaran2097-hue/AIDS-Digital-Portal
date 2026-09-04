@@ -32,20 +32,8 @@ export interface ResourceItem {
   createdAt: Date
 }
 
-const DEFAULT_RESOURCES: ResourceItem[] = [
-  { id: '1', name: 'Data Structures and Algorithm Analysis in C++ (Mark Allen Weiss)', description: 'Standard reference textbook for AD2301 Linear & Non-Linear Data Structures with full C++ implementations', fileName: 'Mark_Allen_Weiss_DSA_4th_Ed.pdf', fileSize: 15518924, resourceType: 'textbook', uploadedByName: 'Dr. S. Karthik', createdAt: new Date() },
-  { id: '2', name: 'Database System Concepts (Silberschatz, Korth & Sudarshan - 7th Edition)', description: 'Comprehensive relational database concepts, SQL transactions, concurrency control & indexing', fileName: 'Silberschatz_Korth_DBMS_7th_Ed.pdf', fileSize: 23488102, resourceType: 'textbook', uploadedByName: 'Mrs. R. Priya', createdAt: new Date() },
-  { id: '3', name: 'Discrete Mathematics and Its Applications (Kenneth H. Rosen - 8th Edition)', description: 'Core mathematical foundations for computing, graph theory, propositional logic & combinatorics', fileName: 'Kenneth_Rosen_Discrete_Math_8th_Ed.pdf', fileSize: 19818905, resourceType: 'textbook', uploadedByName: 'Dr. M. Sowmya', createdAt: new Date() },
-  { id: '4', name: 'Pattern Recognition and Machine Learning (Christopher M. Bishop)', description: 'Foundational machine learning text on Bayesian methods, kernel models, SVMs & neural networks', fileName: 'Bishop_Pattern_Recognition_Machine_Learning.pdf', fileSize: 32715571, resourceType: 'textbook', uploadedByName: 'Dr. S. Karthik', createdAt: new Date() },
-  { id: '5', name: 'Artificial Intelligence: A Modern Approach (Stuart Russell & Peter Norvig)', description: 'Standard AI curriculum handbook covering heuristic search, state spaces, knowledge representation & logic', fileName: 'Russell_Norvig_AI_Modern_Approach.pdf', fileSize: 28311552, resourceType: 'textbook', uploadedByName: 'Dr. S. Karthik', createdAt: new Date() },
-  { id: '6', name: 'Python for Data Analysis (Wes McKinney - Creator of Pandas)', description: 'Data science manipulation handbook with NumPy, Pandas, DataFrames, and time series analysis', fileName: 'Wes_McKinney_Python_Data_Analysis.pdf', fileSize: 12373196, resourceType: 'handbook', uploadedByName: 'Dr. S. Karthik', createdAt: new Date() },
-  { id: '7', name: 'Complete AI & DS Placement & Technical Interview Cheatsheet (2026 Batch)', description: 'Comprehensive 120-topic revision guide for product companies: Python, DSA, SQL, ML, Deep Learning & System Design', fileName: 'VSB_AI_DS_Placement_Interview_Kit_2026.pdf', fileSize: 8388608, resourceType: 'placement_guide', uploadedByName: 'Placement Cell & Dr. S. Karthik', createdAt: new Date() },
-]
-
-export function FacultyResourcesView({ initialResources }: { initialResources?: ResourceItem[] }) {
-  const [resources, setResources] = useState<ResourceItem[]>(
-    initialResources && initialResources.length > 0 ? initialResources : DEFAULT_RESOURCES
-  )
+export function FacultyResourcesView({ initialResources = [] }: { initialResources?: ResourceItem[] }) {
+  const [resources, setResources] = useState<ResourceItem[]>(initialResources)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState('ALL')
   const [showUploadModal, setShowUploadModal] = useState(false)
@@ -201,8 +189,21 @@ export function FacultyResourcesView({ initialResources }: { initialResources?: 
       </div>
 
       {/* Resources Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {filtered.map((r) => (
+      {filtered.length === 0 ? (
+        <Card className="rounded-3xl border-gray-200 bg-white">
+          <CardContent className="p-12 text-center space-y-3">
+            <Database className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="font-bold text-sm text-[#071A3D]">No Learning Resources Available</h3>
+            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              {searchQuery || selectedType !== 'ALL'
+                ? 'No resources matching your search filter.'
+                : 'Upload textbooks, lecture notes, lab manuals or interview materials using the button above.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {filtered.map((r) => (
           <Card
             key={r.id}
             className="rounded-3xl border-gray-200 hover:shadow-lg transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
@@ -241,7 +242,8 @@ export function FacultyResourcesView({ initialResources }: { initialResources?: 
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Upload Resource Modal */}
       {showUploadModal && (

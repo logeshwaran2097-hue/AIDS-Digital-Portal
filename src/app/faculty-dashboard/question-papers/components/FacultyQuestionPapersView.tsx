@@ -226,8 +226,21 @@ export function FacultyQuestionPapersView({
       </div>
 
       {/* Question Papers Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((p) => (
+      {filtered.length === 0 ? (
+        <Card className="rounded-3xl border-gray-200 bg-white">
+          <CardContent className="p-12 text-center space-y-3">
+            <FileQuestion className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="font-bold text-sm text-[#071A3D]">No Question Papers Archived</h3>
+            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              {searchQuery || selectedExamType !== 'ALL' || selectedSubject !== 'ALL'
+                ? 'No question papers matching your search filters.'
+                : 'Upload IAT, Model or University exam question papers using the button above.'}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((p) => (
           <Card
             key={p.id}
             className="rounded-3xl border-gray-200 hover:shadow-lg transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
@@ -273,7 +286,8 @@ export function FacultyQuestionPapersView({
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Upload Paper Modal */}
       {showUploadModal && (

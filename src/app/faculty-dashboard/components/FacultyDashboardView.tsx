@@ -31,6 +31,24 @@ import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 
+export interface AssignedSubjectItem {
+  code: string
+  name: string
+  batch: string
+  students: number
+  hoursConducted: number
+  nextClass: string
+  attendanceAvg: string
+}
+
+export interface TimetableSlotItem {
+  time: string
+  subject: string
+  room: string
+  type: string
+  status: string
+}
+
 interface FacultyData {
   user: { name: string; email: string; phone?: string | null }
   faculty: {
@@ -40,30 +58,20 @@ interface FacultyData {
     experience: number
     specialization: string
     subjects: string
+    advisorBatch?: string | null
+    advisorYear?: number | null
+    advisorSem?: number | null
+    advisorSec?: string | null
+    facultyType?: string
   } | null
   totalStudents: number
   totalSubjects: number
   resourcesCount: number
   questionPapersCount: number
+  attendanceAvg?: string
+  assignedSubjects?: AssignedSubjectItem[]
+  todayTimetable?: TimetableSlotItem[]
 }
-
-const assignedSubjectsList = [
-  { code: 'AD2305', name: 'Machine Learning Foundations', batch: 'Year 2 / Sem 3 (Sec A)', students: 68, hoursConducted: 37, nextClass: 'Today, 09:30 AM (LH-201)', attendanceAvg: '97.3%' },
-  { code: 'AD2301', name: 'Data Structures & Algorithms', batch: 'Year 2 / Sem 3 (Sec A)', students: 68, hoursConducted: 38, nextClass: 'Today, 11:15 AM (Lab-3)', attendanceAvg: '94.7%' },
-  { code: 'AD2307', name: 'Data Science Tools & Laboratory', batch: 'Year 2 / Sem 3 (Sec A)', students: 68, hoursConducted: 18, nextClass: 'Tomorrow, 01:30 PM (Lab-3)', attendanceAvg: '100.0%' },
-]
-
-const todayTimetable = [
-  { time: '09:00 - 09:50 AM', subject: 'AD2305 - Machine Learning Foundations', room: 'Lecture Hall 201', type: 'Lecture', status: 'Completed' },
-  { time: '11:15 - 12:55 PM', subject: 'AD2301 - Data Structures Lab (Batch 1)', room: 'Data Analytics Center (Lab 3)', type: 'Laboratory', status: 'In-Progress' },
-  { time: '02:00 - 03:00 PM', subject: 'Capstone Project Review & Mentoring', room: 'AI Research Lab (Room 201)', type: 'Review', status: 'Upcoming' },
-  { time: '03:30 - 04:30 PM', subject: 'Student Counseling & Office Hours', room: 'Faculty Cabin (Room 201)', type: 'Consultation', status: 'Upcoming' },
-]
-
-const pendingODs = [
-  { id: 'od-1', studentName: 'K. Aishwarya', regNo: '23AD001', event: 'SIH 2025 Grand Finale (Smart India Hackathon)', date: '28/08/2026', type: 'Hackathon OD' },
-  { id: 'od-2', studentName: 'R. Deepak', regNo: '23AD014', event: 'IEEE ICCCNT Paper Presentation', date: '28/08/2026', type: 'Conference OD' },
-]
 
 const quickNav = [
   { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
@@ -77,14 +85,19 @@ const quickNav = [
 ]
 
 export function FacultyDashboardView({ data }: { data: FacultyData }) {
-  const [odList, setOdList] = useState(pendingODs)
+  const [odList, setOdList] = useState<{ id: string; studentName: string; regNo: string; event: string; date: string; type: string }[]>([])
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
+
+  const assignedSubjects = data.assignedSubjects || []
+  const todayTimetable = data.todayTimetable || []
 
   const handleApproveOD = (id: string, name: string) => {
     setOdList((prev) => prev.filter((o) => o.id !== id))
     setActionSuccess(`Approved On-Duty Request for ${name}!`)
     setTimeout(() => setActionSuccess(null), 2500)
   }
+
+  const isClassAdvisor = data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
@@ -95,12 +108,12 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0">
-              {data.user.name.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'K'}
+              {data.user.name.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-                  Senior Faculty Advisor
+                  {isClassAdvisor ? 'Class Advisor & Faculty' : 'Faculty Member'}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
@@ -108,7 +121,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
               </div>
               <h1 className="text-xl sm:text-2xl font-black mt-1">{data.user.name}</h1>
               <p className="text-xs sm:text-sm text-gray-300 font-mono mt-0.5">
-                {data.faculty?.designation || 'Professor'} · {data.faculty?.qualification || 'Ph.D. Computer Science'} · Cabin: <span className="text-[#22C7E8] font-bold">Room 201</span>
+                {data.faculty?.designation || 'Faculty'} {data.faculty?.qualification ? `· ${data.faculty.qualification}` : ''} {data.faculty?.facultyId ? `· ID: ${data.faculty.facultyId}` : ''}
               </p>
             </div>
           </div>
@@ -127,26 +140,26 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/15">
           <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
             <p className="text-[10px] text-gray-300 uppercase font-bold">Allocated Courses</p>
-            <p className="text-xl font-black text-[#F4C430] mt-0.5">3 Theory &amp; Lab</p>
-            <p className="text-[10px] text-gray-300">Regulation 2021</p>
+            <p className="text-xl font-black text-[#F4C430] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
+            <p className="text-[10px] text-gray-300">Curriculum &amp; Labs</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
             <p className="text-[10px] text-gray-300 uppercase font-bold">Enrolled Students</p>
-            <p className="text-xl font-black text-emerald-300 mt-0.5">68 Students</p>
-            <p className="text-[10px] text-gray-300">Semester 3 (Section A)</p>
+            <p className="text-xl font-black text-emerald-300 mt-0.5">{data.totalStudents} Student{data.totalStudents === 1 ? '' : 's'}</p>
+            <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || 'Active Students'}</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
             <p className="text-[10px] text-gray-300 uppercase font-bold">Batch Attendance Avg</p>
-            <p className="text-xl font-black text-[#22C7E8] mt-0.5">94.8%</p>
-            <p className="text-[10px] text-emerald-300">High Compliance (&gt;75%)</p>
+            <p className="text-xl font-black text-[#22C7E8] mt-0.5">{data.attendanceAvg || '—'}</p>
+            <p className="text-[10px] text-emerald-300">Recorded Sessions</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
             <p className="text-[10px] text-gray-300 uppercase font-bold">Pending OD Approvals</p>
             <p className="text-xl font-black text-amber-300 mt-0.5">{odList.length} Requests</p>
-            <p className="text-[10px] text-amber-200">Requires Class Advisor Sign</p>
+            <p className="text-[10px] text-amber-200">Student On-Duty Requests</p>
           </div>
         </div>
       </div>
@@ -194,60 +207,84 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           </div>
 
           <div className="space-y-3">
-            {assignedSubjectsList.map((sub) => (
-              <Card key={sub.code} className="rounded-3xl border-gray-200 hover:shadow-md transition-all bg-white group hover:border-[#1455D9]/40">
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-mono text-xs font-black text-[#1455D9] px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200/60">
-                        {sub.code}
-                      </span>
-                      <h3 className="font-bold text-sm text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
-                        {sub.name}
-                      </h3>
-                    </div>
-                    <span className="text-xs font-semibold text-gray-400">{sub.batch}</span>
+            {assignedSubjects.length === 0 ? (
+              <Card className="rounded-3xl border-gray-200 bg-white shadow-xs">
+                <CardContent className="p-8 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto">
+                    <BookOpen className="w-6 h-6" />
                   </div>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-gray-100 text-xs">
-                    <div className="p-2 rounded-xl bg-gray-50">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">Enrolled</p>
-                      <p className="font-bold text-[#071A3D] mt-0.5">{sub.students} Students</p>
-                    </div>
-                    <div className="p-2 rounded-xl bg-gray-50">
-                      <p className="text-[10px] text-gray-400 font-bold uppercase">Hours Taught</p>
-                      <p className="font-bold text-[#071A3D] mt-0.5">{sub.hoursConducted} Periods</p>
-                    </div>
-                    <div className="p-2 rounded-xl bg-green-50 border border-green-100">
-                      <p className="text-[10px] text-green-700 font-bold uppercase">Class Attendance</p>
-                      <p className="font-black text-green-700 mt-0.5">{sub.attendanceAvg}</p>
-                    </div>
-                    <div className="p-2 rounded-xl bg-blue-50 border border-blue-100">
-                      <p className="text-[10px] text-[#1455D9] font-bold uppercase">Next Session</p>
-                      <p className="font-bold text-[#1455D9] truncate mt-0.5">{sub.nextClass}</p>
-                    </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-[#071A3D]">No Subjects Currently Allocated</h3>
+                    <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                      Courses assigned by the HOD or Department Admin will automatically appear here with enrolled batch analytics.
+                    </p>
                   </div>
-
-                  <div className="pt-2 flex items-center justify-between gap-2">
-                    <span className="text-[11px] text-gray-400 font-medium">Syllabus Progress: 5 / 5 Units Uploaded</span>
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href="/faculty-dashboard/subjects"
-                        className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#071A3D] text-xs font-bold transition-colors"
-                      >
-                        Manage Syllabus
-                      </Link>
-                      <Link
-                        href="/faculty-dashboard/attendance"
-                        className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold transition-colors flex items-center gap-1"
-                      >
-                        <UserCheck className="w-3.5 h-3.5" /> Take Roll Call
-                      </Link>
-                    </div>
+                  <div className="pt-2 flex justify-center gap-2">
+                    <Link
+                      href="/faculty-dashboard/attendance"
+                      className="px-4 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <UserCheck className="w-4 h-4" /> Go to Attendance
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              assignedSubjects.map((sub) => (
+                <Card key={sub.code} className="rounded-3xl border-gray-200 hover:shadow-md transition-all bg-white group hover:border-[#1455D9]/40">
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="font-mono text-xs font-black text-[#1455D9] px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200/60">
+                          {sub.code}
+                        </span>
+                        <h3 className="font-bold text-sm text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
+                          {sub.name}
+                        </h3>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-400">{sub.batch}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-gray-100 text-xs">
+                      <div className="p-2 rounded-xl bg-gray-50">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase">Enrolled</p>
+                        <p className="font-bold text-[#071A3D] mt-0.5">{sub.students} Students</p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-gray-50">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase">Hours Taught</p>
+                        <p className="font-bold text-[#071A3D] mt-0.5">{sub.hoursConducted} Periods</p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-green-50 border border-green-100">
+                        <p className="text-[10px] text-green-700 font-bold uppercase">Class Attendance</p>
+                        <p className="font-black text-green-700 mt-0.5">{sub.attendanceAvg}</p>
+                      </div>
+                      <div className="p-2 rounded-xl bg-blue-50 border border-blue-100">
+                        <p className="text-[10px] text-[#1455D9] font-bold uppercase">Next Session</p>
+                        <p className="font-bold text-[#1455D9] truncate mt-0.5">{sub.nextClass}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-gray-400 font-medium">Department Verified Curriculum</span>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href="/faculty-dashboard/subjects"
+                          className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#071A3D] text-xs font-bold transition-colors"
+                        >
+                          Manage Syllabus
+                        </Link>
+                        <Link
+                          href="/faculty-dashboard/attendance"
+                          className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold transition-colors flex items-center gap-1"
+                        >
+                          <UserCheck className="w-3.5 h-3.5" /> Take Roll Call
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
 
@@ -262,27 +299,35 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
 
             <Card className="rounded-3xl border-gray-200 shadow-xs bg-white">
               <CardContent className="p-4 space-y-3">
-                {todayTimetable.map((slot, i) => (
-                  <div key={i} className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10.5px] font-mono font-bold text-[#1455D9]">{slot.time}</span>
-                      <span
-                        className={cn(
-                          'px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase',
-                          slot.status === 'Completed' && 'bg-gray-200 text-gray-700',
-                          slot.status === 'In-Progress' && 'bg-green-100 text-green-800 animate-pulse',
-                          slot.status === 'Upcoming' && 'bg-blue-100 text-[#1455D9]'
-                        )}
-                      >
-                        {slot.status}
-                      </span>
-                    </div>
-                    <p className="text-xs font-bold text-[#071A3D] leading-tight">{slot.subject}</p>
-                    <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-red-400" /> {slot.room} · {slot.type}
-                    </p>
+                {todayTimetable.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-gray-400 space-y-1">
+                    <Clock className="w-7 h-7 text-gray-300 mx-auto mb-1" />
+                    <p className="font-semibold text-gray-600">No scheduled periods for today</p>
+                    <p className="text-[11px]">Timetable slots configured by Admin or HOD will be displayed here.</p>
                   </div>
-                ))}
+                ) : (
+                  todayTimetable.map((slot, i) => (
+                    <div key={i} className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10.5px] font-mono font-bold text-[#1455D9]">{slot.time}</span>
+                        <span
+                          className={cn(
+                            'px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase',
+                            slot.status === 'Completed' && 'bg-gray-200 text-gray-700',
+                            slot.status === 'In-Progress' && 'bg-green-100 text-green-800 animate-pulse',
+                            slot.status === 'Upcoming' && 'bg-blue-100 text-[#1455D9]'
+                          )}
+                        >
+                          {slot.status}
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold text-[#071A3D] leading-tight">{slot.subject}</p>
+                      <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-red-400" /> {slot.room} · {slot.type}
+                      </p>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </div>

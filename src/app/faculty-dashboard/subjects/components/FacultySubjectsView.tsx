@@ -284,7 +284,7 @@ export function FacultySubjectsView() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">My Allocated Subjects &amp; Syllabus</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Dr. S. Karthik · Manage lesson plans, lecture materials, lab manuals, and question banks
+            Department Course Curriculum · Manage lesson plans, lecture materials, lab manuals, and question banks
           </p>
         </div>
 
