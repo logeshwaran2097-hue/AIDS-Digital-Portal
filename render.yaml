@@ -4,8 +4,8 @@ services:
     env: node
     plan: free
     region: singapore
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: npm install && npx prisma generate && npx next build
+    startCommand: npx prisma db push && npm start
     envVars:
       - key: NODE_VERSION
         value: "20.14.0"
