@@ -30,6 +30,11 @@ export function PWAInstall() {
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
+    const dismissed = typeof window !== 'undefined' && sessionStorage.getItem('vsb_pwa_banner_dismissed')
+    if (!dismissed) {
+      setShowBanner(true)
+    }
+
     const ua = window.navigator.userAgent.toLowerCase()
     const isIosDevice = /iphone|ipad|ipod/.test(ua) && !(window as any).MSStream
     setIsIOS(isIosDevice)
@@ -55,34 +60,7 @@ export function PWAInstall() {
 
     // Expose a global trigger function any button can call
     window.__triggerPwaInstall = async () => {
-      const prompt = promptRef.current || window.__pwaInstallPrompt
-      if (isIosDevice) {
-        setShowIOSGuide(true)
-        return
-      }
-      if (prompt) {
-        setInstalling(true)
-        try {
-          await prompt.prompt()
-          const { outcome } = await prompt.userChoice
-          if (outcome === 'accepted') {
-            setIsInstalled(true)
-            setShowBanner(false)
-            promptRef.current = null
-            window.__pwaInstallPrompt = null
-          } else {
-            setIsDownloaderOpen(true)
-          }
-        } catch (e) {
-          console.error(e)
-          setIsDownloaderOpen(true)
-        } finally {
-          setInstalling(false)
-        }
-      } else {
-        // Prompt not directly available in browser — open active downloader modal
-        setIsDownloaderOpen(true)
-      }
+      handleInstall()
     }
 
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -90,11 +68,7 @@ export function PWAInstall() {
       const evt = e as BeforeInstallPromptEvent
       promptRef.current = evt
       window.__pwaInstallPrompt = evt
-
-      // Do not interrupt the user on the login page
-      if (window.location.pathname !== '/login') {
-        setShowBanner(true)
-      }
+      setShowBanner(true)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -114,40 +88,53 @@ export function PWAInstall() {
     }
   }, [])
 
+  const triggerApkDownload = () => {
+    try {
+      const a = document.createElement('a')
+      a.href = '/Digital-Portal-of-AI-and-DS.apk'
+      a.download = 'Digital-Portal-of-AI-and-DS.apk'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch {
+      window.location.href = '/Digital-Portal-of-AI-and-DS.apk'
+    }
+  }
+
   const handleInstall = async () => {
     if (isIOS) { 
       setShowIOSGuide(true)
       return 
     }
 
+    setInstalling(true)
+
+    // 1. Trigger Direct APK Download for mobile
+    triggerApkDownload()
+
+    // 2. Also trigger browser prompt if available
     const prompt = promptRef.current || window.__pwaInstallPrompt
-    if (!prompt) {
-      // Fallback directly to Realtime App Downloader
-      setIsDownloaderOpen(true)
-      return
+    if (prompt) {
+      try {
+        await prompt.prompt()
+        const { outcome } = await prompt.userChoice
+        if (outcome === 'accepted') {
+          setIsInstalled(true)
+          setShowBanner(false)
+          promptRef.current = null
+          window.__pwaInstallPrompt = null
+        }
+      } catch (e) {
+        console.warn(e)
+      }
     }
 
-    setInstalling(true)
-    try {
-      await prompt.prompt()
-      const { outcome } = await prompt.userChoice
-      if (outcome === 'accepted') {
-        setIsInstalled(true)
-        setShowBanner(false)
-        promptRef.current = null
-        window.__pwaInstallPrompt = null
-      } else {
-        setIsDownloaderOpen(true)
-      }
-    } catch (e) {
-      console.error(e)
-      setIsDownloaderOpen(true)
-    } finally {
+    setTimeout(() => {
       setInstalling(false)
-    }
+    }, 1000)
   }
 
-  if (isInstalled || pathname === '/login') return null
+  if (isInstalled) return null
 
   return (
     <>
@@ -182,7 +169,12 @@ export function PWAInstall() {
               <span>{installing ? 'Installing…' : 'Install'}</span>
             </button>
             <button
-              onClick={() => setShowBanner(false)}
+              onClick={() => {
+                setShowBanner(false)
+                try {
+                  sessionStorage.setItem('vsb_pwa_banner_dismissed', 'true')
+                } catch {}
+              }}
               className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
               aria-label="Dismiss"
             >
