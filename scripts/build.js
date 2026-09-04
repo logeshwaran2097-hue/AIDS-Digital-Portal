@@ -34,7 +34,7 @@ try {
   execSync('npx prisma db push --skip-generate', { stdio: 'inherit', env: process.env })
 
   console.log('[BUILD] [3/3] Running next build...')
-  execSync('npx cross-env NODE_OPTIONS="--max-old-space-size=4096" next build', { stdio: 'inherit', env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' } })
+  execSync('npx next build', { stdio: 'inherit', env: process.env })
 
   console.log('[BUILD] ✅ All build steps completed successfully!')
 } catch (error) {
