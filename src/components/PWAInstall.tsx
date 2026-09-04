@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { Download, X, Share, PlusSquare, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
@@ -19,6 +20,7 @@ declare global {
 }
 
 export function PWAInstall() {
+  const pathname = usePathname()
   const [showBanner, setShowBanner] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
@@ -89,8 +91,10 @@ export function PWAInstall() {
       promptRef.current = evt
       window.__pwaInstallPrompt = evt
 
-      // Show banner when prompt is ready
-      setShowBanner(true)
+      // Do not interrupt the user on the login page
+      if (window.location.pathname !== '/login') {
+        setShowBanner(true)
+      }
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -143,7 +147,7 @@ export function PWAInstall() {
     }
   }
 
-  if (isInstalled) return null
+  if (isInstalled || pathname === '/login') return null
 
   return (
     <>

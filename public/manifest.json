@@ -93,13 +93,6 @@
       "ms_ac_template": "widgets/attendance.json",
       "data": "/api/attendance",
       "type": "application/json",
-      "screenshots": [
-        {
-          "src": "/screenshot-mobile.png",
-          "sizes": "720x1280",
-          "label": "Attendance Widget Preview"
-        }
-      ],
       "icons": [
         {
           "src": "/shortcut-icon-96.png",
@@ -142,22 +135,6 @@
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "VSB AI & DS Portal Desktop Dashboard"
-    },
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "VSB AI & DS Portal Mobile Attendance and Study View"
     }
   ],
   "shortcuts": [
