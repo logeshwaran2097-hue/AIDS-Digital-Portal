@@ -2,8 +2,8 @@ import { PrismaClient } from '@prisma/client'
 import fs from 'fs'
 import path from 'path'
 
-// Handle SQLite on Vercel Serverless environment (where only /tmp is writable)
-if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+// Only configure SQLite /tmp for Vercel if DATABASE_URL starts with file: or is unset and not using PostgreSQL
+if ((process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) && (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:'))) {
   try {
     const tmpDbPath = path.join('/tmp', 'dev.db')
     const needsCopy = !fs.existsSync(tmpDbPath) || fs.statSync(tmpDbPath).size === 0
