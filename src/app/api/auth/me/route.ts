@@ -17,10 +17,10 @@ export async function GET() {
       )
     }
 
-    let extendedInfo: Record<string, unknown> = {}
+    let roleQuery: Promise<any> | null = null
 
     if (session.role === 'student') {
-      const student = await prisma.student.findUnique({
+      roleQuery = prisma.student.findUnique({
         where: { userId: session.userId },
         select: {
           registerNumber: true,
@@ -31,9 +31,8 @@ export async function GET() {
           dateOfBirth: true,
         },
       })
-      extendedInfo = student || {}
     } else if (session.role === 'faculty') {
-      const faculty = await prisma.faculty.findUnique({
+      roleQuery = prisma.faculty.findUnique({
         where: { userId: session.userId },
         select: {
           facultyId: true,
@@ -45,9 +44,8 @@ export async function GET() {
           dateOfBirth: true,
         },
       })
-      extendedInfo = faculty || {}
     } else if (session.role === 'hod') {
-      const hod = await prisma.hOD.findUnique({
+      roleQuery = prisma.hOD.findUnique({
         where: { userId: session.userId },
         select: {
           facultyId: true,
@@ -58,19 +56,17 @@ export async function GET() {
           dateOfBirth: true,
         },
       })
-      extendedInfo = hod || {}
     } else if (session.role === 'admin') {
-      const admin = await prisma.admin.findUnique({
+      roleQuery = prisma.admin.findUnique({
         where: { userId: session.userId },
         select: {
           name: true,
           role: true,
         },
       })
-      extendedInfo = admin || {}
     }
 
-    const dbUser = await prisma.user.findUnique({
+    const userQuery = prisma.user.findUnique({
       where: { id: session.userId },
       select: {
         id: true,
@@ -82,6 +78,13 @@ export async function GET() {
         mustChangePassword: true,
       },
     })
+
+    const [roleData, dbUser] = await Promise.all([
+      roleQuery ? roleQuery.catch(() => null) : Promise.resolve(null),
+      userQuery.catch(() => null),
+    ])
+
+    const extendedInfo: Record<string, unknown> = roleData || {}
 
     return NextResponse.json({
       success: true,
