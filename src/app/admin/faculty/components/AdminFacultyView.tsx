@@ -2105,16 +2105,31 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Dr. S. Karthik"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dr. S. Karthik"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">
+                    Faculty ID <span className="text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. FAC001"
+                    value={formData.facultyId}
+                    onChange={(e) => setFormData({ ...formData, facultyId: e.target.value.toUpperCase() })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D] uppercase"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-0.5">Auto-generated if empty</p>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
