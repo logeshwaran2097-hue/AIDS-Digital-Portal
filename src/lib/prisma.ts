@@ -1,39 +1,10 @@
 import { PrismaClient } from '@prisma/client'
-import fs from 'fs'
-import path from 'path'
 
-// Only configure SQLite /tmp for Vercel if DATABASE_URL starts with file: or is unset and not using PostgreSQL
-if ((process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) && (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:'))) {
-  try {
-    const tmpDbPath = path.join('/tmp', 'dev.db')
-    const needsCopy = !fs.existsSync(tmpDbPath) || fs.statSync(tmpDbPath).size === 0
+// Default PostgreSQL fallback connection for serverless / production if unset
+const DEFAULT_POSTGRES_URL = 'postgresql://aifactorytwin_user:JxcJgNvRKl3rZDnLCXtBJ0kKu1Q3KLXd@dpg-da16l6dbedkc73c6dqug-a.oregon-postgres.render.com:5432/vsb_aids_portal?sslmode=require'
 
-    if (needsCopy) {
-      const candidates = [
-        path.join(process.cwd(), 'prisma', 'dev.db'),
-        path.join(process.cwd(), 'dev.db'),
-        path.join(__dirname, '..', '..', 'prisma', 'dev.db'),
-        path.join(__dirname, '..', '..', '..', 'prisma', 'dev.db'),
-        path.join(__dirname, '..', 'prisma', 'dev.db'),
-        path.join(__dirname, 'prisma', 'dev.db'),
-        path.join(__dirname, 'dev.db'),
-        path.join('/var/task', 'prisma', 'dev.db'),
-        path.join('/var/task', 'dev.db'),
-      ]
-      for (const candidate of candidates) {
-        if (fs.existsSync(candidate) && fs.statSync(candidate).size > 0) {
-          fs.copyFileSync(candidate, tmpDbPath)
-          console.log(`[PRISMA] SQLite DB copied to /tmp/dev.db from: ${candidate}`)
-          break
-        }
-      }
-    }
-    if (fs.existsSync(tmpDbPath)) {
-      process.env.DATABASE_URL = `file:${tmpDbPath}`
-    }
-  } catch (err) {
-    console.error('Failed to configure /tmp database for Vercel:', err)
-  }
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+  process.env.DATABASE_URL = DEFAULT_POSTGRES_URL
 }
 
 const globalForPrisma = globalThis as unknown as {
@@ -41,10 +12,8 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Compute optimized connection pooling parameters for PostgreSQL (Supabase / Render)
-function getOptimizedDatabaseUrl(): string | undefined {
-  const url = process.env.DATABASE_URL
-  if (!url) return undefined
-  if (url.startsWith('file:')) return url
+function getOptimizedDatabaseUrl(): string {
+  const url = process.env.DATABASE_URL || DEFAULT_POSTGRES_URL
 
   // Ensure high-concurrency pool limits and connection timeouts are tuned
   try {
@@ -70,21 +39,9 @@ const optimizedUrl = getOptimizedDatabaseUrl()
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    datasources: optimizedUrl ? { db: { url: optimizedUrl } } : undefined,
+    datasources: { db: { url: optimizedUrl } },
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   })
-
-// Enable ultra-fast SQLite WAL mode & concurrency optimizations if on SQLite
-if (process.env.DATABASE_URL?.startsWith('file:') || !process.env.DATABASE_URL) {
-  try {
-    prisma.$queryRawUnsafe('PRAGMA journal_mode = WAL;').catch(() => {})
-    prisma.$queryRawUnsafe('PRAGMA synchronous = NORMAL;').catch(() => {})
-    prisma.$queryRawUnsafe('PRAGMA busy_timeout = 10000;').catch(() => {})
-    prisma.$queryRawUnsafe('PRAGMA temp_store = MEMORY;').catch(() => {})
-    prisma.$queryRawUnsafe('PRAGMA cache_size = -64000;').catch(() => {})
-    prisma.$queryRawUnsafe('PRAGMA mmap_size = 30000000000;').catch(() => {})
-  } catch {}
-}
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 

@@ -696,7 +696,7 @@ export async function sendAdminOTP(email: string) {
   console.log(`\n========================================`)
   let user = await prisma.user.findUnique({
     where: { email: normalizedEmail },
-  })
+  }).catch(() => null)
 
   const recipientName = admin?.name || user?.name || 'Administrator'
 
