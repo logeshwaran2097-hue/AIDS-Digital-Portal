@@ -29,7 +29,7 @@
     },
     {
       "platform": "webapp",
-      "url": "https://aids-digital-portal.vercel.app/manifest.json"
+      "url": "https://vsb-aids-portal.vercel.app/manifest.json"
     }
   ],
   "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
@@ -43,13 +43,10 @@
   },
   "scope_extensions": [
     {
-      "origin": "https://aids-digital-portal.vercel.app"
+      "origin": "https://vsb-aids-portal.vercel.app"
     },
     {
-      "origin": "https://aids-digital-portal-cwaa0c9cq-kannan15.vercel.app"
-    },
-    {
-      "origin": "https://aids-digital-portal-71nvmp9aa-kannan15.vercel.app"
+      "origin": "https://vsb-aids-portal.onrender.com"
     },
     {
       "origin": "https://vsb.edu.in"
