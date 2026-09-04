@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -57,6 +59,11 @@ const nextConfig = {
     ]
   },
   webpack: (config, { isServer }) => {
+    // Ensure '@/' alias resolves correctly on all platforms (Linux/Render)
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
+    };
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
