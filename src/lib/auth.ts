@@ -379,12 +379,33 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
 }
 
 export async function authenticateFaculty(facultyId: string, passwordInput: string) {
-  const normalizedId = facultyId.trim().toUpperCase()
-  const faculty = await prisma.faculty.findUnique({
+  const rawId = facultyId.trim()
+  const normalizedId = rawId.toUpperCase()
+  let faculty = await prisma.faculty.findUnique({
     where: { facultyId: normalizedId },
   })
 
-  if (!faculty) {
+  let user = null
+  if (faculty) {
+    user = await prisma.user.findUnique({
+      where: { id: faculty.userId },
+    })
+  } else {
+    // Check if entered value is an email address
+    user = await prisma.user.findFirst({
+      where: {
+        role: 'faculty',
+        email: rawId.toLowerCase(),
+      },
+    })
+    if (user) {
+      faculty = await prisma.faculty.findFirst({
+        where: { userId: user.id },
+      })
+    }
+  }
+
+  if (!faculty || !user) {
     const trimmedPw = passwordInput.trim()
     const isDefaultPw = ['vsb@123', 'faculty@123', 'password123', normalizedId.toLowerCase(), normalizedId].includes(trimmedPw)
     if (/^[0-9A-Z]{3,18}$/i.test(normalizedId) && isDefaultPw) {
@@ -421,15 +442,11 @@ export async function authenticateFaculty(facultyId: string, passwordInput: stri
         console.error('Auto faculty provision error:', e)
       }
     }
-    return { success: false, message: 'Invalid Faculty ID or Password.' }
+    return { success: false, message: 'Invalid Faculty ID / Email or Password.' }
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: faculty.userId },
-  })
-
-  if (!user || user.status !== 'active') {
-    return { success: false, message: 'Invalid Faculty ID or Password.' }
+  if (user.status !== 'active') {
+    return { success: false, message: 'Faculty account is suspended or inactive.' }
   }
 
   const trimmedPassword = passwordInput.trim()
