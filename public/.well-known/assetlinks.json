@@ -3,9 +3,20 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
+      "package_name": "app.vercel.aids_digital_portal_2wx2h0bh5_kannan15.twa",
+      "sha256_cert_fingerprints": [
+        "0A:6E:C3:A6:74:C9:14:24:70:42:84:F5:69:61:EA:A3:8A:92:28:0A:11:C5:99:EE:18:82:87:DB:BD:6F:BF:9D"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
       "package_name": "in.edu.vsb.aidsportal",
       "sha256_cert_fingerprints": [
-        "14:6D:E9:7D:0F:52:AB:E7:F4:D3:21:49:03:E5:67:E6:0B:4D:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD"
+        "14:6D:E9:7D:0F:52:AB:E7:F4:D3:21:49:03:E5:67:E6:0B:4D:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD",
+        "0A:6E:C3:A6:74:C9:14:24:70:42:84:F5:69:61:EA:A3:8A:92:28:0A:11:C5:99:EE:18:82:87:DB:BD:6F:BF:9D"
       ]
     }
   }

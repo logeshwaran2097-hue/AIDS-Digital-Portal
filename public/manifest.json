@@ -6,33 +6,14 @@
   "start_url": "/login",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "window-controls-overlay"],
+  "display_override": ["standalone", "fullscreen"],
   "orientation": "portrait-primary",
   "background_color": "#071A41",
   "theme_color": "#071A41",
   "lang": "en-US",
   "dir": "ltr",
   "prefer_related_applications": false,
-  "related_applications": [
-    {
-      "platform": "play",
-      "url": "https://play.google.com/store/apps/details?id=in.edu.vsb.aidsportal",
-      "id": "in.edu.vsb.aidsportal"
-    },
-    {
-      "platform": "webapp",
-      "url": "https://vsb-aids-portal.vercel.app/manifest.json"
-    }
-  ],
-  "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
-  "categories": ["education", "productivity", "utilities"],
-  "handle_links": "preferred",
-  "launch_handler": {
-    "client_mode": "auto"
-  },
-  "edge_side_panel": {
-    "preferred_width": 480
-  },
+  "categories": ["education", "productivity"],
   "scope_extensions": [
     {
       "origin": "https://vsb-aids-portal.vercel.app"
@@ -44,59 +25,6 @@
       "origin": "https://vsb.edu.in"
     }
   ],
-  "file_handlers": [
-    {
-      "action": "/dashboard/resources",
-      "name": "Academic PDF Documents",
-      "icons": [
-        {
-          "src": "/shortcut-icon-96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ],
-      "accept": {
-        "application/pdf": [".pdf"],
-        "text/plain": [".txt"]
-      }
-    }
-  ],
-  "protocol_handlers": [
-    {
-      "protocol": "web+vsbportal",
-      "url": "/login?action=%s"
-    }
-  ],
-  "share_target": {
-    "action": "/dashboard/resources",
-    "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  },
-  "widgets": [
-    {
-      "name": "VSB Attendance & Bell Timings",
-      "description": "Quick view of 8-period attendance and timetable schedule",
-      "tag": "attendance-widget",
-      "template": "attendance-template",
-      "ms_ac_template": "widgets/attendance.json",
-      "data": "/api/attendance",
-      "type": "application/json",
-      "icons": [
-        {
-          "src": "/shortcut-icon-96.png",
-          "sizes": "96x96",
-          "type": "image/png"
-        }
-      ]
-    }
-  ],
-  "note_taking": {
-    "new_note_url": "/dashboard/study"
-  },
   "icons": [
     {
       "src": "/icon-192.png",
