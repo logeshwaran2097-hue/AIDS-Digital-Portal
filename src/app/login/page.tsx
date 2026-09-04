@@ -548,31 +548,29 @@ export default function LoginPage() {
           </div>
         </div>
         
-        {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (PICTURE LOGO) */}
+        {/* Stage 2: INSTAGRAM-STYLE MODERN SQUIRCLE EMBLEM */}
         <div className={cn(
           "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-700 ease-out transform",
           animStage >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"
         )}>
-          {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
-          <div 
-            className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-dashed border-[#06B6D4]/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] animate-spin" 
-            style={{ animationDuration: '14s' }} 
-          />
+          {/* Outer Pulsing Gradient Aura */}
+          <div className="absolute w-22 h-22 sm:w-26 sm:h-26 rounded-[28px] bg-gradient-to-tr from-[#1455D9]/30 via-[#06B6D4]/25 to-[#EAB308]/30 blur-md animate-pulse" />
 
-          {/* Layer 2: Middle Sapphire-Cyan Glass Orbit Halo */}
-          <div className="absolute w-20 h-20 sm:w-23 sm:h-23 rounded-full border-[1.2px] border-[#1557C0]/30 bg-gradient-to-tr from-cyan-100/30 via-blue-100/15 to-amber-100/25 shadow-[0_0_15px_rgba(21,87,192,0.18)] anim-solar-corona" />
-          
-          {/* Layer 1: Inner Circular Gold Medallion with Specular Sheen */}
-          <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_10px_25px_rgba(7,26,65,0.2),0_0_18px_rgba(231,185,62,0.45)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-500">
-            {/* Specular Liquid Gold Sweep */}
+          {/* Modern Instagram-Style Radiant Squircle */}
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] sm:rounded-[26px] p-1 bg-gradient-to-tr from-[#051329] via-[#1455D9] via-60%-[#06B6D4] to-[#FACC15] shadow-[0_12px_32px_rgba(7,26,65,0.28),0_0_20px_rgba(6,182,212,0.35)] ring-1.5 ring-white/60 overflow-hidden hover:scale-105 transition-all duration-500 group cursor-pointer">
+            {/* Top-Right Sunlight Flare */}
+            <div className="absolute top-0 right-0 w-12 h-12 bg-radial from-[#FDE047]/60 via-[#06B6D4]/20 to-transparent pointer-events-none" />
+
+            {/* Specular Sheen Sweep */}
             <div className="anim-gold-sheen" />
 
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1 shadow-inner overflow-hidden relative z-10">
+            {/* Inner Pure White Disc Housing Authentic Emblem */}
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-[0_4px_12px_rgba(5,19,41,0.2)] border-2 border-[#EAB308]/90 overflow-hidden relative z-10 group-hover:rotate-3 transition-transform duration-500">
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
-                width={70}
-                height={70}
+                width={72}
+                height={72}
                 className="w-full h-full object-contain drop-shadow-xs"
                 priority
               />
@@ -580,8 +578,8 @@ export default function LoginPage() {
           </div>
 
           {/* Sparkling Diamond Glint at Top-Right */}
-          <div className="absolute top-1 right-1/2 translate-x-8 sm:translate-x-9 -translate-y-1 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
-            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] drop-shadow-[0_0_6px_rgba(231,185,62,0.9)]" />
+          <div className="absolute top-0.5 right-1/2 translate-x-10 sm:translate-x-12 -translate-y-1 text-[#FACC15] anim-diamond-twinkle pointer-events-none">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FACC15] drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
           </div>
         </div>
 
