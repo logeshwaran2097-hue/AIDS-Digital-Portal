@@ -9,6 +9,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20.14.0"
+      - key: NODE_OPTIONS
+        value: "--max_old_space_size=1024"
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
