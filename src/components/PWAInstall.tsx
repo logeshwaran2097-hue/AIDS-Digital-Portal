@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Download, X, Share, PlusSquare, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
+import { toast } from '@/components/ui/Toast'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -27,7 +28,21 @@ export function PWAInstall() {
   const [showIOSGuide, setShowIOSGuide] = useState(false)
   const [installing, setInstalling] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null)
+
+  const triggerApkDownload = () => {
+    try {
+      const a = document.createElement('a')
+      a.href = '/Digital-Portal-of-AI-and-DS.apk'
+      a.download = 'Digital-Portal-of-AI-and-DS.apk'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch {
+      window.location.href = '/Digital-Portal-of-AI-and-DS.apk'
+    }
+  }
 
   useEffect(() => {
     const dismissed = typeof window !== 'undefined' && sessionStorage.getItem('vsb_pwa_banner_dismissed')
@@ -37,7 +52,26 @@ export function PWAInstall() {
 
     const ua = window.navigator.userAgent.toLowerCase()
     const isIosDevice = /iphone|ipad|ipod/.test(ua) && !(window as any).MSStream
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(ua) || 
+      (typeof window !== 'undefined' && window.innerWidth <= 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0))
+
     setIsIOS(isIosDevice)
+    setIsMobile(isMobileDevice)
+
+    // Automatically trigger APK download for mobile Android users
+    if (isMobileDevice && !isIosDevice) {
+      try {
+        const autoDownloaded = sessionStorage.getItem('vsb_apk_auto_downloaded')
+        if (!autoDownloaded) {
+          sessionStorage.setItem('vsb_apk_auto_downloaded', 'true')
+          const timer = setTimeout(() => {
+            triggerApkDownload()
+            toast.success('Automatically downloading VSB AI&DS App (APK)...')
+          }, 1200)
+          return () => clearTimeout(timer)
+        }
+      } catch {}
+    }
 
     // Register Service Worker
     if ('serviceWorker' in navigator) {
@@ -88,31 +122,25 @@ export function PWAInstall() {
     }
   }, [])
 
-  const triggerApkDownload = () => {
-    try {
-      const a = document.createElement('a')
-      a.href = '/Digital-Portal-of-AI-and-DS.apk'
-      a.download = 'Digital-Portal-of-AI-and-DS.apk'
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-    } catch {
-      window.location.href = '/Digital-Portal-of-AI-and-DS.apk'
-    }
-  }
-
   const handleInstall = async () => {
     if (isIOS) { 
       setShowIOSGuide(true)
       return 
     }
 
+    // MOBILE: Directly download official APK
+    if (isMobile) {
+      setInstalling(true)
+      triggerApkDownload()
+      toast.success('Downloading Official Android APK (3.9 MB)...')
+      setTimeout(() => {
+        setInstalling(false)
+      }, 1200)
+      return
+    }
+
+    // LAPTOP / DESKTOP: Trigger browser native install modal (Top-Right / Address Bar)
     setInstalling(true)
-
-    // 1. Trigger Direct APK Download for mobile
-    triggerApkDownload()
-
-    // 2. Also trigger browser prompt if available
     const prompt = promptRef.current || window.__pwaInstallPrompt
     if (prompt) {
       try {
@@ -123,10 +151,13 @@ export function PWAInstall() {
           setShowBanner(false)
           promptRef.current = null
           window.__pwaInstallPrompt = null
+          toast.success('App installed successfully on your desktop!')
         }
       } catch (e) {
         console.warn(e)
       }
+    } else {
+      toast.info('Click the Install icon in your browser address bar or the popup above to install.')
     }
 
     setTimeout(() => {
@@ -138,7 +169,7 @@ export function PWAInstall() {
 
   return (
     <>
-      {/* ── Bottom install banner (Android Chrome & Desktop) ── */}
+      {/* ── Bottom install banner (Laptop Desktop & Mobile) ── */}
       {showBanner && (
         <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[490px] z-[99999] bg-white text-[#071A3D] p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-[0_15px_45px_rgba(7,26,65,0.18)] border-2 border-[#1455D9] flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -150,12 +181,12 @@ export function PWAInstall() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs sm:text-sm font-black text-[#071A3D] leading-tight whitespace-nowrap">
-                  Install Digital Portal of AI&amp;DS
+                  {isMobile ? 'Install VSB AI&DS App' : 'Install Digital Portal of AI&DS'}
                 </p>
                 <Sparkles className="w-3.5 h-3.5 text-[#E7B93E] shrink-0" />
               </div>
               <p className="text-[10px] sm:text-[11px] text-gray-500 font-semibold truncate mt-0.5">
-                V.S.B. Engineering College · Offline Ready
+                {isMobile ? 'Android App (APK) · Fast & Offline Ready' : 'V.S.B. Engineering College · Focused Desktop App'}
               </p>
             </div>
           </div>
@@ -166,7 +197,11 @@ export function PWAInstall() {
               className="px-3.5 py-2 bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black rounded-xl active:scale-95 transition-all shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-60 shrink-0"
             >
               <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{installing ? 'Installing…' : 'Install'}</span>
+              <span>
+                {installing 
+                  ? (isMobile ? 'Downloading…' : 'Installing…') 
+                  : (isMobile ? 'Download APK' : 'Install')}
+              </span>
             </button>
             <button
               onClick={() => {
