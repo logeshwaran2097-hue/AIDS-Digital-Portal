@@ -20,6 +20,10 @@
 build_output*.txt
 errors.txt
 *.db-journal
+*.db-shm
+*.db-wal
+prisma/dev.db-shm
+prisma/dev.db-wal
 
 # debug logs
 npm-debug.log*
