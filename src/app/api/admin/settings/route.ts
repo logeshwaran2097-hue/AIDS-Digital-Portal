@@ -75,7 +75,18 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    return NextResponse.json({ success: true, settings: DEFAULT_SETTINGS })
+    const saved = await prisma.systemSettings.findUnique({
+      where: { key: 'portal_config' },
+    }).catch(() => null)
+
+    let config = DEFAULT_SETTINGS
+    if (saved?.value) {
+      try {
+        config = { ...DEFAULT_SETTINGS, ...JSON.parse(saved.value) }
+      } catch {}
+    }
+
+    return NextResponse.json({ success: true, settings: config })
   } catch (error) {
     console.error('Error fetching settings:', error)
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 })
@@ -128,6 +139,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Standard settings update
+    await prisma.systemSettings.upsert({
+      where: { key: 'portal_config' },
+      update: {
+        value: typeof body === 'string' ? body : JSON.stringify(body),
+        updatedAt: new Date(),
+      },
+      create: {
+        key: 'portal_config',
+        value: typeof body === 'string' ? body : JSON.stringify(body),
+        description: 'V.S.B. AI & DS Portal Global Configuration',
+        isPublic: true,
+      },
+    }).catch(() => {})
+
     await prisma.auditLog.create({
       data: {
         userName: session.name || 'System Administrator',

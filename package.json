@@ -27,6 +27,8 @@
     "tar": ">=7.4.3"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/core": "^8.5.1",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "3.9.0",
     "@prisma/client": "5.17.0",
