@@ -19,7 +19,15 @@ import {
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
-export function FacultySettingsView() {
+export function FacultySettingsView({
+  userName = 'Faculty Member',
+  facultyId = 'FACULTY',
+  designation = 'Faculty',
+}: {
+  userName?: string
+  facultyId?: string
+  designation?: string
+}) {
   const [theme, setTheme] = useState<'light' | 'midnight'>('light')
   const [emailAlerts, setEmailAlerts] = useState(true)
   const [smsAlerts, setSmsAlerts] = useState(true)
@@ -50,40 +58,22 @@ export function FacultySettingsView() {
 
   const handleDownloadAcademicPortfolio = () => {
     generateAndDownloadPDF({
-      title: 'FACULTY ACADEMIC & RESEARCH PORTFOLIO (2025-2026)',
-      subtitle: 'Dr. S. Karthik · Department of AI & DS · V.S.B. Engineering College',
-      author: 'Dr. S. Karthik (Senior Professor)',
-      category: 'Faculty Performance Dossier',
+      title: 'FACULTY ACADEMIC & PROFILE SUMMARY',
+      subtitle: `${userName} · Department of AI & DS · V.S.B. Engineering College`,
+      author: `${userName} (${designation})`,
+      category: 'Faculty Dossier',
       sections: [
         {
-          heading: '1. FACULTY CREDENTIALS & TEACHING ASSIGNMENTS',
+          heading: '1. FACULTY CREDENTIALS & ASSIGNMENTS',
           body: [
-            'Faculty Name: Dr. S. Karthik (Faculty ID: AI001)',
-            'Designation: Professor & Class Advisor (Year II / Semester 3)',
-            'Specialization: Machine Learning, Deep Neural Networks, Edge Intelligence',
-            'Allocated Courses: AD2305 Machine Learning, AD2301 DSA, AD2307 Data Science Lab',
-          ],
-        },
-        {
-          heading: '2. RESEARCH & SCHOLARLY METRICS',
-          body: [
-            'Total Journal Publications: 24 Scopus / Web of Science Indexed Papers',
-            'Total Citations: 680+ Citations (h-index: 12)',
-            'Active Mentorship: 2 Capstone Research Teams, 18 Student Researchers',
-            'Funded Grants & Patents: 2 Published AI Patents',
-          ],
-        },
-        {
-          heading: '3. CLASS ADVISOR ATTENDANCE COMPLIANCE',
-          body: [
-            'Assigned Class: Year II / Semester 3 (Section A)',
-            'Total Enrolled: 68 Students',
-            'Average Attendance: 94.8% Cumulative Compliance',
-            'Exam Eligibility: 94.1% Students Cleared for University Examinations',
+            `Faculty Name: ${userName}`,
+            `Faculty ID: ${facultyId}`,
+            `Designation: ${designation}`,
+            'Department: Department of Artificial Intelligence & Data Science',
           ],
         },
       ],
-      fileName: 'Dr_S_Karthik_Faculty_Portfolio_2026',
+      fileName: `${userName.replace(/\s+/g, '_')}_Portfolio`,
     })
   }
 
@@ -100,7 +90,7 @@ export function FacultySettingsView() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Portal Settings &amp; Preferences</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Dr. S. Karthik · Manage alert notifications, theme appearance, and export academic portfolio
+            {userName} · Manage alert notifications, theme appearance, and export academic portfolio
           </p>
         </div>
 

@@ -114,58 +114,24 @@ export function formatProjectLinks(githubUrl: string, liveUrl: string): string {
 
 function parseDailyUpdates(raw: string | null | undefined): DailyUpdateLog[] {
   if (!raw) {
-    return [
-      {
-        id: 'log_1',
-        date: '2026-08-30',
-        postedBy: 'Student Team Leader',
-        role: 'Candidate Lead',
-        taskCompleted: 'Completed dataset augmentation pipeline and finalized YOLOv8 baseline model architecture.',
-        blockers: 'Slight class imbalance on minority medical scan labels.',
-        nextTarget: 'Apply focal loss and benchmark against ResNet-50 backbone.',
-        commitUrl: 'https://github.com/vsb-aids/capstone-project/commit/7a8f1b2',
-        progressPercentage: 65,
-        facultyFeedback: 'Excellent progress. Recommended Focal Loss with gamma=2.0 to balance classes.',
-        facultyStatus: 'Verified & Guided',
-      },
-      {
-        id: 'log_2',
-        date: '2026-08-31',
-        postedBy: 'Student Researcher',
-        role: 'ML Engineer',
-        taskCompleted: 'Quantized neural network weights to INT8 precision for NVIDIA Jetson deployment test.',
-        blockers: 'None. Inference latency reduced from 45ms to 12ms.',
-        nextTarget: 'Build FastAPI endpoint and connect React front-end dashboard.',
-        commitUrl: 'https://github.com/vsb-aids/capstone-project/commit/9e4c3d1',
-        progressPercentage: 80,
-        facultyFeedback: 'Good benchmark metrics. Ensure you document memory consumption curves.',
-        facultyStatus: 'Verified & Guided',
-      },
-    ]
+    return []
   }
 
   try {
     const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    if (Array.isArray(parsed)) return parsed
   } catch {}
 
-  return [
-    {
-      id: 'log_init',
-      date: '2026-08-31',
-      postedBy: 'Student Team',
-      role: 'Student Researcher',
-      taskCompleted: raw,
-      blockers: 'None',
-      nextTarget: 'Prepare sprint deliverables',
-      progressPercentage: 70,
-      facultyFeedback: 'Supervised by faculty mentor.',
-      facultyStatus: 'Verified & Guided',
-    },
-  ]
+  return []
 }
 
-export function FacultyProjectsView({ initialProjects }: { initialProjects: FacultyProjectItem[] }) {
+export function FacultyProjectsView({
+  initialProjects,
+  facultyName = 'Faculty Member',
+}: {
+  initialProjects: FacultyProjectItem[]
+  facultyName?: string
+}) {
   const [projects, setProjects] = useState<FacultyProjectItem[]>(initialProjects)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDomain, setSelectedDomain] = useState('ALL')
@@ -255,11 +221,11 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
 
       const matchesGuide =
         filterGuide === 'ALL' ||
-        (filterGuide === 'MY_PROJECTS' && (p.guideName || '').includes('Karthik'))
+        (filterGuide === 'MY_PROJECTS' && (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase()))
 
       return matchesSearch && matchesDomain && matchesGuide
     })
-  }, [projects, searchQuery, selectedDomain, filterGuide])
+  }, [projects, searchQuery, selectedDomain, filterGuide, facultyName])
 
   // Open Details Modal
   const handleOpenDetails = (proj: FacultyProjectItem) => {
@@ -386,7 +352,7 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
     generateAndDownloadPDF({
       title: 'CAPSTONE PROJECT REFERENCE DOSSIER & DAILY PROGRESS LOGS',
       subtitle: `${p.title} · Domain: ${p.domain}`,
-      author: p.guideName || 'Dr. S. Karthik (Faculty Supervisor)',
+      author: p.guideName || `${facultyName} (Faculty Supervisor)`,
       category: 'Capstone Research Project',
       sections: [
         {
@@ -394,7 +360,7 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
           body: [
             `Project Title: ${p.title}`,
             `Domain Specialization: ${p.domain}`,
-            `Faculty Research Mentor: ${p.guideName || 'Dr. S. Karthik'}`,
+            `Faculty Research Mentor: ${p.guideName || facultyName}`,
             `Team Members: ${p.teamMembers}`,
             `Technology Stack: ${p.technologies}`,
             `Problem Statement: ${p.problemStatement || p.description || 'Formulating scalable intelligence frameworks.'}`,
@@ -459,15 +425,15 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
         <div className="bg-white p-5 rounded-3xl border border-purple-200/80 shadow-xs bg-purple-50/20">
           <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">My Guided Teams</p>
           <p className="text-2xl font-black text-purple-700 mt-0.5">
-            {projects.filter((p) => (p.guideName || '').includes('Karthik')).length} Projects
+            {projects.filter((p) => (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase())).length} Projects
           </p>
-          <p className="text-[10px] text-purple-600 font-semibold">Under Dr. S. Karthik</p>
+          <p className="text-[10px] text-purple-600 font-semibold truncate">Guided by {facultyName}</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-green-200/80 shadow-xs bg-green-50/20">
-          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Student Researchers</p>
-          <p className="text-2xl font-black text-green-600 mt-0.5">18 Students</p>
-          <p className="text-[10px] text-green-600 font-semibold">Active Cohort</p>
+          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Project Cohort</p>
+          <p className="text-2xl font-black text-green-600 mt-0.5">{projects.length > 0 ? `${projects.length} Active` : '0 Active'}</p>
+          <p className="text-[10px] text-green-600 font-semibold">Department Portfolio</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-amber-200/80 shadow-xs bg-amber-50/20">
@@ -477,14 +443,14 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      {/* Filter Tabs & Search Bar */}
+      <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-2 w-full md:w-auto">
           <button
             onClick={() => setFilterGuide('ALL')}
             className={cn(
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer',
-              filterGuide === 'ALL' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              filterGuide === 'ALL' ? 'bg-[#071A3D] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             )}
           >
             All Department Projects ({projects.length})
@@ -496,7 +462,7 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
               filterGuide === 'MY_PROJECTS' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             )}
           >
-            My Mentored Teams ({projects.filter((p) => (p.guideName || '').includes('Karthik')).length})
+            My Mentored Teams ({projects.filter((p) => (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase())).length})
           </button>
         </div>
 
@@ -541,7 +507,7 @@ export function FacultyProjectsView({ initialProjects }: { initialProjects: Facu
 
                 <div className="p-3 bg-gray-50 rounded-2xl text-xs space-y-1 border border-gray-100">
                   <p className="font-bold text-[#071A3D]">Team: {p.teamMembers}</p>
-                  <p className="text-gray-500">Mentor: {p.guideName || 'Dr. S. Karthik'}</p>
+                  <p className="text-gray-500">Mentor: {p.guideName || facultyName}</p>
                   <p className="font-mono text-[11px] text-[#1455D9] font-bold">Stack: {p.technologies}</p>
                 </div>
 

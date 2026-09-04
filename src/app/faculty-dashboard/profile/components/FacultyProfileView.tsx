@@ -309,7 +309,7 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
                   <label className="block font-bold text-[#071A3D] mb-1">Contact Email</label>
                   <input
                     type="email"
-                    placeholder="karthik@vsb.edu.in"
+                    placeholder="faculty@vsb.edu.in"
                     value={editForm.email}
                     onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"

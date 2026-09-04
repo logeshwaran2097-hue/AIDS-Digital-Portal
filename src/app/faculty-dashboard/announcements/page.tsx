@@ -10,6 +10,7 @@ export default async function FacultyAnnouncementsPage() {
   const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const facultyName = user?.name || session.name || 'Faculty Member'
   const announcementsFromDb = await prisma.announcement.findMany({
     orderBy: { createdAt: 'desc' },
   })
@@ -22,16 +23,16 @@ export default async function FacultyAnnouncementsPage() {
     target: a.target,
     targetYear: a.targetYear,
     targetSemester: a.targetSemester,
-    createdByName: a.createdByName || 'Dr. S. Karthik',
+    createdByName: a.createdByName || facultyName,
     isPublished: a.isPublished,
     publishedAt: a.publishedAt,
     createdAt: a.createdAt,
   }))
 
   return (
-    <PortalLayout role="faculty" userName={user?.name || 'Faculty'}>
+    <PortalLayout role="faculty" userName={facultyName}>
       <div className="py-2 animate-fade-in">
-        <FacultyAnnouncementsView initialAnnouncements={mappedAnnouncements} />
+        <FacultyAnnouncementsView initialAnnouncements={mappedAnnouncements} facultyName={facultyName} />
       </div>
     </PortalLayout>
   )

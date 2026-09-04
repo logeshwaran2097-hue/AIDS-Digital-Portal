@@ -38,7 +38,13 @@ export interface FacultyEventItem {
   isPublished: boolean
 }
 
-export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEventItem[] }) {
+export function FacultyEventsView({ 
+  initialEvents,
+  facultyName = 'Faculty Member',
+}: { 
+  initialEvents: FacultyEventItem[] 
+  facultyName?: string
+}) {
   const [events, setEvents] = useState<FacultyEventItem[]>(initialEvents)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedYear, setSelectedYear] = useState('ALL')
@@ -59,66 +65,46 @@ export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEve
       const matchesCat =
         selectedCategory === 'ALL' || e.category.toLowerCase() === selectedCategory.toLowerCase()
 
-      const semInfo = e.registrationInfo || 'ALL'
-      const semNum = semInfo.replace('sem', '')
-      const yrNum = semNum !== 'ALL' && !isNaN(Number(semNum)) ? Math.ceil(Number(semNum) / 2) : 'ALL'
-      const yrKey = yrNum !== 'ALL' ? `year${yrNum}` : 'ALL'
-
-      const matchesYear = selectedYear === 'ALL' || yrKey === selectedYear || semInfo === 'ALL'
-      const matchesSemester =
-        selectedSemester === 'ALL' ||
-        semInfo === selectedSemester ||
-        semInfo === 'ALL' ||
-        e.name.toLowerCase().includes(selectedSemester.toLowerCase())
-
-      let matchesMonth = true
-      if (selectedMonth !== 'ALL') {
-        const d = new Date(e.date)
-        matchesMonth = String(d.getMonth() + 1) === selectedMonth
-      }
-
-      return matchesSearch && matchesCat && matchesYear && matchesSemester && matchesMonth
+      return matchesSearch && matchesCat
     })
-  }, [events, searchQuery, selectedCategory, selectedYear, selectedSemester, selectedMonth])
+  }, [events, searchQuery, selectedCategory])
 
   const handleDownloadBrochure = (e: FacultyEventItem) => {
-    const d = new Date(e.date)
     generateAndDownloadPDF({
-      title: `${e.name.toUpperCase()} (2026)`,
-      subtitle: `Department of AI & DS · Category: ${e.category} · Venue: ${e.venue}`,
-      author: e.createdByName || 'Dr. S. Karthik (Event Coordinator)',
-      category: e.category.toUpperCase(),
+      title: e.name.toUpperCase(),
+      subtitle: `${e.category.toUpperCase()} · DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE`,
+      author: e.createdByName || `${facultyName} (Event Coordinator)`,
+      category: 'Official College Event Circular',
       sections: [
         {
-          heading: '1. EVENT OVERVIEW & THEMATIC HIGHLIGHTS',
+          heading: '1. EXECUTIVE EVENT BRIEF & PURPOSE',
           body: [
-            `Event Title: ${e.name}`,
-            `Event Category: ${e.category}`,
-            `Scheduled Date: ${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`,
-            `Timing: ${e.time}`,
-            `Official Venue: ${e.venue}`,
-            `Faculty Convener: ${e.createdByName || 'Dr. S. Karthik (Professor)'}`,
+            `Event Designation: ${e.name}`,
+            `Category / Domain: ${e.category.toUpperCase()}`,
+            `Event Date & Time: ${formatDate(e.date)} at ${e.time}`,
+            `Campus Venue: ${e.venue}`,
+            `Faculty Convener: ${e.createdByName || `${facultyName} (Faculty)`}`,
           ],
         },
         {
-          heading: '2. EVENT DESCRIPTION & PROGRAM OUTLINE',
+          heading: '2. EVENT DESCRIPTION & DETAILED AGENDA',
           body: [
-            e.description ||
-              'A premier academic and technical symposium bringing together AI researchers, students, and industry experts.',
-            'Hands-on problem statements and mentor review sessions.',
-            'Participation Certificates accredited by Anna University and Autonomous Board.',
+            e.description || '',
+            'Participants are required to complete online pre-registration through the portal.',
+            'Certificates of Merit and Participation will be awarded by the Head of the Department.',
           ],
         },
         {
-          heading: '3. REGISTRATION & PARTICIPATION GUIDELINES',
+          heading: '3. REGISTRATION INSTRUCTIONS & GUIDELINES',
           body: [
-            'Eligibility: Open to all B.Tech / B.E. engineering students and faculty delegates.',
-            'Registration Process: Online verification through V.S.B. AI & DS Portal.',
-            'Awards: Cash Prizes, Gold Trophies, and Direct Internship Interviews with AI Companies.',
+            `Registration Status: ${e.isPublished ? 'Open for AI&DS Students' : 'Internal Planning Stage'}`,
+            `Registration Information: ${e.registrationInfo || 'Free registration for all department students'}`,
+            `External Registration Portal: ${e.registrationUrl || 'Campus Internal Portal'}`,
+            'For queries, contact the Department Student Association & Event Faculty In-Charge.',
           ],
         },
       ],
-      fileName: `Event_Brochure_${e.category}_${e.id.slice(-4)}`,
+      fileName: `${e.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_brochure`,
     })
   }
 
@@ -144,7 +130,7 @@ export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEve
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Events, Hackathons &amp; Workshops Hub</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Dr. S. Karthik · Organize technical symposiums, hackathons, seminars, and track registrations
+            {facultyName} · Organize technical symposiums, hackathons, seminars, and track registrations
           </p>
         </div>
 
@@ -417,7 +403,7 @@ export function FacultyEventsView({ initialEvents }: { initialEvents: FacultyEve
 
               <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-between">
                 <span className="text-[#1455D9] font-bold">Coordinator:</span>
-                <span className="font-black text-[#071A3D]">{selectedEvent.createdByName || 'Dr. S. Karthik'}</span>
+                <span className="font-black text-[#071A3D]">{selectedEvent.createdByName || facultyName}</span>
               </div>
             </div>
 

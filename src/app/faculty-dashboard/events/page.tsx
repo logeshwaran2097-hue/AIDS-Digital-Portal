@@ -10,6 +10,7 @@ export default async function FacultyEventsPage() {
   const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const facultyName = user?.name || session.name || 'Faculty Member'
   const eventsFromDb = await prisma.event.findMany({
     orderBy: { date: 'asc' },
   })
@@ -24,15 +25,15 @@ export default async function FacultyEventsPage() {
     venue: e.venue,
     registrationUrl: e.registrationUrl,
     registrationInfo: e.registrationInfo,
-    createdByName: e.createdByName || 'Dr. S. Karthik',
+    createdByName: e.createdByName || facultyName,
     status: e.status,
     isPublished: e.isPublished,
   }))
 
   return (
-    <PortalLayout role="faculty" userName={user?.name || 'Faculty'}>
+    <PortalLayout role="faculty" userName={facultyName}>
       <div className="py-2 animate-fade-in">
-        <FacultyEventsView initialEvents={mappedEvents} />
+        <FacultyEventsView initialEvents={mappedEvents} facultyName={facultyName} />
       </div>
     </PortalLayout>
   )

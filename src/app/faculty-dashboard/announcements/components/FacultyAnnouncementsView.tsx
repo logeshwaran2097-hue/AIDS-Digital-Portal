@@ -40,8 +40,10 @@ export interface FacultyAnnouncementItem {
 
 export function FacultyAnnouncementsView({
   initialAnnouncements,
+  facultyName = 'Faculty Member',
 }: {
   initialAnnouncements: FacultyAnnouncementItem[]
+  facultyName?: string
 }) {
   const [announcements, setAnnouncements] = useState<FacultyAnnouncementItem[]>(initialAnnouncements)
   const [searchQuery, setSearchQuery] = useState('')
@@ -101,7 +103,7 @@ export function FacultyAnnouncementsView({
     generateAndDownloadPDF({
       title: 'DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
       subtitle: `CIRCULAR REF NO: VSB/AIDS/CIR/2026/${a.id.slice(-4).toUpperCase()} · DATE: ${d.toLocaleDateString('en-GB')}`,
-      author: a.createdByName || 'Dr. S. Karthik (Senior Professor)',
+      author: a.createdByName || `${facultyName} (Faculty Advisor)`,
       category: `OFFICIAL CIRCULAR: ${a.category.toUpperCase()}`,
       sections: [
         {
@@ -142,7 +144,7 @@ export function FacultyAnnouncementsView({
           content: formContent,
           category: formCategory,
           target: formTarget,
-          createdByName: 'Dr. S. Karthik (Faculty Advisor)',
+          createdByName: `${facultyName} (Faculty Advisor)`,
         }),
       })
 
@@ -188,7 +190,7 @@ export function FacultyAnnouncementsView({
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Notices &amp; Announcements Center</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Dr. S. Karthik · Issue official academic circulars, exam schedules, and placement notifications
+            {facultyName} · Issue official academic circulars, exam schedules, and placement notifications
           </p>
         </div>
 
@@ -301,7 +303,7 @@ export function FacultyAnnouncementsView({
                 </div>
 
                 <span className="text-[11px] text-gray-500 font-medium">
-                  Issued by: <strong className="text-gray-800">{a.createdByName || 'Dr. S. Karthik'}</strong>
+                  Issued by: <strong className="text-gray-800">{a.createdByName || facultyName}</strong>
                 </span>
               </div>
 
@@ -395,7 +397,7 @@ export function FacultyAnnouncementsView({
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 font-medium border-t border-gray-100">
-                    <span>Authorized by: <strong className="text-[#071A3D]">Dr. S. Karthik (Faculty Advisor)</strong></span>
+                    <span>Authorized by: <strong className="text-[#071A3D]">{facultyName} (Faculty Advisor)</strong></span>
                     <span className="font-mono">Official Circular · V.S.B. AI &amp; DS</span>
                   </div>
                 </div>

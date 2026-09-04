@@ -10,6 +10,7 @@ export default async function FacultyQuestionPapersPage() {
   const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const facultyName = user?.name || session.name || 'Faculty Member'
   const subjects = await prisma.subject.findMany({
     orderBy: { code: 'asc' },
     select: { id: true, code: true, name: true },
@@ -33,15 +34,15 @@ export default async function FacultyQuestionPapersPage() {
       semester: p.semester,
       fileName: p.fileName,
       fileSize: p.fileSize,
-      uploadedByName: p.uploadedByName || 'Dr. S. Karthik',
+      uploadedByName: p.uploadedByName || facultyName,
       createdAt: p.createdAt,
     }
   })
 
   return (
-    <PortalLayout role="faculty" userName={user?.name || 'Faculty'}>
+    <PortalLayout role="faculty" userName={facultyName}>
       <div className="py-2 animate-fade-in">
-        <FacultyQuestionPapersView initialPapers={mappedPapers} subjects={subjects} />
+        <FacultyQuestionPapersView initialPapers={mappedPapers} subjects={subjects} facultyName={facultyName} />
       </div>
     </PortalLayout>
   )

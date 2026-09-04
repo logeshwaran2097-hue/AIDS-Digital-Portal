@@ -32,7 +32,13 @@ export interface ResourceItem {
   createdAt: Date
 }
 
-export function FacultyResourcesView({ initialResources = [] }: { initialResources?: ResourceItem[] }) {
+export function FacultyResourcesView({
+  initialResources = [],
+  facultyName = 'Faculty Member',
+}: {
+  initialResources?: ResourceItem[]
+  facultyName?: string
+}) {
   const [resources, setResources] = useState<ResourceItem[]>(initialResources)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedType, setSelectedType] = useState('ALL')
@@ -58,14 +64,14 @@ export function FacultyResourcesView({ initialResources = [] }: { initialResourc
     generateAndDownloadPDF({
       title: r.name.toUpperCase(),
       subtitle: `${r.description || 'Department of AI & DS Study Resource'} · Approved Reference Material`,
-      author: r.uploadedByName || 'Dr. S. Karthik',
+      author: r.uploadedByName || facultyName,
       category: r.resourceType?.replace(/_/g, ' ').toUpperCase() || 'DIGITAL RESOURCE',
       sections: [
         {
           heading: '1. EXECUTIVE RESOURCE OVERVIEW & ABSTRACT',
           body: [
             `Document Title: ${r.name}`,
-            `Uploaded By: ${r.uploadedByName || 'Department Faculty'}`,
+            `Uploaded By: ${r.uploadedByName || facultyName}`,
             `Academic Regulation: Anna University & Autonomous R-2021`,
             `Intended Audience: B.Tech Artificial Intelligence & Data Science Students`,
           ],
@@ -73,14 +79,21 @@ export function FacultyResourcesView({ initialResources = [] }: { initialResourc
         {
           heading: '2. SYLLABUS & CURRICULAR MAPPING',
           body: [
-            'Course Mapping: AD2301 to AD2307 Curriculum Subjects',
-            'Core Units Covered: Units I through V Complete Topic References',
-            'Bloom Taxonomy Mapping: K1 (Remember) to K4 (Analyze)',
-            'Format: Verified High-Resolution Textbook Reference Handbook',
+            `Primary Subject Category: ${r.resourceType?.toUpperCase() || 'GENERAL AI/DS'}`,
+            `Intended Course Units: Units I through V applicable`,
+            `Repository Index File: ${r.fileName}`,
+            `Standard Format: Electronic Document PDF (${(r.fileSize / 1024).toFixed(1)} KB)`,
+          ],
+        },
+        {
+          heading: '3. ACADEMIC ADVISORY & REVISION POLICY',
+          body: [
+            'All study materials are strictly for internal academic usage at V.S.B. Engineering College.',
+            'Students are encouraged to consult primary prescribed Anna University textbooks alongside these lecture notes.',
+            'Any revision or updated syllabus references are subject to department curriculum committee reviews.',
           ],
         },
       ],
-      fileName: r.fileName.replace(/\.pdf$/, '') || 'Resource_Document',
     })
   }
 
@@ -106,7 +119,7 @@ export function FacultyResourcesView({ initialResources = [] }: { initialResourc
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Study Resources &amp; E-Books Library</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Dr. S. Karthik · Publish and manage standard textbooks, lecture materials, and interview guides
+            {facultyName} · Publish and manage standard textbooks, lecture materials, and interview guides
           </p>
         </div>
 

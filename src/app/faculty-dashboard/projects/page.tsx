@@ -30,11 +30,12 @@ export default async function FacultyProjectsPage() {
   }))
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
+  const facultyName = user?.name || session.name || 'Faculty Member'
 
   return (
-    <PortalLayout role="faculty" userName={user?.name || session.name || 'Faculty'}>
+    <PortalLayout role="faculty" userName={facultyName}>
       <div className="py-2 animate-fade-in">
-        <FacultyProjectsView initialProjects={projectsList} />
+        <FacultyProjectsView initialProjects={projectsList} facultyName={facultyName} />
       </div>
     </PortalLayout>
   )

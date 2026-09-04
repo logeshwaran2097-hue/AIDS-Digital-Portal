@@ -10,6 +10,7 @@ export default async function FacultyResourcesPage() {
   const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const facultyName = user?.name || session.name || 'Faculty Member'
   const resourcesFromDb = await prisma.resource.findMany({
     orderBy: { createdAt: 'desc' },
   })
@@ -21,14 +22,14 @@ export default async function FacultyResourcesPage() {
     fileName: r.fileName,
     fileSize: r.fileSize,
     resourceType: r.resourceType,
-    uploadedByName: r.uploadedByName || 'Dr. S. Karthik',
+    uploadedByName: r.uploadedByName || facultyName,
     createdAt: r.createdAt,
   }))
 
   return (
-    <PortalLayout role="faculty" userName={user?.name || 'Faculty'}>
+    <PortalLayout role="faculty" userName={facultyName}>
       <div className="py-2 animate-fade-in">
-        <FacultyResourcesView initialResources={mappedResources} />
+        <FacultyResourcesView initialResources={mappedResources} facultyName={facultyName} />
       </div>
     </PortalLayout>
   )

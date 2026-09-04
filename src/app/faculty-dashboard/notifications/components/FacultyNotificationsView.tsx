@@ -29,43 +29,12 @@ interface NotificationItem {
   isRead: boolean
 }
 
-const DEFAULT_FACULTY_NOTIFS: NotificationItem[] = [
-  {
-    id: '1',
-    title: 'Student On-Duty (OD) Request Pending Approval',
-    message: 'K. Aishwarya (23AD001) submitted an OD request for IEEE International Conference at IIT Madras.',
-    time: '15 mins ago',
-    type: 'urgent',
-    isRead: false,
-  },
-  {
-    id: '2',
-    title: 'Internal Assessment Test 1 (IAT-1) Question Paper Verification',
-    message: 'COE requested final verification for AD2305 Machine Learning Foundations question paper set.',
-    time: '2 hours ago',
-    type: 'academic',
-    isRead: false,
-  },
-  {
-    id: '3',
-    title: 'National Level Hackathon 2026 Registration Milestone',
-    message: 'Over 140 student delegates have enrolled for the AI Hackathon. Final jury panel review scheduled.',
-    time: '1 day ago',
-    type: 'event',
-    isRead: true,
-  },
-  {
-    id: '4',
-    title: 'Department Academic Council Meeting Scheduled',
-    message: 'Curriculum revision review for Regulation 2021 Semester 4 elective courses on Thursday at 3:00 PM.',
-    time: '2 days ago',
-    type: 'system',
-    isRead: true,
-  },
-]
-
-export function FacultyNotificationsView() {
-  const [notifications, setNotifications] = useState<NotificationItem[]>(DEFAULT_FACULTY_NOTIFS)
+export function FacultyNotificationsView({
+  initialNotifications = [],
+}: {
+  initialNotifications?: NotificationItem[]
+}) {
+  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
 
   const unreadCount = notifications.filter((n) => !n.isRead).length

@@ -63,189 +63,21 @@ interface CourseSubject {
   }[]
 }
 
-const COURSES_DATA: CourseSubject[] = [
-  {
-    code: 'AD2305',
-    name: 'Machine Learning Foundations',
-    regulation: 'Regulation 2021 (Autonomous)',
-    credits: 4,
-    year: 2,
-    semester: 3,
-    section: 'A',
-    enrolledStudents: 68,
-    hoursTaught: 37,
-    attendanceRate: '97.3%',
-    units: [
-      {
-        unit: 'Unit I',
-        title: 'Introduction & Supervised Learning Paradigms',
-        hours: 9,
-        topics: ['Machine Learning Taxonomy', 'Linear & Polynomial Regression', 'Logistic Regression & Sigmoid Function', 'Cost Function Optimization & Gradient Descent', 'Regularization (L1 Lasso, L2 Ridge)'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit II',
-        title: 'Probabilistic Classifiers & Decision Trees',
-        hours: 9,
-        topics: ['Bayes Theorem & Maximum A Posteriori (MAP)', 'Naive Bayes Classifier (Gaussian & Multinomial)', 'Information Gain & Entropy (ID3, C4.5, CART)', 'Pruning Strategies & Overfitting Mitigation', 'Random Forests & Ensemble Bootstrapping'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit III',
-        title: 'Support Vector Machines & Kernel Methods',
-        hours: 9,
-        topics: ['Maximum Margin Hyperplanes', 'Soft Margin Optimization & Slack Variables', 'Linear & Non-Linear Kernels (Polynomial, RBF, Sigmoid)', 'Mercer Theorem & Dual Formulation', 'Support Vector Regression (SVR)'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit IV',
-        title: 'Unsupervised Learning & Dimensionality Reduction',
-        hours: 9,
-        topics: ['K-Means & K-Medoids Clustering', 'Hierarchical Clustering (Agglomerative & Divisive)', 'Gaussian Mixture Models & Expectation Maximization', 'Principal Component Analysis (PCA)', 't-SNE for High-Dimensional Visualization'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit V',
-        title: 'Neural Networks & Deep Learning Foundations',
-        hours: 9,
-        topics: ['Biological to Artificial Neurons (Perceptrons)', 'Multi-Layer Perceptron (MLP) Architectures', 'Activation Functions (ReLU, GELU, Softmax)', 'Backpropagation & Chain Rule Derivation', 'Optimization Algorithms (SGD, RMSProp, Adam)'],
-        status: 'In-Progress',
-      },
-    ],
-    notes: [
-      { unit: 'Unit I', title: 'Linear Regression & Cost Optimization Notes', fileName: 'AD2305_Unit1_Supervised_Learning.pdf', fileSize: '3.8 MB', uploadedDate: '12/08/2026' },
-      { unit: 'Unit II', title: 'Naive Bayes & Decision Tree Derivations', fileName: 'AD2305_Unit2_DecisionTrees_Ensembles.pdf', fileSize: '4.2 MB', uploadedDate: '18/08/2026' },
-      { unit: 'Unit III', title: 'Support Vector Machine Optimization Notes', fileName: 'AD2305_Unit3_SVM_Kernels.pdf', fileSize: '5.1 MB', uploadedDate: '22/08/2026' },
-    ],
-    labs: [
-      { expNo: 1, title: 'Implement Multiple Linear Regression from Scratch with NumPy', tools: 'Python, NumPy, Matplotlib', guideFile: 'AD2305_LabExp1.pdf' },
-      { expNo: 2, title: 'Build Naive Bayes Classifier for Medical Diagnostic Prediction', tools: 'Scikit-Learn, Pandas', guideFile: 'AD2305_LabExp2.pdf' },
-      { expNo: 3, title: 'Non-Linear Decision Boundary Classification with SVM Kernels', tools: 'Python, Scikit-Learn', guideFile: 'AD2305_LabExp3.pdf' },
-    ],
-    questions: [
-      { type: '2_mark', q: 'Define bias-variance tradeoff and its impact on model generalization.', bloom: 'K2 (Understand)' },
-      { type: '2_mark', q: 'State the mathematical formulation of L2 Ridge Regularization.', bloom: 'K1 (Remember)' },
-      { type: '16_mark', q: 'Derive the complete backpropagation gradient equations for a 3-layer neural network with cross-entropy loss function.', bloom: 'K4 (Analyze)' },
-    ],
-  },
-  {
-    code: 'AD2301',
-    name: 'Data Structures & Algorithms',
-    regulation: 'Regulation 2021 (Autonomous)',
-    credits: 4,
-    year: 2,
-    semester: 3,
-    section: 'A',
-    enrolledStudents: 68,
-    hoursTaught: 38,
-    attendanceRate: '94.7%',
-    units: [
-      {
-        unit: 'Unit I',
-        title: 'Linear Data Structures - Lists',
-        hours: 9,
-        topics: ['Abstract Data Types (ADTs)', 'Dynamic Array Vectors', 'Singly Linked Lists', 'Doubly & Circular Linked Lists', 'Polynomial Representation'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit II',
-        title: 'Stacks and Queues ADT',
-        hours: 9,
-        topics: ['Stack Array & Linked Representations', 'Infix to Postfix Conversion', 'Arithmetic Expression Evaluation', 'Circular & Double-Ended Queues (Deque)', 'Priority Queues'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit III',
-        title: 'Non-Linear Data Structures - Trees',
-        hours: 9,
-        topics: ['Binary Trees & Tree Traversals', 'Binary Search Trees (BST)', 'AVL Self-Balancing Trees', 'Binary Min/Max Heaps', 'B-Trees & B+ Trees'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit IV',
-        title: 'Non-Linear Data Structures - Graphs',
-        hours: 9,
-        topics: ['Graph Adjacency Matrix & Lists', 'Breadth First Search (BFS) & DFS', 'Topological Sorting for DAGs', 'Dijkstra Shortest Path', 'Prim & Kruskal MST'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit V',
-        title: 'Searching, Sorting & Hashing',
-        hours: 9,
-        topics: ['Quick Sort & Merge Sort', 'Heap Sort & Counting Sort', 'Hash Tables & Hash Functions', 'Collision Resolution Policies', 'Dynamic Rehashing'],
-        status: 'Completed',
-      },
-    ],
-    notes: [
-      { unit: 'Unit I', title: 'Complete Linked List ADT Operations', fileName: 'AD2301_Unit1_Linked_Lists.pdf', fileSize: '3.4 MB', uploadedDate: '10/08/2026' },
-      { unit: 'Unit III', title: 'AVL Trees & Self Balancing Rotations', fileName: 'AD2301_Unit3_AVL_Trees.pdf', fileSize: '4.8 MB', uploadedDate: '19/08/2026' },
-    ],
-    labs: [
-      { expNo: 1, title: 'Array Vector & Singly Linked List ADT Implementation in C++', tools: 'GCC, C++', guideFile: 'AD2301_LabExp1.pdf' },
-      { expNo: 2, title: 'Infix to Postfix Conversion and Evaluation using Stack ADT', tools: 'C++', guideFile: 'AD2301_LabExp2.pdf' },
-    ],
-    questions: [
-      { type: '2_mark', q: 'State the four rotation cases required for AVL Tree balance restoration.', bloom: 'K1 (Remember)' },
-      { type: '16_mark', q: 'Explain Dijkstra algorithm with a 6-node weighted graph example and trace shortest path step-by-step.', bloom: 'K3 (Apply)' },
-    ],
-  },
-  {
-    code: 'AD2307',
-    name: 'Data Science Tools & Laboratory',
-    regulation: 'Regulation 2021 (Autonomous)',
-    credits: 2,
-    year: 2,
-    semester: 3,
-    section: 'A',
-    enrolledStudents: 68,
-    hoursTaught: 18,
-    attendanceRate: '100.0%',
-    units: [
-      {
-        unit: 'Unit I',
-        title: 'Exploratory Data Analysis with Pandas & NumPy',
-        hours: 6,
-        topics: ['Data Wrangling & Cleaning', 'Handling Missing Values & Outliers', 'Data Aggregation & GroupBy', 'Feature Normalization & Scaling'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit II',
-        title: 'Statistical Visualization & Dashboarding',
-        hours: 6,
-        topics: ['Matplotlib & Seaborn Visuals', 'Correlation Heatmaps & Boxplots', 'Interactive Dashboards with Plotly & Streamlit'],
-        status: 'Completed',
-      },
-      {
-        unit: 'Unit III',
-        title: 'End-to-End Data Science Pipeline',
-        hours: 6,
-        topics: ['Model Training Pipeline with Scikit-Learn', 'Cross-Validation & Hyperparameter Tuning', 'Model Deployment via FastAPI'],
-        status: 'In-Progress',
-      },
-    ],
-    notes: [
-      { unit: 'Unit I', title: 'Pandas & NumPy Cheat Sheet & Reference Lab Guide', fileName: 'AD2307_DataScience_Manual.pdf', fileSize: '6.2 MB', uploadedDate: '15/08/2026' },
-    ],
-    labs: [
-      { expNo: 1, title: 'EDA on Titanic & Boston Housing Datasets with Seaborn', tools: 'Python, Jupyter, Pandas', guideFile: 'AD2307_LabExp1.pdf' },
-      { expNo: 2, title: 'End-to-End Predictive Pipeline Deployment with Streamlit', tools: 'Streamlit, Scikit-Learn', guideFile: 'AD2307_LabExp2.pdf' },
-    ],
-    questions: [
-      { type: '2_mark', q: 'Differentiate between Min-Max Scaling and Standard Z-score Normalization.', bloom: 'K2 (Understand)' },
-      { type: '16_mark', q: 'Design an end-to-end data ingestion and EDA pipeline for customer churn analysis with interactive charts.', bloom: 'K4 (Analyze)' },
-    ],
-  },
-]
-
-export function FacultySubjectsView() {
+export function FacultySubjectsView({
+  initialCourses = [],
+}: {
+  initialCourses?: CourseSubject[]
+}) {
+  const [courses, setCourses] = useState<CourseSubject[]>(initialCourses)
   const [selectedCourseIndex, setSelectedCourseIndex] = useState(0)
   const [activeTab, setActiveTab] = useState<'syllabus' | 'notes' | 'labs' | 'questions'>('syllabus')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
 
-  const currentCourse = COURSES_DATA[selectedCourseIndex]
+  const currentCourse = courses[selectedCourseIndex] || null
 
   const handleDownloadCoursePack = () => {
+    if (!currentCourse) return
     const sections = currentCourse.units.map((u) => ({
       heading: `${u.unit.toUpperCase()}: ${u.title.toUpperCase()}`,
       body: u.topics.map((t) => `${t} (Completed: ${u.status === 'Completed' ? 'Yes' : 'In-Progress'})`),
@@ -255,7 +87,7 @@ export function FacultySubjectsView() {
       title: `${currentCourse.code} - ${currentCourse.name}`,
       subtitle: `${currentCourse.regulation} · Year ${currentCourse.year} Semester ${currentCourse.semester} · Credits: ${currentCourse.credits}`,
       subjectCode: currentCourse.code,
-      author: 'Dr. S. Karthik (Course Faculty)',
+      author: 'Department Course Faculty',
       category: 'Official Course Pack & Lesson Plan',
       sections,
       fileName: `${currentCourse.code}_Faculty_Course_Pack`,
@@ -304,60 +136,81 @@ export function FacultySubjectsView() {
         </div>
       </div>
 
-      {/* Course Selection Ribbon */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        {COURSES_DATA.map((course, idx) => {
-          const isSelected = selectedCourseIndex === idx
-          return (
-            <button
-              key={course.code}
-              onClick={() => setSelectedCourseIndex(idx)}
-              className={cn(
-                'p-4 rounded-3xl border text-left transition-all cursor-pointer relative overflow-hidden group',
-                isSelected
-                  ? 'bg-gradient-to-br from-[#071A3D] to-[#1455D9] text-white border-[#1455D9] shadow-lg scale-[1.02]'
-                  : 'bg-white text-[#071A3D] border-gray-200 hover:border-[#1455D9]/40 hover:shadow-xs'
-              )}
-            >
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span
-                  className={cn(
-                    'px-2.5 py-0.5 rounded-lg text-xs font-mono font-black',
-                    isSelected ? 'bg-white/20 text-[#F4C430]' : 'bg-blue-50 text-[#1455D9]'
-                  )}
-                >
-                  {course.code}
-                </span>
-                <span
-                  className={cn(
-                    'text-[10px] font-bold px-2 py-0.5 rounded-full',
-                    isSelected ? 'bg-emerald-400/20 text-emerald-300' : 'bg-gray-100 text-gray-600'
-                  )}
-                >
-                  {course.credits} Credits
-                </span>
-              </div>
-
-              <h3 className="font-bold text-sm leading-snug line-clamp-1">{course.name}</h3>
-
-              <div
-                className={cn(
-                  'mt-3 pt-2 border-t flex items-center justify-between text-[11px]',
-                  isSelected ? 'border-white/15 text-gray-300' : 'border-gray-100 text-gray-400'
-                )}
+      {/* Course Selection Ribbon & Details */}
+      {courses.length === 0 ? (
+        <Card className="rounded-3xl border-gray-200 bg-white">
+          <CardContent className="p-12 text-center space-y-3">
+            <BookOpen className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="font-bold text-sm text-[#071A3D]">No Allocated Subjects in Your Registry</h3>
+            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              Subjects assigned to you by the Head of the Department (HOD) or Admin will automatically display their syllabus units, notes, and question banks here.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/faculty-dashboard"
+                className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5] transition-colors inline-flex items-center gap-1.5"
               >
-                <span>{course.enrolledStudents} Enrolled</span>
-                <span className={cn('font-bold', isSelected ? 'text-emerald-300' : 'text-green-700')}>
-                  {course.attendanceRate} Attd.
-                </span>
-              </div>
-            </button>
-          )
-        })}
-      </div>
+                Back to Dashboard
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Course Selection Ribbon */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            {courses.map((course, idx) => {
+              const isSelected = selectedCourseIndex === idx
+              return (
+                <button
+                  key={course.code}
+                  onClick={() => setSelectedCourseIndex(idx)}
+                  className={cn(
+                    'p-4 rounded-3xl border text-left transition-all cursor-pointer relative overflow-hidden group',
+                    isSelected
+                      ? 'bg-gradient-to-br from-[#071A3D] to-[#1455D9] text-white border-[#1455D9] shadow-lg scale-[1.02]'
+                      : 'bg-white text-[#071A3D] border-gray-200 hover:border-[#1455D9]/40 hover:shadow-xs'
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span
+                      className={cn(
+                        'px-2.5 py-0.5 rounded-lg text-xs font-mono font-black',
+                        isSelected ? 'bg-white/20 text-[#F4C430]' : 'bg-blue-50 text-[#1455D9]'
+                      )}
+                    >
+                      {course.code}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-[10px] font-bold px-2 py-0.5 rounded-full',
+                        isSelected ? 'bg-emerald-400/20 text-emerald-300' : 'bg-gray-100 text-gray-600'
+                      )}
+                    >
+                      {course.credits} Credits
+                    </span>
+                  </div>
 
-      {/* Selected Course Deep Management Center */}
-      <Card className="rounded-3xl border-gray-200 shadow-xs bg-white">
+                  <h3 className="font-bold text-sm leading-snug line-clamp-1">{course.name}</h3>
+
+                  <div
+                    className={cn(
+                      'mt-3 pt-2 border-t flex items-center justify-between text-[11px]',
+                      isSelected ? 'border-white/15 text-gray-300' : 'border-gray-100 text-gray-400'
+                    )}
+                  >
+                    <span>{course.enrolledStudents} Enrolled</span>
+                    <span className={cn('font-bold', isSelected ? 'text-emerald-300' : 'text-green-700')}>
+                      {course.attendanceRate} Attd.
+                    </span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+
+          {currentCourse && (
+            <Card className="rounded-3xl border-gray-200 shadow-xs bg-white">
         <CardContent className="p-6 space-y-6">
           {/* Course Banner Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-100">
@@ -545,6 +398,9 @@ export function FacultySubjectsView() {
           )}
         </CardContent>
       </Card>
+      )}
+      </>
+      )}
 
       {/* Upload Material Modal */}
       {showUploadModal && (

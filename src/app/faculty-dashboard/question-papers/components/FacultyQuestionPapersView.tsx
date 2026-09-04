@@ -39,9 +39,11 @@ export interface FacultyQPItem {
 export function FacultyQuestionPapersView({
   initialPapers,
   subjects,
+  facultyName = 'Faculty Member',
 }: {
   initialPapers: FacultyQPItem[]
   subjects: { id: string; code: string; name: string }[]
+  facultyName?: string
 }) {
   const [papers, setPapers] = useState<FacultyQPItem[]>(initialPapers)
   const [searchQuery, setSearchQuery] = useState('')
@@ -140,7 +142,7 @@ export function FacultyQuestionPapersView({
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Question Paper Archive &amp; Assessment</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Dr. S. Karthik · Manage and publish internal assessment tests, model exams &amp; Anna University papers
+            {facultyName} · Manage and publish internal assessment tests, model exams &amp; Anna University papers
           </p>
         </div>
 
@@ -267,7 +269,7 @@ export function FacultyQuestionPapersView({
                   <span className="flex items-center gap-1 font-mono text-[11px]">
                     <FileQuestion className="w-3.5 h-3.5 text-[#1455D9]" /> {(p.fileSize / (1024 * 1024)).toFixed(1)} MB
                   </span>
-                  <span>Uploaded by {p.uploadedByName || 'Dr. S. Karthik'}</span>
+                  <span>Uploaded by {p.uploadedByName || facultyName}</span>
                 </div>
               </div>
 

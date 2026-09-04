@@ -10,11 +10,16 @@ export default async function FacultySettingsPage() {
   const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const faculty = await prisma.faculty.findUnique({ where: { userId: session.userId } })
 
   return (
-    <PortalLayout role="faculty" userName={user?.name || 'Faculty'}>
+    <PortalLayout role="faculty" userName={user?.name || session.name || 'Faculty'}>
       <div className="py-2 animate-fade-in">
-        <FacultySettingsView />
+        <FacultySettingsView
+          userName={user?.name || session.name || 'Faculty Member'}
+          facultyId={faculty?.facultyId || session.facultyId || 'FACULTY'}
+          designation={faculty?.designation || 'Faculty Member'}
+        />
       </div>
     </PortalLayout>
   )
