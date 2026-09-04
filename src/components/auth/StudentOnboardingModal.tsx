@@ -51,9 +51,10 @@ export function StudentOnboardingModal({
   onComplete,
   initialData,
 }: StudentOnboardingModalProps) {
-  // Steps: 1: Review Academic Details -> 2: Set Password & Email OTP Verification
-  const [onboardingStep, setOnboardingStep] = useState<1 | 2>(1)
+  // Steps: 1: Review Academic Details -> 2: Set Password & Email OTP Verification -> 3: Verify All Details & Confirm
+  const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)
+  const [step3Confirmed, setStep3Confirmed] = useState(false)
 
   // Form State
   const [form, setForm] = useState({
@@ -164,65 +165,6 @@ export function StudentOnboardingModal({
 
   if (!isOpen) return null
 
-  // Fast 1-Click Save & Direct Entry to Portal
-  const handleDirectConfirm = async () => {
-    if (!form.phone.trim()) {
-      toast.error('Please enter your personal mobile number.')
-      return
-    }
-    if (!form.parentPhone.trim()) {
-      toast.error('Please enter parent/guardian mobile number.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const finalResidency = form.residencyStatus === 'Day Scholar'
-        ? (form.dayScholarType === 'College Bus'
-            ? `Day Scholar · College Bus ${form.busNo ? `No. ${form.busNo}` : ''} ${form.boardingPoint ? `(${form.boardingPoint})` : ''}`.trim()
-            : `Day Scholar · Out Bus (${form.outBusMode || 'Public Bus'}) ${form.boardingPoint ? `From: ${form.boardingPoint}` : ''}`.trim())
-        : (form.residencyStatus === 'Hostel'
-            ? `Hosteller · ${form.hostelBlock || 'Hostel'} ${form.roomNo ? `Room ${form.roomNo}` : ''}`.trim()
-            : '')
-
-      const res = await fetch('/api/auth/student/complete-onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: initialData.name,
-          phone: form.phone.trim(),
-          parentPhone: form.parentPhone.trim(),
-          dateOfBirth: form.dateOfBirth,
-          isParentWhatsapp: form.isParentWhatsapp,
-          bloodGroup: form.bloodGroup,
-          residencyStatus: finalResidency || form.residencyStatus,
-          busNo: form.busNo,
-          boardingPoint: form.boardingPoint,
-          hostelBlock: form.hostelBlock,
-          roomNo: form.roomNo,
-          profileImage: form.profileImage || undefined,
-          skipEmailVerification: true,
-        }),
-      })
-
-      const data = await res.json()
-      if (res.ok && data.success) {
-        toast.success('Welcome! Student profile confirmed.')
-        onComplete(data.user || {
-          phone: form.phone.trim(),
-          parentPhone: form.parentPhone.trim(),
-          profileImage: form.profileImage,
-        })
-      } else {
-        toast.error(data.message || 'Failed to save details.')
-      }
-    } catch {
-      toast.error('Network error saving details.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   // STEP 1 -> STEP 2: Proceed to Security Step
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
@@ -274,8 +216,8 @@ export function StudentOnboardingModal({
     }
   }
 
-  // STEP 2: Complete Onboarding & Activate Account
-  const handleCompleteOnboarding = async (e: React.FormEvent) => {
+  // STEP 2 -> STEP 3: Validate Password & OTP, proceed to Review Details Step
+  const handleProceedToStep3 = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!form.newPassword || form.newPassword.length < 6) {
@@ -290,7 +232,7 @@ export function StudentOnboardingModal({
       toast.error('Please enter a valid email address.')
       return
     }
-    if (!emailOtpSent) {
+    if (!emailOtpSent && !demoOtp) {
       toast.error('Please click "Send OTP" to receive your verification code.')
       return
     }
@@ -299,8 +241,28 @@ export function StudentOnboardingModal({
       return
     }
 
+    setOnboardingStep(3)
+  }
+
+  // STEP 3: Complete Onboarding & Final Activation
+  const handleCompleteOnboarding = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!step3Confirmed) {
+      toast.error('Please check the verification confirmation box before entering the portal.')
+      return
+    }
+
     setLoading(true)
     try {
+      const finalResidency = form.residencyStatus === 'Day Scholar'
+        ? (form.dayScholarType === 'College Bus'
+            ? `Day Scholar · College Bus ${form.busNo ? `No. ${form.busNo}` : ''} ${form.boardingPoint ? `(${form.boardingPoint})` : ''}`.trim()
+            : `Day Scholar · Out Bus (${form.outBusMode || 'Public Bus'}) ${form.boardingPoint ? `From: ${form.boardingPoint}` : ''}`.trim())
+        : (form.residencyStatus === 'Hostel'
+            ? `Hosteller · ${form.hostelBlock || 'Hostel'} ${form.roomNo ? `Room ${form.roomNo}` : ''}`.trim()
+            : '')
+
       const res = await fetch('/api/auth/student/complete-onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -312,7 +274,7 @@ export function StudentOnboardingModal({
           dateOfBirth: form.dateOfBirth,
           isParentWhatsapp: form.isParentWhatsapp,
           bloodGroup: form.bloodGroup,
-          residencyStatus: form.residencyStatus,
+          residencyStatus: finalResidency || form.residencyStatus,
           busNo: form.busNo,
           boardingPoint: form.boardingPoint,
           hostelBlock: form.hostelBlock,
@@ -398,17 +360,20 @@ export function StudentOnboardingModal({
           
           <div className="flex items-center justify-between">
             <h3 className="text-lg sm:text-xl font-black text-[#071A41]">
-              {onboardingStep === 1 ? 'Step 1: Review Your Academic Details' : 'Step 2: Password & Email OTP Verification'}
+              {onboardingStep === 1 && 'Step 1: Review Your Academic Details'}
+              {onboardingStep === 2 && 'Step 2: Password & Email OTP Verification'}
+              {onboardingStep === 3 && 'Step 3: Verify All Details & Confirm'}
             </h3>
             <span className="text-xs font-black text-[#1557C0] bg-blue-50 px-2.5 py-1 rounded-xl">
-              Step {onboardingStep} of 2
+              Step {onboardingStep} of 3
             </span>
           </div>
 
           {/* Visual Step Bar */}
-          <div className="grid grid-cols-2 gap-2 mt-2.5">
+          <div className="grid grid-cols-3 gap-2 mt-2.5">
             <div className={cn('h-1.5 rounded-full transition-all', onboardingStep >= 1 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
-            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep === 2 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
+            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep >= 2 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
+            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep === 3 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
           </div>
         </div>
 
@@ -902,22 +867,12 @@ export function StudentOnboardingModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={handleDirectConfirm}
-                disabled={loading}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                <span>Confirm &amp; Enter Student Portal</span>
-              </button>
-
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
               <button
                 type="submit"
-                className="w-full sm:w-auto px-5 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-sm cursor-pointer hover:scale-[1.02] transition-all text-xs"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
               >
-                <span>Set Custom Password &amp; Email</span>
+                <span>Proceed to Step 2: Password &amp; Email</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -928,7 +883,7 @@ export function StudentOnboardingModal({
         {/* STEP 2: SET PERMANENT PASSWORD & EMAIL OTP VERIFICATION */}
         {/* ========================================================================= */}
         {onboardingStep === 2 && (
-          <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
+          <form onSubmit={handleProceedToStep3} className="space-y-4 text-xs">
             
             {/* 1. Permanent Password Section */}
             <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
@@ -1065,16 +1020,184 @@ export function StudentOnboardingModal({
                 className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Back to Details</span>
+                <span>Back to Step 1</span>
               </button>
 
               <button
                 type="submit"
-                disabled={loading}
-                className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0e44b5] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all disabled:opacity-60"
+                className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0e44b5] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all"
+              >
+                <span>Next: Review &amp; Verify All Details</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 3: VERIFY ALL DETAILS & FINAL CONFIRMATION (CONTACT ADMIN IF CHANGES) */}
+        {/* ========================================================================= */}
+        {onboardingStep === 3 && (
+          <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
+            <p className="text-[11px] text-gray-500 font-medium">
+              Please thoroughly verify all your student particulars, contact details, and security credentials below before confirming.
+            </p>
+
+            {/* Comprehensive Details Review Card */}
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3.5 shadow-xs">
+              
+              {/* Header inside summary with Photo & Identity */}
+              <div className="flex items-center gap-3.5 pb-3 border-b border-slate-200">
+                {form.profileImage ? (
+                  <img
+                    src={form.profileImage}
+                    alt="Student Photo"
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[#1557C0] shadow-sm bg-white shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-dashed border-slate-300 flex items-center justify-center text-slate-400 shadow-inner shrink-0">
+                    <UserIcon className="w-6 h-6" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-black text-sm text-[#071A41] truncate">{initialData.name}</h4>
+                    <span className="text-[10px] font-mono font-bold bg-blue-100 text-[#1557C0] px-2 py-0.5 rounded-md">
+                      {initialData.registerNumber}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
+                    {initialData.department || 'B.Tech AI & Data Science'} · Year {initialData.year} · Sem {initialData.semester} (Sec {initialData.section})
+                  </p>
+                  <p className="text-[10px] text-slate-500 font-bold mt-0.5">
+                    Class Advisor: {initialData.advisorName || 'Assigned Faculty Mentor'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Grid of Verified Particulars */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">STUDENT MOBILE</span>
+                  <span className="font-mono font-bold text-[#071A41]">{form.phone || 'Not provided'}</span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">PARENT MOBILE</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-[#071A41]">{form.parentPhone || 'Not provided'}</span>
+                    {form.isParentWhatsapp && (
+                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                        WhatsApp
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DATE OF BIRTH</span>
+                  <span className="font-bold text-[#071A41]">
+                    {form.dateOfBirth
+                      ? form.dateOfBirth.includes('-')
+                        ? `${form.dateOfBirth.split('-')[2]}-${['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(form.dateOfBirth.split('-')[1], 10)] || form.dateOfBirth.split('-')[1]}-${form.dateOfBirth.split('-')[0]}`
+                        : form.dateOfBirth
+                      : 'Not provided'}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">BLOOD GROUP</span>
+                  <span className="font-bold text-[#071A41]">{form.bloodGroup || 'Not specified'}</span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 sm:col-span-2">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">RESIDENCY &amp; TRANSPORT</span>
+                  <span className="font-bold text-[#071A41]">
+                    {form.residencyStatus === 'Day Scholar'
+                      ? `Day Scholar · ${form.dayScholarType} ${form.busNo ? `(${form.busNo})` : ''} ${form.boardingPoint ? `at ${form.boardingPoint}` : ''}`
+                      : form.residencyStatus === 'Hostel'
+                      ? `Hostel · ${form.hostelBlock} ${form.roomNo ? `(${form.roomNo})` : ''}`
+                      : form.residencyStatus || 'Day Scholar'}
+                  </span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 sm:col-span-2">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">VERIFIED STUDENT EMAIL</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-[#1557C0] truncate">{form.email}</span>
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
+                      <CheckCircle2 className="w-3 h-3" /> OTP Verified
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Prominent Admin Contact / Change Notice (EXACT REQUIREMENT) */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/90 border-2 border-amber-300/90 space-y-2.5">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-200/90 flex items-center justify-center text-amber-800 shrink-0 mt-0.5">
+                  <AlertCircle className="w-4 h-4" />
+                </div>
+                <div className="space-y-1">
+                  <h5 className="font-black text-xs text-amber-950">
+                    Important: Verify All Details &amp; Future Corrections
+                  </h5>
+                  <p className="text-[11px] text-amber-900 leading-relaxed font-medium">
+                    Please verify all your details above. Once confirmed, you cannot edit official particulars directly from your portal. <strong>If any changes are required, you must contact the Department Administrator.</strong>
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-[10px] font-bold text-amber-800">
+                  Any mistakes in academic records or personal details?
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowCorrectionModal(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-amber-400 text-amber-900 hover:bg-amber-100 text-[11px] font-black transition-all shadow-xs cursor-pointer shrink-0"
+                >
+                  <Pencil className="w-3 h-3 text-amber-700" />
+                  <span>Contact Admin / Request Correction</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Mandatory Verification Declaration Checkbox */}
+            <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={step3Confirmed}
+                  onChange={(e) => setStep3Confirmed(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
+                />
+                <span className="text-xs font-bold text-[#071A41] leading-snug">
+                  I confirm that I have verified all the details above. If any changes are needed, I will contact the administrator.
+                </span>
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setOnboardingStep(2)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Step 2</span>
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading || !step3Confirmed}
+                className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md text-xs sm:text-sm cursor-pointer hover:scale-[1.02] transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                <span>Verify OTP &amp; Enter Dashboard</span>
+                <span>Confirm &amp; Enter Student Portal</span>
               </button>
             </div>
           </form>
