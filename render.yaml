@@ -14,7 +14,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: "file:./dev.db"
+        value: "postgresql://aifactorytwin_user:JxcJgNvRKl3rZDnLCXtBJ0kKu1Q3KLXd@dpg-da16l6dbedkc73c6dqug-a.oregon-postgres.render.com:5432/aifactorytwin?schema=vsb_aids_portal&sslmode=require"
       - key: NEXTAUTH_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
