@@ -546,6 +546,20 @@ export default function LoginPage() {
             <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
             <span>Autonomous · NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
           </div>
+
+          <a
+            href="/Digital-Portal-of-AI-and-DS.apk"
+            download="Digital-Portal-of-AI-and-DS.apk"
+            onClick={() => toast.success('Downloading VSB AI&DS Android APK...')}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-0.5 sm:py-1 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 text-[9px] sm:text-xs font-black text-[#1557C0] shadow-xs hover:shadow-sm backdrop-blur-md transition-all duration-700 ease-out transform cursor-pointer active:scale-95",
+              animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+            )}
+            title="Download & Install Official Android APK"
+          >
+            <Download className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#1557C0]" />
+            <span>Download Portal App</span>
+          </a>
         </div>
         
         {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (PICTURE LOGO) */}
@@ -1119,6 +1133,31 @@ export default function LoginPage() {
               </div>
             )}
           </form>
+
+          {/* Direct Mobile APK Download / Install Action Bar */}
+          <div className="pt-3 pb-1 border-t border-slate-100">
+            <a
+              href="/Digital-Portal-of-AI-and-DS.apk"
+              download="Digital-Portal-of-AI-and-DS.apk"
+              onClick={() => toast.success('Downloading Official Android APK (3.9 MB)...')}
+              className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 hover:from-emerald-100 hover:to-blue-100 border border-emerald-200/80 rounded-xl flex items-center justify-between gap-2 transition-all duration-300 hover:shadow-sm active:scale-[0.98] cursor-pointer group"
+              title="Download & Install Official Android APK"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-emerald-600 group-hover:bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-xs transition-colors">
+                  <Download className="w-4 h-4 animate-bounce" />
+                </div>
+                <div className="text-left min-w-0">
+                  <p className="text-xs font-black text-slate-800 leading-tight">Install VSB AI&amp;DS App</p>
+                  <p className="text-[10px] text-emerald-700 font-bold">Tap to Download APK (3.9 MB) · Pure Native</p>
+                </div>
+              </div>
+              <span className="px-3 py-1.5 bg-emerald-600 group-hover:bg-emerald-700 text-white text-[11px] font-black rounded-lg shrink-0 shadow-xs transition-colors flex items-center gap-1">
+                <Download className="w-3 h-3" />
+                <span>Download APK</span>
+              </span>
+            </a>
+          </div>
 
           {/* Quick Help & Secure Links Bar */}
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 font-bold">
