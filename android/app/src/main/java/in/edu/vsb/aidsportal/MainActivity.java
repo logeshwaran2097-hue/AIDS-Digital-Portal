@@ -20,7 +20,9 @@ public class MainActivity extends AppCompatActivity {
     // Production: "https://vsb-aids.vercel.app"
     // Local Wi-Fi (Physical Phone): "http://10.201.60.220:3001"
     // Local Emulator: "http://10.0.2.2:3001"
-    public static final String APP_URL = "https://vsb-aids.vercel.app";
+    public static final String APP_URL = "https://vsb-aids-portal.vercel.app";
+    public static final String FALLBACK_URL_1 = "https://vsb-aids.vercel.app";
+    public static final String FALLBACK_URL_2 = "https://vsb-aids-portal.onrender.com";
     public static final String LOCAL_FALLBACK_URL = "http://10.201.60.220:3001";
 
     @Override
@@ -42,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
         webView.setWebChromeClient(new WebChromeClient());
 
         webView.setWebViewClient(new WebViewClient() {
+            private int retryCount = 0;
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
@@ -68,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // If link is part of our portal domain or local dev server, load inside WebView
-                if (url.contains("vsb-aids.vercel.app") || url.contains("10.201.60.220") || url.contains("localhost") || url.contains("10.0.2.2")) {
+                if (url.contains("vsb-aids-portal.vercel.app") || url.contains("vsb-aids.vercel.app") || url.contains("vsb-aids-portal.onrender.com") || url.contains("10.201.60.220") || url.contains("localhost") || url.contains("10.0.2.2")) {
                     view.loadUrl(url);
                     return false;
                 }
@@ -87,6 +91,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
                 super.onReceivedError(view, request, error);
+                if (request != null && request.isForMainFrame()) {
+                    if (retryCount == 0) {
+                        retryCount++;
+                        view.loadUrl(FALLBACK_URL_1);
+                    } else if (retryCount == 1) {
+                        retryCount++;
+                        view.loadUrl(FALLBACK_URL_2);
+                    }
+                }
             }
         });
 

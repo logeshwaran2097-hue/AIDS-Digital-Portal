@@ -4,7 +4,7 @@
   "webDir": "out",
   "bundledWebRuntime": false,
   "server": {
-    "url": "https://vsb-aids-portal.onrender.com",
+    "url": "https://vsb-aids-portal.vercel.app",
     "cleartext": true
   },
   "plugins": {
