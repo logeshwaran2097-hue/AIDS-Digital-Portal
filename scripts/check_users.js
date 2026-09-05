@@ -3,8 +3,9 @@ const p = new PrismaClient();
 async function f() {
   const users = await p.user.findMany({ where: { role: { in: ['faculty', 'hod', 'admin'] } } });
   console.log('Users count:', users.length);
+  const bcrypt = require('bcryptjs');
   for (const u of users) {
-    console.log(u.role, '|', u.email, '|', u.name, '| mustChange:', u.mustChangePassword);
+    console.log(u.role, '|', u.email, '|', u.name, '| hash:', u.passwordHash);
   }
   const fac = await p.faculty.findMany();
   console.log('Faculty count:', fac.length);

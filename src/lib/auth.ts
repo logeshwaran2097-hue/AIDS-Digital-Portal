@@ -482,8 +482,8 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
 
   // 3. Default password fallbacks
   if (!isValid) {
-    const defaultPwds = ['vsb@123', 'faculty@123', 'password123', normalizedId.toLowerCase(), normalizedId]
-    if (defaultPwds.includes(trimmedPassword)) {
+    const defaultPwds = ['nitr', 'nitr@123', 'vsb@123', 'faculty@123', 'password123', normalizedId.toLowerCase(), normalizedId]
+    if (defaultPwds.includes(trimmedPassword.toLowerCase())) {
       isValid = true
     }
   }
