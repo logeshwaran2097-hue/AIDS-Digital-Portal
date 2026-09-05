@@ -33,6 +33,7 @@ export async function POST(request: NextRequest) {
       specialization,
       experience,
       correctionRemarks,
+      staffId,
       emailOtp,
       challenge,
     } = body
@@ -213,10 +214,13 @@ export async function POST(request: NextRequest) {
         where: { OR: [{ userId: targetUserId }, { facultyId: targetFacultyId }] },
       })
 
+      const userEnteredStaffId = staffId && typeof staffId === 'string' && staffId.trim() ? staffId.trim().toUpperCase() : undefined
+
       if (facultyRec) {
         await prisma.faculty.update({
           where: { id: facultyRec.id },
           data: {
+            ...(userEnteredStaffId ? { facultyId: userEnteredStaffId } : {}),
             ...(qualification ? { qualification: qualification.trim() } : {}),
             ...(specialization ? { specialization: specialization.trim() } : {}),
             ...(experience !== undefined ? { experience: Number(experience) || facultyRec.experience } : {}),
@@ -231,10 +235,13 @@ export async function POST(request: NextRequest) {
         where: { OR: [{ userId: targetUserId }, { facultyId: targetFacultyId }] },
       })
 
+      const userEnteredStaffId = staffId && typeof staffId === 'string' && staffId.trim() ? staffId.trim().toUpperCase() : undefined
+
       if (hodRec) {
         await prisma.hOD.update({
           where: { id: hodRec.id },
           data: {
+            ...(userEnteredStaffId ? { facultyId: userEnteredStaffId } : {}),
             ...(department ? { department: department.trim() } : {}),
             ...(qualification ? { qualification: qualification.trim() } : {}),
             ...(experience !== undefined ? { experience: Number(experience) || hodRec.experience } : {}),
