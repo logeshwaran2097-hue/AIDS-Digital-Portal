@@ -36,7 +36,7 @@ export interface StaffOnboardingModalProps {
     name: string
     email: string
     phone?: string
-    facultyId: string
+    facultyId?: string
     designation: string
     qualification?: string
     experience?: number
@@ -63,16 +63,11 @@ export function StaffOnboardingModal({
   const [loading, setLoading] = useState(false)
   const [step3Confirmed, setStep3Confirmed] = useState(false)
 
-  // Detect auto-generated ID (FACxxxx) or unassigned ID
-  const isAutoId = !initialData.facultyId || /^FAC\d{4}$/i.test(initialData.facultyId)
-  const isDefaultDob = !initialData.dateOfBirth || initialData.dateOfBirth.startsWith('1990-01-01')
-
   // Form State: Only prefilled if explicitly set by admin; otherwise completely empty!
   const [form, setForm] = useState({
     name: initialData.name || '',
     phone: initialData.phone || '',
     dateOfBirth: (initialData.dateOfBirth && !initialData.dateOfBirth.startsWith('1990-01-01')) ? initialData.dateOfBirth.split('T')[0] : '',
-    staffId: '',
     cabin: '',
     specialization: initialData.specialization || '',
     qualification: initialData.qualification || '',
@@ -358,7 +353,6 @@ export function StaffOnboardingModal({
         experience: Number(form.experience) || initialData.experience || 0,
         classPeriod: form.cabin || '',
         role,
-        staffId: form.staffId?.trim() || undefined,
         newPassword: form.newPassword.trim(),
         emailOtp: form.emailOtp.trim(),
         challenge: otpChallenge || undefined,
@@ -443,9 +437,6 @@ export function StaffOnboardingModal({
                 ? 'CLASS ADVISOR VERIFICATION & SECURITY SETUP'
                 : 'FACULTY APPOINTMENT VERIFICATION & SECURITY SETUP'}
             </span>
-            <span className="text-[11px] font-mono font-bold text-slate-500">
-              {isAutoId ? (form.staffId ? form.staffId : 'Staff Onboarding') : initialData.facultyId}
-            </span>
           </div>
 
           <div className="flex items-center justify-between">
@@ -517,43 +508,17 @@ export function StaffOnboardingModal({
                 </div>
               )}
 
-              {/* 6 High-Contrast Locked Cards */}
+              {/* High-Contrast Locked Official Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* Official Staff ID */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                  <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">OFFICIAL STAFF ID</span>
-                    <span className={cn('font-mono font-black text-xs', isAutoId && !form.staffId ? 'text-amber-700' : 'text-[#071A41]')}>
-                      {isAutoId ? (form.staffId ? form.staffId : 'Not Assigned (Optional)') : initialData.facultyId}
-                    </span>
-                  </div>
-                  {isAutoId && !form.staffId ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                      Optional
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                      <Lock className="w-2.5 h-2.5" /> Verified
-                    </span>
-                  )}
-                </div>
-
                 {/* Full Name */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">FULL NAME</span>
                     <span className="font-bold text-xs text-[#071A41]">{initialData.name}</span>
                   </div>
-                  <Lock className="w-3 h-3 text-slate-400" />
-                </div>
-
-                {/* Program / Department */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                  <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DEPARTMENT</span>
-                    <span className="font-bold text-xs text-[#1557C0]">{initialData.department || 'Artificial Intelligence & Data Science'}</span>
-                  </div>
-                  <Lock className="w-3 h-3 text-slate-400" />
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <Lock className="w-2.5 h-2.5" /> Verified
+                  </span>
                 </div>
 
                 {/* Designation */}
@@ -561,6 +526,15 @@ export function StaffOnboardingModal({
                   <div>
                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DESIGNATION</span>
                     <span className="font-bold text-xs text-[#071A41]">{initialData.designation}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Program / Department */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between sm:col-span-2">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DEPARTMENT</span>
+                    <span className="font-bold text-xs text-[#1557C0]">{initialData.department || 'Artificial Intelligence & Data Science'}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
                 </div>
@@ -747,21 +721,6 @@ export function StaffOnboardingModal({
                       />
                     </div>
                   </>
-                )}
-
-                {isAutoId && (
-                  <div className="sm:col-span-2">
-                    <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                      Staff / Faculty ID <span className="font-normal text-gray-400">(Optional — leave blank if you don't have one)</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={form.staffId}
-                      onChange={(e) => setForm({ ...form, staffId: e.target.value.toUpperCase() })}
-                      placeholder="e.g. EMP1024 (Leave blank if not assigned)"
-                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none uppercase"
-                    />
-                  </div>
                 )}
               </div>
             </div>
@@ -1022,8 +981,8 @@ export function StaffOnboardingModal({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <h4 className="font-black text-sm text-[#071A41] truncate">{initialData.name}</h4>
-                    <span className="text-[10px] font-mono font-bold bg-blue-100 text-[#1557C0] px-2 py-0.5 rounded-md">
-                      {isAutoId ? (form.staffId ? form.staffId : role === 'advisor' ? 'Class Advisor' : 'Faculty Member') : initialData.facultyId}
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-[#1557C0] px-2 py-0.5 rounded-md">
+                      {role === 'advisor' ? 'Class Advisor' : role === 'hod' ? 'Head of Department' : 'Faculty Member'}
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
@@ -1167,7 +1126,6 @@ export function StaffOnboardingModal({
                   className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41]"
                 >
                   <option value="name">Full Name</option>
-                  <option value="facultyId">Staff ID</option>
                   <option value="designation">Designation</option>
                   <option value="batch">Assigned Batch / Mentorship</option>
                   <option value="qualification">Qualifications</option>
