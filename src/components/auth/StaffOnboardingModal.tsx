@@ -436,8 +436,11 @@ export function StaffOnboardingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[99999] bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+      >
         {/* Modal Header with Progress Step Indicator (Matching Student Onboarding Method) */}
         <div className="border-b border-gray-100 pb-3">
           <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -1121,7 +1124,7 @@ export function StaffOnboardingModal({
       {/* ADMIN CORRECTION REQUEST MODAL (Exact match with student correction flow) */}
       {/* ========================================================================= */}
       {showCorrectionModal && (
-        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-gray-100 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-2">

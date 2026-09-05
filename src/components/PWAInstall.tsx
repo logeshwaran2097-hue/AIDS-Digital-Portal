@@ -171,7 +171,7 @@ export function PWAInstall() {
     <>
       {/* ── Bottom install banner (Laptop Desktop & Mobile) ── */}
       {showBanner && (
-        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[490px] z-[99999] bg-white text-[#071A3D] p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-[0_15px_45px_rgba(7,26,65,0.18)] border-2 border-[#1455D9] flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 sm:w-[490px] z-40 bg-white text-[#071A3D] p-3.5 sm:p-4 rounded-2xl sm:rounded-3xl shadow-[0_15px_45px_rgba(7,26,65,0.18)] border-2 border-[#1455D9] flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5 duration-300">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="relative w-11 h-11 rounded-xl p-0.5 bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] shadow-sm shrink-0">
               <div className="w-full h-full rounded-[10px] bg-white flex items-center justify-center overflow-hidden p-0.5">
