@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, createToken, verifyOTPChallenge } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { verifyOTP } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -116,7 +117,9 @@ export async function POST(request: NextRequest) {
           orderBy: { createdAt: 'desc' },
         })
         const isValidChallenge = challenge && verifyOTPChallenge(challenge, normalizedEmail || user.email, submittedOtp)
-        const isDbOtpValid = otpRecord ? await bcrypt.compare(submittedOtp, otpRecord.codeHash).catch(() => false) : false
+        const isDbOtpValid = otpRecord
+          ? (verifyOTP(submittedOtp, otpRecord.codeHash) || (await bcrypt.compare(submittedOtp, otpRecord.codeHash).catch(() => false)))
+          : false
         if (!isValidChallenge && !isDbOtpValid) {
           return NextResponse.json(
             { success: false, message: 'Invalid or expired OTP code. Please enter the correct code.' },

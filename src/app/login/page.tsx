@@ -35,6 +35,7 @@ import {
   Pencil,
   Download,
   Smartphone,
+  Loader2,
 } from 'lucide-react'
 import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
 
@@ -117,6 +118,9 @@ export default function LoginPage() {
   const [emailOtpSent, setEmailOtpSent] = React.useState(false)
   const [emailOtpCooldown, setEmailOtpCooldown] = React.useState(0)
   const [demoOtpCode, setDemoOtpCode] = React.useState<string | null>(null)
+  const [isOnboardingVerifyingOtp, setIsOnboardingVerifyingOtp] = React.useState(false)
+  const [isOnboardingOtpVerified, setIsOnboardingOtpVerified] = React.useState(false)
+  const [onboardingOtpError, setOnboardingOtpError] = React.useState<string | null>(null)
 
   // Academic Details Correction Request to Admin States
   const [showCorrectionModal, setShowCorrectionModal] = React.useState(false)
@@ -157,6 +161,50 @@ export default function LoginPage() {
     const timer = setTimeout(() => setEmailOtpCooldown((c) => c - 1), 1000)
     return () => clearTimeout(timer)
   }, [emailOtpCooldown])
+
+  // Auto-verify OTP in Login Onboarding Wizard
+  React.useEffect(() => {
+    const code = (onboardingForm.emailOtp || '').trim()
+    if (code.length === 6 && onboardingForm.email.trim() && !isOnboardingOtpVerified && !isOnboardingVerifyingOtp) {
+      let active = true
+      const runAutoVerify = async () => {
+        setIsOnboardingVerifyingOtp(true)
+        setOnboardingOtpError(null)
+        try {
+          const res = await fetch('/api/auth/verify-onboarding-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: onboardingForm.email.trim().toLowerCase(),
+              otp: code,
+              challenge: onboardingForm.otpChallenge || undefined,
+            }),
+          })
+          const data = await res.json()
+          if (!active) return
+          if (res.ok && data.success) {
+            setIsOnboardingOtpVerified(true)
+            setOnboardingOtpError(null)
+            toast.success('Email OTP verified successfully!')
+          } else {
+            setIsOnboardingOtpVerified(false)
+            setOnboardingOtpError(data.message || 'Invalid verification code.')
+          }
+        } catch {
+          if (active) setOnboardingOtpError('Connection error verifying OTP.')
+        } finally {
+          if (active) setIsOnboardingVerifyingOtp(false)
+        }
+      }
+      runAutoVerify()
+      return () => {
+        active = false
+      }
+    } else if (code.length < 6) {
+      if (isOnboardingOtpVerified) setIsOnboardingOtpVerified(false)
+      if (onboardingOtpError) setOnboardingOtpError(null)
+    }
+  }, [onboardingForm.emailOtp, onboardingForm.email, isOnboardingOtpVerified, isOnboardingVerifyingOtp, onboardingForm.otpChallenge])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1606,15 +1654,53 @@ export default function LoginPage() {
                   {/* OTP Input Section */}
                   {emailOtpSent && (
                     <div className="space-y-1.5 animate-in fade-in">
-                      <label className="block font-bold text-gray-700 text-[11px]">
-                        Enter 6-Digit Email Verification Code *
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="block font-bold text-gray-700 text-[11px]">
+                          Enter 6-Digit Email Verification Code *
+                        </label>
+                        {isOnboardingVerifyingOtp && (
+                          <span className="flex items-center gap-1 text-[11px] font-semibold text-[#1557C0] animate-pulse">
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Auto-verifying...
+                          </span>
+                        )}
+                        {isOnboardingOtpVerified && (
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            Verified!
+                          </span>
+                        )}
+                      </div>
                       <OTPInput
                         length={6}
                         value={onboardingForm.emailOtp}
                         onChange={(val) => setOnboardingForm({ ...onboardingForm, emailOtp: val })}
                         autoFocus
                       />
+                      {onboardingOtpError && (
+                        <div className="flex items-center gap-1 text-[11px] font-semibold text-rose-600">
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{onboardingOtpError}</span>
+                        </div>
+                      )}
+                      {isOnboardingOtpVerified && (
+                        <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+                          <div className="flex items-center gap-1.5 font-bold">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>Security Code Verified &amp; Confirmed</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsOnboardingOtpVerified(false)
+                              setOnboardingForm((prev) => ({ ...prev, emailOtp: '' }))
+                            }}
+                            className="text-[11px] text-emerald-700 underline font-semibold hover:text-emerald-900 cursor-pointer"
+                          >
+                            Change Code
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

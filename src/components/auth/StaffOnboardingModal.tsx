@@ -85,6 +85,10 @@ export function StaffOnboardingModal({
   const [emailOtpSent, setEmailOtpSent] = useState(false)
   const [emailOtpCooldown, setEmailOtpCooldown] = useState(0)
   const [demoOtp, setDemoOtp] = useState<string | null>(null)
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
+  const [otpVerified, setOtpVerified] = useState(false)
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [otpChallenge, setOtpChallenge] = useState<string | null>(null)
 
   // Correction Modal State
   const [showCorrectionModal, setShowCorrectionModal] = useState(false)
@@ -114,6 +118,60 @@ export function StaffOnboardingModal({
     const timer = setInterval(() => setEmailOtpCooldown((prev) => Math.max(0, prev - 1)), 1000)
     return () => clearInterval(timer)
   }, [emailOtpCooldown])
+
+  // Auto-verify OTP in real-time as soon as all 6 digits are typed
+  useEffect(() => {
+    const code = (form.emailOtp || '').trim()
+    if (code.length === 6 && form.email.trim() && !otpVerified && !isVerifyingOtp) {
+      let active = true
+      const runAutoVerify = async () => {
+        setIsVerifyingOtp(true)
+        setOtpError(null)
+        try {
+          const res = await fetch('/api/auth/verify-onboarding-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: form.email.trim().toLowerCase(),
+              otp: code,
+              challenge: otpChallenge || undefined,
+            }),
+          })
+          const data = await res.json()
+          if (!active) return
+          if (res.ok && data.success) {
+            setOtpVerified(true)
+            setOtpError(null)
+            toast.success('Email OTP verified successfully!')
+            // If new passwords are valid, automatically proceed to Step 3!
+            if (
+              form.newPassword &&
+              form.newPassword.length >= 6 &&
+              form.newPassword === form.confirmPassword
+            ) {
+              setTimeout(() => {
+                if (active) setOnboardingStep(3)
+              }, 500)
+            }
+          } else {
+            setOtpVerified(false)
+            setOtpError(data.message || 'Invalid verification code. Please check and try again.')
+          }
+        } catch {
+          if (active) setOtpError('Network error during auto-verification.')
+        } finally {
+          if (active) setIsVerifyingOtp(false)
+        }
+      }
+      runAutoVerify()
+      return () => {
+        active = false
+      }
+    } else if (code.length < 6) {
+      if (otpVerified) setOtpVerified(false)
+      if (otpError) setOtpError(null)
+    }
+  }, [form.emailOtp, form.email, otpVerified, isVerifyingOtp, otpChallenge, form.newPassword, form.confirmPassword])
 
   // Photo upload and compression to base64
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,6 +280,11 @@ export function StaffOnboardingModal({
       if (res.ok && data.success) {
         setEmailOtpSent(true)
         setEmailOtpCooldown(60)
+        setOtpVerified(false)
+        setOtpError(null)
+        if (data.challenge) {
+          setOtpChallenge(data.challenge)
+        }
         if (data.devOtp) {
           setDemoOtp(data.devOtp)
         }
@@ -260,6 +323,10 @@ export function StaffOnboardingModal({
       toast.error('Please enter the complete 6-digit OTP code.')
       return
     }
+    if (otpError) {
+      toast.error('Please enter a valid OTP code.')
+      return
+    }
 
     setOnboardingStep(3)
   }
@@ -288,6 +355,7 @@ export function StaffOnboardingModal({
         role,
         newPassword: form.newPassword.trim(),
         emailOtp: form.emailOtp.trim(),
+        challenge: otpChallenge || undefined,
         profileImage: form.profileImage || undefined,
       }
 
@@ -814,9 +882,23 @@ export function StaffOnboardingModal({
               {/* OTP Input Section */}
               {emailOtpSent && (
                 <div className="space-y-1.5 animate-in fade-in">
-                  <label className="block font-bold text-gray-700 text-[11px]">
-                    Enter 6-Digit Email Verification Code *
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block font-bold text-gray-700 text-[11px]">
+                      Enter 6-Digit Email Verification Code *
+                    </label>
+                    {isVerifyingOtp && (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold text-[#1557C0] animate-pulse">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Auto-verifying...
+                      </span>
+                    )}
+                    {otpVerified && (
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        Verified!
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     maxLength={6}
@@ -824,8 +906,40 @@ export function StaffOnboardingModal({
                     value={form.emailOtp}
                     onChange={(e) => setForm({ ...form, emailOtp: e.target.value.replace(/\D/g, '') })}
                     placeholder="000000"
-                    className="w-full text-center tracking-[0.4em] font-mono font-black text-2xl p-2.5 rounded-xl border border-gray-300 bg-white text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none shadow-inner"
+                    disabled={otpVerified}
+                    className={cn(
+                      'w-full text-center tracking-[0.4em] font-mono font-black text-2xl p-2.5 rounded-xl border bg-white focus:outline-none shadow-inner transition-all',
+                      otpVerified
+                        ? 'border-emerald-500 bg-emerald-50/40 text-emerald-800 ring-2 ring-emerald-400/40'
+                        : otpError
+                        ? 'border-rose-400 bg-rose-50/30 text-rose-800 ring-2 ring-rose-400/30'
+                        : 'border-gray-300 text-[#071A41] focus:ring-2 focus:ring-[#1557C0]'
+                    )}
                   />
+                  {otpError && (
+                    <div className="flex items-center gap-1 text-[11px] font-semibold text-rose-600">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{otpError}</span>
+                    </div>
+                  )}
+                  {otpVerified && (
+                    <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Security Code Verified &amp; Confirmed</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOtpVerified(false)
+                          setForm((prev) => ({ ...prev, emailOtp: '' }))
+                        }}
+                        className="text-[11px] text-emerald-700 underline font-semibold hover:text-emerald-900 cursor-pointer"
+                      >
+                        Change Code
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
