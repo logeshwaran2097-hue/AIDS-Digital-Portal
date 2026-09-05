@@ -102,6 +102,7 @@ export default async function FacultyDashboardPage() {
       name: user.name || session.name || 'Faculty Member',
       email: user.email || session.email || 'faculty@vsb.edu.in',
       phone: user.phone || '',
+      mustChangePassword: Boolean((user as any)?.mustChangePassword),
     },
     faculty: faculty
       ? {

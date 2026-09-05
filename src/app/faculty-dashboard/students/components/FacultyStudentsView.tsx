@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { StaffOnboardingModal } from '@/components/auth/StaffOnboardingModal'
 
 export interface StudentRosterItem {
   id: string
@@ -45,10 +46,18 @@ export function FacultyStudentsView({
   advisorDetails,
 }: {
   initialStudents?: StudentRosterItem[]
-  advisorDetails?: { facultyName: string; advisorBatch: string }
+  advisorDetails?: {
+    facultyName: string
+    advisorBatch: string
+    facultyEmail?: string
+    facultyPhone?: string
+    facultyId?: string
+    mustChangePassword?: boolean
+  }
 }) {
   const students = initialStudents
 
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(Boolean(advisorDetails?.mustChangePassword))
   const [searchQuery, setSearchQuery] = useState('')
   const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'SAFE' | 'WARNING'>('ALL')
   const [selectedStudent, setSelectedStudent] = useState<StudentRosterItem | null>(null)
@@ -122,7 +131,23 @@ export function FacultyStudentsView({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Advisor Onboarding Wizard if required */}
+      <StaffOnboardingModal
+        isOpen={isOnboardingOpen}
+        role="advisor"
+        initialData={{
+          name: advisorDetails?.facultyName || '',
+          email: advisorDetails?.facultyEmail || '',
+          phone: advisorDetails?.facultyPhone || '',
+          facultyId: advisorDetails?.facultyId || '',
+          designation: 'Class Advisor',
+          advisorBatch: advisorDetails?.advisorBatch || null,
+        }}
+        onComplete={() => {
+          setIsOnboardingOpen(false)
+        }}
+      />
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
+import { HODOnboardingWrapper } from './components/HODOnboardingWrapper'
 import {
   Users,
   GraduationCap,
@@ -31,7 +32,8 @@ export default async function HODDashboardPage() {
     pendingResources,
     pendingQP,
     pendingAchievements,
-    user
+    user,
+    hodRec,
   ] = await Promise.all([
     prisma.student.count().catch(() => 120),
     prisma.faculty.count().catch(() => 12),
@@ -44,6 +46,7 @@ export default async function HODDashboardPage() {
     prisma.questionPaper.count({ where: { status: 'pending' } }).catch(() => 1),
     prisma.achievement.count({ where: { status: 'pending' } }).catch(() => 3),
     prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+    prisma.hOD.findFirst({ where: { OR: [{ userId: session.userId }, { facultyId: session.facultyId || '' }] } }).catch(() => null),
   ])
 
   const totalPending = pendingResources + pendingQP + pendingAchievements
@@ -51,6 +54,21 @@ export default async function HODDashboardPage() {
   return (
     <PortalLayout role="hod" userName={user?.name || session.name || 'Head of Department'}>
       <div className="space-y-8 animate-fade-in">
+        {/* HOD Onboarding & Security Wizard */}
+        <HODOnboardingWrapper
+          initialMustChangePassword={Boolean(user?.mustChangePassword)}
+          hodData={{
+            name: user?.name || session.name || 'Prof. Dr. V. Sundar',
+            email: user?.email || session.email || 'hod.ai@vsb.edu.in',
+            phone: user?.phone || '+91 94431 87654',
+            facultyId: hodRec?.facultyId || session.facultyId || 'HOD001',
+            designation: hodRec?.designation || 'Professor & Head of Department',
+            qualification: hodRec?.qualification || 'Ph.D. (AI & DS), M.Tech (CSE)',
+            experience: hodRec?.experience || 18,
+            department: hodRec?.department || 'Artificial Intelligence & Data Science',
+          }}
+        />
+
         {/* HOD Executive Hero Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 sm:p-8 text-white shadow-xl">
           <div className="absolute right-0 top-0 w-96 h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#F4C430]/20 via-transparent to-transparent pointer-events-none" />

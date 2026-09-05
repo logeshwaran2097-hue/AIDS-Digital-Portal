@@ -30,6 +30,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { StaffOnboardingModal } from '@/components/auth/StaffOnboardingModal'
 
 export interface AssignedSubjectItem {
   code: string
@@ -50,7 +51,7 @@ export interface TimetableSlotItem {
 }
 
 interface FacultyData {
-  user: { name: string; email: string; phone?: string | null }
+  user: { name: string; email: string; phone?: string | null; mustChangePassword?: boolean }
   faculty: {
     facultyId: string
     designation: string
@@ -85,6 +86,7 @@ const quickNav = [
 ]
 
 export function FacultyDashboardView({ data }: { data: FacultyData }) {
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(Boolean(data.user?.mustChangePassword))
   const [odList, setOdList] = useState<{ id: string; studentName: string; regNo: string; event: string; date: string; type: string }[]>([])
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
@@ -97,10 +99,36 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
     setTimeout(() => setActionSuccess(null), 2500)
   }
 
-  const isClassAdvisor = data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)
+  const isClassAdvisor = Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec))
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
+      {/* First-Time Staff Onboarding Wizard */}
+      <StaffOnboardingModal
+        isOpen={isOnboardingOpen}
+        role={isClassAdvisor ? 'advisor' : 'faculty'}
+        initialData={{
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone || '',
+          facultyId: data.faculty?.facultyId || '',
+          designation: data.faculty?.designation || '',
+          qualification: data.faculty?.qualification || '',
+          experience: data.faculty?.experience || 0,
+          specialization: data.faculty?.specialization || '',
+          advisorBatch: data.faculty?.advisorBatch || null,
+          advisorYear: data.faculty?.advisorYear || null,
+          advisorSem: data.faculty?.advisorSem || null,
+          advisorSec: data.faculty?.advisorSec || null,
+          subjects: data.faculty?.subjects || '[]',
+        }}
+        onComplete={(updated) => {
+          setIsOnboardingOpen(false)
+          if (updated?.name) {
+            data.user.name = updated.name
+          }
+        }}
+      />
       {/* Hero Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 sm:p-8 text-white shadow-xl">
         <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />

@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name, registerNumber } = await request.json()
+    const { email, name, registerNumber, facultyId, role } = await request.json()
 
     if (!email || !email.includes('@')) {
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         },
       })
     } catch (dbErr) {
-      console.warn('Could not write student OTP to database:', dbErr)
+      console.warn('Could not write OTP to database:', dbErr)
     }
 
     // 2. Generate HMAC Challenge
@@ -44,36 +44,45 @@ export async function POST(request: NextRequest) {
     const challenge = `${Buffer.from(challengePayload).toString('base64')}.${signature}`
 
     // 3. Dispatch Real Email via SMTP
-    let studentDisplayName = name && name.trim() ? name.trim() : ''
-    const studentRegNumber = registerNumber ? registerNumber.trim().toUpperCase() : 'N/A'
+    let displayName = name && name.trim() ? name.trim() : ''
+    const identifier = (registerNumber || facultyId || '').trim().toUpperCase() || 'N/A'
 
-    // If name is missing or looks like "Student (RegNo)", lookup real name from database
-    if (!studentDisplayName || studentDisplayName.startsWith('Student (')) {
+    // If name is missing or placeholder, lookup real name from database
+    if (!displayName || displayName.startsWith('Student (') || displayName.startsWith('Faculty (')) {
       try {
-        if (studentRegNumber && studentRegNumber !== 'N/A') {
-          const studentRec = await prisma.student.findUnique({
-            where: { registerNumber: studentRegNumber },
-          })
-          if (studentRec) {
-            const userRec = await prisma.user.findUnique({ where: { id: studentRec.userId } })
-            if (userRec?.name && !userRec.name.startsWith('Student (')) {
-              studentDisplayName = userRec.name
+        if (facultyId) {
+          const facRec = await prisma.faculty.findUnique({ where: { facultyId: facultyId.toUpperCase() } })
+          if (facRec) {
+            const u = await prisma.user.findUnique({ where: { id: facRec.userId } })
+            if (u?.name) displayName = u.name
+          }
+          if (!displayName) {
+            const hodRec = await prisma.hOD.findUnique({ where: { facultyId: facultyId.toUpperCase() } })
+            if (hodRec) {
+              const u = await prisma.user.findUnique({ where: { id: hodRec.userId } })
+              if (u?.name) displayName = u.name
             }
+          }
+        } else if (registerNumber) {
+          const studentRec = await prisma.student.findUnique({ where: { registerNumber: registerNumber.toUpperCase() } })
+          if (studentRec) {
+            const u = await prisma.user.findUnique({ where: { id: studentRec.userId } })
+            if (u?.name) displayName = u.name
           }
         }
       } catch {}
     }
 
-    if (!studentDisplayName || studentDisplayName.startsWith('Student (')) {
-      studentDisplayName = 'Student'
+    if (!displayName) {
+      displayName = role === 'hod' ? 'Head of Department' : role === 'advisor' ? 'Class Advisor' : role === 'faculty' ? 'Faculty Member' : 'Student'
     }
 
-    console.log(`[VSB Onboarding] Dispatching real OTP email to ${trimmedEmail} (Student: ${studentDisplayName}, OTP: ${otp})`)
+    console.log(`[VSB Onboarding] Dispatching OTP email to ${trimmedEmail} (${displayName}, ID: ${identifier}, OTP: ${otp})`)
     const emailResult = await sendStudentVerificationEmail(
       trimmedEmail,
       otp,
-      studentDisplayName,
-      studentRegNumber
+      displayName,
+      identifier
     )
 
     const response = NextResponse.json({

@@ -35,6 +35,8 @@ export async function POST(request: NextRequest) {
         mustChangePassword: Boolean((result.user as any)?.mustChangePassword),
         qualification: result.hod?.qualification,
         experience: result.hod?.experience,
+        department: result.hod?.department || 'Artificial Intelligence & Data Science',
+        designation: result.hod?.designation || 'Professor & Head of Department',
         dateOfBirth: result.hod?.dateOfBirth ? result.hod.dateOfBirth.toISOString().split('T')[0] : null,
       },
     })

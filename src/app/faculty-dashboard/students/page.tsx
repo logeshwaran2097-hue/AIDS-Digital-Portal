@@ -51,7 +51,11 @@ export default async function FacultyStudentsPage() {
 
   const advisorDetails = {
     facultyName: user?.name || session.name || 'Faculty Advisor',
+    facultyEmail: user?.email || session.email || '',
+    facultyPhone: user?.phone || '',
+    facultyId: faculty?.facultyId || session.facultyId || '',
     advisorBatch: faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} (Sec ${faculty.advisorSec || 'A'})` : 'AI & DS Department'),
+    mustChangePassword: Boolean(user?.mustChangePassword),
   }
 
   return (
