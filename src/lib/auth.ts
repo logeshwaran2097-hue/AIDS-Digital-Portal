@@ -307,6 +307,8 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
   // D. First-time login fallbacks (only if user mustChangePassword is true)
   if (!isValid && user.mustChangePassword) {
     const defaultPwds = [
+      'nitr',
+      'nitr@123',
       'vsb@123',
       'student@123',
       'abc@123',

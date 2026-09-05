@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
 import {
   CheckCircle2,
   AlertCircle,
@@ -18,15 +17,13 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
-  Sparkles,
+  Camera,
+  Upload,
+  Trash2,
+  User as UserIcon,
   Building2,
-  BookOpen,
-  Calendar,
-  Award,
   Users,
-  Briefcase,
-  Layers,
-  HelpCircle,
+  BookOpen,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
@@ -34,23 +31,23 @@ import { cn } from '@/lib/utils'
 export interface StaffOnboardingModalProps {
   isOpen: boolean
   role: 'advisor' | 'faculty' | 'hod'
-  onComplete: (updatedUser?: any) => void
+  onComplete: (updatedData?: any) => void
   initialData: {
     name: string
     email: string
     phone?: string
     facultyId: string
-    designation?: string
+    designation: string
     qualification?: string
     experience?: number
     specialization?: string
-    department?: string
     advisorBatch?: string | null
     advisorYear?: number | null
     advisorSem?: number | null
     advisorSec?: string | null
-    subjects?: string | string[]
-    dateOfBirth?: string | null
+    subjects?: string
+    department?: string
+    dateOfBirth?: string
     profileImage?: string
   }
 }
@@ -61,29 +58,23 @@ export function StaffOnboardingModal({
   onComplete,
   initialData,
 }: StaffOnboardingModalProps) {
-  // Step 1: Review Profile & Departmental Allocation
-  // Step 2: Email Verification & Permanent Password Setup
-  // Step 3: Final Verification & Portal Activation
+  // 3-Step Wizard: 1. Review Official Particulars -> 2. Password & Email OTP -> 3. Verify All Details & Confirm
   const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)
   const [step3Confirmed, setStep3Confirmed] = useState(false)
 
-  // Form state
+  // Form State
   const [form, setForm] = useState({
-    name: initialData.name || '',
-    email: initialData.email || '',
     phone: initialData.phone || '',
-    facultyId: initialData.facultyId || '',
-    designation: initialData.designation || (role === 'hod' ? 'Professor & Head' : role === 'advisor' ? 'Class Advisor' : 'Assistant Professor'),
-    qualification: initialData.qualification || (role === 'hod' ? 'Ph.D., M.Tech' : 'M.E. / M.Tech'),
-    experience: initialData.experience || 5,
-    specialization: initialData.specialization || 'Artificial Intelligence & Data Science',
-    department: initialData.department || 'Artificial Intelligence & Data Science',
-    cabin: 'Staff Room / Department Wing',
     dateOfBirth: initialData.dateOfBirth ? initialData.dateOfBirth.split('T')[0] : '1988-06-15',
-    advisorBatch: initialData.advisorBatch || '',
-    hasCorrectionRequest: false,
-    correctionRemarks: '',
+    cabin: 'Staff Room / Department Wing',
+    specialization: initialData.specialization || 'Artificial Intelligence & Data Science',
+    detailsConfirmed: true,
+    profileImage: initialData.profileImage || '',
+    email:
+      initialData.email && !initialData.email.endsWith('@staff.vsb.edu.in')
+        ? initialData.email
+        : '',
     newPassword: '',
     confirmPassword: '',
     emailOtp: '',
@@ -94,109 +85,208 @@ export function StaffOnboardingModal({
   const [emailOtpSent, setEmailOtpSent] = useState(false)
   const [emailOtpCooldown, setEmailOtpCooldown] = useState(0)
   const [demoOtp, setDemoOtp] = useState<string | null>(null)
-  const [sendingOtp, setSendingOtp] = useState(false)
 
+  // Correction Modal State
+  const [showCorrectionModal, setShowCorrectionModal] = useState(false)
+  const [correctionCategory, setCorrectionCategory] = useState('designation')
+  const [requestedValue, setRequestedValue] = useState('')
+  const [correctionReason, setCorrectionReason] = useState('')
+  const [correctionSubmitting, setCorrectionSubmitting] = useState(false)
+  const [correctionSubmitted, setCorrectionSubmitted] = useState(false)
+
+  // Sync initialData changes
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
-      name: initialData.name || prev.name,
-      email: initialData.email || prev.email,
       phone: initialData.phone || prev.phone,
-      facultyId: initialData.facultyId || prev.facultyId,
-      designation: initialData.designation || prev.designation,
-      qualification: initialData.qualification || prev.qualification,
-      experience: initialData.experience || prev.experience,
-      specialization: initialData.specialization || prev.specialization,
-      department: initialData.department || prev.department,
-      advisorBatch: initialData.advisorBatch || prev.advisorBatch,
       dateOfBirth: initialData.dateOfBirth ? initialData.dateOfBirth.split('T')[0] : prev.dateOfBirth,
+      specialization: initialData.specialization || prev.specialization,
+      email: initialData.email || prev.email,
+      profileImage: initialData.profileImage || prev.profileImage,
     }))
   }, [initialData])
 
-  // Cooldown countdown
+  // Cooldown countdown timer
   useEffect(() => {
     if (emailOtpCooldown <= 0) return
-    const timer = setInterval(() => {
-      setEmailOtpCooldown((prev) => Math.max(0, prev - 1))
-    }, 1000)
+    const timer = setInterval(() => setEmailOtpCooldown((prev) => Math.max(0, prev - 1)), 1000)
     return () => clearInterval(timer)
   }, [emailOtpCooldown])
 
-  if (!isOpen) return null
+  // Photo upload and compression to base64
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
-  const roleTitle =
-    role === 'hod'
-      ? 'Head of Department'
-      : role === 'advisor'
-      ? 'Class Advisor & Student Mentor'
-      : 'Faculty Member'
-
-  const roleAccentColor =
-    role === 'hod' ? 'from-amber-500 to-yellow-400' : role === 'advisor' ? 'from-[#1455D9] to-[#22C7E8]' : 'from-indigo-600 to-cyan-500'
-
-  const roleBadgeBg =
-    role === 'hod' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : role === 'advisor' ? 'bg-[#22C7E8]/20 text-[#22C7E8] border-[#22C7E8]/30' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
-
-  // Send OTP handler
-  const handleSendOtp = async () => {
-    if (!form.email || !form.email.includes('@')) {
-      toast.error('Please enter a valid email address.')
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB')
       return
     }
-    setSendingOtp(true)
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = document.createElement('img')
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxDim = 300
+        let w = img.width
+        let h = img.height
+        if (w > h) {
+          if (w > maxDim) {
+            h = Math.round((h * maxDim) / w)
+            w = maxDim
+          }
+        } else {
+          if (h > maxDim) {
+            w = Math.round((h * maxDim) / h)
+            h = maxDim
+          }
+        }
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h)
+          const base64 = canvas.toDataURL('image/jpeg', 0.85)
+          setForm((prev) => ({ ...prev, profileImage: base64 }))
+          toast.success('Passport photograph uploaded!')
+        }
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
+
+  if (!isOpen) return null
+
+  // Determine mentorship / course allocation string
+  let allocationLabel = 'Department Allocation'
+  let allocationValue = 'Artificial Intelligence & Data Science'
+  if (role === 'advisor') {
+    allocationLabel = 'ASSIGNED MENTORSHIP BATCH'
+    allocationValue =
+      initialData.advisorBatch ||
+      (initialData.advisorYear && initialData.advisorSec
+        ? `Year ${initialData.advisorYear} · Sem ${initialData.advisorSem || 3} · Sec ${initialData.advisorSec}`
+        : 'Year II · Sem 3 · Sec A')
+  } else if (role === 'hod') {
+    allocationLabel = 'DEPARTMENT HEADSHIP'
+    allocationValue = 'Head of Department · AI & DS'
+  } else {
+    allocationLabel = 'ALLOCATED COURSES / LABS'
+    try {
+      const subs = JSON.parse(initialData.subjects || '[]')
+      allocationValue = subs.length > 0 ? subs.join(', ') : 'Assigned Departmental Courses'
+    } catch {
+      allocationValue = initialData.subjects || 'Assigned Departmental Courses'
+    }
+  }
+
+  // STEP 1 -> STEP 2: Proceed to Security Step
+  const handleProceedToSecurityStep = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.phone.trim()) {
+      toast.error('Please enter your direct mobile / WhatsApp number.')
+      return
+    }
+    if (!form.detailsConfirmed) {
+      toast.error('Please check the confirmation box verifying your particulars.')
+      return
+    }
+    setOnboardingStep(2)
+  }
+
+  // Send Email OTP
+  const handleSendEmailOTP = async () => {
+    if (!form.email.trim() || !form.email.includes('@')) {
+      toast.error('Please enter a valid official/personal email address.')
+      return
+    }
+
+    setLoading(true)
     try {
       const res = await fetch('/api/auth/send-onboarding-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: form.email.trim(),
-          name: form.name,
-          facultyId: form.facultyId,
+          email: form.email.trim().toLowerCase(),
+          name: initialData.name,
+          facultyId: initialData.facultyId,
           role,
         }),
       })
+
       const data = await res.json()
-      if (data.success) {
+      if (res.ok && data.success) {
         setEmailOtpSent(true)
         setEmailOtpCooldown(60)
         if (data.devOtp) {
           setDemoOtp(data.devOtp)
         }
-        toast.success(`Verification code sent to ${form.email}`)
+        toast.success(`Verification OTP sent to ${form.email.trim()}`)
       } else {
-        toast.error(data.message || 'Failed to send verification code')
+        toast.error(data.message || 'Failed to send OTP')
       }
     } catch {
-      toast.error('Network error sending OTP code')
+      toast.error('Network error sending OTP. Please try again.')
     } finally {
-      setSendingOtp(false)
+      setLoading(false)
     }
   }
 
-  // Submit complete onboarding
-  const handleSubmitOnboarding = async () => {
-    if (!step3Confirmed) {
-      toast.error('Please verify and confirm the onboarding details')
+  // STEP 2 -> STEP 3: Validate Password & OTP
+  const handleProceedToStep3 = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!form.newPassword || form.newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long.')
       return
     }
+    if (form.newPassword !== form.confirmPassword) {
+      toast.error('New password and confirm password do not match.')
+      return
+    }
+    if (!form.email.trim() || !form.email.includes('@')) {
+      toast.error('Please enter a valid email address.')
+      return
+    }
+    if (!emailOtpSent && !demoOtp) {
+      toast.error('Please click "Send OTP" to receive your verification code.')
+      return
+    }
+    if (!form.emailOtp || form.emailOtp.trim().length !== 6) {
+      toast.error('Please enter the complete 6-digit OTP code.')
+      return
+    }
+
+    setOnboardingStep(3)
+  }
+
+  // STEP 3: Complete Onboarding & Final Activation
+  const handleCompleteOnboarding = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!step3Confirmed) {
+      toast.error('Please check the verification confirmation box before entering the portal.')
+      return
+    }
+
     setLoading(true)
     try {
       const payload = {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        facultyId: form.facultyId,
+        name: initialData.name,
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
+        facultyId: initialData.facultyId,
         dateOfBirth: form.dateOfBirth,
-        qualification: form.qualification,
+        qualification: initialData.qualification || 'M.E. / M.Tech',
         specialization: form.specialization,
-        experience: Number(form.experience),
-        advisorBatch: form.advisorBatch,
+        experience: initialData.experience || 5,
         classPeriod: form.cabin,
-        department: form.department,
         role,
-        newPassword: form.newPassword,
-        emailOtp: form.emailOtp,
-        correctionRemarks: form.hasCorrectionRequest ? form.correctionRemarks : undefined,
+        newPassword: form.newPassword.trim(),
+        emailOtp: form.emailOtp.trim(),
+        profileImage: form.profileImage || undefined,
       }
 
       const res = await fetch('/api/auth/complete-profile', {
@@ -204,538 +294,739 @@ export function StaffOnboardingModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-      const data = await res.json()
 
-      if (data.success) {
-        toast.success('Onboarding complete! Welcome to the portal.')
-        onComplete(data.user)
+      const data = await res.json()
+      if (res.ok && data.success) {
+        toast.success('Account fully verified & Password saved! Welcome to the portal.')
+        setTimeout(() => {
+          onComplete(data.user || {})
+        }, 600)
       } else {
-        toast.error(data.message || 'Failed to complete profile verification.')
+        toast.error(data.message || 'Invalid or expired OTP. Please try again.')
       }
     } catch {
-      toast.error('An unexpected error occurred while completing onboarding.')
+      toast.error('Network error completing verification.')
     } finally {
       setLoading(false)
     }
   }
 
-  // Parse subjects
-  let parsedSubjects: string[] = []
-  try {
-    if (typeof initialData.subjects === 'string') {
-      parsedSubjects = JSON.parse(initialData.subjects)
-    } else if (Array.isArray(initialData.subjects)) {
-      parsedSubjects = initialData.subjects
+  // Send Correction Request to Admin
+  const handleSendCorrectionRequest = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!requestedValue.trim() || !correctionReason.trim()) {
+      toast.error('Please fill in all correction details.')
+      return
     }
-  } catch {
-    parsedSubjects = []
+
+    setCorrectionSubmitting(true)
+    try {
+      const res = await fetch('/api/students/profile-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registerNumber: initialData.facultyId,
+          studentName: initialData.name,
+          requestedData: { [correctionCategory]: requestedValue.trim() },
+          currentData: {
+            name: initialData.name,
+            facultyId: initialData.facultyId,
+            designation: initialData.designation,
+            department: initialData.department || 'Artificial Intelligence & Data Science',
+            batch: allocationValue,
+          },
+          reason: `[Staff Correction] Requested ${correctionCategory.toUpperCase()}: ${correctionReason.trim()}`,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setCorrectionSubmitted(true)
+        setShowCorrectionModal(false)
+        toast.success('Correction request submitted to Admin!')
+      } else {
+        toast.error(data.message || 'Failed to submit correction request.')
+      }
+    } catch {
+      toast.error('Network error submitting request.')
+    } finally {
+      setCorrectionSubmitting(false)
+    }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-[#071A3D]/80 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-2xl my-auto rounded-3xl bg-[#0B224E] border border-white/15 text-white shadow-2xl overflow-hidden transition-all duration-300">
-        {/* Glow Effects */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#22C7E8]/10 rounded-full blur-3xl -z-10 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#1455D9]/15 rounded-full blur-3xl -z-10 pointer-events-none" />
-
-        {/* Header */}
-        <div className="p-5 sm:p-6 border-b border-white/10 bg-gradient-to-r from-white/[0.04] to-transparent">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center shadow-inner">
-                {role === 'hod' ? (
-                  <Building2 className="w-6 h-6 text-amber-400" />
-                ) : role === 'advisor' ? (
-                  <Users className="w-6 h-6 text-[#22C7E8]" />
-                ) : (
-                  <GraduationCap className="w-6 h-6 text-indigo-400" />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className={cn('text-[11px] font-bold px-2.5 py-0.5 rounded-full border tracking-wide uppercase', roleBadgeBg)}>
-                    {roleTitle}
-                  </span>
-                  <span className="text-xs text-gray-400">First-Time Setup</span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Staff Onboarding &amp; Verification</h2>
-              </div>
-            </div>
-            <div className="text-right hidden sm:block">
-              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">Staff ID</span>
-              <span className="text-sm font-black text-[#22C7E8]">{form.facultyId}</span>
-            </div>
+    <div className="fixed inset-0 z-50 bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+        {/* Modal Header with Progress Step Indicator (Matching Student Onboarding Method) */}
+        <div className="border-b border-gray-100 pb-3">
+          <div className="flex items-center justify-between gap-2 mb-1.5">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1557C0] text-[10px] font-black uppercase tracking-wider">
+              {role === 'hod'
+                ? 'HOD APPOINTMENT VERIFICATION & SECURITY SETUP'
+                : role === 'advisor'
+                ? 'CLASS ADVISOR VERIFICATION & SECURITY SETUP'
+                : 'FACULTY APPOINTMENT VERIFICATION & SECURITY SETUP'}
+            </span>
+            <span className="text-[11px] font-mono font-bold text-slate-500">
+              {initialData.facultyId}
+            </span>
           </div>
 
-          {/* Stepper Progress */}
-          <div className="mt-5 grid grid-cols-3 gap-2">
-            {[
-              { step: 1, label: '1. Professional Profile' },
-              { step: 2, label: '2. Security & Credentials' },
-              { step: 3, label: '3. Verify & Activate' },
-            ].map((s) => (
-              <div
-                key={s.step}
-                className={cn(
-                  'py-2 px-3 rounded-xl border text-center transition-all',
-                  onboardingStep === s.step
-                    ? 'bg-gradient-to-r from-[#1455D9]/40 to-[#22C7E8]/20 border-[#22C7E8]/60 text-white font-bold shadow-sm'
-                    : onboardingStep > s.step
-                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 font-semibold'
-                    : 'bg-white/5 border-white/10 text-gray-400 font-medium'
-                )}
-              >
-                <p className="text-[11px] sm:text-xs truncate">{s.label}</p>
-              </div>
-            ))}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg sm:text-xl font-black text-[#071A41]">
+              {onboardingStep === 1 &&
+                (role === 'hod'
+                  ? 'Step 1: Review HOD Appointment Details'
+                  : role === 'advisor'
+                  ? 'Step 1: Review Class Advisor Particulars'
+                  : 'Step 1: Review Faculty Particulars')}
+              {onboardingStep === 2 && 'Step 2: Password & Email OTP Verification'}
+              {onboardingStep === 3 && 'Step 3: Verify All Details & Confirm'}
+            </h3>
+            <span className="text-xs font-black text-[#1557C0] bg-blue-50 px-2.5 py-1 rounded-xl">
+              Step {onboardingStep} of 3
+            </span>
+          </div>
+
+          {/* Visual Step Bar */}
+          <div className="grid grid-cols-3 gap-2 mt-2.5">
+            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep >= 1 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
+            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep >= 2 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
+            <div className={cn('h-1.5 rounded-full transition-all', onboardingStep === 3 ? 'bg-[#1557C0]' : 'bg-gray-200')} />
           </div>
         </div>
 
-        {/* Body Content */}
-        <div className="p-5 sm:p-6 max-h-[68vh] overflow-y-auto space-y-5">
-          {/* STEP 1: REVIEW DETAILS */}
-          {onboardingStep === 1 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 flex items-start gap-3">
-                <ShieldCheck className="w-5 h-5 text-[#22C7E8] shrink-0 mt-0.5" />
-                <p className="text-xs text-gray-300 leading-relaxed">
-                  Welcome to the V.S.B. AI &amp; DS Portal. Please review your departmental designation, assigned batch/subjects, and provide your direct contact number and cabin location for campus coordination.
-                </p>
+        {/* ========================================================================= */}
+        {/* STEP 1: REVIEW OFFICIAL PARTICULARS & REQUEST CORRECTION */}
+        {/* ========================================================================= */}
+        {onboardingStep === 1 && (
+          <form onSubmit={handleProceedToSecurityStep} className="space-y-4 text-xs">
+            <p className="text-[11px] text-gray-500 font-medium">
+              Please carefully verify your official department appointment records below. If any academic or designation details are incorrect, you can request an instant admin correction.
+            </p>
+
+            {/* Official Institutional Record (Locked by Admin) */}
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3.5 shadow-xs">
+              <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-[#1557C0]/10 flex items-center justify-center text-[#1557C0]">
+                    <GraduationCap className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="font-black text-[#071A41] text-xs block">Official Institutional Record</span>
+                    <span className="text-[10px] font-bold text-slate-500">Verified &amp; Configured by Department Administrator</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCorrectionModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300/80 text-amber-900 hover:bg-amber-100 text-[11px] font-black transition-all shadow-xs cursor-pointer"
+                >
+                  <Pencil className="w-3 h-3 text-amber-700" />
+                  <span>Request Admin Correction</span>
+                </button>
               </div>
 
-              {/* Role-Specific Highlight Card */}
-              {role === 'advisor' && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-[#1455D9]/20 to-[#22C7E8]/10 border border-[#22C7E8]/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#22C7E8]">Assigned Mentorship Batch</span>
-                      <h3 className="text-lg font-black text-white mt-0.5">{form.advisorBatch || 'Year II - Sem 3 - Sec A'}</h3>
-                      <p className="text-xs text-gray-300 mt-1">Class Advisor &amp; Academic Mentor for this enrolled cohort</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-[#22C7E8]/20 text-[#22C7E8] flex items-center justify-center">
-                      <Users className="w-5 h-5" />
-                    </div>
+              {/* Pending Correction Alert */}
+              {correctionSubmitted && (
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2 text-emerald-900 text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                  <div>
+                    <span className="font-black block">Correction Request Pending Admin Review</span>
+                    <span className="text-[11px] text-emerald-700">
+                      Your request to modify appointment records has been submitted. The Administrator will review and update official records.
+                    </span>
                   </div>
                 </div>
               )}
 
-              {role === 'hod' && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400">Department Leadership</span>
-                      <h3 className="text-lg font-black text-white mt-0.5">{form.department}</h3>
-                      <p className="text-xs text-gray-300 mt-1">Direct oversight across 4 Academic Years, Faculty members, and Department Labs</p>
-                    </div>
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                      <Building2 className="w-5 h-5" />
-                    </div>
+              {/* 6 High-Contrast Locked Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {/* Official Staff ID */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">OFFICIAL STAFF ID</span>
+                    <span className="font-mono font-black text-xs text-[#071A41]">{initialData.facultyId}</span>
                   </div>
-                </div>
-              )}
-
-              {role === 'faculty' && parsedSubjects.length > 0 && (
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-500/20 to-cyan-500/10 border border-indigo-500/30">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-300">Allocated Courses &amp; Labs</span>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {parsedSubjects.map((sub, idx) => (
-                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-xs font-bold text-white">
-                        {sub}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Editable Fields Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Official Staff ID</label>
-                  <input
-                    type="text"
-                    value={form.facultyId}
-                    disabled
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-400 text-sm cursor-not-allowed"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Designation</label>
-                  <input
-                    type="text"
-                    value={form.designation}
-                    onChange={(e) => setForm({ ...form, designation: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Qualifications</label>
-                  <input
-                    type="text"
-                    value={form.qualification}
-                    onChange={(e) => setForm({ ...form, qualification: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Direct Mobile / WhatsApp</label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                    <input
-                      type="tel"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="+91 98421 XXXXX"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Cabin / Office Room</label>
-                  <div className="relative">
-                    <Building2 className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      value={form.cabin}
-                      onChange={(e) => setForm({ ...form, cabin: e.target.value })}
-                      placeholder="e.g. Staff Room 2 - Cabin A-04"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Date of Birth</label>
-                  <div className="relative">
-                    <Calendar className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                    <input
-                      type="date"
-                      value={form.dateOfBirth}
-                      onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Specialization / Domain</label>
-                  <div className="relative">
-                    <Award className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      value={form.specialization}
-                      onChange={(e) => setForm({ ...form, specialization: e.target.value })}
-                      placeholder="e.g. Deep Learning & Cloud Computing"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Administrative Correction Request */}
-              <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={form.hasCorrectionRequest}
-                    onChange={(e) => setForm({ ...form, hasCorrectionRequest: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-400 text-[#22C7E8] focus:ring-0"
-                  />
-                  <span className="text-xs text-gray-300">
-                    Need administrative correction for department or batch assignment?
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <Lock className="w-2.5 h-2.5" /> Verified
                   </span>
-                </label>
+                </div>
 
-                {form.hasCorrectionRequest && (
-                  <textarea
-                    rows={2}
-                    value={form.correctionRemarks}
-                    onChange={(e) => setForm({ ...form, correctionRemarks: e.target.value })}
-                    placeholder="Describe any batch allocation or course correction for Registrar / Admin review..."
-                    className="w-full mt-2 p-3 rounded-xl bg-white/10 border border-white/20 text-white text-xs placeholder-gray-400 focus:outline-none focus:border-[#22C7E8]"
-                  />
-                )}
+                {/* Full Name */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">FULL NAME</span>
+                    <span className="font-bold text-xs text-[#071A41]">{initialData.name}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Program / Department */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DEPARTMENT</span>
+                    <span className="font-bold text-xs text-[#1557C0]">{initialData.department || 'Artificial Intelligence & Data Science'}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Designation */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DESIGNATION</span>
+                    <span className="font-bold text-xs text-[#071A41]">{initialData.designation}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
+
+                {/* Assigned Batch / Allocated Subjects */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between sm:col-span-2">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">{allocationLabel}</span>
+                    <span className="font-bold text-xs text-[#1557C0] truncate block">{allocationValue}</span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400 shrink-0" />
+                </div>
+
+                {/* Qualifications & Experience */}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between sm:col-span-2">
+                  <div>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">QUALIFICATIONS &amp; EXPERIENCE</span>
+                    <span className="font-bold text-xs text-[#071A41]">
+                      {initialData.qualification || 'M.E. / M.Tech'} · {initialData.experience || 5} Years Experience
+                    </span>
+                  </div>
+                  <Lock className="w-3 h-3 text-slate-400" />
+                </div>
               </div>
             </div>
-          )}
 
-          {/* STEP 2: PASSWORD & OTP */}
-          {onboardingStep === 2 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/10 flex items-start gap-3">
-                <Lock className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-gray-300 leading-relaxed">
-                  To secure your staff account, verify your official email address and replace your temporary password with a permanent, confidential password.
-                </p>
+            {/* Staff Passport Photograph Upload Section */}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-200/80 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-blue-200/60">
+                <div className="flex items-center gap-1.5 text-xs font-black text-[#071A41]">
+                  <Camera className="w-4 h-4 text-[#1557C0]" />
+                  <span>Staff Passport Photograph (Official Faculty Dossier)</span>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Embeds on ID Card
+                </span>
               </div>
 
-              {/* Email Verification Box */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/15 space-y-3">
-                <label className="text-xs font-bold text-gray-300 uppercase tracking-wider block">
-                  Official Communication Email
-                </label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="e.g. staff.ai@vsb.edu.in"
-                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8]"
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative group">
+                  {form.profileImage ? (
+                    <img
+                      src={form.profileImage}
+                      alt="Staff Photo"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#1557C0] shadow-md shrink-0 bg-white"
                     />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={sendingOtp || emailOtpCooldown > 0}
-                    className="px-4 py-2.5 rounded-xl bg-[#22C7E8] text-[#071A3D] font-bold text-xs hover:bg-[#1bb0ce] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all shadow-sm"
-                  >
-                    {sendingOtp ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : emailOtpCooldown > 0 ? (
-                      `${emailOtpCooldown}s`
-                    ) : (
-                      <>
-                        <Send className="w-3.5 h-3.5" />
-                        <span>Send OTP</span>
-                      </>
-                    )}
-                  </button>
+                  ) : (
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white border-2 border-dashed border-blue-300 flex flex-col items-center justify-center text-blue-500 shadow-inner shrink-0">
+                      <UserIcon className="w-8 h-8 opacity-40 mb-1" />
+                      <span className="text-[9px] font-bold text-gray-500">No Photo</span>
+                    </div>
+                  )}
+                  {form.profileImage && (
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, profileImage: '' }))}
+                      className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-1 shadow-md hover:bg-red-700 transition-all cursor-pointer"
+                      title="Remove Photo"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
 
-                {emailOtpSent && (
-                  <div className="space-y-2 pt-1 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Enter 6-Digit OTP Code
-                      </label>
-                      {demoOtp && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setForm({ ...form, emailOtp: demoOtp })
-                            toast.success(`Autofilled demo OTP: ${demoOtp}`)
-                          }}
-                          className="text-[11px] font-bold text-[#22C7E8] hover:underline"
-                        >
-                          Auto-fill Code: {demoOtp}
-                        </button>
-                      )}
-                    </div>
+                <div className="flex-1 space-y-1.5 text-center sm:text-left">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1557C0] hover:bg-[#0f44b0] text-white font-bold text-xs cursor-pointer shadow-sm transition-all">
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{form.profileImage ? 'Change Photo' : 'Upload Passport Photo'}</span>
                     <input
-                      type="text"
-                      maxLength={6}
-                      value={form.emailOtp}
-                      onChange={(e) => setForm({ ...form, emailOtp: e.target.value.replace(/\D/g, '') })}
-                      placeholder="• • • • • •"
-                      className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-[#22C7E8]/50 text-white text-center font-mono text-lg tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-[#22C7E8]"
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
                     />
-                    <p className="text-[11px] text-gray-400">
-                      OTP sent via official SMTP. Master test bypass: <span className="font-mono text-gray-300">123456</span>
-                    </p>
-                  </div>
-                )}
+                  </label>
+                  <p className="text-[11px] text-gray-600">
+                    Upload a clear frontal passport size photograph (JPG, PNG). This will appear on your Faculty Portal, Student Mentorship View &amp; Digital ID Card.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact & Personal Particulars (Editable) */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
+              <div className="flex items-center gap-1.5 pb-2 border-b border-blue-200/60 text-xs font-black text-[#071A41]">
+                <Phone className="w-4 h-4 text-[#1557C0]" />
+                <span>Contact &amp; Personal Particulars (Editable)</span>
               </div>
 
-              {/* Password Setup */}
-              <div className="space-y-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">New Permanent Password</label>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Direct Mobile / WhatsApp *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98421 XXXXX"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={form.dateOfBirth}
+                    onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Cabin / Department Wing
+                  </label>
+                  <input
+                    type="text"
+                    value={form.cabin}
+                    onChange={(e) => setForm({ ...form, cabin: e.target.value })}
+                    placeholder="e.g. AI & DS Staff Wing / Room 204"
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                    Specialization / Research Domain
+                  </label>
+                  <input
+                    type="text"
+                    value={form.specialization}
+                    onChange={(e) => setForm({ ...form, specialization: e.target.value })}
+                    placeholder="e.g. Machine Learning & Computer Vision"
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Details Confirmed Checkbox */}
+            <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={form.detailsConfirmed}
+                  onChange={(e) => setForm({ ...form, detailsConfirmed: e.target.checked })}
+                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
+                />
+                <span className="text-xs font-bold text-[#071A41]">
+                  I confirm that I have reviewed my staff particulars, contact numbers, and departmental appointment.
+                </span>
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
+              >
+                <span>Proceed to Step 2: Password &amp; Email</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 2: SET PERMANENT PASSWORD & EMAIL OTP VERIFICATION */}
+        {/* ========================================================================= */}
+        {onboardingStep === 2 && (
+          <form onSubmit={handleProceedToStep3} className="space-y-4 text-xs">
+            {/* 1. Permanent Password Section */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
+                <span className="font-black text-amber-900 flex items-center gap-1.5 text-xs">
+                  <ShieldCheck className="w-4 h-4 text-amber-600" />
+                  Create Permanent Secure Password *
+                </span>
+                <span className="text-[10px] font-bold text-amber-700">Min 6 characters</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">New Password *</label>
                   <div className="relative">
                     <input
                       type={showNewPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="Create strong password"
                       value={form.newPassword}
                       onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                      placeholder="Minimum 6 characters"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8] pr-10"
+                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
-                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-gray-300 block mb-1">Confirm New Password</label>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1">Confirm Password *</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      placeholder="Repeat password"
                       value={form.confirmPassword}
                       onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                      placeholder="Re-enter password"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm focus:outline-none focus:border-[#22C7E8] pr-10"
+                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
-
-                {form.newPassword && form.confirmPassword && form.newPassword !== form.confirmPassword && (
-                  <p className="text-xs text-rose-400 font-medium">Passwords do not match.</p>
-                )}
               </div>
             </div>
-          )}
 
-          {/* STEP 3: SUMMARY & ACTIVATE */}
-          {onboardingStep === 3 && (
-            <div className="space-y-4 animate-in fade-in duration-200">
-              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-sm font-bold text-white">Ready for Portal Activation</h4>
-                  <p className="text-xs text-gray-300 mt-0.5">
-                    Please confirm your updated staff identity details below before entering your portal.
+            {/* 2. Email Verification via OTP */}
+            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-blue-200">
+                <span className="font-black text-[#071A41] flex items-center gap-1.5 text-xs">
+                  <Mail className="w-4 h-4 text-[#1557C0]" />
+                  Verify Official Email via OTP *
+                </span>
+                <span className="text-[10px] font-bold text-blue-700">Official Campus Communication</span>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                  Email Address *
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    required
+                    placeholder="e.g. yourname@vsb.edu.in or personal email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendEmailOTP}
+                    disabled={loading || emailOtpCooldown > 0}
+                    className="px-4 py-2.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    {emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send OTP'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Demo OTP Helper if generated */}
+              {demoOtp && (
+                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-amber-900 block">Security Code Sent:</span>
+                    <span className="font-mono font-bold text-amber-800 text-sm tracking-wider">{demoOtp}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, emailOtp: demoOtp })}
+                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[11px] cursor-pointer"
+                  >
+                    Auto-Fill OTP
+                  </button>
+                </div>
+              )}
+
+              {/* OTP Input Section */}
+              {emailOtpSent && (
+                <div className="space-y-1.5 animate-in fade-in">
+                  <label className="block font-bold text-gray-700 text-[11px]">
+                    Enter 6-Digit Email Verification Code *
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={form.emailOtp}
+                    onChange={(e) => setForm({ ...form, emailOtp: e.target.value.replace(/\D/g, '') })}
+                    placeholder="000000"
+                    className="w-full text-center tracking-[0.4em] font-mono font-black text-2xl p-2.5 rounded-xl border border-gray-300 bg-white text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none shadow-inner"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+              <button
+                type="button"
+                onClick={() => setOnboardingStep(1)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Step 1</span>
+              </button>
+
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0e44b5] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all"
+              >
+                <span>Next: Review &amp; Verify All Details</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 3: VERIFY ALL DETAILS & FINAL CONFIRMATION */}
+        {/* ========================================================================= */}
+        {onboardingStep === 3 && (
+          <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
+            <p className="text-[11px] text-gray-500 font-medium">
+              Please thoroughly verify all your staff particulars, contact details, and security credentials below before confirming.
+            </p>
+
+            {/* Comprehensive Details Review Card */}
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3.5 shadow-xs">
+              {/* Header inside summary with Photo & Identity */}
+              <div className="flex items-center gap-3.5 pb-3 border-b border-slate-200">
+                {form.profileImage ? (
+                  <img
+                    src={form.profileImage}
+                    alt="Staff Photo"
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-[#1557C0] shadow-sm bg-white shrink-0"
+                  />
+                ) : (
+                  <div className="w-14 h-14 rounded-2xl bg-white border border-dashed border-slate-300 flex items-center justify-center text-slate-400 shadow-inner shrink-0">
+                    <UserIcon className="w-6 h-6" />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-black text-sm text-[#071A41] truncate">{initialData.name}</h4>
+                    <span className="text-[10px] font-mono font-bold bg-blue-100 text-[#1557C0] px-2 py-0.5 rounded-md">
+                      {initialData.facultyId}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
+                    {initialData.designation} · {initialData.department || 'Artificial Intelligence & Data Science'}
+                  </p>
+                  <p className="text-[10px] text-[#1557C0] font-bold mt-0.5 truncate">
+                    {allocationLabel}: {allocationValue}
                   </p>
                 </div>
               </div>
 
-              {/* Summary Card */}
-              <div className="p-5 rounded-2xl bg-white/5 border border-white/15 space-y-3.5">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Staff Identity</span>
-                    <h3 className="text-base font-black text-white">{form.name}</h3>
-                    <p className="text-xs text-[#22C7E8]">{form.designation}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Faculty ID</span>
-                    <p className="text-sm font-mono font-bold text-white">{form.facultyId}</p>
-                  </div>
+              {/* Grid of Verified Particulars */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DIRECT MOBILE</span>
+                  <span className="font-mono font-bold text-[#071A41]">{form.phone || 'Not provided'}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div>
-                    <span className="text-gray-400 block">Verified Email:</span>
-                    <span className="font-semibold text-white">{form.email}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 block">Contact Phone:</span>
-                    <span className="font-semibold text-white">{form.phone || 'Not Provided'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 block">Cabin / Office:</span>
-                    <span className="font-semibold text-white">{form.cabin}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 block">Department:</span>
-                    <span className="font-semibold text-white">{form.department}</span>
-                  </div>
-                  {role === 'advisor' && (
-                    <div className="col-span-2 p-2.5 rounded-xl bg-[#22C7E8]/10 border border-[#22C7E8]/20">
-                      <span className="text-gray-300 block text-[11px]">Class Advisory:</span>
-                      <span className="font-bold text-[#22C7E8] text-xs">{form.advisorBatch}</span>
-                    </div>
-                  )}
-                  {form.newPassword && (
-                    <div className="col-span-2 flex items-center gap-2 text-emerald-400 font-medium">
-                      <CheckCircle2 className="w-4 h-4" /> Permanent password configured and encrypted.
-                    </div>
-                  )}
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">OFFICIAL EMAIL</span>
+                  <span className="font-mono font-bold text-[#071A41] truncate block">{form.email}</span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">CABIN LOCATION</span>
+                  <span className="font-bold text-[#071A41]">{form.cabin || 'Staff Room'}</span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">SPECIALIZATION</span>
+                  <span className="font-bold text-[#071A41] truncate block">{form.specialization || 'AI & Data Science'}</span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DATE OF BIRTH</span>
+                  <span className="font-bold text-[#071A41]">{form.dateOfBirth}</span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">SECURITY CREDENTIALS</span>
+                  <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Password &amp; 2FA Ready
+                  </span>
                 </div>
               </div>
 
-              {/* Mandatory Acceptance Checkbox */}
-              <label className="flex items-start gap-3 p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 cursor-pointer select-none">
+              {/* Note about admin locks */}
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 flex items-start gap-2 text-amber-900 text-[11px]">
+                <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p>
+                  Official institutional records (Staff ID, designation, allocated batch/subjects) are centrally locked. Future changes require approval from the Department Administrator.
+                </p>
+              </div>
+
+              {/* Checkbox Affirmation */}
+              <label className="flex items-start gap-2.5 pt-1 cursor-pointer">
                 <input
                   type="checkbox"
+                  required
                   checked={step3Confirmed}
                   onChange={(e) => setStep3Confirmed(e.target.checked)}
-                  className="w-4 h-4 rounded mt-0.5 border-gray-400 text-[#22C7E8] focus:ring-0"
+                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
                 />
-                <span className="text-xs text-gray-300 leading-relaxed">
-                  I hereby confirm that the academic particulars and contact credentials provided above are accurate and official.
+                <span className="text-xs font-bold text-[#071A41]">
+                  I solemnly affirm that the details furnished above are genuine, accurate, and match my official institutional credentials.
                 </span>
               </label>
             </div>
-          )}
-        </div>
 
-        {/* Footer Navigation */}
-        <div className="p-5 sm:p-6 border-t border-white/10 bg-white/[0.02] flex items-center justify-between gap-3">
-          {onboardingStep > 1 ? (
-            <button
-              type="button"
-              onClick={() => setOnboardingStep((prev) => (prev - 1) as any)}
-              className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs flex items-center gap-1.5 transition-all"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back
-            </button>
-          ) : (
-            <div />
-          )}
+            {/* Navigation & Final Action Buttons */}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+              <button
+                type="button"
+                onClick={() => setOnboardingStep(2)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Step 2</span>
+              </button>
 
-          {onboardingStep < 3 ? (
-            <button
-              type="button"
-              onClick={() => {
-                if (onboardingStep === 1) {
-                  if (!form.name.trim()) {
-                    toast.error('Please enter your full name')
-                    return
-                  }
-                  setOnboardingStep(2)
-                } else if (onboardingStep === 2) {
-                  if (form.newPassword && form.newPassword.length < 6) {
-                    toast.error('Password must be at least 6 characters long')
-                    return
-                  }
-                  if (form.newPassword && form.newPassword !== form.confirmPassword) {
-                    toast.error('Passwords do not match')
-                    return
-                  }
-                  setOnboardingStep(3)
-                }
-              }}
-              className="px-5 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb0ce] text-[#071A3D] font-bold text-xs flex items-center gap-1.5 transition-all shadow-md"
-            >
-              Next Step <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleSubmitOnboarding}
-              disabled={loading || !step3Confirmed}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-600 hover:to-teal-500 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Activating Portal...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Activate Portal &amp; Enter</span>
-                </>
-              )}
-            </button>
-          )}
-        </div>
+              <button
+                type="submit"
+                disabled={loading || !step3Confirmed}
+                className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0e44b5] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Activating Portal...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Complete Verification &amp; Activate Staff Portal</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* ADMIN CORRECTION REQUEST MODAL (Exact match with student correction flow) */}
+      {/* ========================================================================= */}
+      {showCorrectionModal && (
+        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-gray-100 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm text-[#071A41]">Request Record Correction</h4>
+                  <p className="text-[10px] text-gray-500 font-medium">Forwarded to Department Administrator</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowCorrectionModal(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSendCorrectionRequest} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-gray-700 mb-1 text-[11px]">Particular to Correct</label>
+                <select
+                  value={correctionCategory}
+                  onChange={(e) => setCorrectionCategory(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41]"
+                >
+                  <option value="name">Full Name</option>
+                  <option value="facultyId">Staff ID</option>
+                  <option value="designation">Designation</option>
+                  <option value="batch">Assigned Batch / Mentorship</option>
+                  <option value="qualification">Qualifications</option>
+                  <option value="department">Department</option>
+                  <option value="subjects">Allocated Courses / Labs</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1 text-[11px]">Correct / Requested Value *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter the correct detail"
+                  value={requestedValue}
+                  onChange={(e) => setRequestedValue(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-700 mb-1 text-[11px]">Reason for Correction *</label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Provide supporting remarks or appointment reference"
+                  value={correctionReason}
+                  onChange={(e) => setCorrectionReason(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowCorrectionModal(false)}
+                  className="px-4 py-2 rounded-xl border text-gray-600 font-bold hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={correctionSubmitting}
+                  className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold flex items-center gap-1.5 shadow-sm"
+                >
+                  {correctionSubmitting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  <span>Submit Request</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
