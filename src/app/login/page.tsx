@@ -852,7 +852,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. 922525243123"
+                      placeholder="e.g. 922525243103"
                       value={registerNumber}
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
