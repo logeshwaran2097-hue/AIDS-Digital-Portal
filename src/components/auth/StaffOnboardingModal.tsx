@@ -63,18 +63,18 @@ export function StaffOnboardingModal({
   const [loading, setLoading] = useState(false)
   const [step3Confirmed, setStep3Confirmed] = useState(false)
 
-  // Form State
+  // Form State: Only prefilled if explicitly set by admin; otherwise completely empty!
   const [form, setForm] = useState({
+    name: initialData.name || '',
     phone: initialData.phone || '',
-    dateOfBirth: initialData.dateOfBirth ? initialData.dateOfBirth.split('T')[0] : '1988-06-15',
-    cabin: 'Staff Room / Department Wing',
-    specialization: initialData.specialization || 'Artificial Intelligence & Data Science',
+    dateOfBirth: initialData.dateOfBirth ? initialData.dateOfBirth.split('T')[0] : '',
+    cabin: '',
+    specialization: initialData.specialization || '',
+    qualification: initialData.qualification || '',
+    experience: initialData.experience ? String(initialData.experience) : '',
     detailsConfirmed: true,
     profileImage: initialData.profileImage || '',
-    email:
-      initialData.email && !initialData.email.endsWith('@staff.vsb.edu.in')
-        ? initialData.email
-        : '',
+    email: '', // REMOVE FIELD DATA: Never prefill email so user types their own email
     newPassword: '',
     confirmPassword: '',
     emailOtp: '',
@@ -94,15 +94,17 @@ export function StaffOnboardingModal({
   const [correctionSubmitting, setCorrectionSubmitting] = useState(false)
   const [correctionSubmitted, setCorrectionSubmitted] = useState(false)
 
-  // Sync initialData changes
+  // Sync initialData changes (only update if admin fields are populated)
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
       phone: initialData.phone || prev.phone,
       dateOfBirth: initialData.dateOfBirth ? initialData.dateOfBirth.split('T')[0] : prev.dateOfBirth,
       specialization: initialData.specialization || prev.specialization,
-      email: initialData.email || prev.email,
+      qualification: initialData.qualification || prev.qualification,
+      experience: initialData.experience ? String(initialData.experience) : prev.experience,
       profileImage: initialData.profileImage || prev.profileImage,
+      // Note: email is NEVER overwritten with initialData.email so it remains empty for fresh user entry!
     }))
   }, [initialData])
 
@@ -274,15 +276,15 @@ export function StaffOnboardingModal({
     setLoading(true)
     try {
       const payload = {
-        name: initialData.name,
+        name: form.name || initialData.name,
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim(),
         facultyId: initialData.facultyId,
-        dateOfBirth: form.dateOfBirth,
-        qualification: initialData.qualification || 'M.E. / M.Tech',
-        specialization: form.specialization,
-        experience: initialData.experience || 5,
-        classPeriod: form.cabin,
+        dateOfBirth: form.dateOfBirth || undefined,
+        qualification: form.qualification || initialData.qualification || '',
+        specialization: form.specialization || '',
+        experience: Number(form.experience) || initialData.experience || 0,
+        classPeriod: form.cabin || '',
         role,
         newPassword: form.newPassword.trim(),
         emailOtp: form.emailOtp.trim(),
@@ -495,10 +497,23 @@ export function StaffOnboardingModal({
                   <div>
                     <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">QUALIFICATIONS &amp; EXPERIENCE</span>
                     <span className="font-bold text-xs text-[#071A41]">
-                      {initialData.qualification || 'M.E. / M.Tech'} · {initialData.experience || 5} Years Experience
+                      {initialData.qualification ? (
+                        <>
+                          {initialData.qualification}
+                          {initialData.experience ? ` · ${initialData.experience} Years Experience` : ''}
+                        </>
+                      ) : (
+                        <span className="text-amber-600 font-semibold">Not Set by Admin (Enter in particulars below)</span>
+                      )}
                     </span>
                   </div>
-                  <Lock className="w-3 h-3 text-slate-400" />
+                  {initialData.qualification ? (
+                    <Lock className="w-3 h-3 text-slate-400" />
+                  ) : (
+                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      Enter Below
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -574,7 +589,7 @@ export function StaffOnboardingModal({
                   <input
                     type="tel"
                     required
-                    placeholder="+91 98421 XXXXX"
+                    placeholder="Enter 10-digit mobile number"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
@@ -602,7 +617,7 @@ export function StaffOnboardingModal({
                     type="text"
                     value={form.cabin}
                     onChange={(e) => setForm({ ...form, cabin: e.target.value })}
-                    placeholder="e.g. AI & DS Staff Wing / Room 204"
+                    placeholder="e.g. Staff Room 204 / AI & DS Wing"
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                   />
                 </div>
@@ -615,10 +630,42 @@ export function StaffOnboardingModal({
                     type="text"
                     value={form.specialization}
                     onChange={(e) => setForm({ ...form, specialization: e.target.value })}
-                    placeholder="e.g. Machine Learning & Computer Vision"
+                    placeholder="e.g. Machine Learning, Computer Vision, Data Science"
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                   />
                 </div>
+
+                {!initialData.qualification && (
+                  <>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Highest Qualification
+                      </label>
+                      <input
+                        type="text"
+                        value={form.qualification}
+                        onChange={(e) => setForm({ ...form, qualification: e.target.value })}
+                        placeholder="e.g. M.E. / M.Tech, Ph.D., M.Sc."
+                        className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                        Teaching Experience (Years)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        max={50}
+                        value={form.experience}
+                        onChange={(e) => setForm({ ...form, experience: e.target.value })}
+                        placeholder="e.g. 5"
+                        className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -731,7 +778,7 @@ export function StaffOnboardingModal({
                   <input
                     type="email"
                     required
-                    placeholder="e.g. yourname@vsb.edu.in or personal email"
+                    placeholder="Enter your personal or official email address"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
@@ -739,7 +786,7 @@ export function StaffOnboardingModal({
                   <button
                     type="button"
                     onClick={handleSendEmailOTP}
-                    disabled={loading || emailOtpCooldown > 0}
+                    disabled={loading || emailOtpCooldown > 0 || !form.email.trim()}
                     className="px-4 py-2.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
                   >
                     {emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send OTP'}
@@ -854,25 +901,33 @@ export function StaffOnboardingModal({
 
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
                   <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">OFFICIAL EMAIL</span>
-                  <span className="font-mono font-bold text-[#071A41] truncate block">{form.email}</span>
+                  <span className="font-mono font-bold text-[#071A41] truncate block">{form.email || 'Not provided'}</span>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
                   <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">CABIN LOCATION</span>
-                  <span className="font-bold text-[#071A41]">{form.cabin || 'Staff Room'}</span>
+                  <span className="font-bold text-[#071A41]">{form.cabin || 'Not provided'}</span>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
                   <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">SPECIALIZATION</span>
-                  <span className="font-bold text-[#071A41] truncate block">{form.specialization || 'AI & Data Science'}</span>
+                  <span className="font-bold text-[#071A41] truncate block">{form.specialization || 'Not provided'}</span>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                  <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">QUALIFICATIONS</span>
+                  <span className="font-bold text-[#071A41] truncate block">
+                    {form.qualification || initialData.qualification || 'Not provided'}
+                    {(form.experience || initialData.experience) ? ` · ${form.experience || initialData.experience} Years Exp` : ''}
+                  </span>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
                   <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DATE OF BIRTH</span>
-                  <span className="font-bold text-[#071A41]">{form.dateOfBirth}</span>
+                  <span className="font-bold text-[#071A41]">{form.dateOfBirth || 'Not provided'}</span>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
+                <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 sm:col-span-2">
                   <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">SECURITY CREDENTIALS</span>
                   <span className="inline-flex items-center gap-1 font-bold text-emerald-700">
                     <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Password &amp; 2FA Ready

@@ -56,6 +56,10 @@ export default async function FacultyStudentsPage() {
     facultyId: faculty?.facultyId || session.facultyId || '',
     advisorBatch: faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} (Sec ${faculty.advisorSec || 'A'})` : 'AI & DS Department'),
     mustChangePassword: Boolean(user?.mustChangePassword),
+    qualification: faculty?.qualification || '',
+    experience: faculty?.experience || 0,
+    specialization: faculty?.specialization || '',
+    dateOfBirth: faculty?.dateOfBirth ? faculty.dateOfBirth.toISOString() : undefined,
   }
 
   return (

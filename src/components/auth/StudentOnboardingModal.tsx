@@ -74,10 +74,7 @@ export function StudentOnboardingModal({
     correctionRemarks: '',
     detailsConfirmed: true,
     profileImage: initialData.profileImage || '',
-    email:
-      initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
-        ? initialData.email
-        : '',
+    email: '', // REMOVE FIELD DATA: Never prefill email so user types their own email
     newPassword: '',
     confirmPassword: '',
     emailOtp: '',
@@ -96,13 +93,9 @@ export function StudentOnboardingModal({
       phone: initialData.phone || prev.phone,
       parentPhone: initialData.parentPhone || prev.parentPhone,
       dateOfBirth: initialData.dateOfBirth || prev.dateOfBirth,
-      email:
-        initialData.email && !initialData.email.endsWith('@student.vsb.edu.in')
-          ? initialData.email
-          : prev.email,
       profileImage: initialData.profileImage || prev.profileImage,
     }))
-  }, [initialData.phone, initialData.parentPhone, initialData.email, initialData.dateOfBirth, initialData.profileImage])
+  }, [initialData.phone, initialData.parentPhone, initialData.dateOfBirth, initialData.profileImage])
 
   // Cooldown countdown timer
   React.useEffect(() => {

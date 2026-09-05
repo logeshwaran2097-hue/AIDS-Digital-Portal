@@ -53,6 +53,10 @@ export function FacultyStudentsView({
     facultyPhone?: string
     facultyId?: string
     mustChangePassword?: boolean
+    qualification?: string
+    experience?: number
+    specialization?: string
+    dateOfBirth?: string
   }
 }) {
   const students = initialStudents
@@ -138,11 +142,15 @@ export function FacultyStudentsView({
         role="advisor"
         initialData={{
           name: advisorDetails?.facultyName || '',
-          email: advisorDetails?.facultyEmail || '',
+          email: '', // Start empty so user enters their email
           phone: advisorDetails?.facultyPhone || '',
           facultyId: advisorDetails?.facultyId || '',
           designation: 'Class Advisor',
           advisorBatch: advisorDetails?.advisorBatch || null,
+          qualification: advisorDetails?.qualification || '',
+          experience: advisorDetails?.experience || 0,
+          specialization: advisorDetails?.specialization || '',
+          dateOfBirth: advisorDetails?.dateOfBirth || undefined,
         }}
         onComplete={() => {
           setIsOnboardingOpen(false)
