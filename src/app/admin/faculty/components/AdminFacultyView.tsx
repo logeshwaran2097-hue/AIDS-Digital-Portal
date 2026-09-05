@@ -233,8 +233,8 @@ const DAYS_OF_WEEK = [
 ]
 
 export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRecord[] }) {
-  // Active View Tab: 'advisors' (Class Advisors) vs 'handlers' (Subject Handlers)
-  const [activeTab, setActiveTab] = useState<'advisors' | 'handlers'>('advisors')
+  // Active View Tab: 'advisors' (Class Advisors) vs 'faculty' (Faculty Members / Theory) vs 'labs' (Lab Handlers)
+  const [activeTab, setActiveTab] = useState<'advisors' | 'faculty' | 'labs'>('advisors')
   const [facultyList, setFacultyList] = useState<FacultyRecord[]>(initialFaculty)
   const [searchQuery, setSearchQuery] = useState('')
   const [yearFilter, setYearFilter] = useState('ALL')
@@ -628,17 +628,50 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     })
   }, [facultyList, searchQuery, yearFilter, semFilter, sectionFilter])
 
-  // Filtered lists for Subject Handlers
-  const handlersList = useMemo(() => {
+  // Filtered lists for Faculty Members (Theory / Subject Handlers)
+  const facultyMembersList = useMemo(() => {
     return facultyList.filter((f) => {
       const subjs = getSubjectsList(f.subjects)
-      const isHandler =
-        subjs.length > 0 ||
-        f.subjectName ||
+      const isLab =
+        f.facultyType === 'lab_faculty' ||
+        (f.subjectName && f.subjectName.toLowerCase().includes('lab')) ||
+        (f.classPeriod && f.classPeriod.toLowerCase().includes('lab'))
+      
+      // Belongs to Faculty Members if it's theory subject or general faculty (not strictly lab only)
+      const isFaculty =
         f.facultyType === 'subject_handler' ||
         f.facultyType === 'both' ||
-        !f.facultyType
-      if (!isHandler) return false
+        (!isLab && (subjs.length > 0 || f.subjectName || !f.facultyType))
+
+      if (!isFaculty) return false
+
+      const matchesSearch =
+        f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (f.subjectName && f.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (f.classDay && f.classDay.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (f.classPeriod && f.classPeriod.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        f.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        subjs.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
+
+      const matchesDesignation =
+        designationFilter === 'ALL' ||
+        f.designation.toLowerCase().includes(designationFilter.toLowerCase())
+
+      return matchesSearch && matchesDesignation
+    })
+  }, [facultyList, searchQuery, designationFilter])
+
+  // Filtered lists for Lab Handlers
+  const labHandlersList = useMemo(() => {
+    return facultyList.filter((f) => {
+      const subjs = getSubjectsList(f.subjects)
+      const isLab =
+        f.facultyType === 'lab_faculty' ||
+        (f.subjectName && f.subjectName.toLowerCase().includes('lab')) ||
+        (f.classPeriod && f.classPeriod.toLowerCase().includes('lab')) ||
+        (f.facultyType === 'both' && f.subjectName && f.subjectName.toLowerCase().includes('lab'))
+
+      if (!isLab) return false
 
       const matchesSearch =
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -665,43 +698,86 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     })
   }, [facultyList, searchQuery, designationFilter, labSemesterFilter, semestersLabs])
 
+  // Combined handlers list for backward compatibility if needed
+  const handlersList = useMemo(() => {
+    return facultyList.filter((f) => {
+      const subjs = getSubjectsList(f.subjects)
+      const isHandler =
+        subjs.length > 0 ||
+        f.subjectName ||
+        f.facultyType === 'subject_handler' ||
+        f.facultyType === 'lab_faculty' ||
+        f.facultyType === 'both' ||
+        !f.facultyType
+      if (!isHandler) return false
+
+      const matchesSearch =
+        f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (f.subjectName && f.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (f.classDay && f.classDay.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (f.classPeriod && f.classPeriod.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        f.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        subjs.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
+
+      const matchesDesignation =
+        designationFilter === 'ALL' ||
+        f.designation.toLowerCase().includes(designationFilter.toLowerCase())
+
+      let matchesLabSem = true
+      if (labSemesterFilter !== 'ALL' && semestersLabs[labSemesterFilter as keyof typeof semestersLabs]) {
+        const targetLabs = semestersLabs[labSemesterFilter as keyof typeof semestersLabs].labs
+        matchesLabSem = targetLabs.some(
+          (l) => (f.subjectName && f.subjectName.toLowerCase().includes(l.shortName.toLowerCase())) || subjs.includes(l.code)
+        )
+      }
+
+      return matchesSearch && matchesDesignation && matchesLabSem
+    })
+  }, [facultyList, searchQuery, designationFilter, labSemesterFilter, semestersLabs])
+
   // PDF Export
   const handleExportPDF = () => {
     const isAdvisors = activeTab === 'advisors'
+    const isFaculty = activeTab === 'faculty'
+    const isLabs = activeTab === 'labs'
+    const currentList = isAdvisors ? advisorsList : isFaculty ? facultyMembersList : labHandlersList
+    
     generateAndDownloadPDF({
       title: isAdvisors
         ? 'DEPARTMENT OF AI & DS — CLASS ADVISORS DIRECTORY'
-        : 'DEPARTMENT OF AI & DS — 8 SEMESTERS LABS & SUBJECT HANDLERS DIRECTORY',
+        : isFaculty
+        ? 'DEPARTMENT OF AI & DS — FACULTY MEMBERS DIRECTORY'
+        : 'DEPARTMENT OF AI & DS — LAB HANDLERS & PRACTICALS DIRECTORY',
       subtitle: 'V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026',
       author: 'Office of the Department Administrator',
-      category: isAdvisors ? 'Class In-Charges & Mentors' : 'Course Instructors & Schedules',
+      category: isAdvisors ? 'Class In-Charges & Mentors' : isFaculty ? 'Theory Faculty Members' : 'Laboratory In-Charges',
       sections: [
         {
-          heading: isAdvisors ? '1. CLASS ADVISORS SUMMARY' : '1. COURSE INSTRUCTORS & LABS SUMMARY',
+          heading: isAdvisors ? '1. CLASS ADVISORS SUMMARY' : isFaculty ? '1. FACULTY MEMBERS SUMMARY' : '1. LAB HANDLERS SUMMARY',
           body: [
             `Total Faculty Count: ${facultyList.length} Faculty Members`,
-            `Active View: ${isAdvisors ? 'Class Mentors & Batch Advisors' : 'Curriculum Labs (Semesters 1 to 8) & Subject Handlers'}`,
+            `Active View: ${isAdvisors ? 'Class Mentors & Batch Advisors' : isFaculty ? 'Theory Subject Faculty Members' : 'Laboratory Handlers & Practical Curricula'}`,
             `Department: Artificial Intelligence & Data Science (AI & DS)`,
-            `Curriculum Scope: All 8 Semesters (Sem 1 to Sem 8) Laboratories & Theory Courses`,
+            `Curriculum Scope: All 8 Semesters (Sem 1 to Sem 8)`,
           ],
         },
         {
-          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : '2. SUBJECT HANDLERS & LAB ALLOCATIONS',
-          body: (isAdvisors ? advisorsList : handlersList).map((f, idx) => {
+          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : isFaculty ? '2. FACULTY COURSE ALLOCATIONS' : '2. LAB HANDLER ALLOCATIONS',
+          body: currentList.map((f, idx) => {
             if (isAdvisors) {
               return `${idx + 1}. ${f.name} — ${f.designation} | Assigned Batch: ${f.advisorBatch || 'Year II (Sec A)'} | Contact: ${f.email}`
             } else {
               const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2311'
-              const sName = f.subjectName || 'Object Oriented Programming Laboratory'
+              const sName = f.subjectName || (isLabs ? 'Laboratory Course' : 'Theory Subject')
               const sDay = f.classDay || 'Tuesday'
-              const sPeriod = f.classPeriod || 'Lab Session (AN)'
-              const sTime = f.classTime || '01:20 PM - 04:30 PM'
+              const sPeriod = f.classPeriod || 'Regular Period'
+              const sTime = f.classTime || 'Class Hours'
               return `${idx + 1}. ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
             }
           }),
         },
       ],
-      fileName: isAdvisors ? 'VSB_AI_DS_Class_Advisors_2026' : 'VSB_AI_DS_8_Semesters_Labs_2026',
+      fileName: isAdvisors ? 'VSB_AI_DS_Class_Advisors_2026' : isFaculty ? 'VSB_AI_DS_Faculty_Members_2026' : 'VSB_AI_DS_Lab_Handlers_2026',
     })
   }
 
@@ -988,7 +1064,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button
               onClick={() => setActiveTab('advisors')}
               className={cn(
@@ -1006,8 +1082,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-[#071A3D]">Page 1: Class Advisors (Semesters 3, 5 &amp; 7)</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Batch Mentors across Active Semesters (3, 5, 7) &amp; Section Dossiers</p>
+                  <h4 className="font-black text-sm text-[#071A3D]">Class Advisors</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Batch Mentors &amp; Section Dossiers (Sem 3, 5, 7)</p>
                 </div>
               </div>
               <span className={cn(
@@ -1019,31 +1095,60 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </button>
 
             <button
-              onClick={() => setActiveTab('handlers')}
+              onClick={() => setActiveTab('faculty')}
               className={cn(
                 'flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer text-left',
-                activeTab === 'handlers'
-                  ? 'border-[#1455D9] bg-purple-50/50 shadow-sm ring-2 ring-[#1455D9]/20'
+                activeTab === 'faculty'
+                  ? 'border-indigo-600 bg-indigo-50/50 shadow-sm ring-2 ring-indigo-600/20'
                   : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
               )}
             >
               <div className="flex items-center gap-3">
                 <div className={cn(
                   'w-10 h-10 rounded-xl flex items-center justify-center font-black',
-                  activeTab === 'handlers' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                  activeTab === 'faculty' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600'
                 )}>
-                  <FlaskConical className="w-5 h-5" />
+                  <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-[#071A3D]">Page 2: Labs &amp; Subject Handlers (Sem 3, 5, 7)</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Active Labs (Sem 3, 5, 7), 8 Periods (09:15 - 04:30) &amp; Schedules</p>
+                  <h4 className="font-black text-sm text-[#071A3D]">Faculty Members</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Professors &amp; Course Theory Instructors</p>
                 </div>
               </div>
               <span className={cn(
                 'px-2.5 py-1 rounded-xl text-xs font-black font-mono',
-                activeTab === 'handlers' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700'
+                activeTab === 'faculty' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
               )}>
-                {handlersList.length} Active
+                {facultyMembersList.length} Active
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('labs')}
+              className={cn(
+                'flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer text-left',
+                activeTab === 'labs'
+                  ? 'border-purple-600 bg-purple-50/50 shadow-sm ring-2 ring-purple-600/20'
+                  : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  'w-10 h-10 rounded-xl flex items-center justify-center font-black',
+                  activeTab === 'labs' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                )}>
+                  <FlaskConical className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm text-[#071A3D]">Lab Handlers</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Laboratory &amp; Practical Session Handlers</p>
+                </div>
+              </div>
+              <span className={cn(
+                'px-2.5 py-1 rounded-xl text-xs font-black font-mono',
+                activeTab === 'labs' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700'
+              )}>
+                {labHandlersList.length} Active
               </span>
             </button>
           </div>
@@ -1118,9 +1223,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       </div>
 
       {/* ========================================================================= */}
-      {/* ACTIVE SEMESTERS (3, 5, 7) EDITABLE LABS SHOWCASE & FILTER */}
+      {/* ACTIVE SEMESTERS (3, 5, 7) EDITABLE LABS SHOWCASE & FILTER (LAB HANDLERS TAB) */}
       {/* ========================================================================= */}
-      {activeTab === 'handlers' && (
+      {activeTab === 'labs' && (
         <div className="bg-gradient-to-br from-purple-900/5 via-blue-900/5 to-amber-900/5 rounded-3xl p-5 border border-purple-200/80 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-3">
             <div className="flex items-center gap-2">
@@ -1147,46 +1252,41 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 onClick={() => handleOpenAddLab(labSemesterFilter !== 'ALL' ? (labSemesterFilter as any) : 'sem3')}
                 className="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ Add Lab Course</span>
+                <Plus className="w-3.5 h-3.5" /> Add New Laboratory
               </button>
 
               <button
                 type="button"
                 onClick={handleResetLabs}
-                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-gray-100 border border-gray-200 text-gray-600 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="Reset to default institutional laboratory curricula"
+                className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                title="Reset all laboratory courses to official curriculum defaults"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-gray-500" />
-                <span>Reset</span>
+                <RotateCcw className="w-3 h-3 text-gray-500" /> Defaults
               </button>
+            </div>
+          </div>
 
-              <div className="h-5 w-px bg-purple-200 hidden sm:block mx-0.5" />
-
-              <button
-                onClick={() => setLabSemesterFilter('ALL')}
-                className={cn(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                  labSemesterFilter === 'ALL'
-                    ? 'bg-[#071A3D] text-white shadow-xs'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                )}
-              >
-                All Active Sems (3, 5, 7)
-              </button>
+          {/* Quick Filter by Semester for Labs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <span className="text-xs font-bold text-gray-500 flex items-center gap-1 shrink-0">
+              <SlidersHorizontal className="w-3.5 h-3.5" /> Filter Practical Curricula:
+            </span>
+            <div className="flex items-center gap-1.5">
               {[
-                { k: 'sem3', label: 'Sem 3 (Yr 2)' },
-                { k: 'sem5', label: 'Sem 5 (Yr 3)' },
-                { k: 'sem7', label: 'Sem 7 (Yr 4)' },
+                { key: 'ALL', label: 'All 3 Semesters' },
+                { key: 'sem3', label: 'Semester 3 (Year 2)' },
+                { key: 'sem5', label: 'Semester 5 (Year 3)' },
+                { key: 'sem7', label: 'Semester 7 (Year 4)' },
               ].map((s) => (
                 <button
-                  key={s.k}
-                  onClick={() => setLabSemesterFilter(s.k)}
+                  key={s.key}
+                  type="button"
+                  onClick={() => setLabSemesterFilter(s.key)}
                   className={cn(
-                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                    labSemesterFilter === s.k
+                    'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                    labSemesterFilter === s.key
                       ? 'bg-purple-700 text-white shadow-xs'
-                      : 'bg-white text-purple-700 border border-purple-200 hover:bg-purple-50'
+                      : 'bg-white text-gray-600 hover:bg-purple-50 border border-purple-100'
                   )}
                 >
                   {s.label}
@@ -1284,17 +1384,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           <p className="text-2xl font-black text-green-700 mt-0.5">{advisorsList.length}</p>
           <p className="text-[10px] text-green-700 font-medium mt-1">Semesters 3, 5, 7 · Sections A - D</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Subject Handlers</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">{handlersList.length}</p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">Theory &amp; Lab Instructors</p>
+        <div className="bg-white p-4 rounded-2xl border border-indigo-200/80 shadow-xs">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Faculty Members</p>
+          <p className="text-2xl font-black text-indigo-700 mt-0.5">{facultyMembersList.length}</p>
+          <p className="text-[10px] text-indigo-700 font-medium mt-1">Theory Professors &amp; Staff</p>
         </div>
-        <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Active Practical Labs</p>
-          <p className="text-2xl font-black text-amber-700 mt-0.5">
-            {Object.values(semestersLabs).reduce((acc, s) => acc + s.labs.length, 0)} Courses
+        <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Lab Handlers</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">{labHandlersList.length}</p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">
+            {Object.values(semestersLabs).reduce((acc, s) => acc + s.labs.length, 0)} Practical Labs Active
           </p>
-          <p className="text-[10px] text-amber-700 font-medium mt-1">Semesters 3, 5, 7 Active Curricula</p>
         </div>
       </div>
 
@@ -1307,7 +1407,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             placeholder={
               activeTab === 'advisors'
                 ? 'Search advisors by name or batch...'
-                : 'Search handlers by name, subject, days, period, or lab...'
+                : activeTab === 'faculty'
+                ? 'Search faculty members by name, theory subject, or specialization...'
+                : 'Search lab handlers by name, lab course, day, or period...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -1350,13 +1452,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           )}
 
           <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
-            Showing {activeTab === 'advisors' ? advisorsList.length : handlersList.length} of {facultyList.length}
+            Showing {activeTab === 'advisors' ? advisorsList.length : activeTab === 'faculty' ? facultyMembersList.length : labHandlersList.length} of {facultyList.length}
           </span>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* PAGE 1: CLASS ADVISORS TABLE */}
+      {/* 1. CLASS ADVISORS TABLE */}
       {/* ========================================================= */}
       {activeTab === 'advisors' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
@@ -1507,79 +1609,73 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================= */}
-      {/* PAGE 2: SUBJECT HANDLERS & LABS TABLE */}
+      {/* 2. FACULTY MEMBERS TABLE (Theory / Course Instructors) */}
       {/* ========================================================= */}
-      {activeTab === 'handlers' && (
+      {activeTab === 'faculty' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
           <table className="w-full text-left border-collapse text-xs">
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
               <tr>
                 <th className="px-4 py-3.5">#</th>
-                <th className="px-4 py-3.5">Faculty Name</th>
-                <th className="px-4 py-3.5">Subject / Lab Name &amp; Code</th>
+                <th className="px-4 py-3.5">Faculty Member</th>
+                <th className="px-4 py-3.5">Course / Subject &amp; Code</th>
                 <th className="px-4 py-3.5">Class Days</th>
-                <th className="px-4 py-3.5">Periods (1-8) &amp; Lab Sessions</th>
-                <th className="px-4 py-3.5">Designation</th>
+                <th className="px-4 py-3.5">Periods &amp; Timings</th>
+                <th className="px-4 py-3.5">Designation &amp; Qualification</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium">
-              {handlersList.length === 0 ? (
+              {facultyMembersList.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-12 text-gray-400">
-                    <FlaskConical className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                    <p className="font-bold text-gray-600">No Subject Handlers Found</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to allocate subjects, days, 8 periods, and lab sessions.</p>
+                    <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="font-bold text-gray-600">No Faculty Members Found</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to register theory courses and faculty instructors.</p>
                   </td>
                 </tr>
               ) : (
-                handlersList.map((handler, idx) => {
-                  const subjs = getSubjectsList(handler.subjects)
-                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Course: ${subjs.join(', ')}` : 'Object Oriented Programming Laboratory')
-                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2311'
-                  const dayList = handler.classDay ? handler.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Tue']
-                  const periodList = handler.classPeriod ? handler.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Lab Session (AN)']
-                  const timeDisplay = handler.classTime || '01:20 PM - 04:30 PM'
-                  const isLabCourse = subjectDisplayName.toLowerCase().includes('lab') || subjectDisplayName.toLowerCase().includes('project') || subjectDisplayName.toLowerCase().includes('training') || periodList.some(p => p.toLowerCase().includes('lab'))
+                facultyMembersList.map((faculty, idx) => {
+                  const subjs = getSubjectsList(faculty.subjects)
+                  const subjectDisplayName = faculty.subjectName || (subjs.length > 0 ? `Core Course: ${subjs.join(', ')}` : 'Department Course Instructor')
+                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2301'
+                  const dayList = faculty.classDay ? faculty.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Mon', 'Wed', 'Fri']
+                  const periodList = faculty.classPeriod ? faculty.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Period 1']
+                  const timeDisplay = faculty.classTime || '09:15 AM - 10:00 AM'
 
                   return (
-                    <tr key={handler.id} className="hover:bg-blue-50/30 transition-colors">
+                    <tr key={faculty.id} className="hover:bg-indigo-50/30 transition-colors">
                       <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className={cn(
-                            'w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center border',
-                            isLabCourse
-                              ? 'bg-amber-100 text-amber-800 border-amber-300'
-                              : 'bg-purple-100 text-purple-700 border-purple-200'
-                          )}>
-                            {handler.name.charAt(0)}
+                          <div className="w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center border bg-indigo-100 text-indigo-700 border-indigo-200">
+                            {faculty.name.charAt(0)}
                           </div>
                           <div>
                             <span className="font-bold text-[#071A3D] text-sm block">
-                              {handler.name}
+                              {faculty.name}
                             </span>
                             <span className="text-[11px] text-gray-500 font-medium">
-                              {handler.designation}
+                              {faculty.designation}
                             </span>
                           </div>
                         </div>
                       </td>
 
-                      {/* Subject Name & Course Code */}
+                      {/* Course / Subject */}
                       <td className="px-4 py-3.5">
                         <div>
                           <span className="font-bold text-[#071A3D] block text-sm flex items-center gap-1.5">
-                            {isLabCourse && <FlaskConical className="w-3.5 h-3.5 text-amber-600 shrink-0" />}
+                            <BookOpen className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                             {subjectDisplayName}
                           </span>
-                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-[#1455D9] font-mono font-bold border border-blue-200/60 text-[10px] inline-block mt-0.5">
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200/60 text-[10px] inline-block mt-0.5">
                             Code: {codeDisplay}
                           </span>
                         </div>
                       </td>
 
-                      {/* Multiple Class Days */}
+                      {/* Days */}
                       <td className="px-4 py-3.5">
                         <div className="flex flex-wrap items-center gap-1">
                           {dayList.map((d, i) => (
@@ -1594,27 +1690,180 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         </div>
                       </td>
 
-                      {/* Multiple Periods (1-8) & Lab Sessions */}
+                      {/* Periods */}
                       <td className="px-4 py-3.5">
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-1">
-                            {periodList.map((p, i) => {
-                              const isLabBadge = p.toLowerCase().includes('lab')
-                              return (
-                                <span
-                                  key={i}
-                                  className={cn(
-                                    'px-2 py-0.5 rounded-md font-bold text-[11px] inline-flex items-center gap-1 border',
-                                    isLabBadge
-                                      ? 'bg-amber-50 text-amber-800 border-amber-300'
-                                      : 'bg-purple-50 text-purple-700 border-purple-200'
-                                  )}
-                                >
-                                  {isLabBadge ? <FlaskConical className="w-3 h-3 text-amber-600" /> : <Clock className="w-3 h-3 text-purple-600" />}
-                                  {p}
-                                </span>
-                              )
-                            })}
+                            {periodList.map((p, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-md font-bold text-[11px] inline-flex items-center gap-1 border bg-indigo-50 text-indigo-700 border-indigo-200"
+                              >
+                                <Clock className="w-3 h-3 text-indigo-600" />
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-[11px] text-gray-500 font-mono font-semibold block">
+                            {timeDisplay}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-[#071A3D] block">{faculty.designation}</span>
+                        <span className="text-gray-500 text-[11px]">
+                          {faculty.qualification || 'M.E. / Ph.D.'} · {faculty.experience ? `${faculty.experience} Yrs` : 'Faculty'}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedFaculty(faculty)
+                              setFormData({
+                                facultyId: faculty.facultyId,
+                                name: faculty.name,
+                                email: faculty.email,
+                                phone: faculty.phone || '',
+                                password: '',
+                                dateOfBirth: faculty.dateOfBirth || '',
+                                designation: faculty.designation,
+                                qualification: faculty.qualification || '',
+                                experience: faculty.experience || '',
+                                specialization: faculty.specialization || '',
+                                subjects: subjs.join(', '),
+                                subjectName: faculty.subjectName || '',
+                                classDay: faculty.classDay || 'Mon, Wed, Fri',
+                                classPeriod: faculty.classPeriod || 'Period 1',
+                                classTime: faculty.classTime || '09:15 AM - 10:00 AM',
+                                advisorBatch: faculty.advisorBatch || '',
+                                advisorYear: faculty.advisorYear || 2,
+                                advisorSem: faculty.advisorSem || 3,
+                                advisorSec: faculty.advisorSec || 'A',
+                                facultyType: faculty.facultyType || 'subject_handler',
+                              })
+                              setIsEditModalOpen(true)
+                            }}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                            title="Edit Faculty Member"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(faculty.id, faculty.name)}
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                            title="Remove Faculty"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 3. LAB HANDLERS TABLE (Laboratory & Practicals) */}
+      {/* ========================================================= */}
+      {activeTab === 'labs' && (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
+              <tr>
+                <th className="px-4 py-3.5">#</th>
+                <th className="px-4 py-3.5">Lab Handler Name</th>
+                <th className="px-4 py-3.5">Laboratory Name &amp; Course Code</th>
+                <th className="px-4 py-3.5">Lab Days</th>
+                <th className="px-4 py-3.5">Lab Session Timings</th>
+                <th className="px-4 py-3.5">Designation</th>
+                <th className="px-4 py-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 font-medium">
+              {labHandlersList.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-12 text-gray-400">
+                    <FlaskConical className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="font-bold text-gray-600">No Lab Handlers Found</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to assign laboratory sessions and practical batches.</p>
+                  </td>
+                </tr>
+              ) : (
+                labHandlersList.map((handler, idx) => {
+                  const subjs = getSubjectsList(handler.subjects)
+                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Lab: ${subjs.join(', ')}` : 'Object Oriented Programming Laboratory')
+                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2311'
+                  const dayList = handler.classDay ? handler.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Tue']
+                  const periodList = handler.classPeriod ? handler.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Lab Session (AN)']
+                  const timeDisplay = handler.classTime || '01:20 PM - 04:30 PM'
+
+                  return (
+                    <tr key={handler.id} className="hover:bg-purple-50/30 transition-colors">
+                      <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center border bg-purple-100 text-purple-700 border-purple-200">
+                            {handler.name.charAt(0)}
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#071A3D] text-sm block">
+                              {handler.name}
+                            </span>
+                            <span className="text-[11px] text-gray-500 font-medium">
+                              {handler.designation}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Laboratory Name & Course Code */}
+                      <td className="px-4 py-3.5">
+                        <div>
+                          <span className="font-bold text-[#071A3D] block text-sm flex items-center gap-1.5">
+                            <FlaskConical className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                            {subjectDisplayName}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-mono font-bold border border-purple-200/60 text-[10px] inline-block mt-0.5">
+                            Code: {codeDisplay}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Class Days */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex flex-wrap items-center gap-1">
+                          {dayList.map((d, i) => (
+                            <span
+                              key={i}
+                              className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] border border-blue-200 text-[11px] font-bold inline-flex items-center gap-1"
+                            >
+                              <Calendar className="w-3 h-3 text-[#1455D9]" />
+                              {d}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Lab Sessions */}
+                      <td className="px-4 py-3.5">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-1">
+                            {periodList.map((p, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-md font-bold text-[11px] inline-flex items-center gap-1 border bg-amber-50 text-amber-800 border-amber-300"
+                              >
+                                <FlaskConical className="w-3 h-3 text-amber-600" />
+                                {p}
+                              </span>
+                            ))}
                           </div>
                           <span className="text-[11px] text-gray-500 font-mono font-semibold block">
                             {timeDisplay}
@@ -1654,12 +1903,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 advisorYear: handler.advisorYear || 2,
                                 advisorSem: handler.advisorSem || 3,
                                 advisorSec: handler.advisorSec || 'A',
-                                facultyType: handler.facultyType || 'subject_handler',
+                                facultyType: handler.facultyType || 'lab_faculty',
                               })
                               setIsEditModalOpen(true)
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                            title="Edit Subject & Schedule"
+                            title="Edit Lab & Schedule"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
