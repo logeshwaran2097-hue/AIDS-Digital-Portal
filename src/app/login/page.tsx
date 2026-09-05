@@ -162,49 +162,60 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [emailOtpCooldown])
 
-  // Auto-verify OTP in Login Onboarding Wizard
+  const isOnboardingVerifyingOtpRef = React.useRef(false)
+  const lastVerifiedOnboardingOtpRef = React.useRef<string | null>(null)
+
+  // Direct, ultra-fast auto-verify function for login onboarding
+  const verifyOnboardingOtpCode = async (rawCode: string) => {
+    const code = rawCode.trim()
+    const email = onboardingForm.email.trim().toLowerCase()
+    if (code.length !== 6 || !email || !email.includes('@')) return
+    if (isOnboardingVerifyingOtpRef.current) return
+    if (isOnboardingOtpVerified && lastVerifiedOnboardingOtpRef.current === code) return
+
+    isOnboardingVerifyingOtpRef.current = true
+    setIsOnboardingVerifyingOtp(true)
+    setOnboardingOtpError(null)
+
+    try {
+      const res = await fetch('/api/auth/verify-onboarding-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          otp: code,
+          challenge: onboardingForm.otpChallenge || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        lastVerifiedOnboardingOtpRef.current = code
+        setIsOnboardingOtpVerified(true)
+        setOnboardingOtpError(null)
+        toast.success('Email OTP verified successfully!')
+      } else {
+        setIsOnboardingOtpVerified(false)
+        setOnboardingOtpError(data.message || 'Invalid verification code.')
+      }
+    } catch {
+      setOnboardingOtpError('Connection error verifying OTP.')
+    } finally {
+      isOnboardingVerifyingOtpRef.current = false
+      setIsOnboardingVerifyingOtp(false)
+    }
+  }
+
+  // Backup effect for auto-verify in Login Onboarding Wizard
   React.useEffect(() => {
     const code = (onboardingForm.emailOtp || '').trim()
-    if (code.length === 6 && onboardingForm.email.trim() && !isOnboardingOtpVerified && !isOnboardingVerifyingOtp) {
-      let active = true
-      const runAutoVerify = async () => {
-        setIsOnboardingVerifyingOtp(true)
-        setOnboardingOtpError(null)
-        try {
-          const res = await fetch('/api/auth/verify-onboarding-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: onboardingForm.email.trim().toLowerCase(),
-              otp: code,
-              challenge: onboardingForm.otpChallenge || undefined,
-            }),
-          })
-          const data = await res.json()
-          if (!active) return
-          if (res.ok && data.success) {
-            setIsOnboardingOtpVerified(true)
-            setOnboardingOtpError(null)
-            toast.success('Email OTP verified successfully!')
-          } else {
-            setIsOnboardingOtpVerified(false)
-            setOnboardingOtpError(data.message || 'Invalid verification code.')
-          }
-        } catch {
-          if (active) setOnboardingOtpError('Connection error verifying OTP.')
-        } finally {
-          if (active) setIsOnboardingVerifyingOtp(false)
-        }
-      }
-      runAutoVerify()
-      return () => {
-        active = false
-      }
+    if (code.length === 6 && onboardingForm.email.trim() && !isOnboardingOtpVerified && !isOnboardingVerifyingOtpRef.current && lastVerifiedOnboardingOtpRef.current !== code) {
+      verifyOnboardingOtpCode(code)
     } else if (code.length < 6) {
       if (isOnboardingOtpVerified) setIsOnboardingOtpVerified(false)
       if (onboardingOtpError) setOnboardingOtpError(null)
+      lastVerifiedOnboardingOtpRef.current = null
     }
-  }, [onboardingForm.emailOtp, onboardingForm.email, isOnboardingOtpVerified, isOnboardingVerifyingOtp, onboardingForm.otpChallenge])
+  }, [onboardingForm.emailOtp, onboardingForm.email])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1674,7 +1685,17 @@ export default function LoginPage() {
                       <OTPInput
                         length={6}
                         value={onboardingForm.emailOtp}
-                        onChange={(val) => setOnboardingForm({ ...onboardingForm, emailOtp: val })}
+                        onChange={(val) => {
+                          const clean = val.replace(/\D/g, '').slice(0, 6)
+                          setOnboardingForm((prev) => ({ ...prev, emailOtp: clean }))
+                          if (clean.length === 6 && clean !== lastVerifiedOnboardingOtpRef.current) {
+                            verifyOnboardingOtpCode(clean)
+                          } else if (clean.length < 6) {
+                            if (isOnboardingOtpVerified) setIsOnboardingOtpVerified(false)
+                            if (onboardingOtpError) setOnboardingOtpError(null)
+                            lastVerifiedOnboardingOtpRef.current = null
+                          }
+                        }}
                         autoFocus
                       />
                       {onboardingOtpError && (

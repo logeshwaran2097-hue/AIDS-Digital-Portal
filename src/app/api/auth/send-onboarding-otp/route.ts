@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateOTP, hashOTP } from '@/lib/utils'
 import { prisma } from '@/lib/prisma'
-import { sendStudentVerificationEmail } from '@/lib/auth'
+import { sendStudentVerificationEmail, generateOTPChallenge } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,14 +34,8 @@ export async function POST(request: NextRequest) {
       console.warn('Could not write OTP to database:', dbErr)
     }
 
-    // 2. Generate HMAC Challenge
-    const challengePayload = `${trimmedEmail}:${otp}:${expiresAt.getTime()}`
-    const crypto = require('crypto')
-    const signature = crypto
-      .createHmac('sha256', process.env.NEXTAUTH_SECRET || 'vsb-secret-onboarding-otp')
-      .update(challengePayload)
-      .digest('hex')
-    const challenge = `${Buffer.from(challengePayload).toString('base64')}.${signature}`
+    // 2. Generate HMAC Challenge (Ultra-fast 0ms stateless verification)
+    const challenge = generateOTPChallenge(trimmedEmail, otp, 10)
 
     // 3. Dispatch Real Email via SMTP
     let displayName = name && name.trim() ? name.trim() : ''

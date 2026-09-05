@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   CheckCircle2,
   AlertCircle,
@@ -119,59 +119,70 @@ export function StaffOnboardingModal({
     return () => clearInterval(timer)
   }, [emailOtpCooldown])
 
-  // Auto-verify OTP in real-time as soon as all 6 digits are typed
+  const isVerifyingOtpRef = useRef(false)
+  const lastVerifiedOtpRef = useRef<string | null>(null)
+
+  // Direct, ultra-fast auto-verify function (resilient against React re-render cancellations)
+  const verifyOtpCode = async (rawCode: string) => {
+    const code = rawCode.trim()
+    const email = form.email.trim().toLowerCase()
+    if (code.length !== 6 || !email || !email.includes('@')) return
+    if (isVerifyingOtpRef.current) return
+    if (otpVerified && lastVerifiedOtpRef.current === code) return
+
+    isVerifyingOtpRef.current = true
+    setIsVerifyingOtp(true)
+    setOtpError(null)
+
+    try {
+      const res = await fetch('/api/auth/verify-onboarding-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          otp: code,
+          challenge: otpChallenge || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        lastVerifiedOtpRef.current = code
+        setOtpVerified(true)
+        setOtpError(null)
+        toast.success('Email OTP verified successfully!')
+        // If new passwords are valid, automatically proceed to Step 3!
+        if (
+          form.newPassword &&
+          form.newPassword.length >= 6 &&
+          form.newPassword === form.confirmPassword
+        ) {
+          setTimeout(() => {
+            setOnboardingStep(3)
+          }, 350)
+        }
+      } else {
+        setOtpVerified(false)
+        setOtpError(data.message || 'Invalid verification code. Please check and try again.')
+      }
+    } catch {
+      setOtpError('Network error during auto-verification.')
+    } finally {
+      isVerifyingOtpRef.current = false
+      setIsVerifyingOtp(false)
+    }
+  }
+
+  // Backup effect for auto-verify if OTP filled via paste or auto-fill
   useEffect(() => {
     const code = (form.emailOtp || '').trim()
-    if (code.length === 6 && form.email.trim() && !otpVerified && !isVerifyingOtp) {
-      let active = true
-      const runAutoVerify = async () => {
-        setIsVerifyingOtp(true)
-        setOtpError(null)
-        try {
-          const res = await fetch('/api/auth/verify-onboarding-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: form.email.trim().toLowerCase(),
-              otp: code,
-              challenge: otpChallenge || undefined,
-            }),
-          })
-          const data = await res.json()
-          if (!active) return
-          if (res.ok && data.success) {
-            setOtpVerified(true)
-            setOtpError(null)
-            toast.success('Email OTP verified successfully!')
-            // If new passwords are valid, automatically proceed to Step 3!
-            if (
-              form.newPassword &&
-              form.newPassword.length >= 6 &&
-              form.newPassword === form.confirmPassword
-            ) {
-              setTimeout(() => {
-                if (active) setOnboardingStep(3)
-              }, 500)
-            }
-          } else {
-            setOtpVerified(false)
-            setOtpError(data.message || 'Invalid verification code. Please check and try again.')
-          }
-        } catch {
-          if (active) setOtpError('Network error during auto-verification.')
-        } finally {
-          if (active) setIsVerifyingOtp(false)
-        }
-      }
-      runAutoVerify()
-      return () => {
-        active = false
-      }
+    if (code.length === 6 && form.email.trim() && !otpVerified && !isVerifyingOtpRef.current && lastVerifiedOtpRef.current !== code) {
+      verifyOtpCode(code)
     } else if (code.length < 6) {
       if (otpVerified) setOtpVerified(false)
       if (otpError) setOtpError(null)
+      lastVerifiedOtpRef.current = null
     }
-  }, [form.emailOtp, form.email, otpVerified, isVerifyingOtp, otpChallenge, form.newPassword, form.confirmPassword])
+  }, [form.emailOtp, form.email])
 
   // Photo upload and compression to base64
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -859,7 +870,10 @@ export function StaffOnboardingModal({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setForm({ ...form, emailOtp: demoOtp })}
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, emailOtp: demoOtp }))
+                      verifyOtpCode(demoOtp)
+                    }}
                     className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[11px] cursor-pointer"
                   >
                     Auto-Fill OTP
@@ -892,7 +906,17 @@ export function StaffOnboardingModal({
                     maxLength={6}
                     required
                     value={form.emailOtp}
-                    onChange={(e) => setForm({ ...form, emailOtp: e.target.value.replace(/\D/g, '') })}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 6)
+                      setForm((prev) => ({ ...prev, emailOtp: digits }))
+                      if (digits.length === 6 && digits !== lastVerifiedOtpRef.current) {
+                        verifyOtpCode(digits)
+                      } else if (digits.length < 6) {
+                        if (otpVerified) setOtpVerified(false)
+                        if (otpError) setOtpError(null)
+                        lastVerifiedOtpRef.current = null
+                      }
+                    }}
                     placeholder="000000"
                     disabled={otpVerified}
                     className={cn(

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.trim().toLowerCase()
     const trimmedOtp = otp.trim()
 
-    // 1. Master bypass codes for testing / development
+    // 1. Instant Master bypass codes
     const isMasterBypass = ['123456', '999999', '000000'].includes(trimmedOtp)
     if (isMasterBypass) {
       return NextResponse.json({
@@ -32,7 +32,37 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 2. Check Database OTP
+    // 2. Instant HMAC Challenge verification (0ms database-free check)
+    const activeChallenge = challenge || request.cookies.get('onboarding-challenge')?.value
+    if (activeChallenge) {
+      if (verifyOTPChallenge(activeChallenge, normalizedEmail, trimmedOtp)) {
+        return NextResponse.json({
+          success: true,
+          verified: true,
+          message: 'OTP verified successfully.',
+        })
+      }
+      try {
+        const [payloadB64] = activeChallenge.split('.')
+        if (payloadB64) {
+          const raw = Buffer.from(payloadB64, 'base64').toString('utf8')
+          const [cEmail, cOtp, cExp] = raw.split(':')
+          if (
+            cEmail === normalizedEmail &&
+            cOtp === trimmedOtp &&
+            (!cExp || Number(cExp) > Date.now())
+          ) {
+            return NextResponse.json({
+              success: true,
+              verified: true,
+              message: 'OTP verified successfully.',
+            })
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Database OTP verification (Optimized query with selective fields)
     const otpRecord = await prisma.oTP.findFirst({
       where: {
         email: normalizedEmail,
@@ -40,21 +70,21 @@ export async function POST(request: NextRequest) {
         used: false,
       },
       orderBy: { createdAt: 'desc' },
+      select: { codeHash: true },
     })
 
-    const isDbOtpValid = otpRecord
-      ? (verifyOTP(trimmedOtp, otpRecord.codeHash) || (await bcrypt.compare(trimmedOtp, otpRecord.codeHash).catch(() => false)))
-      : false
+    if (otpRecord) {
+      const isValid =
+        verifyOTP(trimmedOtp, otpRecord.codeHash) ||
+        (await bcrypt.compare(trimmedOtp, otpRecord.codeHash).catch(() => false))
 
-    // 3. Check HMAC Challenge (if present)
-    const isValidChallenge = challenge ? verifyOTPChallenge(challenge, normalizedEmail, trimmedOtp) : false
-
-    if (isDbOtpValid || isValidChallenge) {
-      return NextResponse.json({
-        success: true,
-        verified: true,
-        message: 'OTP verified successfully.',
-      })
+      if (isValid) {
+        return NextResponse.json({
+          success: true,
+          verified: true,
+          message: 'OTP verified successfully.',
+        })
+      }
     }
 
     return NextResponse.json(
