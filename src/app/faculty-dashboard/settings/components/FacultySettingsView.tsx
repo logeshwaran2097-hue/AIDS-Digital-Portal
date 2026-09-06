@@ -126,18 +126,61 @@ export function FacultySettingsView({
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [saveSuccessBanner, setSaveSuccessBanner] = useState(false)
 
-  // Load Saved Preferences from LocalStorage on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('vsb-portal-theme')
-    if (savedTheme === 'midnight') {
-      setTheme('midnight')
-    }
+  const [isSyncingRealtime, setIsSyncingRealtime] = useState(false)
+  const isLoadedRef = React.useRef(false)
 
-    const storageKey = `advisor_pref_${facultyId}`
-    const saved = localStorage.getItem(storageKey)
-    if (saved) {
+  // Real-time Auto-Save to Database & LocalStorage whenever any field changes
+  const savePreferencesToBackend = React.useCallback(async (updatedPrefs: any) => {
+    try {
+      setIsSyncingRealtime(true)
+      const storageKey = `advisor_pref_${facultyId}`
+      localStorage.setItem(storageKey, JSON.stringify(updatedPrefs))
+
+      await fetch('/api/faculty/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'SAVE_PREFERENCES',
+          preferences: updatedPrefs,
+        }),
+      })
+    } catch (err) {
+      console.error('Error auto-syncing settings in real time:', err)
+    } finally {
+      setTimeout(() => setIsSyncingRealtime(false), 600)
+    }
+  }, [facultyId])
+
+  // Load from API (DB) first, fallback to localStorage
+  useEffect(() => {
+    const loadSettings = async () => {
+      const savedTheme = localStorage.getItem('vsb-portal-theme')
+      if (savedTheme === 'midnight') {
+        setTheme('midnight')
+      }
+
+      let parsed: any = null
       try {
-        const parsed = JSON.parse(saved)
+        const res = await fetch('/api/faculty/settings')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.success && data.preferences && Object.keys(data.preferences).length > 0) {
+            parsed = data.preferences
+          }
+        }
+      } catch {}
+
+      if (!parsed) {
+        const storageKey = `advisor_pref_${facultyId}`
+        const local = localStorage.getItem(storageKey)
+        if (local) {
+          try {
+            parsed = JSON.parse(local)
+          } catch {}
+        }
+      }
+
+      if (parsed) {
         if (parsed.minAttendanceCutoff) setMinAttendanceCutoff(parsed.minAttendanceCutoff)
         if (parsed.consecutiveAbsentDays) setConsecutiveAbsentDays(parsed.consecutiveAbsentDays)
         if (parsed.autoDefaulterAlert !== undefined) setAutoDefaulterAlert(parsed.autoDefaulterAlert)
@@ -146,31 +189,29 @@ export function FacultySettingsView({
         if (parsed.maxOdDays) setMaxOdDays(parsed.maxOdDays)
         if (parsed.instantOdPush !== undefined) setInstantOdPush(parsed.instantOdPush)
         if (parsed.parentSmsOnOd !== undefined) setParentSmsOnOd(parsed.parentSmsOnOd)
+        if (parsed.autoApproveInternalEvents !== undefined) setAutoApproveInternalEvents(parsed.autoApproveInternalEvents)
         if (parsed.lowCgpaThreshold) setLowCgpaThreshold(parsed.lowCgpaThreshold)
+        if (parsed.autoRetestReminder !== undefined) setAutoRetestReminder(parsed.autoRetestReminder)
+        if (parsed.parentMeetingPrompt !== undefined) setParentMeetingPrompt(parsed.parentMeetingPrompt)
         if (parsed.cabinLocation) setCabinLocation(parsed.cabinLocation)
         if (parsed.mentoringHours) setMentoringHours(parsed.mentoringHours)
+        if (parsed.allowStudentBooking !== undefined) setAllowStudentBooking(parsed.allowStudentBooking)
         if (parsed.emailAlerts !== undefined) setEmailAlerts(parsed.emailAlerts)
         if (parsed.smsAlerts !== undefined) setSmsAlerts(parsed.smsAlerts)
-      } catch (err) {
-        console.error('Failed to parse advisor settings from localStorage', err)
+        if (parsed.morningAttendanceReminder !== undefined) setMorningAttendanceReminder(parsed.morningAttendanceReminder)
+        if (parsed.weeklyDigest !== undefined) setWeeklyDigest(parsed.weeklyDigest)
+        if (parsed.parentNoticeCopy !== undefined) setParentNoticeCopy(parsed.parentNoticeCopy)
       }
+      isLoadedRef.current = true
     }
+
+    loadSettings()
   }, [facultyId])
 
-  // Toggle Theme
-  const handleToggleTheme = (newTheme: 'light' | 'midnight') => {
-    setTheme(newTheme)
-    localStorage.setItem('vsb-portal-theme', newTheme)
-    if (newTheme === 'midnight') {
-      document.documentElement.classList.add('midnight')
-    } else {
-      document.documentElement.classList.remove('midnight')
-    }
-  }
+  // Trigger Real-Time Auto Save when state values change after initial load
+  useEffect(() => {
+    if (!isLoadedRef.current) return
 
-  // Save Advisor Preferences
-  const handleSaveAdvisorPreferences = () => {
-    const storageKey = `advisor_pref_${facultyId}`
     const payload = {
       minAttendanceCutoff,
       consecutiveAbsentDays,
@@ -193,9 +234,74 @@ export function FacultySettingsView({
       weeklyDigest,
       parentNoticeCopy,
     }
-    localStorage.setItem(storageKey, JSON.stringify(payload))
+
+    const timer = setTimeout(() => {
+      savePreferencesToBackend(payload)
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [
+    minAttendanceCutoff,
+    consecutiveAbsentDays,
+    autoDefaulterAlert,
+    attendanceCutoffTime,
+    requireOdProof,
+    maxOdDays,
+    instantOdPush,
+    parentSmsOnOd,
+    autoApproveInternalEvents,
+    lowCgpaThreshold,
+    autoRetestReminder,
+    parentMeetingPrompt,
+    cabinLocation,
+    mentoringHours,
+    allowStudentBooking,
+    emailAlerts,
+    smsAlerts,
+    morningAttendanceReminder,
+    weeklyDigest,
+    parentNoticeCopy,
+    savePreferencesToBackend,
+  ])
+
+  // Toggle Theme
+  const handleToggleTheme = (newTheme: 'light' | 'midnight') => {
+    setTheme(newTheme)
+    localStorage.setItem('vsb-portal-theme', newTheme)
+    if (newTheme === 'midnight') {
+      document.documentElement.classList.add('midnight')
+    } else {
+      document.documentElement.classList.remove('midnight')
+    }
+  }
+
+  // Manual Save Advisor Preferences button
+  const handleSaveAdvisorPreferences = async () => {
+    const payload = {
+      minAttendanceCutoff,
+      consecutiveAbsentDays,
+      autoDefaulterAlert,
+      attendanceCutoffTime,
+      requireOdProof,
+      maxOdDays,
+      instantOdPush,
+      parentSmsOnOd,
+      autoApproveInternalEvents,
+      lowCgpaThreshold,
+      autoRetestReminder,
+      parentMeetingPrompt,
+      cabinLocation,
+      mentoringHours,
+      allowStudentBooking,
+      emailAlerts,
+      smsAlerts,
+      morningAttendanceReminder,
+      weeklyDigest,
+      parentNoticeCopy,
+    }
+    await savePreferencesToBackend(payload)
     setSaveSuccessBanner(true)
-    toast.success('Advisor settings and policy thresholds saved successfully!')
+    toast.success('Advisor settings and policy thresholds saved in real time!')
     setTimeout(() => setSaveSuccessBanner(false), 3000)
   }
 
@@ -354,6 +460,21 @@ export function FacultySettingsView({
         </div>
 
         <div className="flex items-center gap-2 relative z-10 shrink-0">
+          {/* Live Real-time Sync Indicator */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/20 backdrop-blur-xs border border-white/10 text-[11px] font-bold">
+            <span
+              className={cn(
+                'w-2 h-2 rounded-full transition-all duration-300',
+                isSyncingRealtime
+                  ? 'bg-amber-400 animate-ping ring-2 ring-amber-300'
+                  : 'bg-emerald-400 ring-2 ring-emerald-300'
+              )}
+            />
+            <span className={isSyncingRealtime ? 'text-amber-300' : 'text-emerald-300'}>
+              {isSyncingRealtime ? 'Syncing...' : 'Real-time Sync Active'}
+            </span>
+          </div>
+
           <button
             onClick={handleDownloadAcademicPortfolio}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer hover:scale-105"

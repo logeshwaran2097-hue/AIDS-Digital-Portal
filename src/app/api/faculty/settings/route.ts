@@ -5,6 +5,32 @@ import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getSession()
+    if (!session || !session.userId) {
+      return NextResponse.json({ success: false, message: 'Unauthorized session' }, { status: 401 })
+    }
+
+    const key = `faculty_settings_${session.userId}`
+    const record = await prisma.systemSettings.findUnique({
+      where: { key },
+    }).catch(() => null)
+
+    let preferences: any = {}
+    if (record?.value) {
+      try {
+        preferences = JSON.parse(record.value)
+      } catch {}
+    }
+
+    return NextResponse.json({ success: true, preferences })
+  } catch (error) {
+    console.error('Faculty settings GET error:', error)
+    return NextResponse.json({ success: false, message: 'Failed to fetch settings' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
@@ -14,6 +40,29 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { action } = body
+
+    if (action === 'SAVE_PREFERENCES') {
+      const { preferences } = body
+      const key = `faculty_settings_${session.userId}`
+
+      await prisma.systemSettings.upsert({
+        where: { key },
+        create: {
+          key,
+          value: JSON.stringify(preferences || {}),
+          description: `Preferences for faculty ${session.userId}`,
+          isPublic: false,
+        },
+        update: {
+          value: JSON.stringify(preferences || {}),
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: 'Settings and policy thresholds saved in real time to database!',
+      })
+    }
 
     if (action === 'CHANGE_PASSWORD') {
       const { currentPassword, newPassword } = body
