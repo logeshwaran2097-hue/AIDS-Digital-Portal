@@ -7,48 +7,77 @@ export const fetchCache = 'force-no-store'
 
 export async function POST(request: Request) {
   try {
-    const data = await request.formData()
-    const file = data.get('file') as File
-    const title = data.get('title') as string
-    const description = data.get('description') as string | null
-    const subjectId = data.get('subjectId') as string
-    const examType = data.get('examType') as string
-    const academicYear = data.get('academicYear') as string
-    const year = data.get('year') ? Number(data.get('year')) : undefined
-    const semester = data.get('semester') ? Number(data.get('semester')) : undefined
-    const section = data.get('section') as string | null
-    const classPercentage = data.get('classPercentage') ? Number(data.get('classPercentage')) : undefined
-    const studentsAppeared = data.get('studentsAppeared') ? Number(data.get('studentsAppeared')) : undefined
-    const studentsPassed = data.get('studentsPassed') ? Number(data.get('studentsPassed')) : undefined
+    const contentType = request.headers.get('content-type') || ''
+    let subjectId: string = ''
+    let examType: string = ''
+    let academicYear: string = '2025-2026'
+    let year: number = 2
+    let semester: number = 3
+    let section: string | null = 'A'
+    let fileName: string = ''
+    let fileSize: number = 2500000
+    let fileType: string = 'application/pdf'
+    let uploadedByName: string = 'Faculty Member'
+    let classPercentage: number | undefined = undefined
+    let studentsAppeared: number | undefined = undefined
+    let studentsPassed: number | undefined = undefined
 
-    if (!file || !title || !subjectId || !examType) {
+    if (contentType.includes('application/json')) {
+      const body = await request.json()
+      subjectId = body.subjectId
+      examType = body.examType
+      academicYear = body.academicYear || '2025-2026'
+      year = Number(body.year) || 2
+      semester = Number(body.semester) || 3
+      section = body.section || 'A'
+      uploadedByName = body.uploadedByName || 'Faculty Member'
+      fileName = body.fileName || `${examType.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`
+      fileSize = Number(body.fileSize) || 2500000
+    } else {
+      const data = await request.formData()
+      const file = data.get('file') as File | null
+      const title = data.get('title') as string | null
+      subjectId = (data.get('subjectId') as string) || ''
+      examType = (data.get('examType') as string) || ''
+      academicYear = (data.get('academicYear') as string) || '2025-2026'
+      year = data.get('year') ? Number(data.get('year')) : 2
+      semester = data.get('semester') ? Number(data.get('semester')) : 3
+      section = (data.get('section') as string) || 'A'
+      uploadedByName = (data.get('uploadedByName') as string) || 'Faculty Member'
+
+      if (file && typeof file.arrayBuffer === 'function') {
+        const bytes = await file.arrayBuffer()
+        fileSize = bytes.byteLength
+        fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`
+        fileType = file.type || 'application/pdf'
+      } else {
+        fileName = `${(title || examType).replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`
+      }
+    }
+
+    if (!subjectId || !examType) {
       return NextResponse.json(
-        { success: false, message: 'Missing required fields' },
+        { success: false, message: 'Subject and Exam Type are required' },
         { status: 400 }
       )
     }
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const fileSize = buffer.length
-    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`
-    const fileType = file.type || 'application/octet-stream'
-
     const questionPaper = await prisma.questionPaper.create({
       data: {
-        subjectId: subjectId,
-        examType: examType,
-        academicYear: academicYear || '',
-        year: year || 0,
-        semester: semester || 0,
-        section: section,
-        classPercentage: classPercentage,
-        studentsAppeared: studentsAppeared,
-        studentsPassed: studentsPassed,
-        fileName: fileName,
-        fileType: fileType,
-        fileSize: fileSize,
+        subjectId,
+        examType,
+        academicYear: academicYear || '2025-2026',
+        year: year || 2,
+        semester: semester || 3,
+        section,
+        classPercentage,
+        studentsAppeared,
+        studentsPassed,
+        fileName,
+        fileType,
+        fileSize,
         fileUrl: `/uploads/${fileName}`,
+        uploadedByName,
         status: 'published',
       },
     })
@@ -56,7 +85,7 @@ export async function POST(request: Request) {
     // Instant notification to students about new question paper
     await prisma.notification.create({
       data: {
-        title: `📄 Question Paper Uploaded: ${title || examType}`,
+        title: `📄 Question Paper Uploaded: ${examType}`,
         message: `Official question paper for Semester ${semester || 'Curriculum'} is now available in Question Papers Bank.`,
         target: 'all',
         createdByName: 'Faculty Advisory',

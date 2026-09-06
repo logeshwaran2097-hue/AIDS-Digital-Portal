@@ -10,7 +10,13 @@ export default async function FacultyQuestionPapersPage() {
   const session = await requireRoleSession(['faculty'])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const faculty = await prisma.faculty.findUnique({ where: { userId: session.userId } })
   const facultyName = user?.name || session.name || 'Faculty Member'
+  const isAdvisor =
+    faculty?.facultyType === 'advisor' ||
+    Boolean(faculty?.advisorBatch) ||
+    faculty?.facultyType === 'both'
+
   const subjects = await prisma.subject.findMany({
     orderBy: { code: 'asc' },
     select: { id: true, code: true, name: true },
@@ -42,7 +48,21 @@ export default async function FacultyQuestionPapersPage() {
   return (
     <PortalLayout role="faculty" userName={facultyName}>
       <div className="py-2 animate-fade-in">
-        <FacultyQuestionPapersView initialPapers={mappedPapers} subjects={subjects} facultyName={facultyName} />
+        <FacultyQuestionPapersView
+          initialPapers={mappedPapers}
+          subjects={subjects}
+          facultyName={facultyName}
+          isAdvisor={isAdvisor}
+          advisorBatch={
+            faculty?.advisorBatch ||
+            (faculty?.advisorYear
+              ? `Year ${faculty.advisorYear} - Sem ${faculty.advisorSem || 3} - Sec ${faculty.advisorSec || 'A'}`
+              : 'AI & DS Dept')
+          }
+          advisorYear={faculty?.advisorYear || 2}
+          advisorSem={faculty?.advisorSem || 3}
+          advisorSec={faculty?.advisorSec || 'A'}
+        />
       </div>
     </PortalLayout>
   )
