@@ -469,62 +469,19 @@ export function GovernmentAttendanceSystem() {
         </div>
       </div>
 
-      {/* ── Mode Switcher (Morning Roll Call vs Subject-Wise) ───────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-1.5 flex gap-1.5">
-        <button
-          type="button"
-          onClick={() => {
-            setMode('morning')
-            setIsLocked(false)
-            setDataLoaded(false)
-          }}
-          className={cn(
-            'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all',
-            mode === 'morning'
-              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-              : 'text-gray-600 hover:bg-amber-50 hover:text-amber-700'
-          )}
-        >
+      {/* ── Mode Header (Morning Roll Call) ─────────────────────────────────── */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-1.5 flex">
+        <div className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 text-white shadow-md shadow-amber-500/20">
           <Sun className="w-4 h-4 shrink-0" />
           <span>Morning Roll Call</span>
-          <span
-            className={cn(
-              'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
-              mode === 'morning' ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
-            )}
-          >
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white/25 text-white hidden sm:inline">
             Advisor
           </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setMode('subject')
-            setIsLocked(false)
-            setDataLoaded(false)
-          }}
-          className={cn(
-            'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all',
-            mode === 'subject'
-              ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20'
-              : 'text-gray-600 hover:bg-blue-50 hover:text-[#1455D9]'
-          )}
-        >
-          <BookOpen className="w-4 h-4 shrink-0" />
-          <span>Subject Period</span>
-          <span
-            className={cn(
-              'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
-              mode === 'subject' ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'
-            )}
-          >
-            Faculty
-          </span>
-        </button>
+        </div>
       </div>
 
       {/* ── Real-Time KPI Stats Summary ────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
         {/* Total Strength */}
         <div className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -593,49 +550,6 @@ export function GovernmentAttendanceSystem() {
               {stats.percentage}%
             </span>
             <span className="text-[9px] text-gray-400">Min 75%</span>
-          </div>
-        </div>
-
-        {/* Defaulters (<75%) */}
-        <div
-          onClick={() => setStatusFilter(statusFilter === 'DEF' ? 'ALL' : 'DEF')}
-          className={cn(
-            'p-3 sm:p-4 rounded-2xl border shadow-xs flex flex-col justify-between cursor-pointer transition-all',
-            statusFilter === 'DEF'
-              ? 'bg-amber-500 text-white border-amber-600 ring-2 ring-amber-400'
-              : 'bg-amber-50/70 border-amber-200 hover:bg-amber-100/80'
-          )}
-        >
-          <div className="flex items-center justify-between">
-            <span
-              className={cn(
-                'text-[10px] font-bold uppercase tracking-wider',
-                statusFilter === 'DEF' ? 'text-white' : 'text-amber-900'
-              )}
-            >
-              Defaulters (&lt;75%)
-            </span>
-            <AlertTriangle
-              className={cn('w-3.5 h-3.5', statusFilter === 'DEF' ? 'text-white' : 'text-amber-600')}
-            />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span
-              className={cn(
-                'text-xl sm:text-2xl font-black',
-                statusFilter === 'DEF' ? 'text-white' : 'text-amber-700'
-              )}
-            >
-              {stats.defaulters.length}
-            </span>
-            <span
-              className={cn(
-                'text-[10px] font-semibold',
-                statusFilter === 'DEF' ? 'text-amber-100' : 'text-amber-600'
-              )}
-            >
-              Condonation
-            </span>
           </div>
         </div>
       </div>
