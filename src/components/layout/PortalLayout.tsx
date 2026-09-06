@@ -561,6 +561,47 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
           })}
         </nav>
 
+        {/* Luxury Designer Attribution Badge */}
+        <div className="px-3 pb-2 pt-1 shrink-0">
+          <div className="relative overflow-hidden rounded-2xl p-3 bg-gradient-to-br from-[#0B2556]/95 via-[#0E347A]/80 to-[#061838]/95 border border-[#F4C430]/40 shadow-[0_4px_22px_rgba(244,196,48,0.15)] backdrop-blur-md group hover:border-[#F4C430]/80 transition-all duration-300">
+            {/* Subtle Luxury Golden Radial Glow */}
+            <div className="absolute -right-6 -top-6 w-20 h-20 bg-gradient-to-br from-[#F4C430]/30 via-amber-500/15 to-transparent rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-500" />
+            <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-gradient-to-tr from-cyan-400/15 to-transparent rounded-full blur-lg pointer-events-none" />
+
+            <div className="relative z-10 flex items-center gap-2.5">
+              {/* Luxury Monogram Avatar with Metallic Gold Ring */}
+              <div className="relative shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#E7B93E] via-[#FFE58F] to-[#B8860B] p-[1.5px] shadow-[0_0_12px_rgba(244,196,48,0.4)] group-hover:shadow-[0_0_18px_rgba(244,196,48,0.65)] transition-all duration-300">
+                  <div className="w-full h-full rounded-[10px] bg-gradient-to-b from-[#071A3D] to-[#0A2540] flex items-center justify-center font-black text-xs text-[#FFE58F] tracking-wider">
+                    LG
+                  </div>
+                </div>
+                {/* Micro Live Sparkle Beacon */}
+                <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F4C430] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F4C430] ring-1 ring-[#071A3D]" />
+                </span>
+              </div>
+
+              {/* Designer Details */}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-[#F4C430] leading-none mb-1">
+                  <Sparkles className="w-2.5 h-2.5 text-[#F4C430] animate-pulse shrink-0" />
+                  <span>Designed by</span>
+                </div>
+                <h4 className="text-xs font-black tracking-tight bg-gradient-to-r from-amber-100 via-yellow-200 to-amber-300 bg-clip-text text-transparent leading-tight truncate">
+                  Logeshwaran G
+                </h4>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-[#F4C430]/15 border border-[#F4C430]/35 text-[9px] font-extrabold text-[#FFE58F] tracking-wide">
+                    Second Year · AI &amp; DS
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Drawer Footer with Logout */}
         <div className="p-3 border-t border-white/10 bg-white/5">
           <button
