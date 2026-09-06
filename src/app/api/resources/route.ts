@@ -143,3 +143,117 @@ export async function POST(request: Request) {
     )
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const contentType = request.headers.get('content-type') || ''
+    let id = ''
+    let title = ''
+    let description = ''
+    let subjectId: string | null = null
+    let resourceType = 'textbook'
+    let semester = 3
+    let fileName: string | undefined = undefined
+    let fileSize: number | undefined = undefined
+    let fileType: string | undefined = undefined
+    let fileUrl: string | undefined = undefined
+
+    if (contentType.includes('application/json')) {
+      const body = await request.json()
+      id = body.id
+      title = body.title || body.name
+      description = body.description || ''
+      subjectId = body.subjectId || null
+      resourceType = body.resourceType || 'textbook'
+      semester = body.semester ? Number(body.semester) : 3
+      if (body.fileName) fileName = body.fileName
+      if (body.fileSize) fileSize = Number(body.fileSize)
+      if (body.fileType) fileType = body.fileType
+      if (body.fileUrl) fileUrl = body.fileUrl
+    } else {
+      const data = await request.formData()
+      id = (data.get('id') as string) || ''
+      title = (data.get('title') as string) || ''
+      description = (data.get('description') as string) || ''
+      subjectId = (data.get('subjectId') as string) || null
+      resourceType = (data.get('resourceType') as string) || 'textbook'
+      semester = data.get('semester') ? Number(data.get('semester')) : 3
+      const file = data.get('file') as File | null
+      if (file && typeof file === 'object' && 'name' in file) {
+        fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`
+        fileSize = file.size || 1024 * 1024 * 2
+        fileType = file.type || 'application/pdf'
+        fileUrl = `/uploads/${fileName}`
+      }
+    }
+
+    if (!id || !title) {
+      return NextResponse.json(
+        { success: false, message: 'Resource ID and Title are required' },
+        { status: 400 }
+      )
+    }
+
+    const updated = await prisma.resource.update({
+      where: { id },
+      data: {
+        name: title,
+        description: description || '',
+        subjectId,
+        resourceType,
+        semester,
+        ...(fileName ? { fileName } : {}),
+        ...(fileSize !== undefined ? { fileSize } : {}),
+        ...(fileType ? { fileType } : {}),
+        ...(fileUrl ? { fileUrl } : {}),
+      },
+    })
+
+    return NextResponse.json({
+      success: true,
+      resource: updated,
+      message: 'Resource updated successfully',
+    })
+  } catch (error: any) {
+    console.error('Resource update error:', error)
+    return NextResponse.json(
+      { success: false, message: error?.message || 'Failed to update resource' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    let id = searchParams.get('id')
+    if (!id) {
+      try {
+        const body = await request.json()
+        id = body.id
+      } catch {}
+    }
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, message: 'Resource ID is required' },
+        { status: 400 }
+      )
+    }
+
+    await prisma.resource.delete({
+      where: { id },
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Resource deleted successfully',
+    })
+  } catch (error: any) {
+    console.error('Resource delete error:', error)
+    return NextResponse.json(
+      { success: false, message: error?.message || 'Failed to delete resource' },
+      { status: 500 }
+    )
+  }
+}
