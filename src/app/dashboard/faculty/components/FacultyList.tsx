@@ -119,23 +119,23 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
       </div>
 
       {/* TWO PRIMARY PAGES: CLASS ADVISORS vs SUBJECT HANDLERS */}
-      <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 bg-gray-100/80 p-1 rounded-2xl border border-gray-200">
+      <div className="bg-white/95 backdrop-blur-md p-3.5 rounded-3xl border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/70">
           <button
             onClick={() => setActiveTab('advisors')}
             className={cn(
               'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
               activeTab === 'advisors'
-                ? 'bg-[#1455D9] text-white shadow-md'
-                : 'text-gray-600 hover:text-[#071A3D]'
+                ? 'bg-gradient-to-r from-[#1455D9] to-[#2563EB] text-white shadow-md shadow-blue-500/20 ring-1 ring-white/20'
+                : 'text-slate-600 hover:text-[#071A3D] hover:bg-white/50'
             )}
           >
             <UserCheck className="w-4 h-4" />
-            Page 1: Class Advisors (Mentors)
+            Class Advisors (Mentors)
             <span
               className={cn(
                 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
-                activeTab === 'advisors' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                activeTab === 'advisors' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
               )}
             >
               {advisorUsers.length}
@@ -147,16 +147,16 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
             className={cn(
               'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
               activeTab === 'handlers'
-                ? 'bg-[#1455D9] text-white shadow-md'
-                : 'text-gray-600 hover:text-[#071A3D]'
+                ? 'bg-gradient-to-r from-[#1455D9] to-[#2563EB] text-white shadow-md shadow-blue-500/20 ring-1 ring-white/20'
+                : 'text-slate-600 hover:text-[#071A3D] hover:bg-white/50'
             )}
           >
             <BookMarked className="w-4 h-4" />
-            Page 2: Subject Handlers (Courses)
+            Subject Handlers (Courses)
             <span
               className={cn(
                 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
-                activeTab === 'handlers' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                activeTab === 'handlers' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
               )}
             >
               {handlerUsers.length}
@@ -164,8 +164,8 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
           </button>
         </div>
 
-        <div className="relative min-w-[260px]">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="relative min-w-[280px]">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
@@ -173,9 +173,9 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
             placeholder={
               activeTab === 'advisors'
                 ? 'Search advisors by name or batch...'
-                : 'Search handlers by name or subject code...'
+                : 'Search handlers by name or course code...'
             }
-            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#1455D9]/20"
+            className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/90 border border-slate-200/90 rounded-xl text-xs text-[#071A3D] placeholder:text-slate-400 shadow-2xs focus:ring-4 focus:ring-[#1455D9]/15 focus:border-[#1455D9] transition-all"
           />
         </div>
       </div>

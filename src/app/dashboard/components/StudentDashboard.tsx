@@ -185,35 +185,35 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       />
 
       {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 sm:p-8 text-white shadow-xl">
-        <div className="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-[#22C7E8]/10 blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
+        <div className="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(34,199,232,0.25)_0%,_transparent_70%)] pointer-events-none" />
         <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             {currentUser.profileImage ? (
               <img
                 src={currentUser.profileImage}
                 alt={currentUser.name}
-                className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover border-2 border-[#22C7E8] shadow-lg shrink-0"
+                className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover border-2 border-[#22C7E8] shadow-lg shrink-0 ring-4 ring-white/20"
               />
             ) : (
-              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#22C7E8]/40 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg">
+              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#22C7E8]/50 flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg ring-4 ring-[#22C7E8]/20">
                 {currentUser.name.charAt(0)}
               </div>
             )}
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-300 font-medium">Hello,</span>
-                <span className="text-sm font-semibold text-[#22C7E8]">Student 👋</span>
+                <span className="text-sm text-slate-300 font-medium">Welcome back,</span>
+                <span className="text-sm font-bold text-[#22C7E8] flex items-center gap-1">Student Portal ✨</span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold truncate mt-0.5">{currentUser.name}</h1>
-              <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
-                <span className="rounded-lg bg-white/15 px-2.5 py-1 font-semibold tracking-wide border border-white/10 font-mono">
+              <h1 className="text-2xl sm:text-3xl font-black text-white truncate mt-1 tracking-tight">{currentUser.name}</h1>
+              <div className="flex flex-wrap items-center gap-2 mt-2.5 text-xs">
+                <span className="rounded-xl bg-white/15 px-3 py-1 font-bold tracking-wide border border-white/15 font-mono shadow-xs">
                   {data.student.registerNumber}
                 </span>
-                <span className="rounded-lg bg-[#22C7E8]/20 text-[#22C7E8] px-2.5 py-1 font-semibold border border-[#22C7E8]/30">
+                <span className="rounded-xl bg-[#22C7E8]/20 text-[#22C7E8] px-3 py-1 font-bold border border-[#22C7E8]/30 shadow-xs">
                   Year {data.student.year} · Sem {data.student.semester}
                 </span>
-                <span className="rounded-lg bg-white/15 px-2.5 py-1">
+                <span className="rounded-xl bg-white/15 px-3 py-1 font-semibold border border-white/10">
                   Section {data.student.section}
                 </span>
               </div>

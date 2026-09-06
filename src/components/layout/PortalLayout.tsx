@@ -407,7 +407,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
       {/* Slide-out Navigation Drawer / Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#071A3D] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-[#1455D9]/20 shadow-2xl',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#051330] via-[#071A3D] to-[#040D21] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-blue-500/20 shadow-2xl',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -415,7 +415,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_16px_rgba(231,185,62,0.45)] ring-2 ring-white/30 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_22px_rgba(231,185,62,0.7)]">
+              <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_18px_rgba(231,185,62,0.5)] ring-2 ring-white/30 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_24px_rgba(231,185,62,0.75)]">
                 <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
                   <Image
                     src="/college-emblem.png"
@@ -448,13 +448,13 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
           href={profileHref}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'p-4 mx-3 my-3 rounded-2xl border transition-all flex items-center gap-3 shrink-0 cursor-pointer',
+            'p-3.5 mx-3 my-3 rounded-2xl border transition-all flex items-center gap-3 shrink-0 cursor-pointer',
             (activePath || pathname) === profileHref
-              ? 'bg-white/15 border-white/30 shadow-md'
-              : 'bg-white/5 border-white/10 hover:bg-white/10'
+              ? 'bg-white/15 border-white/30 shadow-md ring-1 ring-white/20'
+              : 'bg-white/[0.06] border-white/10 hover:bg-white/[0.12] hover:border-white/20'
           )}
         >
-          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0">
+          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0 ring-2 ring-white/20">
             {userName.charAt(0) || 'U'}
           </div>
           <div className="min-w-0 flex-1">
@@ -533,12 +533,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                   } catch {}
                 }}
                 onClick={() => handleNavClick(item.href)}
-                style={isActive ? { backgroundColor: accentColor, boxShadow: `0 4px 14px ${accentColor}60` } : {}}
+                style={isActive ? { backgroundColor: accentColor, boxShadow: `0 4px 18px ${accentColor}70` } : {}}
                 className={cn(
-                  'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer',
+                  'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer group',
                   isActive
-                    ? 'text-white shadow-md'
-                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    ? 'text-white shadow-md ring-1 ring-white/20'
+                    : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -576,7 +576,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
       </aside>
 
       {/* Main Top Header */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200/80 shadow-xs lg:pl-72">
+      <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs lg:pl-72">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Hamburger Menu & Brand on Mobile */}
           <div className="flex items-center gap-3">
@@ -763,12 +763,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
-              className="flex items-center gap-2.5 p-1.5 pr-3 rounded-full hover:bg-gray-100 transition-colors border border-gray-200"
+              className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-full hover:bg-slate-100/90 transition-all border border-slate-200/80 bg-white/80 backdrop-blur-xs shadow-2xs hover:shadow-xs group"
             >
-              <div className="w-8 h-8 rounded-full bg-[#1455D9] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-white">
                 {userName.charAt(0) || 'U'}
               </div>
-              <span className="hidden sm:inline text-xs font-semibold text-[#071A3D] max-w-[120px] truncate">
+              <span className="hidden sm:inline text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">
                 {userName}
               </span>
             </Link>
@@ -779,9 +779,9 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               onClick={() => setShowLogoutConfirm(true)}
               disabled={isLoggingOut}
               title="Logout from portal"
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-red-200/80 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 disabled:opacity-50"
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-rose-200/80 bg-rose-50/80 hover:bg-rose-100/90 text-rose-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 shadow-2xs disabled:opacity-50"
             >
-              <LogOut className="w-4 h-4 text-red-500" />
+              <LogOut className="w-4 h-4 text-rose-500" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>

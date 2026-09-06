@@ -23,7 +23,11 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-  background-color: #f8fafc;
+  background-color: #f8fafd;
+  background-image: 
+    radial-gradient(at 100% 0%, rgba(20, 85, 217, 0.04) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(34, 199, 232, 0.03) 0px, transparent 50%);
+  background-attachment: fixed;
   color: #071A3D;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -929,4 +933,97 @@ html.dark textarea::placeholder {
   background: linear-gradient(135deg, #E0FCFF 0%, #22C7E8 50%, #1455D9 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   👑 ULTRA-LUXURY EXECUTIVE STYLING UTILITIES
+   ========================================================= */
+.lux-glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 30px -10px rgba(7, 26, 61, 0.07), 0 4px 6px -2px rgba(7, 26, 61, 0.02);
+}
+
+.lux-glass-panel-dark {
+  background: rgba(7, 26, 61, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.lux-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px -2px rgba(7, 26, 61, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lux-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(20, 85, 217, 0.25);
+  box-shadow: 0 14px 34px -4px rgba(20, 85, 217, 0.12);
+}
+
+.lux-stat-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.92) 100%);
+  box-shadow: 0 4px 18px -2px rgba(7, 26, 61, 0.04);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lux-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px -4px rgba(20, 85, 217, 0.12);
+}
+
+.lux-hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.75rem;
+  background: linear-gradient(135deg, #051433 0%, #071A3D 40%, #0D2D6C 80%, #1455D9 100%);
+  box-shadow: 0 20px 40px -10px rgba(7, 26, 61, 0.25);
+}
+
+.lux-badge-gold {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  color: #92400E;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.12);
+}
+
+.lux-badge-sapphire {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  color: #1E40AF;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);
+}
+
+.lux-badge-emerald {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  color: #065F46;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.12);
+}
+
+.lux-badge-cyber {
+  background: linear-gradient(135deg, #ECFEFF 0%, #CFFAFE 100%);
+  color: #155E75;
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  box-shadow: 0 2px 6px rgba(6, 182, 212, 0.12);
+}
+
+.lux-badge-ruby {
+  background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+  color: #9F1239;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow: 0 2px 6px rgba(244, 63, 94, 0.12);
 }

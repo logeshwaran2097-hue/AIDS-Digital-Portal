@@ -130,25 +130,25 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         }}
       />
       {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 sm:p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
         <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0 ring-4 ring-white/10">
               {data.user.name.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider shadow-xs">
                   {isClassAdvisor ? 'Class Advisor & Faculty' : 'Faculty Member'}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-black mt-1">{data.user.name}</h1>
-              <p className="text-xs sm:text-sm text-gray-300 font-mono mt-0.5">
+              <h1 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight text-white">{data.user.name}</h1>
+              <p className="text-xs sm:text-sm text-slate-300 font-mono mt-0.5">
                 {data.faculty?.designation || 'Faculty'} {data.faculty?.qualification ? `· ${data.faculty.qualification}` : ''} {data.faculty?.facultyId ? `· ID: ${data.faculty.facultyId}` : ''}
               </p>
             </div>
@@ -157,7 +157,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           <div className="flex items-center gap-2.5">
             <Link
               href="/faculty-dashboard/attendance"
-              className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md shrink-0 hover:scale-105"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#22C7E8] to-[#0EA5E9] hover:brightness-105 text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-[0_4px_16px_rgba(34,199,232,0.35)] shrink-0 hover:scale-102 cursor-pointer"
             >
               <UserCheck className="w-4 h-4" /> Mark Daily Attendance
             </Link>
@@ -166,13 +166,13 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
 
         {/* Academic KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/15">
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Allocated Courses</p>
+          <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
+            <p className="text-[10px] text-slate-300 uppercase font-bold">Allocated Courses</p>
             <p className="text-xl font-black text-[#F4C430] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
-            <p className="text-[10px] text-gray-300">Curriculum &amp; Labs</p>
+            <p className="text-[10px] text-slate-300">Curriculum &amp; Labs</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+          <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
             <p className="text-[10px] text-gray-300 uppercase font-bold">Enrolled Students</p>
             <p className="text-xl font-black text-emerald-300 mt-0.5">{data.totalStudents} Student{data.totalStudents === 1 ? '' : 's'}</p>
             <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || 'Active Students'}</p>
