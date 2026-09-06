@@ -24,7 +24,10 @@ import {
   Smartphone,
   Table,
   Award,
-  Building2
+  Building2,
+  ShieldAlert,
+  Send,
+  KeyRound
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -127,6 +130,12 @@ export function GovernmentAttendanceSystem() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [showLegend, setShowLegend] = useState(false)
 
+  // HOD Unlock Permission Request state
+  const [unlockRequest, setUnlockRequest] = useState<any>(null)
+  const [showUnlockModal, setShowUnlockModal] = useState(false)
+  const [unlockReason, setUnlockReason] = useState('')
+  const [requestingUnlock, setRequestingUnlock] = useState(false)
+
   // Auto-detect view mode based on screen width on initial load
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -209,6 +218,7 @@ export function GovernmentAttendanceSystem() {
         setStudents(data.students)
         setExistingSession(data.existingSession || null)
         setIsLocked(data.existingSession?.isLocked || false)
+        setUnlockRequest(data.unlockRequest || null)
         setDataLoaded(true)
         setLastSyncedAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
       } else {
@@ -297,6 +307,48 @@ export function GovernmentAttendanceSystem() {
   const showToast = (type: 'success' | 'error' | 'info', msg: string) => {
     setToast({ type, msg })
     setTimeout(() => setToast(null), 3500)
+  }
+
+  const handleRequestUnlock = async () => {
+    if (!unlockReason.trim()) {
+      showToast('error', 'Please provide a reason for editing attendance')
+      return
+    }
+    if (!selectedClass) return
+
+    setRequestingUnlock(true)
+    try {
+      const res = await fetch('/api/attendance/unlock-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'REQUEST',
+          sessionId: existingSession?.id,
+          year: selectedClass.year,
+          section: selectedClass.section,
+          semester: selectedClass.semester,
+          date,
+          sessionType: mode,
+          subjectCode: selectedSubject?.code,
+          subjectName: selectedSubject?.name,
+          hour: mode === 'subject' ? hour : undefined,
+          reason: unlockReason,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setUnlockRequest(data.request)
+        setShowUnlockModal(false)
+        setUnlockReason('')
+        showToast('success', 'Permission request sent to HOD. Awaiting approval ✓')
+      } else {
+        showToast('error', data.message || 'Failed to submit unlock request')
+      }
+    } catch {
+      showToast('error', 'Network error submitting request to HOD')
+    } finally {
+      setRequestingUnlock(false)
+    }
   }
 
   const handleSave = async (lock = false) => {
@@ -696,17 +748,17 @@ export function GovernmentAttendanceSystem() {
           )}
         </div>
 
-        {/* Existing session warning */}
+        {/* Existing Session Alert Banner */}
         {existingSession && (
           <div
             className={cn(
-              'flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-2xl text-xs font-semibold border',
+              'p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-medium border shadow-xs',
               existingSession.isLocked
-                ? 'bg-amber-50 border-amber-200 text-amber-900'
-                : 'bg-blue-50 border-blue-200 text-blue-900'
+                ? 'bg-amber-50/90 border-amber-200 text-amber-900'
+                : 'bg-blue-50/90 border-blue-200 text-[#071A3D]'
             )}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               {existingSession.isLocked ? (
                 <Lock className="w-4 h-4 text-amber-600 shrink-0" />
               ) : (
@@ -714,18 +766,36 @@ export function GovernmentAttendanceSystem() {
               )}
               <span>
                 {existingSession.isLocked
-                  ? `Attendance locked by ${existingSession.takenByName}. Unlock to make adjustments.`
+                  ? unlockRequest?.status === 'PENDING'
+                    ? `Attendance locked. Unlock permission request is pending with HOD (Reason: "${unlockRequest.reason}").`
+                    : unlockRequest?.status === 'REJECTED'
+                    ? `Attendance locked. Previous unlock request was declined by HOD ("${unlockRequest.reviewNote || 'Permission not granted'}"). Ask permission to edit again.`
+                    : `Attendance is locked by ${existingSession.takenByName}. Advisor must ask permission from HOD to make changes.`
                   : `Previously saved session by ${existingSession.takenByName} loaded.`}
               </span>
             </div>
             {existingSession.isLocked && (
-              <button
-                type="button"
-                onClick={() => setIsLocked(false)}
-                className="self-start sm:self-auto px-3 py-1 bg-amber-600 text-white rounded-xl text-[11px] font-bold hover:bg-amber-700 transition-colors flex items-center gap-1 shadow-xs"
-              >
-                <Unlock className="w-3 h-3" /> Unlock Register
-              </button>
+              unlockRequest?.status === 'PENDING' ? (
+                <button
+                  type="button"
+                  onClick={() => loadStudents()}
+                  className="self-start sm:self-auto px-3 py-1.5 bg-amber-200 text-amber-900 rounded-xl text-[11px] font-bold hover:bg-amber-300 transition-colors flex items-center gap-1.5 shadow-xs"
+                  title="Click to refresh HOD approval status"
+                >
+                  <Clock className="w-3.5 h-3.5 animate-pulse text-amber-700" />
+                  <span>Pending HOD Approval</span>
+                  <RefreshCw className="w-3 h-3 text-amber-800 ml-0.5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowUnlockModal(true)}
+                  className="self-start sm:self-auto px-3.5 py-1.5 bg-gradient-to-r from-amber-600 to-amber-700 text-white rounded-xl text-[11px] font-bold hover:from-amber-700 hover:to-amber-800 transition-all flex items-center gap-1.5 shadow-xs active:scale-95"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  <span>Ask Permission to HOD</span>
+                </button>
+              )
             )}
           </div>
         )}
@@ -1193,13 +1263,30 @@ export function GovernmentAttendanceSystem() {
             </div>
             <div className="flex items-center gap-2.5 w-full sm:w-auto">
               {isLocked ? (
-                <button
-                  type="button"
-                  onClick={() => setIsLocked(false)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold border bg-amber-100 text-amber-900 border-amber-300 flex items-center justify-center gap-1.5 hover:bg-amber-200 transition-colors shadow-xs"
-                >
-                  <Unlock className="w-4 h-4" /> Unlock Register
-                </button>
+                unlockRequest?.status === 'PENDING' ? (
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold border bg-amber-100 text-amber-900 border-amber-300 flex items-center justify-center gap-2 shadow-xs">
+                      <Clock className="w-4 h-4 text-amber-700 animate-pulse" />
+                      <span>Pending HOD Approval</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => loadStudents()}
+                      className="p-2.5 rounded-xl border border-amber-300 bg-white hover:bg-amber-50 text-amber-800 transition-colors"
+                      title="Check if HOD has approved request"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowUnlockModal(true)}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold border bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-600/20 active:scale-95"
+                  >
+                    <ShieldAlert className="w-4 h-4" /> Ask Permission to HOD to Edit
+                  </button>
+                )
               ) : (
                 <>
                   <button
@@ -1528,6 +1615,129 @@ export function GovernmentAttendanceSystem() {
                 className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-all shadow-xs"
               >
                 Understood / Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Ask Permission to HOD Unlock Modal ──────────────────────────────── */}
+      {showUnlockModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-5 animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-start gap-3.5 pb-4 border-b border-gray-100">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0 shadow-xs">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-[#071A3D]">Ask Permission from HOD</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
+                    Locked Register
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  Attendance is locked &amp; recorded. State the official reason to request unlock authorization from the Head of Department.
+                </p>
+              </div>
+            </div>
+
+            {/* Session Scope Details */}
+            <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-200/80 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between text-gray-600">
+                <span className="font-semibold text-gray-500">Target Class:</span>
+                <span className="font-bold text-[#071A3D]">
+                  Year {selectedClass?.year} · Sec {selectedClass?.section} (Sem {selectedClass?.semester})
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-gray-600">
+                <span className="font-semibold text-gray-500">Session &amp; Date:</span>
+                <span className="font-bold text-[#071A3D]">
+                  {mode === 'morning' ? 'Morning Roll Call' : `${selectedSubject?.code} (${hour})`} · {date}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-gray-600">
+                <span className="font-semibold text-gray-500">Current Status:</span>
+                <span className="inline-flex items-center gap-1 font-bold text-amber-700">
+                  <Lock className="w-3 h-3" /> Locked on Portal
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Reason Suggestions */}
+            <div>
+              <label className="block text-xs font-bold text-[#071A3D] mb-1.5">
+                Quick Reason Selection:
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  'Accidental absent marking error',
+                  'Late arrival approved by advisor',
+                  'On Duty (OD) letter submitted',
+                  'Medical certificate submitted',
+                  'Lab hour roll call adjustment',
+                ].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setUnlockReason(preset)}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all',
+                      unlockReason === preset
+                        ? 'bg-[#1455D9] text-white border-[#1455D9]'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                    )}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Reason Text Area */}
+            <div>
+              <label className="block text-xs font-bold text-[#071A3D] mb-1.5">
+                Detailed Justification for HOD: <span className="text-rose-500">*</span>
+              </label>
+              <textarea
+                value={unlockReason}
+                onChange={(e) => setUnlockReason(e.target.value)}
+                placeholder="Explain why changes are needed (e.g., student 7376222AD105 arrived at 09:20 with HOD bus pass, need to mark Present)..."
+                rows={3}
+                className="w-full rounded-2xl border border-gray-300 p-3 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1455D9] focus:border-transparent resize-none"
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUnlockModal(false)
+                  setUnlockReason('')
+                }}
+                disabled={requestingUnlock}
+                className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRequestUnlock}
+                disabled={requestingUnlock || !unlockReason.trim()}
+                className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 rounded-xl shadow-md shadow-amber-600/20 disabled:opacity-50 flex items-center gap-1.5 transition-all active:scale-95"
+              >
+                {requestingUnlock ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Submitting Request...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Send Unlock Request to HOD</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

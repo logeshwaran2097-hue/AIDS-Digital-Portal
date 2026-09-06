@@ -15,9 +15,12 @@ import {
   Layers,
   FileText,
   BookOpen,
+  Lock,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { cn } from '@/lib/utils'
+import { HODAttendanceApprovals } from './components/HODAttendanceApprovals'
 
 export const dynamic = 'force-dynamic'
 
@@ -195,6 +198,9 @@ export default async function HODNotificationsPage() {
           </div>
         )}
 
+        {/* Section: Attendance Unlock Approvals */}
+        <HODAttendanceApprovals />
+
         {/* Section 2: Department Notifications Feed */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -208,38 +214,77 @@ export default async function HODNotificationsPage() {
 
           <div className="space-y-3">
             {notifications.length > 0 ? (
-              notifications.map((n) => (
-                <Card
-                  key={n.id}
-                  className="rounded-2xl border-slate-200/80 bg-white/95 backdrop-blur-md hover:border-blue-300/80 shadow-[0_2px_12px_-2px_rgba(7,26,61,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(20,85,217,0.08)] transition-all"
-                >
-                  <CardContent className="p-5 flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9]/15 to-[#22C7E8]/15 border border-[#1455D9]/20 text-[#1455D9] flex items-center justify-center shrink-0">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
+              notifications.map((n) => {
+                const isLockNotice = n.title?.includes('Attendance Locked') || n.title?.includes('🔒')
+                const isUnlockNotice = n.title?.includes('Unlock') || n.title?.includes('🔓')
 
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-extrabold text-sm sm:text-base text-[#071A3D]">{n.title}</h3>
-                        <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">
-                          Notice
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">{n.message}</p>
-                      <div className="flex items-center gap-2 mt-2.5 text-[11px] text-slate-400 font-bold">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{new Date(n.createdAt).toLocaleDateString()}</span>
-                        {n.target && (
-                          <>
-                            <span>·</span>
-                            <span className="text-slate-500 font-semibold">Audience: {n.target}</span>
-                          </>
+                return (
+                  <Card
+                    key={n.id}
+                    className={cn(
+                      'rounded-2xl border-slate-200/80 bg-white/95 backdrop-blur-md shadow-[0_2px_12px_-2px_rgba(7,26,61,0.04)] hover:shadow-[0_8px_24px_-4px_rgba(20,85,217,0.08)] transition-all',
+                      isLockNotice && 'border-amber-300 bg-amber-50/20 hover:border-amber-400',
+                      isUnlockNotice && 'border-blue-300 bg-blue-50/20 hover:border-blue-400'
+                    )}
+                  >
+                    <CardContent className="p-5 flex items-start gap-4">
+                      <div
+                        className={cn(
+                          'w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border',
+                          isLockNotice
+                            ? 'bg-amber-100 border-amber-300 text-amber-700'
+                            : isUnlockNotice
+                            ? 'bg-blue-100 border-blue-300 text-[#1455D9]'
+                            : 'bg-gradient-to-tr from-[#1455D9]/15 to-[#22C7E8]/15 border-[#1455D9]/20 text-[#1455D9]'
+                        )}
+                      >
+                        {isLockNotice ? (
+                          <Lock className="w-5 h-5" />
+                        ) : isUnlockNotice ? (
+                          <ShieldCheck className="w-5 h-5" />
+                        ) : (
+                          <Sparkles className="w-5 h-5" />
                         )}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-extrabold text-sm sm:text-base text-[#071A3D]">{n.title}</h3>
+                          <span
+                            className={cn(
+                              'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
+                              isLockNotice
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300/80'
+                                : isUnlockNotice
+                                ? 'bg-blue-100 text-blue-900 border border-blue-300/80'
+                                : 'bg-slate-100 text-slate-700'
+                            )}
+                          >
+                            {isLockNotice ? 'Locked Roll Call' : isUnlockNotice ? 'Unlock Intimation' : 'Notice'}
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed whitespace-pre-line">{n.message}</p>
+                        <div className="flex items-center gap-2 mt-2.5 text-[11px] text-slate-400 font-bold">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{new Date(n.createdAt).toLocaleDateString()}</span>
+                          {n.createdByName && (
+                            <>
+                              <span>·</span>
+                              <span className="text-slate-600 font-semibold">By {n.createdByName}</span>
+                            </>
+                          )}
+                          {n.target && (
+                            <>
+                              <span>·</span>
+                              <span className="text-slate-500 font-semibold">Audience: {n.target}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })
             ) : totalPendingAction === 0 ? (
               <div className="p-12 text-center bg-white/90 backdrop-blur-md rounded-3xl border border-slate-200/80 shadow-sm">
                 <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center justify-center mx-auto mb-4 shadow-sm">

@@ -149,6 +149,29 @@ export async function GET(request: Request) {
       }
     })
 
+    let unlockRequest: any = null
+    try {
+      const record = await (prisma as any).systemSettings?.findUnique?.({
+        where: { key: 'attendance_unlock_requests' },
+      })
+      if (record?.value) {
+        const allRequests = JSON.parse(record.value)
+        unlockRequest = allRequests.find((r: any) => {
+          if (existingSession && r.sessionId === existingSession.id) return true
+          const sameClass =
+            r.year === year &&
+            r.section?.toUpperCase() === section.toUpperCase() &&
+            r.date === date &&
+            r.sessionType === sessionType
+          if (!sameClass) return false
+          if (sessionType === 'subject') {
+            return r.subjectCode === subjectCode && (r.hour || '') === hour
+          }
+          return true
+        }) || null
+      }
+    } catch {}
+
     return NextResponse.json({
       success: true,
       students: studentsWithAttendance,
@@ -159,6 +182,7 @@ export async function GET(request: Request) {
             takenByName: existingSession.takenByName,
           }
         : null,
+      unlockRequest,
       summary: {
         total: studentsWithAttendance.length,
         present: studentsWithAttendance.filter((s) => s.status === 'P').length,
@@ -328,20 +352,54 @@ export async function POST(request: Request) {
 
     // Real-Time Notification Broadcast for Admin, HOD, Faculty, Students
     try {
+      const className = `Year ${year} - Section ${section} (Semester ${semester})`
       const scopeLabel = sessionType === 'morning'
-        ? `Morning Attendance · Year ${year} (Section ${section})`
-        : `${subjectCode || 'Subject'} · Year ${year} (Section ${section})`
+        ? `Morning Attendance · ${className}`
+        : `${subjectCode || 'Subject'}${hour ? ` (${hour})` : ''} · ${className}`
 
       const actionTitle = isLocked
-        ? `🔒 Attendance Locked: ${scopeLabel}`
-        : `📋 Attendance Recorded: ${scopeLabel}`
+        ? `🔒 Attendance Locked: ${className}`
+        : `📋 Attendance Recorded: ${className}`
 
-      const actionMessage = `${session.name || 'Class Advisor'} posted attendance for ${date}. Present: ${presentCount} | Absent: ${absentCount} | OD: ${odCount} | ML: ${mlCount} (Total: ${totalStudents} students).`
+      // Build other categories only if they exist (> 0)
+      const otherParts: string[] = []
+      if (odCount > 0) otherParts.push(`OD: ${odCount}`)
+      if (mlCount > 0) otherParts.push(`Medical Leave (ML): ${mlCount}`)
+      if (lateCount > 0) otherParts.push(`Late: ${lateCount}`)
+      const othersText = otherParts.length > 0 ? ` | Other: ${otherParts.join(', ')}` : ''
 
+      const absentList = records
+        .filter((r: any) => r.status === 'A')
+        .map((r: any) => `${r.name || r.studentName || r.registerNumber} (${r.registerNumber})${r.remarks ? ` [${r.remarks}]` : ''}`)
+
+      const absentDetails = absentList.length > 0
+        ? ` (Absentees: ${absentList.join(', ')})`
+        : ''
+
+      // Complete notification specifically formatted for HOD:
+      // class name, total students, no of absentees, and others (OD, ML) ONLY shown if > 0
+      const hodMessage = isLocked
+        ? `Attendance locked for Class: ${className} (${sessionType === 'morning' ? 'Morning Roll Call' : subjectCode || 'Subject'}) on ${date}. Total Students: ${totalStudents} | Absentees: ${absentCount}${othersText}${absentDetails}. Locked and submitted by ${session.name || 'Class Advisor'}.`
+        : `Attendance saved for Class: ${className} on ${date}. Total Students: ${totalStudents} | Absentees: ${absentCount}${othersText}. Recorded by ${session.name || 'Class Advisor'}.`
+
+      // 1. Send High-Priority Targeted Notification to HOD
       await prisma.notification.create({
         data: {
           title: actionTitle,
-          message: actionMessage,
+          message: hodMessage,
+          target: 'hod',
+          createdByName: session.name || 'Class Advisor',
+          status: 'published',
+          publishedAt: new Date(),
+          readBy: '[]',
+        },
+      }).catch(() => {})
+
+      // 2. Also publish to all for portal transparency
+      await prisma.notification.create({
+        data: {
+          title: actionTitle,
+          message: `${session.name || 'Class Advisor'} posted attendance for ${scopeLabel} on ${date}. Total: ${totalStudents} | Present: ${presentCount} | Absent: ${absentCount}${othersText}.`,
           target: 'all',
           createdByName: session.name || 'Class Advisor',
           status: 'published',
