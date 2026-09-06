@@ -27,7 +27,8 @@ export async function GET() {
           where: { facultyId: faculty.id },
         }).catch(() => null)
 
-        if (advisorRecord) {
+        const isAdvisorRole = faculty.facultyType === 'advisor' || faculty.facultyType === 'both'
+        if (advisorRecord && isAdvisorRole) {
           isAdvisor = true
           advisorClass = {
             year: advisorRecord.year,
@@ -35,13 +36,13 @@ export async function GET() {
             semester: advisorRecord.semester,
             label: `Year ${advisorRecord.year} - Section ${advisorRecord.section} (Sem ${advisorRecord.semester})`,
           }
-        } else if (faculty.advisorBatch || faculty.advisorYear) {
+        } else if (isAdvisorRole && (faculty.advisorBatch || faculty.advisorYear)) {
           isAdvisor = true
           advisorClass = {
-            year: faculty.advisorYear || 1,
+            year: faculty.advisorYear || 2,
             section: faculty.advisorSec || 'A',
-            semester: faculty.advisorSem || 1,
-            label: faculty.advisorBatch || `Year ${faculty.advisorYear || 1} - Section ${faculty.advisorSec || 'A'}`,
+            semester: faculty.advisorSem || 3,
+            label: faculty.advisorBatch || `Year ${faculty.advisorYear || 2} - Section ${faculty.advisorSec || 'A'}`,
           }
         }
       }
@@ -51,9 +52,23 @@ export async function GET() {
       orderBy: { code: 'asc' },
     }).catch(() => [])
 
-    const resolvedSubjects = assignedSubjectCodes.length > 0
+    let resolvedSubjects = assignedSubjectCodes.length > 0
       ? allSubjects.filter((s) => assignedSubjectCodes.includes(s.code))
       : allSubjects
+
+    // If subjects table is empty, provide standard curriculum subjects
+    if (resolvedSubjects.length === 0) {
+      resolvedSubjects = [
+        { id: 'sub-1', code: 'AD3301', name: 'Design and Analysis of Algorithms', credits: 4 } as any,
+        { id: 'sub-2', code: 'AD3391', name: 'Database Design and Management', credits: 3 } as any,
+        { id: 'sub-3', code: 'CS3351', name: 'Digital Principles and Computer Organization', credits: 4 } as any,
+        { id: 'sub-4', code: 'AD3491', name: 'Fundamentals of Data Science', credits: 3 } as any,
+        { id: 'sub-5', code: 'AL3452', name: 'Operating Systems', credits: 3 } as any,
+        { id: 'sub-6', code: 'AD3501', name: 'Deep Learning', credits: 3 } as any,
+        { id: 'sub-7', code: 'CW3551', name: 'Cloud Computing', credits: 3 } as any,
+        { id: 'sub-8', code: 'AD3701', name: 'Natural Language Processing', credits: 3 } as any,
+      ]
+    }
 
     const distinctStudents = await prisma.student.findMany({
       select: { year: true, section: true, semester: true },
@@ -61,12 +76,26 @@ export async function GET() {
       orderBy: [{ year: 'asc' }, { section: 'asc' }],
     }).catch(() => [])
 
-    const classOptions = distinctStudents.map((s) => ({
+    let classOptions = distinctStudents.map((s) => ({
       year: s.year,
       section: s.section,
       semester: s.semester,
       label: `Year ${s.year} - Section ${s.section} (Sem ${s.semester})`,
     }))
+
+    // If no students currently enrolled, fallback to standard department classes
+    if (classOptions.length === 0) {
+      classOptions = [
+        { year: 2, section: 'A', semester: 3, label: 'Year 2 - Section A (Sem 3)' },
+        { year: 2, section: 'B', semester: 3, label: 'Year 2 - Section B (Sem 3)' },
+        { year: 3, section: 'A', semester: 5, label: 'Year 3 - Section A (Sem 5)' },
+        { year: 3, section: 'B', semester: 5, label: 'Year 3 - Section B (Sem 5)' },
+        { year: 4, section: 'A', semester: 7, label: 'Year 4 - Section A (Sem 7)' },
+        { year: 4, section: 'B', semester: 7, label: 'Year 4 - Section B (Sem 7)' },
+        { year: 1, section: 'A', semester: 1, label: 'Year 1 - Section A (Sem 1)' },
+        { year: 1, section: 'B', semester: 1, label: 'Year 1 - Section B (Sem 1)' },
+      ]
+    }
 
     return NextResponse.json({
       success: true,

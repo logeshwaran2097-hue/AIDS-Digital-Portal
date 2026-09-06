@@ -92,21 +92,37 @@ const REMARK_OPTIONS = [
   'Late Entry / Gate Pass',
 ]
 
-const INITIAL_CLASS_OPTIONS: ClassOption[] = []
+const INITIAL_CLASS_OPTIONS: ClassOption[] = [
+  { year: 2, section: 'A', semester: 3, label: 'Year 2 - Section A (Sem 3)' },
+  { year: 2, section: 'B', semester: 3, label: 'Year 2 - Section B (Sem 3)' },
+  { year: 3, section: 'A', semester: 5, label: 'Year 3 - Section A (Sem 5)' },
+  { year: 3, section: 'B', semester: 5, label: 'Year 3 - Section B (Sem 5)' },
+  { year: 4, section: 'A', semester: 7, label: 'Year 4 - Section A (Sem 7)' },
+  { year: 4, section: 'B', semester: 7, label: 'Year 4 - Section B (Sem 7)' },
+  { year: 1, section: 'A', semester: 1, label: 'Year 1 - Section A (Sem 1)' },
+  { year: 1, section: 'B', semester: 1, label: 'Year 1 - Section B (Sem 1)' },
+]
 
-const INITIAL_SUBJECTS: Subject[] = []
+const INITIAL_SUBJECTS: Subject[] = [
+  { id: 'sub-1', code: 'AD3301', name: 'Design and Analysis of Algorithms', credits: 4 },
+  { id: 'sub-2', code: 'AD3391', name: 'Database Design and Management', credits: 3 },
+  { id: 'sub-3', code: 'CS3351', name: 'Digital Principles and Computer Organization', credits: 4 },
+  { id: 'sub-4', code: 'AD3491', name: 'Fundamentals of Data Science', credits: 3 },
+  { id: 'sub-5', code: 'AL3452', name: 'Operating Systems', credits: 3 },
+  { id: 'sub-6', code: 'AD3501', name: 'Deep Learning', credits: 3 },
+]
 
 export function GovernmentAttendanceSystem() {
   // Metadata
   const [mode, setMode] = useState<AttendanceMode>('morning')
-  const [subjects, setSubjects] = useState<Subject[]>([])
-  const [classOptions, setClassOptions] = useState<ClassOption[]>([])
+  const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS)
+  const [classOptions, setClassOptions] = useState<ClassOption[]>(INITIAL_CLASS_OPTIONS)
   const [isAdvisor, setIsAdvisor] = useState(false)
   const [advisorClass, setAdvisorClass] = useState<ClassOption | null>(null)
 
   // Session fields
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
-  const [selectedClass, setSelectedClass] = useState<ClassOption | null>(null)
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(INITIAL_SUBJECTS[0])
+  const [selectedClass, setSelectedClass] = useState<ClassOption | null>(INITIAL_CLASS_OPTIONS[0])
   const [hour, setHour] = useState(HOUR_OPTIONS[0])
   const [periodType, setPeriodType] = useState<'Theory' | 'Practical' | 'Tutorial'>('Theory')
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
@@ -173,9 +189,13 @@ export function GovernmentAttendanceSystem() {
         if (data.success) {
           if (data.subjects?.length > 0) setSubjects(data.subjects)
           if (data.classOptions?.length > 0) setClassOptions(data.classOptions)
-          if (data.isAdvisor !== undefined) setIsAdvisor(data.isAdvisor)
+          const userIsAdvisor = Boolean(data.isAdvisor)
+          setIsAdvisor(userIsAdvisor)
+          if (!userIsAdvisor) {
+            setMode('subject')
+          }
 
-          if (data.advisorClass) {
+          if (userIsAdvisor && data.advisorClass) {
             const ac: ClassOption = {
               year: data.advisorClass.year,
               section: data.advisorClass.section,
@@ -526,15 +546,55 @@ export function GovernmentAttendanceSystem() {
         </div>
       </div>
 
-      {/* ── Mode Header (Morning Roll Call) ─────────────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-1.5 flex">
-        <div className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 text-white shadow-md shadow-amber-500/20">
-          <Sun className="w-4 h-4 shrink-0" />
-          <span>Morning Roll Call</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white/25 text-white hidden sm:inline">
-            Advisor
+      {/* ── Mode Switcher (Subject Attendance vs Morning Roll Call) ──────────── */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-1.5 flex gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setMode('subject')
+            setDataLoaded(false)
+          }}
+          className={cn(
+            'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
+            mode === 'subject'
+              ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20'
+              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+          )}
+        >
+          <BookOpen className="w-4 h-4 shrink-0" />
+          <span>Subject Attendance</span>
+          <span className={cn(
+            'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
+            mode === 'subject' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#1455D9]'
+          )}>
+            Faculty
           </span>
-        </div>
+        </button>
+
+        {isAdvisor && (
+          <button
+            type="button"
+            onClick={() => {
+              setMode('morning')
+              setDataLoaded(false)
+            }}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
+              mode === 'morning'
+                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            )}
+          >
+            <Sun className="w-4 h-4 shrink-0" />
+            <span>Morning Roll Call</span>
+            <span className={cn(
+              'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
+              mode === 'morning' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800'
+            )}>
+              Advisor
+            </span>
+          </button>
+        )}
       </div>
 
       {/* ── Real-Time KPI Stats Summary ────────────────────────────────────── */}
@@ -648,7 +708,7 @@ export function GovernmentAttendanceSystem() {
 
           {/* Subject (only in subject mode) */}
           {mode === 'subject' && (
-            <div className="sm:col-span-2 lg:col-span-2">
+            <div className="sm:col-span-1 lg:col-span-1">
               <label className="text-[11px] font-bold text-gray-700 mb-1 flex items-center gap-1">
                 <BookOpen className="w-3.5 h-3.5 text-[#1455D9]" /> Subject &amp; Code
               </label>
@@ -732,20 +792,18 @@ export function GovernmentAttendanceSystem() {
             />
           </div>
 
-          {/* Load Students Button (if in morning mode or right-aligned) */}
-          {mode === 'morning' && (
-            <div className="flex items-end">
-              <button
-                type="button"
-                onClick={loadStudents}
-                disabled={loading || !selectedClass}
-                className="w-full px-4 py-2.5 bg-[#1455D9] hover:bg-[#0e44b5] disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                {loading ? 'Fetching...' : 'Load Roster'}
-              </button>
-            </div>
-          )}
+          {/* Load Students Button */}
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={loadStudents}
+              disabled={loading || !selectedClass}
+              className="w-full px-4 py-2.5 bg-[#1455D9] hover:bg-[#0e44b5] disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              {loading ? 'Fetching...' : 'Load Roster'}
+            </button>
+          </div>
         </div>
 
         {/* Existing Session Alert Banner */}
