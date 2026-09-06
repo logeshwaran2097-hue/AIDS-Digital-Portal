@@ -8,11 +8,12 @@ export const dynamic = 'force-dynamic'
 export default async function AdminFilesPage() {
   const session = await requireRoleSession(['admin'])
 
-  const [resources, questionPapers, projects, announcements] = await Promise.all([
+  const [resources, questionPapers, projects, announcements, fileRecords] = await Promise.all([
     prisma.resource.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
     prisma.questionPaper.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
     prisma.project.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
     prisma.announcement.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
+    prisma.fileRecord.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
   ])
 
   const filesList: FileItem[] = [
@@ -35,7 +36,7 @@ export default async function AdminFilesPage() {
       fileSize: qp.fileSize || 3200000,
       fileUrl: qp.fileUrl || '/question-papers',
       module: 'question-papers',
-      uploadedByName: 'Exam Cell / COE',
+      uploadedByName: qp.uploadedByName || 'Exam Cell / COE',
       createdAt: qp.createdAt ? qp.createdAt.toISOString().split('T')[0] : '',
     })),
     ...projects.map((p) => ({
@@ -59,6 +60,17 @@ export default async function AdminFilesPage() {
       module: 'announcements',
       uploadedByName: a.createdByName || 'System Administrator',
       createdAt: a.createdAt ? a.createdAt.toISOString().split('T')[0] : '',
+    })),
+    ...fileRecords.map((fr) => ({
+      id: fr.id,
+      fileName: fr.fileName,
+      originalName: fr.originalName,
+      fileType: fr.fileType,
+      fileSize: fr.fileSize,
+      fileUrl: fr.fileUrl,
+      module: fr.module,
+      uploadedByName: fr.uploadedByName || 'System Administrator',
+      createdAt: fr.createdAt ? fr.createdAt.toISOString().split('T')[0] : '',
     })),
   ]
 
