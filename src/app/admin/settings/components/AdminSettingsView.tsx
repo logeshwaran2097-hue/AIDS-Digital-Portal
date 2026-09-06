@@ -328,9 +328,9 @@ export function AdminSettingsView() {
   const [emailSubjectPrefix, setEmailSubjectPrefix] = useState('[VSB AI&DS Portal]')
 
   // 6b. SMS Gateway Config State
-  const [smsProvider, setSmsProvider] = useState<'twilio' | 'fast2sms' | 'custom'>('twilio')
-  const [smsApiKey, setSmsApiKey] = useState('')
-  const [smsSenderId, setSmsSenderId] = useState('VSBEDU')
+  const [smsProvider, setSmsProvider] = useState<'twilio' | 'fast2sms' | 'custom'>('fast2sms')
+  const [smsApiKey, setSmsApiKey] = useState('XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4')
+  const [smsSenderId, setSmsSenderId] = useState('TXTIND')
   const [notifyAbsentViaSms, setNotifyAbsentViaSms] = useState(true)
   const [testMobileNumber, setTestMobileNumber] = useState('')
   const [isTestingGateway, setIsTestingGateway] = useState(false)
