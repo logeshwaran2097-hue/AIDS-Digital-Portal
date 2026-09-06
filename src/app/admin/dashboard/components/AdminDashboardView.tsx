@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -48,6 +49,7 @@ export interface AdminDashboardData {
 }
 
 export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
+  const router = useRouter()
   const [stats, setStats] = useState<AdminDashboardData>(data)
 
   React.useEffect(() => {
@@ -68,8 +70,8 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
       } catch {}
     }
 
-    fetchStats()
-    const interval = setInterval(fetchStats, 3000)
+    // Refresh every 20 seconds instead of rapid 3-second intervals to avoid interrupting clicks
+    const interval = setInterval(fetchStats, 20000)
     return () => clearInterval(interval)
   }, [])
 
@@ -105,7 +107,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           heading: '3. SYSTEM HEALTH & ENCRYPTION PROTOCOLS',
           body: [
             'Runtime Environment: Next.js 14.2.5 (App Router) + Node.js',
-            'Database Engine: SQLite with Prisma ORM Connection Pool',
+            'Database Engine: PostgreSQL with Prisma ORM Connection Pool',
             'Authentication Architecture: JWT Cryptographic Tokens (HTTP-Only SameSite Cookies)',
             'Report Engine: Client-Side High-Fidelity Vector PDF Engine with Institutional Emblem',
             'System Security Status: 100% Secure · 0 Vulnerabilities Detected',
@@ -130,6 +132,10 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
     { title: 'System Activity Logs', count: 'Audit Log', href: '/admin/activity-logs', icon: <Activity className="w-5 h-5" />, color: 'bg-slate-700', desc: 'Real-time security logins & CRUD events' },
     { title: 'AI Assistant Engine', count: 'NLP Ready', href: '/admin/ai', icon: <Bot className="w-5 h-5" />, color: 'bg-teal-600', desc: 'Floating chatbot knowledge base & prompts' },
   ]
+
+  const handleTileNavigation = (href: string) => {
+    router.push(href)
+  }
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pt-1">
@@ -158,9 +164,13 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
         </div>
       </div>
 
-      {/* System Infrastructure Health Strip */}
+      {/* System Infrastructure Health Strip - Clickable boxes */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs flex items-center gap-3">
+        <div
+          onClick={() => router.push('/admin/settings')}
+          className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs flex items-center gap-3 cursor-pointer hover:shadow-md hover:border-[#1455D9] transition-all hover:scale-[1.02]"
+          title="Click to view App System Settings"
+        >
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1455D9] flex items-center justify-center shrink-0">
             <Server className="w-5 h-5" />
           </div>
@@ -170,7 +180,11 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs flex items-center gap-3 bg-green-50/20">
+        <div
+          onClick={() => router.push('/admin/activity-logs')}
+          className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs flex items-center gap-3 bg-green-50/20 cursor-pointer hover:shadow-md hover:border-green-500 transition-all hover:scale-[1.02]"
+          title="Click to inspect live Database Audit Logs"
+        >
           <div className="w-10 h-10 rounded-xl bg-green-100 text-green-700 flex items-center justify-center shrink-0">
             <Database className="w-5 h-5" />
           </div>
@@ -180,7 +194,11 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs flex items-center gap-3 bg-purple-50/20">
+        <div
+          onClick={() => router.push('/admin/roles')}
+          className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs flex items-center gap-3 bg-purple-50/20 cursor-pointer hover:shadow-md hover:border-purple-500 transition-all hover:scale-[1.02]"
+          title="Click to manage RBAC Security & Roles"
+        >
           <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
@@ -190,7 +208,11 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center gap-3 bg-amber-50/20">
+        <div
+          onClick={handleDownloadSystemReport}
+          className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center gap-3 bg-amber-50/20 cursor-pointer hover:shadow-md hover:border-amber-500 transition-all hover:scale-[1.02]"
+          title="Click to Export Audit Report PDF"
+        >
           <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
             <Cpu className="w-5 h-5" />
           </div>
@@ -206,17 +228,25 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-black text-[#071A3D]">Centralized Administrative Directory</h2>
-            <p className="text-xs text-gray-500 font-medium">Real-time live database counts connected to SQLite &amp; Prisma</p>
+            <p className="text-xs text-gray-500 font-medium">Real-time live database counts connected to PostgreSQL &amp; Prisma</p>
           </div>
           <span className="text-xs text-gray-400 font-mono font-bold">12 Primary Modules</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {managementTiles.map((tile, idx) => (
-            <Link
+            <div
               key={idx}
-              href={tile.href}
-              className="bg-white p-5 rounded-3xl border border-gray-200 hover:border-[#1455D9] transition-all duration-200 hover:shadow-md group flex flex-col justify-between"
+              role="button"
+              tabIndex={0}
+              onClick={() => handleTileNavigation(tile.href)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  handleTileNavigation(tile.href)
+                }
+              }}
+              className="bg-white p-5 rounded-3xl border border-gray-200 hover:border-[#1455D9] transition-all duration-200 hover:shadow-md group flex flex-col justify-between cursor-pointer active:scale-[0.98] select-none"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -236,10 +266,19 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
               </div>
 
               <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#1455D9]">
-                <span>Manage Module</span>
+                <Link
+                  href={tile.href}
+                  prefetch={true}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                  className="hover:underline flex items-center gap-1"
+                >
+                  <span>Manage Module</span>
+                </Link>
                 <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

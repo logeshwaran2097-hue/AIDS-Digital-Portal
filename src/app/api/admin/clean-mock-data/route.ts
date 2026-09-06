@@ -72,6 +72,11 @@ export async function POST(request: Request) {
       clearedInfo.notifications = notifCount.count
     }
 
+    if (target === 'all' || target === 'subjects') {
+      const subCount = await prisma.subject.deleteMany({}).catch(() => ({ count: 0 }))
+      clearedInfo.subjects = subCount.count
+    }
+
     return NextResponse.json({
       success: true,
       message: 'All mock/sample data cleared successfully from database. Admin account is preserved.',

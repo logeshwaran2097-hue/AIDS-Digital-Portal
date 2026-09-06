@@ -21,7 +21,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
 
-interface SubjectItem {
+export interface SubjectItem {
   id: string
   code: string
   name: string
@@ -35,42 +35,15 @@ interface SubjectItem {
   syllabusAvailable: boolean
 }
 
-const ALL_SUBJECTS: SubjectItem[] = [
-  // Semester 5 (Current Active)
-  { id: '1', code: 'AD2301', name: 'Machine Learning', credits: 4, type: 'Theory', semester: 5, year: 'III Year', faculty: 'Dr. S. Karthik', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '2', code: 'AD2302', name: 'Artificial Intelligence & Expert Systems', credits: 3, type: 'Theory', semester: 5, year: 'III Year', faculty: 'Prof. T. Lakshmi', unitsCompleted: 4, totalUnits: 5, syllabusAvailable: true },
-  { id: '3', code: 'AD2303', name: 'Big Data Analytics', credits: 3, type: 'Theory', semester: 5, year: 'III Year', faculty: 'Prof. R. Meena', unitsCompleted: 4, totalUnits: 5, syllabusAvailable: true },
-  { id: '4', code: 'AD2304', name: 'Natural Language Processing', credits: 3, type: 'Theory', semester: 5, year: 'III Year', faculty: 'Dr. K. Mohan', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '5', code: 'AD2305', name: 'Deep Learning', credits: 4, type: 'Theory', semester: 5, year: 'III Year', faculty: 'Dr. S. Karthik', unitsCompleted: 4, totalUnits: 5, syllabusAvailable: true },
-  { id: '6', code: 'AD2311', name: 'Machine Learning Laboratory', credits: 2, type: 'Practical', semester: 5, year: 'III Year', faculty: 'Dr. S. Karthik / Prof. R. Meena', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '7', code: 'AD2312', name: 'Deep Learning Laboratory', credits: 2, type: 'Practical', semester: 5, year: 'III Year', faculty: 'Dr. K. Mohan', unitsCompleted: 4, totalUnits: 5, syllabusAvailable: true },
-
-  // Semester 3
-  { id: '8', code: 'AD2201', name: 'Data Structures & Algorithms', credits: 4, type: 'Theory', semester: 3, year: 'II Year', faculty: 'Prof. R. Meena', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '9', code: 'AD2202', name: 'Database Management Systems', credits: 3, type: 'Theory', semester: 3, year: 'II Year', faculty: 'Dr. K. Mohan', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '10', code: 'AD2203', name: 'Discrete Mathematics', credits: 4, type: 'Theory', semester: 3, year: 'II Year', faculty: 'Prof. T. Lakshmi', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '11', code: 'AD2204', name: 'Operating Systems', credits: 3, type: 'Theory', semester: 3, year: 'II Year', faculty: 'Prof. R. Meena', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-
-  // Semester 4
-  { id: '12', code: 'AD2205', name: 'Computer Networks', credits: 3, type: 'Theory', semester: 4, year: 'II Year', faculty: 'Prof. T. Lakshmi', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '13', code: 'AD2206', name: 'Design and Analysis of Algorithms', credits: 4, type: 'Theory', semester: 4, year: 'II Year', faculty: 'Dr. S. Karthik', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '14', code: 'AD2207', name: 'Software Engineering & Agile', credits: 3, type: 'Theory', semester: 4, year: 'II Year', faculty: 'Dr. K. Mohan', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-
-  // Semester 1
-  { id: '15', code: 'HS2101', name: 'Professional English', credits: 3, type: 'Theory', semester: 1, year: 'I Year', faculty: 'Faculty Dept of English', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '16', code: 'MA2101', name: 'Matrices and Calculus', credits: 4, type: 'Theory', semester: 1, year: 'I Year', faculty: 'Faculty Dept of Maths', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '17', code: 'PH2101', name: 'Engineering Physics', credits: 3, type: 'Theory', semester: 1, year: 'I Year', faculty: 'Faculty Dept of Physics', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-  { id: '18', code: 'GE2101', name: 'Problem Solving and Python Programming', credits: 3, type: 'Theory', semester: 1, year: 'I Year', faculty: 'Dr. S. Karthik', unitsCompleted: 5, totalUnits: 5, syllabusAvailable: true },
-]
-
-export function HODAcademicsView() {
-  const [selectedSemester, setSelectedSemester] = useState<number>(5)
+export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: SubjectItem[] }) {
+  const [subjects, setSubjects] = useState<SubjectItem[]>(initialSubjects)
+  const [selectedSemester, setSelectedSemester] = useState<number>(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedSubjectDetail, setSelectedSubjectDetail] = useState<SubjectItem | null>(null)
 
   // Filtered by semester and search
-  const filteredSubjects = ALL_SUBJECTS.filter((s) => {
+  const filteredSubjects = subjects.filter((s) => {
     const matchesSemester = selectedSemester === 0 || s.semester === selectedSemester
     const matchesSearch =
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -111,7 +84,7 @@ export function HODAcademicsView() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Total Curriculum Courses</p>
-          <p className="text-2xl font-black text-[#071A3D] mt-1">{ALL_SUBJECTS.length}</p>
+          <p className="text-2xl font-black text-[#071A3D] mt-1">{subjects.length}</p>
           <p className="text-[10px] text-gray-400 mt-0.5">Semesters 1 through 8</p>
         </div>
 

@@ -115,45 +115,74 @@ export function AdminAcademicsView({
     })
   }
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.code || !formData.name) {
       alert('Please fill in Course Code and Name')
       return
     }
-    const newSub: SubjectItem = {
-      id: 'sub_' + Date.now(),
-      code: formData.code.toUpperCase(),
-      name: formData.name,
-      credits: Number(formData.credits),
-      category: formData.category,
-      facultyInCharge: formData.facultyInCharge,
-      semester: Number(formData.semester),
-      description: formData.description,
-      units: [
-        { number: 1, title: 'Foundational Principles & Concepts', hours: 9 },
-        { number: 2, title: 'Core Architectural Formulations', hours: 9 },
-        { number: 3, title: 'Analytical & Methodological Frameworks', hours: 9 },
-        { number: 4, title: 'Advanced Algorithms & System Design', hours: 9 },
-        { number: 5, title: 'Industrial Case Studies & Applications', hours: 9 },
-      ],
+
+    try {
+      const res = await fetch('/api/admin/academics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to save course')
+      }
+
+      const newSub: SubjectItem = {
+        id: data.subject.id,
+        code: data.subject.code,
+        name: data.subject.name,
+        credits: data.subject.credits,
+        category: formData.category,
+        facultyInCharge: formData.facultyInCharge || 'Department Faculty',
+        semester: Number(formData.semester),
+        year: Math.ceil(Number(formData.semester) / 2),
+        description: data.subject.description,
+        units: [
+          { number: 1, title: 'Unit I: Foundational Principles & Concepts', hours: 9 },
+          { number: 2, title: 'Unit II: Core Architectural Formulations', hours: 9 },
+          { number: 3, title: 'Unit III: Analytical & Methodological Frameworks', hours: 9 },
+          { number: 4, title: 'Unit IV: Advanced Algorithms & System Design', hours: 9 },
+          { number: 5, title: 'Unit V: Industrial Case Studies & Applications', hours: 9 },
+        ],
+      }
+      setSubjects([...subjects.filter(s => s.id !== newSub.id && s.code !== newSub.code), newSub])
+      setIsAddModalOpen(false)
+      setFormData({
+        code: '',
+        name: '',
+        credits: 4,
+        category: 'Professional Core (PC)',
+        facultyInCharge: '',
+        semester: 1,
+        description: '',
+      })
+    } catch (err: any) {
+      alert(err.message || 'Failed to add course')
     }
-    setSubjects([...subjects, newSub])
-    setIsAddModalOpen(false)
-    setFormData({
-      code: '',
-      name: '',
-      credits: 4,
-      category: 'Professional Core (PC)',
-      facultyInCharge: '',
-      semester: 1,
-      description: '',
-    })
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Remove this course from the curriculum?')) {
+  const handleDelete = async (id: string) => {
+    if (!confirm('Remove this course from the curriculum?')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/admin/academics?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to remove course')
+      }
       setSubjects(subjects.filter((s) => s.id !== id))
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove course')
     }
   }
 
