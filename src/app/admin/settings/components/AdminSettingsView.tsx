@@ -37,6 +37,9 @@ import {
   Palette,
   X,
   Edit3,
+  MessageSquare,
+  ExternalLink,
+  Loader2,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
@@ -335,7 +338,97 @@ export function AdminSettingsView() {
   const [whatsappAccessToken, setWhatsappAccessToken] = useState('')
   const [testMobileNumber, setTestMobileNumber] = useState('')
   const [isTestingGateway, setIsTestingGateway] = useState(false)
-  const [gatewayTestResult, setGatewayTestResult] = useState('')
+  const [testingChannel, setTestingChannel] = useState<'sms' | 'whatsapp' | null>(null)
+  const [gatewayTestResult, setGatewayTestResult] = useState<{
+    type: 'success' | 'error' | 'info'
+    message: string
+    whatsappWebUrl?: string
+    targetNumber?: string
+    provider?: string
+  } | null>(null)
+
+  // Real Gateway Test Dispatch
+  const handleTestGateway = async (channel: 'sms' | 'whatsapp' = 'sms') => {
+    const clean = testMobileNumber.replace(/\D/g, '')
+    if (!testMobileNumber || clean.length < 10) {
+      setGatewayTestResult({
+        type: 'error',
+        message: '❌ Please enter a valid 10-digit mobile number.',
+      })
+      return
+    }
+
+    setIsTestingGateway(true)
+    setTestingChannel(channel)
+    setGatewayTestResult(null)
+
+    try {
+      const res = await fetch('/api/admin/gateway/test-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mobileNumber: testMobileNumber.trim(),
+          provider: smsProvider,
+          apiKey: smsApiKey.trim(),
+          senderId: smsSenderId.trim(),
+          whatsappEnabled,
+          whatsappPhoneNumberId: whatsappPhoneNumberId.trim(),
+          whatsappAccessToken: whatsappAccessToken.trim(),
+          channel,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setGatewayTestResult({
+          type: 'success',
+          message: data.message || `✅ Live ${channel.toUpperCase()} alert successfully dispatched to ${testMobileNumber}!`,
+          whatsappWebUrl: data.whatsappWebUrl,
+          targetNumber: data.targetNumber || testMobileNumber,
+          provider: data.provider || smsProvider,
+        })
+      } else {
+        setGatewayTestResult({
+          type: 'error',
+          message: data.error || data.message || `❌ Failed to dispatch test ${channel.toUpperCase()}.`,
+          whatsappWebUrl: data.whatsappWebUrl,
+          targetNumber: data.targetNumber || testMobileNumber,
+          provider: data.provider || smsProvider,
+        })
+      }
+    } catch (err: any) {
+      console.error('Gateway test error:', err)
+      const last10 = clean.slice(-10)
+      const fallbackWaUrl = `https://wa.me/91${last10}?text=${encodeURIComponent(
+        `[VSB AI&DS Official] Attendance Alert Verification: Institutional Gateway verified for +91-${last10} at ${new Date().toLocaleTimeString('en-IN')}. V.S.B. Engineering College (Autonomous).`
+      )}`
+      setGatewayTestResult({
+        type: 'error',
+        message: '❌ Network connection error while dispatching to gateway. You can use direct WhatsApp below.',
+        whatsappWebUrl: fallbackWaUrl,
+      })
+    } finally {
+      setIsTestingGateway(false)
+      setTestingChannel(null)
+    }
+  }
+
+  const handleDirectWhatsApp = () => {
+    const clean = testMobileNumber.replace(/\D/g, '')
+    if (clean.length < 10) {
+      setGatewayTestResult({
+        type: 'error',
+        message: '❌ Please enter a valid 10-digit mobile number first.',
+      })
+      return
+    }
+    const last10 = clean.slice(-10)
+    const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+    const msg = `[VSB AI&DS Official] Attendance Alert Verification: Mobile Gateway live alert verified for +91-${last10} at ${time}. V.S.B. Engineering College (Autonomous).`
+    const url = `https://wa.me/91${last10}?text=${encodeURIComponent(msg)}`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   // Live Broadcast Dispatcher State
   const [targetMode, setTargetMode] = useState<'FULL' | 'SEPARATED'>('FULL')
@@ -412,6 +505,17 @@ export function AdminSettingsView() {
       const parsed = existing ? JSON.parse(existing) : []
       parsed.unshift(newAlert)
       localStorage.setItem('vsb-live-notifications', JSON.stringify(parsed))
+
+      // Also persist broadcast notification to PostgreSQL database
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: broadcastTitle,
+          message: broadcastMessage,
+          target: targetMode === 'FULL' ? 'all' : selectedTargets.join(','),
+        }),
+      }).catch((e) => console.warn('Broadcast API sync note:', e))
 
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('portal-notifications-updated'))
@@ -581,10 +685,36 @@ export function AdminSettingsView() {
         if (parsed.smtpUser) setSmtpUser(parsed.smtpUser)
         if (parsed.menus) setMenus(parsed.menus)
         if (parsed.accentColor) setAccentColor(parsed.accentColor)
+        if (parsed.smsProvider) setSmsProvider(parsed.smsProvider)
+        if (parsed.smsApiKey) setSmsApiKey(parsed.smsApiKey)
+        if (parsed.smsSenderId) setSmsSenderId(parsed.smsSenderId)
+        if (parsed.whatsappEnabled !== undefined) setWhatsappEnabled(parsed.whatsappEnabled)
+        if (parsed.whatsappPhoneNumberId) setWhatsappPhoneNumberId(parsed.whatsappPhoneNumberId)
+        if (parsed.whatsappAccessToken) setWhatsappAccessToken(parsed.whatsappAccessToken)
       } catch (e) {
         console.error('Failed to parse cached config:', e)
       }
     }
+
+    // Also fetch latest settings from backend PostgreSQL database
+    fetch('/api/admin/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.settings) {
+          const s = data.settings
+          if (s.smsProvider) setSmsProvider(s.smsProvider)
+          if (s.smsApiKey) setSmsApiKey(s.smsApiKey)
+          if (s.smsSenderId) setSmsSenderId(s.smsSenderId)
+          if (s.whatsappEnabled !== undefined) setWhatsappEnabled(s.whatsappEnabled)
+          if (s.whatsappPhoneNumberId) setWhatsappPhoneNumberId(s.whatsappPhoneNumberId)
+          if (s.whatsappAccessToken) setWhatsappAccessToken(s.whatsappAccessToken)
+          if (s.smtpHost) setSmtpHost(s.smtpHost)
+          if (s.smtpPort) setSmtpPort(s.smtpPort)
+          if (s.smtpUser) setSmtpUser(s.smtpUser)
+          if (s.collegeName) setCollegeName(s.collegeName)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   // Toggle Menu Item Visibility with real-time propagation
@@ -654,17 +784,39 @@ export function AdminSettingsView() {
     setTimeout(() => setNotification(''), 3000)
   }
 
-  // Live SMTP Test Email Simulation
-  const handleSendTestEmail = () => {
+  // Real SMTP Test Email Execution
+  const handleSendTestEmail = async () => {
     const target = testEmailAddress || contactEmail
+    if (!target || !target.includes('@')) {
+      setTestEmailResult('❌ Please provide a valid recipient email address.')
+      return
+    }
     setIsTestingEmail(true)
     setTestEmailResult('')
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/admin/gateway/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          targetEmail: target,
+          smtpHost,
+          smtpPort,
+          smtpUser,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setTestEmailResult(data.message)
+      } else {
+        setTestEmailResult(`❌ ${data.error || 'SMTP verification failed.'}`)
+      }
+    } catch (e: any) {
+      setTestEmailResult(`❌ Network error testing SMTP: ${e.message}`)
+    } finally {
       setIsTestingEmail(false)
-      setTestEmailResult(`✅ Success! Test verification OTP dispatched via ${smtpHost}:${smtpPort} to ${target}`)
-      setTimeout(() => setTestEmailResult(''), 6000)
-    }, 1200)
+      setTimeout(() => setTestEmailResult(''), 8000)
+    }
   }
 
   // Handle Change Password Form Submission
@@ -761,6 +913,13 @@ export function AdminSettingsView() {
       notifyNewStudent,
       notifySecurityAlerts,
       menus,
+      // SMS & WhatsApp Gateway Configuration
+      smsProvider,
+      smsApiKey,
+      smsSenderId,
+      whatsappEnabled,
+      whatsappPhoneNumberId,
+      whatsappAccessToken,
     }
 
     try {
@@ -2606,36 +2765,100 @@ export function AdminSettingsView() {
                 </div>
 
                 {/* Gateway Test Dispatch */}
-                <div className="flex items-center gap-2 pt-1">
-                  <input
-                    type="tel"
-                    value={testMobileNumber}
-                    onChange={(e) => setTestMobileNumber(e.target.value)}
-                    placeholder="Enter test mobile: +91 98765 43210"
-                    className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 font-bold text-[#071A3D] text-xs focus:border-[#1455D9] focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    disabled={isTestingGateway || !testMobileNumber}
-                    onClick={() => {
-                      setIsTestingGateway(true)
-                      setTimeout(() => {
-                        setIsTestingGateway(false)
-                        setGatewayTestResult(`✅ Test absentee alert dispatched to ${testMobileNumber} successfully!`)
-                        setTimeout(() => setGatewayTestResult(''), 4000)
-                      }, 1200)
-                    }}
-                    className="px-4 py-2 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all"
-                  >
-                    <Send className="w-3.5 h-3.5 text-[#F4C430]" /> Test SMS
-                  </button>
-                </div>
+                <div className="space-y-2 pt-1">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      type="tel"
+                      value={testMobileNumber}
+                      onChange={(e) => setTestMobileNumber(e.target.value)}
+                      placeholder="Enter test mobile: 6381366088 or +91 98765 43210"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-gray-200 font-bold text-[#071A3D] text-xs focus:border-[#1455D9] focus:outline-none tracking-wide"
+                    />
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        disabled={isTestingGateway || !testMobileNumber}
+                        onClick={() => handleTestGateway('sms')}
+                        className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-sm active:scale-95"
+                        title="Send real test SMS via configured gateway"
+                      >
+                        {isTestingGateway && testingChannel === 'sms' ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#F4C430]" />
+                        ) : (
+                          <Send className="w-3.5 h-3.5 text-[#F4C430]" />
+                        )}
+                        <span>Test SMS</span>
+                      </button>
 
-                {gatewayTestResult && (
-                  <p className="text-[11px] font-bold text-emerald-700 bg-emerald-50 p-2 rounded-xl border border-emerald-200">
-                    {gatewayTestResult}
-                  </p>
-                )}
+                      <button
+                        type="button"
+                        disabled={isTestingGateway || !testMobileNumber}
+                        onClick={() => handleTestGateway('whatsapp')}
+                        className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-sm active:scale-95"
+                        title="Test WhatsApp Cloud API dispatch"
+                      >
+                        {isTestingGateway && testingChannel === 'whatsapp' ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                        ) : (
+                          <MessageSquare className="w-3.5 h-3.5 text-white" />
+                        )}
+                        <span>WhatsApp</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={!testMobileNumber}
+                        onClick={handleDirectWhatsApp}
+                        className="px-2.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer disabled:opacity-40 transition-all active:scale-95"
+                        title="Instant 1-click WhatsApp Web link with pre-filled official alert"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
+                        <span className="hidden md:inline">Open WA</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {gatewayTestResult && (
+                    <div
+                      className={`p-3 rounded-2xl text-xs space-y-2 border transition-all ${
+                        gatewayTestResult.type === 'success'
+                          ? 'bg-emerald-50/90 border-emerald-300 text-emerald-900'
+                          : 'bg-amber-50/90 border-amber-300 text-amber-950'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-base shrink-0">
+                          {gatewayTestResult.type === 'success' ? '✅' : '⚠️'}
+                        </span>
+                        <div className="flex-1 leading-relaxed">
+                          <p className="font-bold text-[11px]">{gatewayTestResult.message}</p>
+                          {gatewayTestResult.provider && (
+                            <p className="text-[10px] text-gray-500 font-semibold mt-0.5">
+                              Provider Engine: <span className="font-bold text-[#071A3D]">{gatewayTestResult.provider}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {gatewayTestResult.whatsappWebUrl && (
+                        <div className="pt-1.5 border-t border-gray-200/60 flex items-center justify-between gap-2">
+                          <span className="text-[10px] text-gray-600 font-semibold">
+                            Direct WhatsApp Communication:
+                          </span>
+                          <a
+                            href={gatewayTestResult.whatsappWebUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-sm transition-all"
+                          >
+                            <MessageSquare className="w-3 h-3" /> Send to +91 {testMobileNumber.replace(/\D/g, '').slice(-10)} via WhatsApp
+                            <ExternalLink className="w-2.5 h-2.5 ml-0.5 opacity-80" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
