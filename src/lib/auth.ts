@@ -137,8 +137,8 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
   let isValid = false
   let passwordChangeRequired = false
 
-  // 1. Look for existing student record
-  let student = await prisma.student.findFirst({
+  // 1. Look for existing student record — ONLY admin-added records can log in
+  const student = await prisma.student.findFirst({
     where: {
       OR: [
         { registerNumber: normalizedReg },
@@ -148,225 +148,53 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     },
   }).catch(() => null)
 
-  // 2. If student is not in Student table, check if User exists
-  let user: any = null
-  if (student) {
-    user = await prisma.user.findUnique({
-      where: { id: student.userId },
-    }).catch(() => null)
+  if (!student) {
+    return { success: false, message: 'No record found in database. Please contact your department administrator.' }
+  }
 
-    if (!user) {
-      user = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { email: `${normalizedReg.toLowerCase()}@student.vsb.edu.in` },
-            { email: { startsWith: normalizedReg.toLowerCase() } },
-            { name: { contains: normalizedReg } },
-          ],
-        },
-      }).catch(() => null)
-    }
-  } else {
+  // 2. Find the linked User record
+  let user: any = await prisma.user.findUnique({
+    where: { id: student.userId },
+  }).catch(() => null)
+
+  if (!user) {
+    // Fallback: search by email in case userId link is stale
     user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: `${normalizedReg.toLowerCase()}@student.vsb.edu.in` },
-          { email: { startsWith: normalizedReg.toLowerCase() } },
-          { name: { contains: normalizedReg } },
-        ],
-      },
+      where: { email: `${normalizedReg.toLowerCase()}@student.vsb.edu.in` },
     }).catch(() => null)
   }
 
-  // 3. If neither Student nor User exists — auto-provision on first valid login
-  if (!student && !user) {
-    if (normalizedReg.length >= 3 && trimmedPassword) {
-      try {
-        const passwordHash = await bcrypt.hash(trimmedPassword, 10)
-        const finalEmail = `${normalizedReg.toLowerCase()}@student.vsb.edu.in`
-
-        user = await prisma.user.upsert({
-          where: { email: finalEmail },
-          update: {
-            name: `Student (${normalizedReg})`,
-            role: 'student',
-            status: 'active',
-            passwordHash,
-          },
-          create: {
-            email: finalEmail,
-            name: `Student (${normalizedReg})`,
-            role: 'student',
-            status: 'active',
-            passwordHash,
-            mustChangePassword: false,
-          },
-        })
-
-        student = await prisma.student.create({
-          data: {
-            userId: user.id,
-            registerNumber: normalizedReg,
-            department: 'Artificial Intelligence & Data Science',
-            year: 2,
-            semester: 4,
-            section: 'A',
-            dateOfBirth: new Date('2004-01-01'),
-          },
-        })
-        isValid = true
-      } catch (e) {
-        console.error('Auto-provisioning student failed:', e)
-      }
-    }
+  if (!user) {
+    return { success: false, message: 'Student account not configured. Please contact your department administrator.' }
   }
 
-  // 4. If student exists but user record is missing — link/create user
-  if (student && !user) {
-    try {
-      const finalEmail = `${normalizedReg.toLowerCase()}@student.vsb.edu.in`
-      const passwordHash = await bcrypt.hash(trimmedPassword || 'vsb@123', 10)
-      user = await prisma.user.upsert({
-        where: { email: finalEmail },
-        update: {
-          name: `Student (${student.registerNumber})`,
-          role: 'student',
-          status: 'active',
-          passwordHash,
-        },
-        create: {
-          email: finalEmail,
-          name: `Student (${student.registerNumber})`,
-          role: 'student',
-          status: 'active',
-          passwordHash,
-        },
-      })
-      await prisma.student.update({
-        where: { id: student.id },
-        data: { userId: user.id },
-      })
-      isValid = true
-    } catch {}
-  }
-
-  // 5. If user exists but no student record — create student record
-  if (user && !student) {
-    try {
-      student = await prisma.student.create({
-        data: {
-          userId: user.id,
-          registerNumber: normalizedReg,
-          department: 'Artificial Intelligence & Data Science',
-          year: 2,
-          semester: 4,
-          section: 'A',
-          dateOfBirth: new Date('2004-01-01'),
-        },
-      })
-    } catch {}
-  }
-
-  if (!user || !student) {
-    return { success: false, message: 'Invalid Register Number or Password.' }
-  }
-
-  // 6. Ensure user status is active
+  // 3. Check account status
   if (user.status && user.status.toLowerCase() !== 'active') {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { status: 'active' },
-    }).catch(() => {})
+    return { success: false, message: 'Student account is suspended or inactive. Please contact your administrator.' }
   }
 
-  // 7. Verify Password
-  // A. Check bcrypt passwordHash
-  if (user.passwordHash) {
-    try {
-      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
-    } catch {}
+  // 4. Verify Password against admin-set bcrypt hash ONLY
+  if (!user.passwordHash) {
+    return { success: false, message: 'Account password not configured. Please contact your department administrator.' }
   }
 
-  // B. Check direct match (if stored as plain text)
-  if (!isValid && user.passwordHash) {
-    if (user.passwordHash === trimmedPassword || user.passwordHash.toLowerCase() === trimmedPassword.toLowerCase()) {
-      isValid = true
-    }
-  }
-
-  // C. If user has no passwordHash set yet, accept and save entered password
-  if (!user.passwordHash && trimmedPassword) {
-    const newHash = await bcrypt.hash(trimmedPassword, 10)
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: newHash },
-    }).catch(() => {})
-    isValid = true
-  }
-
-  // D. First-time login fallbacks (only if user mustChangePassword is true)
-  if (!isValid && user.mustChangePassword) {
-    const defaultPwds = [
-      'nitr',
-      'nitr@123',
-      'vsb@123',
-      'student@123',
-      'abc@123',
-      'welcome@123',
-      'password123',
-      normalizedReg.toLowerCase(),
-      normalizedReg,
-    ]
-    if (defaultPwds.includes(trimmedPassword.toLowerCase())) {
-      isValid = true
-    }
-
-    // Date of Birth comparison
-    if (!isValid && student?.dateOfBirth) {
-      const inputDob = normalizeDate(trimmedPassword)
-      const studentDob = normalizeDate(student.dateOfBirth)
-      if (inputDob && studentDob && inputDob === studentDob) {
-        isValid = true
-      }
-      const cleanInput = trimmedPassword.replace(/\D/g, '')
-      const cleanDob = studentDob.replace(/-/g, '')
-      const ddmmyyyy = studentDob.split('-').reverse().join('')
-      if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
-        isValid = true
-      }
-    }
-  }
-
-  // E. Handle mustChangePassword logic (temp password flow)
-  if (user.mustChangePassword && isValid) {
-    passwordChangeRequired = true
-  }
+  try {
+    isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+  } catch {}
 
   if (!isValid) {
     return { success: false, message: 'Invalid Register Number or Password.' }
   }
 
-  // If password change is required, update lastLogin and create temp token
-  if (passwordChangeRequired) {
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date(), status: 'active' },
-    }).catch(() => {})
-
-    const token = await createToken({
-      userId: user.id,
-      email: user.email,
-      role: 'student',
-      name: user.name,
-      registerNumber: student?.registerNumber || normalizedReg,
-    })
-
-    return { success: true, token, user, student, mustChangePassword: true }
+  // 5. Handle mustChangePassword (temp password flow set by admin)
+  if (user.mustChangePassword) {
+    passwordChangeRequired = true
   }
 
+  // Update last login
   await prisma.user.update({
     where: { id: user.id },
-    data: { lastLogin: new Date(), status: 'active' },
+    data: { lastLogin: new Date() },
   }).catch(() => {})
 
   const token = await createToken({
@@ -374,26 +202,26 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
     email: user.email,
     role: 'student',
     name: user.name,
-    registerNumber: student?.registerNumber || normalizedReg,
+    registerNumber: student.registerNumber,
   })
 
-  return { success: true, token, user, student }
+  return { success: true, token, user, student, mustChangePassword: passwordChangeRequired }
 }
 
 export async function authenticateFaculty(facultyIdOrName: string, passwordInput: string) {
   const rawInput = facultyIdOrName.trim()
   const normalizedId = rawInput.toUpperCase()
 
-  // 1. Try finding by facultyId
+  // 1. Try finding by facultyId — ONLY admin-added records can log in
   let faculty = await prisma.faculty.findUnique({
     where: { facultyId: normalizedId },
-  })
+  }).catch(() => null)
 
-  let user = null
+  let user: any = null
   if (faculty) {
     user = await prisma.user.findUnique({
       where: { id: faculty.userId },
-    })
+    }).catch(() => null)
   } else {
     // 2. Try finding by email
     user = await prisma.user.findFirst({
@@ -401,7 +229,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
         role: 'faculty',
         email: rawInput.toLowerCase(),
       },
-    })
+    }).catch(() => null)
     if (!user) {
       // 3. Try finding by Faculty Name (case-insensitive)
       user = await prisma.user.findFirst({
@@ -412,53 +240,18 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
             mode: 'insensitive',
           },
         },
-      })
+      }).catch(() => null)
     }
     if (user) {
       faculty = await prisma.faculty.findFirst({
         where: { userId: user.id },
-      })
+      }).catch(() => null)
     }
   }
 
+  // No record in DB — reject with clear message (no auto-creation)
   if (!faculty || !user) {
-    const trimmedPw = passwordInput.trim()
-    const isDefaultPw = ['vsb@123', 'faculty@123', 'password123', normalizedId.toLowerCase(), normalizedId].includes(trimmedPw)
-    if (/^[0-9A-Z]{3,18}$/i.test(normalizedId) && isDefaultPw) {
-      try {
-        const newUser = await prisma.user.create({
-          data: {
-            name: `Faculty Member (${normalizedId})`,
-            email: `${normalizedId.toLowerCase()}@vsb.edu.in`,
-            role: 'faculty',
-            status: 'active',
-            mustChangePassword: true,
-          },
-        })
-        const newFaculty = await prisma.faculty.create({
-          data: {
-            userId: newUser.id,
-            facultyId: normalizedId,
-            dateOfBirth: new Date('1990-05-15'),
-            designation: 'Assistant Professor',
-            qualification: 'M.Tech, Ph.D',
-            experience: 5,
-            specialization: 'Artificial Intelligence & Machine Learning',
-          },
-        })
-        const token = await createToken({
-          userId: newUser.id,
-          email: newUser.email,
-          role: 'faculty',
-          name: newUser.name,
-          facultyId: newFaculty.facultyId,
-        })
-        return { success: true, token, user: newUser, faculty: newFaculty }
-      } catch (e) {
-        console.error('Auto faculty provision error:', e)
-      }
-    }
-    return { success: false, message: 'Invalid Faculty ID / Email or Password.' }
+    return { success: false, message: 'No record found in database. Please contact your department administrator.' }
   }
 
   if (user.status !== 'active') {
@@ -466,42 +259,16 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
   }
 
   const trimmedPassword = passwordInput.trim()
+
+  // Verify Password against admin-set bcrypt hash ONLY
+  if (!user.passwordHash) {
+    return { success: false, message: 'Account password not configured. Please contact your department administrator.' }
+  }
+
   let isValid = false
-
-  // 1. Check bcrypt passwordHash
-  if (user.passwordHash) {
-    try {
-      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
-    } catch {}
-  }
-
-  // 2. Check direct match if stored plain
-  if (!isValid && user.passwordHash && user.passwordHash === trimmedPassword) {
-    isValid = true
-  }
-
-  // 3. Default password fallbacks
-  if (!isValid) {
-    const defaultPwds = ['nitr', 'nitr@123', 'vsb@123', 'faculty@123', 'password123', normalizedId.toLowerCase(), normalizedId]
-    if (defaultPwds.includes(trimmedPassword.toLowerCase())) {
-      isValid = true
-    }
-  }
-
-  // 4. Date of Birth comparison
-  if (!isValid && faculty.dateOfBirth) {
-    const inputDob = normalizeDate(trimmedPassword)
-    const facultyDob = normalizeDate(faculty.dateOfBirth)
-    if (inputDob && facultyDob && inputDob === facultyDob) {
-      isValid = true
-    }
-    const cleanInput = trimmedPassword.replace(/\D/g, '')
-    const cleanDob = facultyDob.replace(/-/g, '')
-    const ddmmyyyy = facultyDob.split('-').reverse().join('')
-    if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
-      isValid = true
-    }
-  }
+  try {
+    isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+  } catch {}
 
   if (!isValid) {
     return { success: false, message: 'Invalid Faculty ID or Password.' }
@@ -510,7 +277,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
   await prisma.user.update({
     where: { id: faculty.userId },
     data: { lastLogin: new Date() },
-  })
+  }).catch(() => {})
 
   await prisma.auditLog.create({
     data: {
@@ -520,7 +287,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
       details: `Faculty login: ${normalizedId}`,
       status: 'success',
     },
-  })
+  }).catch(() => {})
 
   const token = await createToken({
     userId: faculty.userId,
@@ -530,23 +297,23 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
     facultyId: faculty.facultyId,
   })
 
-  return { success: true, token, user, faculty }
+  return { success: true, token, user, faculty, mustChangePassword: Boolean(user.mustChangePassword) }
 }
 
 export async function authenticateHOD(facultyIdOrName: string, passwordInput: string) {
   const rawInput = facultyIdOrName.trim()
   const normalizedId = rawInput.toUpperCase()
 
-  // 1. Try finding by facultyId
+  // 1. Try finding by facultyId — ONLY admin-added records can log in
   let hod = await prisma.hOD.findUnique({
     where: { facultyId: normalizedId },
-  })
+  }).catch(() => null)
 
-  let user = null
+  let user: any = null
   if (hod) {
     user = await prisma.user.findUnique({
       where: { id: hod.userId },
-    })
+    }).catch(() => null)
   } else {
     // 2. Try finding by email
     user = await prisma.user.findFirst({
@@ -554,7 +321,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
         role: 'hod',
         email: rawInput.toLowerCase(),
       },
-    })
+    }).catch(() => null)
     if (!user) {
       // 3. Try finding by HOD Name (case-insensitive)
       user = await prisma.user.findFirst({
@@ -565,53 +332,18 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
             mode: 'insensitive',
           },
         },
-      })
+      }).catch(() => null)
     }
     if (user) {
       hod = await prisma.hOD.findFirst({
         where: { userId: user.id },
-      })
+      }).catch(() => null)
     }
   }
 
+  // No record in DB — reject with clear message (no auto-creation)
   if (!hod || !user) {
-    const trimmedPw = passwordInput.trim()
-    const isDefaultPw = ['nitr', 'vsb@123', 'hod@123', 'password123', normalizedId.toLowerCase(), normalizedId].includes(trimmedPw)
-    if (/^[0-9A-Z]{3,18}$/i.test(normalizedId) && isDefaultPw) {
-      try {
-        const newUser = await prisma.user.create({
-          data: {
-            name: `Dr. Head of Department (${normalizedId})`,
-            email: `${normalizedId.toLowerCase()}@vsb.edu.in`,
-            role: 'hod',
-            status: 'active',
-            mustChangePassword: true,
-          },
-        })
-        const newHod = await prisma.hOD.create({
-          data: {
-            userId: newUser.id,
-            facultyId: normalizedId,
-            dateOfBirth: new Date('1980-06-15'),
-            designation: 'Professor & Head of Department',
-            qualification: 'Ph.D, M.Tech (AI & DS)',
-            department: 'Artificial Intelligence & Data Science',
-            experience: 15,
-          },
-        })
-        const token = await createToken({
-          userId: newUser.id,
-          email: newUser.email,
-          role: 'hod',
-          name: newUser.name,
-          facultyId: newHod.facultyId,
-        })
-        return { success: true, token, user: newUser, hod: newHod }
-      } catch (e) {
-        console.error('Auto HOD provision error:', e)
-      }
-    }
-    return { success: false, message: 'Invalid HOD Name / ID or Password.' }
+    return { success: false, message: 'No record found in database. Please contact your department administrator.' }
   }
 
   if (user.status !== 'active') {
@@ -619,42 +351,16 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
   }
 
   const trimmedPassword = passwordInput.trim()
+
+  // Verify Password against admin-set bcrypt hash ONLY
+  if (!user.passwordHash) {
+    return { success: false, message: 'Account password not configured. Please contact your department administrator.' }
+  }
+
   let isValid = false
-
-  // 1. Check bcrypt passwordHash
-  if (user.passwordHash) {
-    try {
-      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
-    } catch {}
-  }
-
-  // 2. Check direct match if stored plain
-  if (!isValid && user.passwordHash && user.passwordHash === trimmedPassword) {
-    isValid = true
-  }
-
-  // 3. Default password fallbacks
-  if (!isValid) {
-    const defaultPwds = ['nitr', 'vsb@123', 'hod@123', 'password123', normalizedId.toLowerCase(), normalizedId]
-    if (defaultPwds.includes(trimmedPassword)) {
-      isValid = true
-    }
-  }
-
-  // 4. Date of Birth comparison
-  if (!isValid && hod.dateOfBirth) {
-    const inputDob = normalizeDate(trimmedPassword)
-    const hodDob = normalizeDate(hod.dateOfBirth)
-    if (inputDob && hodDob && inputDob === hodDob) {
-      isValid = true
-    }
-    const cleanInput = trimmedPassword.replace(/\D/g, '')
-    const cleanDob = hodDob.replace(/-/g, '')
-    const ddmmyyyy = hodDob.split('-').reverse().join('')
-    if (cleanInput && (cleanInput === cleanDob || cleanInput === ddmmyyyy)) {
-      isValid = true
-    }
-  }
+  try {
+    isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+  } catch {}
 
   if (!isValid) {
     return { success: false, message: 'Invalid HOD ID or Password.' }
@@ -663,7 +369,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
   await prisma.user.update({
     where: { id: hod.userId },
     data: { lastLogin: new Date() },
-  })
+  }).catch(() => {})
 
   await prisma.auditLog.create({
     data: {
@@ -673,7 +379,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
       details: `HOD login: ${hod.facultyId}`,
       status: 'success',
     },
-  })
+  }).catch(() => {})
 
   const token = await createToken({
     userId: hod.userId,
@@ -683,7 +389,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
     facultyId: hod.facultyId,
   })
 
-  return { success: true, token, user, hod }
+  return { success: true, token, user, hod, mustChangePassword: Boolean(user.mustChangePassword) }
 }
 
 import crypto from 'crypto'
