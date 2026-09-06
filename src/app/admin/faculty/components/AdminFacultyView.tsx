@@ -1074,7 +1074,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
                 <div>
                   <h4 className="font-black text-sm text-[#071A3D]">Class Advisors</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Batch Mentors &amp; Section Dossiers (Sem 3, 5, 7)</p>
                 </div>
               </div>
               <span className={cn(
