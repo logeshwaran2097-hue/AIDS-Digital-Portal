@@ -172,14 +172,6 @@ export function FacultyStudentsView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <a
-            href="https://chat.whatsapp.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 border border-emerald-400/30"
-          >
-            <span className="text-sm">💬</span> AI&amp;DS WhatsApp Group
-          </a>
           {students.length > 0 && (
             <button
               onClick={handleDownloadRosterPDF}
