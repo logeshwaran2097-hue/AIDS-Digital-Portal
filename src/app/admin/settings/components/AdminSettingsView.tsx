@@ -37,8 +37,6 @@ import {
   Palette,
   X,
   Edit3,
-  MessageSquare,
-  ExternalLink,
   Loader2,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -329,26 +327,22 @@ export function AdminSettingsView() {
   const [retentionDays, setRetentionDays] = useState(14)
   const [emailSubjectPrefix, setEmailSubjectPrefix] = useState('[VSB AI&DS Portal]')
 
-  // 6b. WhatsApp & SMS Gateway Config State
+  // 6b. SMS Gateway Config State
   const [smsProvider, setSmsProvider] = useState<'twilio' | 'fast2sms' | 'custom'>('twilio')
   const [smsApiKey, setSmsApiKey] = useState('')
   const [smsSenderId, setSmsSenderId] = useState('VSBEDU')
-  const [whatsappEnabled, setWhatsappEnabled] = useState(true)
-  const [whatsappPhoneNumberId, setWhatsappPhoneNumberId] = useState('')
-  const [whatsappAccessToken, setWhatsappAccessToken] = useState('')
+  const [notifyAbsentViaSms, setNotifyAbsentViaSms] = useState(true)
   const [testMobileNumber, setTestMobileNumber] = useState('')
   const [isTestingGateway, setIsTestingGateway] = useState(false)
-  const [testingChannel, setTestingChannel] = useState<'sms' | 'whatsapp' | null>(null)
   const [gatewayTestResult, setGatewayTestResult] = useState<{
     type: 'success' | 'error' | 'info'
     message: string
-    whatsappWebUrl?: string
     targetNumber?: string
     provider?: string
   } | null>(null)
 
-  // Real Gateway Test Dispatch
-  const handleTestGateway = async (channel: 'sms' | 'whatsapp' = 'sms') => {
+  // Real SMS Gateway Test Dispatch
+  const handleTestGateway = async () => {
     const clean = testMobileNumber.replace(/\D/g, '')
     if (!testMobileNumber || clean.length < 10) {
       setGatewayTestResult({
@@ -359,7 +353,6 @@ export function AdminSettingsView() {
     }
 
     setIsTestingGateway(true)
-    setTestingChannel(channel)
     setGatewayTestResult(null)
 
     try {
@@ -371,10 +364,7 @@ export function AdminSettingsView() {
           provider: smsProvider,
           apiKey: smsApiKey.trim(),
           senderId: smsSenderId.trim(),
-          whatsappEnabled,
-          whatsappPhoneNumberId: whatsappPhoneNumberId.trim(),
-          whatsappAccessToken: whatsappAccessToken.trim(),
-          channel,
+          channel: 'sms',
         }),
       })
 
@@ -383,51 +373,27 @@ export function AdminSettingsView() {
       if (res.ok && data.success) {
         setGatewayTestResult({
           type: 'success',
-          message: data.message || `✅ Live ${channel.toUpperCase()} alert successfully dispatched to ${testMobileNumber}!`,
-          whatsappWebUrl: data.whatsappWebUrl,
+          message: data.message || `✅ Live test SMS alert successfully dispatched to ${testMobileNumber}!`,
           targetNumber: data.targetNumber || testMobileNumber,
           provider: data.provider || smsProvider,
         })
       } else {
         setGatewayTestResult({
           type: 'error',
-          message: data.error || data.message || `❌ Failed to dispatch test ${channel.toUpperCase()}.`,
-          whatsappWebUrl: data.whatsappWebUrl,
+          message: data.error || data.message || '❌ Failed to dispatch test SMS.',
           targetNumber: data.targetNumber || testMobileNumber,
           provider: data.provider || smsProvider,
         })
       }
     } catch (err: any) {
       console.error('Gateway test error:', err)
-      const last10 = clean.slice(-10)
-      const fallbackWaUrl = `https://wa.me/91${last10}?text=${encodeURIComponent(
-        `[VSB AI&DS Official] Attendance Alert Verification: Institutional Gateway verified for +91-${last10} at ${new Date().toLocaleTimeString('en-IN')}. V.S.B. Engineering College (Autonomous).`
-      )}`
       setGatewayTestResult({
         type: 'error',
-        message: '❌ Network connection error while dispatching to gateway. You can use direct WhatsApp below.',
-        whatsappWebUrl: fallbackWaUrl,
+        message: '❌ Network connection error while dispatching test SMS to gateway.',
       })
     } finally {
       setIsTestingGateway(false)
-      setTestingChannel(null)
     }
-  }
-
-  const handleDirectWhatsApp = () => {
-    const clean = testMobileNumber.replace(/\D/g, '')
-    if (clean.length < 10) {
-      setGatewayTestResult({
-        type: 'error',
-        message: '❌ Please enter a valid 10-digit mobile number first.',
-      })
-      return
-    }
-    const last10 = clean.slice(-10)
-    const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
-    const msg = `[VSB AI&DS Official] Attendance Alert Verification: Mobile Gateway live alert verified for +91-${last10} at ${time}. V.S.B. Engineering College (Autonomous).`
-    const url = `https://wa.me/91${last10}?text=${encodeURIComponent(msg)}`
-    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   // Live Broadcast Dispatcher State
@@ -688,9 +654,7 @@ export function AdminSettingsView() {
         if (parsed.smsProvider) setSmsProvider(parsed.smsProvider)
         if (parsed.smsApiKey) setSmsApiKey(parsed.smsApiKey)
         if (parsed.smsSenderId) setSmsSenderId(parsed.smsSenderId)
-        if (parsed.whatsappEnabled !== undefined) setWhatsappEnabled(parsed.whatsappEnabled)
-        if (parsed.whatsappPhoneNumberId) setWhatsappPhoneNumberId(parsed.whatsappPhoneNumberId)
-        if (parsed.whatsappAccessToken) setWhatsappAccessToken(parsed.whatsappAccessToken)
+        if (parsed.notifyAbsentViaSms !== undefined) setNotifyAbsentViaSms(parsed.notifyAbsentViaSms)
       } catch (e) {
         console.error('Failed to parse cached config:', e)
       }
@@ -705,9 +669,7 @@ export function AdminSettingsView() {
           if (s.smsProvider) setSmsProvider(s.smsProvider)
           if (s.smsApiKey) setSmsApiKey(s.smsApiKey)
           if (s.smsSenderId) setSmsSenderId(s.smsSenderId)
-          if (s.whatsappEnabled !== undefined) setWhatsappEnabled(s.whatsappEnabled)
-          if (s.whatsappPhoneNumberId) setWhatsappPhoneNumberId(s.whatsappPhoneNumberId)
-          if (s.whatsappAccessToken) setWhatsappAccessToken(s.whatsappAccessToken)
+          if (s.notifyAbsentViaSms !== undefined) setNotifyAbsentViaSms(s.notifyAbsentViaSms)
           if (s.smtpHost) setSmtpHost(s.smtpHost)
           if (s.smtpPort) setSmtpPort(s.smtpPort)
           if (s.smtpUser) setSmtpUser(s.smtpUser)
@@ -913,13 +875,11 @@ export function AdminSettingsView() {
       notifyNewStudent,
       notifySecurityAlerts,
       menus,
-      // SMS & WhatsApp Gateway Configuration
+      // SMS Gateway Configuration
       smsProvider,
       smsApiKey,
       smsSenderId,
-      whatsappEnabled,
-      whatsappPhoneNumberId,
-      whatsappAccessToken,
+      notifyAbsentViaSms,
     }
 
     try {
@@ -2676,16 +2636,16 @@ export function AdminSettingsView() {
               </div>
             </div>
 
-            {/* 2. Automated SMS & WhatsApp Gateway Configuration */}
+            {/* 2. Automated SMS Gateway Configuration */}
             <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-7 space-y-5">
               <div className="flex items-center justify-between border-b pb-3.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-2xl bg-emerald-50 text-emerald-700">
+                  <div className="p-2 rounded-2xl bg-blue-50 text-[#1455D9]">
                     <Smartphone className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-base font-black text-[#071A3D]">SMS &amp; WhatsApp Gateway Settings</h4>
-                    <p className="text-xs text-gray-500">Automated parent &amp; student mobile notifications</p>
+                    <h4 className="text-base font-black text-[#071A3D]">Cellular SMS Gateway Settings</h4>
+                    <p className="text-xs text-gray-500">Automated parent &amp; student mobile SMS alerts</p>
                   </div>
                 </div>
                 <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold text-[10px]">
@@ -2701,8 +2661,8 @@ export function AdminSettingsView() {
                     onChange={(e) => setSmsProvider(e.target.value as any)}
                     className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 bg-white font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
                   >
+                    <option value="fast2sms">Fast2SMS Gateway — FREE credits (India) — Recommended</option>
                     <option value="twilio">Twilio Cloud SMS (International / Domestic)</option>
-                    <option value="fast2sms">Fast2SMS Gateway (India DLT Compliant)</option>
                     <option value="custom">Custom Institutional HTTP Gateway</option>
                   </select>
                 </div>
@@ -2724,44 +2684,21 @@ export function AdminSettingsView() {
                       type="password"
                       value={smsApiKey}
                       onChange={(e) => setSmsApiKey(e.target.value)}
-                      placeholder="API Token..."
+                      placeholder="API Token or SID:Token..."
                       className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 font-bold text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
                     />
                   </div>
                 </div>
 
-                {/* WhatsApp Cloud API */}
-                <div className="p-3.5 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-emerald-900 text-[11px] flex items-center gap-1.5">
-                      💬 Meta WhatsApp Cloud Business API
-                    </span>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={whatsappEnabled}
-                        onChange={(e) => setWhatsappEnabled(e.target.checked)}
-                        className="w-4 h-4 accent-emerald-600 cursor-pointer"
-                      />
-                      <span className="text-[10px] font-bold text-emerald-800">Enabled</span>
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-[10px]">
-                    <input
-                      type="text"
-                      value={whatsappPhoneNumberId}
-                      onChange={(e) => setWhatsappPhoneNumberId(e.target.value)}
-                      placeholder="Phone Number ID"
-                      className="px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-white font-bold text-gray-800 focus:outline-none"
-                    />
-                    <input
-                      type="password"
-                      value={whatsappAccessToken}
-                      onChange={(e) => setWhatsappAccessToken(e.target.value)}
-                      placeholder="System User Access Token"
-                      className="px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-white font-bold text-gray-800 focus:outline-none"
-                    />
-                  </div>
+                {/* Automatic Absent Alerts */}
+                <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+                  <div className="flex items-center gap-1.5 font-black text-amber-900 text-[11px]">⚡ Real-Time Absent Alerts (Parent SMS)</div>
+                  <p className="text-[10px] text-amber-800 leading-relaxed">When faculty marks a student as <span className="font-black">Absent (A)</span>, the system instantly dispatches an <span className="font-black">SMS text alert</span> to that student&apos;s parent/registered mobile number via the configured SMS gateway.</p>
+                  <label className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-amber-200 cursor-pointer w-fit">
+                    <input type="checkbox" checked={notifyAbsentViaSms} onChange={(e) => setNotifyAbsentViaSms(e.target.checked)} className="w-4 h-4 accent-[#071A3D]" />
+                    <span className="text-[11px] font-black text-[#071A3D]">Auto Send Cellular SMS on Student Absence</span>
+                  </label>
+                  <p className="text-[9px] text-gray-500">Targets: <span className="font-bold">Student.parentPhone</span> → fallback <span className="font-bold">User.phone</span>. Dispatches via provider selected above. Each alert logged to Audit Trail.</p>
                 </div>
 
                 {/* Gateway Test Dispatch */}
@@ -2774,53 +2711,25 @@ export function AdminSettingsView() {
                       placeholder="Enter test mobile: 6381366088 or +91 98765 43210"
                       className="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-gray-200 font-bold text-[#071A3D] text-xs focus:border-[#1455D9] focus:outline-none tracking-wide"
                     />
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        disabled={isTestingGateway || !testMobileNumber}
-                        onClick={() => handleTestGateway('sms')}
-                        className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-sm active:scale-95"
-                        title="Send real test SMS via configured gateway"
-                      >
-                        {isTestingGateway && testingChannel === 'sms' ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[#F4C430]" />
-                        ) : (
-                          <Send className="w-3.5 h-3.5 text-[#F4C430]" />
-                        )}
-                        <span>Test SMS</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={isTestingGateway || !testMobileNumber}
-                        onClick={() => handleTestGateway('whatsapp')}
-                        className="flex-1 sm:flex-none px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-sm active:scale-95"
-                        title="Test WhatsApp Cloud API dispatch"
-                      >
-                        {isTestingGateway && testingChannel === 'whatsapp' ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                        ) : (
-                          <MessageSquare className="w-3.5 h-3.5 text-white" />
-                        )}
-                        <span>WhatsApp</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={!testMobileNumber}
-                        onClick={handleDirectWhatsApp}
-                        className="px-2.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs flex items-center justify-center gap-1 cursor-pointer disabled:opacity-40 transition-all active:scale-95"
-                        title="Instant 1-click WhatsApp Web link with pre-filled official alert"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5 text-emerald-700" />
-                        <span className="hidden md:inline">Open WA</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      disabled={isTestingGateway || !testMobileNumber}
+                      onClick={handleTestGateway}
+                      className="px-5 py-2.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-sm active:scale-95"
+                      title="Send real test SMS via configured gateway"
+                    >
+                      {isTestingGateway ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#F4C430]" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5 text-[#F4C430]" />
+                      )}
+                      <span>Test SMS</span>
+                    </button>
                   </div>
 
                   {gatewayTestResult && (
                     <div
-                      className={`p-3 rounded-2xl text-xs space-y-2 border transition-all ${
+                      className={`p-3 rounded-2xl text-xs space-y-1.5 border transition-all ${
                         gatewayTestResult.type === 'success'
                           ? 'bg-emerald-50/90 border-emerald-300 text-emerald-900'
                           : 'bg-amber-50/90 border-amber-300 text-amber-950'
@@ -2834,28 +2743,11 @@ export function AdminSettingsView() {
                           <p className="font-bold text-[11px]">{gatewayTestResult.message}</p>
                           {gatewayTestResult.provider && (
                             <p className="text-[10px] text-gray-500 font-semibold mt-0.5">
-                              Provider Engine: <span className="font-bold text-[#071A3D]">{gatewayTestResult.provider}</span>
+                              Gateway Provider: <span className="font-bold text-[#071A3D]">{gatewayTestResult.provider}</span>
                             </p>
                           )}
                         </div>
                       </div>
-
-                      {gatewayTestResult.whatsappWebUrl && (
-                        <div className="pt-1.5 border-t border-gray-200/60 flex items-center justify-between gap-2">
-                          <span className="text-[10px] text-gray-600 font-semibold">
-                            Direct WhatsApp Communication:
-                          </span>
-                          <a
-                            href={gatewayTestResult.whatsappWebUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] shadow-sm transition-all"
-                          >
-                            <MessageSquare className="w-3 h-3" /> Send to +91 {testMobileNumber.replace(/\D/g, '').slice(-10)} via WhatsApp
-                            <ExternalLink className="w-2.5 h-2.5 ml-0.5 opacity-80" />
-                          </a>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
