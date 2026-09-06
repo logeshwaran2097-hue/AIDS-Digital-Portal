@@ -426,7 +426,6 @@ export function FacultySettingsView({
             `OD Document Proof Requirement: ${requireOdProof ? 'Mandatory (Brochure / Registration Upload)' : 'Optional'}`,
             `Maximum Continuous OD Allowed Before HOD Escalation: ${maxOdDays} Days`,
             `Parent SMS on OD Approval: ${parentSmsOnOd ? 'Enabled' : 'Disabled'}`,
-            `At-Risk Student CGPA Cutoff: < ${lowCgpaThreshold} CGPA`,
           ],
         },
       ],
@@ -610,7 +609,7 @@ export function FacultySettingsView({
               </div>
 
               {/* Quick Policy Notice */}
-              <div className="pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div className="p-3 rounded-2xl bg-white border border-gray-200/80 shadow-xs space-y-1">
                   <div className="flex items-center gap-1.5 text-[#1455D9] font-bold">
                     <Clock className="w-3.5 h-3.5" />
@@ -627,15 +626,6 @@ export function FacultySettingsView({
                   </div>
                   <p className="text-gray-600 text-[11px]">
                     OD requests &gt; <strong>{maxOdDays} days</strong> escalate to HOD.
-                  </p>
-                </div>
-                <div className="p-3 rounded-2xl bg-white border border-gray-200/80 shadow-xs space-y-1">
-                  <div className="flex items-center gap-1.5 text-purple-600 font-bold">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>At-Risk Student Cutoff</span>
-                  </div>
-                  <p className="text-gray-600 text-[11px]">
-                    CGPA below <strong>{lowCgpaThreshold}</strong> flagged for advisory.
                   </p>
                 </div>
               </div>
@@ -855,28 +845,16 @@ export function FacultySettingsView({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="block font-bold text-xs text-[#071A3D]">
-                    At-Risk Student CGPA Warning Cutoff:
-                  </label>
-                  <select
-                    value={lowCgpaThreshold}
-                    onChange={(e) => setLowCgpaThreshold(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="6.50">&lt; 6.50 CGPA (Critical Academic Warning)</option>
-                    <option value="7.00">&lt; 7.00 CGPA (Standard Advisory Intervention)</option>
-                    <option value="7.50">&lt; 7.50 CGPA (Pre-Placement Focus)</option>
-                  </select>
-                </div>
-
+              <div className="grid grid-cols-1 gap-5">
                 <div className="space-y-2">
                   <label className="block font-bold text-xs text-[#071A3D]">
                     Student 1-on-1 Counseling Appointments:
                   </label>
-                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-gray-200 bg-gray-50/50">
-                    <span className="text-xs text-gray-700 font-medium">Allow students to book mentoring slots</span>
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl border border-gray-200 bg-gray-50/50">
+                    <div>
+                      <p className="text-xs font-bold text-gray-700">Allow students to book mentoring slots</p>
+                      <p className="text-[11px] text-gray-500">Students in your assigned cohort can request one-on-one academic consultation sessions.</p>
+                    </div>
                     <input
                       type="checkbox"
                       checked={allowStudentBooking}
