@@ -366,6 +366,8 @@ model Announcement {
   @@index([category])
   @@index([target])
   @@index([isPublished])
+  @@index([createdAt])
+  @@index([isPublished, createdAt])
 }
 
 model Notification {
@@ -385,6 +387,8 @@ model Notification {
 
   @@index([target])
   @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
 }
 
 model Achievement {
@@ -516,6 +520,8 @@ model AttendanceSession {
   @@index([year, section])
   @@index([takenByFacultyId])
   @@index([sessionType])
+  @@index([createdAt])
+  @@index([isLocked])
 }
 
 model AttendanceRecord {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,17 +31,24 @@ export interface AttendanceUnlockRequest {
 const SETTINGS_KEY = 'attendance_unlock_requests'
 
 async function getUnlockRequests(): Promise<AttendanceUnlockRequest[]> {
-  try {
-    const record = await (prisma as any).systemSettings?.findUnique?.({
-      where: { key: SETTINGS_KEY },
-    })
-    if (record?.value) {
-      return JSON.parse(record.value)
-    }
-  } catch (err) {
-    console.error('Error fetching unlock requests from systemSettings:', err)
-  }
-  return []
+  return cachedDbQuery(
+    'attendance_unlock_requests',
+    async () => {
+      try {
+        const record = await (prisma as any).systemSettings?.findUnique?.({
+          where: { key: SETTINGS_KEY },
+        })
+        if (record?.value) {
+          return JSON.parse(record.value)
+        }
+      } catch (err) {
+        console.error('Error fetching unlock requests from systemSettings:', err)
+      }
+      return []
+    },
+    3000,
+    ['attendance']
+  )
 }
 
 async function saveUnlockRequests(requests: AttendanceUnlockRequest[]) {
@@ -59,6 +67,10 @@ async function saveUnlockRequests(requests: AttendanceUnlockRequest[]) {
     })
   } catch (err) {
     console.error('Error saving unlock requests to systemSettings:', err)
+  } finally {
+    // Instantly invalidate attendance and notification caches
+    invalidateCache('attendance')
+    invalidateCache('notifications')
   }
 }
 

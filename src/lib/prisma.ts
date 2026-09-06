@@ -21,15 +21,18 @@ function getOptimizedDatabaseUrl(): string {
   // Ensure high-concurrency pool limits and connection timeouts are tuned
   try {
     const parsed = new URL(url)
-    // In serverless / high concurrency, 5-10 connections per worker avoids pool exhaustion
+    // In serverless / high concurrency, optimize connections and cache query plans
     if (!parsed.searchParams.has('connection_limit')) {
-      parsed.searchParams.set('connection_limit', process.env.VERCEL ? '5' : '10')
+      parsed.searchParams.set('connection_limit', process.env.VERCEL ? '10' : '20')
     }
     if (!parsed.searchParams.has('pool_timeout')) {
-      parsed.searchParams.set('pool_timeout', '10')
+      parsed.searchParams.set('pool_timeout', '15')
     }
     if (!parsed.searchParams.has('connect_timeout')) {
-      parsed.searchParams.set('connect_timeout', '10')
+      parsed.searchParams.set('connect_timeout', '15')
+    }
+    if (!parsed.searchParams.has('statement_cache_size')) {
+      parsed.searchParams.set('statement_cache_size', '100')
     }
     return parsed.toString()
   } catch {

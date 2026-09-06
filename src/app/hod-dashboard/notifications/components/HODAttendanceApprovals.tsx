@@ -73,6 +73,24 @@ export function HODAttendanceApprovals() {
   }, [])
 
   const handleApprove = async (requestId: string) => {
+    const prev = requests
+    // Optimistic update (0ms UI latency)
+    setRequests((cur) =>
+      cur.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'APPROVED' as const,
+              reviewedBy: 'Head of Department',
+              reviewedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+          : r
+      )
+    )
+    setActionSuccess('Attendance register unlocked! Advisor has been notified.')
+    setTimeout(() => setActionSuccess(null), 4000)
+
     try {
       setProcessingId(requestId)
       const res = await fetch('/api/attendance/unlock-request', {
@@ -81,19 +99,42 @@ export function HODAttendanceApprovals() {
         body: JSON.stringify({ action: 'APPROVE', requestId }),
       })
       const data = await res.json()
-      if (data.success) {
-        setActionSuccess('Attendance register unlocked! Advisor has been notified.')
-        setTimeout(() => setActionSuccess(null), 4000)
+      if (!data.success) {
+        setRequests(prev)
+      } else {
         fetchRequests()
       }
     } catch (err) {
       console.error('Approve error:', err)
+      setRequests(prev)
     } finally {
       setProcessingId(null)
     }
   }
 
   const handleReject = async (requestId: string) => {
+    const prev = requests
+    const note = rejectReason.trim() || 'Request declined by HOD'
+    // Optimistic update
+    setRequests((cur) =>
+      cur.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'REJECTED' as const,
+              reviewNote: note,
+              reviewedBy: 'Head of Department',
+              reviewedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+          : r
+      )
+    )
+    setActionSuccess('Unlock request declined.')
+    setTimeout(() => setActionSuccess(null), 4000)
+    setRejectModalId(null)
+    setRejectReason('')
+
     try {
       setProcessingId(requestId)
       const res = await fetch('/api/attendance/unlock-request', {
@@ -102,19 +143,18 @@ export function HODAttendanceApprovals() {
         body: JSON.stringify({
           action: 'REJECT',
           requestId,
-          reviewNote: rejectReason.trim() || 'Request declined by HOD',
+          reviewNote: note,
         }),
       })
       const data = await res.json()
-      if (data.success) {
-        setActionSuccess('Unlock request declined.')
-        setTimeout(() => setActionSuccess(null), 4000)
-        setRejectModalId(null)
-        setRejectReason('')
+      if (!data.success) {
+        setRequests(prev)
+      } else {
         fetchRequests()
       }
     } catch (err) {
       console.error('Reject error:', err)
+      setRequests(prev)
     } finally {
       setProcessingId(null)
     }

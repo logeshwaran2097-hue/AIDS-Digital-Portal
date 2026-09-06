@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -53,11 +54,18 @@ export async function GET(request: Request) {
       }
     }
 
-    const notifications = await prisma.notification.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    })
+    const cacheKey = `notifs_${userRole}_${userId || 'anon'}_${since || 'all'}_${limit}`
+    const notifications = await cachedDbQuery(
+      cacheKey,
+      () =>
+        prisma.notification.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: limit,
+        }),
+      3000,
+      ['notifications']
+    )
 
     return NextResponse.json({
       success: true,
@@ -110,6 +118,8 @@ export async function POST(request: Request) {
       },
     })
 
+    invalidateCache('notifications')
+
     return NextResponse.json(
       {
         success: true,
@@ -148,6 +158,7 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.notification.delete({ where: { id } })
+    invalidateCache('notifications')
     return NextResponse.json({ success: true, message: 'Notification deleted successfully' })
   } catch (error) {
     console.error('Delete notification error:', error)

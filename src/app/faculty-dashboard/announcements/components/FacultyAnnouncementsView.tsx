@@ -214,21 +214,27 @@ export function FacultyAnnouncementsView({
 
   const handleConfirmDelete = async () => {
     if (!deletingAnnouncement) return
+    const toDelete = deletingAnnouncement
+    const previousAnnouncements = announcements
+
+    // Optimistic instant removal (0ms UI latency)
+    setAnnouncements((prev) => prev.filter((a) => a.id !== toDelete.id))
+    setBroadcastSuccess(`Deleted Circular "${toDelete.title}"`)
+    setTimeout(() => setBroadcastSuccess(null), 3500)
+    setDeletingAnnouncement(null)
     setDeleteLoading(true)
+
     try {
-      const res = await fetch(`/api/announcements?id=${encodeURIComponent(deletingAnnouncement.id)}`, {
+      const res = await fetch(`/api/announcements?id=${encodeURIComponent(toDelete.id)}`, {
         method: 'DELETE',
       })
       const data = await res.json()
-      if (data.success) {
-        setAnnouncements((prev) => prev.filter((a) => a.id !== deletingAnnouncement.id))
-        setBroadcastSuccess(`Deleted Circular "${deletingAnnouncement.title}"`)
-        setTimeout(() => setBroadcastSuccess(null), 3500)
-        setDeletingAnnouncement(null)
-      } else {
+      if (!data.success) {
+        setAnnouncements(previousAnnouncements)
         toast.error(data.message || 'Failed to delete announcement')
       }
     } catch {
+      setAnnouncements(previousAnnouncements)
       toast.error('Network error deleting announcement')
     } finally {
       setDeleteLoading(false)
@@ -242,11 +248,33 @@ export function FacultyAnnouncementsView({
       const finalCategory = formCategory === 'Others' ? (customCategory.trim() || 'Others') : formCategory
 
       if (editingAnnouncement) {
+        const targetId = editingAnnouncement.id
+        const previousAnnouncements = announcements
+
+        // Optimistic instant update in UI
+        setAnnouncements((prev) =>
+          prev.map((a) =>
+            a.id === targetId
+              ? {
+                  ...a,
+                  title: formTitle,
+                  content: formContent,
+                  category: finalCategory,
+                  target: formTarget,
+                  attachmentUrl: formAttachmentUrl.trim() || null,
+                }
+              : a
+          )
+        )
+        setBroadcastSuccess(`Successfully Updated Circular "${formTitle}"!`)
+        setShowCreateModal(false)
+        setEditingAnnouncement(null)
+
         const res = await fetch('/api/announcements', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            id: editingAnnouncement.id,
+            id: targetId,
             title: formTitle,
             content: formContent,
             category: finalCategory,
@@ -256,22 +284,9 @@ export function FacultyAnnouncementsView({
         })
 
         const data = await res.json()
-        if (data.success && data.announcement) {
-          setAnnouncements((prev) =>
-            prev.map((a) =>
-              a.id === editingAnnouncement.id
-                ? {
-                    ...a,
-                    title: data.announcement.title,
-                    content: data.announcement.content,
-                    category: data.announcement.category,
-                    target: data.announcement.target,
-                    attachmentUrl: data.announcement.attachmentUrl || formAttachmentUrl.trim() || null,
-                  }
-                : a
-            )
-          )
-          setBroadcastSuccess(`Successfully Updated Circular "${formTitle}"!`)
+        if (!data.success) {
+          setAnnouncements(previousAnnouncements)
+          toast.error(data.message || 'Failed to update announcement')
         }
       } else {
         const res = await fetch('/api/announcements', {

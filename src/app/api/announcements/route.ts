@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -15,10 +16,17 @@ export async function GET(request: Request) {
       where.category = category
     }
 
-    const announcements = await prisma.announcement.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    })
+    const cacheKey = `announcements_${category || 'ALL'}`
+    const announcements = await cachedDbQuery(
+      cacheKey,
+      () =>
+        prisma.announcement.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+        }),
+      4000,
+      ['announcements']
+    )
 
     return NextResponse.json({ success: true, announcements })
   } catch (error) {
@@ -41,6 +49,10 @@ export async function POST(request: Request) {
         isPublished: true,
       },
     })
+
+    // Instantly invalidate announcements cache for immediate freshness
+    invalidateCache('announcements')
+    invalidateCache('notifications')
 
     const author = body.createdByName || 'Department Directorate'
 
@@ -82,6 +94,9 @@ export async function PUT(request: Request) {
       },
     })
 
+    // Instantly invalidate announcements cache for immediate freshness
+    invalidateCache('announcements')
+
     return NextResponse.json({ success: true, announcement: updated })
   } catch (error) {
     console.error('Update announcement error:', error)
@@ -97,6 +112,7 @@ export async function DELETE(request: Request) {
 
     if (clearAll === 'true') {
       await prisma.announcement.deleteMany({})
+      invalidateCache('announcements')
       return NextResponse.json({ success: true, message: 'All announcements cleared' })
     }
 
@@ -105,6 +121,10 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.announcement.delete({ where: { id } })
+
+    // Instantly invalidate announcements cache for immediate freshness
+    invalidateCache('announcements')
+
     return NextResponse.json({ success: true, message: 'Announcement deleted successfully' })
   } catch (error) {
     console.error('Delete announcement error:', error)
