@@ -12,13 +12,46 @@ export default async function FacultySettingsPage() {
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   const faculty = await prisma.faculty.findUnique({ where: { userId: session.userId } })
 
+  const isAdvisor =
+    faculty?.facultyType === 'advisor' ||
+    Boolean(faculty?.advisorBatch) ||
+    faculty?.facultyType === 'both'
+
+  let advisorStudentCount = 0
+  if (faculty?.advisorYear && faculty?.advisorSec) {
+    advisorStudentCount = await prisma.student.count({
+      where: {
+        year: faculty.advisorYear,
+        section: faculty.advisorSec,
+      },
+    })
+  }
+
   return (
     <PortalLayout role="faculty" userName={user?.name || session.name || 'Faculty'}>
       <div className="py-2 animate-fade-in">
         <FacultySettingsView
           userName={user?.name || session.name || 'Faculty Member'}
+          userEmail={user?.email || ''}
+          userPhone={user?.phone || ''}
           facultyId={faculty?.facultyId || session.facultyId || 'FACULTY'}
           designation={faculty?.designation || 'Faculty Member'}
+          qualification={faculty?.qualification || ''}
+          experience={faculty?.experience || 0}
+          specialization={faculty?.specialization || ''}
+          isAdvisor={isAdvisor}
+          advisorBatch={
+            faculty?.advisorBatch ||
+            (faculty?.advisorYear
+              ? `Year ${faculty.advisorYear} - Sem ${faculty.advisorSem || 3} - Sec ${faculty.advisorSec || 'A'}`
+              : 'AI & DS Department')
+          }
+          advisorYear={faculty?.advisorYear || 2}
+          advisorSem={faculty?.advisorSem || 3}
+          advisorSec={faculty?.advisorSec || 'A'}
+          facultyType={faculty?.facultyType || 'both'}
+          studentCount={advisorStudentCount}
+          lastLogin={user?.lastLogin ? user.lastLogin.toISOString() : null}
         />
       </div>
     </PortalLayout>
