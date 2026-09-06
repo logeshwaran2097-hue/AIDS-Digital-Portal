@@ -44,7 +44,7 @@ interface BulkImportModalProps {
 }
 
 export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalProps) {
-  const [activeTab, setActiveTab] = useState<'upload' | 'paste' | 'quick-seed'>('upload')
+  const [activeTab, setActiveTab] = useState<'upload' | 'paste'>('upload')
   const [file, setFile] = useState<File | null>(null)
   const [rawText, setRawText] = useState('')
   const [parsedStudents, setParsedStudents] = useState<ParsedStudent[]>([])
@@ -247,81 +247,6 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
     }
   }
 
-  // 5. One-Click 1,000 Sample Student Generator
-  const handleGenerate1000Demo = async () => {
-    setIsProcessing(true)
-    setUploadProgress(20)
-
-    try {
-      const firstNames = [
-        'Aadhil', 'Aakash', 'Abhinav', 'Abishek', 'Aditya', 'Ajay', 'Akash', 'Amarnath', 'Anand', 'Anbu',
-        'Anirudh', 'Aravind', 'Arjun', 'Arul', 'Arun', 'Ashwin', 'Balaji', 'Barath', 'Bhuvanesh', 'Deepak',
-        'Dhanush', 'Dinesh', 'Ganesh', 'Gautam', 'Gokul', 'Hariharan', 'Harish', 'Karthik', 'Kavin', 'Kishore',
-        'Lokesh', 'Manoj', 'Naveen', 'Nikhil', 'Praveen', 'Rahul', 'Rajesh', 'Sanjay', 'Santhosh', 'Saravanan',
-        'Siddharth', 'Siva', 'Surya', 'Vignesh', 'Vijay', 'Vishnu', 'Aadhira', 'Abirami', 'Aishwarya', 'Akshaya',
-        'Ananya', 'Anitha', 'Archana', 'Bhavana', 'Deepa', 'Divya', 'Gayathri', 'Harini', 'Janani', 'Kavitha',
-        'Keerthana', 'Lavanya', 'Monisha', 'Nandhini', 'Nithya', 'Pavithra', 'Pooja', 'Priya', 'Ramya', 'Sandhya',
-        'Saranya', 'Sneha', 'Soundarya', 'Swathi', 'Swetha', 'Vaishnavi', 'Varsha'
-      ]
-
-      const lastNames = [
-        'Kumar', 'Rajan', 'Murugan', 'Selvam', 'Palanisamy', 'Sundaram', 'Nadarajan', 'Krishnan', 'Mani',
-        'Shanmugam', 'Subramanian', 'Natarajan', 'Balakrishnan', 'Ganesan', 'Kandasamy', 'Swaminathan',
-        'Ramasamy', 'Manoharan', 'Govindasamy', 'Arumugam', 'Chandran', 'Venkatesh', 'Mohan', 'Suresh'
-      ]
-
-      const yearConfigs = [
-        { year: 1, sem: 2, batch: '2025-2029', prefix: '922525104', birthYear: 2007 },
-        { year: 2, sem: 4, batch: '2024-2028', prefix: '922524104', birthYear: 2006 },
-        { year: 3, sem: 6, batch: '2023-2027', prefix: '922523104', birthYear: 2005 },
-        { year: 4, sem: 8, batch: '2022-2026', prefix: '922522104', birthYear: 2004 },
-      ]
-
-      const sections = ['A', 'B', 'C', 'D']
-      const bloodGroups = ['O+', 'A+', 'B+', 'AB+', 'O-', 'A-']
-      const residencies = ['Day Scholar', 'Hostel', 'College Bus']
-
-      const generated: ParsedStudent[] = []
-
-      for (const config of yearConfigs) {
-        for (let i = 1; i <= 250; i++) {
-          const regNum = `${config.prefix}${String(i).padStart(3, '0')}`
-          const fName = firstNames[Math.floor(Math.random() * firstNames.length)]
-          const lName = lastNames[Math.floor(Math.random() * lastNames.length)]
-          const section = sections[Math.floor((i - 1) / 63) % sections.length]
-
-          generated.push({
-            registerNumber: regNum,
-            name: `${fName} ${lName}`,
-            email: `${regNum.toLowerCase()}@student.vsb.edu.in`,
-            password: defaultPassword,
-            dateOfBirth: `${config.birthYear}-0${(i % 9) + 1}-15`,
-            year: config.year,
-            semester: config.sem,
-            section,
-            batch: config.batch,
-            phone: `+91 98${String(10000000 + i).padStart(8, '0')}`,
-            parentPhone: `+91 94${String(10000000 + i).padStart(8, '0')}`,
-            bloodGroup: bloodGroups[i % bloodGroups.length],
-            residencyStatus: residencies[i % residencies.length],
-            cgpa: (7.2 + (i % 25) * 0.1).toFixed(2),
-            attendance: `${85 + (i % 14)}%`,
-            isValid: true,
-          })
-        }
-      }
-
-      setParsedStudents(generated)
-      setUploadProgress(50)
-      setActiveTab('paste')
-      toast.success('Generated 1,000 realistic student records! Review preview and click "Import to Database".')
-    } catch (err: any) {
-      toast.error('Error generating demo data.')
-    } finally {
-      setIsProcessing(false)
-    }
-  }
-
   const validCount = parsedStudents.filter((s) => s.isValid).length
   const invalidCount = parsedStudents.length - validCount
 
@@ -371,17 +296,6 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
               }`}
             >
               📋 Paste Excel / PDF Text Rows
-            </button>
-            <button
-              onClick={() => setActiveTab('quick-seed')}
-              className={`px-4 py-2 text-xs font-black rounded-t-xl transition-all cursor-pointer flex items-center gap-1 ${
-                activeTab === 'quick-seed'
-                  ? 'bg-white text-[#1455D9] border-t-2 border-[#1455D9] shadow-xs'
-                  : 'text-[#071A3D] bg-amber-100 hover:bg-amber-200'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              ⚡ Instant 1,000 Students Generator
             </button>
           </div>
 
@@ -454,32 +368,6 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
                   className="w-full p-4 font-mono text-xs rounded-2xl border border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-1 focus:ring-[#1455D9]"
                 />
               </div>
-            </div>
-          )}
-
-          {/* Tab 3: Quick 1,000 Students Generator */}
-          {activeTab === 'quick-seed' && (
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-50 to-blue-50 border border-amber-200 text-center space-y-4">
-              <div className="w-14 h-14 rounded-full bg-[#F4C430] text-[#071A3D] flex items-center justify-center mx-auto shadow-md">
-                <Sparkles className="w-7 h-7" />
-              </div>
-              <div>
-                <h3 className="text-base font-black text-[#071A3D]">
-                  Generate 1,000 Department of AI &amp; DS Students
-                </h3>
-                <p className="text-xs text-gray-600 max-w-lg mx-auto mt-1">
-                  Instantly creates 250 students across each of Year 1, Year 2, Year 3, and Year 4 (Sections A, B, C, D) with Anna University register numbers, passwords, phone numbers, CGPAs, and attendance.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleGenerate1000Demo}
-                disabled={isProcessing}
-                className="px-6 py-3 rounded-2xl bg-[#071A3D] hover:bg-[#0A2A5E] text-white text-xs font-black shadow-xl cursor-pointer hover:scale-105 transition-all flex items-center gap-2 mx-auto"
-              >
-                <Sparkles className="w-4 h-4 text-[#F4C430]" />
-                {isProcessing ? 'Generating Students...' : '⚡ Generate 1,000 Students Data Preview'}
-              </button>
             </div>
           )}
 
