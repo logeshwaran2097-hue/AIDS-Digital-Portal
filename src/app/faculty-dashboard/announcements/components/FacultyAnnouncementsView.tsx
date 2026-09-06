@@ -24,6 +24,8 @@ import {
   BellRing,
   CheckSquare,
   RefreshCw,
+  Edit3,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
@@ -77,6 +79,11 @@ export function FacultyAnnouncementsView({
     pendingStudents: any[]
   } | null>(null)
   const [reminderStatus, setReminderStatus] = useState<string | null>(null)
+
+  // Edit and Delete State
+  const [editingAnnouncement, setEditingAnnouncement] = useState<FacultyAnnouncementItem | null>(null)
+  const [deletingAnnouncement, setDeletingAnnouncement] = useState<FacultyAnnouncementItem | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   // Auto-sync Faculty announcements in real-time
   useEffect(() => {
@@ -187,44 +194,122 @@ export function FacultyAnnouncementsView({
     setTimeout(() => setBroadcastSuccess(null), 3000)
   }
 
+  const handleOpenEdit = (a: FacultyAnnouncementItem) => {
+    setEditingAnnouncement(a)
+    setFormTitle(a.title)
+    const isStandardCategory = ['Academic', 'Examinations', 'Placements', 'Symposium'].includes(a.category)
+    if (isStandardCategory) {
+      setFormCategory(a.category)
+      setCustomCategory('')
+    } else {
+      setFormCategory('Others')
+      setCustomCategory(a.category)
+    }
+    setFormTarget(a.target)
+    setFormContent(a.content)
+    setFormAttachmentUrl(a.attachmentUrl || '')
+    setCreateStep('edit')
+    setShowCreateModal(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingAnnouncement) return
+    setDeleteLoading(true)
+    try {
+      const res = await fetch(`/api/announcements?id=${encodeURIComponent(deletingAnnouncement.id)}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (data.success) {
+        setAnnouncements((prev) => prev.filter((a) => a.id !== deletingAnnouncement.id))
+        setBroadcastSuccess(`Deleted Circular "${deletingAnnouncement.title}"`)
+        setTimeout(() => setBroadcastSuccess(null), 3500)
+        setDeletingAnnouncement(null)
+      } else {
+        toast.error(data.message || 'Failed to delete announcement')
+      }
+    } catch {
+      toast.error('Network error deleting announcement')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     try {
       const finalCategory = formCategory === 'Others' ? (customCategory.trim() || 'Others') : formCategory
-      const res = await fetch('/api/announcements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formTitle,
-          content: formContent,
-          category: finalCategory,
-          target: formTarget,
-          attachmentUrl: formAttachmentUrl.trim() || null,
-          createdByName: `${facultyName} (Class Advisor)`,
-        }),
-      })
 
-      const data = await res.json()
-      if (data.success && data.announcement) {
-        setAnnouncements((prev) => [
-          {
-            id: data.announcement.id,
-            title: data.announcement.title,
-            content: data.announcement.content,
-            category: data.announcement.category,
-            target: data.announcement.target,
-            attachmentUrl: data.announcement.attachmentUrl || formAttachmentUrl.trim() || null,
-            createdByName: data.announcement.createdByName,
-            isPublished: true,
-            createdAt: new Date(),
-          },
-          ...prev,
-        ])
+      if (editingAnnouncement) {
+        const res = await fetch('/api/announcements', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: editingAnnouncement.id,
+            title: formTitle,
+            content: formContent,
+            category: finalCategory,
+            target: formTarget,
+            attachmentUrl: formAttachmentUrl.trim() || null,
+          }),
+        })
+
+        const data = await res.json()
+        if (data.success && data.announcement) {
+          setAnnouncements((prev) =>
+            prev.map((a) =>
+              a.id === editingAnnouncement.id
+                ? {
+                    ...a,
+                    title: data.announcement.title,
+                    content: data.announcement.content,
+                    category: data.announcement.category,
+                    target: data.announcement.target,
+                    attachmentUrl: data.announcement.attachmentUrl || formAttachmentUrl.trim() || null,
+                  }
+                : a
+            )
+          )
+          setBroadcastSuccess(`Successfully Updated Circular "${formTitle}"!`)
+        }
+      } else {
+        const res = await fetch('/api/announcements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formTitle,
+            content: formContent,
+            category: finalCategory,
+            target: formTarget,
+            attachmentUrl: formAttachmentUrl.trim() || null,
+            createdByName: `${facultyName} (Class Advisor)`,
+          }),
+        })
+
+        const data = await res.json()
+        if (data.success && data.announcement) {
+          setAnnouncements((prev) => [
+            {
+              id: data.announcement.id,
+              title: data.announcement.title,
+              content: data.announcement.content,
+              category: data.announcement.category,
+              target: data.announcement.target,
+              attachmentUrl: data.announcement.attachmentUrl || formAttachmentUrl.trim() || null,
+              createdByName: data.announcement.createdByName,
+              isPublished: true,
+              createdAt: new Date(),
+            },
+            ...prev,
+          ])
+          setBroadcastSuccess(`Successfully Published Circular for ${formTarget}!`)
+        }
       }
-      setBroadcastSuccess(`Successfully Published Circular for ${formTarget}!`)
+
       setTimeout(() => setBroadcastSuccess(null), 3500)
       setShowCreateModal(false)
+      setEditingAnnouncement(null)
       setCreateStep('edit')
       setFormTitle('')
       setFormCategory('Academic')
@@ -375,9 +460,29 @@ export function FacultyAnnouncementsView({
                   </span>
                 </div>
 
-                <span className="text-[11px] text-gray-500 font-medium">
-                  Issued by: <strong className="text-gray-800">{a.createdByName || facultyName}</strong>
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[11px] text-gray-500 font-medium hidden sm:inline">
+                    Issued by: <strong className="text-gray-800">{a.createdByName || facultyName}</strong>
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(a)}
+                      className="p-1.5 text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      title="Edit this circular"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeletingAnnouncement(a)}
+                      className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      title="Delete this circular"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -447,12 +552,34 @@ export function FacultyAnnouncementsView({
                   )}
                 </div>
 
-                <button
-                  onClick={() => handleDownloadCircularPDF(a)}
-                  className="px-4 py-2 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" /> Official Circular (PDF)
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(a)}
+                    className="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-[#1455D9] text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                    title="Edit circular"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDeletingAnnouncement(a)}
+                    className="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/70 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                    title="Delete circular"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleDownloadCircularPDF(a)}
+                    className="px-4 py-2 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Official Circular (PDF)
+                  </button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -467,7 +594,11 @@ export function FacultyAnnouncementsView({
             <div className="flex items-start justify-between border-b pb-3">
               <div>
                 <h3 className="text-base font-bold text-[#071A3D]">
-                  {createStep === 'preview' ? 'Verify & Confirm Official Circular' : 'Issue Department Circular'}
+                  {createStep === 'preview'
+                    ? 'Verify & Confirm Official Circular'
+                    : editingAnnouncement
+                    ? 'Edit Department Circular'
+                    : 'Issue Department Circular'}
                 </h3>
                 <p className="text-xs text-gray-500">
                   {createStep === 'preview' ? 'Review before dispatching to student notice boards' : 'Publish notice to students and faculty notice board'}
@@ -552,7 +683,12 @@ export function FacultyAnnouncementsView({
                     disabled={submitting}
                     className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white font-bold text-xs cursor-pointer shadow-md flex items-center gap-2 disabled:opacity-50"
                   >
-                    <Send className="w-4 h-4" /> {submitting ? 'Publishing...' : '✓ Confirm & Publish Circular'}
+                    <Send className="w-4 h-4" />{' '}
+                    {submitting
+                      ? 'Saving...'
+                      : editingAnnouncement
+                      ? '✓ Confirm & Update Circular'
+                      : '✓ Confirm & Publish Circular'}
                   </button>
                 </div>
               </div>
@@ -882,6 +1018,46 @@ export function FacultyAnnouncementsView({
                 className="px-5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {deletingAnnouncement && (
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 border border-rose-100 animate-in zoom-in-95">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-[#071A3D]">Delete Circular?</h3>
+                <p className="text-xs text-gray-500">This will remove the announcement from student portals.</p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 text-xs">
+              <p className="font-bold text-[#071A3D] line-clamp-1">{deletingAnnouncement.title}</p>
+              <p className="text-[11px] text-gray-500 mt-1 line-clamp-2">{deletingAnnouncement.content}</p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingAnnouncement(null)}
+                disabled={deleteLoading}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={deleteLoading}
+                className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors shadow-xs flex items-center gap-1.5"
+              >
+                {deleteLoading ? 'Deleting...' : 'Yes, Delete Circular'}
               </button>
             </div>
           </div>

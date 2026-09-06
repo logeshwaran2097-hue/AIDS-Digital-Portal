@@ -62,6 +62,33 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { id, title, content, category, target, attachmentUrl } = body
+
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Missing announcement ID' }, { status: 400 })
+    }
+
+    const updated = await prisma.announcement.update({
+      where: { id },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(content !== undefined && { content }),
+        ...(category !== undefined && { category }),
+        ...(target !== undefined && { target }),
+        ...(attachmentUrl !== undefined && { attachmentUrl: attachmentUrl || null }),
+      },
+    })
+
+    return NextResponse.json({ success: true, announcement: updated })
+  } catch (error) {
+    console.error('Update announcement error:', error)
+    return NextResponse.json({ success: false, message: 'Failed to update announcement' }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
