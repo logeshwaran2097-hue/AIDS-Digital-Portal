@@ -14,8 +14,8 @@ export default async function FacultyProfilePage() {
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    Boolean(faculty?.advisorBatch) ||
-    faculty?.facultyType === 'both'
+    faculty?.facultyType === 'both' ||
+    (!faculty?.facultyType && Boolean(faculty?.advisorBatch))
 
   let studentCount = 0
   if (faculty?.advisorYear && faculty?.advisorSec) {

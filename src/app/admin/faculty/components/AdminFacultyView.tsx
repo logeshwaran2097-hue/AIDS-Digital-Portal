@@ -588,11 +588,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // Filtered lists for Class Advisors
   const advisorsList = useMemo(() => {
     return facultyList.filter((f) => {
+      // Exclude faculty strictly configured as theory handlers or lab handlers
+      if (f.facultyType === 'subject_handler' || f.facultyType === 'lab_faculty') {
+        return false
+      }
+
       const isAdvisor =
-        f.advisorBatch ||
         f.facultyType === 'advisor' ||
         f.facultyType === 'both' ||
-        !f.facultyType
+        (!f.facultyType && Boolean(f.advisorBatch))
+
       if (!isAdvisor) return false
 
       const matchesSearch =
@@ -622,16 +627,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const facultyMembersList = useMemo(() => {
     return facultyList.filter((f) => {
       const subjs = getSubjectsList(f.subjects)
-      const isLab =
-        f.facultyType === 'lab_faculty' ||
-        (f.subjectName && f.subjectName.toLowerCase().includes('lab')) ||
-        (f.classPeriod && f.classPeriod.toLowerCase().includes('lab'))
       
-      // Belongs to Faculty Members if it's theory subject or general faculty (not strictly lab only)
+      // Exclude faculty strictly configured as advisors only or lab handlers
+      if (f.facultyType === 'advisor' || f.facultyType === 'lab_faculty') {
+        return false
+      }
+
       const isFaculty =
         f.facultyType === 'subject_handler' ||
         f.facultyType === 'both' ||
-        (!isLab && (subjs.length > 0 || f.subjectName || !f.facultyType))
+        (!f.facultyType && (subjs.length > 0 || f.subjectName))
 
       if (!isFaculty) return false
 
@@ -655,11 +660,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const labHandlersList = useMemo(() => {
     return facultyList.filter((f) => {
       const subjs = getSubjectsList(f.subjects)
+
+      // Exclude faculty strictly configured as advisors only or theory subject handlers
+      if (f.facultyType === 'advisor' || f.facultyType === 'subject_handler') {
+        return false
+      }
+
       const isLab =
         f.facultyType === 'lab_faculty' ||
-        (f.subjectName && f.subjectName.toLowerCase().includes('lab')) ||
-        (f.classPeriod && f.classPeriod.toLowerCase().includes('lab')) ||
-        (f.facultyType === 'both' && f.subjectName && f.subjectName.toLowerCase().includes('lab'))
+        f.facultyType === 'both' ||
+        (!f.facultyType && ((f.subjectName && f.subjectName.toLowerCase().includes('lab')) || (f.classPeriod && f.classPeriod.toLowerCase().includes('lab'))))
 
       if (!isLab) return false
 
@@ -691,39 +701,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // Combined handlers list for backward compatibility if needed
   const handlersList = useMemo(() => {
     return facultyList.filter((f) => {
-      const subjs = getSubjectsList(f.subjects)
-      const isHandler =
-        subjs.length > 0 ||
-        f.subjectName ||
+      if (f.facultyType === 'advisor') return false
+      return (
         f.facultyType === 'subject_handler' ||
         f.facultyType === 'lab_faculty' ||
         f.facultyType === 'both' ||
         !f.facultyType
-      if (!isHandler) return false
-
-      const matchesSearch =
-        f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (f.subjectName && f.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (f.classDay && f.classDay.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (f.classPeriod && f.classPeriod.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        f.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        subjs.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
-
-      const matchesDesignation =
-        designationFilter === 'ALL' ||
-        f.designation.toLowerCase().includes(designationFilter.toLowerCase())
-
-      let matchesLabSem = true
-      if (labSemesterFilter !== 'ALL' && semestersLabs[labSemesterFilter as keyof typeof semestersLabs]) {
-        const targetLabs = semestersLabs[labSemesterFilter as keyof typeof semestersLabs].labs
-        matchesLabSem = targetLabs.some(
-          (l) => (f.subjectName && f.subjectName.toLowerCase().includes(l.shortName.toLowerCase())) || subjs.includes(l.code)
-        )
-      }
-
-      return matchesSearch && matchesDesignation && matchesLabSem
+      )
     })
-  }, [facultyList, searchQuery, designationFilter, labSemesterFilter, semestersLabs])
+  }, [facultyList])
 
   // PDF Export
   const handleExportPDF = () => {
@@ -827,6 +813,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         }
       }
 
+      const isAdvisorRole = formData.facultyType === 'advisor' || formData.facultyType === 'both'
       const res = await fetch('/api/faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -839,6 +826,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: formData.classDay || null,
           classPeriod: formData.classPeriod || null,
           classTime: formData.classTime || null,
+          advisorBatch: isAdvisorRole ? (formData.advisorBatch || null) : null,
+          advisorYear: isAdvisorRole ? (formData.advisorYear ? Number(formData.advisorYear) : null) : null,
+          advisorSem: isAdvisorRole ? (formData.advisorSem ? Number(formData.advisorSem) : null) : null,
+          advisorSec: isAdvisorRole ? (formData.advisorSec || null) : null,
         }),
       })
       const result = await res.json()
@@ -863,10 +854,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classPeriod: 'Period 1',
           classTime: '09:15 AM - 10:00 AM',
           advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 3 - Sec A' : '',
-          advisorYear: 2,
-          advisorSem: 3,
-          advisorSec: 'A',
-          facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
+          advisorYear: activeTab === 'advisors' ? 2 : ('' as any),
+          advisorSem: activeTab === 'advisors' ? 3 : ('' as any),
+          advisorSec: activeTab === 'advisors' ? 'A' : '',
+          facultyType: activeTab === 'advisors' ? 'advisor' : activeTab === 'labs' ? 'lab_faculty' : 'subject_handler',
         })
         toast.success('Faculty registered successfully in database!')
       } else {
@@ -896,6 +887,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         }
       }
 
+      const isAdvisorRole = formData.facultyType === 'advisor' || formData.facultyType === 'both'
       const res = await fetch('/api/faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -909,6 +901,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: formData.classDay || null,
           classPeriod: formData.classPeriod || null,
           classTime: formData.classTime || null,
+          advisorBatch: isAdvisorRole ? (formData.advisorBatch || null) : null,
+          advisorYear: isAdvisorRole ? (formData.advisorYear ? Number(formData.advisorYear) : null) : null,
+          advisorSem: isAdvisorRole ? (formData.advisorSem ? Number(formData.advisorSem) : null) : null,
+          advisorSec: isAdvisorRole ? (formData.advisorSec || null) : null,
         }),
       })
       const result = await res.json()
@@ -931,10 +927,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   classDay: formData.classDay,
                   classPeriod: formData.classPeriod,
                   classTime: formData.classTime,
-                  advisorBatch: formData.advisorBatch,
-                  advisorYear: formData.advisorYear,
-                  advisorSem: formData.advisorSem,
-                  advisorSec: formData.advisorSec,
+                  advisorBatch: isAdvisorRole ? formData.advisorBatch : null,
+                  advisorYear: isAdvisorRole ? formData.advisorYear : null,
+                  advisorSem: isAdvisorRole ? formData.advisorSem : null,
+                  advisorSec: isAdvisorRole ? formData.advisorSec : null,
                   facultyType: formData.facultyType,
                 }
               : f
@@ -1026,10 +1022,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 classPeriod: 'Period 1',
                 classTime: '09:15 AM - 10:00 AM',
                 advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 3 - Sec A' : '',
-                advisorYear: 2,
-                advisorSem: 3,
-                advisorSec: 'A',
-                facultyType: activeTab === 'advisors' ? 'advisor' : 'subject_handler',
+                advisorYear: activeTab === 'advisors' ? 2 : ('' as any),
+                advisorSem: activeTab === 'advisors' ? 3 : ('' as any),
+                advisorSec: activeTab === 'advisors' ? 'A' : '',
+                facultyType: activeTab === 'advisors' ? 'advisor' : activeTab === 'labs' ? 'lab_faculty' : 'subject_handler',
               })
               setIsAddModalOpen(true)
             }}
@@ -1186,7 +1182,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               ].map((item) => {
                 const isSelected = yearFilter === String(item.yr)
                 const count = facultyList.filter(
-                  (f) => Number(f.advisorYear) === item.yr || (f.advisorBatch && (f.advisorBatch.includes(`Year ${item.yr}`) || f.advisorBatch.includes(`Year ${['I', 'II', 'III', 'IV'][item.yr - 1]}`)))
+                  (f) =>
+                    (f.facultyType === 'advisor' || f.facultyType === 'both') &&
+                    (Number(f.advisorYear) === item.yr || (f.advisorBatch && (f.advisorBatch.includes(`Year ${item.yr}`) || f.advisorBatch.includes(`Year ${['I', 'II', 'III', 'IV'][item.yr - 1]}`))))
                 ).length
 
                 return (
@@ -1739,10 +1737,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 classDay: faculty.classDay || 'Mon, Wed, Fri',
                                 classPeriod: faculty.classPeriod || 'Period 1',
                                 classTime: faculty.classTime || '09:15 AM - 10:00 AM',
-                                advisorBatch: faculty.advisorBatch || '',
-                                advisorYear: faculty.advisorYear || 2,
-                                advisorSem: faculty.advisorSem || 3,
-                                advisorSec: faculty.advisorSec || 'A',
+                                advisorBatch: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorBatch || '') : '',
+                                advisorYear: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorYear || 2) : ('' as any),
+                                advisorSem: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorSem || 3) : ('' as any),
+                                advisorSec: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorSec || 'A') : '',
                                 facultyType: faculty.facultyType || 'subject_handler',
                               })
                               setShowEditPassword(false)
@@ -1901,10 +1899,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 classDay: handler.classDay || 'Tue',
                                 classPeriod: handler.classPeriod || 'Lab Session (AN)',
                                 classTime: handler.classTime || '01:20 PM - 04:30 PM',
-                                advisorBatch: handler.advisorBatch || '',
-                                advisorYear: handler.advisorYear || 2,
-                                advisorSem: handler.advisorSem || 3,
-                                advisorSec: handler.advisorSec || 'A',
+                                advisorBatch: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorBatch || '') : '',
+                                advisorYear: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorYear || 2) : ('' as any),
+                                advisorSem: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorSem || 3) : ('' as any),
+                                advisorSec: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorSec || 'A') : '',
                                 facultyType: handler.facultyType || 'lab_faculty',
                               })
                               setShowEditPassword(false)
@@ -2297,7 +2295,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, facultyType: 'advisor' })}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        facultyType: 'advisor',
+                        advisorBatch: formData.advisorBatch || 'Year II - Sem 3 - Sec A',
+                        advisorYear: formData.advisorYear || 2,
+                        advisorSem: formData.advisorSem || 3,
+                        advisorSec: formData.advisorSec || 'A',
+                      })
+                    }
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'advisor'
@@ -2312,7 +2319,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, facultyType: 'subject_handler' })}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        facultyType: 'subject_handler',
+                        advisorBatch: '',
+                        advisorYear: '' as any,
+                        advisorSem: '' as any,
+                        advisorSec: '',
+                      })
+                    }
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'subject_handler'
@@ -2327,7 +2343,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, facultyType: 'lab_faculty' })}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        facultyType: 'lab_faculty',
+                        advisorBatch: '',
+                        advisorYear: '' as any,
+                        advisorSem: '' as any,
+                        advisorSec: '',
+                      })
+                    }
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'lab_faculty'
@@ -2899,7 +2924,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, facultyType: 'advisor' })}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        facultyType: 'advisor',
+                        advisorBatch: formData.advisorBatch || 'Year II - Sem 3 - Sec A',
+                        advisorYear: formData.advisorYear || 2,
+                        advisorSem: formData.advisorSem || 3,
+                        advisorSec: formData.advisorSec || 'A',
+                      })
+                    }
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'advisor'
@@ -2914,7 +2948,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, facultyType: 'subject_handler' })}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        facultyType: 'subject_handler',
+                        advisorBatch: '',
+                        advisorYear: '' as any,
+                        advisorSem: '' as any,
+                        advisorSec: '',
+                      })
+                    }
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'subject_handler'
@@ -2929,7 +2972,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, facultyType: 'lab_faculty' })}
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        facultyType: 'lab_faculty',
+                        advisorBatch: '',
+                        advisorYear: '' as any,
+                        advisorSem: '' as any,
+                        advisorSec: '',
+                      })
+                    }
                     className={cn(
                       'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
                       formData.facultyType === 'lab_faculty'

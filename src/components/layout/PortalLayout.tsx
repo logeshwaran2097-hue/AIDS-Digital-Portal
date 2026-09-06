@@ -59,7 +59,7 @@ const navItemsMap: Record<string, NavItem[]> = {
 
 const roleBadgeMap: Record<string, { label: string; color: string }> = {
   student: { label: 'Student', color: 'bg-[#2878E8]/20 text-[#2878E8] border-[#2878E8]/30' },
-  faculty: { label: 'Class Advisor', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
+  faculty: { label: 'Faculty', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
   hod: { label: 'HOD', color: 'bg-[#F4C430]/20 text-[#F4C430] border-[#F4C430]/30' },
   admin: { label: 'Admin', color: 'bg-red-400/20 text-red-300 border-red-400/30' },
 }
@@ -814,7 +814,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                   {userName}
                 </span>
                 <span className="text-[9px] font-extrabold text-emerald-600 mt-0.5">
-                  {role === 'faculty' ? 'Class Advisor' : role.toUpperCase()}
+                  {role === 'faculty' ? 'FACULTY' : role.toUpperCase()}
                 </span>
               </div>
             </Link>

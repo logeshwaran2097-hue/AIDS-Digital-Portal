@@ -99,7 +99,10 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
     setTimeout(() => setActionSuccess(null), 2500)
   }
 
-  const isClassAdvisor = Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec))
+  const isClassAdvisor =
+    data.faculty?.facultyType === 'advisor' ||
+    data.faculty?.facultyType === 'both' ||
+    (!data.faculty?.facultyType && Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)))
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">

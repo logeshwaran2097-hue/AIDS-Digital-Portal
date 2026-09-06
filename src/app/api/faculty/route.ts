@@ -168,6 +168,13 @@ export async function POST(request: Request) {
     // Prepare subjects string
     const subjectsStr = typeof subjects === 'string' ? subjects : JSON.stringify(subjects)
 
+    // Ensure advisor fields are ONLY saved if role is advisor or both
+    const isAdvisorRole = facultyType === 'advisor' || facultyType === 'both'
+    const cleanAdvisorBatch = isAdvisorRole ? (advisorBatch || null) : null
+    const cleanAdvisorYear = isAdvisorRole && advisorYear ? Number(advisorYear) : null
+    const cleanAdvisorSem = isAdvisorRole && advisorSem ? Number(advisorSem) : null
+    const cleanAdvisorSec = isAdvisorRole ? (advisorSec || null) : null
+
     // Upsert Faculty
     const faculty = await prisma.faculty.upsert({
       where: { facultyId: fid },
@@ -182,10 +189,10 @@ export async function POST(request: Request) {
         classDay: classDay || null,
         classPeriod: classPeriod || null,
         classTime: classTime || null,
-        advisorBatch: advisorBatch || null,
-        advisorYear: advisorYear ? Number(advisorYear) : null,
-        advisorSem: advisorSem ? Number(advisorSem) : null,
-        advisorSec: advisorSec || null,
+        advisorBatch: cleanAdvisorBatch,
+        advisorYear: cleanAdvisorYear,
+        advisorSem: cleanAdvisorSem,
+        advisorSec: cleanAdvisorSec,
         facultyType: facultyType || 'both',
       },
       create: {
@@ -201,10 +208,10 @@ export async function POST(request: Request) {
         classDay: classDay || null,
         classPeriod: classPeriod || null,
         classTime: classTime || null,
-        advisorBatch: advisorBatch || null,
-        advisorYear: advisorYear ? Number(advisorYear) : null,
-        advisorSem: advisorSem ? Number(advisorSem) : null,
-        advisorSec: advisorSec || null,
+        advisorBatch: cleanAdvisorBatch,
+        advisorYear: cleanAdvisorYear,
+        advisorSem: cleanAdvisorSem,
+        advisorSec: cleanAdvisorSec,
         facultyType: facultyType || 'both',
       },
     })
