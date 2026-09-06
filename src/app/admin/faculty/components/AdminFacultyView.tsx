@@ -12,6 +12,8 @@ import {
   Trash2,
   CheckCircle2,
   Eye,
+  EyeOff,
+  Key,
   X,
   Mail,
   Phone,
@@ -254,6 +256,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedFaculty, setSelectedFaculty] = useState<FacultyRecord | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [showEditPassword, setShowEditPassword] = useState(false)
 
   // Dossier Modal for Class Advisor
   const [selectedAdvisorDossier, setSelectedAdvisorDossier] = useState<FacultyRecord | null>(null)
@@ -898,6 +901,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          password: formData.password?.trim() || undefined,
           facultyId: selectedFaculty.facultyId,
           experience: Number(formData.experience) || 1,
           subjects: subjectsArr,
@@ -1571,6 +1575,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               advisorSec: advisor.advisorSec || 'A',
                               facultyType: advisor.facultyType || 'advisor',
                             })
+                            setShowEditPassword(false)
                             setIsEditModalOpen(true)
                           }}
                           className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
@@ -1741,6 +1746,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 advisorSec: faculty.advisorSec || 'A',
                                 facultyType: faculty.facultyType || 'subject_handler',
                               })
+                              setShowEditPassword(false)
                               setIsEditModalOpen(true)
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
@@ -1902,6 +1908,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 advisorSec: handler.advisorSec || 'A',
                                 facultyType: handler.facultyType || 'lab_faculty',
                               })
+                              setShowEditPassword(false)
                               setIsEditModalOpen(true)
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
@@ -2973,6 +2980,39 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
+              </div>
+
+              {/* Password / Reset Temporary Password */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-[#071A3D] flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5 text-[#1455D9]" />
+                    <span>Reset / Change Password</span>
+                  </label>
+                  <span className="text-[10px] text-gray-500 font-medium">
+                    (Optional — leave blank to keep existing password)
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showEditPassword ? 'text' : 'password'}
+                    placeholder="Enter new temporary password to reset (or leave blank)"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono text-xs text-[#071A3D] pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword(!showEditPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                    title={showEditPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showEditPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1">
+                  Only enter a password if you want to reset this faculty member's credentials. Leave blank to keep existing.
+                </p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -8,53 +9,63 @@ export const fetchCache = 'force-no-store'
 
 export async function GET(request: Request) {
   try {
-    const facultyRecords = await prisma.faculty.findMany({
-      orderBy: { facultyId: 'asc' },
+    const result = await cachedDbQuery(
+      'all_faculty_records',
+      async () => {
+        const facultyRecords = await prisma.faculty.findMany({
+          orderBy: { facultyId: 'asc' },
+        })
+
+        const userIds = facultyRecords.map((f) => f.userId)
+        const users = await prisma.user.findMany({
+          where: { id: { in: userIds } },
+        })
+        const userMap = new Map(users.map((u) => [u.id, u]))
+
+        return facultyRecords.map((f) => {
+          const u = userMap.get(f.userId)
+          let subjectsArr: string[] = []
+          try {
+            subjectsArr = JSON.parse(f.subjects || '[]')
+          } catch {
+            subjectsArr = []
+          }
+
+          return {
+            id: f.id,
+            userId: f.userId,
+            facultyId: f.facultyId,
+            name: u?.name || 'Faculty Member',
+            email: u?.email || `${f.facultyId.toLowerCase()}@vsb.edu.in`,
+            phone: u?.phone || '',
+            designation: f.designation,
+            qualification: f.qualification,
+            experience: f.experience,
+            specialization: f.specialization,
+            subjects: subjectsArr,
+            subjectName: f.subjectName || null,
+            classDay: f.classDay || null,
+            classPeriod: f.classPeriod || null,
+            classTime: f.classTime || null,
+            advisorBatch: f.advisorBatch || null,
+            advisorYear: f.advisorYear || null,
+            advisorSem: f.advisorSem || null,
+            advisorSec: f.advisorSec || null,
+            facultyType: f.facultyType || 'both',
+            status: u?.status || 'active',
+          }
+        })
+      },
+      3000,
+      ['faculty']
+    )
+
+    return NextResponse.json({
+      success: true,
+      faculty: result,
     })
-
-    const userIds = facultyRecords.map((f) => f.userId)
-    const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
-    })
-    const userMap = new Map(users.map((u) => [u.id, u]))
-
-    const result = facultyRecords.map((f) => {
-      const u = userMap.get(f.userId)
-      let subjectsArr: string[] = []
-      try {
-        subjectsArr = JSON.parse(f.subjects || '[]')
-      } catch {
-        subjectsArr = []
-      }
-
-      return {
-        id: f.id,
-        userId: f.userId,
-        facultyId: f.facultyId,
-        name: u?.name || 'Faculty Member',
-        email: u?.email || `${f.facultyId.toLowerCase()}@vsb.edu.in`,
-        phone: u?.phone || '',
-        designation: f.designation,
-        qualification: f.qualification,
-        experience: f.experience,
-        specialization: f.specialization,
-        subjects: subjectsArr,
-        subjectName: f.subjectName || null,
-        classDay: f.classDay || null,
-        classPeriod: f.classPeriod || null,
-        classTime: f.classTime || null,
-        advisorBatch: f.advisorBatch || null,
-        advisorYear: f.advisorYear || null,
-        advisorSem: f.advisorSem || null,
-        advisorSec: f.advisorSec || null,
-        facultyType: f.facultyType || 'both',
-        status: u?.status || 'active',
-      }
-    })
-
-    return NextResponse.json({ success: true, faculty: result })
   } catch (error) {
-    console.error('Error fetching faculty:', error)
+    console.error('Fetch faculty error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to fetch faculty' },
       { status: 500 }
@@ -73,8 +84,8 @@ export async function POST(request: Request) {
       password,
       dateOfBirth,
       designation = 'Assistant Professor',
-      qualification = 'M.E. / M.Tech / Ph.D.',
-      experience = 5,
+      qualification = 'M.E., Ph.D.',
+      experience = 1,
       specialization = 'Artificial Intelligence',
       subjects = [],
       subjectName,
@@ -89,36 +100,66 @@ export async function POST(request: Request) {
       status = 'active',
     } = data
 
-    if (!name?.trim() || !password?.trim()) {
+    if (!name?.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Faculty Name and Temporary Password are required.' },
+        { success: false, message: 'Faculty Name is required.' },
         { status: 400 }
       )
     }
 
     const fid = facultyId?.trim().toUpperCase() || 'FAC' + Math.floor(1000 + Math.random() * 9000)
     const institutionalEmail = (email && email.trim()) ? email.trim().toLowerCase() : `${fid.toLowerCase()}@vsb.edu.in`
-    const initialPwd = password.trim()
-    const passwordHash = await bcrypt.hash(initialPwd, 10)
+
+    // Check if faculty or user already exists
+    const existingFaculty = await prisma.faculty.findUnique({
+      where: { facultyId: fid },
+    }).catch(() => null)
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: institutionalEmail },
+    }).catch(() => null)
+
+    const isExisting = !!(existingFaculty || existingUser)
+
+    // Only require password for brand new registrations
+    if (!isExisting && !password?.trim()) {
+      return NextResponse.json(
+        { success: false, message: 'Faculty Name and Temporary Password are required for new faculty.' },
+        { status: 400 }
+      )
+    }
+
+    // Determine password update
+    let newPasswordHash: string | undefined = undefined
+    if (password && password.trim()) {
+      newPasswordHash = await bcrypt.hash(password.trim(), 10)
+    } else if (!isExisting) {
+      newPasswordHash = await bcrypt.hash('TempPass@2026', 10)
+    }
+
+    // User update data
+    const userUpdateData: any = {
+      name: name.trim(),
+      phone: phone || null,
+      role: 'faculty',
+      status: status || 'active',
+    }
+    if (newPasswordHash) {
+      userUpdateData.passwordHash = newPasswordHash
+      userUpdateData.mustChangePassword = true
+    }
 
     // Upsert User
     const user = await prisma.user.upsert({
       where: { email: institutionalEmail },
-      update: {
-        name: name.trim(),
-        phone: phone || null,
-        role: 'faculty',
-        status: status || 'active',
-        passwordHash,
-        mustChangePassword: true,
-      },
+      update: userUpdateData,
       create: {
         email: institutionalEmail,
         name: name.trim(),
         phone: phone || null,
         role: 'faculty',
         status: status || 'active',
-        passwordHash,
+        passwordHash: newPasswordHash || await bcrypt.hash('TempPass@2026', 10),
         mustChangePassword: true,
         emailVerified: true,
       },
@@ -188,6 +229,8 @@ export async function POST(request: Request) {
       },
     }).catch(() => {})
 
+    invalidateCache('faculty')
+
     return NextResponse.json({
       success: true,
       faculty: {
@@ -232,6 +275,7 @@ export async function DELETE(request: Request) {
     if (clearAll === 'true') {
       await prisma.faculty.deleteMany({})
       await prisma.user.deleteMany({ where: { role: 'faculty' } })
+      invalidateCache('faculty')
       return NextResponse.json({ success: true, message: 'All faculty cleared successfully' })
     }
 
@@ -257,6 +301,8 @@ export async function DELETE(request: Request) {
     } else {
       await prisma.user.delete({ where: { id: id } }).catch(() => null)
     }
+
+    invalidateCache('faculty')
 
     return NextResponse.json({
       success: true,
