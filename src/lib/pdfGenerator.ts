@@ -321,8 +321,8 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(6.5)
   doc.setTextColor(110, 125, 145)
-  doc.text('Dr. S. Karthik, M.E., Ph.D.', marginX + sigColWidth * 1.5, sigY + 9, { align: 'center' })
-  doc.text('Professor & Department Head', marginX + sigColWidth * 1.5, sigY + 12.5, { align: 'center' })
+  doc.text('Head of Department', marginX + sigColWidth * 1.5, sigY + 9, { align: 'center' })
+  doc.text('Department of AI & Data Science', marginX + sigColWidth * 1.5, sigY + 12.5, { align: 'center' })
 
   // Col 3: Principal & Institutional Seal
   doc.setFontSize(7.2)

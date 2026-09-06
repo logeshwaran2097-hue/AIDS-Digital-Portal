@@ -74,88 +74,7 @@ interface NotificationItem {
   link?: string
 }
 
-const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {
-  student: [
-    {
-      id: '1',
-      title: 'Unit 3 Study Material Uploaded',
-      description: 'Dr. S. Karthik uploaded Deep Learning Unit 3 notes and problem sets.',
-      time: '10 mins ago',
-      unread: true,
-      type: 'info',
-      link: '/dashboard/study',
-    },
-    {
-      id: '2',
-      title: 'CIA 1 Attendance Warning',
-      description: 'Your overall attendance is 87.4%. Keep it above 75% for Anna University eligibility.',
-      time: '1 hour ago',
-      unread: true,
-      type: 'warning',
-      link: '/dashboard/attendance',
-    },
-    {
-      id: '3',
-      title: 'National AI Hackathon 2026',
-      description: 'Registration opens for Smart India Hackathon internal round. Last date Feb 28.',
-      time: '2 hours ago',
-      unread: false,
-      type: 'success',
-      link: '/dashboard/events',
-    },
-  ],
-  faculty: [
-    {
-      id: 'f1',
-      title: 'Attendance Register Due',
-      description: 'Submit today’s 4th hour Artificial Intelligence attendance before 4:30 PM.',
-      time: '15 mins ago',
-      unread: true,
-      type: 'warning',
-      link: '/faculty-dashboard/attendance',
-    },
-    {
-      id: 'f2',
-      title: 'Anna University Question Bank',
-      description: 'Submit 2 sets of Nov/Dec 2025 question papers for Department review.',
-      time: '3 hours ago',
-      unread: false,
-      type: 'info',
-      link: '/faculty-dashboard/question-papers',
-    },
-  ],
-  hod: [
-    {
-      id: 'h1',
-      title: 'CIA-1 Moderation Pending',
-      description: '3 faculty members submitted Question Papers awaiting HOD approval.',
-      time: '20 mins ago',
-      unread: true,
-      type: 'warning',
-      link: '/hod-dashboard/question-papers',
-    },
-    {
-      id: 'h2',
-      title: 'Department NIRF Data Audit',
-      description: 'Quarterly academic and placement data ready for review.',
-      time: '2 hours ago',
-      unread: false,
-      type: 'info',
-      link: '/hod-dashboard/reports',
-    },
-  ],
-  admin: [
-    {
-      id: 'a1',
-      title: 'Database Backup Completed',
-      description: 'Nightly SQLite cloud replica synchronized successfully.',
-      time: '5 mins ago',
-      unread: false,
-      type: 'success',
-      link: '/admin/activity-logs',
-    },
-  ],
-}
+const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {}
 
 export function PortalLayout({ role, userName, userEmail, navItems, children }: PortalLayoutProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -163,9 +82,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
   const [activePath, setActivePath] = useState('')
-  const [notifications, setNotifications] = useState<NotificationItem[]>(
-    DEFAULT_NOTIFICATIONS[role] || DEFAULT_NOTIFICATIONS.student
-  )
+  const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [realtimeToast, setRealtimeToast] = useState<RealtimeToastData | null>(null)
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
   const [isTestingPush, setIsTestingPush] = useState(false)
@@ -257,20 +174,17 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
         if (!isInitialSyncDone.current) {
           // Initial population
           fetchedList.forEach((n: any) => knownNotificationIds.current.add(n.id))
-          DEFAULT_NOTIFICATIONS[role]?.forEach((n) => knownNotificationIds.current.add(n.id))
 
-          if (fetchedList.length > 0) {
-            const formatted: NotificationItem[] = fetchedList.map((n: any) => ({
-              id: n.id,
-              title: n.title,
-              description: n.message,
-              time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
-              unread: true,
-              type: 'info',
-              link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
-            }))
-            setNotifications(formatted)
-          }
+          const formatted: NotificationItem[] = fetchedList.map((n: any) => ({
+            id: n.id,
+            title: n.title,
+            description: n.message,
+            time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
+            unread: true,
+            type: 'info',
+            link: role === 'admin' ? '/admin/notifications' : role === 'hod' ? '/hod-dashboard/notifications' : '/dashboard/notifications',
+          }))
+          setNotifications(formatted)
           isInitialSyncDone.current = true
         } else {
           // Detect brand new real-time notifications

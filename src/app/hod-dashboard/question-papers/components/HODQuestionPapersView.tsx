@@ -32,7 +32,19 @@ interface QuestionPaperRecord {
   createdAt: Date
 }
 
-export function HODQuestionPapersView({ papers }: { papers: QuestionPaperRecord[] }) {
+interface SubjectRecord {
+  id: string
+  code: string
+  name: string
+}
+
+export function HODQuestionPapersView({
+  papers,
+  subjects = [],
+}: {
+  papers: QuestionPaperRecord[]
+  subjects?: SubjectRecord[]
+}) {
   const [selectedSemester, setSelectedSemester] = useState<number>(0)
   const [selectedExamType, setSelectedExamType] = useState<string>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
@@ -287,10 +299,15 @@ export function HODQuestionPapersView({ papers }: { papers: QuestionPaperRecord[
               <div>
                 <label className="font-bold text-gray-600 block mb-1">Subject</label>
                 <select className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs">
-                  <option>AD2301 - Machine Learning</option>
-                  <option>AD2305 - Deep Learning</option>
-                  <option>AD2201 - Data Structures</option>
-                  <option>AD2202 - Database Systems</option>
+                  {subjects.length > 0 ? (
+                    subjects.map((sub) => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.code} - {sub.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No subjects registered</option>
+                  )}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-2">

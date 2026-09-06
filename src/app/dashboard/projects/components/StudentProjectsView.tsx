@@ -387,8 +387,8 @@ export function StudentProjectsView({
           teamMembers: formData.teamMembers,
           year: 2,
           status: 'Active & Supervised',
-          guideName: formData.guideName || 'Dr. S. Karthik, Associate Professor',
-          guideEmail: 'karthik@vsb.edu.in',
+          guideName: formData.guideName || 'Faculty Mentor',
+          guideEmail: null,
         }),
       })
 
@@ -430,7 +430,7 @@ export function StudentProjectsView({
     generateAndDownloadPDF({
       title: 'PROJECT REFERENCE DOSSIER & DAILY PROGRESS LOGS',
       subtitle: `Department of Artificial Intelligence & Data Science · Student Reference Hub 2026`,
-      author: proj.guideName || 'Dr. S. Karthik (Faculty Mentor)',
+      author: proj.guideName || 'Faculty Mentor',
       category: `TECHNICAL BLUEPRINT: ${proj.title.toUpperCase()}`,
       sections: [
         {
@@ -440,7 +440,7 @@ export function StudentProjectsView({
             `Domain Vertical: ${proj.domain || 'Applied AI / ML'}`,
             `Academic Cadre: Year ${proj.year || 2} | Batch: ${proj.batch || '2024-2028'}`,
             `Student Researchers: ${proj.teamMembers || 'Student Team'}`,
-            `Faculty Research Mentor: ${proj.guideName || 'Dr. S. Karthik'} (${proj.guideEmail || 'karthik@vsb.edu.in'})`,
+            `Faculty Research Mentor: ${proj.guideName || 'Faculty Mentor'}${proj.guideEmail ? ` (${proj.guideEmail})` : ''}`,
             `Technical Stack: ${proj.technologies || 'Python, PyTorch, React, FastAPI'}`,
             `Benchmark Results: ${proj.results || 'Verified on local test split'}`,
             `GitHub Repository: ${links.githubUrl || 'Available on Department GitHub'}`,
@@ -583,7 +583,7 @@ export function StudentProjectsView({
                 <div className="pt-3 border-t border-gray-100 space-y-2 text-xs">
                   <div className="flex items-center justify-between text-gray-500">
                     <span>Supervisor:</span>
-                    <span className="font-bold text-[#071A3D]">{p.guideName || 'Dr. S. Karthik'}</span>
+                    <span className="font-bold text-[#071A3D]">{p.guideName || 'Faculty Mentor'}</span>
                   </div>
                   <div className="flex items-center justify-between text-gray-500">
                     <span>Tech:</span>
@@ -638,7 +638,7 @@ export function StudentProjectsView({
                   {selectedProject.domain} · Year {selectedProject.year} Reference
                 </span>
                 <h3 className="text-lg font-black text-[#071A3D] mt-1.5">{selectedProject.title}</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Faculty Mentor: {selectedProject.guideName || 'Dr. S. Karthik'}</p>
+                <p className="text-xs text-gray-500 mt-0.5">Faculty Mentor: {selectedProject.guideName || 'Faculty Mentor'}</p>
               </div>
               <button
                 onClick={() => setSelectedProject(null)}
@@ -720,7 +720,7 @@ export function StudentProjectsView({
 
                   <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 space-y-2">
                     <p className="text-[#071A3D] font-semibold">Student Authors: {selectedProject.teamMembers}</p>
-                    <p className="text-gray-500">Supervisor: {selectedProject.guideName || 'Dr. S. Karthik'}</p>
+                    <p className="text-gray-500">Supervisor: {selectedProject.guideName || 'Faculty Supervisor'}</p>
                     
                     {(() => {
                       const links = extractProjectLinks(selectedProject.documentation)

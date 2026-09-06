@@ -89,33 +89,21 @@ const REMARK_OPTIONS = [
   'Late Entry / Gate Pass',
 ]
 
-const INITIAL_CLASS_OPTIONS: ClassOption[] = [
-  { year: 3, section: 'A', semester: 5, label: 'Year 3 - Section A (Sem 5)' },
-  { year: 3, section: 'B', semester: 5, label: 'Year 3 - Section B (Sem 5)' },
-  { year: 2, section: 'A', semester: 3, label: 'Year 2 - Section A (Sem 3)' },
-  { year: 2, section: 'B', semester: 3, label: 'Year 2 - Section B (Sem 3)' },
-  { year: 4, section: 'A', semester: 7, label: 'Year 4 - Section A (Sem 7)' },
-]
+const INITIAL_CLASS_OPTIONS: ClassOption[] = []
 
-const INITIAL_SUBJECTS: Subject[] = [
-  { id: 'sub-1', code: 'AD2301', name: 'Machine Learning', credits: 4 },
-  { id: 'sub-2', code: 'AD2302', name: 'Deep Learning Architectures', credits: 4 },
-  { id: 'sub-3', code: 'AD2303', name: 'Natural Language Processing', credits: 3 },
-  { id: 'sub-4', code: 'AD2304', name: 'Computer Vision & Edge AI', credits: 3 },
-  { id: 'sub-5', code: 'AD2305', name: 'Big Data Analytics', credits: 3 },
-]
+const INITIAL_SUBJECTS: Subject[] = []
 
 export function GovernmentAttendanceSystem() {
   // Metadata
   const [mode, setMode] = useState<AttendanceMode>('morning')
-  const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS)
-  const [classOptions, setClassOptions] = useState<ClassOption[]>(INITIAL_CLASS_OPTIONS)
-  const [isAdvisor, setIsAdvisor] = useState(true)
-  const [advisorClass, setAdvisorClass] = useState<ClassOption | null>(INITIAL_CLASS_OPTIONS[0])
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [classOptions, setClassOptions] = useState<ClassOption[]>([])
+  const [isAdvisor, setIsAdvisor] = useState(false)
+  const [advisorClass, setAdvisorClass] = useState<ClassOption | null>(null)
 
   // Session fields
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(INITIAL_SUBJECTS[0])
-  const [selectedClass, setSelectedClass] = useState<ClassOption | null>(INITIAL_CLASS_OPTIONS[0])
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
+  const [selectedClass, setSelectedClass] = useState<ClassOption | null>(null)
   const [hour, setHour] = useState(HOUR_OPTIONS[0])
   const [periodType, setPeriodType] = useState<'Theory' | 'Practical' | 'Tutorial'>('Theory')
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
@@ -197,8 +185,8 @@ export function GovernmentAttendanceSystem() {
         }
       })
       .catch(() => {
-        setSubjects(INITIAL_SUBJECTS)
-        setClassOptions(INITIAL_CLASS_OPTIONS)
+        setSubjects([])
+        setClassOptions([])
       })
   }, [])
 
@@ -432,7 +420,9 @@ export function GovernmentAttendanceSystem() {
                 <span>
                   {mode === 'morning'
                     ? '☀ Morning Roll Call · Section Advisory'
-                    : `📘 Subject: ${selectedSubject?.code || 'AD2301'} — ${selectedSubject?.name || 'Data Structures'}`}
+                    : selectedSubject
+                      ? `📘 Subject: ${selectedSubject.code} — ${selectedSubject.name}`
+                      : '📘 Subject: Select a Subject'}
                 </span>
                 <span className="text-blue-300">•</span>
                 <span className="text-[#F4C430] font-semibold">B.Tech AI &amp; DS</span>
@@ -939,7 +929,9 @@ export function GovernmentAttendanceSystem() {
             <span className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
               {mode === 'morning'
                 ? `Morning Roll Call — ${selectedClass?.label || 'Selected Class'}`
-                : `${selectedSubject?.code || 'AD2301'} — ${selectedSubject?.name || 'Subject'} (${hour})`}
+                : selectedSubject
+                  ? `${selectedSubject.code} — ${selectedSubject.name} (${hour})`
+                  : `Subject Period (${hour})`}
             </span>
             {isLocked && (
               <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold border border-amber-200 flex items-center gap-1">

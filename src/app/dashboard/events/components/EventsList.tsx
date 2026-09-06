@@ -54,10 +54,10 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
   return (
     <form onSubmit={onSubmit} className="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
       <div>
-        <label className="font-bold text-gray-700 block mb-1">Participant Name (Team Leader)</label>
+        <label className="font-bold text-gray-700 block mb-1">Full Name</label>
         <input
           type="text"
-          defaultValue="K. Aishwarya"
+          placeholder="e.g. Student Name"
           required
           className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-bold focus:ring-2 focus:ring-[#1455D9]/20 focus:border-[#1455D9]"
         />
@@ -67,7 +67,7 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
           <label className="font-bold text-gray-700 block mb-1">Reg. Number</label>
           <input
             type="text"
-            defaultValue="23AD001"
+            placeholder="e.g. Register Number"
             required
             className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-mono font-bold focus:ring-2 focus:ring-[#1455D9]/20"
           />
@@ -89,7 +89,7 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
         <label className="font-bold text-gray-700 block mb-1">Contact Email</label>
         <input
           type="email"
-          defaultValue="23ad001@vsb.ac.in"
+          placeholder="e.g. student@vsb.edu.in"
           required
           className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-mono focus:ring-2 focus:ring-[#1455D9]/20"
         />

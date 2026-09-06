@@ -9,15 +9,17 @@ export const dynamic = 'force-dynamic'
 export default async function SubjectsPage() {
   const session = await requireRoleSession(['student'])
 
+  const userReg = session.registerNumber || (session.email ? session.email.split('@')[0].toUpperCase() : '')
+
   const student = (await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (await prisma.student.findUnique({ where: { registerNumber: session.registerNumber || '23AD001' } }).catch(() => null)) || {
+    (userReg ? await prisma.student.findUnique({ where: { registerNumber: userReg } }).catch(() => null) : null) || {
       id: 'student-default',
       userId: session.userId,
-      registerNumber: session.registerNumber || '23AD001',
-      dateOfBirth: new Date('2004-05-15'),
+      registerNumber: userReg,
+      dateOfBirth: null,
       department: 'Artificial Intelligence & Data Science',
-      year: 3,
-      semester: 5,
+      year: 1,
+      semester: 1,
       section: 'A',
     }
 

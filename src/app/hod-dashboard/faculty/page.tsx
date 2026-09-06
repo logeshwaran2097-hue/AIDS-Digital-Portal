@@ -21,12 +21,12 @@ export default async function HODFacultyPage() {
       id: f.id,
       facultyId: f.facultyId,
       name: u?.name || f.facultyId,
-      email: u?.email || `${f.facultyId.toLowerCase()}@vsb.ac.in`,
-      phone: u?.phone || '+91 98840 12345',
-      designation: f.designation || 'Assistant Professor',
-      qualification: f.qualification || 'M.Tech',
-      experience: f.experience || 5,
-      specialization: f.specialization || 'AI & Data Science',
+      email: u?.email || '',
+      phone: u?.phone || '',
+      designation: f.designation || 'Faculty Member',
+      qualification: f.qualification || 'Not Specified',
+      experience: f.experience ?? 0,
+      specialization: f.specialization || 'General',
     }
   })
 

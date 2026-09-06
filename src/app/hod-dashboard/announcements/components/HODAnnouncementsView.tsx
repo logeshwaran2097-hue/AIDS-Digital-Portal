@@ -60,10 +60,12 @@ export function HODAnnouncementsView({
   initialAnnouncements,
   facultyList,
   studentList,
+  hodName = 'Head of Department',
 }: {
   initialAnnouncements: AnnouncementItem[]
   facultyList: TargetFacultyOption[]
   studentList: TargetStudentOption[]
+  hodName?: string
 }) {
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>(initialAnnouncements)
   const [searchQuery, setSearchQuery] = useState('')
@@ -79,8 +81,8 @@ export function HODAnnouncementsView({
   const [targetType, setTargetType] = useState<
     'ALL' | 'STUDENTS' | 'FACULTY' | 'ALL_ADVISORS' | 'ADVISORS_Y1' | 'ADVISORS_Y2' | 'ADVISORS_Y3' | 'ADVISORS_Y4' | 'PARTICULAR_FACULTY' | 'PARTICULAR_STUDENT'
   >('STUDENTS')
-  const [selectedFacultyId, setSelectedFacultyId] = useState(facultyList[0]?.facultyId || 'AI001')
-  const [selectedStudentReg, setSelectedStudentReg] = useState(studentList[0]?.registerNumber || '23AD001')
+  const [selectedFacultyId, setSelectedFacultyId] = useState(facultyList[0]?.facultyId || '')
+  const [selectedStudentReg, setSelectedStudentReg] = useState(studentList[0]?.registerNumber || '')
   const [content, setContent] = useState('')
   const [priority, setPriority] = useState('NORMAL')
 
@@ -143,7 +145,7 @@ export function HODAnnouncementsView({
     generateAndDownloadPDF({
       title: 'OFFICIAL DEPARTMENT CIRCULAR & EXECUTIVE DIRECTIVE',
       subtitle: `REF: VSB/AIDS/HOD-CIR/2026/${a.id.slice(-4).toUpperCase()} · DATE: ${d.toLocaleDateString('en-GB')}`,
-      author: 'Prof. Dr. V. Sundar (Head of the Department)',
+      author: `${hodName} (Head of Department)`,
       category: `EXECUTIVE NOTICE: ${a.category.toUpperCase()}`,
       sections: [
         {
@@ -208,7 +210,7 @@ export function HODAnnouncementsView({
           content: priority === 'URGENT' ? `[URGENT / PRIORITY NOTICE]\n${content}` : content,
           category,
           target: finalTarget,
-          createdByName: 'Prof. Dr. V. Sundar (HOD)',
+          createdByName: `${hodName} (HOD)`,
         }),
       })
 
@@ -236,7 +238,7 @@ export function HODAnnouncementsView({
             content: priority === 'URGENT' ? `[URGENT / PRIORITY NOTICE]\n${content}` : content,
             category,
             target: finalTarget,
-            createdByName: 'Prof. Dr. V. Sundar (HOD)',
+            createdByName: `${hodName} (HOD)`,
             isPublished: true,
             createdAt: new Date(),
           },
@@ -269,7 +271,7 @@ export function HODAnnouncementsView({
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Department Announcements &amp; Circulars</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Prof. Dr. V. Sundar · Issue targeted notices to All Students, All Faculty, or Specific Individuals
+            {hodName} · Issue targeted notices to All Students, All Faculty, or Specific Individuals
           </p>
         </div>
 
@@ -413,7 +415,7 @@ export function HODAnnouncementsView({
                   </div>
 
                   <span className="text-[11px] text-gray-500 font-medium">
-                    Issued by: <strong className="text-gray-800">{a.createdByName || 'Prof. Dr. V. Sundar (HOD)'}</strong>
+                    Issued by: <strong className="text-gray-800">{a.createdByName || `${hodName} (HOD)`}</strong>
                   </span>
                 </div>
 
@@ -504,7 +506,7 @@ export function HODAnnouncementsView({
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 font-medium border-t border-gray-100">
-                    <span>Authorized by: <strong className="text-[#071A3D]">Prof. Dr. V. Sundar (Head of Department)</strong></span>
+                    <span>Authorized by: <strong className="text-[#071A3D]">{hodName} (Head of Department)</strong></span>
                     <span className="font-mono">Ref: VSB/HOD/2026</span>
                   </div>
                 </div>

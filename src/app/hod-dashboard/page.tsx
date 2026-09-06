@@ -35,16 +35,16 @@ export default async function HODDashboardPage() {
     user,
     hodRec,
   ] = await Promise.all([
-    prisma.student.count().catch(() => 120),
-    prisma.faculty.count().catch(() => 12),
-    prisma.subject.count().catch(() => 24),
-    prisma.project.count().catch(() => 18),
-    prisma.resource.count({ where: { status: 'published' } }).catch(() => 45),
-    prisma.questionPaper.count({ where: { status: 'published' } }).catch(() => 30),
-    prisma.event.count({ where: { isPublished: true, date: { gte: new Date() } } }).catch(() => 4),
-    prisma.resource.count({ where: { status: 'pending' } }).catch(() => 2),
-    prisma.questionPaper.count({ where: { status: 'pending' } }).catch(() => 1),
-    prisma.achievement.count({ where: { status: 'pending' } }).catch(() => 3),
+    prisma.student.count().catch(() => 0),
+    prisma.faculty.count().catch(() => 0),
+    prisma.subject.count().catch(() => 0),
+    prisma.project.count().catch(() => 0),
+    prisma.resource.count({ where: { status: 'published' } }).catch(() => 0),
+    prisma.questionPaper.count({ where: { status: 'published' } }).catch(() => 0),
+    prisma.event.count({ where: { isPublished: true, date: { gte: new Date() } } }).catch(() => 0),
+    prisma.resource.count({ where: { status: 'pending' } }).catch(() => 0),
+    prisma.questionPaper.count({ where: { status: 'pending' } }).catch(() => 0),
+    prisma.achievement.count({ where: { status: 'pending' } }).catch(() => 0),
     prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
     prisma.hOD.findFirst({ where: { OR: [{ userId: session.userId }, { facultyId: session.facultyId || '' }] } }).catch(() => null),
   ])
@@ -58,13 +58,13 @@ export default async function HODDashboardPage() {
         <HODOnboardingWrapper
           initialMustChangePassword={Boolean(user?.mustChangePassword)}
           hodData={{
-            name: user?.name || session.name || 'Prof. Dr. V. Sundar',
-            email: user?.email || session.email || 'hod.ai@vsb.edu.in',
-            phone: user?.phone || '+91 94431 87654',
-            facultyId: hodRec?.facultyId || session.facultyId || 'HOD001',
-            designation: hodRec?.designation || 'Professor & Head of Department',
-            qualification: hodRec?.qualification || 'Ph.D. (AI & DS), M.Tech (CSE)',
-            experience: hodRec?.experience || 18,
+            name: user?.name || session.name || 'Head of Department',
+            email: user?.email || session.email || '',
+            phone: user?.phone || '',
+            facultyId: hodRec?.facultyId || session.facultyId || '',
+            designation: hodRec?.designation || 'Head of Department',
+            qualification: hodRec?.qualification || '',
+            experience: hodRec?.experience ?? 0,
             department: hodRec?.department || 'Artificial Intelligence & Data Science',
           }}
         />
@@ -83,7 +83,7 @@ export default async function HODDashboardPage() {
                   <span className="text-xs sm:text-sm font-bold text-[#F4C430]">Head of Department</span>
                 </div>
                 <h1 className="text-xl sm:text-3xl font-black text-white truncate mt-1">
-                  {user?.name || session.name || 'Prof. Dr. V. Sundar'}
+                  {user?.name || session.name || 'Head of Department'}
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-300 mt-1">
                   Department of Artificial Intelligence &amp; Data Science · V.S.B. Engineering College

@@ -1637,11 +1637,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               ) : (
                 facultyMembersList.map((faculty, idx) => {
                   const subjs = getSubjectsList(faculty.subjects)
-                  const subjectDisplayName = faculty.subjectName || (subjs.length > 0 ? `Core Course: ${subjs.join(', ')}` : 'Department Course Instructor')
-                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2301'
-                  const dayList = faculty.classDay ? faculty.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Mon', 'Wed', 'Fri']
-                  const periodList = faculty.classPeriod ? faculty.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Period 1']
-                  const timeDisplay = faculty.classTime || '09:15 AM - 10:00 AM'
+                  const subjectDisplayName = faculty.subjectName || (subjs.length > 0 ? `Course: ${subjs.join(', ')}` : 'Faculty Instructor')
+                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : '—'
+                  const dayList = faculty.classDay ? faculty.classDay.split(',').map(d => d.trim()).filter(Boolean) : []
+                  const periodList = faculty.classPeriod ? faculty.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : []
+                  const timeDisplay = faculty.classTime || ''
 
                   return (
                     <tr key={faculty.id} className="hover:bg-indigo-50/30 transition-colors">
@@ -1677,43 +1677,53 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
                       {/* Days */}
                       <td className="px-4 py-3.5">
-                        <div className="flex flex-wrap items-center gap-1">
-                          {dayList.map((d, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] border border-blue-200 text-[11px] font-bold inline-flex items-center gap-1"
-                            >
-                              <Calendar className="w-3 h-3 text-[#1455D9]" />
-                              {d}
-                            </span>
-                          ))}
-                        </div>
+                        {dayList.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1">
+                            {dayList.map((d, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] border border-blue-200 text-[11px] font-bold inline-flex items-center gap-1"
+                              >
+                                <Calendar className="w-3 h-3 text-[#1455D9]" />
+                                {d}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs font-mono">—</span>
+                        )}
                       </td>
 
                       {/* Periods */}
                       <td className="px-4 py-3.5">
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-1">
-                            {periodList.map((p, i) => (
-                              <span
-                                key={i}
-                                className="px-2 py-0.5 rounded-md font-bold text-[11px] inline-flex items-center gap-1 border bg-indigo-50 text-indigo-700 border-indigo-200"
-                              >
-                                <Clock className="w-3 h-3 text-indigo-600" />
-                                {p}
+                        {periodList.length > 0 ? (
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-1">
+                              {periodList.map((p, i) => (
+                                <span
+                                  key={i}
+                                  className="px-2 py-0.5 rounded-md font-bold text-[11px] inline-flex items-center gap-1 border bg-indigo-50 text-indigo-700 border-indigo-200"
+                                >
+                                  <Clock className="w-3 h-3 text-indigo-600" />
+                                  {p}
+                                </span>
+                              ))}
+                            </div>
+                            {timeDisplay && (
+                              <span className="text-[11px] text-gray-500 font-mono font-semibold block">
+                                {timeDisplay}
                               </span>
-                            ))}
+                            )}
                           </div>
-                          <span className="text-[11px] text-gray-500 font-mono font-semibold block">
-                            {timeDisplay}
-                          </span>
-                        </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs font-mono">—</span>
+                        )}
                       </td>
 
                       <td className="px-4 py-3.5">
                         <span className="font-bold text-[#071A3D] block">{faculty.designation}</span>
                         <span className="text-gray-500 text-[11px]">
-                          {faculty.qualification || 'M.E. / Ph.D.'} · {faculty.experience ? `${faculty.experience} Yrs` : 'Faculty'}
+                          {faculty.qualification || 'Not Specified'} · {faculty.experience ? `${faculty.experience} Yrs` : 'Faculty'}
                         </span>
                       </td>
 

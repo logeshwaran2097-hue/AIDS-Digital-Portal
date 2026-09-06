@@ -49,13 +49,6 @@ interface FacultyUser {
   profileImage: string | null
 }
 
-const CABIN_MAP: Record<string, string> = {
-  'Dr. S. Karthik': 'AI Block - Room 201 (2nd Floor)',
-  'Dr. M. Sowmya': 'AI Block - Room 204 (2nd Floor)',
-  'Mr. S. Arun': 'AI Block - Room 105 (1st Floor)',
-  'Mrs. R. Priya': 'AI Block - Room 108 (1st Floor)',
-}
-
 const AVATAR_GRADIENTS = [
   'from-[#1455D9] to-[#22C7E8]',
   'from-[#6C5CE7] to-[#a29bfe]',
@@ -246,12 +239,12 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
 
                       <p className="text-xs font-semibold text-[#1455D9] mt-0.5 flex items-center gap-1.5">
                         <GraduationCap className="w-3.5 h-3.5 text-[#1455D9]" />
-                        <span>{d?.qualification || 'Ph.D. / M.Tech'}</span>
+                        <span>{d?.qualification || 'Faculty Member'}</span>
                       </p>
 
                       <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5 truncate">
                         <MapPin className="w-3 h-3 text-red-500 shrink-0" />
-                        <span>{CABIN_MAP[u.name] || 'AI Department Block'}</span>
+                        <span>AI Department Faculty Block</span>
                       </p>
                     </div>
                   </div>
@@ -264,7 +257,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
                         Assigned Class Advisor:
                       </span>
                       <span className="font-black text-[#071A3D]">
-                        {d?.advisorBatch || 'Year II · Sem 4 · Sec A'}
+                        {d?.advisorBatch || (d?.advisorYear ? `Year ${d.advisorYear} · Sec ${d.advisorSec || 'A'}` : 'Faculty Mentor')}
                       </span>
                     </div>
                   ) : (
@@ -352,7 +345,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
               <div className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100">
                 <p className="font-bold text-[#071A3D]">Faculty Office Hours:</p>
                 <p className="text-gray-600 mt-1">Monday - Friday: 03:30 PM - 04:30 PM</p>
-                <p className="text-gray-500 mt-0.5">Location: {CABIN_MAP[contactFaculty.name] || 'AI Block'}</p>
+                <p className="text-gray-500 mt-0.5">Location: AI Department Faculty Block</p>
               </div>
 
               <div>

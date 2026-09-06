@@ -216,7 +216,7 @@ export function FacultyQuestionPapersView({
         const newPaper: FacultyQPItem = {
           id: result.questionPaper.id,
           subjectId: uploadSubjectId,
-          subjectCode: selectedSub?.code || 'AD2301',
+          subjectCode: selectedSub?.code || uploadSubjectId || 'N/A',
           subjectName: selectedSub?.name || 'Course Subject',
           examType: uploadExamType,
           academicYear: uploadAcademicYear,

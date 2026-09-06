@@ -10,13 +10,13 @@ export default async function FacultyDashboardPage() {
   const session = await requireRoleSession(['faculty'])
 
   const faculty = (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (await prisma.faculty.findUnique({ where: { facultyId: session.facultyId || 'FAC-001' } }).catch(() => null))
+    (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
 
   const user = (await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)) || {
     id: session.userId,
     name: session.name || 'Faculty Member',
-    email: session.email || 'faculty@vsb.edu.in',
-    phone: '+91 98765 43210',
+    email: session.email || '',
+    phone: null,
     role: 'faculty',
     status: 'active',
   }
@@ -107,16 +107,16 @@ export default async function FacultyDashboardPage() {
     faculty: faculty
       ? {
           facultyId: faculty.facultyId,
-          designation: faculty.designation || 'Assistant Professor',
-          qualification: faculty.qualification || 'M.Tech / Ph.D',
-          experience: faculty.experience || 0,
-          specialization: faculty.specialization || 'AI & Data Science',
+          designation: faculty.designation || 'Faculty Member',
+          qualification: faculty.qualification || '',
+          experience: faculty.experience ?? 0,
+          specialization: faculty.specialization || '',
           subjects: faculty.subjects || '[]',
           advisorBatch: faculty.advisorBatch || null,
           advisorYear: faculty.advisorYear || null,
           advisorSem: faculty.advisorSem || null,
           advisorSec: faculty.advisorSec || null,
-          facultyType: faculty.facultyType || 'both',
+          facultyType: faculty.facultyType || 'teaching',
         }
       : null,
     totalStudents,

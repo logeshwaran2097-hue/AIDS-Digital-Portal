@@ -45,13 +45,13 @@ export function AdminQuestionPapersView({ initialPapers }: { initialPapers: QPRe
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
 
   const [formData, setFormData] = useState({
-    subjectCode: 'AD3401',
-    subjectName: 'Data Structures & Algorithms',
+    subjectCode: '',
+    subjectName: '',
     examType: 'Internal Assessment Test 1 (IAT 1)',
     academicYear: '2025-2026',
-    year: 2,
-    semester: 4,
-    uploadedByName: 'Prof. Dr. S. Karthik',
+    year: 1,
+    semester: 1,
+    uploadedByName: '',
   })
 
   // 8 Semesters Definition
@@ -178,7 +178,7 @@ export function AdminQuestionPapersView({ initialPapers }: { initialPapers: QPRe
       academicYear: '2025-2026',
       year: 2,
       semester: 4,
-      uploadedByName: 'Prof. Dr. S. Karthik',
+      uploadedByName: '',
     })
   }
 

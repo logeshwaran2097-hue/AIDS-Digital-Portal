@@ -178,7 +178,7 @@ async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string;
         for (const h of hodRecords) {
           const u = hodUsers.find((user) => user.id === h.userId)
           hodDetails.push(
-            `• **${u?.name || 'Prof. Dr. V. Sundar'}** (${h.facultyId})\n  - **Designation:** ${h.designation}\n  - **Qualification:** ${h.qualification} (${h.experience} Years Exp)\n  - **Department:** ${h.department}\n  - **Email:** ${u?.email || 'hod.ai@vsb.edu.in'}\n  - **Phone:** ${u?.phone || '+91 94431 87654'}`
+            `• **${u?.name || 'Head of Department'}** (${h.facultyId})\n  - **Designation:** ${h.designation || 'Head of Department'}\n  - **Qualification:** ${h.qualification || 'Not Specified'}${h.experience ? ` (${h.experience} Years Exp)` : ''}\n  - **Department:** ${h.department || 'Artificial Intelligence & Data Science'}\n  - **Email:** ${u?.email || 'N/A'}\n  - **Phone:** ${u?.phone || 'N/A'}`
           )
         }
 

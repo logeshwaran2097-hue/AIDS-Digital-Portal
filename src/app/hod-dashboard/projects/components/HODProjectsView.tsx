@@ -269,7 +269,7 @@ export function HODProjectsView({ projects }: { projects: ProjectRecord[] }) {
                 <h4 className="font-bold text-[#071A3D] uppercase tracking-wider mb-1">Project Team &amp; Supervisor:</h4>
                 <div className="p-3 rounded-2xl bg-blue-50/40 border border-blue-100 space-y-1">
                   <p className="text-[#071A3D] font-semibold">Team Members: {selectedProject.teamMembers}</p>
-                  <p className="text-gray-500">Faculty Guide: {selectedProject.guideName || 'Dr. S. Karthik'}</p>
+                  <p className="text-gray-500">Faculty Guide: {selectedProject.guideName || 'Faculty Guide'}</p>
                 </div>
               </div>
             </div>

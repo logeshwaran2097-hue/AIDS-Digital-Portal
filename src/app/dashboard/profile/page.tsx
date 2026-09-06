@@ -47,11 +47,11 @@ export default async function StudentProfilePage() {
   const finalStudent = student || {
     id: 'student-default',
     userId: session.userId,
-    registerNumber: session.registerNumber || '922525243103',
-    dateOfBirth: new Date('2006-02-09'),
+    registerNumber: session.registerNumber || (session.email ? session.email.split('@')[0].toUpperCase() : ''),
+    dateOfBirth: null,
     department: 'Artificial Intelligence & Data Science',
-    year: 2,
-    semester: 4,
+    year: 1,
+    semester: 1,
     section: 'A',
   }
 

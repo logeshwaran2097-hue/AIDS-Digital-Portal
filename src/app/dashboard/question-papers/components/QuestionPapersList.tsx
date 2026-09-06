@@ -63,7 +63,7 @@ export default function QuestionPapersList({ questionPapers, subjects }: { quest
 
     generateAndDownloadPDF({
       title: `${examName.toUpperCase()} - ${q.academicYear}`,
-      subtitle: `${s?.code || 'AD2301'} - ${s?.name || 'Department Subject'} · Maximum Marks: 100 · Duration: 3 Hours`,
+      subtitle: `${s?.code ? `${s.code} - ` : ''}${s?.name || q.fileName} · Maximum Marks: 100 · Duration: 3 Hours`,
       subjectCode: s?.code,
       author: 'Office of the Controller of Examinations (Autonomous)',
       category: examName,
@@ -179,7 +179,7 @@ export default function QuestionPapersList({ questionPapers, subjects }: { quest
                 <CardContent className="p-6 space-y-4">
                   <div className="flex items-center justify-between gap-2">
                     <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1455D9] text-[10px] font-mono font-black border border-blue-200/60">
-                      {s?.code || 'AD2301'}
+                      {s?.code || q.subjectId || 'QP'}
                     </span>
                     <span className="text-[11px] text-gray-400 font-semibold">{q.academicYear}</span>
                   </div>

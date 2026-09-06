@@ -28,9 +28,11 @@ export default async function HODProfilePage() {
                 <span className="px-3 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
                   Head of Department
                 </span>
-                <span className="text-xs text-gray-300">· HOD001</span>
+                {hodRecord?.facultyId && (
+                  <span className="text-xs text-gray-300">· {hodRecord.facultyId}</span>
+                )}
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">{user?.name || 'Prof. Dr. V. Sundar'}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-white">{user?.name || session.name || 'Head of Department'}</h1>
               <p className="text-xs sm:text-sm text-gray-300 mt-1">
                 Department of Artificial Intelligence &amp; Data Science · V.S.B. Engineering College
               </p>
@@ -46,15 +48,15 @@ export default async function HODProfilePage() {
               <div className="space-y-3 text-xs">
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Official Email:</span>
-                  <span className="font-bold text-[#071A3D] font-mono">{user?.email || 'hod.ai@vsb.edu.in'}</span>
+                  <span className="font-bold text-[#071A3D] font-mono">{user?.email || session.email || '—'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Contact Number:</span>
-                  <span className="font-bold text-[#071A3D]">{user?.phone || '+91 94432 12345'}</span>
+                  <span className="font-bold text-[#071A3D]">{user?.phone || 'Not Specified'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Faculty / Employee ID:</span>
-                  <span className="font-bold text-[#1455D9] font-mono">HOD001</span>
+                  <span className="font-bold text-[#1455D9] font-mono">{hodRecord?.facultyId || 'HOD'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Account Status:</span>
@@ -72,15 +74,17 @@ export default async function HODProfilePage() {
               <div className="space-y-3 text-xs">
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Designation:</span>
-                  <span className="font-bold text-[#071A3D]">{hodRecord?.designation || 'Professor & Head'}</span>
+                  <span className="font-bold text-[#071A3D]">{hodRecord?.designation || 'Head of Department'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Qualification:</span>
-                  <span className="font-bold text-[#1455D9]">{hodRecord?.qualification || 'Ph.D. (Data Science & AI)'}</span>
+                  <span className="font-bold text-[#1455D9]">{hodRecord?.qualification || 'Not Specified'}</span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Total Experience:</span>
-                  <span className="font-bold text-purple-700">{hodRecord?.experience || 21} Years Teaching &amp; Research</span>
+                  <span className="font-bold text-purple-700">
+                    {hodRecord?.experience !== undefined && hodRecord?.experience !== null ? `${hodRecord.experience} Years Teaching & Research` : 'Not Specified'}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50">
                   <span className="text-gray-500">Department:</span>

@@ -474,7 +474,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
     generateAndDownloadPDF({
       title: 'PROJECT REFERENCE DOSSIER & DAILY PROGRESS LOGS',
       subtitle: `Department of Artificial Intelligence & Data Science · Student Reference Hub 2026`,
-      author: proj.guideName || 'Dr. S. Karthik (Faculty Supervisor)',
+      author: proj.guideName || 'Faculty Supervisor',
       category: `TECHNICAL BLUEPRINT: ${proj.title.toUpperCase()}`,
       sections: [
         {
@@ -484,7 +484,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
             `Domain Vertical: ${proj.domain || 'Applied AI / ML'}`,
             `Academic Cadre: Year ${proj.year || 4} (Semester ${proj.semester || (proj.year || 4) * 2}) | Batch: ${proj.batch || '2022-2026'}`,
             `Student Researchers: ${proj.teamMembers || 'Candidate Team'}`,
-            `Faculty Research Supervisor: ${proj.guideName || 'Dr. S. Karthik'} (${proj.guideEmail || 'karthik@vsb.edu.in'})`,
+            `Faculty Research Supervisor: ${proj.guideName || 'Faculty Supervisor'}${proj.guideEmail ? ` (${proj.guideEmail})` : ''}`,
             `Technical Stack: ${proj.technologies || 'Python, PyTorch, React, FastAPI'}`,
             `Benchmark Results: ${proj.results || '98.4% Accuracy, 12ms Inference Latency'}`,
             `GitHub Repository: ${links.githubUrl || 'Available on Department GitHub'}`,
@@ -762,7 +762,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     <div className="flex items-center gap-2">
                       <Award className="w-3.5 h-3.5 text-[#F4C430] shrink-0" />
                       <span className="text-gray-600 truncate">
-                        Faculty Mentor: {proj.guideName || 'Dr. S. Karthik, Associate Professor'}
+                        Faculty Mentor: {proj.guideName || 'Faculty Mentor'}
                       </span>
                     </div>
                   </div>
@@ -854,7 +854,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                 </div>
                 <h2 className="text-xl font-black text-white leading-snug">{selectedProject.title}</h2>
                 <p className="text-xs text-gray-300 mt-1">
-                  Faculty Guide: {selectedProject.guideName || 'Dr. S. Karthik'} · Domain: {selectedProject.domain}
+                  Faculty Guide: {selectedProject.guideName || 'Faculty Guide'} · Domain: {selectedProject.domain}
                 </p>
               </div>
               <button
@@ -909,7 +909,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
                     <div>
                       <p className="text-[10px] font-black text-blue-900 uppercase">Faculty Guide Contact</p>
                       <p className="text-xs text-gray-700 mt-0.5">
-                        {selectedProject.guideEmail || 'karthik@vsb.edu.in'}
+                        {selectedProject.guideEmail || '—'}
                       </p>
                     </div>
                   </div>

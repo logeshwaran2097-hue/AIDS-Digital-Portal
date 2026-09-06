@@ -32,8 +32,8 @@ export default async function FacultyQuestionPapersPage() {
     return {
       id: p.id,
       subjectId: p.subjectId,
-      subjectCode: s?.code || 'AD2301',
-      subjectName: s?.name || 'Department Course Subject',
+      subjectCode: s?.code || p.subjectId || 'N/A',
+      subjectName: s?.name || p.fileName || 'Course Subject',
       examType: p.examType,
       academicYear: p.academicYear,
       year: p.year,

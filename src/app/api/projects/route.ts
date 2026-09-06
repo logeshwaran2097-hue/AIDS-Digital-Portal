@@ -48,7 +48,7 @@ export async function POST(request: Request) {
         domain: body.domain || 'Computer Vision & Deep Learning',
         year: Number(body.year) || 4,
         status: body.status || 'Approved & Active',
-        guideName: body.guideName || 'Dr. S. Karthik (Associate Professor)',
+        guideName: body.guideName || 'Faculty Guide',
         guideEmail: body.guideEmail || null,
         teamMembers: body.teamMembers || 'B.Tech AI & DS Team',
       },

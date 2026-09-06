@@ -57,6 +57,8 @@ export default async function HODAnnouncementsPage() {
     }
   })
 
+  const hodName = user?.name || session.name || 'Head of Department'
+
   const mappedAnnouncements: AnnouncementItem[] = announcementsFromDb.map((a) => ({
     id: a.id,
     title: a.title,
@@ -65,18 +67,19 @@ export default async function HODAnnouncementsPage() {
     target: a.target,
     targetYear: a.targetYear,
     targetSemester: a.targetSemester,
-    createdByName: a.createdByName || 'Prof. Dr. V. Sundar (HOD)',
+    createdByName: a.createdByName || hodName,
     isPublished: a.isPublished,
     createdAt: a.createdAt,
   }))
 
   return (
-    <PortalLayout role="hod" userName={user?.name || 'Head of Department'}>
+    <PortalLayout role="hod" userName={hodName}>
       <div className="py-2 animate-fade-in">
         <HODAnnouncementsView
           initialAnnouncements={mappedAnnouncements}
           facultyList={facultyList}
           studentList={studentList}
+          hodName={hodName}
         />
       </div>
     </PortalLayout>

@@ -12,21 +12,23 @@ export default async function StudentSettingsPage() {
   const user = (await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)) || {
     id: session.userId,
     name: session.name || 'Student',
-    email: session.email || 'student@vsb.edu.in',
-    phone: '+91 98765 43210',
+    email: session.email || '',
+    phone: '',
     role: 'student',
     status: 'active',
   }
 
+  const userReg = session.registerNumber || (session.email ? session.email.split('@')[0].toUpperCase() : '')
+
   const student = (await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (await prisma.student.findUnique({ where: { registerNumber: session.registerNumber || '23AD001' } }).catch(() => null)) || {
+    (userReg ? await prisma.student.findUnique({ where: { registerNumber: userReg } }).catch(() => null) : null) || {
       id: 'student-default',
       userId: session.userId,
-      registerNumber: session.registerNumber || '23AD001',
-      dateOfBirth: new Date('2004-05-15'),
+      registerNumber: userReg,
+      dateOfBirth: null,
       department: 'Artificial Intelligence & Data Science',
-      year: 3,
-      semester: 5,
+      year: 1,
+      semester: 1,
       section: 'A',
     }
 

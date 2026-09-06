@@ -111,7 +111,7 @@ export function StudentProfileView({
     batch?: string | null
   }
 }) {
-  const regNo = initialStudent.registerNumber || '922525243123'
+  const regNo = initialStudent.registerNumber || initialUser.email?.split('@')[0].toUpperCase() || ''
   const storageKey = `vsb_student_profile_v2_${regNo}`
 
   const defaultProfile: StudentFullProfile = {
