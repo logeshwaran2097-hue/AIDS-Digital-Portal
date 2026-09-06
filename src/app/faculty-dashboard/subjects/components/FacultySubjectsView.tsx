@@ -21,6 +21,14 @@ import {
   UserCheck,
   Check,
   Eye,
+  Edit3,
+  Trash2,
+  Save,
+  X,
+  FileUp,
+  RefreshCw,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -84,7 +92,200 @@ export function FacultySubjectsView({
   const [uploadDocTitle, setUploadDocTitle] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
 
+  // Syllabus Upload & Extraction State
+  const [showSyllabusUploadModal, setShowSyllabusUploadModal] = useState(false)
+  const [syllabusFile, setSyllabusFile] = useState<File | null>(null)
+  const [uploadingSyllabus, setUploadingSyllabus] = useState(false)
+  const [syllabusError, setSyllabusError] = useState<string | null>(null)
+  const [syllabusSuccessMsg, setSyllabusSuccessMsg] = useState<string | null>(null)
+
+  // Syllabus Editing State
+  const [isEditingSyllabus, setIsEditingSyllabus] = useState(false)
+  const [editableUnits, setEditableUnits] = useState<CourseSubject['units']>([])
+  const [savingSyllabus, setSavingSyllabus] = useState(false)
+
   const currentCourse = courses[selectedCourseIndex] || courses[0] || null
+
+  const startEditingSyllabus = () => {
+    if (!currentCourse) return
+    setEditableUnits(JSON.parse(JSON.stringify(currentCourse.units || [])))
+    setIsEditingSyllabus(true)
+  }
+
+  const cancelEditingSyllabus = () => {
+    setIsEditingSyllabus(false)
+    setEditableUnits([])
+  }
+
+  const handleUnitTitleChange = (unitIdx: number, newTitle: string) => {
+    setEditableUnits((prev) => prev.map((u, i) => (i === unitIdx ? { ...u, title: newTitle } : u)))
+  }
+
+  const handleUnitHoursChange = (unitIdx: number, newHours: number) => {
+    setEditableUnits((prev) => prev.map((u, i) => (i === unitIdx ? { ...u, hours: newHours } : u)))
+  }
+
+  const handleTopicChange = (unitIdx: number, topicIdx: number, newTopic: string) => {
+    setEditableUnits((prev) =>
+      prev.map((u, i) => {
+        if (i !== unitIdx) return u
+        const nextTopics = [...u.topics]
+        nextTopics[topicIdx] = newTopic
+        return { ...u, topics: nextTopics }
+      })
+    )
+  }
+
+  const handleAddTopic = (unitIdx: number) => {
+    setEditableUnits((prev) =>
+      prev.map((u, i) => {
+        if (i !== unitIdx) return u
+        return { ...u, topics: [...u.topics, 'New Topic Concept'] }
+      })
+    )
+  }
+
+  const handleRemoveTopic = (unitIdx: number, topicIdx: number) => {
+    setEditableUnits((prev) =>
+      prev.map((u, i) => {
+        if (i !== unitIdx) return u
+        return { ...u, topics: u.topics.filter((_, tIdx) => tIdx !== topicIdx) }
+      })
+    )
+  }
+
+  const handleAddUnit = () => {
+    const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
+    const nextNum = editableUnits.length + 1
+    const rIndex = nextNum - 1
+    const rLabel = rIndex >= 0 && rIndex < romanNumerals.length ? romanNumerals[rIndex] : String(nextNum)
+    setEditableUnits((prev) => [
+      ...prev,
+      {
+        unit: `Unit ${rLabel}`,
+        title: `Advanced Module ${nextNum}`,
+        hours: 9,
+        topics: ['Overview & Scope', 'Theoretical Formulations', 'Practical Applications'],
+        status: 'In-Progress',
+      },
+    ])
+  }
+
+  const handleRemoveUnit = (unitIdx: number) => {
+    setEditableUnits((prev) => prev.filter((_, i) => i !== unitIdx))
+  }
+
+  const handleSaveSyllabus = async () => {
+    if (!currentCourse) return
+    setSavingSyllabus(true)
+    try {
+      const res = await fetch('/api/faculty/syllabus', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subjectCode: currentCourse.code,
+          units: editableUnits,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to save syllabus')
+      }
+
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (c.code.toUpperCase() === currentCourse.code.toUpperCase()) {
+            return { ...c, units: editableUnits }
+          }
+          return c
+        })
+      )
+      setIsEditingSyllabus(false)
+    } catch (err: any) {
+      alert(err.message || 'Error saving syllabus')
+    } finally {
+      setSavingSyllabus(false)
+    }
+  }
+
+  const handleSyllabusUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!syllabusFile || !currentCourse) return
+
+    setUploadingSyllabus(true)
+    setSyllabusError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', syllabusFile)
+      formData.append('subjectCode', currentCourse.code)
+      formData.append('subjectName', currentCourse.name)
+
+      const res = await fetch('/api/faculty/syllabus', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to extract syllabus')
+      }
+
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (c.code.toUpperCase() === currentCourse.code.toUpperCase()) {
+            return { ...c, units: data.units }
+          }
+          return c
+        })
+      )
+      setShowSyllabusUploadModal(false)
+      setSyllabusFile(null)
+      setSyllabusSuccessMsg(data.message || 'Syllabus successfully extracted!')
+      setTimeout(() => setSyllabusSuccessMsg(null), 4000)
+    } catch (err: any) {
+      setSyllabusError(err.message || 'Error processing syllabus file')
+    } finally {
+      setUploadingSyllabus(false)
+    }
+  }
+
+  const handleStartBlankTemplate = async () => {
+    if (!currentCourse) return
+    const defaultTemplate: CourseSubject['units'] = [
+      { unit: 'Unit I', title: 'Foundational Principles & Concepts', hours: 9, topics: ['Basic Concept Overview', 'Theoretical Framework', 'Core Equations'], status: 'In-Progress' },
+      { unit: 'Unit II', title: 'Architectural Framework & Design', hours: 9, topics: ['System Components', 'Data Structures & Formulations', 'State Representations'], status: 'In-Progress' },
+      { unit: 'Unit III', title: 'Methodologies & Implementation', hours: 9, topics: ['Algorithmic Workflow', 'Analysis & Optimization', 'Benchmark Verification'], status: 'In-Progress' },
+      { unit: 'Unit IV', title: 'Advanced Systems & Models', hours: 9, topics: ['Complexity Reduction', 'Specialized Frameworks', 'Scalability'], status: 'In-Progress' },
+      { unit: 'Unit V', title: 'Applications & Emerging Trends', hours: 9, topics: ['Industry Case Studies', 'Modern Toolkits', 'Project Realization'], status: 'In-Progress' },
+    ]
+
+    try {
+      const res = await fetch('/api/faculty/syllabus', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subjectCode: currentCourse.code,
+          units: defaultTemplate,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.message)
+
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (c.code.toUpperCase() === currentCourse.code.toUpperCase()) {
+            return { ...c, units: defaultTemplate }
+          }
+          return c
+        })
+      )
+      setEditableUnits(defaultTemplate)
+      setIsEditingSyllabus(true)
+    } catch (err: any) {
+      alert(err.message || 'Could not create template')
+    }
+  }
 
   const openUploadModal = () => {
     if (currentCourse) {
@@ -350,37 +551,265 @@ export function FacultySubjectsView({
           {/* Tab 1: 5-Unit Syllabus */}
           {activeTab === 'syllabus' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm text-[#071A3D]">Unit-Wise Detailed Lesson Plan</h3>
-                <span className="text-xs text-green-700 font-bold bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
-                  5 / 5 Units Structured (100%)
-                </span>
-              </div>
+              {syllabusSuccessMsg && (
+                <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{syllabusSuccessMsg}</span>
+                </div>
+              )}
 
-              <div className="space-y-3">
-                {currentCourse.units.map((u, i) => (
-                  <div key={i} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] font-bold text-xs">
-                          {u.unit}
-                        </span>
-                        <h4 className="font-bold text-xs sm:text-sm text-[#071A3D]">{u.title}</h4>
-                      </div>
-                      <span className="text-xs text-gray-400 font-semibold">{u.hours} Teaching Hours</span>
+              {/* State A: No Syllabus Uploaded Yet */}
+              {(!currentCourse.units || currentCourse.units.length === 0) && !isEditingSyllabus && (
+                <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-blue-50/40 via-white to-gray-50 border-2 border-dashed border-blue-200 text-center space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-blue-100 text-[#1455D9] flex items-center justify-center mx-auto shadow-inner">
+                    <FileUp className="w-8 h-8" />
+                  </div>
+                  <div className="max-w-md mx-auto space-y-1">
+                    <h3 className="text-lg font-black text-[#071A3D]">No Syllabus Uploaded Yet</h3>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Upload the official syllabus document (<span className="font-bold text-[#1455D9]">.PDF</span> or <span className="font-bold text-blue-700">.DOCX</span>) for <span className="font-bold text-[#071A3D]">{currentCourse.code} — {currentCourse.name}</span>. The system will automatically extract all 5 units, teaching hours, and topic bullet points.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    <button
+                      onClick={() => {
+                        setSyllabusError(null)
+                        setSyllabusFile(null)
+                        setShowSyllabusUploadModal(true)
+                      }}
+                      className="px-5 py-2.5 rounded-2xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
+                    >
+                      <Upload className="w-4 h-4" /> Upload Syllabus (PDF / DOCX)
+                    </button>
+                    <button
+                      onClick={handleStartBlankTemplate}
+                      className="px-4 py-2.5 rounded-2xl bg-white hover:bg-gray-100 text-[#071A3D] border border-gray-200 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs"
+                    >
+                      <Sparkles className="w-4 h-4 text-amber-500" /> Start with Blank 5-Unit Template
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* State B: View Mode with Uploaded Units */}
+              {currentCourse.units && currentCourse.units.length > 0 && !isEditingSyllabus && (
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-[#071A3D]">Unit-Wise Detailed Lesson Plan</h3>
+                      <span className="text-xs text-green-700 font-bold bg-green-50 px-2.5 py-0.5 rounded-full border border-green-200">
+                        {currentCourse.units.length} Units Structured (100%)
+                      </span>
                     </div>
 
-                    <div className="grid gap-1.5 sm:grid-cols-2 pt-1 border-t border-gray-200/60">
-                      {u.topics.map((t, tIdx) => (
-                        <div key={tIdx} className="flex items-center gap-2 text-xs text-gray-600">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span className="line-clamp-1">{t}</span>
-                        </div>
-                      ))}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={startEditingSyllabus}
+                        className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-amber-700" /> Edit Syllabus
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSyllabusError(null)
+                          setSyllabusFile(null)
+                          setShowSyllabusUploadModal(true)
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-blue-50 text-[#1455D9] border border-blue-200 hover:bg-blue-100 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Upload className="w-3.5 h-3.5" /> Replace File (PDF/DOCX)
+                      </button>
+                      <button
+                        onClick={handleDownloadCoursePack}
+                        className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Export PDF
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <div className="space-y-3">
+                    {currentCourse.units.map((u, i) => (
+                      <div key={i} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-2.5 hover:border-gray-200 transition-all">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] font-bold text-xs font-mono">
+                              {u.unit}
+                            </span>
+                            <h4 className="font-bold text-xs sm:text-sm text-[#071A3D]">{u.title}</h4>
+                          </div>
+                          <span className="text-xs text-gray-400 font-semibold">{u.hours} Teaching Hours</span>
+                        </div>
+
+                        <div className="grid gap-1.5 sm:grid-cols-2 pt-1 border-t border-gray-200/60">
+                          {u.topics.map((t, tIdx) => (
+                            <div key={tIdx} className="flex items-center gap-2 text-xs text-gray-600">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span className="line-clamp-2">{t}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* State C: Live Interactive Syllabus Editor */}
+              {isEditingSyllabus && (
+                <div className="space-y-4 p-5 rounded-3xl bg-amber-50/40 border border-amber-200 animate-fade-in">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-200/70">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Edit3 className="w-4 h-4 text-amber-700" />
+                        <h3 className="font-black text-sm text-[#071A3D]">Live Syllabus &amp; Lesson Plan Editor</h3>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200 text-amber-900">
+                          Editing: {currentCourse.code}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Modify unit titles, allocate teaching hours, and add or delete topic bullet points.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={cancelEditingSyllabus}
+                        disabled={savingSyllabus}
+                        className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 text-xs font-bold cursor-pointer transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveSyllabus}
+                        disabled={savingSyllabus}
+                        className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all disabled:opacity-50"
+                      >
+                        {savingSyllabus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                        <span>{savingSyllabus ? 'Saving...' : 'Save Changes'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Units List Editor */}
+                  <div className="space-y-4">
+                    {editableUnits.map((u, uIdx) => (
+                      <div key={uIdx} className="p-4 rounded-2xl bg-white border border-gray-200 space-y-3 shadow-xs">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="px-2.5 py-1.5 rounded-xl bg-blue-50 text-[#1455D9] font-bold text-xs font-mono shrink-0">
+                              {u.unit}
+                            </span>
+                            <input
+                              type="text"
+                              value={u.title}
+                              onChange={(e) => handleUnitTitleChange(uIdx, e.target.value)}
+                              placeholder="Unit Title..."
+                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-bold text-[#071A3D] focus:bg-white focus:border-[#1455D9] focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-1">
+                              <input
+                                type="number"
+                                min={1}
+                                max={60}
+                                value={u.hours}
+                                onChange={(e) => handleUnitHoursChange(uIdx, parseInt(e.target.value, 10) || 9)}
+                                className="w-16 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-xs font-bold text-center text-[#071A3D] focus:bg-white focus:border-[#1455D9] focus:outline-none"
+                              />
+                              <span className="text-[11px] text-gray-500 font-semibold">Hours</span>
+                            </div>
+
+                            {editableUnits.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveUnit(uIdx)}
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                title="Delete Unit"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Topics for this unit */}
+                        <div className="pt-2 border-t border-gray-100 space-y-2">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                            Topics &amp; Sub-modules ({u.topics.length})
+                          </span>
+
+                          <div className="space-y-1.5">
+                            {u.topics.map((top, tIdx) => (
+                              <div key={tIdx} className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-gray-400 w-4 text-right shrink-0">{tIdx + 1}.</span>
+                                <input
+                                  type="text"
+                                  value={top}
+                                  onChange={(e) => handleTopicChange(uIdx, tIdx, e.target.value)}
+                                  placeholder="Topic description..."
+                                  className="w-full bg-gray-50/80 border border-gray-200 rounded-xl px-2.5 py-1 text-xs text-gray-700 focus:bg-white focus:border-[#1455D9] focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveTopic(uIdx, tIdx)}
+                                  className="p-1 text-gray-400 hover:text-red-600 rounded-md transition-colors cursor-pointer shrink-0"
+                                  title="Remove topic"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAddTopic(uIdx)}
+                            className="text-[11px] font-bold text-[#1455D9] hover:text-[#0e44b5] flex items-center gap-1 pt-1 cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Add Topic
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Unit & Save Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleAddUnit}
+                      className="px-3.5 py-2 rounded-xl bg-white border border-gray-300 hover:border-[#1455D9] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-[#1455D9]" /> Add Another Unit
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={cancelEditingSyllabus}
+                        disabled={savingSyllabus}
+                        className="px-4 py-2 rounded-xl bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 text-xs font-bold cursor-pointer transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveSyllabus}
+                        disabled={savingSyllabus}
+                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all disabled:opacity-50"
+                      >
+                        {savingSyllabus ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                        <span>{savingSyllabus ? 'Saving...' : 'Save Changes'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -695,6 +1124,112 @@ export function FacultySubjectsView({
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Syllabus PDF/DOCX Upload & Automated Extraction Modal */}
+      {showSyllabusUploadModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-scale-up border border-gray-100">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-blue-50 text-[#1455D9]">
+                  <FileUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-[#071A3D] text-base">Upload Syllabus Document</h3>
+                  <p className="text-xs text-gray-400">Extracts units, hours, and topics from PDF or DOCX</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSyllabusUploadModal(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {syllabusError && (
+              <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{syllabusError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSyllabusUploadSubmit} className="space-y-4">
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100 space-y-1">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Target Course</span>
+                <p className="font-bold text-xs text-[#071A3D]">
+                  {currentCourse?.code} — {currentCourse?.name}
+                </p>
+              </div>
+
+              <div>
+                <label className="font-bold text-xs text-[#071A3D] block mb-1">
+                  Select Syllabus File (.PDF or .DOCX) *
+                </label>
+                <div className="relative border-2 border-dashed border-blue-200 hover:border-[#1455D9] rounded-2xl p-6 text-center transition-all bg-blue-50/20 group">
+                  <input
+                    type="file"
+                    accept=".pdf,.docx,.doc"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setSyllabusFile(e.target.files[0])
+                        setSyllabusError(null)
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {syllabusFile ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span className="truncate max-w-[240px]">{syllabusFile.name}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-400">
+                        {(syllabusFile.size / (1024 * 1024)).toFixed(2)} MB · Ready to parse
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <Upload className="w-6 h-6 text-[#1455D9] mx-auto group-hover:scale-110 transition-transform" />
+                      <p className="text-xs font-bold text-gray-700">Click or drag &amp; drop syllabus document</p>
+                      <p className="text-[10px] text-gray-400">Supports PDF, DOCX, DOC up to 25 MB</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2 border-t flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSyllabusUploadModal(false)}
+                  disabled={uploadingSyllabus}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!syllabusFile || uploadingSyllabus}
+                  className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {uploadingSyllabus ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extracting Syllabus Data...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-[#F4C430]" />
+                      <span>Extract &amp; Publish Syllabus</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
