@@ -9,24 +9,37 @@ export const dynamic = 'force-dynamic'
 export default async function FacultyProfilePage() {
   const session = await requireRoleSession(['faculty'])
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } })
-  const faculty = await prisma.faculty.findUnique({ where: { userId: session.userId } })
+  const [user, faculty] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.userId } }),
+    prisma.faculty.findUnique({ where: { userId: session.userId } }),
+  ])
+
+  const key = `faculty_settings_${session.userId}`
+  const userSettings = await prisma.systemSettings.findUnique({ where: { key } }).catch(() => null)
+  let preferences: any = {}
+  if (userSettings?.value) {
+    try {
+      preferences = JSON.parse(userSettings.value)
+    } catch {}
+  }
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
     faculty?.facultyType === 'both' ||
-    (!faculty?.facultyType && Boolean(faculty?.advisorBatch))
+    Boolean(faculty?.advisorBatch)
 
   let studentCount = 0
-  if (faculty?.advisorYear && faculty?.advisorSec) {
-    studentCount = await prisma.student.count({
-      where: {
-        year: faculty.advisorYear,
-        section: faculty.advisorSec,
-      },
-    })
-  } else if (faculty?.advisorBatch) {
-    studentCount = await prisma.student.count()
+  if (isAdvisor) {
+    if (faculty?.advisorYear && faculty?.advisorSec) {
+      studentCount = await prisma.student.count({
+        where: {
+          year: faculty.advisorYear,
+          section: faculty.advisorSec,
+        },
+      })
+    } else if (faculty?.advisorBatch) {
+      studentCount = await prisma.student.count()
+    }
   }
 
   let parsedSubjects: string[] = []
@@ -46,26 +59,32 @@ export default async function FacultyProfilePage() {
     ? dbSubjects.map(s => `${s.code} - ${s.name} (${s.credits} Credits)`)
     : (faculty?.subjectName ? [faculty.subjectName] : [])
 
+  const defaultRoleTitle = isAdvisor
+    ? 'Assistant Professor & Class Advisor'
+    : (faculty?.facultyType === 'lab_faculty' ? 'Assistant Professor & Lab In-charge' : 'Assistant Professor')
+
   const profileData: FacultyProfileData = {
     name: user?.name || session.name || 'Faculty Member',
     facultyId: faculty?.facultyId || session.facultyId || 'FACULTY',
-    designation: faculty?.designation || (isAdvisor ? 'Assistant Professor & Class Advisor' : 'Faculty Member'),
-    qualification: faculty?.qualification || 'Post Graduate / Doctorate',
-    experience: faculty?.experience || 0,
-    specialization: faculty?.specialization || 'Artificial Intelligence & Data Science',
+    designation: faculty?.designation || defaultRoleTitle,
+    qualification: faculty?.qualification?.trim() || preferences?.qualification || 'M.E. / M.Tech (Computer Science & Engineering)',
+    experience: faculty?.experience ?? preferences?.experience ?? 5,
+    specialization: faculty?.specialization?.trim() || preferences?.specialization || 'Artificial Intelligence & Machine Learning',
     email: user?.email || session.email || 'faculty@vsb.edu.in',
     phone: user?.phone || '',
-    cabin: 'Staff Room 2 · AI & DS Block (Desk #4)',
-    officeHours: faculty?.classTime ? `Lecture/Lab: ${faculty.classTime}` : '09:00 AM - 04:30 PM (Working Days)',
-    publicationsCount: 0,
-    citationsCount: 0,
+    cabin: preferences?.cabin || 'Staff Room 2 · AI & DS Block (Desk #4)',
+    officeHours: preferences?.officeHours || (faculty?.classTime ? `Lecture/Lab: ${faculty.classTime}` : '09:00 AM - 04:30 PM (Working Days)'),
+    publicationsCount: preferences?.publicationsCount || 0,
+    citationsCount: preferences?.citationsCount || 0,
     allocatedCourses: allocatedCourseList,
     isAdvisor,
-    advisorBatch: faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} - Sem ${faculty.advisorSem || 3} - Sec ${faculty.advisorSec || 'A'}` : 'AI & DS Department'),
-    advisorYear: faculty?.advisorYear || 2,
-    advisorSem: faculty?.advisorSem || 3,
-    advisorSec: faculty?.advisorSec || 'A',
-    facultyType: faculty?.facultyType || (isAdvisor ? 'advisor' : 'faculty'),
+    advisorBatch: isAdvisor
+      ? (faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} - Section ${faculty.advisorSec || 'A'} (Sem ${faculty.advisorSem || 3})` : 'Class Advisor'))
+      : undefined,
+    advisorYear: isAdvisor ? (faculty?.advisorYear || undefined) : undefined,
+    advisorSem: isAdvisor ? (faculty?.advisorSem || undefined) : undefined,
+    advisorSec: isAdvisor ? (faculty?.advisorSec || undefined) : undefined,
+    facultyType: faculty?.facultyType || (isAdvisor ? 'advisor' : 'subject_handler'),
     studentCount,
   }
 
@@ -74,7 +93,7 @@ export default async function FacultyProfilePage() {
       role="faculty"
       userName={user?.name || 'Faculty'}
       userEmail={user?.email || session.email}
-      roleBadgeLabel={isAdvisor ? 'Class Advisor' : 'Faculty Member'}
+      roleBadgeLabel={isAdvisor ? 'Class Advisor' : (faculty?.facultyType === 'lab_faculty' ? 'Lab In-charge' : 'Faculty Member')}
     >
       <div className="py-2 animate-fade-in">
         <FacultyProfileView data={profileData} />

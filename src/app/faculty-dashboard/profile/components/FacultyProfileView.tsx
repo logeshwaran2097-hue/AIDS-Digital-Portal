@@ -72,7 +72,7 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
   })
   const [loading, setLoading] = useState(false)
 
-  const isAdvisor = Boolean(data.isAdvisor || data.advisorBatch || data.facultyType === 'advisor')
+  const isAdvisor = Boolean(data.isAdvisor)
 
   const handleDownloadFacultyDossier = () => {
     generateAndDownloadPDF({
@@ -151,8 +151,13 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'UPDATE_PROFILE',
+          name: editForm.name.trim(),
           phone: editForm.phone.trim(),
+          qualification: editForm.qualification.trim(),
           specialization: editForm.specialization.trim(),
+          experience: Number(editForm.experience) || 0,
+          cabin: editForm.cabin.trim(),
+          officeHours: editForm.officeHours.trim(),
         }),
       }).catch(() => {})
 
@@ -165,12 +170,12 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
           email: editForm.email.trim(),
           qualification: editForm.qualification.trim(),
           specialization: editForm.specialization.trim(),
-          experience: Number(editForm.experience) || 1,
-          cabin: editForm.cabin,
-          officeHours: editForm.officeHours,
+          experience: Number(editForm.experience) || 0,
+          cabin: editForm.cabin.trim(),
+          officeHours: editForm.officeHours.trim(),
         }))
         setIsEditOpen(false)
-        toast.success('Advisor profile details saved successfully!')
+        toast.success('Faculty profile details saved successfully!')
       } else {
         toast.error(result.message || 'Failed to update profile.')
       }
@@ -250,9 +255,11 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
             <div className="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-xs text-center">
               <p className="text-[10px] text-emerald-600 font-bold uppercase">Students Mentored</p>
               <p className="text-xl font-black text-emerald-700 mt-0.5">
-                {data.studentCount || 'Class'} Students
+                {data.studentCount && data.studentCount > 0 ? `${data.studentCount} Students` : '0 Enrolled'}
               </p>
-              <p className="text-[10px] text-emerald-600 font-medium">Direct Roster Scope</p>
+              <p className="text-[10px] text-emerald-600 font-medium">
+                {data.studentCount && data.studentCount > 0 ? 'Direct Roster Scope' : 'Class Roster Pending'}
+              </p>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs text-center">
@@ -272,25 +279,29 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
             <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs text-center">
               <p className="text-[10px] text-gray-500 font-bold uppercase">Experience</p>
               <p className="text-xl font-black text-[#1455D9] mt-0.5">{data.experience} Years</p>
-              <p className="text-[10px] text-gray-400">Teaching &amp; R&amp;D</p>
+              <p className="text-[10px] text-gray-400">Teaching &amp; Academic</p>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs text-center">
-              <p className="text-[10px] text-purple-700 font-bold uppercase">Publications</p>
-              <p className="text-xl font-black text-purple-700 mt-0.5">{data.publicationsCount} Papers</p>
-              <p className="text-[10px] text-purple-600">Scopus / SCI</p>
+              <p className="text-[10px] text-purple-700 font-bold uppercase">Allocated Workload</p>
+              <p className="text-xl font-black text-purple-700 mt-0.5">
+                {data.allocatedCourses.length} Subject{data.allocatedCourses.length === 1 ? '' : 's'}
+              </p>
+              <p className="text-[10px] text-purple-600">Active Curriculum</p>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs text-center">
-              <p className="text-[10px] text-green-700 font-bold uppercase">Citations</p>
-              <p className="text-xl font-black text-green-600 mt-0.5">{data.citationsCount}+</p>
-              <p className="text-[10px] text-green-700">h-index: 12</p>
+              <p className="text-[10px] text-green-700 font-bold uppercase">Faculty Cadre</p>
+              <p className="text-sm font-black text-green-700 mt-1">
+                {data.facultyType === 'lab_faculty' ? 'Lab In-charge' : 'Theory Specialist'}
+              </p>
+              <p className="text-[10px] text-green-600">AI &amp; DS Department</p>
             </div>
 
             <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs text-center">
-              <p className="text-[10px] text-amber-700 font-bold uppercase">Cabin</p>
-              <p className="text-sm font-black text-amber-600 mt-0.5 truncate">{data.cabin}</p>
-              <p className="text-[10px] text-amber-700 truncate">{data.officeHours}</p>
+              <p className="text-[10px] text-amber-700 font-bold uppercase">Teaching Schedule</p>
+              <p className="text-sm font-black text-amber-800 mt-1 truncate">{data.officeHours}</p>
+              <p className="text-[10px] text-amber-700 truncate">{data.cabin}</p>
             </div>
           </>
         )}
@@ -299,7 +310,7 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
       {/* ========================================================================= */}
       {/* CLASS ADVISOR JURISDICTION & POWERS CARD (HIGHLIGHTED FOR ADVISOR) */}
       {/* ========================================================================= */}
-      {isAdvisor && (
+      {isAdvisor ? (
         <Card className="rounded-3xl border-blue-200 bg-gradient-to-br from-blue-50/60 via-white to-white shadow-xs overflow-hidden">
           <CardContent className="p-6 sm:p-7 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-blue-100 pb-4">
@@ -389,6 +400,98 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
             </div>
           </CardContent>
         </Card>
+      ) : (
+        /* ========================================================================= */
+        /* FACULTY TEACHING PORTFOLIO CARD (FOR THEORY/LAB SPECIALISTS) */
+        /* ========================================================================= */
+        <Card className="rounded-3xl border-blue-200 bg-gradient-to-br from-blue-50/60 via-white to-white shadow-xs overflow-hidden">
+          <CardContent className="p-6 sm:p-7 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-blue-100 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#1455D9] block mb-0.5">
+                  Institutional Appointment &amp; Academic Responsibilities
+                </span>
+                <h2 className="text-lg sm:text-xl font-black text-[#071A3D] flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-[#1455D9]" />
+                  Faculty Teaching Portfolio: Department of AI &amp; DS
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Academic Year 2025–2026 · V.S.B. Engineering College
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                <Link
+                  href="/faculty-dashboard/attendance"
+                  className="px-4 py-2 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
+                >
+                  <Calendar className="w-3.5 h-3.5" /> Take Attendance
+                </Link>
+                <Link
+                  href="/faculty-dashboard/subjects"
+                  className="px-4 py-2 rounded-xl bg-white border border-gray-200 hover:border-blue-300 text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-[#1455D9]" /> My Subjects
+                </Link>
+                <Link
+                  href="/faculty-dashboard/question-papers"
+                  className="px-3.5 py-2 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-600 text-xs font-bold flex items-center gap-1.5 transition-all"
+                >
+                  <FileCheck className="w-3.5 h-3.5 text-[#1455D9]" /> Question Papers
+                </Link>
+              </div>
+            </div>
+
+            {/* Teaching Responsibilities Grid */}
+            <div>
+              <p className="text-xs font-black uppercase text-[#071A3D] mb-3 flex items-center gap-2">
+                <FileCheck className="w-4 h-4 text-emerald-600" />
+                Authorized Teaching Duties &amp; Subject Responsibilities:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#1455D9] font-bold text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Period Attendance</span>
+                  </div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Recording live period attendance, tracking presence and marking OD/Absents in real time.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#1455D9] font-bold text-xs">
+                    <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Syllabus Delivery</span>
+                  </div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Upload official syllabus (PDF/DOCX), parse units and track classroom curriculum coverage.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#1455D9] font-bold text-xs">
+                    <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Assessment &amp; Tests</span>
+                  </div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Formulating and submitting question papers for IAT-1, IAT-2 and Model semester examinations.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white border border-gray-200 shadow-xs space-y-1">
+                  <div className="flex items-center gap-1.5 text-[#1455D9] font-bold text-xs">
+                    <Users className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Academic Guidance</span>
+                  </div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Subject doubts clarification, practical lab supervision, and student project mentorship.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Profile Details Cards */}
@@ -462,9 +565,25 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
                 </div>
               ) : (
                 data.allocatedCourses.map((c, idx) => (
-                  <div key={idx} className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0" />
-                    <span className="font-bold text-[#071A3D]">{c}</span>
+                  <div key={idx} className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0" />
+                      <span className="font-bold text-[#071A3D]">{c}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Link
+                        href="/faculty-dashboard/attendance"
+                        className="px-2.5 py-1 rounded-lg bg-[#1455D9] text-white text-[11px] font-bold hover:bg-[#0e44b5] transition-all shadow-2xs"
+                      >
+                        Attendance
+                      </Link>
+                      <Link
+                        href="/faculty-dashboard/subjects"
+                        className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-[#1455D9] text-[11px] font-bold hover:bg-blue-50 transition-all shadow-2xs"
+                      >
+                        Syllabus
+                      </Link>
+                    </div>
                   </div>
                 ))
               )}

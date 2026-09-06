@@ -113,24 +113,52 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'UPDATE_PROFILE') {
-      const { phone, specialization } = body
-      if (phone !== undefined) {
+      const { name, phone, specialization, qualification, experience, cabin, officeHours } = body
+      if (name !== undefined || phone !== undefined) {
         await prisma.user.update({
           where: { id: session.userId },
           data: {
-            phone: phone ? phone.trim() : null,
+            ...(name ? { name: name.trim() } : {}),
+            ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
             updatedAt: new Date(),
           },
-        })
+        }).catch(() => {})
       }
 
-      if (specialization !== undefined) {
+      if (specialization !== undefined || qualification !== undefined || experience !== undefined || officeHours !== undefined) {
         await prisma.faculty.updateMany({
           where: { userId: session.userId },
           data: {
-            specialization: specialization ? specialization.trim() : '',
+            ...(specialization !== undefined ? { specialization: specialization.trim() } : {}),
+            ...(qualification !== undefined ? { qualification: qualification.trim() } : {}),
+            ...(experience !== undefined ? { experience: Number(experience) || 0 } : {}),
+            ...(officeHours !== undefined ? { classTime: officeHours.trim() } : {}),
           },
-        })
+        }).catch(() => {})
+      }
+
+      if (cabin !== undefined || officeHours !== undefined) {
+        const key = `faculty_settings_${session.userId}`
+        const existing = await prisma.systemSettings.findUnique({ where: { key } }).catch(() => null)
+        let pref: any = {}
+        if (existing?.value) {
+          try { pref = JSON.parse(existing.value) } catch {}
+        }
+        if (cabin !== undefined) pref.cabin = cabin.trim()
+        if (officeHours !== undefined) pref.officeHours = officeHours.trim()
+
+        await prisma.systemSettings.upsert({
+          where: { key },
+          create: {
+            key,
+            value: JSON.stringify(pref),
+            description: `Preferences for faculty ${session.userId}`,
+            isPublic: false,
+          },
+          update: {
+            value: JSON.stringify(pref),
+          },
+        }).catch(() => {})
       }
 
       return NextResponse.json({
