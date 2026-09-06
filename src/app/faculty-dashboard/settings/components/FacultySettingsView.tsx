@@ -1207,27 +1207,15 @@ export function FacultySettingsView({
             </div>
 
             <form onSubmit={handleProfileSubmit} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    disabled
-                    value={userName}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 font-bold"
-                  />
-                  <p className="text-[10px] text-gray-400 mt-1">Managed by Department Administrator.</p>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Advisor Faculty ID</label>
-                  <input
-                    type="text"
-                    disabled
-                    value={facultyId}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 font-mono font-bold text-gray-600"
-                  />
-                </div>
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
+                <input
+                  type="text"
+                  disabled
+                  value={userName}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 font-bold"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">Managed by Department Administrator.</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
