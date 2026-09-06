@@ -128,8 +128,17 @@ export default async function FacultyDashboardPage() {
     todayTimetable: timetableSlots,
   }
 
+  const isAdvisor =
+    faculty?.facultyType === 'advisor' ||
+    faculty?.facultyType === 'both'
+
   return (
-    <PortalLayout role="faculty" userName={user.name || session.name || 'Faculty'}>
+    <PortalLayout
+      role="faculty"
+      userName={user.name || session.name || 'Faculty'}
+      userEmail={user.email || session.email}
+      roleBadgeLabel={isAdvisor ? 'Class Advisor' : 'Faculty Member'}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyDashboardView data={facultyData} />
       </div>

@@ -47,6 +47,7 @@ interface PortalLayoutProps {
   userName: string
   userEmail?: string
   navItems?: NavItem[]
+  roleBadgeLabel?: string
   children: React.ReactNode
 }
 
@@ -76,7 +77,7 @@ interface NotificationItem {
 
 const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {}
 
-export function PortalLayout({ role, userName, userEmail, navItems, children }: PortalLayoutProps) {
+export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLabel, children }: PortalLayoutProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
@@ -466,7 +467,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                 roleBadge.color
               )}
             >
-              {roleBadge.label}
+              {roleBadgeLabel || roleBadge.label}
             </span>
           </div>
         </Link>
@@ -814,7 +815,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
                   {userName}
                 </span>
                 <span className="text-[9px] font-extrabold text-emerald-600 mt-0.5">
-                  {role === 'faculty' ? 'FACULTY' : role.toUpperCase()}
+                  {(roleBadgeLabel || (role === 'faculty' ? 'Faculty' : role)).toUpperCase()}
                 </span>
               </div>
             </Link>

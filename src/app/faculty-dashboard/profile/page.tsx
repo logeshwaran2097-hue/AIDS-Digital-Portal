@@ -70,7 +70,12 @@ export default async function FacultyProfilePage() {
   }
 
   return (
-    <PortalLayout role="faculty" userName={user?.name || 'Faculty'}>
+    <PortalLayout
+      role="faculty"
+      userName={user?.name || 'Faculty'}
+      userEmail={user?.email || session.email}
+      roleBadgeLabel={isAdvisor ? 'Class Advisor' : 'Faculty Member'}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyProfileView data={profileData} />
       </div>

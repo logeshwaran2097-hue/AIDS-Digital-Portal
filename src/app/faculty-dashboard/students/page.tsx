@@ -62,8 +62,15 @@ export default async function FacultyStudentsPage() {
     dateOfBirth: faculty?.dateOfBirth ? faculty.dateOfBirth.toISOString() : undefined,
   }
 
+  const isAdvisor = faculty?.facultyType === 'advisor' || faculty?.facultyType === 'both'
+
   return (
-    <PortalLayout role="faculty" userName={user?.name || session.name || 'Faculty'}>
+    <PortalLayout
+      role="faculty"
+      userName={user?.name || session.name || 'Faculty'}
+      userEmail={user?.email || session.email}
+      roleBadgeLabel={isAdvisor ? 'Class Advisor' : 'Faculty Member'}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyStudentsView initialStudents={mappedStudents} advisorDetails={advisorDetails} />
       </div>
