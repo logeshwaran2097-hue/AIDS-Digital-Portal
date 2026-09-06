@@ -73,12 +73,28 @@ export function FacultySubjectsView({
   const [activeTab, setActiveTab] = useState<'syllabus' | 'notes' | 'labs' | 'questions'>('syllabus')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
-  const [uploadTargetCode, setUploadTargetCode] = useState(courses[0]?.code || '')
-  const [uploadUnitTitle, setUploadUnitTitle] = useState('Unit I - Introduction & Foundations')
+  const [uploadTargetCode, setUploadTargetCode] = useState(
+    courses[0]?.code ? `${courses[0].code} - ${courses[0].name}` : ''
+  )
+  const [uploadUnitTitle, setUploadUnitTitle] = useState(
+    courses[0]?.units?.[0]
+      ? `${courses[0].units[0].unit} - ${courses[0].units[0].title}`
+      : 'Unit I - Introduction & Foundations'
+  )
   const [uploadDocTitle, setUploadDocTitle] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
 
   const currentCourse = courses[selectedCourseIndex] || courses[0] || null
+
+  const openUploadModal = () => {
+    if (currentCourse) {
+      setUploadTargetCode(`${currentCourse.code} - ${currentCourse.name}`)
+      if (currentCourse.units && currentCourse.units.length > 0) {
+        setUploadUnitTitle(`${currentCourse.units[0].unit} - ${currentCourse.units[0].title}`)
+      }
+    }
+    setShowUploadModal(true)
+  }
 
   const handleDownloadCoursePack = () => {
     if (!currentCourse) return
@@ -100,30 +116,69 @@ export function FacultySubjectsView({
 
   const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!uploadDocTitle) return
+    if (!uploadDocTitle.trim() || !uploadTargetCode.trim()) return
 
-    const targetCode = uploadTargetCode || currentCourse?.code || courses[0]?.code
+    const rawTarget = uploadTargetCode.trim()
+    const codePart = rawTarget.split(' - ')[0].trim().toUpperCase()
+    const namePart = rawTarget.includes(' - ')
+      ? rawTarget.split(' - ').slice(1).join(' - ').trim()
+      : rawTarget
+
+    const rawUnit = uploadUnitTitle.trim()
+    const unitLabel = rawUnit.includes(' - ')
+      ? rawUnit.split(' - ')[0].trim()
+      : rawUnit || 'Unit I'
 
     // Add note to courses state
     const newNote = {
-      unit: uploadUnitTitle.split(' - ')[0] || 'Unit I',
-      title: uploadDocTitle,
-      fileName: uploadFile ? uploadFile.name : `${targetCode}_${uploadDocTitle.replace(/\s+/g, '_')}.pdf`,
+      unit: unitLabel,
+      title: uploadDocTitle.trim(),
+      fileName: uploadFile ? uploadFile.name : `${codePart}_${uploadDocTitle.replace(/\s+/g, '_')}.pdf`,
       fileSize: uploadFile ? `${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB` : '2.4 MB',
       uploadedDate: 'Just now',
     }
 
-    setCourses((prev) =>
-      prev.map((c) => {
-        if (c.code === targetCode) {
-          return {
-            ...c,
-            notes: [newNote, ...c.notes],
+    setCourses((prev) => {
+      const existingIdx = prev.findIndex((c) => c.code.toUpperCase() === codePart)
+      if (existingIdx >= 0) {
+        return prev.map((c, idx) => {
+          if (idx === existingIdx) {
+            return {
+              ...c,
+              notes: [newNote, ...c.notes],
+            }
           }
+          return c
+        })
+      } else {
+        // Faculty typed a new subject not yet in list - create it dynamically!
+        const newCourse: CourseSubject = {
+          code: codePart,
+          name: namePart || codePart,
+          regulation: 'Regulation 2021 (Autonomous)',
+          credits: 3,
+          year: 2,
+          semester: 3,
+          section: 'A',
+          enrolledStudents: 68,
+          hoursTaught: 1,
+          attendanceRate: '100%',
+          units: [
+            {
+              unit: unitLabel,
+              title: rawUnit || 'Introduction & Foundations',
+              hours: 9,
+              topics: ['Fundamental Concepts', 'Core Principles', 'Architecture Overview'],
+              status: 'In-Progress',
+            },
+          ],
+          notes: [newNote],
+          labs: [],
+          questions: [],
         }
-        return c
-      })
-    )
+        return [...prev, newCourse]
+      }
+    })
 
     setUploadSuccess(true)
     setTimeout(() => {
@@ -153,7 +208,7 @@ export function FacultySubjectsView({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowUploadModal(true)}
+            onClick={openUploadModal}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
           >
             <Upload className="w-4 h-4 text-[#22C7E8]" /> Upload Material (PDF)
@@ -335,8 +390,8 @@ export function FacultySubjectsView({
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm text-[#071A3D]">Uploaded Notes &amp; Handouts</h3>
                 <button
-                  onClick={() => setShowUploadModal(true)}
-                  className="px-3 py-1.5 bg-[#1455D9] text-white rounded-xl text-xs font-bold flex items-center gap-1 hover:bg-[#0e44b5]"
+                  onClick={openUploadModal}
+                  className="px-3 py-1.5 bg-[#1455D9] text-white rounded-xl text-xs font-bold flex items-center gap-1 hover:bg-[#0e44b5] cursor-pointer shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" /> Upload Material
                 </button>
@@ -463,33 +518,121 @@ export function FacultySubjectsView({
             ) : (
               <form onSubmit={handleUploadSubmit} className="space-y-3.5 text-xs">
                 <div>
-                  <label className="font-bold text-[#071A3D] block mb-1">Target Subject *</label>
-                  <select
-                    value={uploadTargetCode || currentCourse?.code || ''}
-                    onChange={(e) => setUploadTargetCode(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                  >
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-[#071A3D] block">Target Subject *</label>
+                    <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                  </div>
+                  <input
+                    type="text"
+                    list="target-subjects-datalist"
+                    value={uploadTargetCode}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setUploadTargetCode(val)
+                      const matching = courses.find(
+                        (c) =>
+                          val.toUpperCase().includes(c.code.toUpperCase()) ||
+                          c.name.toLowerCase().includes(val.toLowerCase())
+                      )
+                      if (matching && matching.units.length > 0) {
+                        setUploadUnitTitle(`${matching.units[0].unit} - ${matching.units[0].title}`)
+                      }
+                    }}
+                    placeholder="Type subject code or title (e.g. AD3301 - Design and Analysis of Algorithms)"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
+                    required
+                  />
+                  <datalist id="target-subjects-datalist">
                     {courses.map((c) => (
-                      <option key={c.code} value={c.code}>
+                      <option key={c.code} value={`${c.code} - ${c.name}`}>
                         {c.code} — {c.name}
                       </option>
                     ))}
-                  </select>
+                  </datalist>
+
+                  {/* Quick Select Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                    {courses.map((c) => {
+                      const isSelected = uploadTargetCode.includes(c.code)
+                      return (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => {
+                            setUploadTargetCode(`${c.code} - ${c.name}`)
+                            if (c.units.length > 0) {
+                              setUploadUnitTitle(`${c.units[0].unit} - ${c.units[0].title}`)
+                            }
+                          }}
+                          className={cn(
+                            'text-[10px] px-2.5 py-1 rounded-lg border font-mono font-bold cursor-pointer transition-all',
+                            isSelected
+                              ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9] hover:text-[#1455D9]'
+                          )}
+                        >
+                          {c.code}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="font-bold text-[#071A3D] block mb-1">Select Unit *</label>
-                  <select
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-[#071A3D] block">Select / Type Unit *</label>
+                    <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                  </div>
+                  <input
+                    type="text"
+                    list="target-units-datalist"
                     value={uploadUnitTitle}
                     onChange={(e) => setUploadUnitTitle(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
-                  >
-                    <option value="Unit I - Introduction & Foundations">Unit I - Introduction &amp; Foundations</option>
-                    <option value="Unit II - Core Algorithms & Models">Unit II - Core Algorithms &amp; Models</option>
-                    <option value="Unit III - Advanced Paradigms & Kernels">Unit III - Advanced Paradigms &amp; Kernels</option>
-                    <option value="Unit IV - Unsupervised & High Dimension">Unit IV - Unsupervised &amp; High Dimension</option>
-                    <option value="Unit V - Modern Frameworks & Deep Networks">Unit V - Modern Frameworks &amp; Deep Networks</option>
-                  </select>
+                    placeholder="Type custom unit or topic (e.g. Unit I - Foundations)"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
+                    required
+                  />
+                  <datalist id="target-units-datalist">
+                    {((courses.find((c) => uploadTargetCode.toUpperCase().includes(c.code.toUpperCase())) || currentCourse)?.units || []).map((u) => (
+                      <option key={u.unit} value={`${u.unit} - ${u.title}`}>
+                        {u.unit} — {u.title}
+                      </option>
+                    ))}
+                    <option value="Unit I - Introduction & Foundations" />
+                    <option value="Unit II - Core Algorithms & Models" />
+                    <option value="Unit III - Advanced Paradigms & Kernels" />
+                    <option value="Unit IV - Unsupervised & High Dimension" />
+                    <option value="Unit V - Modern Frameworks & Deep Networks" />
+                  </datalist>
+
+                  {/* Quick Unit Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                    {['Unit I', 'Unit II', 'Unit III', 'Unit IV', 'Unit V'].map((uTag) => {
+                      const matchedUnit = (
+                        courses.find((c) => uploadTargetCode.toUpperCase().includes(c.code.toUpperCase())) || currentCourse
+                      )?.units?.find((u) => u.unit === uTag)
+                      const fillVal = matchedUnit ? `${matchedUnit.unit} - ${matchedUnit.title}` : uTag
+                      const isSelected = uploadUnitTitle.startsWith(uTag)
+
+                      return (
+                        <button
+                          key={uTag}
+                          type="button"
+                          onClick={() => setUploadUnitTitle(fillVal)}
+                          className={cn(
+                            'text-[10px] px-2.5 py-1 rounded-lg border font-bold cursor-pointer transition-all',
+                            isSelected
+                              ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9] hover:text-[#1455D9]'
+                          )}
+                        >
+                          {uTag}
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
 
                 <div>

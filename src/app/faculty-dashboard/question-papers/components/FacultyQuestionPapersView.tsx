@@ -76,7 +76,9 @@ export function FacultyQuestionPapersView({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Upload Form State
-  const [uploadSubjectId, setUploadSubjectId] = useState(subjects[0]?.id || '')
+  const [uploadSubjectInput, setUploadSubjectInput] = useState(
+    subjects[0]?.code ? `${subjects[0].code} - ${subjects[0].name}` : ''
+  )
   const [uploadExamType, setUploadExamType] = useState('Internal Test 1 (IAT 1)')
   const [uploadAcademicYear, setUploadAcademicYear] = useState('2025-2026')
   const [uploadSemester, setUploadSemester] = useState<number>(advisorSem || 3)
@@ -87,7 +89,7 @@ export function FacultyQuestionPapersView({
   // Edit Form State
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingPaper, setEditingPaper] = useState<FacultyQPItem | null>(null)
-  const [editSubjectId, setEditSubjectId] = useState('')
+  const [editSubjectInput, setEditSubjectInput] = useState('')
   const [editExamType, setEditExamType] = useState('')
   const [editAcademicYear, setEditAcademicYear] = useState('')
   const [editSemester, setEditSemester] = useState<number>(3)
@@ -96,7 +98,10 @@ export function FacultyQuestionPapersView({
 
   const handleEditClick = (p: FacultyQPItem) => {
     setEditingPaper(p)
-    setEditSubjectId(p.subjectId || subjects[0]?.id || '')
+    const matching = subjects.find((s) => s.id === p.subjectId || s.code === p.subjectCode)
+    setEditSubjectInput(
+      matching ? `${matching.code} - ${matching.name}` : `${p.subjectCode} - ${p.subjectName}`
+    )
     setEditExamType(p.examType)
     setEditAcademicYear(p.academicYear)
     setEditSemester(p.semester)
@@ -107,17 +112,28 @@ export function FacultyQuestionPapersView({
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editingPaper) return
+    if (!editingPaper || !editSubjectInput.trim() || !editExamType.trim()) return
 
     setIsSubmitting(true)
     try {
-      const selectedSub = subjects.find((s) => s.id === editSubjectId)
+      const parsedCode = editSubjectInput.split(' - ')[0].trim().toUpperCase()
+      const parsedName = editSubjectInput.includes(' - ')
+        ? editSubjectInput.split(' - ').slice(1).join(' - ').trim()
+        : editSubjectInput.trim()
+      const matched = subjects.find(
+        (s) => s.id === editSubjectInput || s.code.toUpperCase() === parsedCode
+      )
+
+      const finalSubId = matched?.id || parsedCode
+      const finalSubCode = matched?.code || parsedCode
+      const finalSubName = matched?.name || parsedName
+
       const res = await fetch('/api/question-papers', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingPaper.id,
-          subjectId: editSubjectId,
+          subjectId: finalSubId,
           examType: editExamType,
           academicYear: editAcademicYear,
           year: editYear,
@@ -133,9 +149,9 @@ export function FacultyQuestionPapersView({
             item.id === editingPaper.id
               ? {
                   ...item,
-                  subjectId: editSubjectId,
-                  subjectCode: selectedSub?.code || item.subjectCode,
-                  subjectName: selectedSub?.name || item.subjectName,
+                  subjectId: finalSubId,
+                  subjectCode: finalSubCode,
+                  subjectName: finalSubName,
                   examType: editExamType,
                   academicYear: editAcademicYear,
                   semester: editSemester,
@@ -284,15 +300,24 @@ export function FacultyQuestionPapersView({
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const activeSubId = uploadSubjectId || subjects[0]?.id || ''
-    if (!activeSubId || !uploadExamType) {
-      toast.error('Please select subject and exam type.')
+    if (!uploadSubjectInput.trim() || !uploadExamType.trim()) {
+      toast.error('Please enter subject and exam type.')
       return
     }
 
     setIsSubmitting(true)
     try {
-      const selectedSub = subjects.find((s) => s.id === activeSubId)
+      const parsedCode = uploadSubjectInput.split(' - ')[0].trim().toUpperCase()
+      const parsedName = uploadSubjectInput.includes(' - ')
+        ? uploadSubjectInput.split(' - ').slice(1).join(' - ').trim()
+        : uploadSubjectInput.trim()
+
+      const matched = subjects.find(
+        (s) => s.id === uploadSubjectInput || s.code.toUpperCase() === parsedCode
+      )
+      const activeSubId = matched?.id || parsedCode
+      const activeSubCode = matched?.code || parsedCode
+      const activeSubName = matched?.name || parsedName
       let res: Response
 
       if (uploadFile) {
@@ -322,7 +347,7 @@ export function FacultyQuestionPapersView({
             year: Number(uploadYear),
             section: uploadSection,
             uploadedByName: isAdvisor ? `${facultyName} (Class Advisor)` : facultyName,
-            fileName: `${selectedSub?.code || 'QP'}_${uploadExamType.replace(/[^a-zA-Z0-9]/g, '_')}_${uploadAcademicYear}.pdf`,
+            fileName: `${activeSubCode}_${uploadExamType.replace(/[^a-zA-Z0-9]/g, '_')}_${uploadAcademicYear}.pdf`,
             fileSize: 2500000,
           }),
         })
@@ -333,13 +358,13 @@ export function FacultyQuestionPapersView({
         const newPaper: FacultyQPItem = {
           id: result.questionPaper.id,
           subjectId: activeSubId,
-          subjectCode: selectedSub?.code || activeSubId || 'N/A',
-          subjectName: selectedSub?.name || 'Course Subject',
+          subjectCode: activeSubCode,
+          subjectName: activeSubName,
           examType: uploadExamType,
           academicYear: uploadAcademicYear,
           year: Number(uploadYear),
           semester: Number(uploadSemester),
-          fileName: result.questionPaper.fileName || uploadFile?.name || `${selectedSub?.code}_Paper.pdf`,
+          fileName: result.questionPaper.fileName || uploadFile?.name || `${activeSubCode}_Paper.pdf`,
           fileSize: result.questionPaper.fileSize || uploadFile?.size || 2500000,
           uploadedByName: isAdvisor ? `${facultyName} (Class Advisor)` : facultyName,
           createdAt: new Date(),
@@ -348,7 +373,7 @@ export function FacultyQuestionPapersView({
         setPapers([newPaper, ...papers])
         setShowUploadModal(false)
         setUploadFile(null)
-        toast.success(`Question paper for ${selectedSub?.code || 'Course'} archived successfully!`)
+        toast.success(`Question paper for ${activeSubCode} archived successfully!`)
       } else {
         toast.error(result.message || 'Failed to archive question paper.')
       }
@@ -670,32 +695,105 @@ export function FacultyQuestionPapersView({
 
             <form onSubmit={handleUploadSubmit} className="space-y-3.5 text-xs">
               <div>
-                <label className="font-bold text-[#071A3D] block mb-1">Subject *</label>
-                <select
-                  value={uploadSubjectId || subjects[0]?.id || ''}
-                  onChange={(e) => setUploadSubjectId(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                >
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-[#071A3D] block">Subject *</label>
+                  <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                </div>
+                <input
+                  type="text"
+                  list="qp-upload-subjects-list"
+                  value={uploadSubjectInput}
+                  onChange={(e) => setUploadSubjectInput(e.target.value)}
+                  placeholder="Type subject code or name (e.g. AD3301 - Design and Analysis of Algorithms)"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
+                  required
+                />
+                <datalist id="qp-upload-subjects-list">
                   {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
+                    <option key={s.id} value={`${s.code} - ${s.name}`}>
                       {s.code} — {s.name}
                     </option>
                   ))}
-                </select>
+                </datalist>
+
+                {/* Quick Select Subject Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                  {subjects.slice(0, 5).map((s) => {
+                    const isSelected = uploadSubjectInput.includes(s.code)
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setUploadSubjectInput(`${s.code} - ${s.name}`)}
+                        className={cn(
+                          'text-[10px] px-2.5 py-1 rounded-lg border font-mono font-bold cursor-pointer transition-all',
+                          isSelected
+                            ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9]'
+                        )}
+                      >
+                        {s.code}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div>
-                <label className="font-bold text-[#071A3D] block mb-1">Exam Type *</label>
-                <select
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-[#071A3D] block">Exam Type *</label>
+                  <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                </div>
+                <input
+                  type="text"
+                  list="qp-upload-exams-list"
                   value={uploadExamType}
                   onChange={(e) => setUploadExamType(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="Internal Test 1 (IAT 1)">Internal Test 1 (IAT 1)</option>
-                  <option value="Internal Test 2 (IAT 2)">Internal Test 2 (IAT 2)</option>
-                  <option value="Model Examination">Model Examination</option>
-                  <option value="Anna University Examination (Nov/Dec)">Anna University Examination (Nov/Dec)</option>
-                </select>
+                  placeholder="Type exam type (e.g. Internal Test 1 (IAT 1))"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
+                  required
+                />
+                <datalist id="qp-upload-exams-list">
+                  <option value="Internal Test 1 (IAT 1)" />
+                  <option value="Internal Test 2 (IAT 2)" />
+                  <option value="Model Examination" />
+                  <option value="Anna University Examination (Nov/Dec)" />
+                  <option value="Anna University Examination (Apr/May)" />
+                  <option value="Unit Assessment Test" />
+                  <option value="Midterm Examination" />
+                </datalist>
+
+                {/* Quick Select Exam Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                  {['IAT 1', 'IAT 2', 'Model', 'Anna Univ Nov/Dec'].map((exShort) => {
+                    const fullVal =
+                      exShort === 'IAT 1'
+                        ? 'Internal Test 1 (IAT 1)'
+                        : exShort === 'IAT 2'
+                        ? 'Internal Test 2 (IAT 2)'
+                        : exShort === 'Model'
+                        ? 'Model Examination'
+                        : 'Anna University Examination (Nov/Dec)'
+                    const isSelected = uploadExamType === fullVal
+                    return (
+                      <button
+                        key={exShort}
+                        type="button"
+                        onClick={() => setUploadExamType(fullVal)}
+                        className={cn(
+                          'text-[10px] px-2.5 py-1 rounded-lg border font-bold cursor-pointer transition-all',
+                          isSelected
+                            ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9]'
+                        )}
+                      >
+                        {exShort}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -832,32 +930,105 @@ export function FacultyQuestionPapersView({
 
             <form onSubmit={handleEditSubmit} className="space-y-3.5 text-xs">
               <div>
-                <label className="font-bold text-[#071A3D] block mb-1">Subject *</label>
-                <select
-                  value={editSubjectId}
-                  onChange={(e) => setEditSubjectId(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                >
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-[#071A3D] block">Subject *</label>
+                  <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                </div>
+                <input
+                  type="text"
+                  list="qp-edit-subjects-list"
+                  value={editSubjectInput}
+                  onChange={(e) => setEditSubjectInput(e.target.value)}
+                  placeholder="Type subject code or name (e.g. AD3301 - Design and Analysis of Algorithms)"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
+                  required
+                />
+                <datalist id="qp-edit-subjects-list">
                   {subjects.map((s) => (
-                    <option key={s.id} value={s.id}>
+                    <option key={s.id} value={`${s.code} - ${s.name}`}>
                       {s.code} — {s.name}
                     </option>
                   ))}
-                </select>
+                </datalist>
+
+                {/* Quick Select Subject Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                  {subjects.slice(0, 5).map((s) => {
+                    const isSelected = editSubjectInput.includes(s.code)
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setEditSubjectInput(`${s.code} - ${s.name}`)}
+                        className={cn(
+                          'text-[10px] px-2.5 py-1 rounded-lg border font-mono font-bold cursor-pointer transition-all',
+                          isSelected
+                            ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9]'
+                        )}
+                      >
+                        {s.code}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div>
-                <label className="font-bold text-[#071A3D] block mb-1">Exam Type *</label>
-                <select
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-bold text-[#071A3D] block">Exam Type *</label>
+                  <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                </div>
+                <input
+                  type="text"
+                  list="qp-edit-exams-list"
                   value={editExamType}
                   onChange={(e) => setEditExamType(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
-                >
-                  <option value="Internal Test 1 (IAT 1)">Internal Test 1 (IAT 1)</option>
-                  <option value="Internal Test 2 (IAT 2)">Internal Test 2 (IAT 2)</option>
-                  <option value="Model Examination">Model Examination</option>
-                  <option value="Anna University Examination (Nov/Dec)">Anna University Examination (Nov/Dec)</option>
-                </select>
+                  placeholder="Type exam type (e.g. Internal Test 1 (IAT 1))"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
+                  required
+                />
+                <datalist id="qp-edit-exams-list">
+                  <option value="Internal Test 1 (IAT 1)" />
+                  <option value="Internal Test 2 (IAT 2)" />
+                  <option value="Model Examination" />
+                  <option value="Anna University Examination (Nov/Dec)" />
+                  <option value="Anna University Examination (Apr/May)" />
+                  <option value="Unit Assessment Test" />
+                  <option value="Midterm Examination" />
+                </datalist>
+
+                {/* Quick Select Exam Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                  {['IAT 1', 'IAT 2', 'Model', 'Anna Univ Nov/Dec'].map((exShort) => {
+                    const fullVal =
+                      exShort === 'IAT 1'
+                        ? 'Internal Test 1 (IAT 1)'
+                        : exShort === 'IAT 2'
+                        ? 'Internal Test 2 (IAT 2)'
+                        : exShort === 'Model'
+                        ? 'Model Examination'
+                        : 'Anna University Examination (Nov/Dec)'
+                    const isSelected = editExamType === fullVal
+                    return (
+                      <button
+                        key={exShort}
+                        type="button"
+                        onClick={() => setEditExamType(fullVal)}
+                        className={cn(
+                          'text-[10px] px-2.5 py-1 rounded-lg border font-bold cursor-pointer transition-all',
+                          isSelected
+                            ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                            : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9]'
+                        )}
+                      >
+                        {exShort}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
