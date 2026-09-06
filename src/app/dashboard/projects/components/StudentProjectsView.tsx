@@ -115,55 +115,15 @@ export function formatProjectLinks(githubUrl: string, liveUrl: string): string {
 
 function parseDailyUpdates(raw: string | null | undefined): DailyUpdateLog[] {
   if (!raw) {
-    return [
-      {
-        id: 'log_1',
-        date: '2026-08-30',
-        postedBy: 'Student Team Leader',
-        role: 'Candidate Lead',
-        taskCompleted: 'Completed dataset augmentation pipeline and finalized YOLOv8 baseline model architecture.',
-        blockers: 'Slight class imbalance on minority medical scan labels.',
-        nextTarget: 'Apply focal loss and benchmark against ResNet-50 backbone.',
-        commitUrl: 'https://github.com/vsb-aids/capstone-project/commit/7a8f1b2',
-        progressPercentage: 65,
-        facultyFeedback: 'Excellent progress. Recommended Focal Loss with gamma=2.0 to balance classes.',
-        facultyStatus: 'Verified & Guided',
-      },
-      {
-        id: 'log_2',
-        date: '2026-08-31',
-        postedBy: 'Student Researcher',
-        role: 'ML Engineer',
-        taskCompleted: 'Quantized neural network weights to INT8 precision for NVIDIA Jetson deployment test.',
-        blockers: 'None. Inference latency reduced from 45ms to 12ms.',
-        nextTarget: 'Build FastAPI endpoint and connect React front-end dashboard.',
-        commitUrl: 'https://github.com/vsb-aids/capstone-project/commit/9e4c3d1',
-        progressPercentage: 80,
-        facultyFeedback: 'Good benchmark metrics. Ensure you document memory consumption curves.',
-        facultyStatus: 'Verified & Guided',
-      },
-    ]
+    return []
   }
 
   try {
     const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    if (Array.isArray(parsed)) return parsed
   } catch {}
 
-  return [
-    {
-      id: 'log_init',
-      date: '2026-08-31',
-      postedBy: 'Student Team',
-      role: 'Student Researcher',
-      taskCompleted: raw,
-      blockers: 'None',
-      nextTarget: 'Prepare sprint deliverables',
-      progressPercentage: 70,
-      facultyFeedback: 'Supervised by faculty mentor.',
-      facultyStatus: 'Verified & Guided',
-    },
-  ]
+  return []
 }
 
 export function StudentProjectsView({

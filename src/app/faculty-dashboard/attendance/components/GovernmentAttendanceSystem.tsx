@@ -104,14 +104,7 @@ const INITIAL_CLASS_OPTIONS: ClassOption[] = [
   { year: 1, section: 'B', semester: 1, label: 'Year 1 - Section B (Sem 1)' },
 ]
 
-const INITIAL_SUBJECTS: Subject[] = [
-  { id: 'sub-1', code: 'AD3301', name: 'Design and Analysis of Algorithms', credits: 4 },
-  { id: 'sub-2', code: 'AD3391', name: 'Database Design and Management', credits: 3 },
-  { id: 'sub-3', code: 'CS3351', name: 'Digital Principles and Computer Organization', credits: 4 },
-  { id: 'sub-4', code: 'AD3491', name: 'Fundamentals of Data Science', credits: 3 },
-  { id: 'sub-5', code: 'AL3452', name: 'Operating Systems', credits: 3 },
-  { id: 'sub-6', code: 'AD3501', name: 'Deep Learning', credits: 3 },
-]
+const INITIAL_SUBJECTS: Subject[] = []
 
 export function GovernmentAttendanceSystem() {
   // Metadata
@@ -127,7 +120,7 @@ export function GovernmentAttendanceSystem() {
   const [advisorClass, setAdvisorClass] = useState<ClassOption | null>(null)
 
   // Session fields
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(INITIAL_SUBJECTS[0])
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
   const [selectedClass, setSelectedClass] = useState<ClassOption | null>(INITIAL_CLASS_OPTIONS[0])
   const [hour, setHour] = useState(DEFAULT_INSTITUTIONAL_PERIODS[0])
   const [periodType, setPeriodType] = useState<'Theory' | 'Practical' | 'Tutorial'>('Theory')

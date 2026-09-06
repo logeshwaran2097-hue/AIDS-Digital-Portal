@@ -16,16 +16,7 @@ const INSTITUTIONAL_PERIODS = [
   { id: 'AN_LAB', name: 'Afternoon Lab Session', time: '01:20 PM - 04:30 PM' },
 ]
 
-const FALLBACK_CURRICULUM = [
-  { id: 'sub-1', code: 'AD3301', name: 'Design and Analysis of Algorithms', credits: 4 },
-  { id: 'sub-2', code: 'AD3391', name: 'Database Design and Management', credits: 3 },
-  { id: 'sub-3', code: 'CS3351', name: 'Digital Principles and Computer Organization', credits: 4 },
-  { id: 'sub-4', code: 'AD3491', name: 'Fundamentals of Data Science', credits: 3 },
-  { id: 'sub-5', code: 'AL3452', name: 'Operating Systems', credits: 3 },
-  { id: 'sub-6', code: 'AD3501', name: 'Deep Learning', credits: 3 },
-  { id: 'sub-7', code: 'CW3551', name: 'Cloud Computing', credits: 3 },
-  { id: 'sub-8', code: 'AD3701', name: 'Natural Language Processing', credits: 3 },
-]
+
 
 function parsePeriods(classPeriod: string | null | undefined, classTime: string | null | undefined): string[] {
   if (!classPeriod || !classPeriod.trim()) return []
@@ -127,9 +118,8 @@ export async function GET() {
       if (assignedSubjectCodes.length > 0) {
         resolvedSubjects = assignedSubjectCodes.map((code, idx) => {
           const matchedDb = allSubjects.find((s) => s.code.toUpperCase() === code.toUpperCase())
-          const fallbackCurriculum = FALLBACK_CURRICULUM.find((c) => c.code.toUpperCase() === code.toUpperCase())
-          const name = (idx === 0 && customSubjectName) ? customSubjectName : (matchedDb?.name || fallbackCurriculum?.name || code)
-          const credits = matchedDb?.credits || fallbackCurriculum?.credits || 4
+          const name = (idx === 0 && customSubjectName) ? customSubjectName : (matchedDb?.name || code)
+          const credits = matchedDb?.credits || 4
           const id = matchedDb?.id || `assigned-${code}`
           return { id, code: code.toUpperCase(), name, credits }
         })
@@ -143,7 +133,7 @@ export async function GET() {
         }]
       }
     } else {
-      resolvedSubjects = allSubjects.length > 0 ? allSubjects : FALLBACK_CURRICULUM
+      resolvedSubjects = allSubjects
     }
 
     // Resolve assigned periods / hours based on Admin allocation

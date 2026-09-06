@@ -27,14 +27,24 @@ export default async function FacultySubjectsPage() {
     orderBy: { code: 'asc' },
   }).catch(() => [])
 
-  // Query units, syllabus, resources, and notes for these subjects
   const subjectIds = dbSubjects.map(s => s.id)
-  const [dbUnits, dbSyllabi, dbNotes, dbResources, dbQuestions] = await Promise.all([
+  const subjectCodes = dbSubjects.map(s => s.code)
+  const [dbUnits, dbSyllabi, dbNotes, dbResources, dbQuestions, dbAttendanceSessions, totalStudentsCount] = await Promise.all([
     prisma.unit.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { number: 'asc' } }).catch(() => []),
     prisma.syllabus.findMany({ where: { subjectId: { in: subjectIds } } }).catch(() => []),
     prisma.note.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
     prisma.resource.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
     prisma.importantQuestion.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
+    prisma.attendanceSession.findMany({
+      where: { subjectCode: { in: subjectCodes } },
+      include: { records: true },
+    }).catch(() => []),
+    prisma.student.count({
+      where: faculty?.advisorYear && faculty?.advisorSec ? {
+        year: faculty.advisorYear,
+        section: faculty.advisorSec,
+      } : undefined,
+    }).catch(() => 0),
   ])
 
   const initialCourses = dbSubjects.map(sub => {
@@ -42,6 +52,22 @@ export default async function FacultySubjectsPage() {
     const syllabusForSub = dbSyllabi.find(s => s.subjectId === sub.id)
     const notesForSub = dbNotes.filter(n => n.subjectId === sub.id)
     const questionsForSub = dbQuestions.filter(q => q.subjectId === sub.id)
+    const subSessions = dbAttendanceSessions.filter(s => s.subjectCode === sub.code)
+    const hoursTaught = subSessions.length
+    let attendanceRate = '—'
+    if (subSessions.length > 0) {
+      let totalRecs = 0
+      let presentRecs = 0
+      for (const sess of subSessions) {
+        for (const rec of sess.records) {
+          totalRecs++
+          if (rec.status === 'P' || rec.status === 'OD') presentRecs++
+        }
+      }
+      if (totalRecs > 0) {
+        attendanceRate = `${((presentRecs / totalRecs) * 100).toFixed(1)}%`
+      }
+    }
 
     let parsedUnits: any[] = []
 
@@ -77,9 +103,9 @@ export default async function FacultySubjectsPage() {
       year: faculty?.advisorYear || 2,
       semester: faculty?.advisorSem || 3,
       section: faculty?.advisorSec || 'A',
-      enrolledStudents: 68,
-      hoursTaught: 36,
-      attendanceRate: '96.5%',
+      enrolledStudents: totalStudentsCount,
+      hoursTaught,
+      attendanceRate,
       units: parsedUnits,
       notes: notesForSub.map(n => ({
         unit: 'Study Notes',
