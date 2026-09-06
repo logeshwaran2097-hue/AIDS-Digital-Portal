@@ -59,6 +59,7 @@ export function FacultyAnnouncementsView({
   const [createStep, setCreateStep] = useState<'edit' | 'preview'>('edit')
   const [formTitle, setFormTitle] = useState('')
   const [formCategory, setFormCategory] = useState('Academic')
+  const [customCategory, setCustomCategory] = useState('')
   const [formTarget, setFormTarget] = useState('All Students')
   const [formContent, setFormContent] = useState('')
   const [formAttachmentUrl, setFormAttachmentUrl] = useState('')
@@ -113,7 +114,10 @@ export function FacultyAnnouncementsView({
         a.target.toLowerCase().includes(searchQuery.toLowerCase())
 
       const matchesCat =
-        selectedCategory === 'ALL' || a.category.toLowerCase() === selectedCategory.toLowerCase()
+        selectedCategory === 'ALL' ||
+        (selectedCategory === 'others'
+          ? !['academic', 'examinations', 'placements', 'symposium'].includes(a.category.toLowerCase())
+          : a.category.toLowerCase().includes(selectedCategory.toLowerCase()))
 
       return matchesSearch && matchesCat
     })
@@ -187,13 +191,14 @@ export function FacultyAnnouncementsView({
     e.preventDefault()
     setSubmitting(true)
     try {
+      const finalCategory = formCategory === 'Others' ? (customCategory.trim() || 'Others') : formCategory
       const res = await fetch('/api/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: formTitle,
           content: formContent,
-          category: formCategory,
+          category: finalCategory,
           target: formTarget,
           attachmentUrl: formAttachmentUrl.trim() || null,
           createdByName: `${facultyName} (Class Advisor)`,
@@ -222,6 +227,8 @@ export function FacultyAnnouncementsView({
       setShowCreateModal(false)
       setCreateStep('edit')
       setFormTitle('')
+      setFormCategory('Academic')
+      setCustomCategory('')
       setFormContent('')
       setFormAttachmentUrl('')
     } catch (err) {
@@ -318,6 +325,7 @@ export function FacultyAnnouncementsView({
             { id: 'exam', label: 'Examinations' },
             { id: 'placement', label: 'Placements' },
             { id: 'symposium', label: 'Symposium' },
+            { id: 'others', label: 'Others' },
           ].map((c) => (
             <button
               key={c.id}
@@ -497,7 +505,7 @@ export function FacultyAnnouncementsView({
 
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-[#1455D9] border border-blue-200">
-                      🏷️ {formCategory}
+                      🏷️ {formCategory === 'Others' ? (customCategory.trim() || 'Others') : formCategory}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
                       👥 {formTarget}
@@ -557,6 +565,10 @@ export function FacultyAnnouncementsView({
                     toast.error('Please enter Circular Subject and Content')
                     return
                   }
+                  if (formCategory === 'Others' && !customCategory.trim()) {
+                    toast.error('Please type your custom category name')
+                    return
+                  }
                   setCreateStep('preview')
                 }}
                 className="space-y-3 text-xs"
@@ -578,13 +590,17 @@ export function FacultyAnnouncementsView({
                     <label className="font-bold text-gray-700 block mb-1">Category</label>
                     <select
                       value={formCategory}
-                      onChange={(e) => setFormCategory(e.target.value)}
-                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                      onChange={(e) => {
+                        setFormCategory(e.target.value)
+                        if (e.target.value !== 'Others') setCustomCategory('')
+                      }}
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
                     >
                       <option value="Academic">Academic</option>
                       <option value="Examinations">Examinations</option>
                       <option value="Placements">Placements</option>
                       <option value="Symposium">Symposium</option>
+                      <option value="Others">Others</option>
                     </select>
                   </div>
                   <div>
@@ -592,7 +608,7 @@ export function FacultyAnnouncementsView({
                     <select
                       value={formTarget}
                       onChange={(e) => setFormTarget(e.target.value)}
-                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
                     >
                       <option value="All Students">All Students (Years 1 to 4)</option>
                       <option value="All Class Advisors">⭐ All Class Advisors</option>
@@ -604,6 +620,25 @@ export function FacultyAnnouncementsView({
                     </select>
                   </div>
                 </div>
+
+                {/* Custom Category input field when Others is selected */}
+                {formCategory === 'Others' && (
+                  <div className="p-3 bg-blue-50/60 border border-blue-200 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+                    <label className="font-bold text-[#1455D9] block mb-1 text-xs flex items-center justify-between">
+                      <span>Type Custom Category Name <span className="text-rose-500">*</span></span>
+                      <span className="text-[10px] text-gray-500 font-medium">e.g. Sports, Workshop, Cultural, Hackathon</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder="Type your category name (e.g. Workshop)..."
+                      className="w-full bg-white border-2 border-blue-300 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9] focus:outline-none placeholder:font-normal placeholder:text-gray-400 shadow-2xs"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                )}
 
                 {/* Google Form / Survey Link Attachment Field */}
                 <div>

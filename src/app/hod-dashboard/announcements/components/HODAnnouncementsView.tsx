@@ -79,6 +79,7 @@ export function HODAnnouncementsView({
   // Form State
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('Academic')
+  const [customCategory, setCustomCategory] = useState('')
   const [targetType, setTargetType] = useState<
     'ALL' | 'STUDENTS' | 'FACULTY' | 'ALL_ADVISORS' | 'ADVISORS_Y1' | 'ADVISORS_Y2' | 'ADVISORS_Y3' | 'ADVISORS_Y4' | 'PARTICULAR_FACULTY' | 'PARTICULAR_STUDENT'
   >('STUDENTS')
@@ -203,13 +204,14 @@ export function HODAnnouncementsView({
     }
 
     try {
+      const finalCategory = category === 'Others' ? (customCategory.trim() || 'Others') : category
       const res = await fetch('/api/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           content: priority === 'URGENT' ? `[URGENT / PRIORITY NOTICE]\n${content}` : content,
-          category,
+          category: finalCategory,
           target: finalTarget,
           createdByName: `${hodName} (HOD)`,
         }),
@@ -237,7 +239,7 @@ export function HODAnnouncementsView({
             id: 'ann_' + Date.now(),
             title,
             content: priority === 'URGENT' ? `[URGENT / PRIORITY NOTICE]\n${content}` : content,
-            category,
+            category: finalCategory,
             target: finalTarget,
             createdByName: `${hodName} (HOD)`,
             isPublished: true,
@@ -251,6 +253,8 @@ export function HODAnnouncementsView({
       setTimeout(() => setBroadcastAlert(null), 4000)
       setShowCreateModal(false)
       setTitle('')
+      setCategory('Academic')
+      setCustomCategory('')
       setContent('')
     } catch (err) {
       console.error(err)
@@ -498,7 +502,7 @@ export function HODAnnouncementsView({
 
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-50 text-indigo-800 border border-indigo-200">
-                      🏷️ {category}
+                      🏷️ {category === 'Others' ? (customCategory.trim() || 'Others') : category}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-blue-50 text-[#1455D9] border border-blue-200">
                       👥 {targetType === 'STUDENTS' ? 'All Students' : targetType === 'FACULTY' ? 'All Faculty' : targetType === 'ALL' ? 'All Department' : targetType === 'PARTICULAR_FACULTY' ? `Specific Faculty: ${selectedFacultyId}` : `Specific Student: ${selectedStudentReg}`}
@@ -551,6 +555,10 @@ export function HODAnnouncementsView({
                     toast.error('Please fill in Title and Content')
                     return
                   }
+                  if (category === 'Others' && !customCategory.trim()) {
+                    toast.error('Please type your custom category name')
+                    return
+                  }
                   setCreateStep('preview')
                 }}
                 className="space-y-3.5 text-xs"
@@ -572,7 +580,10 @@ export function HODAnnouncementsView({
                     <label className="font-bold text-gray-700 block mb-1">Category</label>
                     <select
                       value={category}
-                      onChange={(e) => setCategory(e.target.value)}
+                      onChange={(e) => {
+                        setCategory(e.target.value)
+                        if (e.target.value !== 'Others') setCustomCategory('')
+                      }}
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold"
                     >
                       <option value="Academic">Academic</option>
@@ -581,6 +592,7 @@ export function HODAnnouncementsView({
                       <option value="Administrative">Administrative</option>
                       <option value="Disciplinary">Disciplinary</option>
                       <option value="Symposium">Symposium &amp; Event</option>
+                      <option value="Others">Others</option>
                     </select>
                   </div>
 
@@ -596,6 +608,25 @@ export function HODAnnouncementsView({
                     </select>
                   </div>
                 </div>
+
+                {/* Custom Category input field when Others is selected */}
+                {category === 'Others' && (
+                  <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+                    <label className="font-bold text-indigo-900 block mb-1 text-xs flex items-center justify-between">
+                      <span>Type Custom Category Name <span className="text-rose-500">*</span></span>
+                      <span className="text-[10px] text-gray-500 font-medium">e.g. Workshop, Cultural, Sports, Hackathon</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      placeholder="Type your category name (e.g. Workshop)..."
+                      className="w-full bg-white border-2 border-indigo-300 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9] focus:outline-none placeholder:font-normal placeholder:text-gray-400 shadow-2xs"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                )}
 
                 {/* Target Audience Selector */}
                 <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2.5">
