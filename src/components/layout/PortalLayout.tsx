@@ -59,7 +59,7 @@ const navItemsMap: Record<string, NavItem[]> = {
 
 const roleBadgeMap: Record<string, { label: string; color: string }> = {
   student: { label: 'Student', color: 'bg-[#2878E8]/20 text-[#2878E8] border-[#2878E8]/30' },
-  faculty: { label: 'Faculty', color: 'bg-[#22C7E8]/20 text-[#22C7E8] border-[#22C7E8]/30' },
+  faculty: { label: 'Class Advisor', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
   hod: { label: 'HOD', color: 'bg-[#F4C430]/20 text-[#F4C430] border-[#F4C430]/30' },
   admin: { label: 'Admin', color: 'bg-red-400/20 text-red-300 border-red-400/30' },
 }
@@ -768,9 +768,14 @@ export function PortalLayout({ role, userName, userEmail, navItems, children }: 
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-white">
                 {userName.charAt(0) || 'U'}
               </div>
-              <span className="hidden sm:inline text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">
-                {userName}
-              </span>
+              <div className="hidden sm:flex flex-col text-left leading-none">
+                <span className="text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">
+                  {userName}
+                </span>
+                <span className="text-[9px] font-extrabold text-emerald-600 mt-0.5">
+                  {role === 'faculty' ? 'Class Advisor' : role.toUpperCase()}
+                </span>
+              </div>
             </Link>
 
             {/* Top Header Direct Logout Action */}

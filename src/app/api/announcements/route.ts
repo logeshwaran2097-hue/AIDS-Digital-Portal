@@ -36,6 +36,7 @@ export async function POST(request: Request) {
         content: body.content || '',
         category: body.category || 'Academic',
         target: body.target || 'All Students',
+        attachmentUrl: body.attachmentUrl || null,
         createdByName: body.createdByName || 'Administrator',
         isPublished: true,
       },

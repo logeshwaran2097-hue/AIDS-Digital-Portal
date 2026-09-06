@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 interface TestGatewayPayload {
   mobileNumber: string
-  provider?: 'twilio' | 'fast2sms' | 'custom'
+  provider?: 'twilio' | 'fast2sms' | 'custom' | 'meta'
   apiKey?: string
   senderId?: string
   whatsappEnabled?: boolean
@@ -74,6 +74,103 @@ export async function POST(request: NextRequest) {
 
     // Channel 1: WhatsApp Test
     if (channel === 'whatsapp') {
+      // Twilio WhatsApp
+      if (provider === 'twilio') {
+        let accountSid = process.env.TWILIO_ACCOUNT_SID || ''
+        let authToken = process.env.TWILIO_AUTH_TOKEN || ''
+        const rawKey = apiKey.trim()
+
+        if (rawKey.includes(':')) {
+          const parts = rawKey.split(':')
+          accountSid = parts[0].trim()
+          authToken = parts[1].trim()
+        } else if (rawKey.startsWith('AC')) {
+          accountSid = rawKey
+        } else if (rawKey) {
+          authToken = rawKey
+        }
+
+        const twilioWhatsAppFrom = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886'
+
+        if (!accountSid || !authToken) {
+          return NextResponse.json({
+            success: false,
+            channel: 'whatsapp',
+            provider: 'Twilio WhatsApp',
+            requiresConfig: true,
+            error:
+              'Twilio Account SID & Auth Token required for WhatsApp. Format "ACxxxx:token" in the API key field or set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in environment. Ensure you have a Twilio WhatsApp-enabled number (sandbox or verified business number).',
+            whatsappWebUrl: waWebUrl,
+            targetNumber: e164,
+            messagePreview: finalMessage,
+          })
+        }
+
+        try {
+          const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString('base64')
+          const formParams = new URLSearchParams()
+          formParams.append('To', `whatsapp:${e164}`)
+          formParams.append('From', twilioWhatsAppFrom)
+          formParams.append('Body', finalMessage)
+
+          const twilioRes = await fetch(
+            `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Basic ${basicAuth}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: formParams.toString(),
+            }
+          )
+
+          const twilioData = await twilioRes.json()
+
+          if (twilioRes.ok && twilioData.sid) {
+            await prisma.auditLog.create({
+              data: {
+                userName: session.name || 'System Administrator',
+                action: 'TEST_WHATSAPP_GATEWAY',
+                module: 'gateway',
+                details: `Dispatched test WhatsApp to ${e164} via Twilio WhatsApp. SID: ${twilioData.sid}`,
+                status: 'SUCCESS',
+              },
+            }).catch(() => {})
+
+            return NextResponse.json({
+              success: true,
+              channel: 'whatsapp',
+              provider: 'Twilio WhatsApp',
+              sid: twilioData.sid,
+              status: twilioData.status,
+              targetNumber: e164,
+              message: `✅ Live WhatsApp message dispatched to ${e164} via Twilio! (SID: ${twilioData.sid})`,
+              whatsappWebUrl: waWebUrl,
+            })
+          } else {
+            const errMsg = twilioData.message || `Twilio error code ${twilioData.code || 'UNKNOWN'}`
+            return NextResponse.json({
+              success: false,
+              channel: 'whatsapp',
+              provider: 'Twilio WhatsApp',
+              error: `Twilio WhatsApp Error: ${errMsg}`,
+              details: twilioData,
+              whatsappWebUrl: waWebUrl,
+            })
+          }
+        } catch (err: any) {
+          return NextResponse.json({
+            success: false,
+            channel: 'whatsapp',
+            provider: 'Twilio WhatsApp',
+            error: `Failed to connect to Twilio WhatsApp: ${err.message}`,
+            whatsappWebUrl: waWebUrl,
+          })
+        }
+      }
+
+      // Meta WhatsApp Cloud API (existing code)
       const token = whatsappAccessToken.trim() || process.env.WHATSAPP_ACCESS_TOKEN || ''
       const phoneId = whatsappPhoneNumberId.trim() || process.env.WHATSAPP_PHONE_NUMBER_ID || ''
 
@@ -81,9 +178,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({
           success: false,
           channel: 'whatsapp',
+          provider: 'Meta WhatsApp Cloud API',
           requiresConfig: true,
           error:
-            'Meta WhatsApp Cloud API credentials not configured. Please enter your Phone Number ID and Access Token above, or click "Send via WhatsApp Web" for instant browser dispatch.',
+            'Meta WhatsApp Cloud API credentials not configured. Please enter your Phone Number ID and Access Token above, or click "Send via WhatsApp Web" for instant browser dispatch. You can also use Twilio WhatsApp by selecting Twilio as provider.',
           whatsappWebUrl: waWebUrl,
           messagePreview: finalMessage,
           targetNumber: e164,

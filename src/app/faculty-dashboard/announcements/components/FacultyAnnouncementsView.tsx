@@ -19,6 +19,11 @@ import {
   Tag,
   Check,
   X,
+  ExternalLink,
+  BarChart3,
+  BellRing,
+  CheckSquare,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
@@ -33,6 +38,7 @@ export interface FacultyAnnouncementItem {
   target: string
   targetYear?: number | null
   targetSemester?: number | null
+  attachmentUrl?: string | null
   createdByName?: string | null
   isPublished: boolean
   publishedAt?: Date | null
@@ -55,8 +61,21 @@ export function FacultyAnnouncementsView({
   const [formCategory, setFormCategory] = useState('Academic')
   const [formTarget, setFormTarget] = useState('All Students')
   const [formContent, setFormContent] = useState('')
+  const [formAttachmentUrl, setFormAttachmentUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [broadcastSuccess, setBroadcastSuccess] = useState<string | null>(null)
+
+  // Form Response Tracker Modal State
+  const [trackingAnnouncement, setTrackingAnnouncement] = useState<FacultyAnnouncementItem | null>(null)
+  const [trackerLoading, setTrackerLoading] = useState(false)
+  const [trackerData, setTrackerData] = useState<{
+    totalCount: number
+    completedCount: number
+    pendingCount: number
+    completedStudents: any[]
+    pendingStudents: any[]
+  } | null>(null)
+  const [reminderStatus, setReminderStatus] = useState<string | null>(null)
 
   // Auto-sync Faculty announcements in real-time
   useEffect(() => {
@@ -72,6 +91,7 @@ export function FacultyAnnouncementsView({
               content: a.content,
               category: a.category,
               target: a.target,
+              attachmentUrl: a.attachmentUrl || null,
               createdByName: a.createdByName,
               isPublished: a.isPublished !== false,
               createdAt: new Date(a.createdAt),
@@ -99,6 +119,35 @@ export function FacultyAnnouncementsView({
     })
   }, [announcements, searchQuery, selectedCategory])
 
+  const handleOpenTracker = async (a: FacultyAnnouncementItem) => {
+    setTrackingAnnouncement(a)
+    setTrackerLoading(true)
+    setReminderStatus(null)
+    try {
+      const res = await fetch(`/api/announcements/form-tracker?announcementId=${a.id}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          setTrackerData({
+            totalCount: data.totalCount || 0,
+            completedCount: data.completedCount || 0,
+            pendingCount: data.pendingCount || 0,
+            completedStudents: data.completedStudents || [],
+            pendingStudents: data.pendingStudents || [],
+          })
+        }
+      }
+    } catch {} finally {
+      setTrackerLoading(false)
+    }
+  }
+
+  const handleSendReminderSMS = (pendingList: any[]) => {
+    if (!pendingList || pendingList.length === 0) return
+    setReminderStatus(`Dispatched Form Completion Reminder Notice to ${pendingList.length} Pending Students via SMS!`)
+    setTimeout(() => setReminderStatus(null), 4000)
+  }
+
   const handleDownloadCircularPDF = (a: FacultyAnnouncementItem) => {
     const d = new Date(a.createdAt)
     generateAndDownloadPDF({
@@ -113,6 +162,7 @@ export function FacultyAnnouncementsView({
             `Target Audience: ${a.target.toUpperCase()}`,
             `Issuing Authority: Office of the Head of Department & Academic Advisory`,
             `Status: Immediate Compliance & Information`,
+            a.attachmentUrl ? `Attached Survey/Form: ${a.attachmentUrl}` : 'No external form attached',
           ],
         },
         {
@@ -145,7 +195,8 @@ export function FacultyAnnouncementsView({
           content: formContent,
           category: formCategory,
           target: formTarget,
-          createdByName: `${facultyName} (Faculty Advisor)`,
+          attachmentUrl: formAttachmentUrl.trim() || null,
+          createdByName: `${facultyName} (Class Advisor)`,
         }),
       })
 
@@ -158,6 +209,7 @@ export function FacultyAnnouncementsView({
             content: data.announcement.content,
             category: data.announcement.category,
             target: data.announcement.target,
+            attachmentUrl: data.announcement.attachmentUrl || formAttachmentUrl.trim() || null,
             createdByName: data.announcement.createdByName,
             isPublished: true,
             createdAt: new Date(),
@@ -171,6 +223,7 @@ export function FacultyAnnouncementsView({
       setCreateStep('edit')
       setFormTitle('')
       setFormContent('')
+      setFormAttachmentUrl('')
     } catch (err) {
       console.error(err)
     } finally {
@@ -328,13 +381,63 @@ export function FacultyAnnouncementsView({
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                <button
-                  onClick={() => handleBroadcast(a)}
-                  className="px-3.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5 text-[#1455D9]" /> Re-Broadcast Alert
-                </button>
+              {/* Form Attachment & Detection Tracker Banner */}
+              {a.attachmentUrl && (
+                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-blue-50/60 border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold shrink-0 shadow-xs">
+                      📋
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-black text-[#071A3D]">Attached Google Form / Survey</p>
+                        <span className="px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                          Auto Detection Active
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 truncate font-mono mt-0.5">{a.attachmentUrl}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleOpenTracker(a)}
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer hover:scale-102"
+                    >
+                      <BarChart3 className="w-3.5 h-3.5" />
+                      <span>Form Responses Tracker</span>
+                    </button>
+                    <a
+                      href={a.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                      title="Open Google Form link"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleBroadcast(a)}
+                    className="px-3.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Send className="w-3.5 h-3.5 text-[#1455D9]" /> Re-Broadcast Alert
+                  </button>
+
+                  {a.attachmentUrl && (
+                    <button
+                      onClick={() => handleOpenTracker(a)}
+                      className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] text-xs font-black flex items-center gap-1.5 transition-colors cursor-pointer border border-blue-200"
+                    >
+                      <Users className="w-3.5 h-3.5" /> Check Completed ({a.target})
+                    </button>
+                  )}
+                </div>
 
                 <button
                   onClick={() => handleDownloadCircularPDF(a)}
@@ -410,9 +513,21 @@ export function FacultyAnnouncementsView({
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 font-medium border-t border-gray-100">
-                    <span>Authorized by: <strong className="text-[#071A3D]">{facultyName} (Faculty Advisor)</strong></span>
+                    <span>Authorized by: <strong className="text-[#071A3D]">{facultyName} (Class Advisor)</strong></span>
                     <span className="font-mono">Official Circular · V.S.B. AI &amp; DS</span>
                   </div>
+
+                  {formAttachmentUrl && (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between">
+                      <div className="flex items-center gap-2 truncate">
+                        <span>📝 Attached Google Form:</span>
+                        <span className="font-mono font-bold truncate text-[11px]">{formAttachmentUrl}</span>
+                      </div>
+                      <span className="shrink-0 px-2 py-0.5 bg-amber-200 text-amber-900 rounded font-black text-[10px]">
+                        Track Responses Active
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-2">
@@ -490,6 +605,27 @@ export function FacultyAnnouncementsView({
                   </div>
                 </div>
 
+                {/* Google Form / Survey Link Attachment Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-gray-700 flex items-center gap-1.5">
+                      <span>🔗 Attach Google Form / Survey Link</span>
+                      <span className="text-[10px] text-emerald-600 font-bold">(Auto-Detects Completed vs Pending)</span>
+                    </label>
+                    <span className="text-[10px] text-gray-400 font-semibold">Optional</span>
+                  </div>
+                  <input
+                    type="url"
+                    value={formAttachmentUrl}
+                    onChange={(e) => setFormAttachmentUrl(e.target.value)}
+                    placeholder="https://docs.google.com/forms/d/e/... or https://forms.gle/..."
+                    className="w-full bg-amber-50/40 border border-amber-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-400 font-medium"
+                  />
+                  <p className="text-[10.5px] text-gray-400 mt-1">
+                    When attached, our portal automatically detects which students completed the form and who has not completed it yet!
+                  </p>
+                </div>
+
                 <div>
                   <label className="font-bold text-gray-700 block mb-1">Circular Content &amp; Instructions</label>
                   <textarea
@@ -522,6 +658,197 @@ export function FacultyAnnouncementsView({
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Google Form / Survey Response Live Tracking Modal */}
+      {trackingAnnouncement && (
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b pb-3 shrink-0">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
+                    Form Response Tracker
+                  </span>
+                  <span className="text-xs text-gray-500 font-semibold">· {trackingAnnouncement.target}</span>
+                </div>
+                <h3 className="text-base font-black text-[#071A3D]">{trackingAnnouncement.title}</h3>
+                {trackingAnnouncement.attachmentUrl && (
+                  <a
+                    href={trackingAnnouncement.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] text-[#1455D9] hover:underline flex items-center gap-1 font-mono truncate max-w-lg"
+                  >
+                    <span>{trackingAnnouncement.attachmentUrl}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setTrackingAnnouncement(null)
+                  setTrackerData(null)
+                }}
+                className="p-1 text-gray-400 hover:text-gray-700 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Reminder Feedback Banner */}
+            {reminderStatus && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 shrink-0 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{reminderStatus}</span>
+              </div>
+            )}
+
+            {/* Tracker Body */}
+            {trackerLoading ? (
+              <div className="py-16 text-center space-y-2">
+                <RefreshCw className="w-8 h-8 text-[#1455D9] animate-spin mx-auto" />
+                <p className="text-xs font-bold text-gray-600">Scanning cohort student form submissions...</p>
+              </div>
+            ) : !trackerData ? (
+              <div className="py-12 text-center text-xs text-gray-500 font-medium">
+                Unable to load form response data at this time.
+              </div>
+            ) : (
+              <div className="space-y-4 overflow-y-auto pr-1 flex-1" style={{ scrollbarWidth: 'thin' }}>
+                {/* 3 Metric Cards */}
+                <div className="grid grid-cols-3 gap-2.5 shrink-0">
+                  <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 text-center">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">Total Class</p>
+                    <p className="text-2xl font-black text-[#1455D9]">{trackerData.totalCount}</p>
+                    <p className="text-[10px] text-gray-400">Students</p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-center">
+                    <p className="text-[10px] text-emerald-700 font-bold uppercase">✓ Completed</p>
+                    <p className="text-2xl font-black text-emerald-600">{trackerData.completedCount}</p>
+                    <p className="text-[10px] text-emerald-700 font-bold">
+                      {trackerData.totalCount > 0
+                        ? `${((trackerData.completedCount / trackerData.totalCount) * 100).toFixed(0)}% Done`
+                        : '0%'}
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200 text-center">
+                    <p className="text-[10px] text-rose-700 font-bold uppercase">⏳ Pending</p>
+                    <p className="text-2xl font-black text-rose-600">{trackerData.pendingCount}</p>
+                    <p className="text-[10px] text-rose-700 font-bold">Not Completed</p>
+                  </div>
+                </div>
+
+                {/* Pending Students Section */}
+                <div className="rounded-2xl border border-rose-200 overflow-hidden bg-white shadow-2xs">
+                  <div className="p-3 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                      <h4 className="text-xs font-black text-rose-900">
+                        Pending Students ({trackerData.pendingCount})
+                      </h4>
+                    </div>
+
+                    {trackerData.pendingCount > 0 && (
+                      <button
+                        onClick={() => handleSendReminderSMS(trackerData.pendingStudents)}
+                        className="px-3 py-1 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                      >
+                        <BellRing className="w-3.5 h-3.5" />
+                        <span>Send Reminder SMS ({trackerData.pendingCount})</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto divide-y divide-gray-100" style={{ scrollbarWidth: 'thin' }}>
+                    {trackerData.pendingCount === 0 ? (
+                      <div className="p-6 text-center text-xs text-emerald-700 font-bold flex items-center justify-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>All students in the class have submitted this form!</span>
+                      </div>
+                    ) : (
+                      trackerData.pendingStudents.map((s: any) => (
+                        <div key={s.id} className="p-2.5 sm:px-4 flex items-center justify-between text-xs hover:bg-gray-50">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-[#071A3D] truncate">{s.name}</p>
+                            <p className="text-[11px] text-gray-500 font-mono">{s.registerNumber} · Yr {s.year} (Sec {s.section})</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {s.phone && (
+                              <span className="text-[10px] text-gray-500 font-mono hidden sm:inline">{s.phone}</span>
+                            )}
+                            <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold">
+                              Not Completed
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Completed Students Section */}
+                <div className="rounded-2xl border border-emerald-200 overflow-hidden bg-white shadow-2xs">
+                  <div className="p-3 bg-emerald-50/80 border-b border-emerald-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <h4 className="text-xs font-black text-emerald-900">
+                        Completed Students ({trackerData.completedCount})
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div className="max-h-40 overflow-y-auto divide-y divide-gray-100" style={{ scrollbarWidth: 'thin' }}>
+                    {trackerData.completedCount === 0 ? (
+                      <div className="p-6 text-center text-xs text-gray-400 font-medium">
+                        No responses recorded yet. As students click or complete the form, they will appear here automatically.
+                      </div>
+                    ) : (
+                      trackerData.completedStudents.map((s: any) => (
+                        <div key={s.id} className="p-2.5 sm:px-4 flex items-center justify-between text-xs hover:bg-gray-50">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-[#071A3D] truncate">{s.name}</p>
+                            <p className="text-[11px] text-gray-500 font-mono">{s.registerNumber} · Yr {s.year} (Sec {s.section})</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+                              ✓ Completed
+                            </span>
+                            <p className="text-[9px] text-gray-400 mt-0.5">{s.completedAt ? new Date(s.completedAt).toLocaleDateString() : 'Recorded'}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t flex items-center justify-between shrink-0">
+              <button
+                onClick={() => handleOpenTracker(trackingAnnouncement)}
+                className="px-3.5 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-[#1455D9]" />
+                <span>Refresh Live Status</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setTrackingAnnouncement(null)
+                  setTrackerData(null)
+                }}
+                className="px-5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

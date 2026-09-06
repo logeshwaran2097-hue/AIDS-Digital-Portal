@@ -23,6 +23,7 @@ export default async function FacultyAnnouncementsPage() {
     target: a.target,
     targetYear: a.targetYear,
     targetSemester: a.targetSemester,
+    attachmentUrl: a.attachmentUrl || null,
     createdByName: a.createdByName || facultyName,
     isPublished: a.isPublished,
     publishedAt: a.publishedAt,

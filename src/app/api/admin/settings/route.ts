@@ -37,14 +37,19 @@ const DEFAULT_SETTINGS = {
   notifyLowAttendance: true,
   notifyODSubmitted: true,
   notifyNewStudent: true,
-  // SMS & WhatsApp Gateway Configuration
-  smsProvider: 'twilio', // 'twilio' | 'fast2sms' | 'custom'
+  // SMS & WhatsApp Gateway Configuration — FREE defaults: Fast2SMS (free credits) + Meta Cloud (1000 free/mo)
+  smsProvider: 'fast2sms', // 'twilio' | 'fast2sms' | 'custom' (fast2sms = free India credits)
   smsApiKey: '',
   smsSenderId: 'VSBEDU',
   whatsappEnabled: true,
+  whatsappProvider: 'meta', // 'meta' = FREE 1000 conv/mo | 'twilio' = paid
   whatsappPhoneNumberId: '',
   whatsappBusinessAccountId: '',
   whatsappAccessToken: '',
+  twilioWhatsappFrom: 'whatsapp:+14155238886',
+  // Real-time absent alerts (parent notification) — both free if above are configured
+  notifyAbsentViaSms: true,
+  notifyAbsentViaWhatsapp: true,
   // Menu Item Visibility
   visibleMenus: {
     dashboard: true,

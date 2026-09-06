@@ -24,9 +24,9 @@ export const studentNavItems: NavItem[] = [
 
 export const facultyNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/faculty-dashboard', icon: <Home className="h-4 w-4" /> },
-  { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="h-4 w-4" /> },
-  { label: 'Students', href: '/faculty-dashboard/students', icon: <Users className="h-4 w-4" /> },
   { label: 'Attendance', href: '/faculty-dashboard/attendance', icon: <CalendarDays className="h-4 w-4" /> },
+  { label: 'Class Students', href: '/faculty-dashboard/students', icon: <Users className="h-4 w-4" /> },
+  { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="h-4 w-4" /> },
   { label: 'Resources', href: '/faculty-dashboard/resources', icon: <Database className="h-4 w-4" /> },
   { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="h-4 w-4" /> },
   { label: 'Projects', href: '/faculty-dashboard/projects', icon: <FolderOpen className="h-4 w-4" /> },
