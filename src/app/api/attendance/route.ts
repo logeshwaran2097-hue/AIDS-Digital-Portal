@@ -353,10 +353,144 @@ export async function POST(request: Request) {
       console.debug('Notification broadcast note:', notifErr)
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    // Real-time Parent Alerts for Absent Students — SMS + WhatsApp
+    // Triggers automatically on every attendance save. Non-blocking but
+    // awaited with audit logging. Respects portal_config toggles.
+    // ─────────────────────────────────────────────────────────────────
+    let absentAlertSummary: any = null
+    try {
+      const absentRecords = records.filter((r: any) => r.status === 'A')
+      if (absentRecords.length > 0) {
+        // Load portal config toggles
+        let portalCfg: any = {}
+        try {
+          const saved = await (prisma as any).systemSettings?.findUnique?.({ where: { key: 'portal_config' } })
+          if (saved?.value) portalCfg = JSON.parse(saved.value)
+        } catch {}
+        const notifySms = portalCfg.notifyAbsentViaSms !== false
+        const notifyWa = portalCfg.notifyAbsentViaWhatsapp !== false && portalCfg.whatsappEnabled !== false
+
+        if (notifySms || notifyWa) {
+          // Resolve parent/student phones for absent regs
+          const regNos: string[] = absentRecords.map((r: any) => r.registerNumber).filter(Boolean)
+          const stuIds: string[] = absentRecords.map((r: any) => r.id || r.studentId).filter(Boolean)
+
+          let stuRows: any[] = []
+          try {
+            const orConds: any[] = []
+            if (regNos.length) orConds.push({ registerNumber: { in: regNos } })
+            if (stuIds.length) orConds.push({ id: { in: stuIds } })
+            if (orConds.length) {
+              stuRows = await prisma.student.findMany({
+                where: { OR: orConds },
+                select: { id: true, registerNumber: true, parentPhone: true, userId: true },
+              })
+            }
+          } catch {}
+
+          let userMap = new Map<string, string>()
+          try {
+            const userIds = stuRows.map((s: any) => s.userId).filter(Boolean)
+            if (userIds.length) {
+              const users = await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true, phone: true } })
+              userMap = new Map(users.map((u: any) => [u.id, u.phone || '']))
+            }
+          } catch {}
+
+          // Build targets with resolved phones
+          type AbsentT = { registerNumber: string; studentName: string; remarks?: string | null; parentPhone?: string | null; studentPhone?: string | null }
+          const targets: AbsentT[] = absentRecords
+            .map((r: any) => {
+              const found = stuRows.find((s: any) => s.registerNumber === r.registerNumber || s.id === (r.id || r.studentId))
+              const parentPhone = found?.parentPhone || null
+              const studentPhone = found ? (userMap.get(found.userId) || null) : null
+              return {
+                registerNumber: r.registerNumber,
+                studentName: r.name || r.studentName || r.registerNumber,
+                remarks: r.remarks || null,
+                parentPhone,
+                studentPhone,
+              }
+            })
+            .filter((t: AbsentT) => {
+              const ph = (t.parentPhone || t.studentPhone || '').replace(/\D/g, '')
+              return ph.length >= 10
+            })
+
+          if (targets.length > 0) {
+            // Lazy import to avoid circular init issues
+            const { getGatewayConfig, buildAbsentMessage, sendSms, sendWhatsapp } = await import('@/lib/gateway')
+            const baseCfg = await getGatewayConfig()
+            const scopeLabel = sessionType === 'morning'
+              ? `Morning Attendance · ${date} · Year ${year} Sec ${section}`
+              : `${subjectCode || 'Subject'} (${(hour || '').trim()}) · ${date} · Year ${year} Sec ${section}`
+
+            // Fire per-target per-channel in parallel (cap handled by gateway concurrency internally if using dispatch, but we manual here)
+            const tasks = targets.map(async (t) => {
+              const phone = (t.parentPhone || t.studentPhone || '').trim()
+              const body = buildAbsentMessage({
+                studentName: t.studentName,
+                registerNumber: t.registerNumber,
+                date,
+                sessionLabel: scopeLabel,
+                takenByName: session.name || 'Class Advisor',
+                reason: t.remarks || 'Uninformed Absence',
+              })
+              const results: any = { registerNumber: t.registerNumber, phone, sms: null, whatsapp: null }
+              const promises: Promise<any>[] = []
+              if (notifySms) promises.push(sendSms(phone, body, baseCfg).then((r) => (results.sms = r)))
+              else results.sms = { success: false, skipped: true, reason: 'notifyAbsentViaSms disabled' }
+              if (notifyWa) promises.push(sendWhatsapp(phone, body, baseCfg).then((r) => (results.whatsapp = r)))
+              else results.whatsapp = { success: false, skipped: true, reason: 'notifyAbsentViaWhatsapp disabled' }
+              await Promise.allSettled(promises)
+              // Per-target audit is done inside send*? No — log aggregated here as well
+              const anySuccess = results.sms?.success || results.whatsapp?.success
+              await prisma.auditLog
+                .create({
+                  data: {
+                    userName: session.name || 'System',
+                    action: anySuccess ? 'ABSENT_ALERT_SENT' : 'ABSENT_ALERT_FAILED',
+                    module: 'attendance',
+                    details: `Absent auto-alert for ${t.studentName} (${t.registerNumber}) → ${phone} | SMS=${results.sms?.success ? 'OK ' + (results.sms.sid || '') : results.sms?.error || results.sms?.reason} | WA=${results.whatsapp?.success ? 'OK ' + (results.whatsapp.sid || results.whatsapp.messageId || '') : results.whatsapp?.error || results.whatsapp?.reason} | ${scopeLabel}`,
+                    status: anySuccess ? 'SUCCESS' : 'FAILED',
+                  },
+                })
+                .catch(() => {})
+              return results
+            })
+
+            const settled = await Promise.allSettled(tasks)
+            const details = settled.map((s) => (s.status === 'fulfilled' ? s.value : { error: (s as any).reason?.message }))
+            const smsOk = details.filter((d: any) => d.sms?.success).length
+            const waOk = details.filter((d: any) => d.whatsapp?.success).length
+            absentAlertSummary = {
+              attempted: targets.length,
+              smsProvider: baseCfg.smsProvider,
+              whatsappProvider: baseCfg.whatsappProvider,
+              smsSent: smsOk,
+              whatsappSent: waOk,
+              notifySms,
+              notifyWa,
+              details,
+            }
+          } else {
+            absentAlertSummary = { attempted: 0, note: 'No valid parent/student phone found for absent records' }
+          }
+        } else {
+          absentAlertSummary = { attempted: 0, note: 'Auto absent alerts disabled in portal settings' }
+        }
+      }
+    } catch (alertErr: any) {
+      console.warn('Absent auto-alert error:', alertErr?.message || alertErr)
+      absentAlertSummary = { attempted: 0, error: alertErr?.message || String(alertErr) }
+    }
+
     return NextResponse.json({
       success: true,
       message: isLocked ? 'Attendance locked and submitted successfully.' : 'Attendance saved successfully.',
       session: attSession || { id: 'session-local', isLocked },
+      absentAlerts: absentAlertSummary,
     })
   } catch (error) {
     console.error('Attendance save error:', error)
