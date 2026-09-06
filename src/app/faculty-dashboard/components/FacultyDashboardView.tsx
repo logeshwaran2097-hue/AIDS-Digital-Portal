@@ -59,6 +59,7 @@ interface FacultyData {
     experience: number
     specialization: string
     subjects: string
+    subjectName?: string | null
     advisorBatch?: string | null
     advisorYear?: number | null
     advisorSem?: number | null
@@ -122,8 +123,8 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           advisorBatch: data.faculty?.advisorBatch || null,
           advisorYear: data.faculty?.advisorYear || null,
           advisorSem: data.faculty?.advisorSem || null,
-          advisorSec: data.faculty?.advisorSec || null,
-          subjects: data.faculty?.subjects || '[]',
+          subjects: data.faculty?.subjectName || (data.assignedSubjects && data.assignedSubjects.length > 0 ? data.assignedSubjects.map(s => s.name).join(', ') : (data.faculty?.subjects && data.faculty.subjects !== '[]' ? data.faculty.subjects : 'Artificial Intelligence & Data Science')),
+          department: 'B.Tech Artificial Intelligence & Data Science',
         }}
         onComplete={(updated) => {
           setIsOnboardingOpen(false)

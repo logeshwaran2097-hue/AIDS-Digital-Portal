@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, name, registerNumber, facultyId, role } = await request.json()
+    const { email, name, registerNumber, facultyId, role, subjectName, department } = await request.json()
 
     if (!email || !email.includes('@')) {
       return NextResponse.json(
@@ -40,43 +40,81 @@ export async function POST(request: NextRequest) {
     // 3. Dispatch Real Email via SMTP
     let displayName = name && name.trim() ? name.trim() : ''
     const identifier = (registerNumber || facultyId || '').trim().toUpperCase() || 'N/A'
+    let resolvedSubjectName = subjectName && typeof subjectName === 'string' ? subjectName.trim() : ''
+    let resolvedDepartment = department && typeof department === 'string' ? department.trim() : 'B.Tech Artificial Intelligence & Data Science'
 
-    // If name is missing or placeholder, lookup real name from database
-    if (!displayName || displayName.startsWith('Student (') || displayName.startsWith('Faculty (')) {
-      try {
-        if (facultyId) {
-          const facRec = await prisma.faculty.findUnique({ where: { facultyId: facultyId.toUpperCase() } })
-          if (facRec) {
-            const u = await prisma.user.findUnique({ where: { id: facRec.userId } })
-            if (u?.name) displayName = u.name
-          }
-          if (!displayName) {
-            const hodRec = await prisma.hOD.findUnique({ where: { facultyId: facultyId.toUpperCase() } })
-            if (hodRec) {
-              const u = await prisma.user.findUnique({ where: { id: hodRec.userId } })
-              if (u?.name) displayName = u.name
+    // If name or subject is missing, lookup from database
+    try {
+      if (facultyId) {
+        const facRec = await prisma.faculty.findUnique({ where: { facultyId: facultyId.toUpperCase() } })
+        if (facRec) {
+          const u = await prisma.user.findUnique({ where: { id: facRec.userId } })
+          if (u?.name && (!displayName || displayName.startsWith('Faculty ('))) displayName = u.name
+          if (!resolvedSubjectName) {
+            if (facRec.subjectName) {
+              resolvedSubjectName = facRec.subjectName
+            } else if (facRec.subjects && facRec.subjects !== '[]') {
+              try {
+                const parsed = JSON.parse(facRec.subjects)
+                resolvedSubjectName = Array.isArray(parsed) && parsed.length > 0 ? parsed.join(', ') : facRec.subjects
+              } catch {
+                resolvedSubjectName = facRec.subjects
+              }
             }
           }
-        } else if (registerNumber) {
-          const studentRec = await prisma.student.findUnique({ where: { registerNumber: registerNumber.toUpperCase() } })
-          if (studentRec) {
-            const u = await prisma.user.findUnique({ where: { id: studentRec.userId } })
+        }
+        if (!displayName) {
+          const hodRec = await prisma.hOD.findUnique({ where: { facultyId: facultyId.toUpperCase() } })
+          if (hodRec) {
+            const u = await prisma.user.findUnique({ where: { id: hodRec.userId } })
             if (u?.name) displayName = u.name
+            if (hodRec.department) resolvedDepartment = hodRec.department
           }
         }
-      } catch {}
-    }
+      } else if (registerNumber) {
+        const studentRec = await prisma.student.findUnique({ where: { registerNumber: registerNumber.toUpperCase() } })
+        if (studentRec) {
+          const u = await prisma.user.findUnique({ where: { id: studentRec.userId } })
+          if (u?.name && (!displayName || displayName.startsWith('Student ('))) displayName = u.name
+          if (studentRec.department) resolvedDepartment = studentRec.department
+        }
+      } else if (trimmedEmail) {
+        const u = await prisma.user.findUnique({ where: { email: trimmedEmail } })
+        if (u) {
+          if (!displayName) displayName = u.name
+          const facRec = await prisma.faculty.findUnique({ where: { userId: u.id } })
+          if (facRec && !resolvedSubjectName) {
+            if (facRec.subjectName) {
+              resolvedSubjectName = facRec.subjectName
+            } else if (facRec.subjects && facRec.subjects !== '[]') {
+              try {
+                const parsed = JSON.parse(facRec.subjects)
+                resolvedSubjectName = Array.isArray(parsed) && parsed.length > 0 ? parsed.join(', ') : facRec.subjects
+              } catch {
+                resolvedSubjectName = facRec.subjects
+              }
+            }
+          }
+        }
+      }
+    } catch {}
 
     if (!displayName) {
       displayName = role === 'hod' ? 'Head of Department' : role === 'advisor' ? 'Class Advisor' : role === 'faculty' ? 'Faculty Member' : 'Student'
     }
 
-    console.log(`[VSB Onboarding] Dispatching OTP email to ${trimmedEmail} (${displayName}, ID: ${identifier}, OTP: ${otp})`)
+    if (!resolvedSubjectName) {
+      resolvedSubjectName = 'Artificial Intelligence & Data Science'
+    }
+
+    console.log(`[VSB Onboarding] Dispatching OTP email to ${trimmedEmail} (Name: ${displayName}, Subject: ${resolvedSubjectName}, Dept: ${resolvedDepartment}, OTP: ${otp})`)
     const emailResult = await sendStudentVerificationEmail(
       trimmedEmail,
       otp,
       displayName,
-      identifier
+      identifier,
+      resolvedSubjectName,
+      resolvedDepartment
     )
 
     const response = NextResponse.json({

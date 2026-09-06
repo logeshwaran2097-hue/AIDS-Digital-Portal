@@ -281,9 +281,11 @@ export function StaffOnboardingModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: form.email.trim().toLowerCase(),
-          name: initialData.name,
+          name: form.name || initialData.name,
           facultyId: initialData.facultyId,
           role,
+          subjectName: initialData.subjects || '',
+          department: initialData.department || 'B.Tech Artificial Intelligence & Data Science',
         }),
       })
 

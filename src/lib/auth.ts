@@ -771,7 +771,14 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
   }
 }
 
-export async function sendStudentVerificationEmail(email: string, otp: string, studentName: string, registerNumber: string) {
+export async function sendStudentVerificationEmail(
+  email: string,
+  otp: string,
+  studentName: string,
+  registerNumber?: string,
+  subjectName?: string,
+  department?: string
+) {
   const nodemailer = require('nodemailer')
   const dns = require('dns')
   const fs = require('fs')
@@ -787,6 +794,9 @@ export async function sendStudentVerificationEmail(email: string, otp: string, s
   const smtpUser = process.env.SMTP_USER || 'admin@vsb.edu.in'
   const smtpPass = process.env.SMTP_PASSWORD || ''
   const isRealSmtpConfigured = smtpUser && smtpPass && smtpPass !== 'your-app-password'
+
+  const resolvedSubjectName = (subjectName || '').trim() || 'Artificial Intelligence & Data Science'
+  const departmentName = (department || '').trim() || 'B.Tech Artificial Intelligence & Data Science'
 
   const logoPath = path.join(process.cwd(), 'public', 'logo.png')
   const hasLogo = fs.existsSync(logoPath)
@@ -830,27 +840,27 @@ export async function sendStudentVerificationEmail(email: string, otp: string, s
           </div>
           
           <div style="padding: 24px 20px;">
-            <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">Student Email &amp; Password Setup Verification</h2>
+            <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">Email &amp; Password Setup Verification</h2>
             <p style="margin: 0 0 14px; font-size: 14px; color: #334155;">Dear <strong>${studentName}</strong>,</p>
 
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                  <td style="padding: 3px 0; color: #64748b; font-weight: 600; width: 140px;">🎓 Register No:</td>
-                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700; font-family: monospace;">${registerNumber}</td>
+                  <td style="padding: 4px 0; color: #64748b; font-weight: 600; width: 140px;">👤 Name:</td>
+                  <td style="padding: 4px 0; color: #071A3D; font-weight: 700;">${studentName}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">👤 Student Name:</td>
-                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">${studentName}</td>
+                  <td style="padding: 4px 0; color: #64748b; font-weight: 600;">📚 Subject Name:</td>
+                  <td style="padding: 4px 0; color: #071A3D; font-weight: 700;">${resolvedSubjectName}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
-                  <td style="padding: 3px 0; color: #1455D9; font-weight: 700;">B.Tech Artificial Intelligence &amp; Data Science</td>
+                  <td style="padding: 4px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+                  <td style="padding: 4px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
                 </tr>
               </table>
             </div>
 
-            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your student portal to verify your institutional account and proceed to set your new permanent password:</p>
+            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your portal to verify your institutional account and proceed to set your new permanent password:</p>
             
             <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; text-align: center; margin: 16px 0;">
               <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
@@ -860,7 +870,7 @@ export async function sendStudentVerificationEmail(email: string, otp: string, s
             <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this email verification, please contact your department administrator.</p>
             
             <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; text-align: center;">
-              <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal • Student Verification System</p>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal • Institutional Verification System</p>
             </div>
           </div>
         </div>
