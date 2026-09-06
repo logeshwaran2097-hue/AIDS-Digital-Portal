@@ -65,9 +65,12 @@ interface CourseSubject {
     guideFile: string
   }[]
   questions: {
+    id?: string
     type: '2_mark' | '16_mark'
     q: string
     bloom: string
+    unit?: string
+    marks?: number
   }[]
 }
 
@@ -103,6 +106,32 @@ export function FacultySubjectsView({
   const [isEditingSyllabus, setIsEditingSyllabus] = useState(false)
   const [editableUnits, setEditableUnits] = useState<CourseSubject['units']>([])
   const [savingSyllabus, setSavingSyllabus] = useState(false)
+
+  // Question Bank Upload & Manage State
+  const [showQbUploadModal, setShowQbUploadModal] = useState(false)
+  const [qbUploading, setQbUploading] = useState(false)
+  const [qbFile, setQbFile] = useState<File | null>(null)
+  const [qbError, setQbError] = useState<string | null>(null)
+  const [qbSuccessMsg, setQbSuccessMsg] = useState<string | null>(null)
+
+  // Add Question Modal State
+  const [showAddQuestionModal, setShowAddQuestionModal] = useState(false)
+  const [addingQuestion, setAddingQuestion] = useState(false)
+  const [newQuestionForm, setNewQuestionForm] = useState<{
+    type: '2_mark' | '16_mark'
+    unit: string
+    question: string
+    bloom: string
+  }>({
+    type: '2_mark',
+    unit: 'Unit I',
+    question: '',
+    bloom: 'L2: Understand',
+  })
+
+  // Question Bank Tab Filters
+  const [qbFilterType, setQbFilterType] = useState<'all' | '2_mark' | '16_mark'>('all')
+  const [qbFilterUnit, setQbFilterUnit] = useState<string>('all')
 
   const currentCourse = courses[selectedCourseIndex] || courses[0] || null
 
@@ -285,6 +314,219 @@ export function FacultySubjectsView({
     } catch (err: any) {
       alert(err.message || 'Could not create template')
     }
+  }
+
+  // Question Bank Handlers
+  const handleUploadQuestionBank = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentCourse) return
+    if (!qbFile) {
+      setQbError('Please select a file (.pdf, .docx, or .txt)')
+      return
+    }
+
+    setQbUploading(true)
+    setQbError(null)
+    setQbSuccessMsg(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', qbFile)
+      formData.append('subjectCode', currentCourse.code)
+
+      const res = await fetch('/api/faculty/questions', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to parse and upload question bank')
+      }
+
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (c.code.toUpperCase() === currentCourse.code.toUpperCase()) {
+            return {
+              ...c,
+              questions: [...data.questions, ...(c.questions || [])],
+            }
+          }
+          return c
+        })
+      )
+
+      setQbSuccessMsg(`Extracted & saved ${data.count} questions successfully!`)
+      setTimeout(() => {
+        setShowQbUploadModal(false)
+        setQbFile(null)
+        setQbSuccessMsg(null)
+      }, 1200)
+    } catch (err: any) {
+      setQbError(err.message || 'Error uploading question bank')
+    } finally {
+      setQbUploading(false)
+    }
+  }
+
+  const handleAddQuestionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentCourse) return
+    if (!newQuestionForm.question.trim()) {
+      alert('Question text is required')
+      return
+    }
+
+    setAddingQuestion(true)
+    try {
+      const res = await fetch('/api/faculty/questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'ADD_QUESTION',
+          subjectCode: currentCourse.code,
+          type: newQuestionForm.type,
+          unit: newQuestionForm.unit,
+          question: newQuestionForm.question.trim(),
+          bloom: newQuestionForm.bloom,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to add question')
+      }
+
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (c.code.toUpperCase() === currentCourse.code.toUpperCase()) {
+            return {
+              ...c,
+              questions: [data.question, ...(c.questions || [])],
+            }
+          }
+          return c
+        })
+      )
+
+      setShowAddQuestionModal(false)
+      setNewQuestionForm({
+        type: '2_mark',
+        unit: 'Unit I',
+        question: '',
+        bloom: 'L2: Understand',
+      })
+    } catch (err: any) {
+      alert(err.message || 'Failed to add question')
+    } finally {
+      setAddingQuestion(false)
+    }
+  }
+
+  const handleLoadTemplateQuestions = async () => {
+    if (!currentCourse) return
+    if (!confirm(`Load standard Anna University Question Bank template for ${currentCourse.code}?`)) {
+      return
+    }
+
+    try {
+      const res = await fetch('/api/faculty/questions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'LOAD_TEMPLATE',
+          subjectCode: currentCourse.code,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to load template questions')
+      }
+
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (c.code.toUpperCase() === currentCourse.code.toUpperCase()) {
+            return {
+              ...c,
+              questions: data.questions,
+            }
+          }
+          return c
+        })
+      )
+    } catch (err: any) {
+      alert(err.message || 'Failed to load template')
+    }
+  }
+
+  const handleDeleteQuestion = async (id?: string, idx?: number) => {
+    if (!confirm('Are you sure you want to remove this question?')) return
+    if (!currentCourse) return
+
+    if (id) {
+      try {
+        const res = await fetch(`/api/faculty/questions?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        })
+        const data = await res.json()
+        if (!res.ok || !data.success) {
+          throw new Error(data.message || 'Failed to delete question')
+        }
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete question from database')
+        return
+      }
+    }
+
+    setCourses((prev) =>
+      prev.map((c) => {
+        if (c.code.toUpperCase() === currentCourse.code.toUpperCase()) {
+          const updated = [...(c.questions || [])]
+          if (id) {
+            return { ...c, questions: updated.filter((q) => q.id !== id) }
+          } else if (typeof idx === 'number') {
+            updated.splice(idx, 1)
+            return { ...c, questions: updated }
+          }
+        }
+        return c
+      })
+    )
+  }
+
+  const handleDownloadQuestionBankPDF = () => {
+    if (!currentCourse || !currentCourse.questions || currentCourse.questions.length === 0) {
+      alert('No questions to export.')
+      return
+    }
+
+    const partA = currentCourse.questions.filter((q) => q.type === '2_mark')
+    const partB = currentCourse.questions.filter((q) => q.type === '16_mark')
+
+    const sections = [
+      {
+        heading: `PART - A: SHORT ANSWER QUESTIONS (2 MARKS) [Total: ${partA.length}]`,
+        body: partA.map(
+          (q, i) => `Q${i + 1}. [${q.unit || 'Unit I'}] [${q.bloom || 'L2: Understand'}] ${q.q}`
+        ),
+      },
+      {
+        heading: `PART - B: ESSAY & ANALYTICAL QUESTIONS (16 MARKS) [Total: ${partB.length}]`,
+        body: partB.map(
+          (q, i) => `Q${i + 1}. [${q.unit || 'Unit I'}] [${q.bloom || 'L3: Apply'}] ${q.q}`
+        ),
+      },
+    ]
+
+    generateAndDownloadPDF({
+      title: `${currentCourse.code} - ${currentCourse.name}`,
+      subtitle: `OFFICIAL QUESTION BANK ARCHIVE · Anna University Autonomous Regulation ${currentCourse.regulation}`,
+      subjectCode: currentCourse.code,
+      author: 'Department Course Faculty',
+      category: "Question Bank & Bloom's Taxonomy Mapping",
+      sections,
+    })
   }
 
   const openUploadModal = () => {
@@ -882,35 +1124,230 @@ export function FacultySubjectsView({
           )}
 
           {/* Tab 4: Question Bank & Bloom's Taxonomy */}
-          {activeTab === 'questions' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm text-[#071A3D]">Important 2-Mark &amp; 16-Mark Question Archive</h3>
-                <span className="text-xs text-purple-700 font-bold bg-purple-50 px-2.5 py-1 rounded-full border border-purple-200">
-                  CO-PO Mapped
-                </span>
-              </div>
+          {activeTab === 'questions' && (() => {
+            const allQuestions = currentCourse.questions || []
+            const partACount = allQuestions.filter((q) => q.type === '2_mark').length
+            const partBCount = allQuestions.filter((q) => q.type === '16_mark').length
 
-              <div className="space-y-3">
-                {currentCourse.questions.map((q, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span
+            // Available units in current course
+            const unitsList = currentCourse.units && currentCourse.units.length > 0
+              ? currentCourse.units.map((u) => u.unit)
+              : ['Unit I', 'Unit II', 'Unit III', 'Unit IV', 'Unit V']
+
+            const filteredQuestions = allQuestions.filter((q) => {
+              if (qbFilterType !== 'all' && q.type !== qbFilterType) return false
+              if (qbFilterUnit !== 'all') {
+                const qUnit = (q.unit || '').toUpperCase()
+                const targetUnit = qbFilterUnit.toUpperCase()
+                if (!qUnit.includes(targetUnit) && !targetUnit.includes(qUnit)) return false
+              }
+              return true
+            })
+
+            return (
+              <div className="space-y-4">
+                {/* Header Actions Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-xs">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm sm:text-base text-[#071A3D]">Important Question Bank &amp; Archive</h3>
+                      <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                        CO-PO Mapped
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Classified by Anna University Bloom&apos;s Taxonomy (L1-L6) &amp; Unit Modules
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setShowQbUploadModal(true)}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                    >
+                      <FileUp className="w-3.5 h-3.5" />
+                      <span>Upload QB (.pdf / .docx)</span>
+                    </button>
+                    <button
+                      onClick={() => setShowAddQuestionModal(true)}
+                      className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-[#071A3D] text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Question</span>
+                    </button>
+                    {allQuestions.length > 0 && (
+                      <button
+                        onClick={handleDownloadQuestionBankPDF}
+                        className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Download Question Bank as official PDF"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Export PDF</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Filters & Tabs */}
+                {allQuestions.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-50/70 p-3 rounded-2xl border border-gray-100">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <button
+                        onClick={() => setQbFilterType('all')}
                         className={cn(
-                          'px-2.5 py-0.5 rounded-md text-[10px] font-black',
-                          q.type === '2_mark' ? 'bg-blue-50 text-[#1455D9]' : 'bg-purple-50 text-purple-700'
+                          'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                          qbFilterType === 'all'
+                            ? 'bg-[#071A3D] text-white shadow-xs'
+                            : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                         )}
                       >
-                        {q.type === '2_mark' ? 'PART-A (2 Marks)' : 'PART-B (16 Marks)'}
-                      </span>
-                      <span className="text-[10px] text-gray-400 font-semibold">{q.bloom}</span>
+                        All ({allQuestions.length})
+                      </button>
+                      <button
+                        onClick={() => setQbFilterType('2_mark')}
+                        className={cn(
+                          'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                          qbFilterType === '2_mark'
+                            ? 'bg-[#1455D9] text-white shadow-xs'
+                            : 'bg-white text-gray-600 hover:bg-blue-50 border border-gray-200'
+                        )}
+                      >
+                        Part-A 2 Marks ({partACount})
+                      </button>
+                      <button
+                        onClick={() => setQbFilterType('16_mark')}
+                        className={cn(
+                          'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                          qbFilterType === '16_mark'
+                            ? 'bg-purple-700 text-white shadow-xs'
+                            : 'bg-white text-gray-600 hover:bg-purple-50 border border-gray-200'
+                        )}
+                      >
+                        Part-B 16 Marks ({partBCount})
+                      </button>
                     </div>
-                    <p className="text-xs font-bold text-[#071A3D]">{q.q}</p>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-semibold">Unit:</span>
+                      <select
+                        value={qbFilterUnit}
+                        onChange={(e) => setQbFilterUnit(e.target.value)}
+                        className="bg-white border border-gray-200 text-xs text-[#071A3D] font-bold rounded-xl px-2.5 py-1 focus:outline-hidden focus:ring-1 focus:ring-[#1455D9]"
+                      >
+                        <option value="all">All Units</option>
+                        {unitsList.map((u, i) => (
+                          <option key={i} value={u}>
+                            {u}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
-                ))}
+                )}
+
+                {/* Empty State when no questions exist */}
+                {allQuestions.length === 0 && (
+                  <div className="p-8 text-center bg-gray-50/60 rounded-3xl border border-dashed border-gray-200 space-y-4">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto shadow-xs">
+                      <FileQuestion className="w-6 h-6" />
+                    </div>
+                    <div className="max-w-md mx-auto space-y-1">
+                      <h4 className="font-bold text-sm sm:text-base text-[#071A3D]">
+                        No Questions Uploaded for {currentCourse.code}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        Upload your department question bank document (.pdf, .docx, or .txt) to automatically extract Part-A and Part-B questions with Bloom&apos;s Taxonomy levels.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+                      <button
+                        onClick={() => setShowQbUploadModal(true)}
+                        className="px-4 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                      >
+                        <FileUp className="w-4 h-4" />
+                        <span>Upload Question Bank Document</span>
+                      </button>
+                      <button
+                        onClick={handleLoadTemplateQuestions}
+                        className="px-4 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
+                      >
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                        <span>Load AU Standard Template</span>
+                      </button>
+                      <button
+                        onClick={() => setShowAddQuestionModal(true)}
+                        className="px-3.5 py-2 bg-white hover:bg-gray-100 text-[#071A3D] border border-gray-200 rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Manually</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Filter Empty State */}
+                {allQuestions.length > 0 && filteredQuestions.length === 0 && (
+                  <div className="p-8 text-center bg-gray-50/50 rounded-2xl border border-gray-100 space-y-2">
+                    <p className="text-xs text-gray-500 font-medium">No questions found matching your filter criteria.</p>
+                    <button
+                      onClick={() => {
+                        setQbFilterType('all')
+                        setQbFilterUnit('all')
+                      }}
+                      className="text-xs font-bold text-[#1455D9] hover:underline"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                )}
+
+                {/* Questions List */}
+                <div className="space-y-3">
+                  {filteredQuestions.map((q, idx) => (
+                    <div
+                      key={q.id || idx}
+                      className="p-4 rounded-2xl bg-white border border-gray-100 hover:border-blue-100 shadow-xs space-y-2 transition-all group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={cn(
+                              'px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wide',
+                              q.type === '2_mark'
+                                ? 'bg-blue-50 text-[#1455D9] border border-blue-100'
+                                : 'bg-purple-50 text-purple-700 border border-purple-100'
+                            )}
+                          >
+                            {q.type === '2_mark' ? 'PART-A (2 Marks)' : 'PART-B (16 Marks)'}
+                          </span>
+                          {q.unit && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 font-mono">
+                              {q.unit}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md font-semibold">
+                            {q.bloom || 'L2: Understand'}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => handleDeleteQuestion(q.id, idx)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-all cursor-pointer"
+                          title="Delete question"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <p className="text-xs sm:text-sm font-semibold text-[#071A3D] leading-relaxed">
+                        {q.q}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
         </CardContent>
       </Card>
       )}
@@ -1225,6 +1662,214 @@ export function FacultySubjectsView({
                     <>
                       <Sparkles className="w-3.5 h-3.5 text-[#F4C430]" />
                       <span>Extract &amp; Publish Syllabus</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Upload Question Bank Document Modal */}
+      {showQbUploadModal && currentCourse && (
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-start justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-[#071A3D]">Upload Question Bank</h3>
+                <p className="text-xs text-gray-500">
+                  Target Course: <span className="font-bold text-[#1455D9]">{currentCourse.code} - {currentCourse.name}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowQbUploadModal(false)
+                  setQbFile(null)
+                  setQbError(null)
+                  setQbSuccessMsg(null)
+                }}
+                className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUploadQuestionBank} className="space-y-4">
+              <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-3 text-xs text-blue-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold">
+                  <Sparkles className="w-3.5 h-3.5 text-[#1455D9]" />
+                  <span>AI / Pattern Question Extractor</span>
+                </div>
+                <p className="text-[11px] text-blue-800/80 leading-relaxed">
+                  Upload your Question Bank document (<code className="font-bold">.pdf</code>, <code className="font-bold">.docx</code>, or <code className="font-bold">.txt</code>). Our parser will automatically identify Part-A (2 Marks), Part-B (16 Marks), Unit headings, and Bloom&apos;s Taxonomy levels.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  Select Question Bank File (.pdf, .docx, .txt) *
+                </label>
+                <input
+                  type="file"
+                  required
+                  accept=".pdf,.docx,.txt"
+                  onChange={(e) => {
+                    setQbFile(e.target.files?.[0] || null)
+                    setQbError(null)
+                  }}
+                  className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-[#1455D9] hover:file:bg-blue-100 cursor-pointer border border-gray-200 rounded-xl p-1"
+                />
+              </div>
+
+              {qbError && (
+                <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{qbError}</span>
+                </div>
+              )}
+
+              {qbSuccessMsg && (
+                <div className="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{qbSuccessMsg}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowQbUploadModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={qbUploading || !qbFile}
+                  className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {qbUploading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extracting Questions...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="w-3.5 h-3.5" />
+                      <span>Extract &amp; Save Questions</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Single Question Modal */}
+      {showAddQuestionModal && currentCourse && (
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-start justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-[#071A3D]">Add Question</h3>
+                <p className="text-xs text-gray-500">
+                  Course: <span className="font-bold text-[#1455D9]">{currentCourse.code}</span>
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddQuestionModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddQuestionSubmit} className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Question Type</label>
+                  <select
+                    value={newQuestionForm.type}
+                    onChange={(e) =>
+                      setNewQuestionForm((prev) => ({
+                        ...prev,
+                        type: e.target.value as '2_mark' | '16_mark',
+                      }))
+                    }
+                    className="w-full text-xs border border-gray-200 rounded-xl p-2 font-bold text-[#071A3D]"
+                  >
+                    <option value="2_mark">Part-A (2 Marks)</option>
+                    <option value="16_mark">Part-B (16 Marks)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Unit / Module</label>
+                  <select
+                    value={newQuestionForm.unit}
+                    onChange={(e) => setNewQuestionForm((prev) => ({ ...prev, unit: e.target.value }))}
+                    className="w-full text-xs border border-gray-200 rounded-xl p-2 font-bold text-[#071A3D]"
+                  >
+                    <option value="Unit I">Unit I</option>
+                    <option value="Unit II">Unit II</option>
+                    <option value="Unit III">Unit III</option>
+                    <option value="Unit IV">Unit IV</option>
+                    <option value="Unit V">Unit V</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Bloom&apos;s Taxonomy Level</label>
+                <select
+                  value={newQuestionForm.bloom}
+                  onChange={(e) => setNewQuestionForm((prev) => ({ ...prev, bloom: e.target.value }))}
+                  className="w-full text-xs border border-gray-200 rounded-xl p-2 font-semibold text-[#071A3D]"
+                >
+                  <option value="L1: Remember">L1: Remember</option>
+                  <option value="L2: Understand">L2: Understand</option>
+                  <option value="L3: Apply">L3: Apply</option>
+                  <option value="L4: Analyze">L4: Analyze</option>
+                  <option value="L5: Evaluate">L5: Evaluate</option>
+                  <option value="L6: Create">L6: Create</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Question Text *</label>
+                <textarea
+                  required
+                  rows={4}
+                  placeholder="e.g. Define dynamic programming. Differentiate between divide-and-conquer and dynamic programming with an example."
+                  value={newQuestionForm.question}
+                  onChange={(e) => setNewQuestionForm((prev) => ({ ...prev, question: e.target.value }))}
+                  className="w-full text-xs border border-gray-200 rounded-xl p-2.5 text-[#071A3D] font-medium focus:ring-1 focus:ring-[#1455D9]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddQuestionModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingQuestion}
+                  className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {addingQuestion ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Save Question</span>
                     </>
                   )}
                 </button>

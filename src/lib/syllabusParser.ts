@@ -1,4 +1,3 @@
-import pdfParse from 'pdf-parse'
 import mammoth from 'mammoth'
 
 export interface ParsedUnit {
@@ -21,6 +20,7 @@ export async function extractTextFromFile(
 
   if (mimeType.includes('pdf') || lowerName.endsWith('.pdf')) {
     try {
+      const pdfParse = require('pdf-parse')
       const pdfData = await (pdfParse as any)(buffer)
       return pdfData.text || ''
     } catch (err: any) {
