@@ -18,6 +18,8 @@ import {
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn, formatDate } from '@/lib/utils'
+import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 
 interface QuestionPaperRecord {
   id: string
@@ -273,8 +275,41 @@ export function HODQuestionPapersView({
 
                     <td className="py-3.5 px-4 text-center">
                       <button
-                        onClick={() => alert(`Downloading official Question Paper: ${p.fileName}`)}
-                        className="px-3 py-1 bg-[#1455D9]/10 hover:bg-[#1455D9] text-[#1455D9] hover:text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors"
+                        onClick={() => {
+                          generateAndDownloadPDF({
+                            title: 'DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
+                            subtitle: `${p.examType.toUpperCase()} · SEMESTER ${p.semester || 5} · ACADEMIC YEAR ${p.academicYear}`,
+                            author: p.uploadedByName || 'Office of Department Controller of Examinations',
+                            category: `EXAMINATION QUESTION PAPER: ${p.examType}`,
+                            sections: [
+                              {
+                                heading: 'PART A: FUNDAMENTALS (10 x 2 = 20 Marks)',
+                                body: [
+                                  '1. Formulate the mathematical objective function and operational bounds.',
+                                  '2. State the key architectural differences between supervised and unsupervised learning.',
+                                  '3. Define the convergence criterion and learning rate constraints in gradient optimization.',
+                                  '4. Illustrate the bias-variance tradeoff with an annotated diagram.',
+                                  '5. State the governing theorem for backpropagation in multilayer perceptrons.',
+                                ],
+                              },
+                              {
+                                heading: 'PART B: DESCRIPTIVE & DERIVATIONS (5 x 13 = 65 Marks)',
+                                body: [
+                                  '11. (a) Derive and discuss the comprehensive mathematical framework and step-by-step algorithmic pipeline. (13 Marks)\n\t\t\tOR\n\t(b) Discuss the design considerations, worst-case complexity analysis, and trace execution on sample inputs. (13 Marks)',
+                                  '12. (a) Design an end-to-end processing pipeline illustrating data flow, transformation, and feature representation. (13 Marks)\n\t\t\tOR\n\t(b) Evaluate comparative performance metrics under varying production workload conditions. (13 Marks)',
+                                ],
+                              },
+                              {
+                                heading: 'PART C: APPLICATION & SYSTEM DESIGN (1 x 15 = 15 Marks)',
+                                body: [
+                                  '16. Propose a scalable, real-world deployment strategy addressing model drift, data security, fault tolerance, and sub-second inference latency for an enterprise institutional portal. (15 Marks)',
+                                ],
+                              },
+                            ],
+                            fileName: `QP_${p.fileName.replace(/\.pdf$/i, '')}`,
+                          })
+                        }}
+                        className="px-3 py-1 bg-[#1455D9]/10 hover:bg-[#1455D9] text-[#1455D9] hover:text-white rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                       >
                         <Download className="w-3.5 h-3.5" /> PDF
                       </button>
@@ -340,7 +375,7 @@ export function HODQuestionPapersView({
               <button onClick={() => setShowUploadModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Cancel</button>
               <button
                 onClick={() => {
-                  alert('Question paper successfully published to Student & Faculty portals!')
+                  toast.success('Question paper successfully published to Student & Faculty portals!')
                   setShowUploadModal(false)
                 }}
                 className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5]"

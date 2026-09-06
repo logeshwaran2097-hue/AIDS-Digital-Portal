@@ -16,10 +16,19 @@ import {
   Filter,
   Eye,
   FileCheck,
+  Sparkles,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
+import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
+
+export interface SubjectUnitItem {
+  unit: string
+  title: string
+  topics: string
+}
 
 export interface SubjectItem {
   id: string
@@ -33,14 +42,37 @@ export interface SubjectItem {
   unitsCompleted: number
   totalUnits: number
   syllabusAvailable: boolean
+  units?: SubjectUnitItem[]
 }
 
-export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: SubjectItem[] }) {
+export interface FacultyOptionItem {
+  facultyId: string
+  name: string
+  designation: string
+  email: string
+}
+
+export function HODAcademicsView({
+  initialSubjects = [],
+  facultyOptions = [],
+}: {
+  initialSubjects?: SubjectItem[]
+  facultyOptions?: FacultyOptionItem[]
+}) {
   const [subjects, setSubjects] = useState<SubjectItem[]>(initialSubjects)
   const [selectedSemester, setSelectedSemester] = useState<number>(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
   const [selectedSubjectDetail, setSelectedSubjectDetail] = useState<SubjectItem | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Add course form
+  const [newCode, setNewCode] = useState('')
+  const [newName, setNewName] = useState('')
+  const [newSem, setNewSem] = useState(1)
+  const [newCredits, setNewCredits] = useState(3)
+  const [newCategory, setNewCategory] = useState('Professional Core (PC)')
+  const [newFaculty, setNewFaculty] = useState(facultyOptions[0]?.name || '')
 
   // Filtered by semester and search
   const filteredSubjects = subjects.filter((s) => {
@@ -54,18 +86,107 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
 
   const totalCredits = filteredSubjects.reduce((acc, s) => acc + s.credits, 0)
 
+  const handleDownloadSyllabusPDF = (s: SubjectItem) => {
+    const sections = s.units && s.units.length > 0
+      ? s.units.map((u) => ({
+          heading: `${u.unit.toUpperCase()}: ${u.title.toUpperCase()}`,
+          body: [u.topics],
+        }))
+      : [
+          {
+            heading: 'COURSE OBJECTIVES & OUTCOMES',
+            body: [
+              `Course: ${s.code} - ${s.name}`,
+              `Semester: ${s.semester} · Credits: ${s.credits} · Regulation: Autonomous R-2021`,
+              'Instruction: Adhere strictly to the university curriculum framework and practical hours.',
+            ],
+          },
+        ]
+
+    generateAndDownloadPDF({
+      title: `${s.code} - ${s.name}`,
+      subtitle: `Regulation 2021 (Autonomous) · Year ${s.year} · Semester ${s.semester} · ${s.credits} Credits`,
+      subjectCode: s.code,
+      author: 'Office of Head of Department & Academic Directorate',
+      category: 'Curriculum & Course Pack',
+      sections,
+      fileName: `Syllabus_${s.code}_${s.name.replace(/\s+/g, '_')}`,
+    })
+  }
+
+  const handleSaveCourse = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCode.trim() || !newName.trim()) {
+      toast.error('Please enter Course Code and Course Name')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const res = await fetch('/api/admin/academics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: newCode.trim(),
+          name: newName.trim(),
+          semester: Number(newSem),
+          credits: Number(newCredits),
+          category: newCategory,
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success && data.subject) {
+        const yearNumber = Math.ceil(Number(newSem) / 2)
+        const yearMap: Record<number, string> = {
+          1: 'I Year',
+          2: 'II Year',
+          3: 'III Year',
+          4: 'IV Year',
+        }
+
+        const newSubItem: SubjectItem = {
+          id: data.subject.id,
+          code: data.subject.code,
+          name: data.subject.name,
+          credits: data.subject.credits,
+          type: newCategory.toLowerCase().includes('laboratory') || newCategory.toLowerCase().includes('practical') ? 'Practical' : 'Theory',
+          semester: Number(newSem),
+          year: yearMap[yearNumber] || 'I Year',
+          faculty: newFaculty || 'Department Faculty',
+          unitsCompleted: 0,
+          totalUnits: 5,
+          syllabusAvailable: true,
+          units: [],
+        }
+
+        setSubjects((prev) => [newSubItem, ...prev])
+        toast.success(`Course ${data.subject.code} saved to database!`)
+        setShowAddModal(false)
+        setNewCode('')
+        setNewName('')
+      } else {
+        toast.error(data.message || 'Failed to save course')
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Network error saving course')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Curriculum &amp; Syllabus
             </span>
           </div>
-          <h1 className="text-2xl font-black">Academic &amp; Course Management</h1>
-          <p className="text-xs text-gray-300 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black">Academic &amp; Course Management</h1>
+          <p className="text-xs sm:text-sm text-gray-300 mt-1">
             Curriculum structure, semester subject mapping, credit allocations &amp; faculty assignments
           </p>
         </div>
@@ -73,7 +194,7 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md"
+            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
           >
             <Plus className="w-4 h-4" /> Add New Course
           </button>
@@ -91,7 +212,7 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
         <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Selected Sem Subjects</p>
           <p className="text-2xl font-black text-[#1455D9] mt-1">{filteredSubjects.length}</p>
-          <p className="text-[10px] text-gray-400 mt-0.5">Semester {selectedSemester}</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">Semester {selectedSemester === 0 ? 'All' : selectedSemester}</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
@@ -111,7 +232,7 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
       <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Select Semester to View Curriculum:</p>
-          <span className="text-xs font-bold text-[#1455D9]">Currently Viewing: Semester {selectedSemester}</span>
+          <span className="text-xs font-bold text-[#1455D9]">Currently Viewing: {selectedSemester === 0 ? 'All Semesters' : `Semester ${selectedSemester}`}</span>
         </div>
 
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
@@ -120,20 +241,19 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
               key={sem}
               onClick={() => setSelectedSemester(sem)}
               className={cn(
-                'px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0',
+                'px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 cursor-pointer',
                 selectedSemester === sem
                   ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/25 scale-105'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-[#071A3D]'
               )}
             >
               <span>Semester {sem}</span>
-              {sem === 5 && <span className="px-1.5 py-0.2 bg-[#F4C430] text-[#071A3D] text-[9px] rounded-md font-black">ACTIVE</span>}
             </button>
           ))}
           <button
             onClick={() => setSelectedSemester(0)}
             className={cn(
-              'px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shrink-0',
+              'px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer',
               selectedSemester === 0
                 ? 'bg-[#071A3D] text-white shadow-md'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -168,7 +288,9 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
 
         {filteredSubjects.length === 0 ? (
           <div className="py-12 text-center text-gray-500 text-xs">
-            No subjects found for Semester {selectedSemester}. Click "Add New Course" to add courses to this semester.
+            <BookOpen className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="font-bold text-gray-700">No subjects found for Semester {selectedSemester === 0 ? 'All' : selectedSemester}</p>
+            <p className="text-[11px] text-gray-400 mt-1">Click &ldquo;Add New Course&rdquo; above to register subjects into this semester.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -186,8 +308,12 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredSubjects.map((s, idx) => (
-                  <tr key={s.id} className={cn('hover:bg-blue-50/30 transition-colors', idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/20')}>
-                    <td className="py-3.5 px-4 font-mono font-bold text-[#1455D9]">{s.code}</td>
+                  <tr
+                    key={s.id}
+                    onClick={() => setSelectedSubjectDetail(s)}
+                    className={cn('hover:bg-blue-50/40 transition-colors cursor-pointer group', idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/20')}
+                  >
+                    <td className="py-3.5 px-4 font-mono font-bold text-[#1455D9] group-hover:underline">{s.code}</td>
                     <td className="py-3.5 px-4 font-bold text-[#071A3D]">
                       <div>{s.name}</div>
                       <div className="text-[10px] text-gray-400 font-normal">{s.year} · Semester {s.semester}</div>
@@ -210,17 +336,17 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
                     <td className="py-3.5 px-3 text-center font-bold text-green-600">
                       {s.unitsCompleted}/{s.totalUnits} Units
                     </td>
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => setSelectedSubjectDetail(s)}
-                          className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-[#1455D9] hover:text-white text-[#071A3D] text-[11px] font-semibold transition-colors flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg bg-gray-100 hover:bg-[#1455D9] hover:text-white text-[#071A3D] text-[11px] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" /> Syllabus
                         </button>
                         <button
-                          onClick={() => alert(`Downloading official Syllabus PDF for ${s.code} - ${s.name}`)}
-                          className="p-1 rounded-lg bg-[#22C7E8]/10 text-[#0e8fa3] hover:bg-[#22C7E8]/20 transition-colors"
+                          onClick={() => handleDownloadSyllabusPDF(s)}
+                          className="p-1.5 rounded-lg bg-[#22C7E8]/10 text-[#0e8fa3] hover:bg-[#22C7E8]/20 transition-colors cursor-pointer"
                           title="Download Syllabus PDF"
                         >
                           <Download className="w-3.5 h-3.5" />
@@ -247,7 +373,7 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
               </div>
               <button
                 onClick={() => setSelectedSubjectDetail(null)}
-                className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg"
+                className="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg cursor-pointer"
               >
                 ✕
               </button>
@@ -255,42 +381,45 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
 
             <div className="space-y-3 text-xs">
               <h4 className="font-bold text-[#071A3D] uppercase tracking-wider">Course Units (Regulation 2021):</h4>
-              <div className="space-y-2">
-                {[
-                  { u: 'Unit I', t: 'Introduction & Foundational Principles', topics: 'Mathematical preliminaries, core concepts, design paradigm' },
-                  { u: 'Unit II', t: 'Supervised Learning & Regression Models', topics: 'Linear models, decision boundaries, cost optimization' },
-                  { u: 'Unit III', t: 'Classification & Support Vector Machines', topics: 'Kernel methods, margin maximization, multi-class strategies' },
-                  { u: 'Unit IV', t: 'Unsupervised Learning & Clustering', topics: 'K-Means, PCA, dimensionality reduction algorithms' },
-                  { u: 'Unit V', t: 'Neural Architectures & Case Studies', topics: 'Feedforward networks, backpropagation, industry deployments' },
-                ].map((unit) => (
-                  <div key={unit.u} className="p-3 rounded-2xl bg-gray-50 border border-gray-100 flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-bold text-[#071A3D]">{unit.u}: {unit.t}</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">{unit.topics}</p>
+              {selectedSubjectDetail.units && selectedSubjectDetail.units.length > 0 ? (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {selectedSubjectDetail.units.map((unit) => (
+                    <div key={unit.unit} className="p-3 rounded-2xl bg-gray-50 border border-gray-100 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-[#071A3D]">{unit.unit}: {unit.title}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{unit.topics}</p>
+                      </div>
+                      <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full font-bold text-[10px]">
+                        Active
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full font-bold text-[10px]">
-                      Complete
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center text-gray-500 space-y-1">
+                  <p className="font-bold">No Syllabus Units Uploaded Yet</p>
+                  <p className="text-[11px] text-gray-400">
+                    Units and lesson plans will appear here once registered by the assigned faculty member.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="pt-3 border-t flex justify-end gap-2">
               <button
                 onClick={() => setSelectedSubjectDetail(null)}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-200"
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-200 cursor-pointer"
               >
                 Close
               </button>
               <button
                 onClick={() => {
-                  alert('Syllabus PDF downloaded.')
+                  handleDownloadSyllabusPDF(selectedSubjectDetail)
                   setSelectedSubjectDetail(null)
                 }}
-                className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5] flex items-center gap-1.5"
+                className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5] flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
-                <Download className="w-3.5 h-3.5" /> Download Full Syllabus
+                <Download className="w-3.5 h-3.5" /> Download Full Syllabus (PDF)
               </button>
             </div>
           </div>
@@ -302,52 +431,112 @@ export function HODAcademicsView({ initialSubjects = [] }: { initialSubjects?: S
         <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-bold text-[#071A3D]">Add New Curriculum Course</h3>
-              <button onClick={() => setShowAddModal(false)} className="p-1 text-gray-400 hover:text-gray-700">✕</button>
-            </div>
-            <div className="space-y-3 text-xs">
               <div>
-                <label className="font-bold text-gray-600 block mb-1">Course Code</label>
-                <input type="text" placeholder="e.g. AD2306" className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" />
+                <span className="px-2 py-0.5 bg-[#F4C430] text-[#071A3D] text-[9px] font-black uppercase rounded-md">Curriculum Admin</span>
+                <h3 className="text-base font-bold text-[#071A3D] mt-1">Add New Curriculum Course</h3>
+              </div>
+              <button onClick={() => setShowAddModal(false)} className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer">✕</button>
+            </div>
+            <form onSubmit={handleSaveCourse} className="space-y-3 text-xs">
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Course Code *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. AD2306"
+                  value={newCode}
+                  onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-mono font-bold"
+                />
               </div>
               <div>
-                <label className="font-bold text-gray-600 block mb-1">Course Name</label>
-                <input type="text" placeholder="e.g. Computer Vision" className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" />
+                <label className="font-bold text-gray-700 block mb-1">Course Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Computer Vision"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="font-bold text-gray-600 block mb-1">Semester</label>
-                  <select className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
+                  <label className="font-bold text-gray-700 block mb-1">Semester</label>
+                  <select
+                    value={newSem}
+                    onChange={(e) => setNewSem(Number(e.target.value))}
+                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={s}>Semester {s}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="font-bold text-gray-600 block mb-1">Credits</label>
-                  <input type="number" defaultValue={3} className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" />
+                  <label className="font-bold text-gray-700 block mb-1">Credits</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={newCredits}
+                    onChange={(e) => setNewCredits(Number(e.target.value))}
+                    className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                  />
                 </div>
               </div>
               <div>
-                <label className="font-bold text-gray-600 block mb-1">Assigned Faculty</label>
-                <select className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs">
-                  <option>Dr. S. Karthik (Professor)</option>
-                  <option>Prof. R. Meena (Assoc. Professor)</option>
-                  <option>Dr. K. Mohan (Asst. Professor)</option>
-                  <option>Prof. T. Lakshmi (Asst. Professor)</option>
+                <label className="font-bold text-gray-700 block mb-1">Course Category</label>
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                >
+                  <option value="Professional Core (PC)">Professional Core (PC)</option>
+                  <option value="Professional Elective (PE)">Professional Elective (PE)</option>
+                  <option value="Open Elective (OE)">Open Elective (OE)</option>
+                  <option value="Basic Sciences (BS)">Basic Sciences (BS)</option>
+                  <option value="Engineering Sciences (ES)">Engineering Sciences (ES)</option>
+                  <option value="Laboratory / Practical">Laboratory / Practical</option>
+                  <option value="Employability Enhancement (EEC)">Employability Enhancement (EEC)</option>
                 </select>
               </div>
-            </div>
-            <div className="pt-3 border-t flex justify-end gap-2">
-              <button onClick={() => setShowAddModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Cancel</button>
-              <button
-                onClick={() => {
-                  alert('Course added to academic syllabus database!')
-                  setShowAddModal(false)
-                }}
-                className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold"
-              >
-                Save Course
-              </button>
-            </div>
+              <div>
+                <label className="font-bold text-gray-700 block mb-1">Assigned Faculty</label>
+                <select
+                  value={newFaculty}
+                  onChange={(e) => setNewFaculty(e.target.value)}
+                  className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold"
+                >
+                  {facultyOptions.length > 0 ? (
+                    facultyOptions.map((f) => (
+                      <option key={f.facultyId} value={f.name}>
+                        {f.name} ({f.designation})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="Department Faculty">Department Faculty</option>
+                  )}
+                </select>
+              </div>
+
+              <div className="pt-3 border-t flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold cursor-pointer hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 shadow-xs"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Course'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

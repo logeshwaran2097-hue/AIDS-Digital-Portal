@@ -22,7 +22,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await requireRoleSession(['admin'])
+    const session = await requireRoleSession(['admin', 'hod'])
     const body = await request.json()
 
     const { code, name, credits = 4, category = 'Professional Core (PC)', description = '', semester = 1 } = body
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = await requireRoleSession(['admin'])
+    const session = await requireRoleSession(['admin', 'hod'])
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

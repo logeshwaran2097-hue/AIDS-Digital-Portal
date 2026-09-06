@@ -4,20 +4,21 @@ import React, { useState, useMemo } from 'react'
 import {
   FolderOpen,
   Users,
-  Star,
-  ExternalLink,
   Search,
-  Filter,
+  Plus,
+  Star,
+  Layers,
   Code2,
+  ExternalLink,
+  ChevronRight,
+  Eye,
   CheckCircle2,
   Sparkles,
-  Layers,
-  FileCode2,
-  Plus,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
+import { toast } from '@/components/ui/Toast'
 
 interface ProjectRecord {
   id: string
@@ -74,8 +75,8 @@ export function HODProjectsView({ projects }: { projects: ProjectRecord[] }) {
         </div>
 
         <button
-          onClick={() => alert('New Project submission guidelines and template opened.')}
-          className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md shrink-0"
+          onClick={() => toast.info('Capstone submission protocol: projects are registered by student batches or faculty mentors and appear here upon review.')}
+          className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md shrink-0 cursor-pointer hover:scale-105"
         >
           <Plus className="w-4 h-4" /> Add Capstone Project
         </button>
@@ -140,7 +141,18 @@ export function HODProjectsView({ projects }: { projects: ProjectRecord[] }) {
       </div>
 
       {/* Projects Grid */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+      {filteredProjects.length === 0 ? (
+        <Card className="rounded-3xl border-gray-200 bg-white shadow-xs">
+          <CardContent className="p-12 text-center space-y-3">
+            <FolderOpen className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="font-bold text-base text-[#071A3D]">No Capstone Projects in Registry</h3>
+            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              Ongoing mini-projects, final-year capstones, and published research prototypes will appear in this registry.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
         {filteredProjects.map((p) => {
           let techList: string[] = []
           try {
@@ -215,9 +227,10 @@ export function HODProjectsView({ projects }: { projects: ProjectRecord[] }) {
                 </div>
               </CardContent>
             </Card>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* Project Detail Modal */}
       {selectedProject && (

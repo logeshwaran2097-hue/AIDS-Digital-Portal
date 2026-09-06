@@ -20,8 +20,11 @@ import {
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
+import { toast } from '@/components/ui/Toast'
 
 export function HODSettingsView() {
+  const router = useRouter()
   const [attendanceThreshold, setAttendanceThreshold] = useState(75)
   const [academicTerm, setAcademicTerm] = useState('2025-2026 (Odd Semester)')
   const [regulation, setRegulation] = useState('R-2021 (Autonomous)')
@@ -188,8 +191,28 @@ export function HODSettingsView() {
             <div className="grid gap-3 sm:grid-cols-3 text-xs">
               <button
                 type="button"
-                onClick={() => alert('Exporting full student enrollment register to Excel...')}
-                className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 hover:bg-blue-100/60 text-left transition-colors flex items-center gap-3"
+                onClick={async () => {
+                  try {
+                    toast.info('Exporting student enrollment roster...')
+                    const res = await fetch('/api/students')
+                    const data = await res.json()
+                    const rows = (data.students || []).map((s: any) =>
+                      `"${s.registerNumber}","${s.name || ''}","${s.year}","${s.semester}","${s.section}","${s.email || ''}"`
+                    )
+                    const csv = ['"Register Number","Name","Year","Semester","Section","Email"', ...rows].join('\n')
+                    const blob = new Blob([csv], { type: 'text/csv' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `VSB_AIDS_Student_Roll_${new Date().toISOString().split('T')[0]}.csv`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                    toast.success('Roster downloaded successfully!')
+                  } catch (e) {
+                    toast.error('Failed to export student roster')
+                  }
+                }}
+                className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 hover:bg-blue-100/60 text-left transition-colors flex items-center gap-3 cursor-pointer"
               >
                 <FileSpreadsheet className="w-5 h-5 text-[#1455D9] shrink-0" />
                 <div>
@@ -200,25 +223,25 @@ export function HODSettingsView() {
 
               <button
                 type="button"
-                onClick={() => alert('Exporting department attendance analytics to PDF...')}
-                className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 hover:bg-purple-100/60 text-left transition-colors flex items-center gap-3"
+                onClick={() => router.push('/hod-dashboard/reports')}
+                className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 hover:bg-purple-100/60 text-left transition-colors flex items-center gap-3 cursor-pointer"
               >
                 <Download className="w-5 h-5 text-purple-600 shrink-0" />
                 <div>
                   <p className="font-bold text-[#071A3D]">Attendance Reports</p>
-                  <p className="text-[10px] text-gray-500">Official University PDF</p>
+                  <p className="text-[10px] text-gray-500">Official University Analytics</p>
                 </div>
               </button>
 
               <button
                 type="button"
-                onClick={() => alert('Generating full curriculum course syllabus archive...')}
-                className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 hover:bg-emerald-100/60 text-left transition-colors flex items-center gap-3"
+                onClick={() => router.push('/hod-dashboard/academics')}
+                className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 hover:bg-emerald-100/60 text-left transition-colors flex items-center gap-3 cursor-pointer"
               >
                 <School className="w-5 h-5 text-emerald-600 shrink-0" />
                 <div>
                   <p className="font-bold text-[#071A3D]">Curriculum Archive</p>
-                  <p className="text-[10px] text-gray-500">Regulation 2021 Files</p>
+                  <p className="text-[10px] text-gray-500">Regulation 2021 Courses</p>
                 </div>
               </button>
             </div>

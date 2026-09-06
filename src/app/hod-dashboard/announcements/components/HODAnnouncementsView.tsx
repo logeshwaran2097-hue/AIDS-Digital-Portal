@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 
 export interface AnnouncementItem {
   id: string
@@ -364,8 +365,19 @@ export function HODAnnouncementsView({
       </div>
 
       {/* Announcements List */}
-      <div className="space-y-4">
-        {filtered.map((a) => {
+      {filtered.length === 0 ? (
+        <Card className="rounded-3xl border-gray-200 bg-white">
+          <CardContent className="p-12 text-center space-y-3">
+            <Megaphone className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="font-bold text-base text-[#071A3D]">No Department Announcements in Registry</h3>
+            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              Broadcasted directives, student guidelines, and circulars will appear here in real-time.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((a) => {
           const isIndividual =
             a.target.includes('Faculty:') ||
             a.target.includes('Student:') ||
@@ -448,6 +460,7 @@ export function HODAnnouncementsView({
           )
         })}
       </div>
+      )}
 
       {/* Create Announcement Modal */}
       {showCreateModal && (
@@ -535,7 +548,7 @@ export function HODAnnouncementsView({
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (!title.trim() || !content.trim()) {
-                    alert('Please fill in Title and Content')
+                    toast.error('Please fill in Title and Content')
                     return
                   }
                   setCreateStep('preview')

@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { toast } from '@/components/ui/Toast'
 
 export interface FacultyAnnouncementItem {
   id: string
@@ -282,12 +283,23 @@ export function FacultyAnnouncementsView({
       </div>
 
       {/* Announcements List Grid */}
-      <div className="space-y-4">
-        {filtered.map((a) => (
-          <Card
-            key={a.id}
-            className="rounded-3xl border-gray-200 hover:shadow-lg transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40"
-          >
+      {filtered.length === 0 ? (
+        <Card className="rounded-3xl border-gray-200 bg-white">
+          <CardContent className="p-12 text-center space-y-3">
+            <Megaphone className="w-10 h-10 text-gray-300 mx-auto" />
+            <h3 className="font-bold text-base text-[#071A3D]">No Circulars Published Yet</h3>
+            <p className="text-xs text-gray-400 max-w-sm mx-auto">
+              Click &ldquo;+ Issue New Circular&rdquo; above to broadcast class notices, exam timetables, or assignment instructions.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((a) => (
+            <Card
+              key={a.id}
+              className="rounded-3xl border-gray-200 hover:shadow-lg transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 cursor-pointer"
+            >
             <CardContent className="p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -335,6 +347,7 @@ export function FacultyAnnouncementsView({
           </Card>
         ))}
       </div>
+      )}
 
       {/* Create Announcement Modal */}
       {showCreateModal && (
@@ -426,7 +439,7 @@ export function FacultyAnnouncementsView({
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (!formTitle.trim() || !formContent.trim()) {
-                    alert('Please enter Circular Subject and Content')
+                    toast.error('Please enter Circular Subject and Content')
                     return
                   }
                   setCreateStep('preview')
