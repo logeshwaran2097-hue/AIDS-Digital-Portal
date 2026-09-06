@@ -9,11 +9,24 @@ export const dynamic = 'force-dynamic'
 export default async function FacultyAnnouncementsPage() {
   const session = await requireRoleSession(['faculty'])
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const [user, faculty, announcementsFromDb, distinctClasses] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.userId } }),
+    prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null),
+    prisma.announcement.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
+    prisma.student.findMany({
+      select: { year: true, section: true, semester: true },
+      distinct: ['year', 'section', 'semester'],
+      orderBy: [{ year: 'asc' }, { section: 'asc' }],
+    }).catch(() => []),
+  ])
+
   const facultyName = user?.name || session.name || 'Faculty Member'
-  const announcementsFromDb = await prisma.announcement.findMany({
-    orderBy: { createdAt: 'desc' },
-  })
+  const isAdvisor = faculty?.facultyType === 'advisor' || faculty?.facultyType === 'both'
+  const advisorBatch =
+    faculty?.advisorBatch ||
+    (isAdvisor && faculty?.advisorYear
+      ? `Year ${faculty.advisorYear} - Section ${faculty.advisorSec || 'A'} (Sem ${faculty.advisorSem || 3})`
+      : null)
 
   const mappedAnnouncements: FacultyAnnouncementItem[] = announcementsFromDb.map((a) => ({
     id: a.id,
@@ -33,7 +46,16 @@ export default async function FacultyAnnouncementsPage() {
   return (
     <PortalLayout role="faculty" userName={facultyName}>
       <div className="py-2 animate-fade-in">
-        <FacultyAnnouncementsView initialAnnouncements={mappedAnnouncements} facultyName={facultyName} />
+        <FacultyAnnouncementsView
+          initialAnnouncements={mappedAnnouncements}
+          facultyName={facultyName}
+          isAdvisor={isAdvisor}
+          advisorBatch={advisorBatch}
+          advisorYear={faculty?.advisorYear || null}
+          advisorSem={faculty?.advisorSem || null}
+          advisorSec={faculty?.advisorSec || null}
+          allocatedClasses={distinctClasses}
+        />
       </div>
     </PortalLayout>
   )

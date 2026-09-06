@@ -8,6 +8,68 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
+function isAnnouncementForStudent(
+  target: string | null | undefined,
+  studentYear?: number | null,
+  studentSection?: string | null,
+  studentBatch?: string | null
+) {
+  if (!target) return true
+  const t = target.toLowerCase().trim()
+
+  // Memos exclusively for faculty/advisors are hidden from students
+  if (t === 'all class advisors' || t === 'all faculty' || t === 'all faculty & staff') {
+    return false
+  }
+
+  // Universal student broadcast
+  if (t.includes('all student') || t === 'all' || t === 'general') {
+    return true
+  }
+
+  // Check year matching
+  const romanYears: Record<number, string[]> = {
+    1: ['year i', 'year 1', 'first year', 'sem 1', 'sem 2'],
+    2: ['year ii', 'year 2', 'second year', 'sem 3', 'sem 4'],
+    3: ['year iii', 'year 3', 'third year', 'sem 5', 'sem 6'],
+    4: ['year iv', 'year 4', 'final year', 'sem 7', 'sem 8'],
+  }
+
+  if (studentYear) {
+    // Placement training eligibility
+    if (t.includes('placement') && studentYear >= 3) {
+      return true
+    }
+
+    const yearKeywords = romanYears[studentYear] || []
+    const isMatchingYear = yearKeywords.some((kw) => t.includes(kw))
+
+    if (isMatchingYear) {
+      // Check if target specifies a specific section (e.g. Section A or Section B)
+      const hasSectionA = t.includes('section a') || t.includes('sec a') || t.includes('- a')
+      const hasSectionB = t.includes('section b') || t.includes('sec b') || t.includes('- b')
+
+      // If no specific section is specified in target, the entire year is targeted!
+      if (!hasSectionA && !hasSectionB) {
+        return true
+      }
+
+      // If specific section is addressed, match student's section
+      const sec = (studentSection || '').toLowerCase().trim()
+      if (sec === 'a' && hasSectionA) return true
+      if (sec === 'b' && hasSectionB) return true
+      return false
+    }
+  }
+
+  // Check batch match (e.g. 2024-2028 or 2023-2027)
+  if (studentBatch && t.includes(studentBatch.toLowerCase())) {
+    return true
+  }
+
+  return false
+}
+
 export default async function AnnouncementsPage() {
   const session = await requireRoleSession(['student'])
 
@@ -20,7 +82,11 @@ export default async function AnnouncementsPage() {
   const student = await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)
   const studentReg = student?.registerNumber || session.registerNumber || (user?.email?.split('@')[0].toUpperCase()) || 'STUDENT'
 
-  const mappedAnnouncements: StudentAnnouncementItem[] = announcementsFromDb.map((item) => ({
+  const relevantAnnouncements = announcementsFromDb.filter((item) =>
+    isAnnouncementForStudent(item.target, student?.year, student?.section, student?.batch)
+  )
+
+  const mappedAnnouncements: StudentAnnouncementItem[] = relevantAnnouncements.map((item) => ({
     id: item.id,
     title: item.title,
     content: item.content,

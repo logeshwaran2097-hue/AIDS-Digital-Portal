@@ -50,10 +50,32 @@ export interface FacultyAnnouncementItem {
 export function FacultyAnnouncementsView({
   initialAnnouncements,
   facultyName = 'Faculty Member',
+  isAdvisor = false,
+  advisorBatch = null,
+  advisorYear = null,
+  advisorSem = null,
+  advisorSec = null,
+  allocatedClasses = [],
 }: {
   initialAnnouncements: FacultyAnnouncementItem[]
   facultyName?: string
+  isAdvisor?: boolean
+  advisorBatch?: string | null
+  advisorYear?: number | null
+  advisorSem?: number | null
+  advisorSec?: string | null
+  allocatedClasses?: { year: number; section: string; semester: number }[]
 }) {
+  const allocatedClassLabel =
+    advisorBatch ||
+    (advisorYear
+      ? `Year ${advisorYear} - Section ${advisorSec || 'A'} (Sem ${advisorSem || 3})`
+      : null)
+
+  const defaultTarget = allocatedClassLabel
+    ? `My Class: ${allocatedClassLabel}`
+    : 'All Students'
+
   const [announcements, setAnnouncements] = useState<FacultyAnnouncementItem[]>(initialAnnouncements)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
@@ -62,7 +84,7 @@ export function FacultyAnnouncementsView({
   const [formTitle, setFormTitle] = useState('')
   const [formCategory, setFormCategory] = useState('Academic')
   const [customCategory, setCustomCategory] = useState('')
-  const [formTarget, setFormTarget] = useState('All Students')
+  const [formTarget, setFormTarget] = useState(defaultTarget)
   const [formContent, setFormContent] = useState('')
   const [formAttachmentUrl, setFormAttachmentUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -192,6 +214,18 @@ export function FacultyAnnouncementsView({
   const handleBroadcast = (a: FacultyAnnouncementItem) => {
     setBroadcastSuccess(`Dispatched Instant Push Alert & SMS for "${a.title}" to ${a.target}!`)
     setTimeout(() => setBroadcastSuccess(null), 3000)
+  }
+
+  const handleOpenCreateModal = () => {
+    setEditingAnnouncement(null)
+    setFormTitle('')
+    setFormCategory('Academic')
+    setCustomCategory('')
+    setFormTarget(defaultTarget)
+    setFormContent('')
+    setFormAttachmentUrl('')
+    setCreateStep('edit')
+    setShowCreateModal(true)
   }
 
   const handleOpenEdit = (a: FacultyAnnouncementItem) => {
@@ -357,7 +391,7 @@ export function FacultyAnnouncementsView({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={handleOpenCreateModal}
             className="px-5 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
           >
             <Plus className="w-4 h-4" /> Issue New Circular
@@ -755,21 +789,113 @@ export function FacultyAnnouncementsView({
                     </select>
                   </div>
                   <div>
-                    <label className="font-bold text-gray-700 block mb-1">Target Audience</label>
+                    <label className="font-bold text-gray-700 block mb-1 flex items-center justify-between">
+                      <span>Target Audience</span>
+                      {allocatedClassLabel && (
+                        <span className="text-[9px] text-[#1455D9] font-extrabold bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-md">
+                          Allocated: {allocatedClassLabel}
+                        </span>
+                      )}
+                    </label>
                     <select
                       value={formTarget}
                       onChange={(e) => setFormTarget(e.target.value)}
-                      className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
+                      className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9] focus:outline-none"
                     >
-                      <option value="All Students">All Students (Years 1 to 4)</option>
-                      <option value="All Class Advisors">⭐ All Class Advisors</option>
-                      <option value="Year I (Sem 1 & 2)">Year I (Sem 1 &amp; 2)</option>
-                      <option value="Year II (Sem 3 & 4)">Year II (Sem 3 &amp; 4)</option>
-                      <option value="Year III (Sem 5 & 6)">Year III (Sem 5 &amp; 6)</option>
-                      <option value="Year IV (Sem 7 & 8)">Year IV (Sem 7 &amp; 8)</option>
-                      <option value="Placement Eligible">Placement Eligible Students</option>
+                      {allocatedClassLabel && (
+                        <optgroup label="🎯 My Allocated Class">
+                          <option value={`My Class: ${allocatedClassLabel}`}>
+                            🎯 {allocatedClassLabel} (My Assigned Class)
+                          </option>
+                        </optgroup>
+                      )}
+
+                      <optgroup label="🎓 Individual Academic Years">
+                        <option value="Year I (Sem 1 & 2)">Year I (First Year - Sem 1 & 2)</option>
+                        <option value="Year II (Sem 3 & 4)">Year II (Second Year - Sem 3 & 4)</option>
+                        <option value="Year III (Sem 5 & 6)">Year III (Third Year - Sem 5 & 6)</option>
+                        <option value="Year IV (Sem 7 & 8)">Year IV (Final Year - Sem 7 & 8)</option>
+                      </optgroup>
+
+                      <optgroup label="🏛️ Individual Class Sections">
+                        {allocatedClasses && allocatedClasses.length > 0 ? (
+                          allocatedClasses.map((cls) => {
+                            const roman = cls.year === 1 ? 'I' : cls.year === 2 ? 'II' : cls.year === 3 ? 'III' : 'IV'
+                            const val = `Year ${roman} - Section ${cls.section}`
+                            return (
+                              <option key={val} value={val}>
+                                {val} (Sem {cls.semester})
+                              </option>
+                            )
+                          })
+                        ) : (
+                          <>
+                            <option value="Year I - Section A">Year I - Section A</option>
+                            <option value="Year I - Section B">Year I - Section B</option>
+                            <option value="Year II - Section A">Year II - Section A</option>
+                            <option value="Year II - Section B">Year II - Section B</option>
+                            <option value="Year III - Section A">Year III - Section A</option>
+                            <option value="Year III - Section B">Year III - Section B</option>
+                            <option value="Year IV - Section A">Year IV - Section A</option>
+                            <option value="Year IV - Section B">Year IV - Section B</option>
+                          </>
+                        )}
+                      </optgroup>
+
+                      <optgroup label="📢 General Audiences">
+                        <option value="All Students">All Students (Years 1 to 4)</option>
+                        <option value="All Class Advisors">⭐ All Class Advisors</option>
+                        <option value="Placement Eligible">Placement Eligible Students (Years 3 & 4)</option>
+                      </optgroup>
                     </select>
                   </div>
+                </div>
+
+                {/* Fast Audience Quick-Select Badges */}
+                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Quick Select:</span>
+                  {allocatedClassLabel && (
+                    <button
+                      type="button"
+                      onClick={() => setFormTarget(`My Class: ${allocatedClassLabel}`)}
+                      className={`text-[10px] font-black px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                        formTarget === `My Class: ${allocatedClassLabel}`
+                          ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                          : 'bg-blue-50 text-[#1455D9] border-blue-200 hover:bg-blue-100'
+                      }`}
+                    >
+                      🎯 My Class
+                    </button>
+                  )}
+                  {(['Year I (Sem 1 & 2)', 'Year II (Sem 3 & 4)', 'Year III (Sem 5 & 6)', 'Year IV (Sem 7 & 8)'] as const).map((fullTarget, idx) => {
+                    const shortLabel = ['Year I', 'Year II', 'Year III', 'Year IV'][idx]
+                    const isSelected = formTarget === fullTarget
+                    return (
+                      <button
+                        key={fullTarget}
+                        type="button"
+                        onClick={() => setFormTarget(fullTarget)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#071A3D] text-white border-[#071A3D] shadow-xs scale-105'
+                            : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200'
+                        }`}
+                      >
+                        {shortLabel}
+                      </button>
+                    )
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => setFormTarget('All Students')}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                      formTarget === 'All Students'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs scale-105'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    }`}
+                  >
+                    All Students
+                  </button>
                 </div>
 
                 {/* Custom Category input field when Others is selected */}
