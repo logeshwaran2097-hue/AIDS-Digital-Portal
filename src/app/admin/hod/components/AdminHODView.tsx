@@ -19,6 +19,8 @@ import {
   Sparkles,
   Lock,
   Search,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -38,19 +40,24 @@ export interface HODRecord {
   status: string
 }
 
-export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
+interface AdminHODViewProps {
+  initialHOD: HODRecord[]
+}
+
+export function AdminHODView({ initialHOD }: AdminHODViewProps) {
   const [hodList, setHODList] = useState<HODRecord[]>(initialHOD)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedHOD, setSelectedHOD] = useState<HODRecord | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    password: 'nitr',
+    password: '',
     dateOfBirth: '',
     designation: 'Professor & Head',
     qualification: 'Ph.D. (AI & Data Science)',
@@ -73,7 +80,7 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
             `Department: Artificial Intelligence & Data Science`,
             `HOD Appointees Count: ${hodList.length}`,
             `Status: Official Academic Head & BoS Chairperson`,
-            `Default Password Protocol: Admin temporary password (nitr) with mandatory first-login profile completion.`,
+            `Default Password Protocol: Admin-assigned temporary password with mandatory first-login profile completion.`,
           ],
         },
         {
@@ -90,6 +97,11 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
   // Handle Add/Appoint HOD
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.name.trim() || !formData.password.trim()) {
+      toast.error('Please fill in HOD Full Name and Temporary Password.')
+      return
+    }
+
     setIsLoading(true)
     try {
       const res = await fetch('/api/hod', {
@@ -109,7 +121,7 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
           name: '',
           email: '',
           phone: '',
-          password: 'nitr',
+          password: '',
           dateOfBirth: '',
           designation: 'Professor & Head',
           qualification: 'Ph.D. (AI & Data Science)',
@@ -237,7 +249,7 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
                 name: '',
                 email: '',
                 phone: '',
-                password: 'nitr',
+                password: '',
                 dateOfBirth: '',
                 designation: 'Professor & Head',
                 qualification: 'Ph.D. (AI & Data Science)',
@@ -273,8 +285,8 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
           <p className="text-[10px] text-purple-700 font-medium mt-1">Years I to IV Academic Oversight</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Default Password</p>
-          <p className="text-xl font-black text-amber-700 mt-0.5 font-mono">nitr</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Password Policy</p>
+          <p className="text-xl font-black text-amber-700 mt-0.5 font-mono">Admin Set</p>
           <p className="text-[10px] text-amber-700 font-medium mt-1">First-login self-service update</p>
         </div>
       </div>
@@ -303,7 +315,7 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
             <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <h3 className="text-base font-bold text-gray-700">No Head of Department Appointed</h3>
             <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-              Click &quot;+ Appoint / Add HOD&quot; above to assign the Head of Department. Only Full Name and Temporary Password (default: nitr) are required!
+              Click &quot;+ Appoint / Add HOD&quot; above to assign the Head of Department. Only Full Name and Temporary Password are required!
             </p>
           </div>
         ) : (
@@ -438,16 +450,33 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Temporary Password *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-[#071A3D]">Temporary Password *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-[11px] text-[#1455D9] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      {showPassword ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" /> Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3.5 h-3.5" /> Show
+                        </>
+                      )}
+                    </button>
+                  </div>
                   <input
-                    type="text"
+                    type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="e.g. nitr"
+                    placeholder="Enter temporary password"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
                   />
-                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Default temporary password: <strong>nitr</strong>.</p>
+                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Admin-assigned temporary password.</p>
                 </div>
               </div>
 
@@ -510,7 +539,7 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
               <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200 text-gray-700 text-[11px] space-y-1">
                 <span className="font-bold text-[#1455D9] block">Self-Service Onboarding:</span>
                 <p>
-                  Upon first login using their temporary password (<strong>{formData.password || 'nitr'}</strong>), the HOD will be prompted to set a permanent secure password and complete any remaining profile details.
+                  Upon first login using their temporary password{formData.password ? ` (${formData.password})` : ''}, the HOD will be prompted to set a permanent secure password and complete any remaining profile details.
                 </p>
               </div>
 
@@ -628,6 +657,20 @@ export function AdminHODView({ initialHOD }: { initialHOD: HODRecord[] }) {
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">
+                  Reset Password <span className="text-gray-400 font-normal">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Leave blank to keep existing password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 font-mono"
+                />
+                <p className="text-[10px] text-gray-500 mt-1">If entered, HOD must use this password on their next login.</p>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">

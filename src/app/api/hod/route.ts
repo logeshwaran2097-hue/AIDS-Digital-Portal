@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       name,
       email,
       phone,
-      password = 'nitr',
+      password,
       department = 'Artificial Intelligence & Data Science',
       designation = 'Professor & Head',
       qualification = 'Ph.D. (AI & Data Science)',
@@ -68,6 +68,14 @@ export async function POST(request: Request) {
 
     // Auto-generate facultyId if not provided (remove requirement for admin to type fac id)
     let fid = facultyId?.trim().toUpperCase()
+    const isNew = !fid
+    if (isNew && (!password || !password.trim())) {
+      return NextResponse.json(
+        { success: false, message: 'Temporary Password is required for HOD appointment' },
+        { status: 400 }
+      )
+    }
+
     if (!fid) {
       const existingCount = await prisma.hOD.count()
       fid = existingCount === 0 ? 'HOD001' : `HOD${(existingCount + 1).toString().padStart(3, '0')}`
@@ -80,30 +88,38 @@ export async function POST(request: Request) {
       finalEmail = `hod.${sanitized || fid.toLowerCase()}@vsb.edu.in`
     }
 
-    // Hash temporary password (default 'nitr')
-    const rawPassword = password?.trim() || 'nitr'
-    const passwordHash = await bcrypt.hash(rawPassword, 10)
+    // Hash temporary password if provided
+    let passwordHash: string | undefined = undefined
+    if (password && password.trim()) {
+      passwordHash = await bcrypt.hash(password.trim(), 10)
+    }
 
     // Upsert User
+    const userUpdate: any = {
+      name: name.trim(),
+      phone: phone?.trim() || null,
+      role: 'hod',
+      status: status || 'active',
+    }
+    if (passwordHash) {
+      userUpdate.passwordHash = passwordHash
+      userUpdate.mustChangePassword = true
+    }
+
+    const userCreate: any = {
+      email: finalEmail,
+      name: name.trim(),
+      phone: phone?.trim() || null,
+      role: 'hod',
+      status: status || 'active',
+      passwordHash: passwordHash || '',
+      mustChangePassword: true,
+    }
+
     const user = await (prisma.user as any).upsert({
       where: { email: finalEmail },
-      update: {
-        name: name.trim(),
-        phone: phone?.trim() || null,
-        role: 'hod',
-        status: status || 'active',
-        passwordHash,
-        mustChangePassword: true,
-      },
-      create: {
-        email: finalEmail,
-        name: name.trim(),
-        phone: phone?.trim() || null,
-        role: 'hod',
-        status: status || 'active',
-        passwordHash,
-        mustChangePassword: true,
-      },
+      update: userUpdate,
+      create: userCreate,
     })
 
     // Upsert HOD
