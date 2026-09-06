@@ -73,8 +73,12 @@ export function FacultySubjectsView({
   const [activeTab, setActiveTab] = useState<'syllabus' | 'notes' | 'labs' | 'questions'>('syllabus')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [uploadTargetCode, setUploadTargetCode] = useState(courses[0]?.code || '')
+  const [uploadUnitTitle, setUploadUnitTitle] = useState('Unit I - Introduction & Foundations')
+  const [uploadDocTitle, setUploadDocTitle] = useState('')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
 
-  const currentCourse = courses[selectedCourseIndex] || null
+  const currentCourse = courses[selectedCourseIndex] || courses[0] || null
 
   const handleDownloadCoursePack = () => {
     if (!currentCourse) return
@@ -96,11 +100,38 @@ export function FacultySubjectsView({
 
   const handleUploadSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!uploadDocTitle) return
+
+    const targetCode = uploadTargetCode || currentCourse?.code || courses[0]?.code
+
+    // Add note to courses state
+    const newNote = {
+      unit: uploadUnitTitle.split(' - ')[0] || 'Unit I',
+      title: uploadDocTitle,
+      fileName: uploadFile ? uploadFile.name : `${targetCode}_${uploadDocTitle.replace(/\s+/g, '_')}.pdf`,
+      fileSize: uploadFile ? `${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB` : '2.4 MB',
+      uploadedDate: 'Just now',
+    }
+
+    setCourses((prev) =>
+      prev.map((c) => {
+        if (c.code === targetCode) {
+          return {
+            ...c,
+            notes: [newNote, ...c.notes],
+          }
+        }
+        return c
+      })
+    )
+
     setUploadSuccess(true)
     setTimeout(() => {
       setUploadSuccess(false)
       setShowUploadModal(false)
-    }, 2000)
+      setUploadDocTitle('')
+      setUploadFile(null)
+    }, 1500)
   }
 
   return (
@@ -409,9 +440,16 @@ export function FacultySubjectsView({
             <div className="flex items-start justify-between border-b pb-3">
               <div>
                 <h3 className="text-base font-bold text-[#071A3D]">Upload Lecture Material</h3>
-                <p className="text-xs text-gray-500">Publish notes or lab guide for {currentCourse.code}</p>
+                <p className="text-xs text-gray-500">
+                  Publish notes or lab guide for {currentCourse?.code || uploadTargetCode || 'Curriculum Subject'}
+                </p>
               </div>
-              <button onClick={() => setShowUploadModal(false)} className="p-1 text-gray-400 hover:text-gray-700">✕</button>
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
 
             {uploadSuccess ? (
@@ -423,31 +461,94 @@ export function FacultySubjectsView({
                 <p className="text-xs text-gray-500">Students can now view and download this PDF in their portal.</p>
               </div>
             ) : (
-              <form onSubmit={handleUploadSubmit} className="space-y-3 text-xs">
+              <form onSubmit={handleUploadSubmit} className="space-y-3.5 text-xs">
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">Select Unit</label>
-                  <select className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold">
-                    <option>Unit I - Introduction &amp; Foundations</option>
-                    <option>Unit II - Core Algorithms &amp; Models</option>
-                    <option>Unit III - Advanced Paradigms &amp; Kernels</option>
-                    <option>Unit IV - Unsupervised &amp; High Dimension</option>
-                    <option>Unit V - Modern Frameworks &amp; Deep Networks</option>
+                  <label className="font-bold text-[#071A3D] block mb-1">Target Subject *</label>
+                  <select
+                    value={uploadTargetCode || currentCourse?.code || ''}
+                    onChange={(e) => setUploadTargetCode(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
+                  >
+                    {courses.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.code} — {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">Document Title</label>
-                  <input type="text" placeholder="e.g. Unit 4 PCA & Dimensionality Notes" className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" required />
+                  <label className="font-bold text-[#071A3D] block mb-1">Select Unit *</label>
+                  <select
+                    value={uploadUnitTitle}
+                    onChange={(e) => setUploadUnitTitle(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D]"
+                  >
+                    <option value="Unit I - Introduction & Foundations">Unit I - Introduction &amp; Foundations</option>
+                    <option value="Unit II - Core Algorithms & Models">Unit II - Core Algorithms &amp; Models</option>
+                    <option value="Unit III - Advanced Paradigms & Kernels">Unit III - Advanced Paradigms &amp; Kernels</option>
+                    <option value="Unit IV - Unsupervised & High Dimension">Unit IV - Unsupervised &amp; High Dimension</option>
+                    <option value="Unit V - Modern Frameworks & Deep Networks">Unit V - Modern Frameworks &amp; Deep Networks</option>
+                  </select>
                 </div>
 
                 <div>
-                  <label className="font-bold text-gray-700 block mb-1">PDF File</label>
-                  <input type="file" accept=".pdf" className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" />
+                  <label className="font-bold text-[#071A3D] block mb-1">Document Title *</label>
+                  <input
+                    type="text"
+                    value={uploadDocTitle}
+                    onChange={(e) => setUploadDocTitle(e.target.value)}
+                    placeholder="e.g. Unit 3 State Space Search & TSP Notes"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#071A3D] block mb-1">PDF File Document</label>
+                  <div className="relative border-2 border-dashed border-gray-300 hover:border-[#1455D9] rounded-2xl p-4 text-center transition-colors bg-gray-50/50">
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          setUploadFile(e.target.files[0])
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    {uploadFile ? (
+                      <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-700">
+                        <FileText className="w-4 h-4 text-emerald-600" />
+                        <span className="truncate max-w-[200px]">{uploadFile.name}</span>
+                        <span className="text-[10px] text-gray-400">
+                          ({(uploadFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <Upload className="w-5 h-5 text-gray-400 mx-auto" />
+                        <p className="text-[11px] font-bold text-gray-700">Click or drag &amp; drop PDF notes</p>
+                        <p className="text-[10px] text-gray-400">PDF up to 25 MB</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="pt-3 border-t flex justify-end gap-2">
-                  <button type="button" onClick={() => setShowUploadModal(false)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold">Cancel</button>
-                  <button type="submit" className="px-5 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5]">Upload &amp; Publish</button>
+                  <button
+                    type="button"
+                    onClick={() => setShowUploadModal(false)}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    Upload &amp; Publish
+                  </button>
                 </div>
               </form>
             )}

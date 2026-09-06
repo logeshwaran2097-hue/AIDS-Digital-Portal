@@ -24,6 +24,9 @@ import {
   X,
   Sliders,
   Check,
+  Edit,
+  Trash2,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -79,6 +82,99 @@ export function FacultyQuestionPapersView({
   const [uploadSemester, setUploadSemester] = useState<number>(advisorSem || 3)
   const [uploadYear, setUploadYear] = useState<number>(advisorYear || 2)
   const [uploadSection, setUploadSection] = useState<string>(advisorSec || 'A')
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+
+  // Edit Form State
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingPaper, setEditingPaper] = useState<FacultyQPItem | null>(null)
+  const [editSubjectId, setEditSubjectId] = useState('')
+  const [editExamType, setEditExamType] = useState('')
+  const [editAcademicYear, setEditAcademicYear] = useState('')
+  const [editSemester, setEditSemester] = useState<number>(3)
+  const [editYear, setEditYear] = useState<number>(2)
+  const [editSection, setEditSection] = useState<string>('A')
+
+  const handleEditClick = (p: FacultyQPItem) => {
+    setEditingPaper(p)
+    setEditSubjectId(p.subjectId || subjects[0]?.id || '')
+    setEditExamType(p.examType)
+    setEditAcademicYear(p.academicYear)
+    setEditSemester(p.semester)
+    setEditYear(p.year)
+    setEditSection('A')
+    setShowEditModal(true)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingPaper) return
+
+    setIsSubmitting(true)
+    try {
+      const selectedSub = subjects.find((s) => s.id === editSubjectId)
+      const res = await fetch('/api/question-papers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingPaper.id,
+          subjectId: editSubjectId,
+          examType: editExamType,
+          academicYear: editAcademicYear,
+          year: editYear,
+          semester: editSemester,
+          section: editSection,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setPapers((prev) =>
+          prev.map((item) =>
+            item.id === editingPaper.id
+              ? {
+                  ...item,
+                  subjectId: editSubjectId,
+                  subjectCode: selectedSub?.code || item.subjectCode,
+                  subjectName: selectedSub?.name || item.subjectName,
+                  examType: editExamType,
+                  academicYear: editAcademicYear,
+                  semester: editSemester,
+                  year: editYear,
+                }
+              : item
+          )
+        )
+        setShowEditModal(false)
+        setEditingPaper(null)
+        toast.success('Question paper updated successfully!')
+      } else {
+        toast.error(data.message || 'Failed to update question paper.')
+      }
+    } catch {
+      toast.error('Network error updating question paper.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDeleteQP = async (id: string, code: string) => {
+    if (!confirm(`Are you sure you want to delete the question paper for ${code}?`)) return
+
+    try {
+      const res = await fetch(`/api/question-papers?id=${id}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setPapers((prev) => prev.filter((item) => item.id !== id))
+        toast.success(`Question paper for ${code} removed successfully.`)
+      } else {
+        toast.error(data.message || 'Failed to delete question paper.')
+      }
+    } catch {
+      toast.error('Network error deleting question paper.')
+    }
+  }
 
   const examTypes = [
     'ALL',
@@ -120,12 +216,11 @@ export function FacultyQuestionPapersView({
       const matchesSearch =
         p.subjectCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.subjectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.examType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.academicYear.toLowerCase().includes(searchQuery.toLowerCase())
+        p.fileName.toLowerCase().includes(searchQuery.toLowerCase())
 
       const matchesExam =
         selectedExamType === 'ALL' ||
-        p.examType.toLowerCase().includes(selectedExamType.toLowerCase()) ||
+        p.examType.toLowerCase() === selectedExamType.toLowerCase() ||
         (selectedExamType.includes('IAT 1') && p.examType.toLowerCase().includes('iat 1')) ||
         (selectedExamType.includes('IAT 2') && p.examType.toLowerCase().includes('iat 2')) ||
         (selectedExamType.includes('Model') && p.examType.toLowerCase().includes('model'))
@@ -189,47 +284,70 @@ export function FacultyQuestionPapersView({
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!uploadSubjectId || !uploadExamType) {
+    const activeSubId = uploadSubjectId || subjects[0]?.id || ''
+    if (!activeSubId || !uploadExamType) {
       toast.error('Please select subject and exam type.')
       return
     }
 
     setIsSubmitting(true)
     try {
-      const selectedSub = subjects.find((s) => s.id === uploadSubjectId)
-      const res = await fetch('/api/question-papers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subjectId: uploadSubjectId,
-          examType: uploadExamType,
-          academicYear: uploadAcademicYear,
-          semester: Number(uploadSemester),
-          year: Number(uploadYear),
-          section: uploadSection,
-          uploadedByName: isAdvisor ? `${facultyName} (Class Advisor)` : facultyName,
-        }),
-      })
+      const selectedSub = subjects.find((s) => s.id === activeSubId)
+      let res: Response
+
+      if (uploadFile) {
+        const fd = new FormData()
+        fd.append('file', uploadFile)
+        fd.append('subjectId', activeSubId)
+        fd.append('examType', uploadExamType)
+        fd.append('academicYear', uploadAcademicYear)
+        fd.append('year', String(uploadYear))
+        fd.append('semester', String(uploadSemester))
+        fd.append('section', uploadSection)
+        fd.append('uploadedByName', isAdvisor ? `${facultyName} (Class Advisor)` : facultyName)
+
+        res = await fetch('/api/question-papers', {
+          method: 'POST',
+          body: fd,
+        })
+      } else {
+        res = await fetch('/api/question-papers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subjectId: activeSubId,
+            examType: uploadExamType,
+            academicYear: uploadAcademicYear,
+            semester: Number(uploadSemester),
+            year: Number(uploadYear),
+            section: uploadSection,
+            uploadedByName: isAdvisor ? `${facultyName} (Class Advisor)` : facultyName,
+            fileName: `${selectedSub?.code || 'QP'}_${uploadExamType.replace(/[^a-zA-Z0-9]/g, '_')}_${uploadAcademicYear}.pdf`,
+            fileSize: 2500000,
+          }),
+        })
+      }
 
       const result = await res.json()
       if (res.ok && result.success && result.questionPaper) {
         const newPaper: FacultyQPItem = {
           id: result.questionPaper.id,
-          subjectId: uploadSubjectId,
-          subjectCode: selectedSub?.code || uploadSubjectId || 'N/A',
+          subjectId: activeSubId,
+          subjectCode: selectedSub?.code || activeSubId || 'N/A',
           subjectName: selectedSub?.name || 'Course Subject',
           examType: uploadExamType,
           academicYear: uploadAcademicYear,
           year: Number(uploadYear),
           semester: Number(uploadSemester),
-          fileName: result.questionPaper.fileName,
-          fileSize: result.questionPaper.fileSize || 2500000,
+          fileName: result.questionPaper.fileName || uploadFile?.name || `${selectedSub?.code}_Paper.pdf`,
+          fileSize: result.questionPaper.fileSize || uploadFile?.size || 2500000,
           uploadedByName: isAdvisor ? `${facultyName} (Class Advisor)` : facultyName,
           createdAt: new Date(),
         }
 
         setPapers([newPaper, ...papers])
         setShowUploadModal(false)
+        setUploadFile(null)
         toast.success(`Question paper for ${selectedSub?.code || 'Course'} archived successfully!`)
       } else {
         toast.error(result.message || 'Failed to archive question paper.')
@@ -501,7 +619,22 @@ export function FacultyQuestionPapersView({
                   </div>
 
                   <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
-                    <span className="text-[10px] text-gray-400 font-bold">Anna Univ Pattern</span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleEditClick(p)}
+                        className="p-1.5 rounded-xl border border-gray-200 text-gray-600 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                        title="Edit Question Paper"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteQP(p.id, p.subjectCode)}
+                        className="p-1.5 rounded-xl border border-gray-200 text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                        title="Delete Question Paper"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                     <button
                       onClick={() => handleDownloadQP(p)}
                       className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer hover:scale-105"
@@ -539,7 +672,7 @@ export function FacultyQuestionPapersView({
               <div>
                 <label className="font-bold text-[#071A3D] block mb-1">Subject *</label>
                 <select
-                  value={uploadSubjectId}
+                  value={uploadSubjectId || subjects[0]?.id || ''}
                   onChange={(e) => setUploadSubjectId(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
                 >
@@ -603,6 +736,49 @@ export function FacultyQuestionPapersView({
                 />
               </div>
 
+              <div>
+                <label className="font-bold text-[#071A3D] block mb-1">Upload Question Paper Document (PDF)</label>
+                <div className="relative border-2 border-dashed border-gray-300 hover:border-[#1455D9] rounded-2xl p-4 text-center transition-colors bg-gray-50/50">
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setUploadFile(e.target.files[0])
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {uploadFile ? (
+                    <div className="flex items-center justify-between gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">
+                      <div className="flex items-center gap-2 truncate">
+                        <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="truncate max-w-[200px]">{uploadFile.name}</span>
+                        <span className="text-[10px] text-gray-400">
+                          ({(uploadFile.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setUploadFile(null)
+                        }}
+                        className="text-gray-400 hover:text-red-500 text-xs px-1.5 py-0.5 rounded-md hover:bg-white cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <Upload className="w-5 h-5 text-gray-400 mx-auto" />
+                      <p className="text-[11px] font-bold text-gray-700">Click or drag &amp; drop PDF question paper</p>
+                      <p className="text-[10px] text-gray-400">PDF up to 25 MB</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200 text-[11px] text-gray-700 space-y-1">
                 <span className="font-bold text-[#1455D9] block">Standard Autonomous PDF Template:</span>
                 <p>
@@ -630,6 +806,101 @@ export function FacultyQuestionPapersView({
                       <Check className="w-4 h-4" /> Archive Question Paper
                     </>
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Question Paper Modal */}
+      {showEditModal && editingPaper && (
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b pb-3">
+              <div>
+                <h3 className="text-base font-bold text-[#071A3D]">Edit Question Paper</h3>
+                <p className="text-xs text-gray-500">Update examination details for {editingPaper.subjectCode}</p>
+              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="font-bold text-[#071A3D] block mb-1">Subject *</label>
+                <select
+                  value={editSubjectId}
+                  onChange={(e) => setEditSubjectId(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
+                >
+                  {subjects.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.code} — {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-[#071A3D] block mb-1">Exam Type *</label>
+                <select
+                  value={editExamType}
+                  onChange={(e) => setEditExamType(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
+                >
+                  <option value="Internal Test 1 (IAT 1)">Internal Test 1 (IAT 1)</option>
+                  <option value="Internal Test 2 (IAT 2)">Internal Test 2 (IAT 2)</option>
+                  <option value="Model Examination">Model Examination</option>
+                  <option value="Anna University Examination (Nov/Dec)">Anna University Examination (Nov/Dec)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-bold text-[#071A3D] block mb-1">Semester</label>
+                  <select
+                    value={editSemester}
+                    onChange={(e) => setEditSemester(Number(e.target.value))}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D]"
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                      <option key={s} value={s}>
+                        Semester {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#071A3D] block mb-1">Academic Year</label>
+                  <input
+                    type="text"
+                    value={editAcademicYear}
+                    onChange={(e) => setEditAcademicYear(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>
