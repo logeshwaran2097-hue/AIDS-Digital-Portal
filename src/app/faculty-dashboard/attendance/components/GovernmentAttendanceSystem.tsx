@@ -274,7 +274,12 @@ export function GovernmentAttendanceSystem() {
   const setStudentStatus = (id: string, status: 'P' | 'A' | 'OD' | 'ML' | 'L') => {
     if (isLocked) return
     triggerHaptic()
-    setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, status } : s)))
+    setStudents((prev) => prev.map((s) => {
+      if (s.id !== id) return s
+      // Auto-clear remarks when switching to Present
+      if (status === 'P' || status === 'L') return { ...s, status, remarks: '' }
+      return { ...s, status }
+    }))
   }
 
   const setStudentRemarks = (id: string, remarks: string) => {
@@ -985,29 +990,57 @@ export function GovernmentAttendanceSystem() {
                     })}
                   </div>
 
-                  {/* Bottom Row: Remarks Selector (Shown on card) */}
-                  <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
-                      Remark:
-                    </span>
-                    <select
-                      value={s.remarks}
-                      onChange={(e) => setStudentRemarks(s.id, e.target.value)}
-                      disabled={isLocked}
-                      className={cn(
-                        'flex-1 bg-gray-50 border rounded-xl px-2.5 py-1 text-xs focus:ring-1 focus:ring-[#1455D9] disabled:cursor-not-allowed',
-                        s.status === 'A' && !s.remarks
-                          ? 'border-rose-300 text-rose-800 bg-rose-50/40'
-                          : 'border-gray-200 text-gray-700'
-                      )}
-                    >
-                      {REMARK_OPTIONS.map((r) => (
-                        <option key={r} value={r}>
-                          {r || '— Select remark (Optional) —'}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Bottom Row: Remarks Selector — required for Absent/OD/ML */}
+                  {(s.status === 'A' || s.status === 'OD' || s.status === 'ML') ? (
+                    <div className={cn(
+                      'pt-2 border-t space-y-1.5',
+                      s.status === 'A' ? 'border-rose-200 bg-rose-50/30 -mx-3.5 -mb-3.5 px-3.5 pb-3.5 rounded-b-2xl' : 'border-blue-200 bg-blue-50/30 -mx-3.5 -mb-3.5 px-3.5 pb-3.5 rounded-b-2xl'
+                    )}>
+                      <span className={cn(
+                        'text-[10px] font-bold uppercase tracking-wider flex items-center gap-1',
+                        s.status === 'A' ? 'text-rose-700' : 'text-blue-700'
+                      )}>
+                        <AlertTriangle className="w-3 h-3" />
+                        Reason / Remark {!s.remarks && <span className="text-rose-500 ml-0.5">*Required</span>}
+                      </span>
+                      <select
+                        value={s.remarks}
+                        onChange={(e) => setStudentRemarks(s.id, e.target.value)}
+                        disabled={isLocked}
+                        className={cn(
+                          'w-full border rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:ring-2 disabled:cursor-not-allowed transition-all',
+                          !s.remarks
+                            ? 'border-rose-400 text-rose-800 bg-white ring-1 ring-rose-300 animate-pulse'
+                            : s.status === 'A'
+                            ? 'border-rose-300 text-rose-800 bg-white'
+                            : 'border-blue-300 text-blue-800 bg-white'
+                        )}
+                      >
+                        <option value="">— Select reason (Required) —</option>
+                        {REMARK_OPTIONS.filter(r => r !== '').map((r) => (
+                          <option key={r} value={r}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
+                        Remark:
+                      </span>
+                      <select
+                        value={s.remarks}
+                        onChange={(e) => setStudentRemarks(s.id, e.target.value)}
+                        disabled={isLocked}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1 text-xs text-gray-700 focus:ring-1 focus:ring-[#1455D9] disabled:cursor-not-allowed"
+                      >
+                        {REMARK_OPTIONS.map((r) => (
+                          <option key={r} value={r}>
+                            {r || '— Select remark (Optional) —'}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -1193,6 +1226,131 @@ export function GovernmentAttendanceSystem() {
           </div>
         )}
       </div>
+
+      {/* ── Absentees Summary Panel ────────────────────────────────────────── */}
+      {students.filter(s => s.status === 'A').length > 0 && (
+        <div className="bg-rose-50/60 border border-rose-200 rounded-3xl p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-rose-600 flex items-center justify-center shadow-xs">
+                <XCircle className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-rose-900">
+                  Absentees List — {students.filter(s => s.status === 'A').length} Student{students.filter(s => s.status === 'A').length > 1 ? 's' : ''}
+                </h3>
+                <p className="text-[10px] text-rose-600 font-semibold">SMS/Email alerts will be dispatched to parents upon lock</p>
+              </div>
+            </div>
+            <span className="shrink-0 px-3 py-1 bg-rose-600 text-white rounded-full text-xs font-black shadow-xs">
+              {students.filter(s => s.status === 'A').length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {students.filter(s => s.status === 'A').map((s, idx) => (
+              <div
+                key={s.id}
+                className="bg-white border border-rose-200 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shadow-xs"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="text-[10px] font-mono font-bold text-rose-400 w-5 shrink-0">{idx + 1}.</span>
+                  <div className={cn(
+                    'w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs',
+                    s.gender === 'F' ? 'bg-purple-600' : 'bg-rose-600'
+                  )}>
+                    {s.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-[#071A3D] text-xs truncate">{s.name}</div>
+                    <div className="text-[10px] text-gray-500 font-mono">{s.registerNumber}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 sm:shrink-0 pl-8 sm:pl-0">
+                  {s.remarks ? (
+                    <span className="px-2.5 py-1 bg-rose-100 text-rose-800 rounded-xl text-[11px] font-bold border border-rose-200 truncate max-w-[220px]">
+                      📋 {s.remarks}
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-xl text-[11px] font-bold border border-amber-200 animate-pulse">
+                      ⚠ No reason provided
+                    </span>
+                  )}
+                  <span className={cn(
+                    'px-2 py-0.5 rounded-full text-[10px] font-black border',
+                    s.cumulativeAttendance < 75 ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-gray-100 text-gray-600 border-gray-200'
+                  )}>
+                    {s.cumulativeAttendance}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── OD / Medical Leave Summary Panel ─────────────────────────────────── */}
+      {students.filter(s => s.status === 'OD' || s.status === 'ML').length > 0 && (
+        <div className="bg-blue-50/60 border border-blue-200 rounded-3xl p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-[#1455D9] flex items-center justify-center shadow-xs">
+                <Award className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-blue-900">
+                  On Duty / Medical Leave — {students.filter(s => s.status === 'OD' || s.status === 'ML').length} Student{students.filter(s => s.status === 'OD' || s.status === 'ML').length > 1 ? 's' : ''}
+                </h3>
+                <p className="text-[10px] text-blue-600 font-semibold">OD counts as present • ML eligible for condonation</p>
+              </div>
+            </div>
+            <span className="shrink-0 px-3 py-1 bg-[#1455D9] text-white rounded-full text-xs font-black shadow-xs">
+              {students.filter(s => s.status === 'OD' || s.status === 'ML').length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {students.filter(s => s.status === 'OD' || s.status === 'ML').map((s, idx) => (
+              <div
+                key={s.id}
+                className={cn(
+                  'bg-white border rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 shadow-xs',
+                  s.status === 'OD' ? 'border-blue-200' : 'border-purple-200'
+                )}
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="text-[10px] font-mono font-bold text-blue-400 w-5 shrink-0">{idx + 1}.</span>
+                  <div className={cn(
+                    'w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs',
+                    s.status === 'ML' ? 'bg-purple-600' : 'bg-[#1455D9]'
+                  )}>
+                    {s.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-[#071A3D] text-xs truncate">{s.name}</div>
+                    <div className="text-[10px] text-gray-500 font-mono">{s.registerNumber}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 sm:shrink-0 pl-8 sm:pl-0">
+                  <span className={cn(
+                    'px-2.5 py-1 rounded-xl text-[11px] font-black border',
+                    s.status === 'OD' ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-purple-100 text-purple-800 border-purple-300'
+                  )}>
+                    {s.status === 'OD' ? '🏢 On Duty' : '🏥 Medical Leave'}
+                  </span>
+                  {s.remarks ? (
+                    <span className="px-2.5 py-1 bg-blue-50 text-blue-800 rounded-xl text-[11px] font-bold border border-blue-200 truncate max-w-[220px]">
+                      📋 {s.remarks}
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-xl text-[11px] font-bold border border-amber-200 animate-pulse">
+                      ⚠ No reason provided
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Defaulters Warning Panel ────────────────────────────────────────── */}
       {stats.defaulters.length > 0 && (
