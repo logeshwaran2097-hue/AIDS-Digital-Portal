@@ -224,10 +224,19 @@ export async function POST(request: Request) {
     }
 
     // Broadcast real-time notification for Department Directorate & Students
+    const isAdvNotification = isAdvisorRole && cleanAdvisorYear && cleanAdvisorSec
     await prisma.notification.create({
       data: {
         title: `👨‍🏫 Faculty Directorate: ${name.trim()}`,
-        message: `${designation} appointed. ${advisorYear && advisorSec ? `Assigned as Class Advisor for Year ${advisorYear} (Sec ${advisorSec}).` : `Specialization: ${specialization}.`}`,
+        message: `${designation} appointed. ${
+          isAdvNotification
+            ? `Assigned as Class Advisor for Year ${cleanAdvisorYear} (Sec ${cleanAdvisorSec}).`
+            : facultyType === 'subject_handler'
+            ? `Course Instructor for Theory Curricula.`
+            : facultyType === 'lab_faculty'
+            ? `Laboratory Practical Session Handler.`
+            : `Specialization: ${specialization || 'AI & DS'}.`
+        }`,
         target: 'all',
         createdByName: 'Department Directorate',
         status: 'published',

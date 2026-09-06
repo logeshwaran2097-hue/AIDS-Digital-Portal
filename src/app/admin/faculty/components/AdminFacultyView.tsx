@@ -837,6 +837,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       if (result.success && result.faculty) {
         setFacultyList([result.faculty, ...facultyList])
         setIsAddModalOpen(false)
+        if (formData.facultyType === 'subject_handler') {
+          setActiveTab('faculty')
+        } else if (formData.facultyType === 'lab_faculty') {
+          setActiveTab('labs')
+        } else {
+          setActiveTab('advisors')
+        }
         setFormData({
           facultyId: '',
           name: '',
@@ -937,6 +944,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           )
         )
         setIsEditModalOpen(false)
+        if (formData.facultyType === 'subject_handler') {
+          setActiveTab('faculty')
+        } else if (formData.facultyType === 'lab_faculty') {
+          setActiveTab('labs')
+        } else {
+          setActiveTab('advisors')
+        }
         toast.success('Faculty record updated in database!')
       } else {
         toast.error(result.message || 'Failed to update faculty')
@@ -1501,8 +1515,23 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </td>
 
                     <td className="px-4 py-3.5">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#1455D9] border border-blue-200">
-                        {advisor.facultyType === 'both' ? 'Advisor & Faculty' : 'Class Advisor'}
+                      <span className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold border",
+                        advisor.facultyType === 'subject_handler'
+                          ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                          : advisor.facultyType === 'lab_faculty'
+                          ? "bg-purple-50 text-purple-700 border-purple-200"
+                          : advisor.facultyType === 'both'
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-blue-50 text-[#1455D9] border-blue-200"
+                      )}>
+                        {advisor.facultyType === 'both'
+                          ? 'Advisor & Faculty'
+                          : advisor.facultyType === 'subject_handler'
+                          ? 'Theory Faculty'
+                          : advisor.facultyType === 'lab_faculty'
+                          ? 'Lab Handler'
+                          : 'Class Advisor'}
                       </span>
                     </td>
 
@@ -1644,8 +1673,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             <span className="font-bold text-[#071A3D] text-sm block">
                               {faculty.name}
                             </span>
-                            <span className="text-[11px] text-gray-500 font-medium">
+                            <span className="text-[11px] text-gray-500 font-medium block">
                               {faculty.designation}
+                            </span>
+                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              Theory Faculty
                             </span>
                           </div>
                         </div>
@@ -1816,8 +1848,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             <span className="font-bold text-[#071A3D] text-sm block">
                               {handler.name}
                             </span>
-                            <span className="text-[11px] text-gray-500 font-medium">
+                            <span className="text-[11px] text-gray-500 font-medium block">
                               {handler.designation}
+                            </span>
+                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                              Lab Handler
                             </span>
                           </div>
                         </div>
