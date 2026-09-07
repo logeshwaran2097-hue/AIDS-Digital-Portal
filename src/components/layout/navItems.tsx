@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, FileText, FolderOpen, Users, CalendarDays, Megaphone, Trophy, Database, Bot, Bell, User, Settings, GraduationCap, FileQuestion, Newspaper } from 'lucide-react'
+import { Home, BookOpen, FileText, FolderOpen, Users, CalendarDays, Megaphone, Trophy, Database, Bot, Bell, User, Settings, GraduationCap, FileQuestion, Newspaper, Info, BarChart3, ShieldCheck } from 'lucide-react'
 import type { NavItem } from './PortalLayout'
 
 export const studentNavItems: NavItem[] = [
@@ -18,9 +18,8 @@ export const studentNavItems: NavItem[] = [
   { label: 'Notifications', href: '/dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Profile', href: '/dashboard/profile', icon: <User className="h-4 w-4" /> },
   { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
+  { label: 'About Portal', href: '/dashboard/about', icon: <Info className="h-4 w-4" /> },
 ]
-
-
 
 export const facultyNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/faculty-dashboard', icon: <Home className="h-4 w-4" /> },
@@ -35,6 +34,7 @@ export const facultyNavItems: NavItem[] = [
   { label: 'Notifications', href: '/faculty-dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Profile', href: '/faculty-dashboard/profile', icon: <User className="h-4 w-4" /> },
   { label: 'Settings', href: '/faculty-dashboard/settings', icon: <Settings className="h-4 w-4" /> },
+  { label: 'About Portal', href: '/faculty-dashboard/about', icon: <Info className="h-4 w-4" /> },
 ]
 
 export const hodNavItems: NavItem[] = [
@@ -52,6 +52,7 @@ export const hodNavItems: NavItem[] = [
   { label: 'Notifications', href: '/hod-dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Profile', href: '/hod-dashboard/profile', icon: <User className="h-4 w-4" /> },
   { label: 'Settings', href: '/hod-dashboard/settings', icon: <Settings className="h-4 w-4" /> },
+  { label: 'About Portal', href: '/hod-dashboard/about', icon: <Info className="h-4 w-4" /> },
 ]
 
 export const adminNavItems: NavItem[] = [
@@ -74,6 +75,5 @@ export const adminNavItems: NavItem[] = [
   { label: 'File Management', href: '/admin/files', icon: <FileText className="h-4 w-4" /> },
   { label: 'System Settings', href: '/admin/settings', icon: <Settings className="h-4 w-4" /> },
   { label: 'Profile', href: '/admin/profile', icon: <User className="h-4 w-4" /> },
+  { label: 'About Portal', href: '/admin/about', icon: <Info className="h-4 w-4" /> },
 ]
-
-import { BarChart3, ShieldCheck } from 'lucide-react'
