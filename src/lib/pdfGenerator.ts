@@ -355,13 +355,13 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
   }
 
   // 6. OFFICIAL DIGITAL RECORD CERTIFICATION & AUTHENTICATION SEAL (NO PHYSICAL SIGNATURE REQUIRED)
-  const certH = 22
+  const certH = 26
   let certY = currentY + 4
   if (certY + certH > pageHeight - 13) {
     certY = pageHeight - 13 - certH
   }
 
-  // Certification Container Box
+  // Outer Certification Container Box
   doc.setFillColor(248, 250, 254)
   doc.setDrawColor(205, 220, 240)
   doc.setLineWidth(0.35)
@@ -369,59 +369,75 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
 
   // Left Deep Navy Accent Bar
   doc.setFillColor(7, 26, 61)
-  doc.roundedRect(marginX, certY, 3, certH, 1, 1, 'F')
+  doc.roundedRect(marginX, certY, 3.5, certH, 1, 1, 'F')
 
-  // Top Badge / Pills
+  // Top Row: Badges / Pills
   doc.setFillColor(235, 244, 255)
   doc.setDrawColor(190, 215, 250)
   doc.setLineWidth(0.2)
-  doc.roundedRect(marginX + 6, certY + 2.2, 58, 4.2, 1, 1, 'FD')
+  doc.roundedRect(marginX + 6, certY + 2.5, 60, 4.2, 1, 1, 'FD')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(5.8)
   doc.setTextColor(20, 85, 217)
-  doc.text('OFFICIAL DIGITAL ACADEMIC RECORD', marginX + 35, certY + 5.2, { align: 'center' })
+  doc.text('OFFICIAL DIGITAL ACADEMIC RECORD', marginX + 36, certY + 5.5, { align: 'center' })
 
   doc.setFillColor(236, 253, 245)
   doc.setDrawColor(167, 243, 208)
-  doc.roundedRect(marginX + contentW - 55, certY + 2.2, 49, 4.2, 1, 1, 'FD')
+  doc.roundedRect(marginX + contentW - 55, certY + 2.5, 49, 4.2, 1, 1, 'FD')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(5.8)
   doc.setTextColor(5, 122, 85)
-  doc.text('SYSTEM AUTHENTICATED · VALID', marginX + contentW - 30.5, certY + 5.2, { align: 'center' })
+  doc.text('SYSTEM AUTHENTICATED · VALID', marginX + contentW - 30.5, certY + 5.5, { align: 'center' })
 
   // Core Legal & Authentication Statement
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(6.8)
   doc.setTextColor(7, 26, 61)
-  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL REPORT BASED ON INSTITUTIONAL DATABASE RECORDS.', marginX + 6, certY + 9.3)
+  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL REPORT BASED ON INSTITUTIONAL DATABASE RECORDS.', marginX + 6, certY + 10.2)
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(6.0)
   doc.setTextColor(75, 90, 110)
-  doc.text('All attendance records, course hours, and academic metrics are electronically certified from the centralized ERP database of the Department of Artificial Intelligence & Data Science, V.S.B. Engineering College. As an authenticated digital document, no physical signature is required.', marginX + 6, certY + 13.2)
+  const certNotice = 'All attendance statistics and academic metrics are electronically certified from the centralized ERP records of the Department of Artificial Intelligence & Data Science, V.S.B. Engineering College. As an authenticated digital document, no physical signature is required.'
+  const splitNotice = doc.splitTextToSize(certNotice, contentW - 12)
+  doc.text(splitNotice, marginX + 6, certY + 14)
 
   // Inner Divider Line
   doc.setDrawColor(225, 235, 247)
   doc.setLineWidth(0.25)
-  doc.line(marginX + 6, certY + 15.5, marginX + contentW - 6, certY + 15.5)
+  doc.line(marginX + 6, certY + 17.5, marginX + contentW - 6, certY + 17.5)
 
-  // Metadata Security Verification Row
+  // 3 Distinct Clean Non-Overlapping Columns (Stacked Label on Top, Value Below)
+  const col1X = marginX + 6
+  const col2X = marginX + 68
+  const col3X = marginX + 128
+
+  // Col 1: Record Source
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.6)
-  doc.setTextColor(110, 125, 145)
-  doc.text('RECORD SOURCE:', marginX + 6, certY + 19.2)
+  doc.setFontSize(5.0)
+  doc.setTextColor(115, 130, 150)
+  doc.text('RECORD REPOSITORY', col1X, certY + 20.8)
+  doc.setFontSize(6.0)
   doc.setTextColor(7, 26, 61)
-  doc.text('Centralized Autonomous ERP', marginX + 30, certY + 19.2)
+  doc.text('Centralized Autonomous ERP', col1X, certY + 24.2)
 
-  doc.setTextColor(110, 125, 145)
-  doc.text('ISSUING AUTHORITY:', marginX + 70, certY + 19.2)
+  // Col 2: Issuing Authority
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.0)
+  doc.setTextColor(115, 130, 150)
+  doc.text('ISSUING AUTHORITY', col2X, certY + 20.8)
+  doc.setFontSize(6.0)
   doc.setTextColor(7, 26, 61)
-  doc.text('Office of HOD (AI & DS)', marginX + 95, certY + 19.2)
+  doc.text('Office of HOD (AI & DS)', col2X, certY + 24.2)
 
-  doc.setTextColor(110, 125, 145)
-  doc.text('VERIFICATION CODE:', marginX + 131, certY + 19.2)
+  // Col 3: Verification Code
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.0)
+  doc.setTextColor(115, 130, 150)
+  doc.text('VERIFICATION CODE', col3X, certY + 20.8)
+  doc.setFontSize(6.0)
   doc.setTextColor(20, 85, 217)
-  doc.text('VSB-SEC-2026-AUTONOMOUS', marginX + 156, certY + 19.2)
+  doc.text('VSB-SEC-2026-AUTONOMOUS', col3X, certY + 24.2)
 
   // 7. Multi-Page Running Footer Bar
   const totalPages = doc.getNumberOfPages()
@@ -720,8 +736,8 @@ export function generateAttendanceBarGraphPDF(options: {
   currentY += auditRows.length * gridRowHeight + 5
 
   // 5. OFFICIAL DIGITAL RECORD CERTIFICATION & AUTHENTICATION SEAL (NO SIGNATURE REQUIRED)
-  const bgCertH = 19
-  const bgCertY = Math.max(currentY + 2, pageHeight - 10 - bgCertH)
+  const bgCertH = 22
+  const bgCertY = Math.max(currentY + 2, pageHeight - 11 - bgCertH)
   const bgMarginX = 15
   const bgContentW = pageWidth - 30
 
@@ -739,35 +755,48 @@ export function generateAttendanceBarGraphPDF(options: {
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(6.8)
   doc.setTextColor(7, 26, 61)
-  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL ANALYTICS REPORT · NO SIGNATURE REQUIRED', bgMarginX + 6, bgCertY + 5.5)
+  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL ANALYTICS REPORT · NO SIGNATURE REQUIRED', bgMarginX + 6, bgCertY + 5.2)
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(6.0)
   doc.setTextColor(75, 90, 110)
-  doc.text('All aggregate metrics and student cohort data are electronically certified directly from institutional database records for official academic audit purposes.', bgMarginX + 6, bgCertY + 9.8)
+  const bgCertNotice = 'All aggregate metrics and student cohort data are electronically certified directly from institutional database records for official academic audit purposes.'
+  const splitBgNotice = doc.splitTextToSize(bgCertNotice, bgContentW - 12)
+  doc.text(splitBgNotice, bgMarginX + 6, bgCertY + 9.2)
 
   // Inner Divider Line
   doc.setDrawColor(225, 235, 247)
   doc.setLineWidth(0.25)
-  doc.line(bgMarginX + 6, bgCertY + 12, bgMarginX + bgContentW - 6, bgCertY + 12)
+  doc.line(bgMarginX + 6, bgCertY + 12.5, bgMarginX + bgContentW - 6, bgCertY + 12.5)
 
-  // Metadata Row
+  // 3 Distinct Clean Non-Overlapping Columns (Stacked Label on Top, Value Below)
+  const bgCol1X = bgMarginX + 6
+  const bgCol2X = bgMarginX + 68
+  const bgCol3X = bgMarginX + 128
+
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.6)
-  doc.setTextColor(110, 125, 145)
-  doc.text('RECORD REPOSITORY:', bgMarginX + 6, bgCertY + 15.8)
+  doc.setFontSize(5.0)
+  doc.setTextColor(115, 130, 150)
+  doc.text('RECORD REPOSITORY', bgCol1X, bgCertY + 16.2)
+  doc.setFontSize(6.0)
   doc.setTextColor(7, 26, 61)
-  doc.text('Centralized Autonomous ERP', bgMarginX + 31, bgCertY + 15.8)
+  doc.text('Centralized Autonomous ERP', bgCol1X, bgCertY + 19.8)
 
-  doc.setTextColor(110, 125, 145)
-  doc.text('ISSUING AUTHORITY:', bgMarginX + 70, bgCertY + 15.8)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.0)
+  doc.setTextColor(115, 130, 150)
+  doc.text('ISSUING AUTHORITY', bgCol2X, bgCertY + 16.2)
+  doc.setFontSize(6.0)
   doc.setTextColor(7, 26, 61)
-  doc.text('Office of HOD (AI & DS)', bgMarginX + 95, bgCertY + 15.8)
+  doc.text('Office of HOD (AI & DS)', bgCol2X, bgCertY + 19.8)
 
-  doc.setTextColor(110, 125, 145)
-  doc.text('VERIFICATION CODE:', bgMarginX + 130, bgCertY + 15.8)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.0)
+  doc.setTextColor(115, 130, 150)
+  doc.text('VERIFICATION CODE', bgCol3X, bgCertY + 16.2)
+  doc.setFontSize(6.0)
   doc.setTextColor(20, 85, 217)
-  doc.text('VSB-SEC-2026-AUTONOMOUS', bgMarginX + 155, bgCertY + 15.8)
+  doc.text('VSB-SEC-2026-AUTONOMOUS', bgCol3X, bgCertY + 19.8)
 
   // Footer
   doc.setFillColor(248, 250, 253)
