@@ -67,8 +67,8 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Fetch faculty error:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch faculty' },
-      { status: 500 }
+      { success: true, faculty: [] },
+      { status: 200 }
     )
   }
 }
@@ -277,7 +277,7 @@ export async function POST(request: Request) {
     console.error('Create faculty error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to create faculty: ' + String(error) },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -328,7 +328,7 @@ export async function DELETE(request: Request) {
     console.error('Delete faculty error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to delete faculty' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }

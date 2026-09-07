@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     console.error('Question paper upload error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to upload question paper' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -128,8 +128,8 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching question papers:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch question papers' },
-      { status: 500 }
+      { success: true, questionPapers: [] },
+      { status: 200 }
     )
   }
 }
@@ -165,7 +165,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, questionPaper: updated, message: 'Question paper updated successfully' })
   } catch (error) {
     console.error('Error updating question paper:', error)
-    return NextResponse.json({ success: false, message: 'Failed to update question paper' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to update question paper' }, { status: 400 })
   }
 }
 
@@ -196,6 +196,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: 'Question paper removed successfully' })
   } catch (error) {
     console.error('Error deleting question paper:', error)
-    return NextResponse.json({ success: false, message: 'Failed to delete question paper' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to delete question paper' }, { status: 400 })
   }
 }

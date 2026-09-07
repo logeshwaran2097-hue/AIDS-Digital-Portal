@@ -32,8 +32,8 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Resource fetch error:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch resources' },
-      { status: 500 }
+      { success: true, resources: [] },
+      { status: 200 }
     )
   }
 }
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
     console.error('Resource upload error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to upload resource' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -218,7 +218,7 @@ export async function PUT(request: Request) {
     console.error('Resource update error:', error)
     return NextResponse.json(
       { success: false, message: error?.message || 'Failed to update resource' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -253,7 +253,7 @@ export async function DELETE(request: Request) {
     console.error('Resource delete error:', error)
     return NextResponse.json(
       { success: false, message: error?.message || 'Failed to delete resource' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }

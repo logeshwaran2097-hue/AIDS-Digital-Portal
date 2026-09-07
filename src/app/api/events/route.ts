@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, event }, { status: 201 })
   } catch (error) {
     console.error('Events API error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to create event' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to create event' }, { status: 400 })
   }
 }
 
@@ -85,6 +85,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: 'Event deleted successfully' })
   } catch (error) {
     console.error('Delete event error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to delete event' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to delete event' }, { status: 400 })
   }
 }

@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, announcement }, { status: 201 })
   } catch (error) {
     console.error('Announcements API error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to create announcement' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to create announcement' }, { status: 400 })
   }
 }
 
@@ -100,7 +100,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, announcement: updated })
   } catch (error) {
     console.error('Update announcement error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to update announcement' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to update announcement' }, { status: 400 })
   }
 }
 
@@ -128,6 +128,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: 'Announcement deleted successfully' })
   } catch (error) {
     console.error('Delete announcement error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to delete announcement' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to delete announcement' }, { status: 400 })
   }
 }

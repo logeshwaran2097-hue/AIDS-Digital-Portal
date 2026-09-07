@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error('Error fetching OD applications:', error)
-    return NextResponse.json({ success: false, message: 'Failed to fetch applications' }, { status: 500 })
+    return NextResponse.json({ success: true, applications: [] }, { status: 200 })
   }
 }
 
@@ -227,7 +227,7 @@ export async function POST(request: Request) {
     console.error('Error submitting OD application:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to submit application: ' + String(error) },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }

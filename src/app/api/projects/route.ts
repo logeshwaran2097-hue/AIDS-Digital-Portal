@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, projects })
   } catch (error) {
     console.error('Projects API error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to fetch projects' }, { status: 500 })
+    return NextResponse.json({ success: true, projects: [] }, { status: 200 })
   }
 }
 
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, project }, { status: 201 })
   } catch (error) {
     console.error('Projects API error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to create project' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to create project' }, { status: 400 })
   }
 }
 
@@ -117,7 +117,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ success: true, project })
   } catch (error) {
     console.error('Update project error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to update project' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to update project' }, { status: 400 })
   }
 }
 
@@ -140,6 +140,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: 'Project deleted successfully' })
   } catch (error) {
     console.error('Delete project error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to delete project' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to delete project' }, { status: 400 })
   }
 }

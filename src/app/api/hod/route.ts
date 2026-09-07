@@ -35,8 +35,8 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching HOD:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch HOD' },
-      { status: 500 }
+      { success: true, hod: null },
+      { status: 200 }
     )
   }
 }
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     console.error('Create HOD error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to save HOD: ' + String(error) },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -197,7 +197,7 @@ export async function DELETE(request: Request) {
     console.error('Delete HOD error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to delete HOD' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }

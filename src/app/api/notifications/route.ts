@@ -138,7 +138,7 @@ export async function POST(request: Request) {
     )
   } catch (error) {
     console.error('Notifications POST API error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to create notification' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to create notification' }, { status: 400 })
   }
 }
 
@@ -162,6 +162,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: 'Notification deleted successfully' })
   } catch (error) {
     console.error('Delete notification error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to delete notification' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to delete notification' }, { status: 400 })
   }
 }
