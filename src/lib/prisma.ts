@@ -43,14 +43,41 @@ function getOptimizedDatabaseUrl(): string {
 
 const optimizedUrl = getOptimizedDatabaseUrl()
 
-export const prisma =
+const basePrisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     datasources: { db: { url: optimizedUrl } },
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   })
 
-// Cache prisma on globalThis in both dev and production serverless containers
-globalForPrisma.prisma = prisma
+export const prisma = basePrisma.$extends({
+  query: {
+    $allOperations({ model, operation, args, query }) {
+      const executeWithRetry = async (attempt = 1): Promise<any> => {
+        try {
+          return await query(args)
+        } catch (error) {
+          const msg = String((error as any)?.message || error || '')
+          const isTransient =
+            msg.includes('closed the connection') ||
+            msg.includes('Connection refused') ||
+            msg.includes('Connection timed out') ||
+            msg.includes("Can't reach database server")
+
+          if (isTransient && attempt <= 2) {
+            console.warn(`[Prisma Retry] Reconnecting on transient error ${model}.${operation} (attempt ${attempt}):`, msg)
+            await new Promise((r) => setTimeout(r, 500 * attempt))
+            return executeWithRetry(attempt + 1)
+          }
+          throw error
+        }
+      }
+      return executeWithRetry()
+    },
+  },
+}) as unknown as PrismaClient
+
+// Cache basePrisma on globalThis in both dev and production serverless containers
+globalForPrisma.prisma = basePrisma
 
 export default prisma

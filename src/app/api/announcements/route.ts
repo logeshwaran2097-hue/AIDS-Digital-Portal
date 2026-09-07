@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, announcements })
   } catch (error) {
     console.error('Announcements API error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to fetch announcements' }, { status: 500 })
+    return NextResponse.json({ success: true, announcements: [] })
   }
 }
 

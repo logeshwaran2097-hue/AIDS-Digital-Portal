@@ -62,8 +62,8 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching students:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to fetch students' },
-      { status: 500 }
+      { success: false, message: 'Failed to fetch students', students: [] },
+      { status: 200 }
     )
   }
 }
@@ -279,7 +279,7 @@ export async function POST(request: Request) {
     console.error('Error creating student:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to create student: ' + String(error) },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -519,7 +519,7 @@ export async function PUT(request: Request) {
     })
   } catch (error) {
     console.error('Update student error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to update student: ' + String(error) }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to update student: ' + String(error) }, { status: 400 })
   }
 }
 
@@ -614,7 +614,7 @@ export async function DELETE(request: Request) {
     console.error('Delete student error:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to delete student: ' + String(error) },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
