@@ -944,6 +944,22 @@ export function StudentOnboardingModal({
               )}
             </div>
 
+            {/* Details Confirmed Checkbox */}
+            <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  checked={form.detailsConfirmed}
+                  onChange={(e) => setForm({ ...form, detailsConfirmed: e.target.checked })}
+                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0] cursor-pointer"
+                />
+                <span className="text-xs font-bold text-[#071A41]">
+                  I confirm that I have reviewed my student particulars, mobile numbers, and academic record.
+                </span>
+              </label>
+            </div>
+
             {/* Action Buttons */}
             <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
               <button
