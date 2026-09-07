@@ -238,10 +238,17 @@ export async function POST(request: Request) {
       date,
       hour,
       isLocked = false,
-      records,
+      records: rawRecords,
+      students: rawStudents,
     } = body
 
-    if (!records || !Array.isArray(records) || records.length === 0) {
+    const records = (Array.isArray(rawRecords) && rawRecords.length > 0)
+      ? rawRecords
+      : (Array.isArray(rawStudents) && rawStudents.length > 0)
+      ? rawStudents
+      : []
+
+    if (!records || records.length === 0) {
       return NextResponse.json({ success: false, message: 'No student records provided' }, { status: 400 })
     }
 

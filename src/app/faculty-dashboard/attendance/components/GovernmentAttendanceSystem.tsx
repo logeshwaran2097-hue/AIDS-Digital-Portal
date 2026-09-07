@@ -413,6 +413,17 @@ export function GovernmentAttendanceSystem() {
             remarks: s.remarks,
             cumulativeAttendance: s.cumulativeAttendance,
           })),
+          records: students.map((s) => ({
+            id: s.id,
+            studentId: s.id,
+            registerNumber: s.registerNumber,
+            name: s.name,
+            studentName: s.name,
+            gender: s.gender,
+            status: s.status,
+            remarks: s.remarks,
+            cumulativeAttendance: s.cumulativeAttendance,
+          })),
           isLocked: lock,
         }),
       })
