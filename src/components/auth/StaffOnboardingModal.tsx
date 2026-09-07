@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils'
 export interface StaffOnboardingModalProps {
   isOpen: boolean
   role: 'advisor' | 'faculty' | 'hod'
+  onClose?: () => void
   onComplete: (updatedData?: any) => void
   initialData: {
     name: string
@@ -55,6 +56,7 @@ export interface StaffOnboardingModalProps {
 export function StaffOnboardingModal({
   isOpen,
   role,
+  onClose,
   onComplete,
   initialData,
 }: StaffOnboardingModalProps) {
@@ -253,6 +255,56 @@ export function StaffOnboardingModal({
     }
   }
 
+  // FAST PATH: Staff confirms particulars & enters portal immediately
+  const handleFastConfirmAndEnter = async () => {
+    if (!form.phone.trim()) {
+      toast.error('Please enter your direct mobile / WhatsApp number.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const payload = {
+        name: form.name || initialData.name,
+        email: form.email ? form.email.trim().toLowerCase() : initialData.email,
+        phone: form.phone.trim(),
+        facultyId: initialData.facultyId,
+        dateOfBirth: form.dateOfBirth || undefined,
+        qualification: form.qualification || initialData.qualification || '',
+        specialization: form.specialization || '',
+        experience: Number(form.experience) || initialData.experience || 0,
+        classPeriod: form.cabin || '',
+        role,
+        profileImage: form.profileImage || undefined,
+      }
+
+      const res = await fetch('/api/auth/complete-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        const staffKey = initialData.facultyId || initialData.email || 'staff'
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
+          sessionStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
+        }
+        toast.success('Particulars verified! Entering portal...')
+        setTimeout(() => {
+          onComplete(data.user || {})
+        }, 500)
+      } else {
+        toast.error(data.message || 'Failed to save particulars.')
+      }
+    } catch {
+      toast.error('Network error saving particulars.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // STEP 1 -> STEP 2: Proceed to Security Step
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
@@ -380,6 +432,11 @@ export function StaffOnboardingModal({
 
       const data = await res.json()
       if (res.ok && data.success) {
+        const staffKey = initialData.facultyId || initialData.email || 'staff'
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
+          sessionStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
+        }
         toast.success('Account fully verified & Password saved! Welcome to the portal.')
         setTimeout(() => {
           onComplete(data.user || {})
@@ -453,6 +510,16 @@ export function StaffOnboardingModal({
                 ? 'CLASS ADVISOR VERIFICATION & SECURITY SETUP'
                 : 'FACULTY APPOINTMENT VERIFICATION & SECURITY SETUP'}
             </span>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
@@ -758,13 +825,23 @@ export function StaffOnboardingModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
+            <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleFastConfirmAndEnter}
+                disabled={loading}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>Confirm Particulars &amp; Enter Portal</span>
+              </button>
+
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 bg-[#1557C0]/10 hover:bg-[#1557C0]/20 text-[#1557C0] border border-[#1557C0]/30 cursor-pointer hover:scale-[1.02] transition-all text-xs"
               >
-                <span>Proceed to Step 2: Password &amp; Email</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Change Password &amp; Email (Optional)</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </form>

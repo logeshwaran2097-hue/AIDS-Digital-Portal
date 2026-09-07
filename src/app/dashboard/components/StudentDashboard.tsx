@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   BookOpen,
@@ -129,13 +129,38 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
     return () => clearInterval(interval)
   }, [])
 
+  const studentKey = data.student?.registerNumber || currentUser.email || 'student'
   const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(isInitialNeedsOnboarding)
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const isCompletedLocally =
+      localStorage.getItem(`vsb_student_onboarding_done_${studentKey}`) === 'true' ||
+      sessionStorage.getItem(`vsb_student_onboarding_done_${studentKey}`) === 'true'
+
+    if (!isCompletedLocally && isInitialNeedsOnboarding) {
+      setIsOnboardingOpen(true)
+    } else {
+      setIsOnboardingOpen(false)
+    }
+  }, [studentKey, isInitialNeedsOnboarding])
 
   const handleOnboardingComplete = (updatedUser: any) => {
     setIsOnboardingOpen(false)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
+      sessionStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
+    }
     if (updatedUser) {
-      setCurrentUser((prev) => ({ ...prev, ...updatedUser }))
+      setCurrentUser((prev) => ({ ...prev, ...updatedUser, mustChangePassword: false }))
+    }
+  }
+
+  const handleOnboardingClose = () => {
+    setIsOnboardingOpen(false)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
     }
   }
 
@@ -164,6 +189,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       {/* First-Time Student Setup & Verification Modal */}
       <StudentOnboardingModal
         isOpen={isOnboardingOpen}
+        onClose={handleOnboardingClose}
         onComplete={handleOnboardingComplete}
         initialData={{
           name: currentUser.name,

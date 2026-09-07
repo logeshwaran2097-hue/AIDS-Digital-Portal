@@ -36,10 +36,28 @@ export async function POST(request: NextRequest) {
         userUpdateData.emailVerified = true
       }
 
-      const updatedUser = await prisma.user.update({
+      let updatedUser = await prisma.user.update({
         where: { id: session.userId },
         data: userUpdateData,
       }).catch(() => null)
+
+      // Fallback: if user was not updated by session.userId, locate user via student or registerNumber
+      if (!updatedUser && session.registerNumber) {
+        const studentRec = await prisma.student.findFirst({
+          where: {
+            OR: [
+              { registerNumber: session.registerNumber.trim().toUpperCase() },
+              { registerNumber: session.registerNumber.trim() },
+            ],
+          },
+        }).catch(() => null)
+        if (studentRec?.userId) {
+          updatedUser = await prisma.user.update({
+            where: { id: studentRec.userId },
+            data: userUpdateData,
+          }).catch(() => null)
+        }
+      }
 
       // Update DOB and Parent Phone in Student record if provided
       const studentUpdateData: any = {}
@@ -64,7 +82,7 @@ export async function POST(request: NextRequest) {
             where: { registerNumber: session.registerNumber.trim().toUpperCase() },
             data: {
               ...studentUpdateData,
-              userId: session.userId,
+              userId: updatedUser?.id || session.userId,
             },
           }).catch(() => {})
         }
@@ -170,10 +188,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Update User
-    const updatedUser = await prisma.user.update({
+    let updatedUser = await prisma.user.update({
       where: { id: session.userId },
       data: userUpdateData,
-    })
+    }).catch(() => null)
+
+    if (!updatedUser && session.registerNumber) {
+      const studentRec = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { registerNumber: session.registerNumber.trim().toUpperCase() },
+            { registerNumber: session.registerNumber.trim() },
+          ],
+        },
+      }).catch(() => null)
+      if (studentRec?.userId) {
+        updatedUser = await prisma.user.update({
+          where: { id: studentRec.userId },
+          data: userUpdateData,
+        }).catch(() => null)
+      }
+    }
 
     // Update Student DOB & Parent Phone
     const studentUpdateData: any = {}
@@ -198,10 +233,14 @@ export async function POST(request: NextRequest) {
           where: { registerNumber: session.registerNumber.trim().toUpperCase() },
           data: {
             ...studentUpdateData,
-            userId: session.userId,
+            userId: updatedUser?.id || session.userId,
           },
         }).catch(() => {})
       }
+    }
+
+    if (!updatedUser) {
+      return NextResponse.json({ success: false, message: 'Student account record not found.' }, { status: 404 })
     }
 
     // Invalidate caches

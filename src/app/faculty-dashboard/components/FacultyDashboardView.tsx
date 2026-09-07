@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   BookOpen,
@@ -87,7 +87,23 @@ const quickNav = [
 ]
 
 export function FacultyDashboardView({ data }: { data: FacultyData }) {
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(Boolean(data.user?.mustChangePassword))
+  const facultyKey = data.faculty?.facultyId || data.user?.email || 'faculty'
+  const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const isCompletedLocally =
+      localStorage.getItem(`vsb_staff_onboarding_done_${facultyKey}`) === 'true' ||
+      sessionStorage.getItem(`vsb_staff_onboarding_done_${facultyKey}`) === 'true'
+
+    if (!isCompletedLocally && isInitialNeedsOnboarding) {
+      setIsOnboardingOpen(true)
+    } else {
+      setIsOnboardingOpen(false)
+    }
+  }, [facultyKey, isInitialNeedsOnboarding])
+
   const [odList, setOdList] = useState<{ id: string; studentName: string; regNo: string; event: string; date: string; type: string }[]>([])
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
@@ -111,6 +127,12 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
       <StaffOnboardingModal
         isOpen={isOnboardingOpen}
         role={isClassAdvisor ? 'advisor' : 'faculty'}
+        onClose={() => {
+          setIsOnboardingOpen(false)
+          if (typeof window !== 'undefined') {
+            sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
+          }
+        }}
         initialData={{
           name: data.user.name,
           email: data.user.email,
@@ -128,6 +150,10 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         }}
         onComplete={(updated) => {
           setIsOnboardingOpen(false)
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
+            sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
+          }
           if (updated?.name) {
             data.user.name = updated.name
           }

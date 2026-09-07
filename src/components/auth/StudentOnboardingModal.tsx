@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils'
 
 interface StudentOnboardingModalProps {
   isOpen: boolean
+  onClose?: () => void
   onComplete: (updatedUser: any) => void
   initialData: {
     name: string
@@ -48,6 +49,7 @@ interface StudentOnboardingModalProps {
 
 export function StudentOnboardingModal({
   isOpen,
+  onClose,
   onComplete,
   initialData,
 }: StudentOnboardingModalProps) {
@@ -227,6 +229,68 @@ export function StudentOnboardingModal({
 
   if (!isOpen) return null
 
+  // FAST PATH: Confirm Details & Enter Portal (Step 1 -> Done)
+  const handleFastConfirmAndEnter = async () => {
+    if (!form.phone.trim()) {
+      toast.error('Please enter your personal mobile number.')
+      return
+    }
+    if (!form.parentPhone.trim()) {
+      toast.error('Please enter parent/guardian mobile number.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const finalResidency = form.residencyStatus === 'Day Scholar'
+        ? (form.dayScholarType === 'College Bus'
+            ? `Day Scholar · College Bus ${form.busNo ? `No. ${form.busNo}` : ''} ${form.boardingPoint ? `(${form.boardingPoint})` : ''}`.trim()
+            : `Day Scholar · Out Bus (${form.outBusMode || 'Public Bus'}) ${form.boardingPoint ? `From: ${form.boardingPoint}` : ''}`.trim())
+        : (form.residencyStatus === 'Hostel'
+            ? `Hosteller · ${form.hostelBlock || 'Hostel'} ${form.roomNo ? `Room ${form.roomNo}` : ''}`.trim()
+            : '')
+
+      const res = await fetch('/api/auth/student/complete-onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: initialData.name,
+          email: form.email ? form.email.trim().toLowerCase() : initialData.email,
+          phone: form.phone.trim(),
+          parentPhone: form.parentPhone.trim(),
+          dateOfBirth: form.dateOfBirth,
+          isParentWhatsapp: form.isParentWhatsapp,
+          bloodGroup: form.bloodGroup,
+          residencyStatus: finalResidency || form.residencyStatus,
+          busNo: form.busNo,
+          boardingPoint: form.boardingPoint,
+          hostelBlock: form.hostelBlock,
+          roomNo: form.roomNo,
+          skipEmailVerification: true,
+          profileImage: form.profileImage || undefined,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
+          sessionStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
+        }
+        toast.success('Details confirmed! Entering student portal...')
+        setTimeout(() => {
+          onComplete(data.user || {})
+        }, 500)
+      } else {
+        toast.error(data.message || 'Failed to save details.')
+      }
+    } catch {
+      toast.error('Network error saving details.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // STEP 1 -> STEP 2: Proceed to Security Step
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
@@ -358,6 +422,10 @@ export function StudentOnboardingModal({
 
       const data = await res.json()
       if (res.ok && data.success) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
+          sessionStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
+        }
         toast.success('Account fully verified & Password saved!')
         setTimeout(() => {
           onComplete(data.user || {})
@@ -427,9 +495,21 @@ export function StudentOnboardingModal({
             <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1557C0] text-[10px] font-black uppercase tracking-wider">
               INITIAL PROFILE VERIFICATION &amp; SECURITY SETUP
             </span>
-            <span className="text-[11px] font-mono font-bold text-slate-500">
-              {initialData.registerNumber}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono font-bold text-slate-500">
+                {initialData.registerNumber}
+              </span>
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center justify-between">
@@ -941,13 +1021,23 @@ export function StudentOnboardingModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
+            <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleFastConfirmAndEnter}
+                disabled={loading}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>Confirm Details &amp; Enter Student Portal</span>
+              </button>
+
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0f44b0] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 bg-[#1557C0]/10 hover:bg-[#1557C0]/20 text-[#1557C0] border border-[#1557C0]/30 cursor-pointer hover:scale-[1.02] transition-all text-xs"
               >
-                <span>Proceed to Step 2: Password &amp; Email</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Change Password &amp; Email (Optional)</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </form>
