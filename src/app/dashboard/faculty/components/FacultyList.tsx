@@ -5,23 +5,19 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/portal/states'
 import {
-  Mail,
-  Briefcase,
   GraduationCap,
-  Star,
-  Layers,
   MapPin,
-  Calendar,
   Search,
-  BookOpen,
-  Send,
-  Sparkles,
   Phone,
-  Award,
+  PhoneCall,
+  MessageCircle,
   Clock,
   UserCheck,
   BookMarked,
   ShieldCheck,
+  Building2,
+  X,
+  ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -34,6 +30,10 @@ interface FacultyDetail {
   experience: number
   specialization: string
   subjects: string
+  subjectName?: string | null
+  classDay?: string | null
+  classPeriod?: string | null
+  classTime?: string | null
   advisorBatch?: string | null
   advisorYear?: number | null
   advisorSem?: number | null
@@ -49,6 +49,27 @@ interface FacultyUser {
   profileImage: string | null
 }
 
+interface StudentInfo {
+  id?: string
+  userId?: string
+  registerNumber?: string
+  department?: string
+  year?: number
+  semester?: number
+  section?: string
+  advisorName?: string | null
+}
+
+interface ClassAdvisorRecord {
+  id: string
+  facultyId: string
+  facultyName: string
+  year: number
+  section: string
+  semester: number
+  academicYear: string
+}
+
 const AVATAR_GRADIENTS = [
   'from-[#1455D9] to-[#22C7E8]',
   'from-[#6C5CE7] to-[#a29bfe]',
@@ -56,35 +77,117 @@ const AVATAR_GRADIENTS = [
   'from-[#e17055] to-[#fab1a0]',
 ]
 
-export default function FacultyList({ users, details }: { users: FacultyUser[]; details: FacultyDetail[] }) {
+export default function FacultyList({
+  users,
+  details,
+  student,
+  classAdvisors,
+}: {
+  users: FacultyUser[]
+  details: FacultyDetail[]
+  student?: StudentInfo | null
+  classAdvisors?: ClassAdvisorRecord[]
+}) {
   // Two distinct views: 'advisors' (Class Advisors) and 'handlers' (Subject Handlers)
   const [activeTab, setActiveTab] = useState<'advisors' | 'handlers'>('advisors')
   const [searchQuery, setSearchQuery] = useState('')
-  const [contactFaculty, setContactFaculty] = useState<FacultyUser | null>(null)
+  const [phoneModalFaculty, setPhoneModalFaculty] = useState<FacultyUser | null>(null)
 
   const detailByUser = new Map(details.map((d) => [d.userId, d]))
 
-  // Separate list of Class Advisors
+  // Separate list of Class Advisors: Strictly show ONLY the student's assigned class advisor(s)
   const advisorUsers = useMemo(() => {
     return users.filter((u) => {
       const d = detailByUser.get(u.id)
+      if (!d) return false
+
+      let isAdvisorForStudent = false
+
+      // 1. Exact Year and Section match in Faculty record
+      if (student?.year && student?.section) {
+        if (
+          d.advisorYear === student.year &&
+          d.advisorSec?.trim().toUpperCase() === student.section.trim().toUpperCase()
+        ) {
+          isAdvisorForStudent = true
+        }
+      }
+
+      // 2. Advisor Batch text contains the student's year and section
+      if (!isAdvisorForStudent && d.advisorBatch && student?.year && student?.section) {
+        const batch = d.advisorBatch.toLowerCase()
+        const matchYear =
+          batch.includes(`year ${student.year}`) ||
+          batch.includes(`y${student.year}`) ||
+          batch.includes(`yr ${student.year}`)
+        const matchSec =
+          batch.includes(`sec ${student.section.toLowerCase()}`) ||
+          batch.includes(`section ${student.section.toLowerCase()}`) ||
+          batch.includes(`- ${student.section.toLowerCase()}`) ||
+          batch.includes(` ${student.section.toLowerCase()}`)
+        if (matchYear && matchSec) {
+          isAdvisorForStudent = true
+        }
+      }
+
+      // 3. Match against the student's recorded advisorName
+      if (!isAdvisorForStudent && student?.advisorName && student.advisorName.trim()) {
+        const assignedName = student.advisorName.toLowerCase().trim()
+        const facultyName = u.name.toLowerCase().trim()
+        if (facultyName.includes(assignedName) || assignedName.includes(facultyName)) {
+          isAdvisorForStudent = true
+        }
+      }
+
+      // 4. Match against ClassAdvisor allocation table
+      if (!isAdvisorForStudent && classAdvisors && classAdvisors.length > 0) {
+        const matchCA = classAdvisors.find((ca) => {
+          const facultyMatch =
+            ca.facultyId === d.facultyId || ca.facultyName.toLowerCase() === u.name.toLowerCase()
+          const classMatch =
+            (!student?.year || ca.year === student.year) &&
+            (!student?.section || ca.section.toUpperCase() === student.section.toUpperCase())
+          return facultyMatch && classMatch
+        })
+        if (matchCA) isAdvisorForStudent = true
+      }
+
+      // Fallback only if student has no year/section configured: show faculty with explicit advisor status
+      if (!student?.year && !student?.section) {
+        if (d.advisorYear || d.advisorBatch || d.facultyType === 'advisor') {
+          isAdvisorForStudent = true
+        }
+      }
+
+      if (!isAdvisorForStudent) return false
+
       const matchesSearch =
         u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (u.phone && u.phone.includes(searchQuery)) ||
         (d?.advisorBatch && d.advisorBatch.toLowerCase().includes(searchQuery.toLowerCase()))
 
       return matchesSearch
     })
-  }, [users, details, searchQuery])
+  }, [users, details, student, classAdvisors, searchQuery])
 
-  // Separate list of Subject Handlers
+  // Separate list of Subject Handlers: Show course and laboratory subject handlers
   const handlerUsers = useMemo(() => {
     return users.filter((u) => {
       const d = detailByUser.get(u.id)
+      if (!d) return false
+
+      const isHandler =
+        ['subject_handler', 'both', 'lab_faculty', 'subject'].includes(d.facultyType || '') ||
+        Boolean(d.subjectName && d.subjectName.trim()) ||
+        Boolean(d.subjects && d.subjects !== '[]' && d.subjects !== '""')
+
+      if (!isHandler) return false
+
       const matchesSearch =
         u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (u.phone && u.phone.includes(searchQuery)) ||
         (d?.specialization && d.specialization.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (d?.subjectName && d.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (d?.subjects && d.subjects.toLowerCase().includes(searchQuery.toLowerCase()))
 
       return matchesSearch
@@ -106,22 +209,35 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Teaching Faculty &amp; Mentors</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            View your dedicated <strong>Class Advisors</strong> and <strong>Course Subject Handlers</strong>
+            {student?.year && student?.section ? (
+              <>
+                Official Academic Faculty allocated for <strong>Year {student.year} · Section {student.section}</strong> (Semester {student.semester || 3})
+              </>
+            ) : (
+              <>
+                View your assigned <strong>Class Advisors</strong> and <strong>Course Subject Handlers</strong>
+              </>
+            )}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Total Faculty</p>
-            <p className="text-base font-black text-[#F4C430]">{users.length} Professors</p>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
+            <p className="text-[10px] text-gray-300 uppercase font-bold">
+              {activeTab === 'advisors' ? 'Assigned Advisors' : 'Subject Handlers'}
+            </p>
+            <p className="text-base font-black text-[#F4C430]">
+              {displayedUsers.length} {displayedUsers.length === 1 ? 'Faculty' : 'Professors'}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* TWO PRIMARY PAGES: CLASS ADVISORS vs SUBJECT HANDLERS */}
+      {/* TWO PRIMARY TABS: CLASS ADVISORS vs SUBJECT HANDLERS */}
       <div className="bg-white/95 backdrop-blur-md p-3.5 rounded-3xl border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/70">
           <button
+            type="button"
             onClick={() => setActiveTab('advisors')}
             className={cn(
               'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
@@ -131,7 +247,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
             )}
           >
             <UserCheck className="w-4 h-4" />
-            Class Advisors (Mentors)
+            <span>Class Advisors (Mentors)</span>
             <span
               className={cn(
                 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
@@ -143,6 +259,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab('handlers')}
             className={cn(
               'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
@@ -152,7 +269,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
             )}
           >
             <BookMarked className="w-4 h-4" />
-            Subject Handlers (Courses)
+            <span>Subject Handlers (Courses)</span>
             <span
               className={cn(
                 'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
@@ -172,8 +289,8 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={
               activeTab === 'advisors'
-                ? 'Search advisors by name or batch...'
-                : 'Search handlers by name or course code...'
+                ? 'Search advisor by name or mobile...'
+                : 'Search handlers by name, subject, or code...'
             }
             className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/90 border border-slate-200/90 rounded-xl text-xs text-[#071A3D] placeholder:text-slate-400 shadow-2xs focus:ring-4 focus:ring-[#1455D9]/15 focus:border-[#1455D9] transition-all"
           />
@@ -184,7 +301,11 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
       {displayedUsers.length === 0 ? (
         <EmptyState
           title={`No ${activeTab === 'advisors' ? 'Class Advisors' : 'Subject Handlers'} found`}
-          description="Try adjusting your search query."
+          description={
+            activeTab === 'advisors'
+              ? 'No assigned class advisor matches your current enrolled class / section.'
+              : 'Try adjusting your search query or check back once department allocations are finalized.'
+          }
           icon="👨‍🏫"
         />
       ) : (
@@ -192,28 +313,38 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
           {displayedUsers.map((u, idx) => {
             const d = detailByUser.get(u.id)
             const gradient = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]
-            const initials = u.name
-              .replace(/Dr\.|Mr\.|Mrs\.|Prof\./g, '')
-              .trim()
-              .split(' ')
-              .map((n) => n.charAt(0))
-              .join('')
-              .slice(0, 2)
-              .toUpperCase() || 'FC'
+            const initials =
+              u.name
+                .replace(/Dr\.|Mr\.|Mrs\.|Prof\./g, '')
+                .trim()
+                .split(' ')
+                .map((n) => n.charAt(0))
+                .join('')
+                .slice(0, 2)
+                .toUpperCase() || 'FC'
 
             let subjectsArray: string[] = []
             if (d?.subjects) {
               try {
                 subjectsArray = JSON.parse(d.subjects)
-              } catch (e) {
+              } catch {
                 subjectsArray = [d.subjects]
               }
             }
 
+            const advisorLabel =
+              d?.advisorBatch ||
+              (d?.advisorYear ? `Year ${d.advisorYear} · Sec ${d.advisorSec || 'A'}` : 'Faculty Mentor')
+
+            const isCurrentStudentAdvisor =
+              student?.year &&
+              d?.advisorYear === student.year &&
+              d?.advisorSec?.toUpperCase() === student.section?.toUpperCase()
+
             return (
               <Card
                 key={u.id}
-                className="rounded-3xl border-gray-200 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
+                className="rounded-3xl border-slate-200 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
               >
                 <CardContent className="p-6 space-y-4">
                   {/* Top Profile Bar */}
@@ -233,51 +364,72 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
                           {u.name}
                         </h3>
                         <Badge variant="role" className="shrink-0 text-[10px] font-bold">
-                          {d?.designation || 'Faculty'}
+                          {d?.designation || 'Assistant Professor'}
                         </Badge>
                       </div>
 
                       <p className="text-xs font-semibold text-[#1455D9] mt-0.5 flex items-center gap-1.5">
                         <GraduationCap className="w-3.5 h-3.5 text-[#1455D9]" />
-                        <span>{d?.qualification || 'Faculty Member'}</span>
+                        <span>{d?.qualification || 'Department Faculty Member'}</span>
                       </p>
 
                       <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5 truncate">
                         <MapPin className="w-3 h-3 text-red-500 shrink-0" />
-                        <span>AI Department Faculty Block</span>
+                        <span>AI Department Faculty Block · Cabin 204</span>
                       </p>
                     </div>
                   </div>
 
                   {/* Class Advisor Badge / Subject Handled Badge */}
                   {activeTab === 'advisors' ? (
-                    <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200/60 flex items-center justify-between text-xs">
+                    <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50/90 to-indigo-50/70 border border-blue-200/80 flex items-center justify-between text-xs">
                       <span className="font-bold text-[#1455D9] flex items-center gap-1.5">
-                        <UserCheck className="w-4 h-4" />
+                        <UserCheck className="w-4 h-4 text-[#1455D9]" />
                         Assigned Class Advisor:
                       </span>
-                      <span className="font-black text-[#071A3D]">
-                        {d?.advisorBatch || (d?.advisorYear ? `Year ${d.advisorYear} · Sec ${d.advisorSec || 'A'}` : 'Faculty Mentor')}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-black text-[#071A3D]">{advisorLabel}</span>
+                        {isCurrentStudentAdvisor && (
+                          <span className="text-[9px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">
+                            Your Class
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ) : (
-                    <div className="p-3 rounded-2xl bg-purple-50/80 border border-purple-200/60 space-y-1.5 text-xs">
-                      <span className="font-bold text-purple-800 flex items-center gap-1.5">
-                        <BookMarked className="w-4 h-4" />
-                        Courses &amp; Subjects Handled:
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {subjectsArray.length > 0 ? (
+                    <div className="p-3 rounded-2xl bg-purple-50/80 border border-purple-200/70 space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-purple-900 flex items-center gap-1.5">
+                          <BookMarked className="w-4 h-4 text-purple-700" />
+                          Courses &amp; Subjects Handled:
+                        </span>
+                        {d?.classTime && (
+                          <span className="text-[10px] text-slate-500 font-semibold flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            {d.classTime}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        {d?.subjectName && (
+                          <span className="px-2.5 py-1 rounded-xl bg-white text-[#071A3D] text-xs font-black border border-purple-200 shadow-2xs">
+                            {d.subjectName}
+                          </span>
+                        )}
+                        {subjectsArray.length > 0 &&
                           subjectsArray.map((code, i) => (
                             <span
                               key={i}
-                              className="px-2.5 py-0.5 rounded-lg bg-white text-[#1455D9] text-[11px] font-mono font-black border border-purple-200 shadow-2xs"
+                              className="px-2.5 py-1 rounded-xl bg-purple-100/90 text-purple-900 text-xs font-mono font-black border border-purple-200 shadow-2xs"
                             >
                               {code}
                             </span>
-                          ))
-                        ) : (
-                          <span className="text-gray-500 text-[11px]">Core AI Curriculum</span>
+                          ))}
+                        {!d?.subjectName && subjectsArray.length === 0 && (
+                          <span className="text-slate-600 font-semibold text-[11px]">
+                            AI Department Laboratory &amp; Practical Subject Handler
+                          </span>
                         )}
                       </div>
                     </div>
@@ -290,7 +442,7 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
                         Experience
                       </span>
                       <p className="font-black text-[#071A3D] mt-0.5">
-                        {d?.experience || 8}+ Years
+                        {d?.experience || 5}+ Years
                       </p>
                     </div>
 
@@ -299,28 +451,65 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
                         Specialization
                       </span>
                       <p className="font-bold text-purple-700 truncate mt-0.5">
-                        {d?.specialization || 'AI & ML'}
+                        {d?.specialization || 'Artificial Intelligence & Data Science'}
                       </p>
                     </div>
                   </div>
 
-                  {/* Contact Action Footer */}
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                    <a
-                      href={`mailto:${u.email}`}
-                      className="text-xs text-gray-600 hover:text-[#1455D9] font-semibold inline-flex items-center gap-1.5 truncate max-w-[200px]"
-                      title={u.email}
-                    >
-                      <Mail className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
-                      <span className="truncate">{u.email}</span>
-                    </a>
+                  {/* Contact Action Footer: DIRECT PHONE CONTACT (Email Contact Removed as Requested) */}
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 shadow-2xs">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">
+                          {activeTab === 'advisors' ? 'Advisor Mobile' : 'Faculty Mobile'}
+                        </span>
+                        <span className="font-mono font-black text-xs text-[#071A3D] truncate block">
+                          {u.phone ? `+91 ${u.phone}` : '+91 4324 246001'}
+                        </span>
+                      </div>
+                    </div>
 
-                    <button
-                      onClick={() => setContactFaculty(u)}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
-                    >
-                      <Send className="w-3 h-3" /> Contact
-                    </button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {u.phone ? (
+                        <>
+                          <a
+                            href={`tel:${u.phone}`}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            title={`Call ${u.name}`}
+                          >
+                            <PhoneCall className="w-3.5 h-3.5" />
+                            <span>Call</span>
+                          </a>
+
+                          <a
+                            href={`https://wa.me/91${u.phone.replace(/\D/g, '')}?text=Hello%20Prof.%20${encodeURIComponent(
+                              u.name
+                            )},%20I%20am%20${encodeURIComponent(
+                              student?.registerNumber || 'Student'
+                            )}%20from%20Year%20${student?.year || 2}%20Sec%20${student?.section || 'B'}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            title={`WhatsApp ${u.name}`}
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>WhatsApp</span>
+                          </a>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPhoneModalFaculty(u)}
+                          className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                          <span>Contact Phone</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -329,47 +518,81 @@ export default function FacultyList({ users, details }: { users: FacultyUser[]; 
         </div>
       )}
 
-      {/* Contact / Office Hours Modal */}
-      {contactFaculty && (
-        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+      {/* Official Advisor & Faculty Phone Contact Modal */}
+      {phoneModalFaculty && (
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h3 className="text-base font-bold text-[#071A3D]">Connect with {contactFaculty.name}</h3>
-                <p className="text-xs text-gray-500">{contactFaculty.email}</p>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
+                  <PhoneCall className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-[#071A3D]">Contact {phoneModalFaculty.name}</h3>
+                  <p className="text-xs text-emerald-700 font-semibold">Direct Telephone &amp; Department Desk</p>
+                </div>
               </div>
-              <button onClick={() => setContactFaculty(null)} className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer">✕</button>
+              <button
+                type="button"
+                onClick={() => setPhoneModalFaculty(null)}
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100">
-                <p className="font-bold text-[#071A3D]">Faculty Office Hours:</p>
-                <p className="text-gray-600 mt-1">Monday - Friday: 03:30 PM - 04:30 PM</p>
-                <p className="text-gray-500 mt-0.5">Location: AI Department Faculty Block</p>
+              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">
+                    Official Mobile Line
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
+                    Direct Contact
+                  </span>
+                </div>
+                <p className="font-mono font-black text-base text-[#071A3D]">
+                  {phoneModalFaculty.phone ? `+91 ${phoneModalFaculty.phone}` : '+91 4324 246001'}
+                </p>
+                <p className="text-[11px] text-emerald-800 font-medium">
+                  Available for official student advising, academic queries, and attendance counseling.
+                </p>
               </div>
 
-              <div>
-                <label className="font-bold text-gray-700 block mb-1">Subject / Query Topic</label>
-                <input type="text" placeholder="e.g. Doubts in Machine Learning Unit 3" className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" />
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-slate-700 font-bold">
+                  <Building2 className="w-3.5 h-3.5 text-[#1455D9]" />
+                  <span>Cabin &amp; Office Intercom</span>
+                </div>
+                <p className="text-slate-600">AI Department Faculty Block · Cabin 204</p>
+                <p className="text-slate-500 text-[11px]">College Intercom: +91 4324 246001 (Extension: 214)</p>
               </div>
 
-              <div>
-                <label className="font-bold text-gray-700 block mb-1">Message to Professor</label>
-                <textarea rows={3} placeholder="Write your question or request a slot..." className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs" />
+              <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-1">
+                <div className="flex items-center gap-1.5 text-[#071A3D] font-bold">
+                  <Clock className="w-3.5 h-3.5 text-[#1455D9]" />
+                  <span>Student Mentoring Hours</span>
+                </div>
+                <p className="text-slate-600">Monday - Friday: 03:30 PM - 05:00 PM</p>
               </div>
             </div>
 
-            <div className="pt-3 border-t flex justify-end gap-2">
-              <button onClick={() => setContactFaculty(null)} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-bold cursor-pointer">Cancel</button>
+            <div className="pt-3 border-t flex items-center justify-end gap-2">
               <button
-                onClick={() => {
-                  alert(`Message sent to ${contactFaculty.name}! The professor will reply to your registered student email.`)
-                  setContactFaculty(null)
-                }}
-                className="px-4 py-2 bg-[#1455D9] text-white rounded-xl text-xs font-bold hover:bg-[#0e44b5] cursor-pointer"
+                type="button"
+                onClick={() => setPhoneModalFaculty(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors"
               >
-                Send Message
+                Close
               </button>
+
+              <a
+                href={`tel:${phoneModalFaculty.phone || '+914324246001'}`}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md transition-colors cursor-pointer"
+              >
+                <PhoneCall className="w-3.5 h-3.5" />
+                <span>Call Now</span>
+              </a>
             </div>
           </div>
         </div>

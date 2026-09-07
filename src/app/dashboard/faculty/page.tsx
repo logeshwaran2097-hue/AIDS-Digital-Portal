@@ -8,16 +8,28 @@ export const dynamic = 'force-dynamic'
 
 export default async function FacultyPage() {
   const session = await requireRoleSession(['student'])
+  const userReg = session.registerNumber || (session.email ? session.email.split('@')[0].toUpperCase() : '')
+
+  const student = (await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
+    (userReg ? await prisma.student.findUnique({ where: { registerNumber: userReg } }).catch(() => null) : null)
+
   const facultyRows = await prisma.user.findMany({
     where: { role: 'faculty' },
     select: { id: true, name: true, email: true, phone: true, profileImage: true },
     orderBy: { name: 'asc' },
   })
   const facultyDetails = await prisma.faculty.findMany({})
-  const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const classAdvisors = await prisma.classAdvisor.findMany({}).catch(() => [])
+  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
+
   return (
-    <PortalLayout role="student" userName={user?.name || 'Student'} >
-      <FacultyList users={facultyRows} details={facultyDetails} />
+    <PortalLayout role="student" userName={user?.name || session.name || 'Student'} >
+      <FacultyList 
+        users={facultyRows} 
+        details={facultyDetails} 
+        student={student}
+        classAdvisors={classAdvisors}
+      />
     </PortalLayout>
   )
 }
