@@ -835,481 +835,357 @@ export function downloadStudentCardPDF(student: {
   batch: string
   profileImage?: string | null
 }) {
+  // CR80 / Standard Vertical Lanyard Badge Dimensions: 65mm x 100mm
+  const cardW = 65
+  const cardH = 100
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: 'a4',
+    format: [cardW, cardH],
   })
 
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
-  const marginX = 12
-  const contentW = pageWidth - marginX * 2
+  // ===========================================================================
+  // PAGE 1: FRONT SIDE OF STUDENT IDENTITY CARD
+  // ===========================================================================
 
-  // 1. Double Luxury Document Frame
-  doc.setDrawColor(215, 226, 242)
+  // Card Outer Border
+  doc.setDrawColor(210, 220, 238)
   doc.setLineWidth(0.4)
-  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+  doc.roundedRect(1, 1, cardW - 2, cardH - 2, 2.5, 2.5, 'S')
 
-  doc.setDrawColor(238, 243, 250)
+  // Top Lanyard Punch Slot Hole Indicator
+  doc.setFillColor(235, 240, 248)
+  doc.roundedRect(cardW / 2 - 6, 2.2, 12, 2.4, 1.2, 1.2, 'F')
+  doc.setDrawColor(195, 205, 222)
   doc.setLineWidth(0.2)
-  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+  doc.roundedRect(cardW / 2 - 6, 2.2, 12, 2.4, 1.2, 1.2, 'S')
 
-  // 2. Prestigious Academic Letterhead
-  doc.setFillColor(250, 252, 255)
-  doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
-
-  const logoX = marginX + 2
-  const logoY = marginX + 3
-  const logoSize = 24
-
-  // Circular Gold Ring Base
-  doc.setFillColor(255, 255, 255)
-  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
-  doc.setDrawColor(231, 185, 62) // Gold
-  doc.setLineWidth(0.6)
-  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
-
-  try {
-    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4)
-  } catch (e) {
-    console.error('Failed to embed logo in student card PDF:', e)
-  }
-
-  const headerCenterX = marginX + logoSize + (contentW - logoSize) / 2
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(14.5)
-  doc.setTextColor(7, 26, 61)
-  doc.text('V.S.B. ENGINEERING COLLEGE', headerCenterX, marginX + 6.5, { align: 'center' })
-
-  // Autonomous Pill Tag
-  doc.setFillColor(231, 185, 62)
-  doc.roundedRect(headerCenterX - 22, marginX + 8.5, 44, 4, 1, 1, 'F')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text('AN AUTONOMOUS INSTITUTION', headerCenterX, marginX + 11.3, { align: 'center' })
-
-  // Department Title
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(9.5)
-  doc.setTextColor(21, 87, 192)
-  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', headerCenterX, marginX + 17.5, { align: 'center' })
-
-  // Affiliations
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(7)
-  doc.setTextColor(75, 85, 105)
-  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', headerCenterX, marginX + 22.5, { align: 'center' })
-
-  // Accreditations
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(100, 115, 135)
-  doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', headerCenterX, marginX + 27, { align: 'center' })
-
-  // 3. Sapphire & Gold Ornamental Beam Separator
-  const beamY = marginX + 34
-  doc.setFillColor(21, 87, 192)
-  doc.rect(marginX, beamY, contentW, 1.4, 'F')
-
-  doc.setFillColor(231, 185, 62)
-  doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
-
-  // Center Diamond Accent
-  doc.setFillColor(231, 185, 62)
-  doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
+  // 1. Executive College Header Banner (5.5mm to 22.5mm)
   doc.setFillColor(7, 26, 61)
-  doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
+  doc.rect(1.2, 5.5, cardW - 2.4, 17, 'F')
 
-  // 4. Document Title Section
-  let currentY = beamY + 9
-  doc.setTextColor(7, 26, 61)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(13)
-  doc.text('OFFICIAL STUDENT DIGITAL ACADEMIC ID CARD', marginX, currentY)
-  currentY += 5
+  // Gold Accent Strip
+  doc.setFillColor(244, 196, 48)
+  doc.rect(1.2, 22.5, cardW - 2.4, 1, 'F')
 
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(90, 105, 125)
-  doc.text(`${student.name} (${student.registerNumber}) · Year ${student.year} · Semester ${student.semester} · Section ${student.section}`, marginX, currentY)
-  currentY += 5.5
+  // College Crest Emblem
+  try {
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', 3.2, 6.8, 14, 14)
+  } catch (e) {
+    console.error('Failed to embed logo in student card:', e)
+  }
 
-  // 5. Executive 4-Cell Metadata Matrix
-  const metaBoxY = currentY
-  const metaBoxW = contentW
-  const metaBoxH = 13.5
-
-  doc.setFillColor(248, 250, 254)
-  doc.roundedRect(marginX, metaBoxY, metaBoxW, metaBoxH, 2, 2, 'F')
-  doc.setDrawColor(215, 226, 242)
-  doc.setLineWidth(0.3)
-  doc.roundedRect(marginX, metaBoxY, metaBoxW, metaBoxH, 2, 2, 'S')
-
-  doc.line(marginX + metaBoxW / 2, metaBoxY, marginX + metaBoxW / 2, metaBoxY + metaBoxH)
-  doc.line(marginX, metaBoxY + metaBoxH / 2, marginX + metaBoxW, metaBoxY + metaBoxH / 2)
-
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-  const timeStr = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  })
-  const timeStampStr = `${dateStr} · ${timeStr}`
-
-  // Cell 1: Category
+  // Header Titles
+  doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(6.8)
-  doc.setTextColor(21, 87, 192)
-  doc.text('DOCUMENT CATEGORY:', marginX + 4, metaBoxY + 4.5)
+  doc.text('V.S.B. ENGINEERING COLLEGE', 19, 10)
+
+  doc.setFontSize(4.6)
+  doc.setTextColor(244, 196, 48)
+  doc.text('AN AUTONOMOUS INSTITUTION · KARUR', 19, 13.5)
+
+  doc.setFontSize(4.2)
+  doc.setTextColor(205, 225, 255)
+  doc.text('DEPARTMENT OF AI & DATA SCIENCE', 19, 17)
+
+  doc.setFontSize(3.8)
+  doc.setTextColor(175, 195, 225)
+  doc.text('AFFILIATED TO ANNA UNIVERSITY · CHENNAI', 19, 20.2)
+
+  // 2. Card Type Ribbon
+  doc.setFillColor(238, 244, 255)
+  doc.roundedRect(cardW / 2 - 22, 24.5, 44, 3.8, 1, 1, 'F')
   doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('Official Student Academic ID Card', marginX + 37, metaBoxY + 4.5)
+  doc.setFontSize(5.2)
+  doc.setTextColor(20, 85, 217)
+  doc.text('STUDENT IDENTITY CARD', cardW / 2, 27.2, { align: 'center' })
 
-  // Cell 2: Timestamp
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(21, 87, 192)
-  doc.text('TIMESTAMP:', marginX + metaBoxW / 2 + 4, metaBoxY + 4.5)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text(timeStampStr, marginX + metaBoxW / 2 + 25, metaBoxY + 4.5)
+  // 3. Framed Student Photograph
+  const photoW = 21
+  const photoH = 24
+  const photoX = (cardW - photoW) / 2
+  const photoY = 29.5
 
-  // Cell 3: Issuing Authority
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(21, 87, 192)
-  doc.text('ISSUING AUTHORITY:', marginX + 4, metaBoxY + 11)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('Office of Head of Department (AI & DS)', marginX + 37, metaBoxY + 11)
-
-  // Cell 4: Verification Code
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(21, 87, 192)
-  doc.text('VERIFICATION CODE:', marginX + metaBoxW / 2 + 4, metaBoxY + 11)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(16, 120, 75)
-  doc.text('VSB-SEC-2026-AUTONOMOUS', marginX + metaBoxW / 2 + 34, metaBoxY + 11)
-
-  currentY = metaBoxY + metaBoxH + 6
-
-  // Helper to draw clean sections matching generateAndDownloadPDF
-  const drawSectionHeader = (title: string) => {
-    doc.setFillColor(243, 246, 252)
-    doc.roundedRect(marginX, currentY, contentW, 7, 1.5, 1.5, 'F')
-    doc.setFillColor(21, 87, 192)
-    doc.rect(marginX, currentY, 3, 7, 'F')
-
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(8)
-    doc.setTextColor(7, 26, 61)
-    doc.text(title.toUpperCase(), marginX + 6, currentY + 4.8)
-
-    // Right Verified Record Badge
-    const pillW = 28
-    const pillH = 4.2
-    const pillX = marginX + contentW - pillW - 3
-    const pillY = currentY + 1.4
-    doc.setFillColor(21, 87, 192)
-    doc.roundedRect(pillX, pillY, pillW, pillH, 1, 1, 'F')
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(5.8)
-    doc.setTextColor(255, 255, 255)
-    doc.text('VERIFIED RECORD', pillX + pillW / 2, pillY + 2.9, { align: 'center' })
-
-    currentY += 9
-  }
-
-  // Helper to draw clean data row
-  const drawDataRow = (
-    label: string,
-    val: string,
-    tableX: number,
-    tableW: number,
-    col1W: number,
-    rowHeight: number,
-    isEven: boolean,
-    statusOverride?: 'eligible' | 'neutral' | 'shortage'
-  ) => {
-    doc.setFillColor(isEven ? 255 : 249, isEven ? 255 : 251, isEven ? 255 : 254)
-    doc.rect(tableX, currentY, tableW, rowHeight, 'F')
-    doc.setDrawColor(225, 233, 245)
-    doc.setLineWidth(0.2)
-    doc.rect(tableX, currentY, tableW, rowHeight, 'S')
-
-    // Column divider
-    doc.line(tableX + col1W, currentY, tableX + col1W, currentY + rowHeight)
-
-    // Key label with cobalt bullet dot
-    doc.setFillColor(21, 87, 192)
-    doc.circle(tableX + 4.5, currentY + rowHeight / 2, 0.75, 'F')
-
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(7.2)
-    doc.setTextColor(30, 41, 59)
-    doc.text(label, tableX + 7.5, currentY + rowHeight / 2 + 1.2)
-
-    // Value Pill
-    const valLower = val.toLowerCase()
-    const isEligible =
-      statusOverride === 'eligible' ||
-      valLower.includes('eligible') ||
-      valLower.includes('verified') ||
-      valLower.includes('good') ||
-      valLower.includes('active') ||
-      valLower.includes('enrolled') ||
-      valLower.includes('safe')
-    const isShortage =
-      statusOverride === 'shortage' ||
-      valLower.includes('shortage') ||
-      valLower.includes('critical')
-
-    const isFullBanner = val.length > 35
-
-    if (isFullBanner) {
-      const bannerW = tableW - col1W - 6
-      const bannerX = tableX + col1W + 3
-      const bannerH = 5.6
-      const bannerY = currentY + (rowHeight - bannerH) / 2
-
-      if (isEligible) {
-        doc.setFillColor(236, 253, 245)
-        doc.setDrawColor(167, 243, 208)
-        doc.setTextColor(5, 122, 85)
-      } else if (isShortage) {
-        doc.setFillColor(254, 242, 242)
-        doc.setDrawColor(254, 202, 202)
-        doc.setTextColor(185, 28, 28)
-      } else {
-        doc.setFillColor(240, 246, 255)
-        doc.setDrawColor(219, 234, 254)
-        doc.setTextColor(29, 78, 216)
-      }
-      doc.setLineWidth(0.3)
-      doc.roundedRect(bannerX, bannerY, bannerW, bannerH, 1.8, 1.8, 'FD')
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(6.8)
-      doc.text(val, bannerX + 4, bannerY + 3.9)
-    } else {
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(7.4)
-      const textW = doc.getTextWidth(val)
-      const pillW = Math.min(tableW - col1W - 8, Math.max(26, textW + 9))
-      const pillX = tableX + col1W + 4
-      const pillH = 5.4
-      const pillY = currentY + (rowHeight - pillH) / 2
-
-      if (isEligible) {
-        doc.setFillColor(236, 253, 245)
-        doc.setDrawColor(167, 243, 208)
-        doc.setTextColor(5, 122, 85)
-      } else if (isShortage) {
-        doc.setFillColor(254, 242, 242)
-        doc.setDrawColor(254, 202, 202)
-        doc.setTextColor(185, 28, 28)
-      } else {
-        doc.setFillColor(240, 246, 255)
-        doc.setDrawColor(219, 234, 254)
-        doc.setTextColor(21, 87, 192)
-      }
-
-      doc.setLineWidth(0.3)
-      doc.roundedRect(pillX, pillY, pillW, pillH, 1.8, 1.8, 'FD')
-      doc.text(val, pillX + pillW / 2, pillY + 3.8, { align: 'center' })
-    }
-
-    currentY += rowHeight
-  }
-
-  // -------------------------------------------------------------
-  // SECTION 1: PRIMARY PROFILE & BIOMETRIC IDENTITY
-  // -------------------------------------------------------------
-  drawSectionHeader('1. Primary Profile & Biometric Identity')
-
-  const sec1StartY = currentY
-  const photoW = 34
-  const photoH = 41
-  const photoX = marginX + contentW - photoW
-  const sec1TableW = contentW - photoW - 4
-
-  // Table on the Left
-  const sec1Rows = [
-    { label: 'Full Student Name', val: student.name },
-    { label: 'Institutional Register Number', val: student.registerNumber },
-    { label: 'Degree & Program', val: student.degreeProgram || 'B.Tech Artificial Intelligence & Data Science' },
-    { label: 'Regulation & Batch', val: `${student.regulation || 'R-2021 (Autonomous)'} · Batch ${student.batch || '2024-2028'}` },
-    { label: 'Current Academic Standing', val: `Year ${student.year} · Semester ${student.semester} (Section ${student.section})` },
-  ]
-
-  const sec1RowHeight = 8.2
-  for (let i = 0; i < sec1Rows.length; i++) {
-    drawDataRow(sec1Rows[i].label, sec1Rows[i].val, marginX, sec1TableW, 55, sec1RowHeight, i % 2 === 0, 'eligible')
-  }
-
-  // Photo Frame on the Right
-  doc.setFillColor(248, 250, 254)
-  doc.roundedRect(photoX, sec1StartY, photoW, photoH, 2, 2, 'F')
-  doc.setDrawColor(21, 87, 192)
+  doc.setFillColor(245, 248, 253)
+  doc.roundedRect(photoX, photoY, photoW, photoH, 1.5, 1.5, 'F')
+  doc.setDrawColor(20, 85, 217)
   doc.setLineWidth(0.6)
-  doc.roundedRect(photoX, sec1StartY, photoW, photoH, 2, 2, 'S')
+  doc.roundedRect(photoX, photoY, photoW, photoH, 1.5, 1.5, 'S')
 
   if (student.profileImage && (student.profileImage.startsWith('data:image') || student.profileImage.startsWith('http'))) {
     try {
       const format = student.profileImage.includes('png') ? 'PNG' : 'JPEG'
-      doc.addImage(student.profileImage, format, photoX + 2, sec1StartY + 2, photoW - 4, photoH - 10)
+      doc.addImage(student.profileImage, format, photoX + 0.5, photoY + 0.5, photoW - 1, photoH - 1)
     } catch (e) {
-      console.error('Failed to embed student photo in PDF:', e)
+      console.error('Failed to embed student photo in ID card:', e)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(22)
+      doc.setFontSize(18)
       doc.setTextColor(7, 26, 61)
-      doc.text(student.name.charAt(0) || 'S', photoX + photoW / 2, sec1StartY + 20, { align: 'center' })
+      doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 15, { align: 'center' })
     }
   } else {
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(22)
+    doc.setFontSize(18)
     doc.setTextColor(7, 26, 61)
-    doc.text(student.name.charAt(0) || 'S', photoX + photoW / 2, sec1StartY + 20, { align: 'center' })
+    doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 15, { align: 'center' })
   }
 
-  // Photo Caption Badge
-  doc.setFillColor(21, 87, 192)
-  doc.rect(photoX, sec1StartY + photoH - 6, photoW, 6, 'F')
+  // Official Verified Micro-Badge over photo
+  doc.setFillColor(244, 196, 48)
+  doc.circle(photoX + photoW - 2.5, photoY + photoH - 2.5, 2, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(3.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text('VSB', photoX + photoW - 2.5, photoY + photoH - 1.5, { align: 'center' })
+
+  // 4. Student Name & Registration Chip
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.name.toUpperCase(), cardW / 2, 56.5, { align: 'center' })
+
+  // Registration Number Pill
+  const regPillW = 34
+  doc.setFillColor(7, 26, 61)
+  doc.roundedRect((cardW - regPillW) / 2, 58, regPillW, 3.8, 1, 1, 'F')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(5.5)
+  doc.setTextColor(244, 196, 48)
+  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 60.7, { align: 'center' })
+
+  // Program / Degree
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(20, 85, 217)
+  doc.text('B.Tech - Artificial Intelligence & Data Science', cardW / 2, 64, { align: 'center' })
+
+  // 5. Clean Micro Details Grid (65.5mm to 82.5mm)
+  const gridX = 3
+  const gridW = cardW - 6
+  const gridY = 65.5
+  const gridH = 17
+
+  doc.setFillColor(252, 253, 255)
+  doc.setDrawColor(220, 230, 245)
+  doc.setLineWidth(0.25)
+  doc.roundedRect(gridX, gridY, gridW, gridH, 1.5, 1.5, 'FD')
+
+  // Row 1: DOB & Blood Group
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(110, 125, 145)
+  doc.text('DOB:', gridX + 2, gridY + 3.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.dob || '01/01/2004', gridX + 11, gridY + 3.8)
+
+  doc.setTextColor(110, 125, 145)
+  doc.text('BLOOD GRP:', gridX + 31, gridY + 3.8)
+  doc.setTextColor(185, 28, 28)
+  doc.text(student.bloodGroup || 'O+ve', gridX + 47, gridY + 3.8)
+
+  // Row 2: Year & Semester
+  doc.setTextColor(110, 125, 145)
+  doc.text('YEAR / SEM:', gridX + 2, gridY + 7.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(`Year ${student.year} · Sem ${student.semester} (${student.section})`, gridX + 16, gridY + 7.8)
+
+  // Row 3: Batch & Regulation
+  doc.setTextColor(110, 125, 145)
+  doc.text('BATCH:', gridX + 2, gridY + 11.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.batch || '2024 - 2028', gridX + 11, gridY + 11.8)
+
+  doc.setTextColor(110, 125, 145)
+  doc.text('REGULATION:', gridX + 31, gridY + 11.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.regulation || 'R-2021', gridX + 47, gridY + 11.8)
+
+  // Row 4: Phone & Residency
+  doc.setTextColor(110, 125, 145)
+  doc.text('CONTACT:', gridX + 2, gridY + 15.6)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.phone, gridX + 14, gridY + 15.6)
+
+  doc.setTextColor(110, 125, 145)
+  doc.text('TYPE:', gridX + 38, gridY + 15.6)
+  doc.setTextColor(20, 85, 217)
+  doc.text(student.residencyStatus || 'Day Scholar', gridX + 45, gridY + 15.6)
+
+  // 6. Realistic 1D Barcode Graphic (83.5mm to 91mm)
+  const barOriginX = 7
+  const barOriginY = 83.5
+  const barW = cardW - 14
+  const barH = 4.8
+
+  doc.setFillColor(20, 25, 35)
+  // Draw authentic looking Code-128 barcode bars based on reg number digits
+  const seed = student.registerNumber.replace(/\D/g, '') || '922525243103'
+  let curBarX = barOriginX
+  for (let b = 0; b < 36; b++) {
+    const digit = parseInt(seed[b % seed.length] || '5', 10)
+    const strokeW = digit % 3 === 0 ? 0.8 : digit % 2 === 0 ? 0.5 : 0.28
+    if (b % 4 !== 1) {
+      doc.rect(curBarX, barOriginY, strokeW, barH, 'F')
+    }
+    curBarX += strokeW + (digit % 2 === 0 ? 0.55 : 0.35)
+    if (curBarX > barOriginX + barW) break
+  }
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(4.2)
+  doc.setTextColor(90, 100, 115)
+  doc.text(`* ${student.registerNumber} *`, cardW / 2, 90.2, { align: 'center' })
+
+  // 7. Bottom Official Authority Bar (91.5mm to 98.8mm)
+  doc.setFillColor(7, 26, 61)
+  doc.rect(1.2, 91.5, cardW - 2.4, 7.3, 'F')
+
+  doc.setFillColor(244, 196, 48)
+  doc.rect(1.2, 91.5, cardW - 2.4, 0.5, 'F')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(3.8)
+  doc.setTextColor(244, 196, 48)
+  doc.text('HOD / AI & DS', 4, 95.8)
+
   doc.setTextColor(255, 255, 255)
-  doc.text('ERP VERIFIED ID PHOTO', photoX + photoW / 2, sec1StartY + photoH - 2.2, { align: 'center' })
+  doc.text('AUTONOMOUS ID CARD', cardW / 2, 95.8, { align: 'center' })
 
-  currentY = Math.max(currentY, sec1StartY + photoH) + 6
+  doc.setTextColor(244, 196, 48)
+  doc.text('PRINCIPAL', cardW - 4, 95.8, { align: 'right' })
 
-  // -------------------------------------------------------------
-  // SECTION 2: PERSONAL, CONTACT & ACADEMIC AUDIT DETAILS
-  // -------------------------------------------------------------
-  drawSectionHeader('2. Personal, Contact & Academic Audit Details')
+  // ===========================================================================
+  // PAGE 2: BACK SIDE OF STUDENT IDENTITY CARD
+  // ===========================================================================
+  doc.addPage([cardW, cardH], 'portrait')
 
-  const sec2Rows = [
-    { label: 'College Official Email', val: student.email, override: 'neutral' as const },
-    { label: 'Registered Mobile Number', val: student.phone, override: 'neutral' as const },
-    { label: 'Date of Birth', val: student.dob || '01/01/2004', override: 'neutral' as const },
-    { label: 'Blood Group Classification', val: `${student.bloodGroup || 'O+ve'} Verified`, override: 'neutral' as const },
-    { label: 'Campus Residency Status', val: student.residencyStatus || 'Day Scholar', override: 'neutral' as const },
-    { label: 'Cumulative Academic CGPA', val: `${student.cgpa} CGPA (Autonomous Compliant)`, override: 'eligible' as const },
-    {
-      label: 'Cumulative Attendance',
-      val: `${student.attendance} - ELIGIBLE FOR SEMESTER EXAMINATIONS (Anna University >75% Criterion Met)`,
-      override: parseFloat(student.attendance) >= 75 ? ('eligible' as const) : ('shortage' as const),
-    },
+  // Back Outer Frame
+  doc.setDrawColor(210, 220, 238)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(1, 1, cardW - 2, cardH - 2, 2.5, 2.5, 'S')
+
+  // Back Lanyard Slot
+  doc.setFillColor(235, 240, 248)
+  doc.roundedRect(cardW / 2 - 6, 2.2, 12, 2.4, 1.2, 1.2, 'F')
+  doc.setDrawColor(195, 205, 222)
+  doc.setLineWidth(0.2)
+  doc.roundedRect(cardW / 2 - 6, 2.2, 12, 2.4, 1.2, 1.2, 'S')
+
+  // Back Header Bar
+  doc.setFillColor(7, 26, 61)
+  doc.rect(1.2, 5.5, cardW - 2.4, 6.5, 'F')
+  doc.setFillColor(244, 196, 48)
+  doc.rect(1.2, 12, cardW - 2.4, 0.6, 'F')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.2)
+  doc.setTextColor(255, 255, 255)
+  doc.text('INSTRUCTIONS & TERMS OF USE', cardW / 2, 9.8, { align: 'center' })
+
+  // Instructions Rules
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(4.0)
+  doc.setTextColor(50, 60, 75)
+
+  const rules = [
+    '1. This card is non-transferable and the property of V.S.B. Engg College.',
+    '2. The student must wear and display this card at all times on campus.',
+    '3. Loss of this identity card should be reported to the Principal immediately.',
+    '4. Surrender of this card is mandatory upon course completion or withdrawal.',
+    '5. Misuse of this card is a punishable disciplinary offense.',
   ]
 
-  for (let i = 0; i < sec2Rows.length; i++) {
-    drawDataRow(sec2Rows[i].label, sec2Rows[i].val, marginX, contentW, 62, 7.8, i % 2 === 0, sec2Rows[i].override)
+  let ruleY = 16
+  for (const rule of rules) {
+    doc.text(rule, 3.5, ruleY)
+    ruleY += 3.4
   }
 
-  currentY += 5
-
-  // -------------------------------------------------------------
-  // 6. OFFICIAL DIGITAL RECORD CERTIFICATION & AUTHENTICATION SEAL
-  // -------------------------------------------------------------
-  const certH = 26
-  let certY = currentY + 3
-  if (certY + certH > pageHeight - 13) {
-    certY = pageHeight - 13 - certH
-  }
-
-  // Outer Certification Container Box
+  // Student Profile Summary Box
   doc.setFillColor(248, 250, 254)
-  doc.setDrawColor(205, 220, 240)
-  doc.setLineWidth(0.35)
-  doc.roundedRect(marginX, certY, contentW, certH, 2, 2, 'FD')
-
-  // Left Deep Navy Accent Bar
-  doc.setFillColor(7, 26, 61)
-  doc.roundedRect(marginX, certY, 3.5, certH, 1, 1, 'F')
-
-  // Top Row: Badges / Pills
-  doc.setFillColor(235, 244, 255)
-  doc.setDrawColor(190, 215, 250)
-  doc.setLineWidth(0.2)
-  doc.roundedRect(marginX + 6, certY + 2.5, 60, 4.2, 1, 1, 'FD')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.8)
-  doc.setTextColor(20, 85, 217)
-  doc.text('OFFICIAL DIGITAL ACADEMIC RECORD', marginX + 36, certY + 5.5, { align: 'center' })
-
-  doc.setFillColor(236, 253, 245)
-  doc.setDrawColor(167, 243, 208)
-  doc.roundedRect(marginX + contentW - 55, certY + 2.5, 49, 4.2, 1, 1, 'FD')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.8)
-  doc.setTextColor(5, 122, 85)
-  doc.text('SYSTEM AUTHENTICATED · VALID', marginX + contentW - 30.5, certY + 5.5, { align: 'center' })
-
-  // Core Legal & Authentication Statement
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL STUDENT IDENTITY CARD.', marginX + 6, certY + 10.2)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.0)
-  doc.setTextColor(75, 90, 110)
-  const certNotice = 'All identity attributes, student credentials, and academic metrics are electronically certified from the centralized ERP database of the Department of Artificial Intelligence & Data Science, V.S.B. Engineering College. As an authenticated digital document, no physical signature is required.'
-  const splitNotice = doc.splitTextToSize(certNotice, contentW - 12)
-  doc.text(splitNotice, marginX + 6, certY + 14)
-
-  // Inner Divider Line
-  doc.setDrawColor(225, 235, 247)
+  doc.setDrawColor(215, 225, 242)
   doc.setLineWidth(0.25)
-  doc.line(marginX + 6, certY + 17.5, marginX + contentW - 6, certY + 17.5)
+  doc.roundedRect(3, 34, cardW - 6, 21, 1.5, 1.5, 'FD')
 
-  // 3 Distinct Clean Non-Overlapping Columns (Stacked Label on Top, Value Below)
-  const col1X = marginX + 6
-  const col2X = marginX + 68
-  const col3X = marginX + 128
-
-  // Col 1: Record Source
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('RECORD REPOSITORY', col1X, certY + 20.8)
-  doc.setFontSize(6.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text('Centralized Autonomous ERP', col1X, certY + 24.2)
-
-  // Col 2: Issuing Authority
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('ISSUING AUTHORITY', col2X, certY + 20.8)
-  doc.setFontSize(6.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text('Office of HOD (AI & DS)', col2X, certY + 24.2)
-
-  // Col 3: Verification Code
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('VERIFICATION CODE', col3X, certY + 20.8)
-  doc.setFontSize(6.0)
+  doc.setFontSize(4.5)
   doc.setTextColor(20, 85, 217)
-  doc.text('VSB-SEC-2026-AUTONOMOUS', col3X, certY + 24.2)
+  doc.text('STUDENT RECORD SPECIFICATIONS', cardW / 2, 37.5, { align: 'center' })
 
-  // 7. Multi-Page Running Footer Bar
-  doc.setFillColor(246, 248, 252)
-  doc.rect(marginX - 3, pageHeight - 11, contentW + 6, 8, 'F')
-  doc.setDrawColor(220, 228, 240)
-  doc.line(marginX - 3, pageHeight - 11, marginX + contentW + 3, pageHeight - 11)
+  doc.setDrawColor(225, 235, 248)
+  doc.line(4.5, 39, cardW - 4.5, 39)
 
-  doc.setFontSize(6.2)
+  doc.setFontSize(4.0)
+  doc.setTextColor(100, 115, 135)
+  doc.text('COLLEGE EMAIL:', 4.5, 42.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.email, 21, 42.5)
+
+  doc.setTextColor(100, 115, 135)
+  doc.text('REGISTERED PHONE:', 4.5, 46)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.phone, 24, 46)
+
+  doc.setTextColor(100, 115, 135)
+  doc.text('RESIDENCY STATUS:', 4.5, 49.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.residencyStatus || 'Day Scholar', 24, 49.5)
+
+  doc.setTextColor(100, 115, 135)
+  doc.text('EXAM ELIGIBILITY:', 4.5, 53)
+  doc.setTextColor(16, 120, 75)
+  doc.text('Anna University Autonomous Compliant', 23, 53)
+
+  // Institutional Emergency & Return Address Box
+  doc.setFillColor(254, 250, 240)
+  doc.setDrawColor(245, 220, 160)
+  doc.setLineWidth(0.25)
+  doc.roundedRect(3, 57.5, cardW - 6, 24, 1.5, 1.5, 'FD')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(180, 83, 9)
+  doc.text('IF FOUND, PLEASE RETURN TO:', cardW / 2, 61.2, { align: 'center' })
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.6)
+  doc.setTextColor(7, 26, 61)
+  doc.text('THE PRINCIPAL / ADMINISTRATIVE OFFICE', cardW / 2, 65.5, { align: 'center' })
+
   doc.setFont('helvetica', 'normal')
-  doc.setTextColor(110, 125, 145)
-  doc.text('CONFIDENTIAL · V.S.B. ENGINEERING COLLEGE · AI & DS ACADEMIC DIGITAL PORTAL · FOR OFFICIAL INSTITUTIONAL USE ONLY', marginX, pageHeight - 6.5)
-  doc.text('Page 1 of 1', marginX + contentW, pageHeight - 6.5, { align: 'right' })
+  doc.setFontSize(3.8)
+  doc.setTextColor(70, 80, 95)
+  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', cardW / 2, 69, { align: 'center' })
+  doc.text('NH-67, Covai Road, Karur - 639 111, Tamil Nadu', cardW / 2, 72.2, { align: 'center' })
+  doc.text('Phone: 04324 - 269999 · Email: principal@vsbec.ac.in', cardW / 2, 75.4, { align: 'center' })
+  doc.text('Web: www.vsbec.ac.in', cardW / 2, 78.6, { align: 'center' })
+
+  // Digital Authentication Seal & QR Code Block
+  doc.setFillColor(243, 247, 254)
+  doc.setDrawColor(210, 225, 245)
+  doc.setLineWidth(0.2)
+  doc.roundedRect(3, 83.5, cardW - 6, 8, 1, 1, 'FD')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.0)
+  doc.setTextColor(20, 85, 217)
+  doc.text('DIGITALLY AUTHENTICATED PVC SMART CARD', cardW / 2, 86.8, { align: 'center' })
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(3.5)
+  doc.setTextColor(100, 115, 135)
+  doc.text('RFID / ERP Database Code: VSB-SEC-2026-AUTONOMOUS', cardW / 2, 89.8, { align: 'center' })
+
+  // Back Footer
+  doc.setFillColor(7, 26, 61)
+  doc.rect(1.2, 93, cardW - 2.4, 5.8, 'F')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(3.6)
+  doc.setTextColor(244, 196, 48)
+  doc.text('V.S.B. ENGINEERING COLLEGE · AI & DS ACADEMIC PORTAL', cardW / 2, 96.8, { align: 'center' })
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }
