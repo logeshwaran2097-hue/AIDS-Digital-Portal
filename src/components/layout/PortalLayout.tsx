@@ -228,10 +228,10 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
     } catch {}
   }
 
-  // Polling loop: checks every 3.5s for genuine newly posted events, announcements, or materials
+  // Polling loop: gentle background check every 45s to avoid exhausting database connections
   useEffect(() => {
     syncNotifications()
-    const interval = setInterval(syncNotifications, 3500)
+    const interval = setInterval(syncNotifications, 45000)
     return () => clearInterval(interval)
   }, [role])
 

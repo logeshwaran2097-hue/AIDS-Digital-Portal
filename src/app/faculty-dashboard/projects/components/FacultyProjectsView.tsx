@@ -199,7 +199,7 @@ export function FacultyProjectsView({
       } catch {}
     }
 
-    const interval = setInterval(fetchLatest, 4000)
+    const interval = setInterval(fetchLatest, 45000)
     return () => clearInterval(interval)
   }, [])
 

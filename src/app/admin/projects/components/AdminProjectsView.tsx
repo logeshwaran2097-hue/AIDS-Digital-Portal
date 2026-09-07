@@ -212,7 +212,7 @@ export function AdminProjectsView({ initialProjects }: { initialProjects: Projec
       } catch {}
     }
 
-    const interval = setInterval(fetchProjects, 4000)
+    const interval = setInterval(fetchProjects, 45000)
     return () => clearInterval(interval)
   }, [])
 

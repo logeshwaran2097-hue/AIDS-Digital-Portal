@@ -39,6 +39,10 @@ export default async function AdminStudentsPage() {
       section: s.section,
       advisorName: (s as any).advisorName || '',
       status: user?.status || 'active',
+      bloodGroup: (s as any).bloodGroup || null,
+      residencyStatus: (s as any).residencyStatus || null,
+      cgpa: (s as any).cgpa ? String((s as any).cgpa) : null,
+      attendance: (s as any).attendance ? String((s as any).attendance) : null,
     }
   })
 

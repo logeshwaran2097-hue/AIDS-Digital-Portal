@@ -74,7 +74,7 @@ export function HODReportsView({
       } catch {}
     }
 
-    const interval = setInterval(fetchLatest, 3000)
+    const interval = setInterval(fetchLatest, 45000)
     return () => clearInterval(interval)
   }, [])
 

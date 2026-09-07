@@ -248,7 +248,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       setFacultyList(initialFaculty)
     }
     fetchFaculty()
-    const interval = setInterval(fetchFaculty, 4000)
+    const interval = setInterval(fetchFaculty, 45000)
     return () => clearInterval(interval)
   }, [initialFaculty])
 

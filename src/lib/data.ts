@@ -64,16 +64,16 @@ export async function getStudentData(userId: string) {
 
     if (!student) {
       student = {
-        id: 'student-default',
+        id: 'student-pending',
         userId: userId,
-        registerNumber: user?.email ? user.email.split('@')[0].toUpperCase() : 'STUDENT01',
-        dateOfBirth: new Date('2004-01-01'),
+        registerNumber: user?.email ? user.email.split('@')[0].toUpperCase() : '',
+        dateOfBirth: null,
         department: 'Artificial Intelligence & Data Science',
         year: 1,
         semester: 1,
         section: 'A',
-        batch: '2024 - 2028',
-        advisorName: 'Assigned Faculty Mentor',
+        batch: '',
+        advisorName: null,
         parentPhone: null,
       }
     }

@@ -111,7 +111,7 @@ export function HODAnnouncementsView({
       } catch {}
     }
 
-    const timer = setInterval(fetchFreshAnnouncements, 3500)
+    const timer = setInterval(fetchFreshAnnouncements, 45000)
     return () => clearInterval(timer)
   }, [])
 

@@ -125,7 +125,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       } catch {}
     }
 
-    const interval = setInterval(fetchFreshContent, 3500)
+    const interval = setInterval(fetchFreshContent, 45000)
     return () => clearInterval(interval)
   }, [])
 

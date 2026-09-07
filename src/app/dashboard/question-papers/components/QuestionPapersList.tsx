@@ -58,6 +58,11 @@ export default function QuestionPapersList({ questionPapers, subjects }: { quest
   })
 
   const handleDownloadQP = (q: QP) => {
+    if (q.fileUrl && (q.fileUrl.startsWith('http') || q.fileUrl.startsWith('/'))) {
+      window.open(q.fileUrl, '_blank')
+      return
+    }
+
     const s = subjectMap.get(q.subjectId)
     const examName = examLabels[q.examType] || q.examType
 

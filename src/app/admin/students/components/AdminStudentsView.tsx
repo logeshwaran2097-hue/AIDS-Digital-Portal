@@ -109,7 +109,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     const interval = setInterval(() => {
       fetchStudents()
       fetchProfileRequests()
-    }, 4000)
+    }, 45000)
     return () => clearInterval(interval)
   }, [initialStudents])
 
@@ -269,6 +269,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
       if (result.success && result.student) {
         setStudents([result.student, ...students])
+        fetchStudents()
         setIsAddModalOpen(false)
         setFormData({
           registerNumber: '',
@@ -738,15 +739,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       {students.length === 0 ? (
         <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center shadow-xs">
           <GraduationCap className="w-12 h-12 text-blue-300 mx-auto mb-3" />
-          <h3 className="font-bold text-base text-[#071A3D] mb-1">No Students Registered Yet</h3>
+          <h3 className="font-bold text-base text-[#071A3D] mb-1">No Students Enrolled in This Cohort</h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
-            All sample records have been removed. Click below to add your actual students into the database.
+            There are currently no student records matching the selected filters. Click below to register a new student candidate directly into the database.
           </p>
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="px-6 py-3 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black inline-flex items-center gap-2 shadow-lg transition-all cursor-pointer hover:scale-105"
           >
-            <Plus className="w-4 h-4" /> + Add First Real Student
+            <Plus className="w-4 h-4" /> + Register Student Candidate
           </button>
         </div>
       ) : (

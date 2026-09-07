@@ -67,8 +67,8 @@ export function HODAttendanceApprovals() {
 
   useEffect(() => {
     fetchRequests()
-    // Poll periodically for real-time requests
-    const timer = setInterval(fetchRequests, 6000)
+    // Poll periodically for real-time requests (gentle 45s interval)
+    const timer = setInterval(fetchRequests, 45000)
     return () => clearInterval(timer)
   }, [])
 

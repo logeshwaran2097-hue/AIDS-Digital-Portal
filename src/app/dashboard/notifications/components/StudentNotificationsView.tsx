@@ -46,7 +46,7 @@ export function StudentNotificationsView({ notifications: initialNotifications }
     }
 
     fetchLive()
-    const timer = setInterval(fetchLive, 1500)
+    const timer = setInterval(fetchLive, 45000)
     const onVisibility = () => {
       if (!document.hidden) fetchLive()
     }
