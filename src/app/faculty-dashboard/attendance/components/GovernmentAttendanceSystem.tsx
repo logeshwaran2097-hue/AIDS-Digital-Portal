@@ -277,10 +277,9 @@ export function GovernmentAttendanceSystem() {
       if (data.success && data.students) {
         setStudents(data.students)
         setExistingSession(data.existingSession || null)
-        const periodEnded = checkPeriodEnded(hour, date)
         const unlockApproved = data.unlockRequest?.status === 'APPROVED'
-        // Session is only locked if the scheduled period has actually ended and not unlocked by HOD
-        const shouldLock = !unlockApproved && Boolean(data.existingSession?.isLocked && periodEnded)
+        // Once attendance is submitted & locked, it strictly remains locked unless HOD approved unlock
+        const shouldLock = !unlockApproved && Boolean(data.existingSession?.isLocked)
         setIsLocked(shouldLock)
         setUnlockRequest(data.unlockRequest || null)
         setDataLoaded(true)
@@ -420,8 +419,8 @@ export function GovernmentAttendanceSystem() {
     if (mode === 'subject' && !selectedSubject) return showToast('error', 'Please select a subject')
     if (students.length === 0) return showToast('error', 'No students found for this class')
 
-    const periodEnded = checkPeriodEnded(hour, date)
-    const shouldLock = explicitLock !== undefined ? explicitLock : periodEnded
+    // Submitting locks the portal session; saving draft leaves it unlocked
+    const shouldLock = explicitLock !== undefined ? explicitLock : true
 
     setSaving(true)
     try {
@@ -469,8 +468,8 @@ export function GovernmentAttendanceSystem() {
         showToast(
           'success',
           shouldLock
-            ? 'Period ended. Attendance locked & recorded to portal ✓'
-            : 'Attendance saved & synced in real-time. Open for immediate updates ✓'
+            ? 'Attendance submitted & locked to portal. Changes require HOD permission ✓'
+            : 'Attendance draft saved ✓'
         )
       } else {
         showToast('error', data.message || 'Failed to save attendance')
@@ -1471,7 +1470,7 @@ export function GovernmentAttendanceSystem() {
             </div>
             <div className="flex items-center gap-2.5 w-full sm:w-auto">
               {isLocked ? (
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   {unlockRequest?.status === 'PENDING' ? (
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                       <div className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold border bg-amber-100 text-amber-900 border-amber-300 flex items-center justify-center gap-2 shadow-xs">
@@ -1488,27 +1487,13 @@ export function GovernmentAttendanceSystem() {
                       </button>
                     </div>
                   ) : (
-                    <>
-                      {/* Reopen for immediate changes during the day */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsLocked(false)
-                          showToast('success', 'Register reopened for immediate changes. Click Submit when done.')
-                        }}
-                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold border bg-blue-50 text-[#1455D9] border-blue-200 hover:bg-blue-100 flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                        title="Reopen roll call to make immediate adjustments"
-                      >
-                        <Unlock className="w-4 h-4" /> Reopen for Immediate Change
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowUnlockModal(true)}
-                        className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold border bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white flex items-center justify-center gap-2 transition-all shadow-xs active:scale-95 cursor-pointer"
-                      >
-                        <ShieldAlert className="w-4 h-4" /> Ask Permission to HOD
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      onClick={() => setShowUnlockModal(true)}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold border bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-600/20 active:scale-95 cursor-pointer"
+                    >
+                      <ShieldAlert className="w-4 h-4" /> Ask Permission to HOD to Edit
+                    </button>
                   )}
                 </div>
               ) : (
@@ -1524,24 +1509,16 @@ export function GovernmentAttendanceSystem() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleSave(checkPeriodEnded(hour, date))}
+                    onClick={() => handleSave(true)}
                     disabled={saving || !dataLoaded}
                     className="flex-1 sm:flex-none px-6 py-2.5 bg-[#1455D9] hover:bg-[#0e44b5] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md shadow-[#1455D9]/25 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer"
                   >
                     {saving ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : checkPeriodEnded(hour, date) ? (
-                      <Lock className="w-4 h-4" />
                     ) : (
-                      <CheckCircle2 className="w-4 h-4" />
+                      <Lock className="w-4 h-4" />
                     )}
-                    {existingSession
-                      ? checkPeriodEnded(hour, date)
-                        ? 'Update & Lock to Portal'
-                        : 'Update Attendance (Immediate Sync)'
-                      : checkPeriodEnded(hour, date)
-                      ? 'Submit & Lock to Portal'
-                      : 'Submit Attendance'}
+                    Submit &amp; Lock to Portal
                   </button>
                 </>
               )}
