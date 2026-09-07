@@ -354,51 +354,74 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
     }
   }
 
-  // 6. Verification Seal & 3-Column Signatures
-  // Ensure it fits gracefully on current page or clean bottom
-  let sigY = currentY + 3
-  if (sigY > pageHeight - 36) {
-    sigY = pageHeight - 36
+  // 6. OFFICIAL DIGITAL RECORD CERTIFICATION & AUTHENTICATION SEAL (NO PHYSICAL SIGNATURE REQUIRED)
+  const certH = 22
+  let certY = currentY + 4
+  if (certY + certH > pageHeight - 13) {
+    certY = pageHeight - 13 - certH
   }
 
-  doc.setDrawColor(215, 225, 240)
-  doc.setLineWidth(0.3)
-  doc.line(marginX, sigY, marginX + contentW, sigY)
+  // Certification Container Box
+  doc.setFillColor(248, 250, 254)
+  doc.setDrawColor(205, 220, 240)
+  doc.setLineWidth(0.35)
+  doc.roundedRect(marginX, certY, contentW, certH, 2, 2, 'FD')
 
-  const sigColWidth = contentW / 3
+  // Left Deep Navy Accent Bar
+  doc.setFillColor(7, 26, 61)
+  doc.roundedRect(marginX, certY, 3, certH, 1, 1, 'F')
 
-  // Col 1: System Admin / Class Advisor
-  doc.setFontSize(7.2)
+  // Top Badge / Pills
+  doc.setFillColor(235, 244, 255)
+  doc.setDrawColor(190, 215, 250)
+  doc.setLineWidth(0.2)
+  doc.roundedRect(marginX + 6, certY + 2.2, 58, 4.2, 1, 1, 'FD')
   doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('PREPARED & VERIFIED BY', marginX + sigColWidth / 2, sigY + 5, { align: 'center' })
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.5)
-  doc.setTextColor(110, 125, 145)
-  doc.text('System Administrator / Class Advisor', marginX + sigColWidth / 2, sigY + 9, { align: 'center' })
-  doc.text('Department of AI & DS', marginX + sigColWidth / 2, sigY + 12.5, { align: 'center' })
+  doc.setFontSize(5.8)
+  doc.setTextColor(20, 85, 217)
+  doc.text('OFFICIAL DIGITAL ACADEMIC RECORD', marginX + 35, certY + 5.2, { align: 'center' })
 
-  // Col 2: Head of Department
-  doc.setFontSize(7.2)
+  doc.setFillColor(236, 253, 245)
+  doc.setDrawColor(167, 243, 208)
+  doc.roundedRect(marginX + contentW - 55, certY + 2.2, 49, 4.2, 1, 1, 'FD')
   doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('HEAD OF DEPARTMENT', marginX + sigColWidth * 1.5, sigY + 5, { align: 'center' })
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.5)
-  doc.setTextColor(110, 125, 145)
-  doc.text('Head of Department', marginX + sigColWidth * 1.5, sigY + 9, { align: 'center' })
-  doc.text('Department of AI & Data Science', marginX + sigColWidth * 1.5, sigY + 12.5, { align: 'center' })
+  doc.setFontSize(5.8)
+  doc.setTextColor(5, 122, 85)
+  doc.text('SYSTEM AUTHENTICATED · VALID', marginX + contentW - 30.5, certY + 5.2, { align: 'center' })
 
-  // Col 3: Principal & Institutional Seal
-  doc.setFontSize(7.2)
+  // Core Legal & Authentication Statement
   doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
   doc.setTextColor(7, 26, 61)
-  doc.text('PRINCIPAL / COE (AUTONOMOUS)', marginX + sigColWidth * 2.5, sigY + 5, { align: 'center' })
+  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL REPORT BASED ON INSTITUTIONAL DATABASE RECORDS.', marginX + 6, certY + 9.3)
+
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.5)
+  doc.setFontSize(6.0)
+  doc.setTextColor(75, 90, 110)
+  doc.text('All attendance records, course hours, and academic metrics are electronically certified from the centralized ERP database of the Department of Artificial Intelligence & Data Science, V.S.B. Engineering College. As an authenticated digital document, no physical signature is required.', marginX + 6, certY + 13.2)
+
+  // Inner Divider Line
+  doc.setDrawColor(225, 235, 247)
+  doc.setLineWidth(0.25)
+  doc.line(marginX + 6, certY + 15.5, marginX + contentW - 6, certY + 15.5)
+
+  // Metadata Security Verification Row
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.6)
   doc.setTextColor(110, 125, 145)
-  doc.text('V.S.B. Engineering College', marginX + sigColWidth * 2.5, sigY + 9, { align: 'center' })
-  doc.text('Official Digital Institutional Seal', marginX + sigColWidth * 2.5, sigY + 12.5, { align: 'center' })
+  doc.text('RECORD SOURCE:', marginX + 6, certY + 19.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text('Centralized Autonomous ERP', marginX + 30, certY + 19.2)
+
+  doc.setTextColor(110, 125, 145)
+  doc.text('ISSUING AUTHORITY:', marginX + 70, certY + 19.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text('Office of HOD (AI & DS)', marginX + 95, certY + 19.2)
+
+  doc.setTextColor(110, 125, 145)
+  doc.text('VERIFICATION CODE:', marginX + 131, certY + 19.2)
+  doc.setTextColor(20, 85, 217)
+  doc.text('VSB-SEC-2026-AUTONOMOUS', marginX + 156, certY + 19.2)
 
   // 7. Multi-Page Running Footer Bar
   const totalPages = doc.getNumberOfPages()
@@ -696,25 +719,55 @@ export function generateAttendanceBarGraphPDF(options: {
 
   currentY += auditRows.length * gridRowHeight + 5
 
-  // 5. OFFICIAL SIGNATURES
-  const finalY = Math.max(currentY + 2, pageHeight - 32)
-  doc.setDrawColor(215, 225, 240)
-  doc.setLineWidth(0.3)
-  doc.line(15, finalY, pageWidth - 15, finalY)
+  // 5. OFFICIAL DIGITAL RECORD CERTIFICATION & AUTHENTICATION SEAL (NO SIGNATURE REQUIRED)
+  const bgCertH = 19
+  const bgCertY = Math.max(currentY + 2, pageHeight - 10 - bgCertH)
+  const bgMarginX = 15
+  const bgContentW = pageWidth - 30
 
-  doc.setFontSize(7.5)
+  // Certification Box
+  doc.setFillColor(248, 250, 254)
+  doc.setDrawColor(205, 220, 240)
+  doc.setLineWidth(0.35)
+  doc.roundedRect(bgMarginX, bgCertY, bgContentW, bgCertH, 1.8, 1.8, 'FD')
+
+  // Left Navy Accent Ribbon
+  doc.setFillColor(7, 26, 61)
+  doc.roundedRect(bgMarginX, bgCertY, 3, bgCertH, 1, 1, 'F')
+
+  // Top Title and Statement
   doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
   doc.setTextColor(7, 26, 61)
-  doc.text('Faculty Class Advisor', 25, finalY + 5.5)
-  doc.text('Head of Department (AI & DS)', pageWidth / 2, finalY + 5.5, { align: 'center' })
-  doc.text('Controller of Examinations', pageWidth - 25, finalY + 5.5, { align: 'right' })
+  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL ANALYTICS REPORT · NO SIGNATURE REQUIRED', bgMarginX + 6, bgCertY + 5.5)
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.8)
-  doc.setTextColor(120, 130, 145)
-  doc.text('Verified Analytics Copy', 25, finalY + 9.5)
-  doc.text('V.S.B. Engineering College', pageWidth / 2, finalY + 9.5, { align: 'center' })
-  doc.text('Authorized Institutional Seal', pageWidth - 25, finalY + 9.5, { align: 'right' })
+  doc.setFontSize(6.0)
+  doc.setTextColor(75, 90, 110)
+  doc.text('All aggregate metrics and student cohort data are electronically certified directly from institutional database records for official academic audit purposes.', bgMarginX + 6, bgCertY + 9.8)
+
+  // Inner Divider Line
+  doc.setDrawColor(225, 235, 247)
+  doc.setLineWidth(0.25)
+  doc.line(bgMarginX + 6, bgCertY + 12, bgMarginX + bgContentW - 6, bgCertY + 12)
+
+  // Metadata Row
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.6)
+  doc.setTextColor(110, 125, 145)
+  doc.text('RECORD REPOSITORY:', bgMarginX + 6, bgCertY + 15.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('Centralized Autonomous ERP', bgMarginX + 31, bgCertY + 15.8)
+
+  doc.setTextColor(110, 125, 145)
+  doc.text('ISSUING AUTHORITY:', bgMarginX + 70, bgCertY + 15.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text('Office of HOD (AI & DS)', bgMarginX + 95, bgCertY + 15.8)
+
+  doc.setTextColor(110, 125, 145)
+  doc.text('VERIFICATION CODE:', bgMarginX + 130, bgCertY + 15.8)
+  doc.setTextColor(20, 85, 217)
+  doc.text('VSB-SEC-2026-AUTONOMOUS', bgMarginX + 155, bgCertY + 15.8)
 
   // Footer
   doc.setFillColor(248, 250, 253)
@@ -867,10 +920,10 @@ export function downloadStudentCardPDF(student: {
 
   doc.setFontSize(6.5)
   doc.setTextColor(244, 196, 48)
-  doc.text('PRINCIPAL / REGISTRAR SIGNATURE', 12, height - 6)
+  doc.text('OFFICIALLY AUTHENTICATED DIGITAL ID', 10, height - 6)
 
   doc.setTextColor(255, 255, 255)
-  doc.text('HOD - AI & DS', width - 12, height - 6, { align: 'right' })
+  doc.text('HOD - AI & DS', width - 10, height - 6, { align: 'right' })
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }
