@@ -197,6 +197,16 @@ export default async function FacultyStudentsPage() {
       attendance: isNaN(rawAttendance) ? 0 : rawAttendance,
       arrears: 0,
       parentPhone: s.parentPhone || '',
+      bloodGroup: s.bloodGroup || null,
+      residencyStatus: s.residencyStatus || 'Day Scholar',
+      hostelBlock: s.hostelBlock || null,
+      roomNo: s.roomNo || null,
+      busNo: s.busNo || null,
+      boardingPoint: s.boardingPoint || null,
+      batch: s.batch || (s.year ? `${2026 - s.year + 1}-${2026 - s.year + 5}` : null),
+      advisorName: s.advisorName || null,
+      isParentWhatsapp: s.isParentWhatsapp || Boolean(s.parentPhone),
+      dob: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,
     }
   })
 
