@@ -22,6 +22,8 @@ import {
   Upload,
   Trash2,
   User as UserIcon,
+  BadgeCheck,
+  FileCheck2,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
@@ -240,6 +242,10 @@ export function StudentOnboardingModal({
     }
     if (!form.parentPhone.trim()) {
       toast.error('Please enter parent/guardian mobile number.')
+      return
+    }
+    if (!form.detailsConfirmed) {
+      toast.error('Please check the verification attestation box to confirm your details.')
       return
     }
     setOnboardingStep(2)
@@ -916,58 +922,108 @@ export function StudentOnboardingModal({
               )}
             </div>
 
-            {/* Option: Request Admin Correction */}
-            <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.hasCorrectionRequest}
-                  onChange={(e) => setForm({ ...form, hasCorrectionRequest: e.target.checked })}
-                  className="w-4 h-4 rounded text-[#1557C0] focus:ring-[#1557C0]"
-                />
-                <span className="font-bold text-amber-900 text-xs flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  Any academic details wrong? Request Admin Correction
+            {/* Academic Discrepancy Reporting (Executive Accordion Card) */}
+            <div className="rounded-2xl border border-amber-200/90 bg-gradient-to-r from-amber-50/70 via-amber-50/40 to-orange-50/30 p-3.5 transition-all">
+              <label className="flex items-center justify-between gap-3 cursor-pointer select-none">
+                <div className="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={form.hasCorrectionRequest}
+                    onChange={(e) => setForm({ ...form, hasCorrectionRequest: e.target.checked })}
+                    className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                  />
+                  <div>
+                    <span className="font-black text-amber-950 text-xs flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      Notice an error in your academic particulars?
+                    </span>
+                    <span className="text-[10px] text-amber-800 font-medium block">
+                      Click to submit a formal correction request directly to the Academic Office
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200 shrink-0">
+                  Optional
                 </span>
               </label>
 
               {form.hasCorrectionRequest && (
-                <div className="pt-1 animate-in fade-in">
+                <div className="mt-3 pt-3 border-t border-amber-200/70 space-y-2 animate-in fade-in duration-200">
+                  <p className="text-[11px] text-amber-900 font-medium leading-relaxed">
+                    Specify the exact corrections needed (e.g. Spelling correction in Student Name, change in Section, or Mentor update). This request will be routed to the Department HOD &amp; Admin Office without blocking your account setup.
+                  </p>
                   <textarea
                     rows={2}
-                    placeholder="Describe the correction needed (e.g. My section should be B, or correction in name spelling...)"
+                    placeholder="Enter precise correction details here..."
                     value={form.correctionRemarks}
                     onChange={(e) => setForm({ ...form, correctionRemarks: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-medium text-[#071A41] focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-semibold text-[#071A41] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-inner"
                   />
                 </div>
               )}
             </div>
 
-            {/* Details Confirmed Checkbox */}
-            <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={form.detailsConfirmed}
-                  onChange={(e) => setForm({ ...form, detailsConfirmed: e.target.checked })}
-                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0] cursor-pointer"
-                />
-                <span className="text-xs font-bold text-[#071A41]">
-                  I confirm that I have reviewed my student particulars, mobile numbers, and academic record.
-                </span>
+            {/* Institutional Student Declaration & Attestation Card */}
+            <div className={cn(
+              "relative rounded-2xl border-2 p-4 transition-all duration-200",
+              form.detailsConfirmed
+                ? "bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-emerald-50/30 border-blue-400/90 shadow-sm shadow-blue-500/10"
+                : "bg-slate-50/90 border-slate-200/90 hover:border-slate-300 shadow-xs"
+            )}>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <div className="mt-0.5 flex items-center justify-center shrink-0">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={form.detailsConfirmed}
+                    onChange={(e) => setForm({ ...form, detailsConfirmed: e.target.checked })}
+                    className="w-5 h-5 rounded-md text-[#1557C0] border-slate-300 focus:ring-2 focus:ring-[#1557C0] focus:ring-offset-1 cursor-pointer transition-all"
+                  />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className={cn("w-4 h-4", form.detailsConfirmed ? "text-emerald-600" : "text-[#1557C0]")} />
+                      <span className="text-xs font-black text-[#071A41] uppercase tracking-wide">
+                        Student Particulars &amp; Identity Attestation
+                      </span>
+                    </div>
+                    {form.detailsConfirmed ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        Attested by Student
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black text-blue-800 bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-200">
+                        Mandatory Confirmation
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                    I solemnly declare and confirm that I have thoroughly verified all my academic particulars, registration number, parent/student contact details, and photograph displayed above. I understand these records will be permanently linked to my official V.S.B. student profile and digital ID.
+                  </p>
+                </div>
               </label>
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 border-t border-gray-100 flex items-center justify-end">
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium order-2 sm:order-1">
+                <FileCheck2 className="w-3.5 h-3.5 text-[#1557C0]" />
+                <span>Step 1 of 3: Verification &amp; Attestation</span>
+              </div>
+
               <button
                 type="submit"
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#1557C0] hover:bg-[#0e44b5] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
+                className={cn(
+                  "w-full sm:w-auto px-7 py-3 rounded-xl font-black flex items-center justify-center gap-2.5 shadow-md transition-all text-xs sm:text-sm order-1 sm:order-2 group",
+                  form.detailsConfirmed
+                    ? "bg-gradient-to-r from-[#071A41] via-[#0E387A] to-[#1557C0] hover:from-[#051330] hover:to-[#0d45b5] text-white shadow-blue-900/25 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                    : "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed shadow-none"
+                )}
               >
                 <span>Proceed to Password &amp; Email Setup</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
           </form>
@@ -1317,28 +1373,55 @@ export function StudentOnboardingModal({
               </div>
             </div>
 
-            {/* Mandatory Verification Declaration Checkbox */}
-            <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={step3Confirmed}
-                  onChange={(e) => setStep3Confirmed(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
-                />
-                <span className="text-xs font-bold text-[#071A41] leading-snug">
-                  I confirm that I have verified all the details above. If any changes are needed, I will contact the administrator.
-                </span>
+            {/* Institutional Verification Declaration & Authorization Card */}
+            <div className={cn(
+              "relative rounded-2xl border-2 p-4 transition-all duration-200",
+              step3Confirmed
+                ? "bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-blue-50/30 border-emerald-400/90 shadow-sm shadow-emerald-500/10"
+                : "bg-slate-50/90 border-slate-200/90 hover:border-slate-300 shadow-xs"
+            )}>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <div className="mt-0.5 flex items-center justify-center shrink-0">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={step3Confirmed}
+                    onChange={(e) => setStep3Confirmed(e.target.checked)}
+                    className="w-5 h-5 rounded-md text-emerald-600 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 cursor-pointer transition-all"
+                  />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className={cn("w-4 h-4", step3Confirmed ? "text-emerald-600" : "text-[#1557C0]")} />
+                      <span className="text-xs font-black text-[#071A41] uppercase tracking-wide">
+                        Final Academic Authorization &amp; Portal Enrollment
+                      </span>
+                    </div>
+                    {step3Confirmed ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        Attested &amp; Authorized
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-200">
+                        Mandatory
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                    I solemnly confirm that I have verified all details above. I acknowledge that upon completion, my official records are locked and any future corrections must be petitioned through the Department Administrator.
+                  </p>
+                </div>
               </label>
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setOnboardingStep(2)}
-                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 flex items-center justify-center gap-2 cursor-pointer text-xs transition-colors order-2 sm:order-1"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back to Step 2</span>
@@ -1347,10 +1430,15 @@ export function StudentOnboardingModal({
               <button
                 type="submit"
                 disabled={loading || !step3Confirmed}
-                className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md text-xs sm:text-sm cursor-pointer hover:scale-[1.02] transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
+                className={cn(
+                  "w-full sm:w-auto px-8 py-3 rounded-xl font-black flex items-center justify-center gap-2.5 shadow-md transition-all text-xs sm:text-sm order-1 sm:order-2 group",
+                  step3Confirmed && !loading
+                    ? "bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 hover:from-emerald-700 hover:to-teal-900 text-white shadow-emerald-900/20 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                    : "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed shadow-none"
+                )}
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                <span>Confirm &amp; Enter Student Portal</span>
+                <span>Authorize &amp; Enter Student Portal</span>
               </button>
             </div>
           </form>
