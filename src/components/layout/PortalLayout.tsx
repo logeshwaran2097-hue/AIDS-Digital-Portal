@@ -48,6 +48,7 @@ interface PortalLayoutProps {
   userEmail?: string
   navItems?: NavItem[]
   roleBadgeLabel?: string
+  isAdvisor?: boolean
   children: React.ReactNode
 }
 
@@ -77,7 +78,7 @@ interface NotificationItem {
 
 const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {}
 
-export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLabel, children }: PortalLayoutProps) {
+export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLabel, isAdvisor, children }: PortalLayoutProps) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
@@ -276,7 +277,37 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
     return () => window.removeEventListener('portal-config-updated', handleConfigChange)
   }, [])
 
-  const baseNavItems = navItems || navItemsMap[role] || []
+  // Cache and determine advisor status for faculty role
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (typeof isAdvisor === 'boolean') {
+        sessionStorage.setItem('vsb_faculty_is_advisor', String(isAdvisor))
+      } else if (roleBadgeLabel) {
+        sessionStorage.setItem('vsb_faculty_is_advisor', String(roleBadgeLabel.toLowerCase().includes('advisor')))
+      }
+    }
+  }, [isAdvisor, roleBadgeLabel])
+
+  const [cachedAdvisor] = useState<boolean | null>(() => {
+    if (typeof window !== 'undefined') {
+      const v = sessionStorage.getItem('vsb_faculty_is_advisor')
+      if (v !== null) return v === 'true'
+    }
+    return null
+  })
+
+  const isFacultyAdvisor = isAdvisor ?? (roleBadgeLabel ? roleBadgeLabel.toLowerCase().includes('advisor') : (cachedAdvisor ?? false))
+
+  const rawNavItems = navItems || navItemsMap[role] || []
+  const baseNavItems = rawNavItems.filter((item) => {
+    // If faculty is not a Class Advisor, hide "Class Students" page
+    if (role === 'faculty' && !isFacultyAdvisor) {
+      if (item.href.includes('/faculty-dashboard/students') || item.label.toLowerCase().includes('class student')) {
+        return false
+      }
+    }
+    return true
+  })
   
   // Filter nav items based on admin menu preferences
   const resolvedNavItems = baseNavItems.filter((item) => {
@@ -467,7 +498,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
                 roleBadge.color
               )}
             >
-              {roleBadgeLabel || roleBadge.label}
+              {roleBadgeLabel || (role === 'faculty' ? (isFacultyAdvisor ? 'Class Advisor' : 'Faculty Member') : roleBadge.label)}
             </span>
           </div>
         </Link>

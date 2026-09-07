@@ -1191,56 +1191,86 @@ export function GovernmentAttendanceSystem() {
                     })}
                   </div>
 
-                  {/* Bottom Row: Remarks Selector — required for Absent/OD/ML */}
-                  {(s.status === 'A' || s.status === 'OD' || s.status === 'ML') ? (
-                    <div className={cn(
-                      'pt-2 border-t space-y-1.5',
-                      s.status === 'A' ? 'border-rose-200 bg-rose-50/30 -mx-3.5 -mb-3.5 px-3.5 pb-3.5 rounded-b-2xl' : 'border-blue-200 bg-blue-50/30 -mx-3.5 -mb-3.5 px-3.5 pb-3.5 rounded-b-2xl'
-                    )}>
-                      <span className={cn(
-                        'text-[10px] font-bold uppercase tracking-wider flex items-center gap-1',
-                        s.status === 'A' ? 'text-rose-700' : 'text-blue-700'
+                  {/* Bottom Row: Remarks Selector — Only for Advisor in Morning Advisory Roll Call */}
+                  {isAdvisor && mode === 'morning' && (
+                    (s.status === 'A' || s.status === 'OD' || s.status === 'ML') ? (
+                      <div className={cn(
+                        'pt-2 border-t space-y-1.5',
+                        s.status === 'A' ? 'border-rose-200 bg-rose-50/30 -mx-3.5 -mb-3.5 px-3.5 pb-3.5 rounded-b-2xl' : 'border-blue-200 bg-blue-50/30 -mx-3.5 -mb-3.5 px-3.5 pb-3.5 rounded-b-2xl'
                       )}>
-                        <AlertTriangle className="w-3 h-3" />
-                        Reason / Remark {!s.remarks && <span className="text-rose-500 ml-0.5">*Required</span>}
-                      </span>
-                      <select
-                        value={s.remarks}
-                        onChange={(e) => setStudentRemarks(s.id, e.target.value)}
-                        disabled={isLocked}
-                        className={cn(
-                          'w-full border rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:ring-2 disabled:cursor-not-allowed transition-all',
-                          !s.remarks
-                            ? 'border-rose-400 text-rose-800 bg-white ring-1 ring-rose-300 animate-pulse'
-                            : s.status === 'A'
-                            ? 'border-rose-300 text-rose-800 bg-white'
-                            : 'border-blue-300 text-blue-800 bg-white'
+                        <span className={cn(
+                          'text-[10px] font-bold uppercase tracking-wider flex items-center gap-1',
+                          s.status === 'A' ? 'text-rose-700' : 'text-blue-700'
+                        )}>
+                          <AlertTriangle className="w-3 h-3" />
+                          Advisor Reason / Remark
+                        </span>
+                        <select
+                          value={REMARK_OPTIONS.includes(s.remarks) ? s.remarks : (s.remarks ? 'CUSTOM' : '')}
+                          onChange={(e) => {
+                            if (e.target.value === 'CUSTOM') {
+                              setStudentRemarks(s.id, s.remarks || 'Personal Reason')
+                            } else {
+                              setStudentRemarks(s.id, e.target.value)
+                            }
+                          }}
+                          disabled={isLocked}
+                          className="w-full border border-gray-200 bg-white rounded-xl px-2.5 py-1.5 text-xs font-semibold focus:ring-2 disabled:cursor-not-allowed"
+                        >
+                          <option value="">— Select reason —</option>
+                          {REMARK_OPTIONS.filter(r => r !== '').map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                          <option value="CUSTOM">Type custom reason...</option>
+                        </select>
+                        {(!REMARK_OPTIONS.includes(s.remarks) && s.remarks !== '') && (
+                          <input
+                            type="text"
+                            value={s.remarks}
+                            onChange={(e) => setStudentRemarks(s.id, e.target.value)}
+                            placeholder="Type specific reason..."
+                            disabled={isLocked}
+                            className="w-full bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs text-blue-900 focus:ring-1 focus:ring-blue-400 mt-1"
+                          />
                         )}
-                      >
-                        <option value="">— Select reason (Required) —</option>
-                        {REMARK_OPTIONS.filter(r => r !== '').map((r) => (
-                          <option key={r} value={r}>{r}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
-                        Remark:
-                      </span>
-                      <select
-                        value={s.remarks}
-                        onChange={(e) => setStudentRemarks(s.id, e.target.value)}
-                        disabled={isLocked}
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1 text-xs text-gray-700 focus:ring-1 focus:ring-[#1455D9] disabled:cursor-not-allowed"
-                      >
-                        {REMARK_OPTIONS.map((r) => (
-                          <option key={r} value={r}>
-                            {r || '— Select remark (Optional) —'}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-1 pt-1 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">
+                            Advisor Remark:
+                          </span>
+                          <select
+                            value={REMARK_OPTIONS.includes(s.remarks) ? s.remarks : (s.remarks ? 'CUSTOM' : '')}
+                            onChange={(e) => {
+                              if (e.target.value === 'CUSTOM') {
+                                setStudentRemarks(s.id, s.remarks || 'Personal Reason')
+                              } else {
+                                setStudentRemarks(s.id, e.target.value)
+                              }
+                            }}
+                            disabled={isLocked}
+                            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1 text-xs text-gray-700 focus:ring-1 focus:ring-[#1455D9] disabled:cursor-not-allowed"
+                          >
+                            <option value="">— Select remark (Optional) —</option>
+                            {REMARK_OPTIONS.filter(Boolean).map((r) => (
+                              <option key={r} value={r}>{r}</option>
+                            ))}
+                            <option value="CUSTOM">Type custom reason...</option>
+                          </select>
+                        </div>
+                        {(!REMARK_OPTIONS.includes(s.remarks) && s.remarks !== '') && (
+                          <input
+                            type="text"
+                            value={s.remarks}
+                            onChange={(e) => setStudentRemarks(s.id, e.target.value)}
+                            placeholder="Type specific reason..."
+                            disabled={isLocked}
+                            className="w-full bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs text-blue-900 focus:ring-1 focus:ring-blue-400"
+                          />
+                        )}
+                      </div>
+                    )
                   )}
                 </div>
               )
@@ -1259,7 +1289,9 @@ export function GovernmentAttendanceSystem() {
                   <th className="py-3 px-4 font-bold min-w-[180px]">Student Name</th>
                   <th className="py-3 px-3 font-bold text-center w-[110px]">Cumulative %</th>
                   <th className="py-3 px-4 font-bold text-center w-[280px]">Real-Time Status</th>
-                  <th className="py-3 px-4 font-bold min-w-[200px]">Official Remarks</th>
+                  {isAdvisor && mode === 'morning' && (
+                    <th className="py-3 px-4 font-bold min-w-[200px]">Official Remarks</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -1355,26 +1387,48 @@ export function GovernmentAttendanceSystem() {
                         </div>
                       </td>
 
-                      {/* Remarks */}
-                      <td className="py-3 px-4">
-                        <select
-                          value={s.remarks}
-                          onChange={(e) => setStudentRemarks(s.id, e.target.value)}
-                          disabled={isLocked}
-                          className={cn(
-                            'w-full bg-gray-50 border rounded-xl px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-[#1455D9] disabled:cursor-not-allowed',
-                            s.status === 'A' && !s.remarks
-                              ? 'border-rose-300 text-rose-800 bg-rose-50/40'
-                              : 'border-gray-200 text-gray-700'
-                          )}
-                        >
-                          {REMARK_OPTIONS.map((r) => (
-                            <option key={r} value={r}>
-                              {r || '— Select remark —'}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
+                      {/* Remarks - Only for Advisor in Morning Advisory Roll Call */}
+                      {isAdvisor && mode === 'morning' && (
+                        <td className="py-3 px-4">
+                          <div className="space-y-1">
+                            <select
+                              value={REMARK_OPTIONS.includes(s.remarks) ? s.remarks : (s.remarks ? 'CUSTOM' : '')}
+                              onChange={(e) => {
+                                if (e.target.value === 'CUSTOM') {
+                                  setStudentRemarks(s.id, s.remarks || 'Personal Reason')
+                                } else {
+                                  setStudentRemarks(s.id, e.target.value)
+                                }
+                              }}
+                              disabled={isLocked}
+                              className={cn(
+                                'w-full bg-gray-50 border rounded-xl px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-[#1455D9] disabled:cursor-not-allowed',
+                                s.status === 'A' && !s.remarks
+                                  ? 'border-rose-300 text-rose-800 bg-rose-50/40'
+                                  : 'border-gray-200 text-gray-700'
+                              )}
+                            >
+                              <option value="">— Select remark —</option>
+                              {REMARK_OPTIONS.filter(Boolean).map((r) => (
+                                <option key={r} value={r}>
+                                  {r}
+                                </option>
+                              ))}
+                              <option value="CUSTOM">Type custom reason...</option>
+                            </select>
+                            {(!REMARK_OPTIONS.includes(s.remarks) && s.remarks !== '') && (
+                              <input
+                                type="text"
+                                value={s.remarks}
+                                onChange={(e) => setStudentRemarks(s.id, e.target.value)}
+                                placeholder="Type specific reason..."
+                                disabled={isLocked}
+                                className="w-full bg-white border border-blue-200 rounded-lg px-2 py-1 text-xs text-blue-900 focus:ring-1 focus:ring-blue-400"
+                              />
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   )
                 })}

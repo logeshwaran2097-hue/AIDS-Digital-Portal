@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import {
   BookOpen,
@@ -75,21 +75,26 @@ interface FacultyData {
   todayTimetable?: TimetableSlotItem[]
 }
 
-const quickNav = [
-  { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
-  { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] border-[#1455D9]/20 hover:bg-[#1455D9]/20' },
-  { label: 'Students List', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20 hover:bg-purple-500/20' },
-  { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' },
-  { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
-  { label: 'Capstone Projects', href: '/faculty-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 hover:bg-cyan-500/20' },
-  { label: 'Department Events', href: '/faculty-dashboard/events', icon: <CalendarDays className="w-5 h-5" />, bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20 hover:bg-rose-500/20' },
-  { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
-]
-
 export function FacultyDashboardView({ data }: { data: FacultyData }) {
   const facultyKey = data.faculty?.facultyId || data.user?.email || 'faculty'
   const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+
+  const isClassAdvisor =
+    data.faculty?.facultyType === 'advisor' ||
+    data.faculty?.facultyType === 'both' ||
+    (!data.faculty?.facultyType && Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)))
+
+  const quickNav = useMemo(() => [
+    { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
+    { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] border-[#1455D9]/20 hover:bg-[#1455D9]/20' },
+    ...(isClassAdvisor ? [{ label: 'Class Students', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20 hover:bg-purple-500/20' }] : []),
+    { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' },
+    { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
+    { label: 'Capstone Projects', href: '/faculty-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 hover:bg-cyan-500/20' },
+    { label: 'Department Events', href: '/faculty-dashboard/events', icon: <CalendarDays className="w-5 h-5" />, bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20 hover:bg-rose-500/20' },
+    { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
+  ], [isClassAdvisor])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -115,11 +120,6 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
     setActionSuccess(`Approved On-Duty Request for ${name}!`)
     setTimeout(() => setActionSuccess(null), 2500)
   }
-
-  const isClassAdvisor =
-    data.faculty?.facultyType === 'advisor' ||
-    data.faculty?.facultyType === 'both' ||
-    (!data.faculty?.facultyType && Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)))
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
@@ -214,11 +214,19 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             <p className="text-[10px] text-emerald-300">Recorded Sessions</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Pending OD Approvals</p>
-            <p className="text-xl font-black text-amber-300 mt-0.5">{odList.length} Requests</p>
-            <p className="text-[10px] text-amber-200">Student On-Duty Requests</p>
-          </div>
+          {isClassAdvisor ? (
+            <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+              <p className="text-[10px] text-gray-300 uppercase font-bold">Pending OD Approvals</p>
+              <p className="text-xl font-black text-amber-300 mt-0.5">{odList.length} Requests</p>
+              <p className="text-[10px] text-amber-200">Student On-Duty Requests</p>
+            </div>
+          ) : (
+            <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+              <p className="text-[10px] text-gray-300 uppercase font-bold">Faculty Status</p>
+              <p className="text-xl font-black text-emerald-300 mt-0.5">Active</p>
+              <p className="text-[10px] text-emerald-200">Department Faculty</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -390,49 +398,51 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             </Card>
           </div>
 
-          {/* Pending On-Duty (OD) Leave Approvals */}
-          <div className="space-y-3">
-            <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-[#F4C430]" />
-              <span>Pending Student OD Requests</span>
-            </h2>
+          {/* Pending On-Duty (OD) Leave Approvals - Only for Class Advisor */}
+          {isClassAdvisor && (
+            <div className="space-y-3">
+              <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#F4C430]" />
+                <span>Pending Student OD Requests</span>
+              </h2>
 
-            {odList.length === 0 ? (
-              <Card className="rounded-3xl border-gray-200">
-                <CardContent className="p-6 text-center text-xs text-gray-400">
-                  <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-1.5" />
-                  All student On-Duty applications cleared!
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2.5">
-                {odList.map((od) => (
-                  <Card key={od.id} className="rounded-3xl border-amber-200/80 bg-amber-50/30 p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-xs text-[#071A3D]">{od.studentName}</p>
-                        <p className="text-[10px] font-mono text-gray-400">{od.regNo} · Date: {od.date}</p>
+              {odList.length === 0 ? (
+                <Card className="rounded-3xl border-gray-200">
+                  <CardContent className="p-6 text-center text-xs text-gray-400">
+                    <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-1.5" />
+                    All student On-Duty applications cleared!
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-2.5">
+                  {odList.map((od) => (
+                    <Card key={od.id} className="rounded-3xl border-amber-200/80 bg-amber-50/30 p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-xs text-[#071A3D]">{od.studentName}</p>
+                          <p className="text-[10px] font-mono text-gray-400">{od.regNo} · Date: {od.date}</p>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9.5px] font-bold">
+                          {od.type}
+                        </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9.5px] font-bold">
-                        {od.type}
-                      </span>
-                    </div>
 
-                    <p className="text-xs text-gray-600 line-clamp-1">{od.event}</p>
+                      <p className="text-xs text-gray-600 line-clamp-1">{od.event}</p>
 
-                    <div className="pt-1 flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => handleApproveOD(od.id, od.studentName)}
-                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs"
-                      >
-                        <Check className="w-3.5 h-3.5" /> Approve OD
-                      </button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+                      <div className="pt-1 flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleApproveOD(od.id, od.studentName)}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                        >
+                          <Check className="w-3.5 h-3.5" /> Approve OD
+                        </button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

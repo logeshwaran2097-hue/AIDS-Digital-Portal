@@ -30,8 +30,22 @@ export default async function FacultyEventsPage() {
     isPublished: e.isPublished,
   }))
 
+  const faculty = (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
+    (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
+
+  const isAdvisor =
+    faculty?.facultyType === 'advisor' ||
+    faculty?.facultyType === 'both' ||
+    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+
   return (
-    <PortalLayout role="faculty" userName={facultyName}>
+    <PortalLayout
+      role="faculty"
+      userName={facultyName}
+      userEmail={user?.email || session.email}
+      roleBadgeLabel={isAdvisor ? 'Class Advisor' : 'Faculty Member'}
+      isAdvisor={isAdvisor}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyEventsView initialEvents={mappedEvents} facultyName={facultyName} />
       </div>

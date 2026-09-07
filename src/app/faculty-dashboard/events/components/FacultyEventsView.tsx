@@ -69,6 +69,24 @@ export function FacultyEventsView({
     })
   }, [events, searchQuery, selectedCategory])
 
+  const upcomingCount = useMemo(() => {
+    return events.filter(e => {
+      try {
+        return new Date(e.date) >= new Date()
+      } catch {
+        return false
+      }
+    }).length
+  }, [events])
+
+  const technicalCount = useMemo(() => {
+    return events.filter(e => /symposi|workshop|seminar|tech/i.test(`${e.name} ${e.category || ''} ${e.description || ''}`)).length
+  }, [events])
+
+  const competitionsCount = useMemo(() => {
+    return events.filter(e => /hackathon|contest|compet|challenge|code/i.test(`${e.name} ${e.category || ''} ${e.description || ''}`)).length
+  }, [events])
+
   const handleDownloadBrochure = (e: FacultyEventItem) => {
     generateAndDownloadPDF({
       title: e.name.toUpperCase(),
@@ -158,21 +176,21 @@ export function FacultyEventsView({
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-purple-200/80 shadow-xs bg-purple-50/20">
-          <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">National Hackathon</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">Rs. 1 Lakh Prize</p>
-          <p className="text-[10px] text-purple-600 font-semibold">15 Aug 2026</p>
+          <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">Upcoming Events</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">{upcomingCount} Session{upcomingCount === 1 ? '' : 's'}</p>
+          <p className="text-[10px] text-purple-600 font-semibold">Scheduled Ahead</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-green-200/80 shadow-xs bg-green-50/20">
-          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Total Enrolled</p>
-          <p className="text-2xl font-black text-green-600 mt-0.5">148 Students</p>
-          <p className="text-[10px] text-green-700 font-semibold">Registered Delegates</p>
+          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Symposia &amp; Workshops</p>
+          <p className="text-2xl font-black text-green-600 mt-0.5">{technicalCount} Program{technicalCount === 1 ? '' : 's'}</p>
+          <p className="text-[10px] text-green-700 font-semibold">Technical Training</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-amber-200/80 shadow-xs bg-amber-50/20">
-          <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Certificates</p>
-          <p className="text-2xl font-black text-amber-600 mt-0.5">Autonomous Seal</p>
-          <p className="text-[10px] text-amber-700 font-semibold">Anna University Accredited</p>
+          <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Hackathons &amp; Contests</p>
+          <p className="text-2xl font-black text-amber-600 mt-0.5">{competitionsCount} Challenge{competitionsCount === 1 ? '' : 's'}</p>
+          <p className="text-[10px] text-amber-700 font-semibold">Student Competitions</p>
         </div>
       </div>
 

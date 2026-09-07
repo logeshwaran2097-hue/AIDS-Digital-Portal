@@ -99,8 +99,8 @@ export function FacultySettingsView({
   const [parentMeetingPrompt, setParentMeetingPrompt] = useState(true)
 
   // Mentoring & Consultation Slots
-  const [cabinLocation, setCabinLocation] = useState('AI & DS Dept · Staff Room 2, Desk #4')
-  const [mentoringHours, setMentoringHours] = useState('Tuesday & Thursday · 03:30 PM - 04:30 PM')
+  const [cabinLocation, setCabinLocation] = useState('')
+  const [mentoringHours, setMentoringHours] = useState('')
   const [allowStudentBooking, setAllowStudentBooking] = useState(true)
 
   // 2. Notification Channels State
@@ -454,7 +454,7 @@ export function FacultySettingsView({
             {isAdvisor ? 'Class Advisor & Portal Settings' : 'Portal Settings & Preferences'}
           </h1>
           <p className="text-xs sm:text-sm text-gray-300 max-w-2xl">
-            {userName} ({designation}) · Configure class advisory thresholds, student OD approval workflows, alert triggers, theme &amp; password credentials.
+            {userName} ({designation}) · {isAdvisor ? 'Configure class advisory thresholds, student OD approval workflows, alert triggers, theme & password credentials.' : 'Configure communication preferences, contact details, theme & password credentials.'}
           </p>
         </div>
 
@@ -1198,7 +1198,7 @@ export function FacultySettingsView({
             <div className="border-b border-gray-100 pb-3 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-base text-[#071A3D] flex items-center gap-2">
-                  <Building className="w-4 h-4 text-[#1455D9]" /> Advisor Profile &amp; Contact Particulars
+                  <Building className="w-4 h-4 text-[#1455D9]" /> {isAdvisor ? 'Advisor Profile & Contact Particulars' : 'Faculty Profile & Contact Particulars'}
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Update your contact phone, academic specialization, and student consultation cabin.
@@ -1255,23 +1255,23 @@ export function FacultySettingsView({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Advisor Office Cabin / Desk</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">{isAdvisor ? 'Advisor Office Cabin / Desk' : 'Faculty Office Cabin / Desk'}</label>
                   <input
                     type="text"
                     value={cabinLocation}
                     onChange={(e) => setCabinLocation(e.target.value)}
-                    placeholder="e.g. AI & DS Staff Room 2, Desk #4"
+                    placeholder="e.g. Staff Room 2, Desk #4"
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Weekly Mentoring Availability</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">{isAdvisor ? 'Weekly Mentoring Availability' : 'Consultation / Office Hours'}</label>
                   <input
                     type="text"
                     value={mentoringHours}
                     onChange={(e) => setMentoringHours(e.target.value)}
-                    placeholder="e.g. Tuesday & Thursday · 03:30 PM - 04:30 PM"
+                    placeholder="e.g. Monday & Wednesday · 03:00 PM - 04:00 PM"
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>

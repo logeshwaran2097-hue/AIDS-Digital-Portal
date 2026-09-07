@@ -64,6 +64,7 @@ export function FacultyStudentsView({
   const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'SAFE' | 'WARNING'>('ALL')
   const [selectedStudent, setSelectedStudent] = useState<StudentRosterItem | null>(null)
   const [alertSuccess, setAlertSuccess] = useState<string | null>(null)
+  const [studentRemarksMap, setStudentRemarksMap] = useState<Record<string, { category: string; customText: string }>>({})
 
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
@@ -408,6 +409,57 @@ export function FacultyStudentsView({
               <div className="p-3 rounded-2xl bg-gray-50 border flex justify-between">
                 <span className="text-gray-500 font-bold">Institutional Email:</span>
                 <span className="font-mono text-[#071A3D]">{selectedStudent.email}</span>
+              </div>
+
+              {/* Advisor Remarks & Academic Case Notes */}
+              <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase text-[#1455D9] tracking-wider block">
+                    Class Advisor Remarks &amp; Notes
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-medium">Advisor Record</span>
+                </div>
+                <select
+                  value={studentRemarksMap[selectedStudent.id]?.category || ''}
+                  onChange={(e) => {
+                    const cat = e.target.value
+                    setStudentRemarksMap(prev => ({
+                      ...prev,
+                      [selectedStudent.id]: {
+                        category: cat,
+                        customText: prev[selectedStudent.id]?.customText || (cat !== 'CUSTOM' ? cat : '')
+                      }
+                    }))
+                  }}
+                  className="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs text-gray-700 font-medium focus:ring-1 focus:ring-[#1455D9]"
+                >
+                  <option value="">— Select relevant category —</option>
+                  <option value="Academic Excellence">Academic Excellence / High Performer</option>
+                  <option value="Attendance Warning">Attendance Warning Issued</option>
+                  <option value="Symposium / Hackathon OD">Symposium / Hackathon OD Approved</option>
+                  <option value="Medical Leave (Certificate on Record)">Medical Leave (Certificate on Record)</option>
+                  <option value="Placement / Internship Drive">Placement / Internship Drive</option>
+                  <option value="Parent Counseling Required">Parent Counseling Required</option>
+                  <option value="Disciplinary / Gate Pass">Disciplinary / Gate Pass Record</option>
+                  <option value="CUSTOM">Type custom observation / notes...</option>
+                </select>
+
+                <input
+                  type="text"
+                  value={studentRemarksMap[selectedStudent.id]?.customText || ''}
+                  onChange={(e) => {
+                    const text = e.target.value
+                    setStudentRemarksMap(prev => ({
+                      ...prev,
+                      [selectedStudent.id]: {
+                        category: prev[selectedStudent.id]?.category || 'CUSTOM',
+                        customText: text
+                      }
+                    }))
+                  }}
+                  placeholder="Type specific advisor remarks or notes..."
+                  className="w-full bg-white border border-gray-200 rounded-xl px-2.5 py-1.5 text-xs text-[#071A3D] focus:ring-1 focus:ring-[#1455D9]"
+                />
               </div>
             </div>
 
