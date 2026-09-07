@@ -27,7 +27,6 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { StudentOnboardingModal } from '@/components/auth/StudentOnboardingModal'
 
 interface DashboardData {
   user: {
@@ -129,41 +128,6 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
     return () => clearInterval(interval)
   }, [])
 
-  const studentKey = data.student?.registerNumber || currentUser.email || 'student'
-  const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const isCompletedLocally =
-      localStorage.getItem(`vsb_student_onboarding_done_${studentKey}`) === 'true' ||
-      sessionStorage.getItem(`vsb_student_onboarding_done_${studentKey}`) === 'true'
-
-    if (!isCompletedLocally && isInitialNeedsOnboarding) {
-      setIsOnboardingOpen(true)
-    } else {
-      setIsOnboardingOpen(false)
-    }
-  }, [studentKey, isInitialNeedsOnboarding])
-
-  const handleOnboardingComplete = (updatedUser: any) => {
-    setIsOnboardingOpen(false)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
-      sessionStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
-    }
-    if (updatedUser) {
-      setCurrentUser((prev) => ({ ...prev, ...updatedUser, mustChangePassword: false }))
-    }
-  }
-
-  const handleOnboardingClose = () => {
-    setIsOnboardingOpen(false)
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
-    }
-  }
-
   const att = data.attendanceStats || {
     totalSessions: 0,
     presentSessions: 0,
@@ -186,30 +150,6 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* First-Time Student Setup & Verification Modal */}
-      <StudentOnboardingModal
-        isOpen={isOnboardingOpen}
-        onClose={handleOnboardingClose}
-        onComplete={handleOnboardingComplete}
-        initialData={{
-          name: currentUser.name,
-          email: currentUser.email,
-          phone: currentUser.phone || '',
-          registerNumber: data.student.registerNumber,
-          department: data.student.department,
-          year: data.student.year,
-          semester: data.student.semester,
-          section: data.student.section,
-          dateOfBirth: data.student.dateOfBirth
-            ? new Date(data.student.dateOfBirth).toISOString().split('T')[0]
-            : undefined,
-          advisorName: (data.student as any).advisorName || undefined,
-          batch: (data.student as any).batch || undefined,
-          parentPhone: (data.student as any).parentPhone || undefined,
-          profileImage: currentUser.profileImage || undefined,
-        }}
-      />
-
       {/* Hero Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
         <div className="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(34,199,232,0.25)_0%,_transparent_70%)] pointer-events-none" />

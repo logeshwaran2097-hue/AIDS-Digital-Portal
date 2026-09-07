@@ -30,7 +30,6 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { StaffOnboardingModal } from '@/components/auth/StaffOnboardingModal'
 
 export interface AssignedSubjectItem {
   code: string
@@ -76,10 +75,6 @@ interface FacultyData {
 }
 
 export function FacultyDashboardView({ data }: { data: FacultyData }) {
-  const facultyKey = data.faculty?.facultyId || data.user?.email || 'faculty'
-  const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
-
   const isClassAdvisor =
     data.faculty?.facultyType === 'advisor' ||
     data.faculty?.facultyType === 'both' ||
@@ -96,19 +91,6 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
     { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
   ], [isClassAdvisor])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const isCompletedLocally =
-      localStorage.getItem(`vsb_staff_onboarding_done_${facultyKey}`) === 'true' ||
-      sessionStorage.getItem(`vsb_staff_onboarding_done_${facultyKey}`) === 'true'
-
-    if (!isCompletedLocally && isInitialNeedsOnboarding) {
-      setIsOnboardingOpen(true)
-    } else {
-      setIsOnboardingOpen(false)
-    }
-  }, [facultyKey, isInitialNeedsOnboarding])
-
   const [odList, setOdList] = useState<{ id: string; studentName: string; regNo: string; event: string; date: string; type: string }[]>([])
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
@@ -123,42 +105,6 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
-      {/* First-Time Staff Onboarding Wizard */}
-      <StaffOnboardingModal
-        isOpen={isOnboardingOpen}
-        role={isClassAdvisor ? 'advisor' : 'faculty'}
-        onClose={() => {
-          setIsOnboardingOpen(false)
-          if (typeof window !== 'undefined') {
-            sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
-          }
-        }}
-        initialData={{
-          name: data.user.name,
-          email: data.user.email,
-          phone: data.user.phone || '',
-          facultyId: data.faculty?.facultyId || '',
-          designation: data.faculty?.designation || '',
-          qualification: data.faculty?.qualification || '',
-          experience: data.faculty?.experience || 0,
-          specialization: data.faculty?.specialization || '',
-          advisorBatch: data.faculty?.advisorBatch || null,
-          advisorYear: data.faculty?.advisorYear || null,
-          advisorSem: data.faculty?.advisorSem || null,
-          subjects: data.faculty?.subjectName || (data.assignedSubjects && data.assignedSubjects.length > 0 ? data.assignedSubjects.map(s => s.name).join(', ') : (data.faculty?.subjects && data.faculty.subjects !== '[]' ? data.faculty.subjects : 'Artificial Intelligence & Data Science')),
-          department: 'B.Tech Artificial Intelligence & Data Science',
-        }}
-        onComplete={(updated) => {
-          setIsOnboardingOpen(false)
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
-            sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
-          }
-          if (updated?.name) {
-            data.user.name = updated.name
-          }
-        }}
-      />
       {/* Hero Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
         <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
