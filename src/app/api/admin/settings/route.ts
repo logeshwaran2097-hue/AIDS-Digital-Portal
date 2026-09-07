@@ -37,17 +37,21 @@ const DEFAULT_SETTINGS = {
   notifyLowAttendance: true,
   notifyODSubmitted: true,
   notifyNewStudent: true,
-  // SMS & WhatsApp Gateway Configuration — FREE defaults: Fast2SMS (free credits) + Meta Cloud (1000 free/mo)
-  smsProvider: 'fast2sms', // 'twilio' | 'fast2sms' | 'custom' (fast2sms = free India credits)
-  smsApiKey: '',
-  smsSenderId: 'VSBEDU',
+  // SMS & WhatsApp Gateway Configuration — defaults: Fast2SMS WhatsApp & SMS
+  smsProvider: 'fast2sms', // 'twilio' | 'fast2sms' | 'custom'
+  smsApiKey: 'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4',
+  smsSenderId: 'TXTIND',
   whatsappEnabled: true,
-  whatsappProvider: 'meta', // 'meta' = FREE 1000 conv/mo | 'twilio' = paid
-  whatsappPhoneNumberId: '',
-  whatsappBusinessAccountId: '',
+  whatsappProvider: 'fast2sms', // 'fast2sms' | 'meta' | 'twilio'
+  fast2smsWhatsappApiKey: 'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4',
+  fast2smsPhoneNumberId: '1325593377300934',
+  fast2smsMessageId: '31679',
+  fast2smsTemplateName: 'vsb_attendance_alert',
+  whatsappPhoneNumberId: '1325593377300934',
+  whatsappBusinessAccountId: '2173997096493507',
   whatsappAccessToken: '',
   twilioWhatsappFrom: 'whatsapp:+14155238886',
-  // Real-time absent alerts (parent notification) — both free if above are configured
+  // Real-time absent alerts (parent notification)
   notifyAbsentViaSms: true,
   notifyAbsentViaWhatsapp: true,
   // Menu Item Visibility

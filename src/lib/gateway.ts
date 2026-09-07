@@ -5,7 +5,7 @@
 import { prisma } from '@/lib/prisma'
 
 export type SmsProvider = 'twilio' | 'fast2sms' | 'custom'
-export type WhatsappProvider = 'twilio' | 'meta'
+export type WhatsappProvider = 'fast2sms' | 'meta' | 'twilio'
 
 export interface GatewayConfig {
   smsProvider: SmsProvider
@@ -15,6 +15,9 @@ export interface GatewayConfig {
   whatsappProvider: WhatsappProvider
   whatsappPhoneNumberId: string
   whatsappAccessToken: string
+  fast2smsWhatsappApiKey?: string
+  fast2smsPhoneNumberId?: string
+  fast2smsMessageId?: string
   twilioAccountSid: string
   twilioAuthToken: string
   twilioPhoneNumber: string // E.164 e.g. +15551234567
@@ -75,18 +78,29 @@ export async function getGatewayConfig(): Promise<GatewayConfig> {
   const tokenEnv = process.env.TWILIO_AUTH_TOKEN || ''
 
   // smsApiKey may contain "AC:token" — reuse for whatsapp twilio as well
-  const rawApiKey = portal.smsApiKey || ''
+  const rawApiKey =
+    portal.smsApiKey ||
+    process.env.FAST2SMS_API_KEY ||
+    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
+
+  const fast2smsWaKey =
+    portal.fast2smsWhatsappApiKey ||
+    process.env.FAST2SMS_WHATSAPP_API_KEY ||
+    rawApiKey
 
   const { sid: parsedSid, token: parsedToken } = parseTwilioCreds(rawApiKey, sidEnv, tokenEnv)
 
   return {
-    smsProvider: (portal.smsProvider as SmsProvider) || 'fast2sms', // free tier preferred
+    smsProvider: (portal.smsProvider as SmsProvider) || 'fast2sms',
     smsApiKey: rawApiKey,
     smsSenderId: portal.smsSenderId || process.env.TWILIO_PHONE_NUMBER || 'VSBEDU',
     whatsappEnabled: portal.whatsappEnabled !== false,
-    whatsappProvider: (portal.whatsappProvider as WhatsappProvider) || (portal.whatsappPhoneNumberId || portal.whatsappAccessToken ? 'meta' : 'meta'), // meta is free 1000/mo
+    whatsappProvider: (portal.whatsappProvider as WhatsappProvider) || 'fast2sms',
     whatsappPhoneNumberId: portal.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID || '',
     whatsappAccessToken: portal.whatsappAccessToken || process.env.WHATSAPP_ACCESS_TOKEN || '',
+    fast2smsWhatsappApiKey: fast2smsWaKey,
+    fast2smsPhoneNumberId: portal.fast2smsPhoneNumberId || process.env.FAST2SMS_WHATSAPP_PHONE_NUMBER_ID || '1325593377300934',
+    fast2smsMessageId: portal.fast2smsMessageId || process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || '31679',
     twilioAccountSid: parsedSid || sidEnv,
     twilioAuthToken: parsedToken || tokenEnv,
     twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER || portal.smsSenderId || '',
@@ -192,6 +206,77 @@ async function sendFast2Sms(toLast10: string, body: string, cfg: GatewayConfig):
   }
 }
 
+async function sendFast2SmsWhatsapp(
+  toLast10: string,
+  bodyOrParams: string | { studentName?: string; date?: string; reason?: string },
+  cfg: GatewayConfig
+): Promise<SendResult> {
+  const token =
+    cfg.fast2smsWhatsappApiKey?.trim() ||
+    cfg.smsApiKey?.trim() ||
+    process.env.FAST2SMS_WHATSAPP_API_KEY ||
+    process.env.FAST2SMS_API_KEY ||
+    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
+
+  if (!token) {
+    return { success: false, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', error: 'Fast2SMS WhatsApp API key missing' }
+  }
+
+  const phoneId =
+    cfg.fast2smsPhoneNumberId?.trim() ||
+    process.env.FAST2SMS_WHATSAPP_PHONE_NUMBER_ID ||
+    '1325593377300934'
+
+  const messageId =
+    cfg.fast2smsMessageId?.trim() ||
+    process.env.FAST2SMS_WHATSAPP_MESSAGE_ID ||
+    '31679'
+
+  let variablesValues = ''
+  if (typeof bodyOrParams === 'object') {
+    const sName = bodyOrParams.studentName || 'Student'
+    const sDate = bodyOrParams.date || new Date().toLocaleDateString('en-GB')
+    const sReason = bodyOrParams.reason || 'Absent'
+    variablesValues = `${sName}|${sDate}|${sReason}|${sReason}`
+  } else {
+    // Attempt extracting name and date from text
+    const nameMatch = bodyOrParams.match(/ward\s+([^(]+)\s*\(/i)
+    const dateMatch = bodyOrParams.match(/on\s+([0-9\-/]+)/i)
+    const sName = nameMatch ? nameMatch[1].trim() : 'Student'
+    const sDate = dateMatch ? dateMatch[1].trim() : new Date().toLocaleDateString('en-GB')
+    variablesValues = `${sName}|${sDate}|Absent|Absent`
+  }
+
+  try {
+    const res = await fetch('https://www.fast2sms.com/dev/whatsapp', {
+      method: 'POST',
+      headers: {
+        authorization: token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message_id: messageId,
+        phone_number_id: phoneId,
+        numbers: toLast10,
+        variables_values: variablesValues,
+      }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (data.return === true) {
+      return { success: true, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', sid: data.request_id, details: data }
+    }
+    return {
+      success: false,
+      provider: 'Fast2SMS WhatsApp',
+      channel: 'whatsapp',
+      error: data.message?.[0] || 'Fast2SMS WhatsApp rejected',
+      details: data,
+    }
+  } catch (e: any) {
+    return { success: false, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', error: e.message }
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Public: unified senders respecting GatewayConfig
 // ─────────────────────────────────────────────────────────────────────────────
@@ -207,18 +292,34 @@ export async function sendSms(toRaw: string, body: string, cfg?: GatewayConfig):
   return { success: false, provider: 'Custom', channel: 'sms', error: 'Custom gateway not configured' }
 }
 
-export async function sendWhatsapp(toRaw: string, body: string, cfg?: GatewayConfig): Promise<SendResult> {
+export async function sendWhatsapp(
+  toRaw: string,
+  bodyOrParams: string | { studentName?: string; date?: string; reason?: string },
+  cfg?: GatewayConfig
+): Promise<SendResult> {
   const config = cfg || (await getGatewayConfig())
   if (!config.whatsappEnabled) return { success: false, provider: 'WhatsApp disabled', channel: 'whatsapp', error: 'WhatsApp disabled in settings' }
+
+  if (config.whatsappProvider === 'fast2sms') {
+    const last10 = cleanDigits(toRaw).slice(-10)
+    if (last10.length < 10) return { success: false, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', error: 'Invalid phone number' }
+    return sendFast2SmsWhatsapp(last10, bodyOrParams, config)
+  }
+
+  const bodyStr =
+    typeof bodyOrParams === 'string'
+      ? bodyOrParams
+      : `[VSB AI&DS] Official Notification: Your ward ${bodyOrParams.studentName || 'Student'} is marked absent on ${bodyOrParams.date || ''}.`
+
   if (config.whatsappProvider === 'twilio') {
     const e164 = toE164(toRaw)
     if (!e164) return { success: false, provider: 'Twilio WhatsApp', channel: 'whatsapp', error: 'Invalid phone number' }
-    return sendTwilioWhatsapp(e164, body, config)
+    return sendTwilioWhatsapp(e164, bodyStr, config)
   }
   // meta
   const digits = toWhatsappDigits(toRaw)
   if (!digits) return { success: false, provider: 'Meta WhatsApp Cloud', channel: 'whatsapp', error: 'Invalid phone number' }
-  return sendMetaWhatsapp(digits, body, config)
+  return sendMetaWhatsapp(digits, bodyStr, config)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -278,7 +379,10 @@ export async function dispatchAbsentAlerts(
       })
 
       // Send both channels in parallel, collecting individual results
-      const [smsRes, waRes] = await Promise.allSettled([sendSms(phone, body, config), sendWhatsapp(phone, body, config)])
+      const [smsRes, waRes] = await Promise.allSettled([
+        sendSms(phone, body, config),
+        sendWhatsapp(phone, { studentName: t.studentName, date: meta.date, reason: 'Absent' }, config),
+      ])
 
       const smsVal: SendResult =
         smsRes.status === 'fulfilled' ? smsRes.value : { success: false, provider: config.smsProvider, channel: 'sms', error: (smsRes as any).reason?.message || 'SMS failure' }

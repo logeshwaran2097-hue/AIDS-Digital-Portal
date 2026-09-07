@@ -38,6 +38,7 @@ import {
   X,
   Edit3,
   Loader2,
+  MessageCircle,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
@@ -396,6 +397,83 @@ export function AdminSettingsView() {
     }
   }
 
+  // 6c. WhatsApp Gateway Config State (Fast2SMS WhatsApp Cloud API / Meta / Twilio)
+  const [whatsappProvider, setWhatsappProvider] = useState<'fast2sms' | 'meta' | 'twilio'>('fast2sms')
+  const [fast2smsWhatsappKey, setFast2smsWhatsappKey] = useState(
+    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
+  )
+  const [fast2smsPhoneNumberId, setFast2smsPhoneNumberId] = useState('1325593377300934')
+  const [fast2smsMessageId, setFast2smsMessageId] = useState('31679')
+  const [fast2smsTemplateName, setFast2smsTemplateName] = useState('vsb_attendance_alert')
+  const [notifyAbsentViaWhatsapp, setNotifyAbsentViaWhatsapp] = useState(true)
+  const [testWhatsappNumber, setTestWhatsappNumber] = useState('6381366088')
+  const [isTestingWhatsapp, setIsTestingWhatsapp] = useState(false)
+  const [showWhatsappKey, setShowWhatsappKey] = useState(false)
+  const [whatsappTestResult, setWhatsappTestResult] = useState<{
+    type: 'success' | 'error' | 'info'
+    message: string
+    targetNumber?: string
+    provider?: string
+    whatsappWebUrl?: string
+  } | null>(null)
+
+  // Real WhatsApp Gateway Test Dispatch
+  const handleTestWhatsapp = async () => {
+    const clean = testWhatsappNumber.replace(/\D/g, '')
+    if (!testWhatsappNumber || clean.length < 10) {
+      setWhatsappTestResult({
+        type: 'error',
+        message: '❌ Please enter a valid 10-digit recipient mobile number.',
+      })
+      return
+    }
+
+    setIsTestingWhatsapp(true)
+    setWhatsappTestResult(null)
+
+    try {
+      const res = await fetch('/api/admin/gateway/test-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mobileNumber: testWhatsappNumber.trim(),
+          provider: whatsappProvider,
+          apiKey: fast2smsWhatsappKey.trim(),
+          whatsappPhoneNumberId: fast2smsPhoneNumberId.trim(),
+          channel: 'whatsapp',
+        }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setWhatsappTestResult({
+          type: 'success',
+          message: data.message || `✅ Live WhatsApp message successfully dispatched to +91-${clean.slice(-10)}!`,
+          targetNumber: data.targetNumber || testWhatsappNumber,
+          provider: data.provider || 'Fast2SMS WhatsApp API',
+          whatsappWebUrl: data.whatsappWebUrl,
+        })
+      } else {
+        setWhatsappTestResult({
+          type: 'error',
+          message: data.error || data.message || '❌ Failed to dispatch WhatsApp message.',
+          targetNumber: data.targetNumber || testWhatsappNumber,
+          provider: data.provider || 'Fast2SMS WhatsApp API',
+          whatsappWebUrl: data.whatsappWebUrl,
+        })
+      }
+    } catch (err: any) {
+      console.error('WhatsApp gateway test error:', err)
+      setWhatsappTestResult({
+        type: 'error',
+        message: '❌ Network connection error while dispatching test WhatsApp message.',
+      })
+    } finally {
+      setIsTestingWhatsapp(false)
+    }
+  }
+
   // Live Broadcast Dispatcher State
   const [targetMode, setTargetMode] = useState<'FULL' | 'SEPARATED'>('FULL')
   const [selectedTargets, setSelectedTargets] = useState<string[]>([
@@ -655,6 +733,12 @@ export function AdminSettingsView() {
         if (parsed.smsApiKey) setSmsApiKey(parsed.smsApiKey)
         if (parsed.smsSenderId) setSmsSenderId(parsed.smsSenderId)
         if (parsed.notifyAbsentViaSms !== undefined) setNotifyAbsentViaSms(parsed.notifyAbsentViaSms)
+        if (parsed.whatsappProvider) setWhatsappProvider(parsed.whatsappProvider)
+        if (parsed.fast2smsWhatsappApiKey) setFast2smsWhatsappKey(parsed.fast2smsWhatsappApiKey)
+        if (parsed.fast2smsPhoneNumberId) setFast2smsPhoneNumberId(parsed.fast2smsPhoneNumberId)
+        if (parsed.fast2smsMessageId) setFast2smsMessageId(parsed.fast2smsMessageId)
+        if (parsed.fast2smsTemplateName) setFast2smsTemplateName(parsed.fast2smsTemplateName)
+        if (parsed.notifyAbsentViaWhatsapp !== undefined) setNotifyAbsentViaWhatsapp(parsed.notifyAbsentViaWhatsapp)
       } catch (e) {
         console.error('Failed to parse cached config:', e)
       }
@@ -670,6 +754,12 @@ export function AdminSettingsView() {
           if (s.smsApiKey) setSmsApiKey(s.smsApiKey)
           if (s.smsSenderId) setSmsSenderId(s.smsSenderId)
           if (s.notifyAbsentViaSms !== undefined) setNotifyAbsentViaSms(s.notifyAbsentViaSms)
+          if (s.whatsappProvider) setWhatsappProvider(s.whatsappProvider)
+          if (s.fast2smsWhatsappApiKey) setFast2smsWhatsappKey(s.fast2smsWhatsappApiKey)
+          if (s.fast2smsPhoneNumberId) setFast2smsPhoneNumberId(s.fast2smsPhoneNumberId)
+          if (s.fast2smsMessageId) setFast2smsMessageId(s.fast2smsMessageId)
+          if (s.fast2smsTemplateName) setFast2smsTemplateName(s.fast2smsTemplateName)
+          if (s.notifyAbsentViaWhatsapp !== undefined) setNotifyAbsentViaWhatsapp(s.notifyAbsentViaWhatsapp)
           if (s.smtpHost) setSmtpHost(s.smtpHost)
           if (s.smtpPort) setSmtpPort(s.smtpPort)
           if (s.smtpUser) setSmtpUser(s.smtpUser)
@@ -875,11 +965,19 @@ export function AdminSettingsView() {
       notifyNewStudent,
       notifySecurityAlerts,
       menus,
-      // SMS Gateway Configuration
+      // SMS & WhatsApp Gateway Configuration
       smsProvider,
       smsApiKey,
       smsSenderId,
       notifyAbsentViaSms,
+      whatsappEnabled: true,
+      whatsappProvider,
+      fast2smsWhatsappApiKey: fast2smsWhatsappKey,
+      fast2smsPhoneNumberId,
+      fast2smsMessageId,
+      fast2smsTemplateName,
+      whatsappPhoneNumberId: fast2smsPhoneNumberId,
+      notifyAbsentViaWhatsapp,
     }
 
     try {
@@ -2750,6 +2848,235 @@ export function AdminSettingsView() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* 3. WhatsApp Business Cloud Gateway Configuration */}
+            <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-7 space-y-5">
+              <div className="flex items-center justify-between border-b pb-3.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-600">
+                    <MessageCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-base font-black text-[#071A3D]">WhatsApp Business Gateway Settings</h4>
+                    <p className="text-xs text-gray-500">
+                      Fast2SMS WhatsApp Cloud API &amp; Approved Bilingual Attendance Templates
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold text-[10px] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Active · Connected
+                </span>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                {/* WhatsApp Provider Selector */}
+                <div>
+                  <label className="block font-black text-[#071A3D] mb-1.5">WhatsApp Gateway Service Provider</label>
+                  <select
+                    value={whatsappProvider}
+                    onChange={(e) => setWhatsappProvider(e.target.value as any)}
+                    className="w-full px-3.5 py-2.5 rounded-xl border-2 border-gray-200 bg-white font-bold text-[#071A3D] focus:border-emerald-600 focus:outline-none"
+                  >
+                    <option value="fast2sms">
+                      Fast2SMS WhatsApp Cloud API (Approved Template: vsb_attendance_alert) — Active
+                    </option>
+                    <option value="meta">Meta WhatsApp Cloud API (Graph API v19.0)</option>
+                    <option value="twilio">Twilio Cloud WhatsApp</option>
+                  </select>
+                </div>
+
+                {/* Fast2SMS WhatsApp API Credentials */}
+                {whatsappProvider === 'fast2sms' && (
+                  <div className="space-y-3 p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-emerald-950 text-xs">
+                        ⚡ Fast2SMS WhatsApp Cloud API Credentials
+                      </span>
+                      <span className="text-[10px] text-emerald-700 font-bold">
+                        WABA: 2173997096493507 · Sender: +1555-479-5127
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-1">
+                        <label className="block font-black text-[#071A3D] mb-1">
+                          Phone Number ID
+                        </label>
+                        <input
+                          type="text"
+                          value={fast2smsPhoneNumberId}
+                          onChange={(e) => setFast2smsPhoneNumberId(e.target.value)}
+                          placeholder="1325593377300934"
+                          className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white font-bold text-[#071A3D] focus:border-emerald-600 focus:outline-none text-xs"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1">
+                        <label className="block font-black text-[#071A3D] mb-1">
+                          Approved Template ID / Message ID
+                        </label>
+                        <input
+                          type="text"
+                          value={fast2smsMessageId}
+                          onChange={(e) => setFast2smsMessageId(e.target.value)}
+                          placeholder="31679 (vsb_attendance_alert)"
+                          className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white font-bold text-[#071A3D] focus:border-emerald-600 focus:outline-none text-xs"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1">
+                        <label className="block font-black text-[#071A3D] mb-1">
+                          Template Identifier
+                        </label>
+                        <input
+                          type="text"
+                          value={fast2smsTemplateName}
+                          onChange={(e) => setFast2smsTemplateName(e.target.value)}
+                          placeholder="vsb_attendance_alert"
+                          className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white font-bold text-[#071A3D] focus:border-emerald-600 focus:outline-none text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-black text-[#071A3D]">
+                          Fast2SMS WhatsApp API Authorization Key
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowWhatsappKey(!showWhatsappKey)}
+                          className="text-[10px] text-emerald-700 hover:text-emerald-900 font-bold cursor-pointer"
+                        >
+                          {showWhatsappKey ? 'Hide Key' : 'Reveal Key'}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showWhatsappKey ? 'text' : 'password'}
+                          value={fast2smsWhatsappKey}
+                          onChange={(e) => setFast2smsWhatsappKey(e.target.value)}
+                          placeholder="Paste Fast2SMS API Key..."
+                          className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 bg-white font-mono font-bold text-[#071A3D] focus:border-emerald-600 focus:outline-none text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Template Preview */}
+                    <div className="p-3 rounded-xl bg-white border border-emerald-200/80 text-[11px] space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-[#071A3D]">
+                          Approved Template: <code className="bg-emerald-100 text-emerald-900 px-1.5 py-0.5 rounded font-bold">vsb_attendance_alert</code>
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                          APPROVED · UTILITY
+                        </span>
+                      </div>
+                      <p className="text-gray-600 leading-relaxed text-[10px]">
+                        <strong>English &amp; Tamil:</strong> &ldquo;Dear Parent, your ward <em>[Student Name]</em> was marked absent on <em>[Date]</em>. Reason/Status: <em>[Reason]</em>. V.S.B. Engineering College (Autonomous)&rdquo;
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Automatic Absent Alerts for WhatsApp */}
+                <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+                  <div className="flex items-center gap-1.5 font-black text-emerald-950 text-[11px]">
+                    💬 Real-Time Parent WhatsApp Alerts
+                  </div>
+                  <p className="text-[10px] text-emerald-900 leading-relaxed">
+                    When faculty marks a student as <span className="font-black">Absent (A)</span>, the system instantly dispatches the official WhatsApp message to the parent&apos;s registered WhatsApp mobile number via Fast2SMS Cloud API.
+                  </p>
+                  <label className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-emerald-200 cursor-pointer w-fit">
+                    <input
+                      type="checkbox"
+                      checked={notifyAbsentViaWhatsapp}
+                      onChange={(e) => setNotifyAbsentViaWhatsapp(e.target.checked)}
+                      className="w-4 h-4 accent-emerald-600"
+                    />
+                    <span className="text-[11px] font-black text-[#071A3D]">
+                      Auto Send WhatsApp Message on Student Absence
+                    </span>
+                  </label>
+                </div>
+
+                {/* Live WhatsApp Test Dispatch */}
+                <div className="space-y-2 pt-1">
+                  <label className="block font-black text-[#071A3D]">Test WhatsApp Message Delivery</label>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <input
+                      type="tel"
+                      value={testWhatsappNumber}
+                      onChange={(e) => setTestWhatsappNumber(e.target.value)}
+                      placeholder="Enter mobile number: 6381366088"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-gray-200 font-bold text-[#071A3D] text-xs focus:border-emerald-600 focus:outline-none tracking-wide"
+                    />
+                    <button
+                      type="button"
+                      disabled={isTestingWhatsapp || !testWhatsappNumber}
+                      onClick={handleTestWhatsapp}
+                      className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 transition-all shadow-sm active:scale-95"
+                      title="Send live WhatsApp verification message"
+                    >
+                      {isTestingWhatsapp ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[#F4C430]" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5 text-[#F4C430]" />
+                      )}
+                      <span>Test WhatsApp</span>
+                    </button>
+                  </div>
+
+                  {whatsappTestResult && (
+                    <div
+                      className={`p-3.5 rounded-2xl text-xs space-y-1.5 border transition-all ${
+                        whatsappTestResult.type === 'success'
+                          ? 'bg-emerald-50/90 border-emerald-300 text-emerald-900'
+                          : 'bg-amber-50/90 border-amber-300 text-amber-950'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-base shrink-0">
+                          {whatsappTestResult.type === 'success' ? '✅' : '⚠️'}
+                        </span>
+                        <div className="flex-1 leading-relaxed">
+                          <p className="font-bold text-[11px]">{whatsappTestResult.message}</p>
+                          {whatsappTestResult.provider && (
+                            <p className="text-[10px] text-gray-500 font-semibold mt-0.5">
+                              Gateway Provider:{' '}
+                              <span className="font-bold text-[#071A3D]">{whatsappTestResult.provider}</span>
+                            </p>
+                          )}
+                          {whatsappTestResult.whatsappWebUrl && (
+                            <a
+                              href={whatsappTestResult.whatsappWebUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-emerald-800 font-bold hover:underline mt-1"
+                            >
+                              <span>Open in WhatsApp Web</span> &rarr;
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Save Gateway Settings Button */}
+                <div className="flex items-center justify-end pt-3 border-t">
+                  <button
+                    type="button"
+                    onClick={handleSaveSettings}
+                    disabled={isSaving}
+                    className="px-5 py-2.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all hover:scale-105"
+                  >
+                    <Save className="w-3.5 h-3.5 text-[#F4C430]" />
+                    <span>{isSaving ? 'Saving...' : 'Save WhatsApp Gateway'}</span>
+                  </button>
                 </div>
               </div>
             </div>
