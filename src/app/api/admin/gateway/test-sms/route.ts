@@ -170,7 +170,96 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Meta WhatsApp Cloud API (existing code)
+      // Fast2SMS WhatsApp Business API
+      if (provider === 'fast2sms') {
+        const token = apiKey.trim() || process.env.FAST2SMS_WHATSAPP_API_KEY || ''
+
+        if (!token) {
+          return NextResponse.json({
+            success: false,
+            channel: 'whatsapp',
+            provider: 'Fast2SMS WhatsApp',
+            requiresConfig: true,
+            error:
+              'Fast2SMS WhatsApp API Key is required. Paste your Fast2SMS WhatsApp API key in the field above or set FAST2SMS_WHATSAPP_API_KEY in environment.',
+            whatsappWebUrl: waWebUrl,
+            targetNumber: e164,
+            messagePreview: finalMessage,
+          })
+        }
+
+        try {
+          const payload: Record<string, unknown> = {
+            route: 'whatsapp_template',
+            numbers: last10,
+            template_name: 'vsb_attendance_alert',
+            language_code: 'en',
+            header_type: 'none',
+            body_parameters: [
+              { type: 'text', text: 'Test Student' },
+              { type: 'text', text: new Date().toLocaleDateString('en-IN') },
+              { type: 'text', text: 'Gateway Test' },
+              { type: 'text', text: '1' },
+            ],
+          }
+
+          const fast2WaRes = await fetch('https://www.fast2sms.com/dev/wa', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              authorization: token,
+            },
+            body: JSON.stringify(payload),
+          })
+
+          const fast2WaData = await fast2WaRes.json()
+
+          if (fast2WaData.return === true || fast2WaData.status === 'success' || fast2WaRes.ok) {
+            await prisma.auditLog.create({
+              data: {
+                userName: session.name || 'System Administrator',
+                action: 'TEST_WHATSAPP_GATEWAY',
+                module: 'gateway',
+                details: `Dispatched test WhatsApp to ${last10} via Fast2SMS WhatsApp. Request ID: ${fast2WaData.request_id || 'OK'}`,
+                status: 'SUCCESS',
+              },
+            }).catch(() => {})
+
+            return NextResponse.json({
+              success: true,
+              channel: 'whatsapp',
+              provider: 'Fast2SMS WhatsApp',
+              requestId: fast2WaData.request_id || fast2WaData.message_id || 'OK',
+              targetNumber: e164,
+              message: `✅ WhatsApp message dispatched to +91${last10} via Fast2SMS!`,
+              whatsappWebUrl: waWebUrl,
+            })
+          }
+
+          const errMsg = Array.isArray(fast2WaData.message)
+            ? fast2WaData.message.join(', ')
+            : fast2WaData.message || fast2WaData.error || 'Fast2SMS WhatsApp API rejected the request'
+
+          return NextResponse.json({
+            success: false,
+            channel: 'whatsapp',
+            provider: 'Fast2SMS WhatsApp',
+            error: `Fast2SMS WhatsApp Error: ${errMsg}`,
+            details: fast2WaData,
+            whatsappWebUrl: waWebUrl,
+          })
+        } catch (err: any) {
+          return NextResponse.json({
+            success: false,
+            channel: 'whatsapp',
+            provider: 'Fast2SMS WhatsApp',
+            error: `Failed to connect to Fast2SMS WhatsApp API: ${err.message}`,
+            whatsappWebUrl: waWebUrl,
+          })
+        }
+      }
+
+
       const token = whatsappAccessToken.trim() || process.env.WHATSAPP_ACCESS_TOKEN || ''
       const phoneId = whatsappPhoneNumberId.trim() || process.env.WHATSAPP_PHONE_NUMBER_ID || ''
 
