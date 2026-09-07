@@ -933,43 +933,45 @@ export function downloadStudentCardPDF(student: {
   doc.text('STUDENT DIGITAL ACADEMIC ID CARD', cardW / 2, 34.5, { align: 'center' })
 
   // 6. Center Student Photograph Flanked by DOB & Blood Group (Left) and Year & Batch (Right)
-  const photoW = 25
-  const photoH = 29
+  const photoW = 26
+  const photoH = 30
   const photoX = (cardW - photoW) / 2
-  const photoY = 37.5
+  const photoY = 38.0
+
+  const flankW = 26.5
+  const leftX = 5.5
+  const rightX = photoX + photoW + 3.0
 
   // LEFT FLANK: Date of Birth & Blood Group
-  const leftX = 5.5
-  const flankW = 26.5
   doc.setFillColor(248, 250, 254)
   doc.setDrawColor(215, 228, 245)
   doc.setLineWidth(0.3)
   doc.roundedRect(leftX, photoY, flankW, photoH, 2, 2, 'FD')
 
-  // Left - DOB Compartment
   const leftCenterX = leftX + flankW / 2
+  // Top: DATE OF BIRTH
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
+  doc.setFontSize(4.3)
   doc.setTextColor(100, 115, 135)
-  doc.text('DATE OF BIRTH', leftCenterX, photoY + 5.2, { align: 'center' })
+  doc.text('DATE OF BIRTH', leftCenterX, photoY + 5.5, { align: 'center' })
 
-  doc.setFontSize(5.6)
+  doc.setFontSize(5.8)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.dob || '01/01/2004', leftCenterX, photoY + 9.8, { align: 'center' })
+  doc.text(student.dob || '01/01/2004', leftCenterX, photoY + 10.5, { align: 'center' })
 
-  // Left Divider
+  // Left Divider Line (Exactly half-height)
   doc.setDrawColor(225, 235, 248)
-  doc.line(leftX + 2.5, photoY + 14.5, leftX + flankW - 2.5, photoY + 14.5)
+  doc.line(leftX + 2.5, photoY + 15.0, leftX + flankW - 2.5, photoY + 15.0)
 
-  // Left - Blood Group Compartment
+  // Bottom: BLOOD GROUP
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
+  doc.setFontSize(4.3)
   doc.setTextColor(100, 115, 135)
-  doc.text('BLOOD GROUP', leftCenterX, photoY + 19.5, { align: 'center' })
+  doc.text('BLOOD GROUP', leftCenterX, photoY + 20.5, { align: 'center' })
 
-  doc.setFontSize(6.5)
+  doc.setFontSize(6.8)
   doc.setTextColor(220, 38, 38) // Medical Red
-  doc.text(student.bloodGroup || 'O+ve', leftCenterX, photoY + 24.8, { align: 'center' })
+  doc.text(student.bloodGroup || 'O+ve', leftCenterX, photoY + 25.8, { align: 'center' })
 
   // CENTER: Framed Student Photograph
   doc.setFillColor(245, 248, 253)
@@ -987,70 +989,65 @@ export function downloadStudentCardPDF(student: {
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(20)
       doc.setTextColor(7, 26, 61)
-      doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 17, { align: 'center' })
+      doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 18, { align: 'center' })
     }
   } else {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(20)
     doc.setTextColor(7, 26, 61)
-    doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 17, { align: 'center' })
+    doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 18, { align: 'center' })
   }
 
-  // RIGHT FLANK: Year/Sem & Batch
-  const rightX = photoX + photoW + 3.5
+  // RIGHT FLANK: Year/Sem & Batch (Aligned identically to Left Flank)
   doc.setFillColor(248, 250, 254)
   doc.setDrawColor(215, 228, 245)
   doc.setLineWidth(0.3)
   doc.roundedRect(rightX, photoY, flankW, photoH, 2, 2, 'FD')
 
-  // Right - Year/Sem Compartment
   const rightCenterX = rightX + flankW / 2
+  // Top: YEAR / SEM
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
+  doc.setFontSize(4.3)
   doc.setTextColor(100, 115, 135)
-  doc.text('YEAR / SEM', rightCenterX, photoY + 5.2, { align: 'center' })
-
-  doc.setFontSize(5.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text(`Year ${student.year} · Sem ${student.semester}`, rightCenterX, photoY + 9.2, { align: 'center' })
-
-  doc.setFontSize(4.4)
-  doc.setTextColor(21, 87, 192)
-  doc.text(`Section ${student.section}`, rightCenterX, photoY + 12.8, { align: 'center' })
-
-  // Right Divider
-  doc.setDrawColor(225, 235, 248)
-  doc.line(rightX + 2.5, photoY + 14.5, rightX + flankW - 2.5, photoY + 14.5)
-
-  // Right - Batch Compartment
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
-  doc.setTextColor(100, 115, 135)
-  doc.text('BATCH', rightCenterX, photoY + 19.5, { align: 'center' })
+  doc.text('YEAR / SEM', rightCenterX, photoY + 5.5, { align: 'center' })
 
   doc.setFontSize(5.4)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.batch || '2025 - 2029', rightCenterX, photoY + 24.5, { align: 'center' })
+  doc.text(`Year ${student.year} · Sem ${student.semester} (${student.section})`, rightCenterX, photoY + 10.5, { align: 'center' })
 
-  // 7. Student Name & Registration Pill (DEPT REMOVED BELOW REG NO)
+  // Right Divider Line (Exactly half-height)
+  doc.setDrawColor(225, 235, 248)
+  doc.line(rightX + 2.5, photoY + 15.0, rightX + flankW - 2.5, photoY + 15.0)
+
+  // Bottom: BATCH
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10.5)
+  doc.setFontSize(4.3)
+  doc.setTextColor(100, 115, 135)
+  doc.text('BATCH', rightCenterX, photoY + 20.5, { align: 'center' })
+
+  doc.setFontSize(5.8)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.name.toUpperCase(), cardW / 2, 70.5, { align: 'center' })
+  doc.text(student.batch || '2025 - 2029', rightCenterX, photoY + 25.8, { align: 'center' })
+
+  // 7. Student Name & Registration Pill
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.name.toUpperCase(), cardW / 2, 72.5, { align: 'center' })
 
   // Registration Pill
   doc.setFillColor(7, 26, 61)
-  doc.roundedRect(cardW / 2 - 24, 72.5, 48, 5.2, 1.5, 1.5, 'F')
+  doc.roundedRect(cardW / 2 - 24, 74.8, 48, 5.2, 1.5, 1.5, 'F')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.2)
   doc.setTextColor(244, 196, 48)
-  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 76.2, { align: 'center' })
+  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 78.5, { align: 'center' })
 
-  // 8. Structured Information Micro-Card (DOB, Blood, Year, Batch moved to photo flanks!)
-  const gridX = 5
-  const gridW = cardW - 10
-  const gridY = 80.5
-  const gridH = 37
+  // 8. Structured Information Card (DEGREE & EXAM REMOVED, exactly 3 clear contact rows!)
+  const gridX = 5.5
+  const gridW = cardW - 11
+  const gridY = 83.5
+  const gridH = 26
 
   doc.setFillColor(252, 254, 255)
   doc.setDrawColor(215, 228, 245)
@@ -1058,44 +1055,38 @@ export function downloadStudentCardPDF(student: {
   doc.roundedRect(gridX, gridY, gridW, gridH, 2, 2, 'FD')
 
   const cardRows = [
-    { label: 'DEGREE / BRANCH:', val: 'B.Tech - Artificial Intelligence & Data Science' },
     { label: 'RESIDENCY STATUS:', val: student.residencyStatus || 'Day Scholar' },
     { label: 'CONTACT NUMBER:', val: student.phone },
     { label: 'OFFICIAL EMAIL:', val: student.email },
-    { label: 'EXAM ELIGIBILITY:', val: 'Eligible for Semester Examinations (Autonomous)' },
   ]
 
-  let curY = gridY + 5.2
-  const rowStep = 7.0
+  let curY = gridY + 5.5
+  const rowStep = 7.6
 
   for (let i = 0; i < cardRows.length; i++) {
     const row = cardRows[i]
     if (i % 2 === 1) {
       doc.setFillColor(248, 250, 254)
-      doc.rect(gridX + 0.5, curY - 4.2, gridW - 1, 6.8, 'F')
+      doc.rect(gridX + 0.5, curY - 4.5, gridW - 1, 7.2, 'F')
     }
 
     doc.setFillColor(21, 87, 192)
-    doc.circle(gridX + 3.0, curY - 0.8, 0.7, 'F')
+    doc.circle(gridX + 3.2, curY - 0.8, 0.7, 'F')
 
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(4.8)
+    doc.setFontSize(5.0)
     doc.setTextColor(100, 115, 135)
-    doc.text(row.label, gridX + 5.2, curY - 0.2)
+    doc.text(row.label, gridX + 5.5, curY - 0.2)
 
-    doc.setFontSize(5.2)
-    if (row.label.includes('EXAM')) {
-      doc.setTextColor(16, 120, 75) // Success Green
-    } else {
-      doc.setTextColor(7, 26, 61)
-    }
-    doc.text(row.val, gridX + 32, curY - 0.2)
+    doc.setFontSize(5.6)
+    doc.setTextColor(7, 26, 61)
+    doc.text(row.val, gridX + 34, curY - 0.2)
 
     curY += rowStep
   }
 
   // 9. Signatures Row
-  const sigY = 122.5
+  const sigY = 117.5
   doc.setDrawColor(180, 195, 215)
   doc.setLineWidth(0.3)
 
@@ -1123,40 +1114,40 @@ export function downloadStudentCardPDF(student: {
   // 10. Institutional Footer Styled Like the Header (Clean Academic Letterhead Format)
   // Mirror Beam Separator (Sapphire & Gold)
   doc.setFillColor(231, 185, 62)
-  doc.rect(3, 128, cardW - 6, 0.6, 'F')
+  doc.rect(3, 125.5, cardW - 6, 0.6, 'F')
 
   doc.setFillColor(21, 87, 192)
-  doc.rect(3, 128.6, cardW - 6, 1.2, 'F')
+  doc.rect(3, 126.1, cardW - 6, 1.2, 'F')
 
   // Center Diamond Accent
   doc.setFillColor(231, 185, 62)
-  doc.circle(cardW / 2, 129.2, 1.4, 'F')
+  doc.circle(cardW / 2, 126.7, 1.4, 'F')
   doc.setFillColor(7, 26, 61)
-  doc.circle(cardW / 2, 129.2, 0.7, 'F')
+  doc.circle(cardW / 2, 126.7, 0.7, 'F')
 
   // Clean Light Background Panel Matching Header
   doc.setFillColor(250, 252, 255)
-  doc.rect(3, 130.5, cardW - 6, 10.5, 'F')
+  doc.rect(3, 128.0, cardW - 6, 12.0, 'F')
 
   // Line 1: College Name
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.2)
+  doc.setFontSize(6.4)
   doc.setTextColor(7, 26, 61)
-  doc.text('V.S.B. ENGINEERING COLLEGE', cardW / 2, 134.2, { align: 'center' })
+  doc.text('V.S.B. ENGINEERING COLLEGE', cardW / 2, 132.5, { align: 'center' })
 
   // Line 2: Autonomous Pill Tag (Matching Header's Autonomous Pill!)
   doc.setFillColor(231, 185, 62)
-  doc.roundedRect(cardW / 2 - 24, 135.2, 48, 2.8, 0.7, 0.7, 'F')
+  doc.roundedRect(cardW / 2 - 24, 134.0, 48, 3.0, 0.8, 0.8, 'F')
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
+  doc.setFontSize(4.6)
   doc.setTextColor(7, 26, 61)
-  doc.text('AN AUTONOMOUS INSTITUTION · KARUR - 639 111', cardW / 2, 137.2, { align: 'center' })
+  doc.text('AN AUTONOMOUS INSTITUTION · KARUR - 639 111', cardW / 2, 136.2, { align: 'center' })
 
   // Line 3: Address & Return Notice
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(3.4)
+  doc.setFontSize(3.5)
   doc.setTextColor(90, 105, 125)
-  doc.text('NH-67, Covai Road, Karur · www.vsbec.com · If found, please return to College Office', cardW / 2, 139.8, { align: 'center' })
+  doc.text('NH-67, Covai Road, Karur · www.vsbec.com · If found, please return to College Office', cardW / 2, 139.5, { align: 'center' })
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }
