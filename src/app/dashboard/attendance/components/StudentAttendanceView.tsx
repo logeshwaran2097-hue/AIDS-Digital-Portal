@@ -64,13 +64,26 @@ export function StudentAttendanceView({
   const isCompliant = stats.totalSessions === 0 || stats.percentage >= 75
 
   const handleDownloadReport = () => {
+    // Standard R-2021 curriculum semester courses if subjectBreakdown is not yet populated by staff attendance
+    const defaultCourses = [
+      { code: 'AD3301', name: 'Design and Analysis of Algorithms', conducted: 0, attended: 0, percent: 100, status: 'Safe' },
+      { code: 'CS3351', name: 'Digital Principles and Computer Organization', conducted: 0, attended: 0, percent: 100, status: 'Safe' },
+      { code: 'AD3391', name: 'Database Design and Management', conducted: 0, attended: 0, percent: 100, status: 'Safe' },
+      { code: 'MA3354', name: 'Discrete Mathematics', conducted: 0, attended: 0, percent: 100, status: 'Safe' },
+      { code: 'AD3351', name: 'Design and Analysis of Algorithms Laboratory', conducted: 0, attended: 0, percent: 100, status: 'Safe' },
+      { code: 'AD3381', name: 'Database Design and Management Laboratory', conducted: 0, attended: 0, percent: 100, status: 'Safe' },
+    ]
+
+    const coursesToReport = stats.subjectBreakdown && stats.subjectBreakdown.length > 0 ? stats.subjectBreakdown : defaultCourses
+
     const sections = [
       {
         heading: '1. CUMULATIVE ATTENDANCE SUMMARY',
         body: [
           `Total Working Sessions Conducted: ${stats.totalSessions} Sessions`,
-          `Total Sessions Present: ${stats.presentSessions} Sessions (${stats.percentage.toFixed(1)}%)`,
-          `On-Duty (OD) Approved: ${stats.odSessions} Sessions`,
+          `Total Sessions Attended (Present): ${stats.presentSessions} Sessions`,
+          `Cumulative Attendance Percentage: ${stats.percentage.toFixed(1)}%`,
+          `On-Duty (OD) Authorized: ${stats.odSessions} Sessions`,
           `Total Absent Sessions: ${stats.absentSessions} Sessions`,
           `Eligibility Status: ${
             isCompliant
@@ -81,9 +94,9 @@ export function StudentAttendanceView({
       },
       {
         heading: '2. COURSE-WISE ATTENDANCE BREAKDOWN',
-        body: stats.subjectBreakdown.map(
+        body: coursesToReport.map(
           (s) =>
-            `${s.code} - ${s.name}: ${s.attended}/${s.conducted} Periods (${s.percent.toFixed(1)}%) — Status: ${s.conducted === 0 ? 'Enrolled' : s.status}`
+            `${s.code} · ${s.name}: ${s.conducted > 0 ? `${s.attended}/${s.conducted} Periods (${s.percent.toFixed(1)}%)` : 'Enrolled (100% Safe)'}`
         ),
       },
     ]

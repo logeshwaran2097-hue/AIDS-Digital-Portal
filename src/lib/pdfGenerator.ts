@@ -209,8 +209,7 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
       // Parse Lines into Key-Value Table
       const tableX = marginX
       const tableW = contentW
-      const rowHeight = 7.5
-      const col1W = 68
+      const col1W = 75
 
       for (let rIdx = 0; rIdx < sec.body.length; rIdx++) {
         if (currentY > pageHeight - 45) {
@@ -225,64 +224,130 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
         const cleanLine = rawLine.replace(/^[•\-\*]\s*/, '').trim()
         const colonIdx = cleanLine.indexOf(':')
 
-        // Alternating Table Row
-        doc.setFillColor(rIdx % 2 === 0 ? 255 : 249, rIdx % 2 === 0 ? 255 : 251, rIdx % 2 === 0 ? 255 : 254)
-        doc.rect(tableX, currentY, tableW, rowHeight, 'F')
-        doc.setDrawColor(225, 233, 245)
-        doc.setLineWidth(0.2)
-        doc.rect(tableX, currentY, tableW, rowHeight, 'S')
-
-        if (colonIdx > 0 && colonIdx < 45) {
+        if (colonIdx > 0 && colonIdx < 55) {
           const label = cleanLine.slice(0, colonIdx).trim()
           const val = cleanLine.slice(colonIdx + 1).trim()
+
+          doc.setFont('helvetica', 'bold')
+          doc.setFontSize(7.2)
+          const splitLabel = doc.splitTextToSize(label, col1W - 12)
+          const rowHeight = Math.max(8.2, splitLabel.length * 4.2 + 2.5)
+
+          // Alternating Table Row
+          doc.setFillColor(rIdx % 2 === 0 ? 255 : 248, rIdx % 2 === 0 ? 255 : 250, rIdx % 2 === 0 ? 255 : 253)
+          doc.rect(tableX, currentY, tableW, rowHeight, 'F')
+          doc.setDrawColor(225, 233, 245)
+          doc.setLineWidth(0.2)
+          doc.rect(tableX, currentY, tableW, rowHeight, 'S')
 
           // Column 1 Divider
           doc.line(tableX + col1W, currentY, tableX + col1W, currentY + rowHeight)
 
-          // Key Label
+          // Key Label with bullet dot
           doc.setFillColor(21, 87, 192)
-          doc.circle(tableX + 4, currentY + rowHeight / 2, 0.7, 'F')
+          doc.circle(tableX + 4.5, currentY + (rowHeight / 2), 0.75, 'F')
 
           doc.setFont('helvetica', 'bold')
           doc.setFontSize(7.2)
-          doc.setTextColor(55, 65, 81)
-          doc.text(label, tableX + 7, currentY + 5)
+          doc.setTextColor(30, 41, 59)
+          const labelStartY = splitLabel.length > 1 ? currentY + 4.2 : currentY + (rowHeight / 2) + 1.2
+          doc.text(splitLabel, tableX + 7.5, labelStartY)
 
           // Value Pill / Highlight Text
-          doc.setFont('helvetica', 'bold')
-          doc.setFontSize(7.6)
-
           const valLower = val.toLowerCase()
-          if (valLower.includes('active') || valLower.includes('100%') || valLower.includes('healthy') || valLower.includes('verified')) {
-            // Emerald Accent for active/verified
-            doc.setFillColor(236, 253, 245)
-            doc.roundedRect(tableX + col1W + 3, currentY + 1.2, tableW - col1W - 6, 5, 1, 1, 'F')
-            doc.setDrawColor(167, 243, 208)
-            doc.roundedRect(tableX + col1W + 3, currentY + 1.2, tableW - col1W - 6, 5, 1, 1, 'S')
-            doc.setTextColor(6, 95, 70)
-          } else if (valLower.includes('0 ') || valLower.includes('shortage')) {
-            // Amber Neutral Accent
-            doc.setFillColor(254, 243, 199)
-            doc.roundedRect(tableX + col1W + 3, currentY + 1.2, tableW - col1W - 6, 5, 1, 1, 'F')
-            doc.setDrawColor(253, 230, 138)
-            doc.roundedRect(tableX + col1W + 3, currentY + 1.2, tableW - col1W - 6, 5, 1, 1, 'S')
-            doc.setTextColor(146, 64, 14)
+          const isEligible =
+            valLower.includes('eligible') ||
+            valLower.includes('verified') ||
+            valLower.includes('safe') ||
+            valLower.includes('compliant') ||
+            valLower.includes('100%')
+          const isShortage =
+            valLower.includes('shortage') ||
+            valLower.includes('critical') ||
+            (valLower.includes('absent') && !valLower.startsWith('0') && !valLower.includes('zero'))
+          const isWarning =
+            valLower.includes('warning') ||
+            valLower.includes('remedial') ||
+            valLower.includes('condonation')
+
+          const isFullBanner = val.length > 35
+
+          if (isFullBanner) {
+            // Full-width status banner with rounded corners
+            const bannerW = tableW - col1W - 6
+            const bannerX = tableX + col1W + 3
+            const bannerH = 5.6
+            const bannerY = currentY + (rowHeight - bannerH) / 2
+
+            if (isEligible) {
+              doc.setFillColor(236, 253, 245) // Emerald-50
+              doc.setDrawColor(167, 243, 208)
+              doc.setTextColor(5, 122, 85)
+            } else if (isShortage) {
+              doc.setFillColor(254, 242, 242) // Rose-50
+              doc.setDrawColor(254, 202, 202)
+              doc.setTextColor(185, 28, 28)
+            } else {
+              doc.setFillColor(240, 246, 255) // Blue-50
+              doc.setDrawColor(219, 234, 254)
+              doc.setTextColor(29, 78, 216)
+            }
+            doc.setLineWidth(0.3)
+            doc.roundedRect(bannerX, bannerY, bannerW, bannerH, 1.8, 1.8, 'FD')
+
+            doc.setFont('helvetica', 'bold')
+            doc.setFontSize(6.8)
+            doc.text(val, bannerX + 4, bannerY + 3.9)
           } else {
-            doc.setTextColor(7, 26, 61)
+            // Compact, proportional rounded pill (sized to content)
+            doc.setFont('helvetica', 'bold')
+            doc.setFontSize(7.4)
+            const textW = doc.getTextWidth(val)
+            const pillW = Math.min(tableW - col1W - 8, Math.max(26, textW + 9))
+            const pillX = tableX + col1W + 4
+            const pillH = 5.4
+            const pillY = currentY + (rowHeight - pillH) / 2
+
+            if (isEligible) {
+              doc.setFillColor(236, 253, 245)
+              doc.setDrawColor(167, 243, 208)
+              doc.setTextColor(5, 122, 85)
+            } else if (isShortage) {
+              doc.setFillColor(254, 242, 242)
+              doc.setDrawColor(254, 202, 202)
+              doc.setTextColor(185, 28, 28)
+            } else if (isWarning) {
+              doc.setFillColor(254, 243, 199)
+              doc.setDrawColor(253, 230, 138)
+              doc.setTextColor(180, 83, 9)
+            } else {
+              // Clean Cobalt Blue neutral badge
+              doc.setFillColor(240, 246, 255)
+              doc.setDrawColor(219, 234, 254)
+              doc.setTextColor(21, 87, 192)
+            }
+
+            doc.setLineWidth(0.3)
+            doc.roundedRect(pillX, pillY, pillW, pillH, 1.8, 1.8, 'FD')
+            doc.text(val, pillX + pillW / 2, pillY + 3.8, { align: 'center' })
           }
 
-          const splitVal = doc.splitTextToSize(val, tableW - col1W - 10)
-          doc.text(splitVal, tableX + col1W + 5, currentY + 4.8)
+          currentY += rowHeight
         } else {
           // Regular Line Card
+          doc.setFillColor(rIdx % 2 === 0 ? 255 : 249, rIdx % 2 === 0 ? 255 : 251, rIdx % 2 === 0 ? 255 : 254)
+          doc.rect(tableX, currentY, tableW, 7.5, 'F')
+          doc.setDrawColor(225, 233, 245)
+          doc.setLineWidth(0.2)
+          doc.rect(tableX, currentY, tableW, 7.5, 'S')
+
           doc.setFont('helvetica', 'normal')
           doc.setFontSize(7.5)
           doc.setTextColor(30, 40, 55)
           const splitText = doc.splitTextToSize(cleanLine, tableW - 10)
           doc.text(splitText, tableX + 5, currentY + 5)
+          currentY += 7.5
         }
-
-        currentY += rowHeight
       }
 
       currentY += 4
