@@ -299,15 +299,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
   const isFacultyAdvisor = isAdvisor ?? (roleBadgeLabel ? roleBadgeLabel.toLowerCase().includes('advisor') : (cachedAdvisor ?? false))
 
   const rawNavItems = navItems || navItemsMap[role] || []
-  const baseNavItems = rawNavItems.filter((item) => {
-    // If faculty is not a Class Advisor, hide "Class Students" page
-    if (role === 'faculty' && !isFacultyAdvisor) {
-      if (item.href.includes('/faculty-dashboard/students') || item.label.toLowerCase().includes('class student')) {
-        return false
-      }
-    }
-    return true
-  })
+  const baseNavItems = rawNavItems
   
   // Filter nav items based on admin menu preferences
   const resolvedNavItems = baseNavItems.filter((item) => {

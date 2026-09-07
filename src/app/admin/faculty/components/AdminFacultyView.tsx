@@ -850,10 +850,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: formData.classDay || null,
           classPeriod: formData.classPeriod || null,
           classTime: formData.classTime || null,
-          advisorBatch: isAdvisorRole ? (formData.advisorBatch || null) : null,
-          advisorYear: isAdvisorRole ? (formData.advisorYear ? Number(formData.advisorYear) : null) : null,
-          advisorSem: isAdvisorRole ? (formData.advisorSem ? Number(formData.advisorSem) : null) : null,
-          advisorSec: isAdvisorRole ? (formData.advisorSec || null) : null,
+          advisorBatch: formData.advisorBatch || (formData.advisorYear ? `Year ${formData.advisorYear} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}` : null),
+          advisorYear: formData.advisorYear ? Number(formData.advisorYear) : null,
+          advisorSem: formData.advisorSem ? Number(formData.advisorSem) : null,
+          advisorSec: formData.advisorSec || null,
         }),
       })
       const result = await res.json()
@@ -932,10 +932,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: formData.classDay || null,
           classPeriod: formData.classPeriod || null,
           classTime: formData.classTime || null,
-          advisorBatch: isAdvisorRole ? (formData.advisorBatch || null) : null,
-          advisorYear: isAdvisorRole ? (formData.advisorYear ? Number(formData.advisorYear) : null) : null,
-          advisorSem: isAdvisorRole ? (formData.advisorSem ? Number(formData.advisorSem) : null) : null,
-          advisorSec: isAdvisorRole ? (formData.advisorSec || null) : null,
+          advisorBatch: formData.advisorBatch || (formData.advisorYear ? `Year ${formData.advisorYear} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}` : null),
+          advisorYear: formData.advisorYear ? Number(formData.advisorYear) : null,
+          advisorSem: formData.advisorSem ? Number(formData.advisorSem) : null,
+          advisorSec: formData.advisorSec || null,
         }),
       })
       const result = await res.json()

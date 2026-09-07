@@ -168,12 +168,11 @@ export async function POST(request: Request) {
     // Prepare subjects string
     const subjectsStr = typeof subjects === 'string' ? subjects : JSON.stringify(subjects)
 
-    // Ensure advisor fields are ONLY saved if role is advisor or both
-    const isAdvisorRole = facultyType === 'advisor' || facultyType === 'both'
-    const cleanAdvisorBatch = isAdvisorRole ? (advisorBatch || null) : null
-    const cleanAdvisorYear = isAdvisorRole && advisorYear ? Number(advisorYear) : null
-    const cleanAdvisorSem = isAdvisorRole && advisorSem ? Number(advisorSem) : null
-    const cleanAdvisorSec = isAdvisorRole ? (advisorSec || null) : null
+    // Allow saving assigned class/cohort fields for all faculty allocations
+    const cleanAdvisorBatch = advisorBatch || (advisorYear && advisorSec ? `Year ${advisorYear} - Sem ${advisorSem || 3} - Sec ${advisorSec}` : null)
+    const cleanAdvisorYear = advisorYear ? Number(advisorYear) : null
+    const cleanAdvisorSem = advisorSem ? Number(advisorSem) : null
+    const cleanAdvisorSec = advisorSec ? String(advisorSec).trim().toUpperCase() : null
 
     // Upsert Faculty
     const faculty = await prisma.faculty.upsert({
@@ -224,6 +223,7 @@ export async function POST(request: Request) {
     }
 
     // Broadcast real-time notification for Department Directorate & Students
+    const isAdvisorRole = facultyType === 'advisor' || facultyType === 'both'
     const isAdvNotification = isAdvisorRole && cleanAdvisorYear && cleanAdvisorSec
     await prisma.notification.create({
       data: {
