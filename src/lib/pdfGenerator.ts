@@ -897,11 +897,11 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(7, 26, 61)
   doc.text('AN AUTONOMOUS INSTITUTION · KARUR', headerCenterX, 15.8, { align: 'center' })
 
-  // Department Title
+  // Department Title (FULL FORM)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.6)
+  doc.setFontSize(4.7)
   doc.setTextColor(21, 87, 192)
-  doc.text('DEPARTMENT OF AI & DATA SCIENCE', headerCenterX, 20.2, { align: 'center' })
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', headerCenterX, 20.2, { align: 'center' })
 
   // Affiliations
   doc.setFont('helvetica', 'normal')
@@ -933,8 +933,8 @@ export function downloadStudentCardPDF(student: {
   doc.text('STUDENT DIGITAL ACADEMIC ID CARD', cardW / 2, 34.5, { align: 'center' })
 
   // 6. Framed Student Photograph
-  const photoW = 24
-  const photoH = 27
+  const photoW = 25
+  const photoH = 29
   const photoX = (cardW - photoW) / 2
   const photoY = 37.5
 
@@ -962,30 +962,24 @@ export function downloadStudentCardPDF(student: {
     doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 17, { align: 'center' })
   }
 
-  // 7. Student Name, Registration Pill & Course
+  // 7. Student Name & Registration Pill (DEPT REMOVED BELOW REG NO)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10.5)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.name.toUpperCase(), cardW / 2, 69.5, { align: 'center' })
+  doc.text(student.name.toUpperCase(), cardW / 2, 70.5, { align: 'center' })
 
   // Registration Pill
   doc.setFillColor(7, 26, 61)
-  doc.roundedRect(cardW / 2 - 24, 71.5, 48, 5, 1.5, 1.5, 'F')
+  doc.roundedRect(cardW / 2 - 24, 72.5, 48, 5.2, 1.5, 1.5, 'F')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.2)
   doc.setTextColor(244, 196, 48)
-  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 75, { align: 'center' })
-
-  // Degree & Program
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.2)
-  doc.setTextColor(21, 87, 192)
-  doc.text('B.Tech - Artificial Intelligence & Data Science', cardW / 2, 79.5, { align: 'center' })
+  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 76.2, { align: 'center' })
 
   // 8. Structured Information Micro-Card (REGULATION REMOVED)
   const gridX = 5
   const gridW = cardW - 10
-  const gridY = 82
+  const gridY = 80
   const gridH = 37
 
   doc.setFillColor(252, 254, 255)
@@ -1039,7 +1033,7 @@ export function downloadStudentCardPDF(student: {
   }
 
   // 9. Signatures Row
-  const sigY = 126
+  const sigY = 122.5
   doc.setDrawColor(180, 195, 215)
   doc.setLineWidth(0.3)
 
@@ -1064,33 +1058,43 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(90, 105, 125)
   doc.text('PRINCIPAL', 78.5, sigY + 3.2, { align: 'center' })
 
-  // 10. Proper Institutional Footer Bar
-  const footerY = 132
-  const footerH = 9
-  doc.setFillColor(7, 26, 61)
-  doc.roundedRect(2.8, footerY, cardW - 5.6, footerH, 1.8, 1.8, 'F')
-
-  // Top Accent Gold Line
+  // 10. Institutional Footer Styled Like the Header (Clean Academic Letterhead Format)
+  // Mirror Beam Separator (Sapphire & Gold)
   doc.setFillColor(231, 185, 62)
-  doc.rect(2.8, footerY, cardW - 5.6, 0.6, 'F')
+  doc.rect(3, 128, cardW - 6, 0.6, 'F')
 
-  // Line 1: College Name (Autonomous)
+  doc.setFillColor(21, 87, 192)
+  doc.rect(3, 128.6, cardW - 6, 1.2, 'F')
+
+  // Center Diamond Accent
+  doc.setFillColor(231, 185, 62)
+  doc.circle(cardW / 2, 129.2, 1.4, 'F')
+  doc.setFillColor(7, 26, 61)
+  doc.circle(cardW / 2, 129.2, 0.7, 'F')
+
+  // Clean Light Background Panel Matching Header
+  doc.setFillColor(250, 252, 255)
+  doc.rect(3, 130.5, cardW - 6, 10.5, 'F')
+
+  // Line 1: College Name
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.8)
-  doc.setTextColor(244, 196, 48)
-  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', cardW / 2, footerY + 3.4, { align: 'center' })
+  doc.setFontSize(6.2)
+  doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', cardW / 2, 134.2, { align: 'center' })
 
-  // Line 2: Address & Website
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(3.7)
-  doc.setTextColor(226, 232, 240)
-  doc.text('NH-67, Covai Road, Karur - 639 111, Tamil Nadu · www.vsbec.com', cardW / 2, footerY + 5.8, { align: 'center' })
+  // Line 2: Autonomous Pill Tag (Matching Header's Autonomous Pill!)
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(cardW / 2 - 24, 135.2, 48, 2.8, 0.7, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION · KARUR - 639 111', cardW / 2, 137.2, { align: 'center' })
 
-  // Line 3: Institutional Notice
+  // Line 3: Address & Return Notice
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(3.1)
-  doc.setTextColor(147, 197, 253)
-  doc.text('Valid for Campus Identity · If found, please return to the College Office', cardW / 2, footerY + 7.8, { align: 'center' })
+  doc.setFontSize(3.4)
+  doc.setTextColor(90, 105, 125)
+  doc.text('NH-67, Covai Road, Karur · www.vsbec.com · If found, please return to College Office', cardW / 2, 139.8, { align: 'center' })
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }
