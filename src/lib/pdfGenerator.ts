@@ -962,14 +962,6 @@ export function downloadStudentCardPDF(student: {
     doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 17, { align: 'center' })
   }
 
-  // Official Verified Badge over photo
-  doc.setFillColor(244, 196, 48)
-  doc.circle(photoX + photoW - 2.8, photoY + photoH - 2.8, 2.4, 'F')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(3.5)
-  doc.setTextColor(7, 26, 61)
-  doc.text('VSB', photoX + photoW - 2.8, photoY + photoH - 1.6, { align: 'center' })
-
   // 7. Student Name, Registration Pill & Course
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10.5)
@@ -990,7 +982,7 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(21, 87, 192)
   doc.text('B.Tech - Artificial Intelligence & Data Science', cardW / 2, 79.5, { align: 'center' })
 
-  // 8. Structured Information Micro-Card (REGULATION REMOVED!)
+  // 8. Structured Information Micro-Card (REGULATION REMOVED)
   const gridX = 5
   const gridW = cardW - 10
   const gridY = 82
@@ -1046,52 +1038,59 @@ export function downloadStudentCardPDF(student: {
     curY += rowStep
   }
 
-  // 9. Authentic Campus Barcode
-  const barOriginX = 14
-  const barOriginY = 121
-  const barW = cardW - 28
-  const barH = 5
+  // 9. Signatures Row
+  const sigY = 126
+  doc.setDrawColor(180, 195, 215)
+  doc.setLineWidth(0.3)
 
-  doc.setFillColor(20, 25, 35)
-  const seed = student.registerNumber.replace(/\D/g, '') || '922525243103'
-  let curBarX = barOriginX
-  for (let b = 0; b < 36; b++) {
-    const digit = parseInt(seed[b % seed.length] || '5', 10)
-    const strokeW = digit % 3 === 0 ? 0.75 : digit % 2 === 0 ? 0.48 : 0.28
-    if (b % 4 !== 1) {
-      doc.rect(curBarX, barOriginY, strokeW, barH, 'F')
-    }
-    curBarX += strokeW + (digit % 2 === 0 ? 0.5 : 0.35)
-    if (curBarX > barOriginX + barW) break
-  }
-
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(4.5)
-  doc.setTextColor(80, 95, 115)
-  doc.text(`* ${student.registerNumber} *`, cardW / 2, 129, { align: 'center' })
-
-  // 10. Bottom Security & Authority Seal Bar
-  doc.setFillColor(7, 26, 61)
-  doc.rect(3, 131, cardW - 6, 9.5, 'F')
-
-  doc.setFillColor(244, 196, 48)
-  doc.rect(3, 131, cardW - 6, 0.6, 'F')
-
+  // Student Signature
+  doc.line(7, sigY, 28, sigY)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.6)
+  doc.setFontSize(4.5)
+  doc.setTextColor(90, 105, 125)
+  doc.text('STUDENT SIGN', 17.5, sigY + 3.2, { align: 'center' })
+
+  // HOD Signature
+  doc.line(38, sigY, 58, sigY)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.5)
+  doc.setTextColor(90, 105, 125)
+  doc.text('HOD / AI & DS', 48, sigY + 3.2, { align: 'center' })
+
+  // Principal Signature
+  doc.line(68, sigY, 89, sigY)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.5)
+  doc.setTextColor(90, 105, 125)
+  doc.text('PRINCIPAL', 78.5, sigY + 3.2, { align: 'center' })
+
+  // 10. Proper Institutional Footer Bar
+  const footerY = 132
+  const footerH = 9
+  doc.setFillColor(7, 26, 61)
+  doc.roundedRect(2.8, footerY, cardW - 5.6, footerH, 1.8, 1.8, 'F')
+
+  // Top Accent Gold Line
+  doc.setFillColor(231, 185, 62)
+  doc.rect(2.8, footerY, cardW - 5.6, 0.6, 'F')
+
+  // Line 1: College Name (Autonomous)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
   doc.setTextColor(244, 196, 48)
-  doc.text('HOD / AI & DS', 6, 135.5)
+  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', cardW / 2, footerY + 3.4, { align: 'center' })
 
-  doc.setTextColor(255, 255, 255)
-  doc.text('AUTONOMOUS ID CARD', cardW / 2, 135.5, { align: 'center' })
-
-  doc.setTextColor(244, 196, 48)
-  doc.text('PRINCIPAL', cardW - 6, 135.5, { align: 'right' })
-
+  // Line 2: Address & Website
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(3.6)
-  doc.setTextColor(190, 210, 245)
-  doc.text('DIGITALLY CERTIFIED · SEC: VSB-SEC-2026-AUTONOMOUS', cardW / 2, 138.8, { align: 'center' })
+  doc.setFontSize(3.7)
+  doc.setTextColor(226, 232, 240)
+  doc.text('NH-67, Covai Road, Karur - 639 111, Tamil Nadu · www.vsbec.com', cardW / 2, footerY + 5.8, { align: 'center' })
+
+  // Line 3: Institutional Notice
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(3.1)
+  doc.setTextColor(147, 197, 253)
+  doc.text('Valid for Campus Identity · If found, please return to the College Office', cardW / 2, footerY + 7.8, { align: 'center' })
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }
