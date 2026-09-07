@@ -932,12 +932,46 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(20, 85, 217)
   doc.text('STUDENT DIGITAL ACADEMIC ID CARD', cardW / 2, 34.5, { align: 'center' })
 
-  // 6. Framed Student Photograph
+  // 6. Center Student Photograph Flanked by DOB & Blood Group (Left) and Year & Batch (Right)
   const photoW = 25
   const photoH = 29
   const photoX = (cardW - photoW) / 2
   const photoY = 37.5
 
+  // LEFT FLANK: Date of Birth & Blood Group
+  const leftX = 5.5
+  const flankW = 26.5
+  doc.setFillColor(248, 250, 254)
+  doc.setDrawColor(215, 228, 245)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(leftX, photoY, flankW, photoH, 2, 2, 'FD')
+
+  // Left - DOB Compartment
+  const leftCenterX = leftX + flankW / 2
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(100, 115, 135)
+  doc.text('DATE OF BIRTH', leftCenterX, photoY + 5.2, { align: 'center' })
+
+  doc.setFontSize(5.6)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.dob || '01/01/2004', leftCenterX, photoY + 9.8, { align: 'center' })
+
+  // Left Divider
+  doc.setDrawColor(225, 235, 248)
+  doc.line(leftX + 2.5, photoY + 14.5, leftX + flankW - 2.5, photoY + 14.5)
+
+  // Left - Blood Group Compartment
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(100, 115, 135)
+  doc.text('BLOOD GROUP', leftCenterX, photoY + 19.5, { align: 'center' })
+
+  doc.setFontSize(6.5)
+  doc.setTextColor(220, 38, 38) // Medical Red
+  doc.text(student.bloodGroup || 'O+ve', leftCenterX, photoY + 24.8, { align: 'center' })
+
+  // CENTER: Framed Student Photograph
   doc.setFillColor(245, 248, 253)
   doc.roundedRect(photoX, photoY, photoW, photoH, 2, 2, 'F')
   doc.setDrawColor(21, 87, 192)
@@ -962,6 +996,42 @@ export function downloadStudentCardPDF(student: {
     doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 17, { align: 'center' })
   }
 
+  // RIGHT FLANK: Year/Sem & Batch
+  const rightX = photoX + photoW + 3.5
+  doc.setFillColor(248, 250, 254)
+  doc.setDrawColor(215, 228, 245)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(rightX, photoY, flankW, photoH, 2, 2, 'FD')
+
+  // Right - Year/Sem Compartment
+  const rightCenterX = rightX + flankW / 2
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(100, 115, 135)
+  doc.text('YEAR / SEM', rightCenterX, photoY + 5.2, { align: 'center' })
+
+  doc.setFontSize(5.0)
+  doc.setTextColor(7, 26, 61)
+  doc.text(`Year ${student.year} · Sem ${student.semester}`, rightCenterX, photoY + 9.2, { align: 'center' })
+
+  doc.setFontSize(4.4)
+  doc.setTextColor(21, 87, 192)
+  doc.text(`Section ${student.section}`, rightCenterX, photoY + 12.8, { align: 'center' })
+
+  // Right Divider
+  doc.setDrawColor(225, 235, 248)
+  doc.line(rightX + 2.5, photoY + 14.5, rightX + flankW - 2.5, photoY + 14.5)
+
+  // Right - Batch Compartment
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.4)
+  doc.setTextColor(100, 115, 135)
+  doc.text('BATCH', rightCenterX, photoY + 19.5, { align: 'center' })
+
+  doc.setFontSize(5.4)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.batch || '2025 - 2029', rightCenterX, photoY + 24.5, { align: 'center' })
+
   // 7. Student Name & Registration Pill (DEPT REMOVED BELOW REG NO)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(10.5)
@@ -976,10 +1046,10 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(244, 196, 48)
   doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 76.2, { align: 'center' })
 
-  // 8. Structured Information Micro-Card (REGULATION REMOVED)
+  // 8. Structured Information Micro-Card (DOB, Blood, Year, Batch moved to photo flanks!)
   const gridX = 5
   const gridW = cardW - 10
-  const gridY = 80
+  const gridY = 80.5
   const gridH = 37
 
   doc.setFillColor(252, 254, 255)
@@ -988,46 +1058,38 @@ export function downloadStudentCardPDF(student: {
   doc.roundedRect(gridX, gridY, gridW, gridH, 2, 2, 'FD')
 
   const cardRows = [
-    { label: 'YEAR / SEM:', val: `Year ${student.year} · Sem ${student.semester} (${student.section})` },
-    { label: 'BATCH:', val: `Batch ${student.batch || '2024 - 2028'}` },
-    { label: 'DATE OF BIRTH:', val: student.dob || '01/01/2004', secondLabel: 'BLOOD:', secondVal: `${student.bloodGroup || 'O+ve'}` },
-    { label: 'RESIDENCY:', val: student.residencyStatus || 'Day Scholar' },
-    { label: 'CONTACT:', val: student.phone },
-    { label: 'COLLEGE EMAIL:', val: student.email },
+    { label: 'DEGREE / BRANCH:', val: 'B.Tech - Artificial Intelligence & Data Science' },
+    { label: 'RESIDENCY STATUS:', val: student.residencyStatus || 'Day Scholar' },
+    { label: 'CONTACT NUMBER:', val: student.phone },
+    { label: 'OFFICIAL EMAIL:', val: student.email },
+    { label: 'EXAM ELIGIBILITY:', val: 'Eligible for Semester Examinations (Autonomous)' },
   ]
 
-  let curY = gridY + 4.8
-  const rowStep = 5.8
+  let curY = gridY + 5.2
+  const rowStep = 7.0
 
   for (let i = 0; i < cardRows.length; i++) {
     const row = cardRows[i]
     if (i % 2 === 1) {
       doc.setFillColor(248, 250, 254)
-      doc.rect(gridX + 0.5, curY - 3.8, gridW - 1, 5.5, 'F')
+      doc.rect(gridX + 0.5, curY - 4.2, gridW - 1, 6.8, 'F')
     }
 
     doc.setFillColor(21, 87, 192)
-    doc.circle(gridX + 2.8, curY - 1, 0.6, 'F')
+    doc.circle(gridX + 3.0, curY - 0.8, 0.7, 'F')
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(4.8)
     doc.setTextColor(100, 115, 135)
-    doc.text(row.label, gridX + 4.8, curY - 0.3)
+    doc.text(row.label, gridX + 5.2, curY - 0.2)
 
     doc.setFontSize(5.2)
-    doc.setTextColor(7, 26, 61)
-    doc.text(row.val, gridX + 28, curY - 0.3)
-
-    if (row.secondLabel && row.secondVal) {
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(4.8)
-      doc.setTextColor(100, 115, 135)
-      doc.text(row.secondLabel, gridX + 54, curY - 0.3)
-
-      doc.setFontSize(5.2)
-      doc.setTextColor(185, 28, 28)
-      doc.text(row.secondVal, gridX + 68, curY - 0.3)
+    if (row.label.includes('EXAM')) {
+      doc.setTextColor(16, 120, 75) // Success Green
+    } else {
+      doc.setTextColor(7, 26, 61)
     }
+    doc.text(row.val, gridX + 32, curY - 0.2)
 
     curY += rowStep
   }
