@@ -139,17 +139,11 @@ export function AdminAcademicsView({
         name: data.subject.name,
         credits: data.subject.credits,
         category: formData.category,
-        facultyInCharge: formData.facultyInCharge || 'Department Faculty',
+        facultyInCharge: formData.facultyInCharge,
         semester: Number(formData.semester),
         year: Math.ceil(Number(formData.semester) / 2),
         description: data.subject.description,
-        units: [
-          { number: 1, title: 'Unit I: Foundational Principles & Concepts', hours: 9 },
-          { number: 2, title: 'Unit II: Core Architectural Formulations', hours: 9 },
-          { number: 3, title: 'Unit III: Analytical & Methodological Frameworks', hours: 9 },
-          { number: 4, title: 'Unit IV: Advanced Algorithms & System Design', hours: 9 },
-          { number: 5, title: 'Unit V: Industrial Case Studies & Applications', hours: 9 },
-        ],
+        units: data.subject.units || [],
       }
       setSubjects([...subjects.filter(s => s.id !== newSub.id && s.code !== newSub.code), newSub])
       setIsAddModalOpen(false)
@@ -546,22 +540,26 @@ export function AdminAcademicsView({
               </button>
             </div>
             <div className="space-y-3">
-              {selectedSubjectForModal.units.map((unit) => (
-                <div
-                  key={unit.number}
-                  className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-md bg-[#071A3D] text-white font-mono text-[10px] font-black">
-                      UNIT {unit.number}
+              {selectedSubjectForModal.units.length > 0 ? (
+                selectedSubjectForModal.units.map((unit) => (
+                  <div
+                    key={unit.number}
+                    className="p-4 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-[#071A3D] text-white font-mono text-[10px] font-black">
+                        UNIT {unit.number}
+                      </span>
+                      <h4 className="font-bold text-xs text-[#071A3D]">{unit.title}</h4>
+                    </div>
+                    <span className="font-mono text-xs font-bold text-gray-600 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shrink-0">
+                      {unit.hours} Hrs
                     </span>
-                    <h4 className="font-bold text-xs text-[#071A3D]">{unit.title}</h4>
                   </div>
-                  <span className="font-mono text-xs font-bold text-gray-600 bg-white px-2.5 py-1 rounded-xl border border-gray-200 shrink-0">
-                    {unit.hours} Hrs
-                  </span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-xs text-gray-400 text-center py-6">No unit details available for this course.</p>
+              )}
             </div>
             <div className="flex items-center justify-between pt-4 border-t">
               <div className="text-xs text-gray-500">

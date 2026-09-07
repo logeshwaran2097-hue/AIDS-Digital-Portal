@@ -24,18 +24,12 @@ export default async function AdminAcademicsPage() {
       code: s.code,
       name: s.name,
       credits: s.credits,
-      category: s.description?.includes('Practical') ? 'Laboratory Course (PC)' : 'Professional Core (PC)',
-      facultyInCharge: 'Department Faculty',
+      category: (s as any).category || 'Professional Core (PC)',
+      facultyInCharge: (s as any).facultyInCharge || '',
       semester: sem,
       year: Math.ceil(sem / 2),
       description: s.description,
-      units: [
-        { number: 1, title: 'Unit I: Fundamental Principles & Foundations', hours: 9 },
-        { number: 2, title: 'Unit II: Mathematical Formulations & Architecture', hours: 9 },
-        { number: 3, title: 'Unit III: Analytical Methods & Algorithms', hours: 9 },
-        { number: 4, title: 'Unit IV: Advanced System Engineering', hours: 9 },
-        { number: 5, title: 'Unit V: Industrial Applications & Case Studies', hours: 9 },
-      ],
+      units: [],
     }
   })
 
