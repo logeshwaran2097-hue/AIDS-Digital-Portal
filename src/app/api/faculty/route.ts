@@ -237,7 +237,7 @@ export async function POST(request: Request) {
             ? `Laboratory Practical Session Handler.`
             : `Specialization: ${specialization || 'AI & DS'}.`
         }`,
-        target: 'all',
+        target: 'faculty',
         createdByName: 'Department Directorate',
         status: 'published',
         publishedAt: new Date(),

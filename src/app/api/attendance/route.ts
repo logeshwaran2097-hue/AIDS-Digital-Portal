@@ -450,12 +450,12 @@ export async function POST(request: Request) {
         },
       }).catch(() => {})
 
-      // 2. Also publish to all for portal transparency
+      // 2. Also publish to faculty for department record
       await prisma.notification.create({
         data: {
           title: actionTitle,
           message: `${session.name || 'Class Advisor'} posted attendance for ${scopeLabel} on ${date}. Total: ${totalStudents} | Present: ${presentCount} | Absent: ${absentCount}${othersText}.`,
-          target: 'all',
+          target: 'faculty',
           createdByName: session.name || 'Class Advisor',
           status: 'published',
           publishedAt: new Date(),

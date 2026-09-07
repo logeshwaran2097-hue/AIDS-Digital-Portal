@@ -22,13 +22,41 @@ export async function GET(request: Request) {
 
     // Target audience filtering
     if (userRole === 'student') {
-      where.OR = [
-        { target: 'all' },
-        { target: 'ALL' },
-        { target: 'students' },
-        { target: 'student' },
-        { target: { contains: 'student' } },
-        ...(userId ? [{ targetIds: { contains: userId } }] : []),
+      const userReg = session?.registerNumber || (session?.email ? session.email.split('@')[0].toUpperCase() : '')
+      const student = (userId ? await prisma.student.findUnique({ where: { userId } }).catch(() => null) : null) ||
+        (userReg ? await prisma.student.findUnique({ where: { registerNumber: userReg } }).catch(() => null) : null)
+
+      const studentReg = student?.registerNumber || userReg
+      const studentId = student?.id
+
+      where.AND = [
+        // Strictly exclude internal administrative & faculty-only notifications from students
+        {
+          NOT: [
+            { target: 'faculty' },
+            { target: 'hod' },
+            { target: 'admin' },
+            { title: { contains: 'Attendance Locked' } },
+            { title: { contains: 'Attendance Unlock' } },
+            { title: { contains: 'Attendance Approval' } },
+            { title: { contains: 'Faculty Directorate' } },
+            { title: { contains: 'Student Enrolled' } },
+          ],
+        },
+        // Only include notifications meant for this student or student body
+        {
+          OR: [
+            { target: 'students' },
+            { target: 'student' },
+            { target: 'all' },
+            { target: 'ALL' },
+            ...(userId ? [{ targetIds: { contains: userId } }] : []),
+            ...(studentId ? [{ targetIds: { contains: studentId } }] : []),
+            ...(studentReg ? [{ targetIds: { contains: studentReg } }] : []),
+            ...(student?.year ? [{ target: `year_${student.year}` }] : []),
+            ...(student?.year && student?.section ? [{ target: `year_${student.year}_${student.section.toLowerCase()}` }] : []),
+          ],
+        },
       ]
     } else if (userRole === 'faculty') {
       where.OR = [

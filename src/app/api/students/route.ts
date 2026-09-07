@@ -233,7 +233,7 @@ export async function POST(request: Request) {
       data: {
         title: `🎓 Student Enrolled: ${name.trim()} (${regUpper})`,
         message: `Registered into Year ${year} (Section ${section}) · ${department}. Advisor: ${advisorName || 'Assigned'}.`,
-        target: 'all',
+        target: 'admin',
         createdByName: 'Department Directorate',
         status: 'published',
         publishedAt: new Date(),
