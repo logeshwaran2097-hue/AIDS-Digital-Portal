@@ -115,43 +115,65 @@ interface StudentInClass {
   status: 'active' | 'warning' | 'critical'
 }
 
-// Active Odd Semesters (Semesters 3, 5, 7) Practical Laboratories & Training Curricula
-export const ALL_SEMESTERS_LABS = {
+export type SemKey = 'sem1' | 'sem2' | 'sem3' | 'sem4' | 'sem5' | 'sem6' | 'sem7' | 'sem8'
+
+// All 8 Semesters (Years I - IV) Practical Laboratories & Training Curricula (No mock or sample data)
+export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
+  sem1: {
+    semNumber: 1,
+    yearNumber: 1,
+    semLabel: 'Semester 1 (Year 1 - Freshman Odd)',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    labs: [],
+  },
+  sem2: {
+    semNumber: 2,
+    yearNumber: 1,
+    semLabel: 'Semester 2 (Year 1 - Freshman Even)',
+    badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
+    labs: [],
+  },
   sem3: {
     semNumber: 3,
     yearNumber: 2,
-    semLabel: 'Semester 3 (Year 2 - Odd)',
+    semLabel: 'Semester 3 (Year 2 - Sophomore Odd)',
     badgeColor: 'bg-blue-50 text-[#1455D9] border-blue-200',
-    labs: [
-      { id: 's3_oop', code: 'AD2311', name: 'Object Oriented Programming Laboratory', shortName: 'OOP Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Tuesday' },
-      { id: 's3_dbms', code: 'AD2312', name: 'Database Management Systems Laboratory', shortName: 'DBMS Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Thursday' },
-      { id: 's3_dsa', code: 'AD2313', name: 'Data Structures & Algorithms Laboratory', shortName: 'DSA Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Friday' },
-    ],
+    labs: [],
+  },
+  sem4: {
+    semNumber: 4,
+    yearNumber: 2,
+    semLabel: 'Semester 4 (Year 2 - Sophomore Even)',
+    badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    labs: [],
   },
   sem5: {
     semNumber: 5,
     yearNumber: 3,
-    semLabel: 'Semester 5 (Year 3 - Odd)',
+    semLabel: 'Semester 5 (Year 3 - Junior Odd)',
     badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
-    labs: [
-      { id: 's5_cloud', code: 'AD2511', name: 'Cloud Service Management Laboratory', shortName: 'Cloud Mgmt Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Monday' },
-      { id: 's5_bigdata', code: 'AD2512', name: 'Big Data Analytics Laboratory', shortName: 'Big Data Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Wednesday' },
-      { id: 's5_dl', code: 'AD2513', name: 'Deep Learning Laboratory', shortName: 'Deep Learning Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Thursday' },
-      { id: 's5_ba', code: 'AD2514', name: 'Business Analytics Laboratory', shortName: 'Business Analytics Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Friday' },
-      { id: 's5_comm', code: 'AD2515', name: 'Communication Training & Soft Skills', shortName: 'Communication Training', credits: 1, defaultPeriod: 'Period 7, Period 8', defaultTime: '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM', defaultDays: 'Tuesday' },
-      { id: 's5_apt', code: 'AD2516', name: 'Aptitude & Quantitative Problem Solving', shortName: 'Aptitude Training', credits: 1, defaultPeriod: 'Period 7, Period 8', defaultTime: '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM', defaultDays: 'Thursday' },
-      { id: 's5_web', code: 'AD2517', name: 'Full Stack Web Development Laboratory', shortName: 'Web Dev Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Friday' },
-    ],
+    labs: [],
+  },
+  sem6: {
+    semNumber: 6,
+    yearNumber: 3,
+    semLabel: 'Semester 6 (Year 3 - Junior Even)',
+    badgeColor: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
+    labs: [],
   },
   sem7: {
     semNumber: 7,
     yearNumber: 4,
-    semLabel: 'Semester 7 (Year 4 - Odd)',
+    semLabel: 'Semester 7 (Year 4 - Senior Odd)',
     badgeColor: 'bg-amber-50 text-amber-900 border-amber-300',
-    labs: [
-      { id: 's7_proj1', code: 'AD2711', name: 'Project Work (Phase I)', shortName: 'Project Phase I', credits: 6, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Wednesday, Friday' },
-      { id: 's7_place', code: 'AD2712', name: 'Placement & Industry Training Program', shortName: 'Placement & Training', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Monday, Thursday' },
-    ],
+    labs: [],
+  },
+  sem8: {
+    semNumber: 8,
+    yearNumber: 4,
+    semLabel: 'Semester 8 (Year 4 - Capstone Even)',
+    badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
+    labs: [],
   },
 }
 
@@ -230,6 +252,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [semFilter, setSemFilter] = useState('ALL')
   const [sectionFilter, setSectionFilter] = useState('ALL')
   const [designationFilter, setDesignationFilter] = useState('ALL')
+  const [labYearFilter, setLabYearFilter] = useState<'ALL' | 1 | 2 | 3 | 4>('ALL')
   const [labSemesterFilter, setLabSemesterFilter] = useState<string>('ALL')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -292,14 +315,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [quickLabTab, setQuickLabTab] = useState<string>('sem3')
   const [quickTheoryTab, setQuickTheoryTab] = useState<string>('sem3')
 
-  // Dynamic Editable Labs State (Persistent across browser reloads)
-  const [semestersLabs, setSemestersLabs] = useState<SemestersLabsMap>(() => {
+  // Dynamic Editable Labs State (Persistent across browser reloads, without mock data)
+  const [semestersLabs, setSemestersLabs] = useState<Record<string, SemesterLabGroup>>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('VSB_AIDS_EDITABLE_LABS')
+        const saved = localStorage.getItem('VSB_AIDS_EDITABLE_LABS_V2')
         if (saved) {
           const parsed = JSON.parse(saved)
-          if (parsed && typeof parsed === 'object' && parsed.sem3) return parsed
+          if (parsed && typeof parsed === 'object' && parsed.sem1) return parsed
         }
       } catch {}
     }
@@ -310,7 +333,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('VSB_AIDS_EDITABLE_LABS', JSON.stringify(semestersLabs))
+        localStorage.setItem('VSB_AIDS_EDITABLE_LABS_V2', JSON.stringify(semestersLabs))
       } catch {}
     }
   }, [semestersLabs])
@@ -319,7 +342,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [isLabModalOpen, setIsLabModalOpen] = useState(false)
   const [editingLabId, setEditingLabId] = useState<string | null>(null)
   const [labFormData, setLabFormData] = useState<{
-    targetSem: 'sem3' | 'sem5' | 'sem7'
+    targetSem: SemKey
     name: string
     shortName: string
     code: string
@@ -328,7 +351,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     defaultTime: string
     defaultDays: string
   }>({
-    targetSem: 'sem3',
+    targetSem: 'sem1',
     name: '',
     shortName: '',
     code: '',
@@ -339,7 +362,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   })
 
   // Open Add Lab Modal
-  const handleOpenAddLab = (semKey: 'sem3' | 'sem5' | 'sem7' = 'sem3') => {
+  const handleOpenAddLab = (semKey: SemKey = 'sem1') => {
     setEditingLabId(null)
     setLabFormData({
       targetSem: semKey,
@@ -355,7 +378,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   }
 
   // Open Edit Lab Modal
-  const handleOpenEditLab = (semKey: 'sem3' | 'sem5' | 'sem7', lab: LabItem) => {
+  const handleOpenEditLab = (semKey: SemKey, lab: LabItem) => {
     setEditingLabId(lab.id)
     setLabFormData({
       targetSem: semKey,
@@ -431,7 +454,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   }
 
   // Delete Lab
-  const handleDeleteLab = (semKey: 'sem3' | 'sem5' | 'sem7', labId: string, labName: string) => {
+  const handleDeleteLab = (semKey: SemKey, labId: string, labName: string) => {
     if (window.confirm(`Are you sure you want to remove "${labName}" from this semester?`)) {
       const currentSem = semestersLabs[semKey]
       if (!currentSem) return
@@ -448,12 +471,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
   // Reset Labs to Official Defaults
   const handleResetLabs = () => {
-    if (window.confirm('Reset all laboratories to default institutional curricula?')) {
+    if (window.confirm('Reset all laboratories across all 8 semesters?')) {
       setSemestersLabs(ALL_SEMESTERS_LABS)
       if (typeof window !== 'undefined') {
+        localStorage.removeItem('VSB_AIDS_EDITABLE_LABS_V2')
         localStorage.removeItem('VSB_AIDS_EDITABLE_LABS')
       }
-      toast.success('Laboratories reset to standard curricula!')
+      toast.success('Laboratories reset!')
     }
   }
 
@@ -1236,22 +1260,22 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </div>
               <div>
                 <h3 className="font-black text-sm text-[#071A3D] flex items-center gap-2">
-                  <span>Available Laboratories &amp; Practical Training (Semesters 3, 5 &amp; 7)</span>
+                  <span>Available Laboratories &amp; Practical Training (All 8 Semesters)</span>
                   <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
-                    Editable Curricula
+                    Official Curricula
                   </span>
                 </h3>
                 <p className="text-[11px] text-gray-500 font-medium">
-                  FN Lab: 09:15 AM – 12:30 PM · AN Lab: 01:20 PM – 04:30 PM · Click Edit on any lab to customize
+                  FN Lab: 09:15 AM – 12:30 PM · AN Lab: 01:20 PM – 04:30 PM · Configure institutional practical sessions
                 </p>
               </div>
             </div>
 
-            {/* Quick Actions & Semester Filter buttons */}
+            {/* Quick Actions & Reset */}
             <div className="flex items-center flex-wrap gap-2">
               <button
                 type="button"
-                onClick={() => handleOpenAddLab(labSemesterFilter !== 'ALL' ? (labSemesterFilter as any) : 'sem3')}
+                onClick={() => handleOpenAddLab(labSemesterFilter !== 'ALL' ? (labSemesterFilter as any) : 'sem1')}
                 className="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Add New Laboratory
@@ -1261,115 +1285,198 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 type="button"
                 onClick={handleResetLabs}
                 className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="Reset all laboratory courses to official curriculum defaults"
+                title="Reset all laboratory courses"
               >
-                <RotateCcw className="w-3 h-3 text-gray-500" /> Defaults
+                <RotateCcw className="w-3 h-3 text-gray-500" /> Reset
               </button>
             </div>
           </div>
 
-          {/* Quick Filter by Semester for Labs */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs font-bold text-gray-500 flex items-center gap-1 shrink-0">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Filter Practical Curricula:
-            </span>
-            <div className="flex items-center gap-1.5">
-              {[
-                { key: 'ALL', label: 'All 3 Semesters' },
-                { key: 'sem3', label: 'Semester 3 (Year 2)' },
-                { key: 'sem5', label: 'Semester 5 (Year 3)' },
-                { key: 'sem7', label: 'Semester 7 (Year 4)' },
-              ].map((s) => (
+          {/* 2-STEP YEAR & SEMESTER WISE FILTER ONLY */}
+          <div className="space-y-2.5 bg-white/80 p-3.5 rounded-2xl border border-purple-100 shadow-2xs">
+            {/* Step 1: Filter by Year */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-xs font-black text-purple-950 flex items-center gap-1 shrink-0">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-purple-700" /> Filter by Year:
+              </span>
+              <div className="flex items-center flex-wrap gap-1.5">
+                {[
+                  { val: 'ALL', label: 'All 4 Years (I - IV)' },
+                  { val: 1, label: 'Year I (Freshman)' },
+                  { val: 2, label: 'Year II (Sophomore)' },
+                  { val: 3, label: 'Year III (Junior)' },
+                  { val: 4, label: 'Year IV (Senior)' },
+                ].map((y) => (
+                  <button
+                    key={String(y.val)}
+                    type="button"
+                    onClick={() => {
+                      setLabYearFilter(y.val as any)
+                      setLabSemesterFilter('ALL')
+                    }}
+                    className={cn(
+                      'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                      labYearFilter === y.val
+                        ? 'bg-purple-700 text-white shadow-xs'
+                        : 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
+                    )}
+                  >
+                    {y.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Step 2: Filter by Semester */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 border-t border-purple-50">
+              <span className="text-xs font-black text-purple-950 flex items-center gap-1 shrink-0">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-purple-700" /> Filter by Semester:
+              </span>
+              <div className="flex items-center flex-wrap gap-1.5">
                 <button
-                  key={s.key}
                   type="button"
-                  onClick={() => setLabSemesterFilter(s.key)}
+                  onClick={() => setLabSemesterFilter('ALL')}
                   className={cn(
                     'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                    labSemesterFilter === s.key
+                    labSemesterFilter === 'ALL'
                       ? 'bg-purple-700 text-white shadow-xs'
-                      : 'bg-white text-gray-600 hover:bg-purple-50 border border-purple-100'
+                      : 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
                   )}
                 >
-                  {s.label}
+                  {labYearFilter === 'ALL' ? 'All 8 Semesters' : `All Sems in Year ${labYearFilter}`}
                 </button>
-              ))}
+
+                {Object.entries(semestersLabs)
+                  .filter(([_, sem]) => labYearFilter === 'ALL' || sem.yearNumber === labYearFilter)
+                  .map(([key, sem]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setLabSemesterFilter(key)}
+                      className={cn(
+                        'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
+                        labSemesterFilter === key
+                          ? 'bg-purple-700 text-white shadow-xs'
+                          : 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
+                      )}
+                    >
+                      <span>Sem {sem.semNumber}</span>
+                      <span
+                        className={cn(
+                          'px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono',
+                          labSemesterFilter === key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                        )}
+                      >
+                        {sem.labs.length}
+                      </span>
+                    </button>
+                  ))}
+              </div>
             </div>
           </div>
 
           {/* Active Semesters Editable Labs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-            {Object.entries(semestersLabs).filter(([k]) => labSemesterFilter === 'ALL' || labSemesterFilter === k).map(([key, sem]) => (
-              <div key={key} className="p-4 rounded-2xl bg-white border border-gray-200 shadow-2xs space-y-2 flex flex-col justify-between hover:border-purple-300 transition-all">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className={cn('px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border', sem.badgeColor)}>
-                      Semester {sem.semNumber} (Year {sem.yearNumber})
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-gray-400 font-bold font-mono">{sem.labs.length} Labs</span>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenAddLab(key as any)}
-                        className="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-700 hover:text-white text-purple-700 text-[10px] font-bold transition-all border border-purple-200 cursor-pointer flex items-center gap-0.5"
-                        title={`Add laboratory to Semester ${sem.semNumber}`}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+            {Object.entries(semestersLabs)
+              .filter(([key, sem]) => {
+                const matchesYear = labYearFilter === 'ALL' || sem.yearNumber === labYearFilter
+                const matchesSem = labSemesterFilter === 'ALL' || key === labSemesterFilter
+                return matchesYear && matchesSem
+              })
+              .map(([key, sem]) => (
+                <div
+                  key={key}
+                  className="p-4 rounded-2xl bg-white border border-gray-200 shadow-2xs space-y-2 flex flex-col justify-between hover:border-purple-300 transition-all"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <span
+                        className={cn(
+                          'px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border',
+                          sem.badgeColor
+                        )}
                       >
-                        <Plus className="w-2.5 h-2.5" /> Add
-                      </button>
+                        Semester {sem.semNumber} (Year {sem.yearNumber})
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-gray-400 font-bold font-mono">
+                          {sem.labs.length} {sem.labs.length === 1 ? 'Lab' : 'Labs'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAddLab(key as any)}
+                          className="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-700 hover:text-white text-purple-700 text-[10px] font-bold transition-all border border-purple-200 cursor-pointer flex items-center gap-0.5"
+                          title={`Add laboratory to Semester ${sem.semNumber}`}
+                        >
+                          <Plus className="w-2.5 h-2.5" /> Add
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <h4 className="font-extrabold text-sm text-[#071A3D]">{sem.semLabel}</h4>
+                    <h4 className="font-extrabold text-sm text-[#071A3D]">{sem.semLabel}</h4>
 
-                  <ul className="mt-2.5 space-y-2 text-xs max-h-64 overflow-y-auto pr-1">
-                    {sem.labs.length === 0 ? (
-                      <li className="p-4 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-center text-gray-400 text-xs font-semibold">
-                        No labs configured yet. Click "+ Add" above to insert a lab.
-                      </li>
-                    ) : (
-                      sem.labs.map((l) => (
-                        <li key={l.id} className="p-2 rounded-xl bg-gray-50 border border-gray-100 hover:border-purple-200 flex items-start justify-between gap-2 group transition-all">
-                          <div className="flex items-start gap-2 flex-1 min-w-0">
-                            <Code2 className="w-3.5 h-3.5 text-[#1455D9] shrink-0 mt-0.5" />
-                            <div className="flex-1 min-w-0">
-                              <span className="font-bold text-[#071A3D] block text-xs truncate" title={l.name}>{l.name}</span>
-                              <span className="text-[10px] text-gray-500 font-mono block">
-                                <span className="text-purple-700 font-bold">{l.code}</span> · {l.defaultPeriod} ({l.defaultTime})
-                              </span>
-                              <span className="text-[9px] text-gray-400 font-semibold block mt-0.5">
-                                Days: {l.defaultDays} · {l.credits} Credits
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenEditLab(key as any, l)}
-                              className="p-1 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 text-[10px] transition-all cursor-pointer shadow-2xs"
-                              title={`Edit ${l.name}`}
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteLab(key as any, l.id, l.name)}
-                              className="p-1 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 text-[10px] transition-all cursor-pointer shadow-2xs"
-                              title={`Delete ${l.name}`}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
+                    <ul className="mt-2.5 space-y-2 text-xs max-h-64 overflow-y-auto pr-1">
+                      {sem.labs.length === 0 ? (
+                        <li className="p-4 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-center space-y-1.5">
+                          <FlaskConical className="w-5 h-5 text-gray-300 mx-auto" />
+                          <p className="text-gray-400 text-xs font-semibold">No labs configured yet.</p>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenAddLab(key as any)}
+                            className="text-[11px] font-bold text-purple-700 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                          >
+                            <Plus className="w-3 h-3" /> Add First Lab
+                          </button>
                         </li>
-                      ))
-                    )}
-                  </ul>
+                      ) : (
+                        sem.labs.map((l) => (
+                          <li
+                            key={l.id}
+                            className="p-2 rounded-xl bg-gray-50 border border-gray-100 hover:border-purple-200 flex items-start justify-between gap-2 group transition-all"
+                          >
+                            <div className="flex items-start gap-2 flex-1 min-w-0">
+                              <Code2 className="w-3.5 h-3.5 text-[#1455D9] shrink-0 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <span className="font-bold text-[#071A3D] block text-xs truncate" title={l.name}>
+                                  {l.name}
+                                </span>
+                                <span className="text-[10px] text-gray-500 font-mono block">
+                                  <span className="text-purple-700 font-bold">{l.code}</span> · {l.defaultPeriod} ({l.defaultTime})
+                                </span>
+                                <span className="text-[9px] text-gray-400 font-semibold block mt-0.5">
+                                  Days: {l.defaultDays} · {l.credits} Credits
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditLab(key as any, l)}
+                                className="p-1 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 text-[10px] transition-all cursor-pointer shadow-2xs"
+                                title={`Edit ${l.name}`}
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteLab(key as any, l.id, l.name)}
+                                className="p-1 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 text-[10px] transition-all cursor-pointer shadow-2xs"
+                                title={`Delete ${l.name}`}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </li>
+                        ))
+                      )}
+                    </ul>
+                  </div>
+                  <div className="pt-2.5 border-t border-gray-100 text-xs text-purple-700 font-bold flex items-center justify-between">
+                    <span>Practical Curricula</span>
+                    <span className="font-mono">{sem.labs.reduce((a, b) => a + b.credits, 0)} Credits</span>
+                  </div>
                 </div>
-                <div className="pt-2.5 border-t border-gray-100 text-xs text-purple-700 font-bold flex items-center justify-between">
-                  <span>Practical Curricula</span>
-                  <span className="font-mono">{sem.labs.reduce((a, b) => a + b.credits, 0)} Credits</span>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}
@@ -3619,9 +3726,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9] focus:border-[#1455D9] focus:outline-none"
                   disabled={Boolean(editingLabId)}
                 >
+                  <option value="sem1">Semester 1 · Year 1 (Freshman - Odd)</option>
+                  <option value="sem2">Semester 2 · Year 1 (Freshman - Even)</option>
                   <option value="sem3">Semester 3 · Year 2 (Sophomore - Odd)</option>
+                  <option value="sem4">Semester 4 · Year 2 (Sophomore - Even)</option>
                   <option value="sem5">Semester 5 · Year 3 (Junior - Odd)</option>
+                  <option value="sem6">Semester 6 · Year 3 (Junior - Even)</option>
                   <option value="sem7">Semester 7 · Year 4 (Senior - Odd)</option>
+                  <option value="sem8">Semester 8 · Year 4 (Capstone - Even)</option>
                 </select>
               </div>
 
