@@ -21,18 +21,19 @@ function getOptimizedDatabaseUrl(): string {
   // Ensure high-concurrency pool limits and connection timeouts are tuned
   try {
     const parsed = new URL(url)
-    // In serverless / high concurrency, optimize connections and cache query plans
+    // In serverless, each container handles 1 request at a time.
+    // Setting connection_limit to 1 avoids overloading Render's free tier RAM limit.
     if (!parsed.searchParams.has('connection_limit')) {
-      parsed.searchParams.set('connection_limit', process.env.VERCEL ? '10' : '20')
+      parsed.searchParams.set('connection_limit', process.env.VERCEL ? '1' : '5')
     }
     if (!parsed.searchParams.has('pool_timeout')) {
-      parsed.searchParams.set('pool_timeout', '15')
+      parsed.searchParams.set('pool_timeout', '20')
     }
     if (!parsed.searchParams.has('connect_timeout')) {
-      parsed.searchParams.set('connect_timeout', '15')
+      parsed.searchParams.set('connect_timeout', '20')
     }
     if (!parsed.searchParams.has('statement_cache_size')) {
-      parsed.searchParams.set('statement_cache_size', '100')
+      parsed.searchParams.set('statement_cache_size', '50')
     }
     return parsed.toString()
   } catch {
@@ -49,6 +50,7 @@ export const prisma =
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Cache prisma on globalThis in both dev and production serverless containers
+globalForPrisma.prisma = prisma
 
 export default prisma
