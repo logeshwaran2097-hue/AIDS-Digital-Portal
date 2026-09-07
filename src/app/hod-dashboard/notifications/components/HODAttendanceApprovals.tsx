@@ -35,6 +35,8 @@ export interface AttendanceUnlockRequestItem {
   facultyId: string
   facultyName: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  targetStudent?: string
+  intendedStatus?: string
   reviewNote?: string
   reviewedBy?: string
   reviewedAt?: string
@@ -268,9 +270,27 @@ export function HODAttendanceApprovals() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-bold text-[#071A3D] truncate">{req.facultyName}</p>
-                      <p className="text-[10px] text-slate-500">Class Advisor</p>
+                      <p className="text-[10px] text-slate-500">Class Advisor / Faculty</p>
                     </div>
                   </div>
+
+                  {/* Target Student to Revise */}
+                  {req.targetStudent && req.targetStudent !== 'ALL' && (
+                    <div className="p-2.5 rounded-2xl bg-blue-50 border border-blue-200 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-blue-800 font-bold">
+                        <User className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Target Student:</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-[#071A3D]">{req.targetStudent}</span>
+                        {req.intendedStatus && (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px]">
+                            → {req.intendedStatus === 'P' ? 'Present' : req.intendedStatus === 'OD' ? 'On Duty (OD)' : req.intendedStatus === 'ML' ? 'Medical Leave' : 'Absent'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Reason Stated */}
                   <div className="p-3 rounded-2xl bg-amber-100/50 border border-amber-200 text-xs space-y-1">

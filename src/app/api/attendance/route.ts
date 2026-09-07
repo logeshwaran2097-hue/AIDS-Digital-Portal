@@ -370,6 +370,41 @@ export async function POST(request: Request) {
       console.warn('Attendance DB save note:', e)
     }
 
+    // When attendance is locked upon submission, cleanly resolve any approved unlock requests for this session
+    if (isLocked) {
+      try {
+        const record = await (prisma as any).systemSettings?.findUnique?.({
+          where: { key: 'attendance_unlock_requests' },
+        })
+        if (record?.value) {
+          const allRequests = JSON.parse(record.value)
+          let changed = false
+          allRequests.forEach((r: any) => {
+            const sameSession =
+              r.year === parseInt(year) &&
+              r.section?.toUpperCase() === section?.toUpperCase() &&
+              r.date === date &&
+              r.sessionType === sessionType &&
+              (sessionType !== 'subject' || (r.subjectCode === subjectCode && (!hour || r.hour === hour)))
+            if (sameSession && r.status === 'APPROVED') {
+              r.status = 'RESOLVED'
+              r.resolvedAt = new Date().toISOString()
+              r.updatedAt = new Date().toISOString()
+              changed = true
+            }
+          })
+          if (changed) {
+            await (prisma as any).systemSettings?.update?.({
+              where: { key: 'attendance_unlock_requests' },
+              data: { value: JSON.stringify(allRequests) },
+            })
+          }
+        }
+      } catch (unlockResolveErr) {
+        console.warn('Could not resolve unlock request:', unlockResolveErr)
+      }
+    }
+
     // Real-Time Notification Broadcast for Admin, HOD, Faculty, Students
     try {
       const className = `Year ${year} - Section ${section} (Semester ${semester})`

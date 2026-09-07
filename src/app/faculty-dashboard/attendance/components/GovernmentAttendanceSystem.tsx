@@ -177,7 +177,11 @@ export function GovernmentAttendanceSystem() {
   const [unlockRequest, setUnlockRequest] = useState<any>(null)
   const [showUnlockModal, setShowUnlockModal] = useState(false)
   const [unlockReason, setUnlockReason] = useState('')
+  const [targetStudentId, setTargetStudentId] = useState<string>('ALL')
+  const [intendedStatusChange, setIntendedStatusChange] = useState<'P' | 'OD' | 'ML' | 'A'>('P')
   const [requestingUnlock, setRequestingUnlock] = useState(false)
+
+
 
   // Auto-detect view mode based on screen width on initial load
   useEffect(() => {
@@ -304,6 +308,16 @@ export function GovernmentAttendanceSystem() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClass, date, mode, selectedSubject, hour])
 
+  // Auto-poll every 8 seconds while waiting for HOD approval
+  useEffect(() => {
+    if (unlockRequest?.status === 'PENDING') {
+      const pollTimer = setInterval(() => {
+        loadStudents()
+      }, 8000)
+      return () => clearInterval(pollTimer)
+    }
+  }, [unlockRequest?.status, loadStudents])
+
   // ── Real-time stats ────────────────────────────────────────────────────────
   const stats = useMemo(() => {
     const total = students.length
@@ -372,12 +386,46 @@ export function GovernmentAttendanceSystem() {
     setTimeout(() => setToast(null), 3500)
   }
 
+  const applyQuickPreset = (presetText: string) => {
+    const studentInfo =
+      targetStudentId !== 'ALL'
+        ? students.find((s) => s.id === targetStudentId || s.registerNumber === targetStudentId)
+        : null
+
+    const statusName =
+      intendedStatusChange === 'P'
+        ? 'Present (P)'
+        : intendedStatusChange === 'OD'
+        ? 'On Duty (OD)'
+        : intendedStatusChange === 'ML'
+        ? 'Medical Leave (ML)'
+        : 'Absent (A)'
+
+    if (studentInfo) {
+      setUnlockReason(
+        `Request permission to update student ${studentInfo.registerNumber} (${studentInfo.name}) to "${statusName}". Reason: ${presetText}. Supporting documentation verified.`
+      )
+    } else {
+      setUnlockReason(
+        `Official roll call revision requested for Year ${selectedClass?.year} - Sec ${selectedClass?.section} (${mode === 'morning' ? 'Morning Roll Call' : selectedSubject?.code || 'Subject'}). Reason: ${presetText}.`
+      )
+    }
+  }
+
   const handleRequestUnlock = async () => {
     if (!unlockReason.trim()) {
-      showToast('error', 'Please provide a reason for editing attendance')
+      showToast('error', 'Please provide an official justification for editing attendance')
       return
     }
     if (!selectedClass) return
+
+    const studentInfo =
+      targetStudentId !== 'ALL'
+        ? students.find((s) => s.id === targetStudentId || s.registerNumber === targetStudentId)
+        : null
+    const targetStudentStr = studentInfo
+      ? `${studentInfo.registerNumber} - ${studentInfo.name}`
+      : 'ALL'
 
     setRequestingUnlock(true)
     try {
@@ -395,6 +443,8 @@ export function GovernmentAttendanceSystem() {
           subjectCode: selectedSubject?.code,
           subjectName: selectedSubject?.name,
           hour: mode === 'subject' ? hour : undefined,
+          targetStudent: targetStudentStr,
+          intendedStatus: targetStudentId !== 'ALL' ? intendedStatusChange : undefined,
           reason: unlockReason,
         }),
       })
@@ -403,7 +453,7 @@ export function GovernmentAttendanceSystem() {
         setUnlockRequest(data.request)
         setShowUnlockModal(false)
         setUnlockReason('')
-        showToast('success', 'Permission request sent to HOD. Awaiting approval ✓')
+        showToast('success', 'Official unlock request sent to HOD. Awaiting approval ✓')
       } else {
         showToast('error', data.message || 'Failed to submit unlock request')
       }
@@ -900,6 +950,28 @@ export function GovernmentAttendanceSystem() {
             </button>
           </div>
         </div>
+
+        {/* HOD Permission Approved Banner */}
+        {unlockRequest?.status === 'APPROVED' && !isLocked && (
+          <div className="p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-medium border bg-emerald-50/90 border-emerald-300 text-emerald-950 shadow-xs animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-xl bg-emerald-200 text-emerald-800 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="font-extrabold text-emerald-900">
+                  Permission Approved by HOD ({unlockRequest.reviewedBy || 'Head of Department'})
+                </p>
+                <p className="text-[11px] text-emerald-700">
+                  Attendance register is unlocked. You can make adjustments now. Click &ldquo;Submit &amp; Lock to Portal&rdquo; when finished to re-lock.
+                </p>
+              </div>
+            </div>
+            <span className="self-start sm:self-auto px-3 py-1 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 shadow-2xs">
+              Unlocked for Editing
+            </span>
+          </div>
+        )}
 
         {/* Existing Session Alert Banner */}
         {existingSession && (
@@ -1836,27 +1908,27 @@ export function GovernmentAttendanceSystem() {
       {/* ── Ask Permission to HOD Unlock Modal ──────────────────────────────── */}
       {showUnlockModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-5 animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-start gap-3.5 pb-4 border-b border-gray-100">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center shrink-0 shadow-xs">
+            <div className="flex items-start gap-3.5 pb-3 border-b border-gray-100">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-black text-[#071A3D]">Ask Permission from HOD</h3>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider">
                     Locked Register
                   </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                  Attendance is locked &amp; recorded. State the official reason to request unlock authorization from the Head of Department.
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  Official authorization from the Head of Department is required to unlock and make adjustments to this registered roll call.
                 </p>
               </div>
             </div>
 
             {/* Session Scope Details */}
-            <div className="bg-gray-50 rounded-2xl p-3.5 border border-gray-200/80 space-y-1.5 text-xs">
+            <div className="bg-gray-50 rounded-2xl p-3 border border-gray-200/80 space-y-1.5 text-xs">
               <div className="flex items-center justify-between text-gray-600">
                 <span className="font-semibold text-gray-500">Target Class:</span>
                 <span className="font-bold text-[#071A3D]">
@@ -1866,7 +1938,7 @@ export function GovernmentAttendanceSystem() {
               <div className="flex items-center justify-between text-gray-600">
                 <span className="font-semibold text-gray-500">Session &amp; Date:</span>
                 <span className="font-bold text-[#071A3D]">
-                  {mode === 'morning' ? 'Morning Roll Call' : `${selectedSubject?.code} (${hour})`} · {date}
+                  {mode === 'morning' ? 'Morning Roll Call' : `${selectedSubject?.code || 'Subject'} (${hour})`} · {date}
                 </span>
               </div>
               <div className="flex items-center justify-between text-gray-600">
@@ -1877,10 +1949,61 @@ export function GovernmentAttendanceSystem() {
               </div>
             </div>
 
+            {/* Target Student Selection */}
+            <div>
+              <label className="block text-xs font-bold text-[#071A3D] mb-1">
+                Select Student / Scope for Revision:
+              </label>
+              <select
+                value={targetStudentId}
+                onChange={(e) => {
+                  setTargetStudentId(e.target.value)
+                  setUnlockReason('')
+                }}
+                className="w-full rounded-xl border border-gray-300 p-2.5 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#1455D9] bg-white cursor-pointer"
+              >
+                <option value="ALL">Entire Session / General Roll Call Correction</option>
+                {students.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.registerNumber} — {s.name} (Currently: {s.status === 'P' ? 'Present' : s.status === 'A' ? 'Absent' : s.status === 'OD' ? 'On Duty' : s.status === 'ML' ? 'Medical Leave' : 'Late'})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* If specific student chosen, show requested status pills */}
+            {targetStudentId !== 'ALL' && (
+              <div>
+                <label className="block text-xs font-bold text-[#071A3D] mb-1">
+                  Requested New Status:
+                </label>
+                <div className="flex items-center gap-2">
+                  {[
+                    { id: 'P', label: 'Present (P)', color: 'border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100', active: 'bg-emerald-600 text-white border-emerald-600' },
+                    { id: 'OD', label: 'On Duty (OD)', color: 'border-blue-300 text-blue-800 bg-blue-50 hover:bg-blue-100', active: 'bg-blue-600 text-white border-blue-600' },
+                    { id: 'ML', label: 'Medical Leave (ML)', color: 'border-purple-300 text-purple-800 bg-purple-50 hover:bg-purple-100', active: 'bg-purple-600 text-white border-purple-600' },
+                    { id: 'A', label: 'Absent (A)', color: 'border-rose-300 text-rose-800 bg-rose-50 hover:bg-rose-100', active: 'bg-rose-600 text-white border-rose-600' },
+                  ].map((st) => (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => setIntendedStatusChange(st.id as any)}
+                      className={cn(
+                        'flex-1 py-1.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer',
+                        intendedStatusChange === st.id ? st.active : st.color
+                      )}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Quick Reason Suggestions */}
             <div>
-              <label className="block text-xs font-bold text-[#071A3D] mb-1.5">
-                Quick Reason Selection:
+              <label className="block text-xs font-bold text-[#071A3D] mb-1">
+                Standard Institutional Reasons (Click to populate):
               </label>
               <div className="flex flex-wrap gap-1.5">
                 {[
@@ -1893,15 +2016,10 @@ export function GovernmentAttendanceSystem() {
                   <button
                     key={preset}
                     type="button"
-                    onClick={() => setUnlockReason(preset)}
-                    className={cn(
-                      'px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all',
-                      unlockReason === preset
-                        ? 'bg-[#1455D9] text-white border-[#1455D9]'
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
-                    )}
+                    onClick={() => applyQuickPreset(preset)}
+                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold border bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:text-[#1455D9] hover:border-blue-200 transition-all cursor-pointer"
                   >
-                    {preset}
+                    + {preset}
                   </button>
                 ))}
               </div>
@@ -1909,28 +2027,29 @@ export function GovernmentAttendanceSystem() {
 
             {/* Reason Text Area */}
             <div>
-              <label className="block text-xs font-bold text-[#071A3D] mb-1.5">
+              <label className="block text-xs font-bold text-[#071A3D] mb-1">
                 Detailed Justification for HOD: <span className="text-rose-500">*</span>
               </label>
               <textarea
                 value={unlockReason}
                 onChange={(e) => setUnlockReason(e.target.value)}
-                placeholder="Explain why changes are needed (e.g., student 7376222AD105 arrived at 09:20 with HOD bus pass, need to mark Present)..."
+                placeholder="State the official academic or administrative reason for HOD review..."
                 rows={3}
-                className="w-full rounded-2xl border border-gray-300 p-3 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1455D9] focus:border-transparent resize-none"
+                className="w-full rounded-2xl border border-gray-300 p-3 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1455D9] focus:border-transparent resize-none bg-slate-50/50"
               />
             </div>
 
             {/* Modal Actions */}
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-gray-100">
               <button
                 type="button"
                 onClick={() => {
                   setShowUnlockModal(false)
                   setUnlockReason('')
+                  setTargetStudentId('ALL')
                 }}
                 disabled={requestingUnlock}
-                className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1938,7 +2057,7 @@ export function GovernmentAttendanceSystem() {
                 type="button"
                 onClick={handleRequestUnlock}
                 disabled={requestingUnlock || !unlockReason.trim()}
-                className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 rounded-xl shadow-md shadow-amber-600/20 disabled:opacity-50 flex items-center gap-1.5 transition-all active:scale-95"
+                className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 rounded-xl shadow-md shadow-amber-600/20 disabled:opacity-50 flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
               >
                 {requestingUnlock ? (
                   <>

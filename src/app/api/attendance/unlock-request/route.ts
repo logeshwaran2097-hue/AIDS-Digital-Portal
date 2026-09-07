@@ -21,6 +21,8 @@ export interface AttendanceUnlockRequest {
   facultyId: string
   facultyName: string
   status: 'PENDING' | 'APPROVED' | 'REJECTED'
+  targetStudent?: string
+  intendedStatus?: string
   reviewNote?: string
   reviewedBy?: string
   reviewedAt?: string
@@ -187,6 +189,8 @@ export async function POST(request: Request) {
         hour: hour || undefined,
         date,
         reason: reason.trim(),
+        targetStudent: body.targetStudent || 'ALL',
+        intendedStatus: body.intendedStatus || undefined,
         facultyId: session.userId,
         facultyName: session.name || 'Class Advisor',
         status: 'PENDING',
@@ -210,10 +214,13 @@ export async function POST(request: Request) {
 
       // Send High-Priority Immediate Notification to HOD
       try {
+        const targetNote = body.targetStudent && body.targetStudent !== 'ALL'
+          ? ` Target Student: ${body.targetStudent} (Intended: ${body.intendedStatus || 'Status Update'}).`
+          : ''
         await prisma.notification.create({
           data: {
             title: `🔓 Attendance Unlock Request: ${className}`,
-            message: `${session.name || 'Class Advisor'} requested permission to make changes in locked attendance for ${className} · ${sessionLabel} (${date}). Reason: "${reason.trim()}".`,
+            message: `${session.name || 'Class Advisor'} requested permission to make changes in locked attendance for ${className} · ${sessionLabel} (${date}).${targetNote} Reason: "${reason.trim()}".`,
             target: 'hod',
             createdByName: session.name || 'Class Advisor',
             status: 'published',
