@@ -163,11 +163,6 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       localStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
       sessionStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
     }
-    fetch('/api/auth/student/complete-onboarding', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ skipEmailVerification: true }),
-    }).catch(() => {})
   }
 
   const att = data.attendanceStats || {
