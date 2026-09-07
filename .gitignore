@@ -26,6 +26,8 @@ errors.txt
 *.db-wal
 prisma/dev.db-shm
 prisma/dev.db-wal
+*.apk
+*.zip
 
 # debug logs
 npm-debug.log*

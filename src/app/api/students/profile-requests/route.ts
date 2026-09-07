@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     console.error('Error creating profile change request:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to submit profile change request: ' + String(error) },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -201,7 +201,7 @@ export async function PATCH(request: Request) {
     console.error('Error reviewing profile change request:', error)
     return NextResponse.json(
       { success: false, message: 'Failed to process request: ' + String(error) },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
@@ -220,6 +220,6 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true, message: 'Request cancelled successfully' })
   } catch (error) {
     console.error('Error deleting profile change request:', error)
-    return NextResponse.json({ success: false, message: 'Failed to cancel request' }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to cancel request' }, { status: 400 })
   }
 }

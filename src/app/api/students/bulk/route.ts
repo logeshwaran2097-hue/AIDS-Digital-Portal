@@ -230,7 +230,7 @@ export async function POST(request: Request) {
     console.error('Error in bulk student upload:', error)
     return NextResponse.json(
       { success: false, message: error?.message || 'Failed to process bulk student upload' },
-      { status: 500 }
+      { status: 400 }
     )
   }
 }
