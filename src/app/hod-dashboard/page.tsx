@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
+import { HODOnboardingWrapper } from './components/HODOnboardingWrapper'
 import { HODAttendanceApprovals } from './notifications/components/HODAttendanceApprovals'
 import {
   Users,
@@ -54,6 +55,21 @@ export default async function HODDashboardPage() {
   return (
     <PortalLayout role="hod" userName={user?.name || session.name || 'Head of Department'}>
       <div className="space-y-8 animate-fade-in">
+        {/* HOD Onboarding & Security Wizard */}
+        <HODOnboardingWrapper
+          initialMustChangePassword={Boolean(user?.mustChangePassword)}
+          hodData={{
+            name: user?.name || session.name || 'Head of Department',
+            email: user?.email || session.email || '',
+            phone: user?.phone || '',
+            facultyId: hodRec?.facultyId || session.facultyId || '',
+            designation: hodRec?.designation || 'Head of Department',
+            qualification: hodRec?.qualification || '',
+            experience: hodRec?.experience ?? 0,
+            department: hodRec?.department || 'Artificial Intelligence & Data Science',
+          }}
+        />
+
         {/* HOD Executive Hero Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 sm:p-8 text-white shadow-xl">
           <div className="absolute right-0 top-0 w-96 h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#F4C430]/20 via-transparent to-transparent pointer-events-none" />
