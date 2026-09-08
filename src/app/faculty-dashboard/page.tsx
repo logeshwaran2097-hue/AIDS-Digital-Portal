@@ -148,7 +148,8 @@ export default async function FacultyDashboardPage() {
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both'
+    faculty?.facultyType === 'both' ||
+    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
 
   const roleBadgeLabel = isAdvisor
     ? 'Class Advisor'

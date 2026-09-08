@@ -48,7 +48,8 @@ export default async function FacultyStudentsPage() {
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both'
+    faculty?.facultyType === 'both' ||
+    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
 
   if (!isAdvisor) {
     redirect('/faculty-dashboard')

@@ -244,8 +244,8 @@ const DAYS_OF_WEEK = [
 ]
 
 export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRecord[] }) {
-  // Active View Tab: 'advisors' (Class Advisors) vs 'faculty' (Faculty Members / Theory) vs 'labs' (Lab Handlers)
-  const [activeTab, setActiveTab] = useState<'advisors' | 'faculty' | 'labs'>('advisors')
+  // Active View Tab: 'faculty' (Faculty Members: Theory & Practicals) vs 'advisors' (Class Advisors / In-charges)
+  const [activeTab, setActiveTab] = useState<'faculty' | 'advisors'>('faculty')
   const [facultyList, setFacultyList] = useState<FacultyRecord[]>(initialFaculty)
   const [searchQuery, setSearchQuery] = useState('')
   const [yearFilter, setYearFilter] = useState('ALL')
@@ -304,11 +304,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     classDay: 'Mon, Wed, Fri',
     classPeriod: 'Period 1',
     classTime: '09:15 AM - 10:00 AM',
+    isClassAdvisor: false,
     advisorBatch: '',
     advisorYear: 2,
     advisorSem: 3,
     advisorSec: 'A',
-    facultyType: 'advisor',
+    allocationType: 'theory' as 'theory' | 'lab' | 'both',
+    facultyType: 'both',
   })
 
   // Quick Presets Modal Tab for Labs & Theory Courses (Semesters 3, 5, 7)
@@ -338,148 +340,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     }
   }, [semestersLabs])
 
-  // Lab Edit & Add Modal State
-  const [isLabModalOpen, setIsLabModalOpen] = useState(false)
-  const [editingLabId, setEditingLabId] = useState<string | null>(null)
-  const [labFormData, setLabFormData] = useState<{
-    targetSem: SemKey
-    name: string
-    shortName: string
-    code: string
-    credits: number
-    defaultPeriod: string
-    defaultTime: string
-    defaultDays: string
-  }>({
-    targetSem: 'sem1',
-    name: '',
-    shortName: '',
-    code: '',
-    credits: 2,
-    defaultPeriod: 'Lab Session (FN)',
-    defaultTime: '09:15 AM - 12:30 PM',
-    defaultDays: 'Tuesday',
-  })
 
-  // Open Add Lab Modal
-  const handleOpenAddLab = (semKey: SemKey = 'sem1') => {
-    setEditingLabId(null)
-    setLabFormData({
-      targetSem: semKey,
-      name: '',
-      shortName: '',
-      code: '',
-      credits: 2,
-      defaultPeriod: 'Lab Session (FN)',
-      defaultTime: '09:15 AM - 12:30 PM',
-      defaultDays: 'Monday',
-    })
-    setIsLabModalOpen(true)
-  }
-
-  // Open Edit Lab Modal
-  const handleOpenEditLab = (semKey: SemKey, lab: LabItem) => {
-    setEditingLabId(lab.id)
-    setLabFormData({
-      targetSem: semKey,
-      name: lab.name,
-      shortName: lab.shortName,
-      code: lab.code,
-      credits: lab.credits,
-      defaultPeriod: lab.defaultPeriod,
-      defaultTime: lab.defaultTime,
-      defaultDays: lab.defaultDays,
-    })
-    setIsLabModalOpen(true)
-  }
-
-  // Save Lab (Add or Update)
-  const handleSaveLab = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!labFormData.name.trim() || !labFormData.code.trim()) {
-      toast.error('Please enter both Laboratory Name and Course Code')
-      return
-    }
-
-    const semKey = labFormData.targetSem
-    const currentSem = semestersLabs[semKey] || ALL_SEMESTERS_LABS[semKey]
-
-    if (editingLabId) {
-      // Update existing lab
-      const updatedLabs = currentSem.labs.map((l) =>
-        l.id === editingLabId
-          ? {
-              ...l,
-              name: labFormData.name.trim(),
-              shortName: labFormData.shortName.trim() || labFormData.name.trim().slice(0, 16),
-              code: labFormData.code.trim().toUpperCase(),
-              credits: Number(labFormData.credits) || 2,
-              defaultPeriod: labFormData.defaultPeriod,
-              defaultTime: labFormData.defaultTime,
-              defaultDays: labFormData.defaultDays,
-            }
-          : l
-      )
-      setSemestersLabs({
-        ...semestersLabs,
-        [semKey]: {
-          ...currentSem,
-          labs: updatedLabs,
-        },
-      })
-      toast.success(`Lab "${labFormData.code}" updated successfully!`)
-    } else {
-      // Add new lab
-      const newLab: LabItem = {
-        id: 'lab_' + Date.now(),
-        name: labFormData.name.trim(),
-        shortName: labFormData.shortName.trim() || labFormData.name.trim().slice(0, 16),
-        code: labFormData.code.trim().toUpperCase(),
-        credits: Number(labFormData.credits) || 2,
-        defaultPeriod: labFormData.defaultPeriod,
-        defaultTime: labFormData.defaultTime,
-        defaultDays: labFormData.defaultDays,
-      }
-      setSemestersLabs({
-        ...semestersLabs,
-        [semKey]: {
-          ...currentSem,
-          labs: [...currentSem.labs, newLab],
-        },
-      })
-      toast.success(`New lab "${newLab.code}" added to Semester ${currentSem.semNumber}!`)
-    }
-
-    setIsLabModalOpen(false)
-  }
-
-  // Delete Lab
-  const handleDeleteLab = (semKey: SemKey, labId: string, labName: string) => {
-    if (window.confirm(`Are you sure you want to remove "${labName}" from this semester?`)) {
-      const currentSem = semestersLabs[semKey]
-      if (!currentSem) return
-      setSemestersLabs({
-        ...semestersLabs,
-        [semKey]: {
-          ...currentSem,
-          labs: currentSem.labs.filter((l) => l.id !== labId),
-        },
-      })
-      toast.success(`Lab "${labName}" removed successfully.`)
-    }
-  }
-
-  // Reset Labs to Official Defaults
-  const handleResetLabs = () => {
-    if (window.confirm('Reset all laboratories across all 8 semesters?')) {
-      setSemestersLabs(ALL_SEMESTERS_LABS)
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('VSB_AIDS_EDITABLE_LABS_V2')
-        localStorage.removeItem('VSB_AIDS_EDITABLE_LABS')
-      }
-      toast.success('Laboratories reset!')
-    }
-  }
 
   // Apply Quick Lab Preset into Form
   const applyLabPreset = (lab: {
@@ -609,23 +470,20 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       .finally(() => setLoadingClassData(false))
   }, [selectedAdvisorDossier])
 
-  // Filtered lists for Class Advisors
+  // Filtered lists for Class Advisors / In-charges
   const advisorsList = useMemo(() => {
     return facultyList.filter((f) => {
-      // Exclude faculty strictly configured as theory handlers or lab handlers
-      if (f.facultyType === 'subject_handler' || f.facultyType === 'lab_faculty') {
-        return false
-      }
-
       const isAdvisor =
+        Boolean(f.advisorBatch || (f.advisorYear && f.advisorSec)) ||
         f.facultyType === 'advisor' ||
-        f.facultyType === 'both' ||
-        (!f.facultyType && Boolean(f.advisorBatch))
+        f.facultyType === 'both'
 
       if (!isAdvisor) return false
 
       const matchesSearch =
+        !searchQuery ||
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.facultyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (f.advisorBatch && f.advisorBatch.toLowerCase().includes(searchQuery.toLowerCase()))
 
       const matchesYear =
@@ -647,28 +505,19 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     })
   }, [facultyList, searchQuery, yearFilter, semFilter, sectionFilter])
 
-  // Filtered lists for Faculty Members (Theory / Subject Handlers)
+  // Filtered lists for all Faculty Members (All faculty with Theory and Practical Labs)
   const facultyMembersList = useMemo(() => {
     return facultyList.filter((f) => {
       const subjs = getSubjectsList(f.subjects)
-      
-      // Exclude faculty strictly configured as advisors only or lab handlers
-      if (f.facultyType === 'advisor' || f.facultyType === 'lab_faculty') {
-        return false
-      }
-
-      const isFaculty =
-        f.facultyType === 'subject_handler' ||
-        f.facultyType === 'both' ||
-        (!f.facultyType && (subjs.length > 0 || f.subjectName))
-
-      if (!isFaculty) return false
 
       const matchesSearch =
+        !searchQuery ||
         f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        f.facultyId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (f.subjectName && f.subjectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (f.classDay && f.classDay.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (f.classPeriod && f.classPeriod.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (f.advisorBatch && f.advisorBatch.toLowerCase().includes(searchQuery.toLowerCase())) ||
         f.specialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
         subjs.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()))
 
@@ -738,38 +587,34 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // PDF Export
   const handleExportPDF = () => {
     const isAdvisors = activeTab === 'advisors'
-    const isFaculty = activeTab === 'faculty'
-    const isLabs = activeTab === 'labs'
-    const currentList = isAdvisors ? advisorsList : isFaculty ? facultyMembersList : labHandlersList
+    const currentList = isAdvisors ? advisorsList : facultyMembersList
     
     generateAndDownloadPDF({
       title: isAdvisors
         ? 'DEPARTMENT OF AI & DS — CLASS ADVISORS DIRECTORY'
-        : isFaculty
-        ? 'DEPARTMENT OF AI & DS — FACULTY MEMBERS DIRECTORY'
-        : 'DEPARTMENT OF AI & DS — LAB HANDLERS & PRACTICALS DIRECTORY',
+        : 'DEPARTMENT OF AI & DS — FACULTY MEMBERS DIRECTORY',
       subtitle: 'V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026',
       author: 'Office of the Department Administrator',
-      category: isAdvisors ? 'Class In-Charges & Mentors' : isFaculty ? 'Theory Faculty Members' : 'Laboratory In-Charges',
+      category: isAdvisors ? 'Class In-Charges & Mentors' : 'Theory & Practical Faculty Members',
       sections: [
         {
-          heading: isAdvisors ? '1. CLASS ADVISORS SUMMARY' : isFaculty ? '1. FACULTY MEMBERS SUMMARY' : '1. LAB HANDLERS SUMMARY',
+          heading: isAdvisors ? '1. CLASS ADVISORS SUMMARY' : '1. FACULTY MEMBERS SUMMARY',
           body: [
             `Total Faculty Count: ${facultyList.length} Faculty Members`,
-            `Active View: ${isAdvisors ? 'Class Mentors & Batch Advisors' : isFaculty ? 'Theory Subject Faculty Members' : 'Laboratory Handlers & Practical Curricula'}`,
+            `Active View: ${isAdvisors ? 'Class Mentors & Batch In-Charges' : 'Faculty Members (Theory Courses & Practical Laboratories)'}`,
             `Department: Artificial Intelligence & Data Science (AI & DS)`,
             `Curriculum Scope: All 8 Semesters (Sem 1 to Sem 8)`,
           ],
         },
         {
-          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : isFaculty ? '2. FACULTY COURSE ALLOCATIONS' : '2. LAB HANDLER ALLOCATIONS',
+          heading: isAdvisors ? '2. CLASS ADVISORS ALLOCATION' : '2. FACULTY COURSE ALLOCATIONS',
           body: currentList.map((f, idx) => {
             if (isAdvisors) {
               return `${idx + 1}. ${f.name} — ${f.designation} | Assigned Batch: ${f.advisorBatch || 'Year II (Sec A)'} | Contact: ${f.email}`
             } else {
               const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2311'
-              const sName = f.subjectName || (isLabs ? 'Laboratory Course' : 'Theory Subject')
-              const sDay = f.classDay || 'Tuesday'
+              const sName = f.subjectName || 'Course / Practical'
+              const sDay = f.classDay || 'Mon, Wed, Fri'
               const sPeriod = f.classPeriod || 'Regular Period'
               const sTime = f.classTime || 'Class Hours'
               return `${idx + 1}. ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
@@ -777,7 +622,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           }),
         },
       ],
-      fileName: isAdvisors ? 'VSB_AI_DS_Class_Advisors_2026' : isFaculty ? 'VSB_AI_DS_Faculty_Members_2026' : 'VSB_AI_DS_Lab_Handlers_2026',
+      fileName: isAdvisors ? 'VSB_AI_DS_Class_Advisors_2026' : 'VSB_AI_DS_Faculty_Members_2026',
     })
   }
 
@@ -837,7 +682,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         }
       }
 
-      const isAdvisorRole = formData.facultyType === 'advisor' || formData.facultyType === 'both'
+      const isAdvisorRole = Boolean(formData.isClassAdvisor || formData.facultyType === 'advisor' || formData.facultyType === 'both')
+      const computedFacultyType = isAdvisorRole
+        ? 'both'
+        : formData.allocationType === 'lab'
+        ? 'lab_faculty'
+        : 'subject_handler'
+
       const res = await fetch('/api/faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -850,10 +701,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: formData.classDay || null,
           classPeriod: formData.classPeriod || null,
           classTime: formData.classTime || null,
-          advisorBatch: formData.advisorBatch || (formData.advisorYear ? `Year ${formData.advisorYear} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}` : null),
-          advisorYear: formData.advisorYear ? Number(formData.advisorYear) : null,
-          advisorSem: formData.advisorSem ? Number(formData.advisorSem) : null,
-          advisorSec: formData.advisorSec || null,
+          advisorBatch: isAdvisorRole
+            ? (formData.advisorBatch || `Year ${formData.advisorYear || 2} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}`)
+            : null,
+          advisorYear: isAdvisorRole ? Number(formData.advisorYear || 2) : null,
+          advisorSem: isAdvisorRole ? Number(formData.advisorSem || 3) : null,
+          advisorSec: isAdvisorRole ? (formData.advisorSec || 'A') : null,
+          facultyType: computedFacultyType,
         }),
       })
       const result = await res.json()
@@ -861,12 +715,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       if (result.success && result.faculty) {
         setFacultyList([result.faculty, ...facultyList])
         setIsAddModalOpen(false)
-        if (formData.facultyType === 'subject_handler') {
-          setActiveTab('faculty')
-        } else if (formData.facultyType === 'lab_faculty') {
-          setActiveTab('labs')
-        } else {
+        if (isAdvisorRole && activeTab === 'advisors') {
           setActiveTab('advisors')
+        } else {
+          setActiveTab('faculty')
         }
         setFormData({
           facultyId: '',
@@ -884,11 +736,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: 'Mon, Wed, Fri',
           classPeriod: 'Period 1',
           classTime: '09:15 AM - 10:00 AM',
-          advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 3 - Sec A' : '',
-          advisorYear: activeTab === 'advisors' ? 2 : ('' as any),
-          advisorSem: activeTab === 'advisors' ? 3 : ('' as any),
-          advisorSec: activeTab === 'advisors' ? 'A' : '',
-          facultyType: activeTab === 'advisors' ? 'advisor' : activeTab === 'labs' ? 'lab_faculty' : 'subject_handler',
+          isClassAdvisor: false,
+          advisorBatch: '',
+          advisorYear: 2,
+          advisorSem: 3,
+          advisorSec: 'A',
+          allocationType: 'theory',
+          facultyType: 'both',
         })
         toast.success('Faculty registered successfully in database!')
       } else {
@@ -918,7 +772,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         }
       }
 
-      const isAdvisorRole = formData.facultyType === 'advisor' || formData.facultyType === 'both'
+      const isAdvisorRole = Boolean(formData.isClassAdvisor || formData.facultyType === 'advisor' || formData.facultyType === 'both')
+      const computedFacultyType = isAdvisorRole
+        ? 'both'
+        : formData.allocationType === 'lab'
+        ? 'lab_faculty'
+        : 'subject_handler'
+
       const res = await fetch('/api/faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -932,10 +792,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           classDay: formData.classDay || null,
           classPeriod: formData.classPeriod || null,
           classTime: formData.classTime || null,
-          advisorBatch: formData.advisorBatch || (formData.advisorYear ? `Year ${formData.advisorYear} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}` : null),
-          advisorYear: formData.advisorYear ? Number(formData.advisorYear) : null,
-          advisorSem: formData.advisorSem ? Number(formData.advisorSem) : null,
-          advisorSec: formData.advisorSec || null,
+          advisorBatch: isAdvisorRole
+            ? (formData.advisorBatch || `Year ${formData.advisorYear || 2} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}`)
+            : null,
+          advisorYear: isAdvisorRole ? Number(formData.advisorYear || 2) : null,
+          advisorSem: isAdvisorRole ? Number(formData.advisorSem || 3) : null,
+          advisorSec: isAdvisorRole ? (formData.advisorSec || 'A') : null,
+          facultyType: computedFacultyType,
         }),
       })
       const result = await res.json()
@@ -958,22 +821,20 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   classDay: formData.classDay,
                   classPeriod: formData.classPeriod,
                   classTime: formData.classTime,
-                  advisorBatch: isAdvisorRole ? formData.advisorBatch : null,
-                  advisorYear: isAdvisorRole ? formData.advisorYear : null,
-                  advisorSem: isAdvisorRole ? formData.advisorSem : null,
-                  advisorSec: isAdvisorRole ? formData.advisorSec : null,
-                  facultyType: formData.facultyType,
+                  advisorBatch: isAdvisorRole ? (formData.advisorBatch || `Year ${formData.advisorYear || 2} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}`) : null,
+                  advisorYear: isAdvisorRole ? Number(formData.advisorYear || 2) : null,
+                  advisorSem: isAdvisorRole ? Number(formData.advisorSem || 3) : null,
+                  advisorSec: isAdvisorRole ? (formData.advisorSec || 'A') : null,
+                  facultyType: computedFacultyType,
                 }
               : f
           )
         )
         setIsEditModalOpen(false)
-        if (formData.facultyType === 'subject_handler') {
-          setActiveTab('faculty')
-        } else if (formData.facultyType === 'lab_faculty') {
-          setActiveTab('labs')
-        } else {
+        if (isAdvisorRole && activeTab === 'advisors') {
           setActiveTab('advisors')
+        } else {
+          setActiveTab('faculty')
         }
         toast.success('Faculty record updated in database!')
       } else {
@@ -1059,11 +920,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 classDay: 'Mon, Wed, Fri',
                 classPeriod: 'Period 1',
                 classTime: '09:15 AM - 10:00 AM',
-                advisorBatch: activeTab === 'advisors' ? 'Year II - Sem 3 - Sec A' : '',
-                advisorYear: activeTab === 'advisors' ? 2 : ('' as any),
-                advisorSem: activeTab === 'advisors' ? 3 : ('' as any),
-                advisorSec: activeTab === 'advisors' ? 'A' : '',
-                facultyType: activeTab === 'advisors' ? 'advisor' : activeTab === 'labs' ? 'lab_faculty' : 'subject_handler',
+                isClassAdvisor: activeTab === 'advisors',
+                advisorBatch: activeTab === 'advisors' ? 'Year 2 - Sem 3 - Sec A' : '',
+                advisorYear: 2,
+                advisorSem: 3,
+                advisorSec: 'A',
+                allocationType: 'theory',
+                facultyType: activeTab === 'advisors' ? 'advisor' : 'both',
               })
               setIsAddModalOpen(true)
             }}
@@ -1089,35 +952,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button
-              onClick={() => setActiveTab('advisors')}
-              className={cn(
-                'flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer text-left',
-                activeTab === 'advisors'
-                  ? 'border-[#1455D9] bg-blue-50/50 shadow-sm ring-2 ring-[#1455D9]/20'
-                  : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  'w-10 h-10 rounded-xl flex items-center justify-center font-black',
-                  activeTab === 'advisors' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600'
-                )}>
-                  <UserCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-black text-sm text-[#071A3D]">Class Advisors</h4>
-                </div>
-              </div>
-              <span className={cn(
-                'px-2.5 py-1 rounded-xl text-xs font-black font-mono',
-                activeTab === 'advisors' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-700'
-              )}>
-                {advisorsList.length} Active
-              </span>
-            </button>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={() => setActiveTab('faculty')}
               className={cn(
@@ -1136,43 +971,43 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
                 <div>
                   <h4 className="font-black text-sm text-[#071A3D]">Faculty Members</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Professors &amp; Course Theory Instructors</p>
+                  <p className="text-[11px] text-gray-500 font-medium">Department Faculty, Theory Courses &amp; Practical Labs</p>
                 </div>
               </div>
               <span className={cn(
                 'px-2.5 py-1 rounded-xl text-xs font-black font-mono',
                 activeTab === 'faculty' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'
               )}>
-                {facultyMembersList.length} Active
+                {facultyMembersList.length} Faculty
               </span>
             </button>
 
             <button
-              onClick={() => setActiveTab('labs')}
+              onClick={() => setActiveTab('advisors')}
               className={cn(
                 'flex items-center justify-between p-4 rounded-2xl border-2 transition-all cursor-pointer text-left',
-                activeTab === 'labs'
-                  ? 'border-purple-600 bg-purple-50/50 shadow-sm ring-2 ring-purple-600/20'
+                activeTab === 'advisors'
+                  ? 'border-[#1455D9] bg-blue-50/50 shadow-sm ring-2 ring-[#1455D9]/20'
                   : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
               )}
             >
               <div className="flex items-center gap-3">
                 <div className={cn(
                   'w-10 h-10 rounded-xl flex items-center justify-center font-black',
-                  activeTab === 'labs' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-600'
+                  activeTab === 'advisors' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600'
                 )}>
-                  <FlaskConical className="w-5 h-5" />
+                  <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-black text-sm text-[#071A3D]">Lab Handlers</h4>
-                  <p className="text-[11px] text-gray-500 font-medium">Laboratory &amp; Practical Session Handlers</p>
+                  <h4 className="font-black text-sm text-[#071A3D]">Class Advisors &amp; In-charges</h4>
+                  <p className="text-[11px] text-gray-500 font-medium">Batch Mentors across All 8 Semesters</p>
                 </div>
               </div>
               <span className={cn(
                 'px-2.5 py-1 rounded-xl text-xs font-black font-mono',
-                activeTab === 'labs' ? 'bg-purple-700 text-white' : 'bg-gray-100 text-gray-700'
+                activeTab === 'advisors' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-700'
               )}>
-                {labHandlersList.length} Active
+                {advisorsList.length} In-charges
               </span>
             </button>
           </div>
@@ -1248,239 +1083,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         )}
       </div>
 
-      {/* ========================================================================= */}
-      {/* ACTIVE SEMESTERS (3, 5, 7) EDITABLE LABS SHOWCASE & FILTER (LAB HANDLERS TAB) */}
-      {/* ========================================================================= */}
-      {activeTab === 'labs' && (
-        <div className="bg-gradient-to-br from-purple-900/5 via-blue-900/5 to-amber-900/5 rounded-3xl p-5 border border-purple-200/80 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-purple-700 text-white flex items-center justify-center shadow-xs">
-                <FlaskConical className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-black text-sm text-[#071A3D] flex items-center gap-2">
-                  <span>Available Laboratories &amp; Practical Training (All 8 Semesters)</span>
-                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-bold">
-                    Official Curricula
-                  </span>
-                </h3>
-                <p className="text-[11px] text-gray-500 font-medium">
-                  FN Lab: 09:15 AM – 12:30 PM · AN Lab: 01:20 PM – 04:30 PM · Configure institutional practical sessions
-                </p>
-              </div>
-            </div>
-
-            {/* Quick Actions & Reset */}
-            <div className="flex items-center flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => handleOpenAddLab(labSemesterFilter !== 'ALL' ? (labSemesterFilter as any) : 'sem1')}
-                className="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold transition-all flex items-center gap-1 shadow-xs cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" /> Add New Laboratory
-              </button>
-
-              <button
-                type="button"
-                onClick={handleResetLabs}
-                className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                title="Reset all laboratory courses"
-              >
-                <RotateCcw className="w-3 h-3 text-gray-500" /> Reset
-              </button>
-            </div>
-          </div>
-
-          {/* 2-STEP YEAR & SEMESTER WISE FILTER ONLY */}
-          <div className="space-y-2.5 bg-white/80 p-3.5 rounded-2xl border border-purple-100 shadow-2xs">
-            {/* Step 1: Filter by Year */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span className="text-xs font-black text-purple-950 flex items-center gap-1 shrink-0">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-purple-700" /> Filter by Year:
-              </span>
-              <div className="flex items-center flex-wrap gap-1.5">
-                {[
-                  { val: 'ALL', label: 'All 4 Years (I - IV)' },
-                  { val: 1, label: 'Year I (Freshman)' },
-                  { val: 2, label: 'Year II (Sophomore)' },
-                  { val: 3, label: 'Year III (Junior)' },
-                  { val: 4, label: 'Year IV (Senior)' },
-                ].map((y) => (
-                  <button
-                    key={String(y.val)}
-                    type="button"
-                    onClick={() => {
-                      setLabYearFilter(y.val as any)
-                      setLabSemesterFilter('ALL')
-                    }}
-                    className={cn(
-                      'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                      labYearFilter === y.val
-                        ? 'bg-purple-700 text-white shadow-xs'
-                        : 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
-                    )}
-                  >
-                    {y.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Step 2: Filter by Semester */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 pt-1 border-t border-purple-50">
-              <span className="text-xs font-black text-purple-950 flex items-center gap-1 shrink-0">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-purple-700" /> Filter by Semester:
-              </span>
-              <div className="flex items-center flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setLabSemesterFilter('ALL')}
-                  className={cn(
-                    'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                    labSemesterFilter === 'ALL'
-                      ? 'bg-purple-700 text-white shadow-xs'
-                      : 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
-                  )}
-                >
-                  {labYearFilter === 'ALL' ? 'All 8 Semesters' : `All Sems in Year ${labYearFilter}`}
-                </button>
-
-                {Object.entries(semestersLabs)
-                  .filter(([_, sem]) => labYearFilter === 'ALL' || sem.yearNumber === labYearFilter)
-                  .map(([key, sem]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setLabSemesterFilter(key)}
-                      className={cn(
-                        'px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5',
-                        labSemesterFilter === key
-                          ? 'bg-purple-700 text-white shadow-xs'
-                          : 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
-                      )}
-                    >
-                      <span>Sem {sem.semNumber}</span>
-                      <span
-                        className={cn(
-                          'px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono',
-                          labSemesterFilter === key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
-                        )}
-                      >
-                        {sem.labs.length}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Active Semesters Editable Labs Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-            {Object.entries(semestersLabs)
-              .filter(([key, sem]) => {
-                const matchesYear = labYearFilter === 'ALL' || sem.yearNumber === labYearFilter
-                const matchesSem = labSemesterFilter === 'ALL' || key === labSemesterFilter
-                return matchesYear && matchesSem
-              })
-              .map(([key, sem]) => (
-                <div
-                  key={key}
-                  className="p-4 rounded-2xl bg-white border border-gray-200 shadow-2xs space-y-2 flex flex-col justify-between hover:border-purple-300 transition-all"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-1 mb-1.5">
-                      <span
-                        className={cn(
-                          'px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider border',
-                          sem.badgeColor
-                        )}
-                      >
-                        Semester {sem.semNumber} (Year {sem.yearNumber})
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-gray-400 font-bold font-mono">
-                          {sem.labs.length} {sem.labs.length === 1 ? 'Lab' : 'Labs'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenAddLab(key as any)}
-                          className="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-700 hover:text-white text-purple-700 text-[10px] font-bold transition-all border border-purple-200 cursor-pointer flex items-center gap-0.5"
-                          title={`Add laboratory to Semester ${sem.semNumber}`}
-                        >
-                          <Plus className="w-2.5 h-2.5" /> Add
-                        </button>
-                      </div>
-                    </div>
-                    <h4 className="font-extrabold text-sm text-[#071A3D]">{sem.semLabel}</h4>
-
-                    <ul className="mt-2.5 space-y-2 text-xs max-h-64 overflow-y-auto pr-1">
-                      {sem.labs.length === 0 ? (
-                        <li className="p-4 rounded-xl bg-gray-50 border border-dashed border-gray-200 text-center space-y-1.5">
-                          <FlaskConical className="w-5 h-5 text-gray-300 mx-auto" />
-                          <p className="text-gray-400 text-xs font-semibold">No labs configured yet.</p>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenAddLab(key as any)}
-                            className="text-[11px] font-bold text-purple-700 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
-                          >
-                            <Plus className="w-3 h-3" /> Add First Lab
-                          </button>
-                        </li>
-                      ) : (
-                        sem.labs.map((l) => (
-                          <li
-                            key={l.id}
-                            className="p-2 rounded-xl bg-gray-50 border border-gray-100 hover:border-purple-200 flex items-start justify-between gap-2 group transition-all"
-                          >
-                            <div className="flex items-start gap-2 flex-1 min-w-0">
-                              <Code2 className="w-3.5 h-3.5 text-[#1455D9] shrink-0 mt-0.5" />
-                              <div className="flex-1 min-w-0">
-                                <span className="font-bold text-[#071A3D] block text-xs truncate" title={l.name}>
-                                  {l.name}
-                                </span>
-                                <span className="text-[10px] text-gray-500 font-mono block">
-                                  <span className="text-purple-700 font-bold">{l.code}</span> · {l.defaultPeriod} ({l.defaultTime})
-                                </span>
-                                <span className="text-[9px] text-gray-400 font-semibold block mt-0.5">
-                                  Days: {l.defaultDays} · {l.credits} Credits
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditLab(key as any, l)}
-                                className="p-1 rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 border border-blue-200 text-[10px] transition-all cursor-pointer shadow-2xs"
-                                title={`Edit ${l.name}`}
-                              >
-                                <Edit2 className="w-3 h-3" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteLab(key as any, l.id, l.name)}
-                                className="p-1 rounded-lg bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 text-[10px] transition-all cursor-pointer shadow-2xs"
-                                title={`Delete ${l.name}`}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </li>
-                        ))
-                      )}
-                    </ul>
-                  </div>
-                  <div className="pt-2.5 border-t border-gray-100 text-xs text-purple-700 font-bold flex items-center justify-between">
-                    <span>Practical Curricula</span>
-                    <span className="font-mono">{sem.labs.reduce((a, b) => a + b.credits, 0)} Credits</span>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
-
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs">
@@ -1489,21 +1091,23 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           <p className="text-[10px] text-[#1455D9] font-medium mt-1">Teaching &amp; Advisory Staff</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Class Advisors</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Class In-charges</p>
           <p className="text-2xl font-black text-green-700 mt-0.5">{advisorsList.length}</p>
-          <p className="text-[10px] text-green-700 font-medium mt-1">Semesters 3, 5, 7 · Sections A - D</p>
+          <p className="text-[10px] text-green-700 font-medium mt-1">Active Batch Mentors</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-indigo-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Faculty Members</p>
-          <p className="text-2xl font-black text-indigo-700 mt-0.5">{facultyMembersList.length}</p>
-          <p className="text-[10px] text-indigo-700 font-medium mt-1">Theory Professors &amp; Staff</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Theory Courses</p>
+          <p className="text-2xl font-black text-indigo-700 mt-0.5">
+            {facultyList.filter(f => f.facultyType === 'subject_handler' || f.facultyType === 'both' || (f.subjectName && !f.subjectName.toLowerCase().includes('lab'))).length}
+          </p>
+          <p className="text-[10px] text-indigo-700 font-medium mt-1">Core &amp; Elective Courses</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Lab Handlers</p>
-          <p className="text-2xl font-black text-purple-700 mt-0.5">{labHandlersList.length}</p>
-          <p className="text-[10px] text-purple-700 font-medium mt-1">
-            {Object.values(semestersLabs).reduce((acc, s) => acc + s.labs.length, 0)} Practical Labs Active
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Laboratory Practicals</p>
+          <p className="text-2xl font-black text-purple-700 mt-0.5">
+            {facultyList.filter(f => f.facultyType === 'lab_faculty' || (f.subjectName && f.subjectName.toLowerCase().includes('lab')) || (f.classPeriod && f.classPeriod.toLowerCase().includes('lab'))).length}
           </p>
+          <p className="text-[10px] text-purple-700 font-medium mt-1">Practical &amp; Applied Curricula</p>
         </div>
       </div>
 
@@ -1515,10 +1119,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             type="text"
             placeholder={
               activeTab === 'advisors'
-                ? 'Search advisors by name or batch...'
-                : activeTab === 'faculty'
-                ? 'Search faculty members by name, theory subject, or specialization...'
-                : 'Search lab handlers by name, lab course, day, or period...'
+                ? 'Search class advisors by name, year, or batch...'
+                : 'Search faculty members by name, course, lab practical, or specialization...'
             }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -1561,7 +1163,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           )}
 
           <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
-            Showing {activeTab === 'advisors' ? advisorsList.length : activeTab === 'faculty' ? facultyMembersList.length : labHandlersList.length} of {facultyList.length}
+            Showing {activeTab === 'advisors' ? advisorsList.length : facultyMembersList.length} of {facultyList.length}
           </span>
         </div>
       </div>
@@ -1686,6 +1288,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           onClick={() => {
                             setSelectedFaculty(advisor)
                             const subjs = getSubjectsList(advisor.subjects)
+                            const isLab = advisor.facultyType === 'lab_faculty' || (advisor.subjectName && advisor.subjectName.toLowerCase().includes('lab')) || (typeof advisor.subjects === 'string' && advisor.subjects.includes('11'))
                             setFormData({
                               facultyId: advisor.facultyId,
                               name: advisor.name,
@@ -1699,14 +1302,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               specialization: advisor.specialization || '',
                               subjects: subjs.join(', '),
                               subjectName: advisor.subjectName || '',
-                              classDay: advisor.classDay || 'Mon, Wed, Fri',
-                              classPeriod: advisor.classPeriod || 'Period 1',
-                              classTime: advisor.classTime || '09:15 AM - 10:00 AM',
-                              advisorBatch: advisor.advisorBatch || 'Year II - Sem 3 - Sec A',
+                              classDay: advisor.classDay || (isLab ? 'Tue' : 'Mon, Wed, Fri'),
+                              classPeriod: advisor.classPeriod || (isLab ? 'Lab Session (AN)' : 'Period 1'),
+                              classTime: advisor.classTime || (isLab ? '01:20 PM - 04:30 PM' : '09:15 AM - 10:00 AM'),
+                              isClassAdvisor: true,
+                              advisorBatch: advisor.advisorBatch || `Year ${advisor.advisorYear || 2} - Sem ${advisor.advisorSem || 3} - Sec ${advisor.advisorSec || 'A'}`,
                               advisorYear: advisor.advisorYear || 2,
                               advisorSem: advisor.advisorSem || 3,
                               advisorSec: advisor.advisorSec || 'A',
-                              facultyType: advisor.facultyType || 'advisor',
+                              allocationType: isLab ? 'lab' : 'theory',
+                              facultyType: advisor.facultyType || 'both',
                             })
                             setShowEditPassword(false)
                             setIsEditModalOpen(true)
@@ -1734,7 +1339,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       )}
 
       {/* ========================================================= */}
-      {/* 2. FACULTY MEMBERS TABLE (Theory / Course Instructors) */}
+      {/* 2. FACULTY MEMBERS TABLE (Theory / Course Instructors & Lab Practicals) */}
       {/* ========================================================= */}
       {activeTab === 'faculty' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
@@ -1743,9 +1348,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               <tr>
                 <th className="px-4 py-3.5">#</th>
                 <th className="px-4 py-3.5">Faculty Member</th>
-                <th className="px-4 py-3.5">Course / Subject &amp; Code</th>
-                <th className="px-4 py-3.5">Class Days</th>
-                <th className="px-4 py-3.5">Periods &amp; Timings</th>
+                <th className="px-4 py-3.5">Class In-charge</th>
+                <th className="px-4 py-3.5">Course / Theory Subject</th>
+                <th className="px-4 py-3.5">Laboratory Practical</th>
                 <th className="px-4 py-3.5">Designation &amp; Qualification</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
@@ -1756,13 +1361,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <td colSpan={7} className="text-center py-12 text-gray-400">
                     <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-2" />
                     <p className="font-bold text-gray-600">No Faculty Members Found</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to register theory courses and faculty instructors.</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to register theory courses, lab practicals and faculty instructors.</p>
                   </td>
                 </tr>
               ) : (
                 facultyMembersList.map((faculty, idx) => {
                   const subjs = getSubjectsList(faculty.subjects)
-                  const subjectDisplayName = faculty.subjectName || (subjs.length > 0 ? `Course: ${subjs.join(', ')}` : 'Faculty Instructor')
+                  const isAdvisor = Boolean(faculty.advisorBatch || (faculty.advisorYear && faculty.advisorSec)) || faculty.facultyType === 'advisor' || faculty.facultyType === 'both'
+                  const isLab = faculty.facultyType === 'lab_faculty' || (faculty.subjectName && faculty.subjectName.toLowerCase().includes('lab')) || (faculty.classPeriod && faculty.classPeriod.toLowerCase().includes('lab'))
+                  const isTheory = faculty.facultyType === 'subject_handler' || (faculty.subjectName && !faculty.subjectName.toLowerCase().includes('lab')) || (!isLab && subjs.length > 0)
+
+                  const subjectDisplayName = faculty.subjectName || (subjs.length > 0 ? `Course: ${subjs.join(', ')}` : 'Department Course')
                   const codeDisplay = subjs.length > 0 ? subjs.join(', ') : '—'
                   const dayList = faculty.classDay ? faculty.classDay.split(',').map(d => d.trim()).filter(Boolean) : []
                   const periodList = faculty.classPeriod ? faculty.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : []
@@ -1773,7 +1382,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center border bg-indigo-100 text-indigo-700 border-indigo-200">
+                          <div className={cn(
+                            "w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center border",
+                            isLab ? "bg-purple-100 text-purple-700 border-purple-200" : "bg-indigo-100 text-indigo-700 border-indigo-200"
+                          )}>
                             {faculty.name.charAt(0)}
                           </div>
                           <div>
@@ -1783,71 +1395,110 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             <span className="text-[11px] text-gray-500 font-medium block">
                               {faculty.designation}
                             </span>
-                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                              Theory Faculty
-                            </span>
+                            <div className="flex flex-wrap items-center gap-1 mt-1">
+                              {isAdvisor && (
+                                <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-green-50 text-green-700 border border-green-200">
+                                  Class In-charge
+                                </span>
+                              )}
+                              {isLab && (
+                                <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-0.5">
+                                  <FlaskConical className="w-2.5 h-2.5" /> Lab Practical
+                                </span>
+                              )}
+                              {isTheory && !isLab && (
+                                <span className="px-2 py-0.2 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-0.5">
+                                  <BookOpen className="w-2.5 h-2.5" /> Theory
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Course / Subject */}
+                      {/* Class In-charge Column */}
                       <td className="px-4 py-3.5">
-                        <div>
-                          <span className="font-bold text-[#071A3D] block text-sm flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                            {subjectDisplayName}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200/60 text-[10px] inline-block mt-0.5">
-                            Code: {codeDisplay}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Days */}
-                      <td className="px-4 py-3.5">
-                        {dayList.length > 0 ? (
-                          <div className="flex flex-wrap items-center gap-1">
-                            {dayList.map((d, i) => (
-                              <span
-                                key={i}
-                                className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] border border-blue-200 text-[11px] font-bold inline-flex items-center gap-1"
+                        {isAdvisor ? (
+                          <div className="space-y-1">
+                            <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[11px] inline-flex items-center gap-1.5 shadow-2xs">
+                              <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
+                              {faculty.advisorBatch || `Year ${faculty.advisorYear || 2} · Sem ${faculty.advisorSem || 3} (Sec ${faculty.advisorSec || 'A'})`}
+                            </span>
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedAdvisorDossier(faculty)
+                                  setDossierTab('students')
+                                }}
+                                className="text-[10px] font-bold text-[#1455D9] hover:underline inline-flex items-center gap-1 cursor-pointer"
                               >
-                                <Calendar className="w-3 h-3 text-[#1455D9]" />
-                                {d}
-                              </span>
-                            ))}
+                                <Eye className="w-3 h-3" /> View Class Details
+                              </button>
+                            </div>
                           </div>
                         ) : (
-                          <span className="text-gray-400 text-xs font-mono">—</span>
+                          <span className="text-gray-400 font-mono">—</span>
                         )}
                       </td>
 
-                      {/* Periods */}
+                      {/* Course / Theory Subject */}
                       <td className="px-4 py-3.5">
-                        {periodList.length > 0 ? (
-                          <div className="space-y-1">
-                            <div className="flex flex-wrap items-center gap-1">
-                              {periodList.map((p, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-0.5 rounded-md font-bold text-[11px] inline-flex items-center gap-1 border bg-indigo-50 text-indigo-700 border-indigo-200"
-                                >
-                                  <Clock className="w-3 h-3 text-indigo-600" />
-                                  {p}
+                        {isTheory && !isLab ? (
+                          <div>
+                            <span className="font-bold text-[#071A3D] block text-xs flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                              {subjectDisplayName}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-mono font-bold border border-indigo-200/60 text-[10px]">
+                                {codeDisplay}
+                              </span>
+                              {dayList.length > 0 && (
+                                <span className="text-[10px] text-gray-500 font-medium">
+                                  {dayList.join(', ')}
                                 </span>
-                              ))}
+                              )}
                             </div>
-                            {timeDisplay && (
-                              <span className="text-[11px] text-gray-500 font-mono font-semibold block">
-                                {timeDisplay}
+                            {periodList.length > 0 && (
+                              <span className="text-[9px] text-gray-400 font-mono block mt-0.5">
+                                {periodList.join(', ')} {timeDisplay ? `(${timeDisplay})` : ''}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-400 text-xs font-mono">—</span>
+                          <span className="text-gray-400 font-mono">—</span>
                         )}
                       </td>
 
+                      {/* Laboratory Practical */}
+                      <td className="px-4 py-3.5">
+                        {isLab ? (
+                          <div>
+                            <span className="font-bold text-[#071A3D] block text-xs flex items-center gap-1.5">
+                              <FlaskConical className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                              {subjectDisplayName}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-mono font-bold border border-purple-200/60 text-[10px]">
+                                {codeDisplay}
+                              </span>
+                              {dayList.length > 0 && (
+                                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 text-[#1455D9] font-bold text-[10px] border border-blue-100">
+                                  {dayList.join(', ')}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[10px] text-amber-800 font-bold block mt-1">
+                              {periodList.length > 0 ? periodList.join(', ') : 'Lab Session'} {timeDisplay ? `· ${timeDisplay}` : ''}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 font-mono">—</span>
+                        )}
+                      </td>
+
+                      {/* Designation & Qualification */}
                       <td className="px-4 py-3.5">
                         <span className="font-bold text-[#071A3D] block">{faculty.designation}</span>
                         <span className="text-gray-500 text-[11px]">
@@ -1855,6 +1506,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         </span>
                       </td>
 
+                      {/* Actions */}
                       <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
@@ -1873,190 +1525,27 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                                 specialization: faculty.specialization || '',
                                 subjects: subjs.join(', '),
                                 subjectName: faculty.subjectName || '',
-                                classDay: faculty.classDay || 'Mon, Wed, Fri',
-                                classPeriod: faculty.classPeriod || 'Period 1',
-                                classTime: faculty.classTime || '09:15 AM - 10:00 AM',
-                                advisorBatch: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorBatch || '') : '',
-                                advisorYear: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorYear || 2) : ('' as any),
-                                advisorSem: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorSem || 3) : ('' as any),
-                                advisorSec: (faculty.facultyType === 'advisor' || faculty.facultyType === 'both') ? (faculty.advisorSec || 'A') : '',
-                                facultyType: faculty.facultyType || 'subject_handler',
+                                classDay: faculty.classDay || (isLab ? 'Tue' : 'Mon, Wed, Fri'),
+                                classPeriod: faculty.classPeriod || (isLab ? 'Lab Session (AN)' : 'Period 1'),
+                                classTime: faculty.classTime || (isLab ? '01:20 PM - 04:30 PM' : '09:15 AM - 10:00 AM'),
+                                isClassAdvisor: isAdvisor,
+                                advisorBatch: faculty.advisorBatch || `Year ${faculty.advisorYear || 2} - Sem ${faculty.advisorSem || 3} - Sec ${faculty.advisorSec || 'A'}`,
+                                advisorYear: faculty.advisorYear || 2,
+                                advisorSem: faculty.advisorSem || 3,
+                                advisorSec: faculty.advisorSec || 'A',
+                                allocationType: isLab ? 'lab' : 'theory',
+                                facultyType: faculty.facultyType || (isAdvisor ? 'both' : isLab ? 'lab_faculty' : 'subject_handler'),
                               })
                               setShowEditPassword(false)
                               setIsEditModalOpen(true)
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                            title="Edit Faculty Member"
+                            title="Edit Faculty Member & Lab Details"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(faculty.id, faculty.name)}
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
-                            title="Remove Faculty"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* 3. LAB HANDLERS TABLE (Laboratory & Practicals) */}
-      {/* ========================================================= */}
-      {activeTab === 'labs' && (
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
-              <tr>
-                <th className="px-4 py-3.5">#</th>
-                <th className="px-4 py-3.5">Lab Handler Name</th>
-                <th className="px-4 py-3.5">Laboratory Name &amp; Course Code</th>
-                <th className="px-4 py-3.5">Lab Days</th>
-                <th className="px-4 py-3.5">Lab Session Timings</th>
-                <th className="px-4 py-3.5">Designation</th>
-                <th className="px-4 py-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 font-medium">
-              {labHandlersList.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-12 text-gray-400">
-                    <FlaskConical className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-                    <p className="font-bold text-gray-600">No Lab Handlers Found</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Click &quot;+ Add New Faculty&quot; to assign laboratory sessions and practical batches.</p>
-                  </td>
-                </tr>
-              ) : (
-                labHandlersList.map((handler, idx) => {
-                  const subjs = getSubjectsList(handler.subjects)
-                  const subjectDisplayName = handler.subjectName || (subjs.length > 0 ? `Core Lab: ${subjs.join(', ')}` : 'Object Oriented Programming Laboratory')
-                  const codeDisplay = subjs.length > 0 ? subjs.join(', ') : 'AD2311'
-                  const dayList = handler.classDay ? handler.classDay.split(',').map(d => d.trim()).filter(Boolean) : ['Tue']
-                  const periodList = handler.classPeriod ? handler.classPeriod.split(',').map(p => p.trim()).filter(Boolean) : ['Lab Session (AN)']
-                  const timeDisplay = handler.classTime || '01:20 PM - 04:30 PM'
-
-                  return (
-                    <tr key={handler.id} className="hover:bg-purple-50/30 transition-colors">
-                      <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center border bg-purple-100 text-purple-700 border-purple-200">
-                            {handler.name.charAt(0)}
-                          </div>
-                          <div>
-                            <span className="font-bold text-[#071A3D] text-sm block">
-                              {handler.name}
-                            </span>
-                            <span className="text-[11px] text-gray-500 font-medium block">
-                              {handler.designation}
-                            </span>
-                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                              Lab Handler
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Laboratory Name & Course Code */}
-                      <td className="px-4 py-3.5">
-                        <div>
-                          <span className="font-bold text-[#071A3D] block text-sm flex items-center gap-1.5">
-                            <FlaskConical className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                            {subjectDisplayName}
-                          </span>
-                          <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 font-mono font-bold border border-purple-200/60 text-[10px] inline-block mt-0.5">
-                            Code: {codeDisplay}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Class Days */}
-                      <td className="px-4 py-3.5">
-                        <div className="flex flex-wrap items-center gap-1">
-                          {dayList.map((d, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] border border-blue-200 text-[11px] font-bold inline-flex items-center gap-1"
-                            >
-                              <Calendar className="w-3 h-3 text-[#1455D9]" />
-                              {d}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-
-                      {/* Lab Sessions */}
-                      <td className="px-4 py-3.5">
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-1">
-                            {periodList.map((p, i) => (
-                              <span
-                                key={i}
-                                className="px-2 py-0.5 rounded-md font-bold text-[11px] inline-flex items-center gap-1 border bg-amber-50 text-amber-800 border-amber-300"
-                              >
-                                <FlaskConical className="w-3 h-3 text-amber-600" />
-                                {p}
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-[11px] text-gray-500 font-mono font-semibold block">
-                            {timeDisplay}
-                          </span>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <span className="font-bold text-[#071A3D] block">{handler.designation}</span>
-                        <span className="text-gray-500 text-[11px]">
-                          {handler.qualification || 'M.E. / Ph.D.'}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => {
-                              setSelectedFaculty(handler)
-                              setFormData({
-                                facultyId: handler.facultyId,
-                                name: handler.name,
-                                email: handler.email,
-                                phone: handler.phone || '',
-                                password: '',
-                                dateOfBirth: handler.dateOfBirth || '',
-                                designation: handler.designation,
-                                qualification: handler.qualification || '',
-                                experience: handler.experience || '',
-                                specialization: handler.specialization || '',
-                                subjects: subjs.join(', '),
-                                subjectName: handler.subjectName || '',
-                                classDay: handler.classDay || 'Tue',
-                                classPeriod: handler.classPeriod || 'Lab Session (AN)',
-                                classTime: handler.classTime || '01:20 PM - 04:30 PM',
-                                advisorBatch: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorBatch || '') : '',
-                                advisorYear: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorYear || 2) : ('' as any),
-                                advisorSem: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorSem || 3) : ('' as any),
-                                advisorSec: (handler.facultyType === 'advisor' || handler.facultyType === 'both') ? (handler.advisorSec || 'A') : '',
-                                facultyType: handler.facultyType || 'lab_faculty',
-                              })
-                              setShowEditPassword(false)
-                              setIsEditModalOpen(true)
-                            }}
-                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                            title="Edit Lab & Schedule"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(handler.id, handler.name)}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                             title="Remove Faculty"
                           >
@@ -2429,88 +1918,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
 
             <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
-              {/* Role / Type Selector: Advisor, Theory Subject, Lab Practical, or Both */}
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1.5">
-                  Faculty Role / Allocation Type *
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        facultyType: 'advisor',
-                        advisorBatch: formData.advisorBatch || 'Year II - Sem 3 - Sec A',
-                        advisorYear: formData.advisorYear || 2,
-                        advisorSem: formData.advisorSem || 3,
-                        advisorSec: formData.advisorSec || 'A',
-                      })
-                    }
-                    className={cn(
-                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
-                      formData.facultyType === 'advisor'
-                        ? 'bg-blue-50 border-[#1455D9] text-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    )}
-                  >
-                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                    <span>Class Advisor</span>
-                    <span className="text-[10px] font-normal text-gray-400">Batch Mentor</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        facultyType: 'subject_handler',
-                        advisorBatch: '',
-                        advisorYear: '' as any,
-                        advisorSem: '' as any,
-                        advisorSec: '',
-                      })
-                    }
-                    className={cn(
-                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
-                      formData.facultyType === 'subject_handler'
-                        ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-xs ring-2 ring-indigo-600/20'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    )}
-                  >
-                    <BookOpen className="w-4 h-4 text-indigo-600" />
-                    <span>Theory Subject</span>
-                    <span className="text-[10px] font-normal text-gray-400">Course Instructor</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        facultyType: 'lab_faculty',
-                        advisorBatch: '',
-                        advisorYear: '' as any,
-                        advisorSem: '' as any,
-                        advisorSec: '',
-                      })
-                    }
-                    className={cn(
-                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
-                      formData.facultyType === 'lab_faculty'
-                        ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    )}
-                  >
-                    <FlaskConical className="w-4 h-4 text-purple-600" />
-                    <span>Lab / Practical</span>
-                    <span className="text-[10px] font-normal text-gray-400">Lab In-Charge</span>
-                  </button>
-
-
-                </div>
-              </div>
-
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
                 <input
@@ -2606,14 +2013,50 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 />
               </div>
 
-              {/* Class Advisor Assignment Fields for All 8 Semesters */}
-              {(formData.facultyType === 'advisor' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 animate-fade-in">
-                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                    Class Advisor Allocation (All 8 Semesters):
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
+              {/* 1. CLASS IN-CHARGE / BATCH MENTOR ALLOCATION */}
+              <div className={cn(
+                "p-3.5 rounded-2xl border transition-all space-y-2.5",
+                formData.isClassAdvisor ? "bg-blue-50/80 border-[#1455D9]/40 ring-2 ring-[#1455D9]/10" : "bg-gray-50/60 border-gray-200"
+              )}>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={formData.isClassAdvisor}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setFormData({
+                          ...formData,
+                          isClassAdvisor: checked,
+                          advisorBatch: checked ? (formData.advisorBatch || `Year ${formData.advisorYear || 2} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}`) : '',
+                          advisorYear: checked ? (formData.advisorYear || 2) : ('' as any),
+                          advisorSem: checked ? (formData.advisorSem || 3) : ('' as any),
+                          advisorSec: checked ? (formData.advisorSec || 'A') : '',
+                          facultyType: checked ? 'both' : (formData.allocationType === 'lab' ? 'lab_faculty' : 'subject_handler'),
+                        })
+                      }}
+                      className="w-4 h-4 rounded text-[#1455D9] focus:ring-[#1455D9] cursor-pointer"
+                    />
+                    <div>
+                      <span className="font-black text-[#071A3D] text-xs flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4 text-[#1455D9]" />
+                        Appointed as Class In-charge (Batch Mentor)
+                      </span>
+                      <span className="text-[10px] text-gray-500 block">
+                        Assign faculty as mentor &amp; class advisor for an academic batch
+                      </span>
+                    </div>
+                  </label>
+
+                  {formData.isClassAdvisor && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[10px] font-black font-mono">
+                      Active In-charge
+                    </span>
+                  )}
+                </div>
+
+                {formData.isClassAdvisor && (
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-blue-100 animate-fade-in">
                     <div>
                       <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester</label>
                       <select
@@ -2625,7 +2068,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             ...formData,
                             advisorSem: sem,
                             advisorYear: yr,
-                            advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                            advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec || 'A'}`,
                           })
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
@@ -2649,7 +2092,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             ...formData,
                             advisorYear: y,
                             advisorSem: sem,
-                            advisorBatch: `Year ${y} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                            advisorBatch: `Year ${y} - Sem ${sem} - Sec ${formData.advisorSec || 'A'}`,
                           })
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
@@ -2682,11 +2125,67 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </select>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* INDIVIDUAL ENTRY: 1. THEORY SUBJECT FACULTY */}
-              {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
+              {/* 2. TEACHING ALLOCATION (THEORY COURSE OR LABORATORY PRACTICAL) */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1.5">
+                  Teaching Allocation (Theory Course or Laboratory Practical) *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        allocationType: 'theory',
+                        facultyType: formData.isClassAdvisor ? 'both' : 'subject_handler',
+                        classPeriod: formData.classPeriod.includes('Lab') ? 'Period 1' : formData.classPeriod,
+                        classTime: formData.classTime.includes('01:20') ? '09:15 AM - 10:00 AM' : formData.classTime,
+                        classDay: formData.classDay || 'Mon, Wed, Fri',
+                      })
+                    }
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.allocationType === 'theory'
+                        ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-xs ring-2 ring-indigo-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <BookOpen className="w-4 h-4 text-indigo-600" />
+                    <span>Theory Course</span>
+                    <span className="text-[10px] font-normal text-gray-400">Classroom Lecture</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        allocationType: 'lab',
+                        facultyType: formData.isClassAdvisor ? 'both' : 'lab_faculty',
+                        classPeriod: 'Lab Session (AN)',
+                        classTime: '01:20 PM - 04:30 PM',
+                        classDay: formData.classDay || 'Tue',
+                      })
+                    }
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.allocationType === 'lab'
+                        ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <FlaskConical className="w-4 h-4 text-purple-600" />
+                    <span>Laboratory / Practical</span>
+                    <span className="text-[10px] font-normal text-gray-400">Lab In-Charge &amp; Sessions</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 3A. THEORY SUBJECT ALLOCATION */}
+              {formData.allocationType === 'theory' && (
                 <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
@@ -2694,7 +2193,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Theory Subject Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
-                      Theory Sem 3, 5, 7
+                      Theory Curricula
                     </span>
                   </div>
 
@@ -2702,7 +2201,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Theory Subject Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                        Theory Subject Name *
                       </label>
                       <input
                         type="text"
@@ -2714,7 +2213,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Subject Code * <span className="text-gray-400 font-normal">(Type code)</span>
+                        Subject Code *
                       </label>
                       <input
                         type="text"
@@ -2726,7 +2225,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Theory Subject Presets across Active Semesters (3, 5, 7) */}
+                  {/* Quick-Fill Theory Subject Presets */}
                   <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
@@ -2839,8 +2338,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* INDIVIDUAL ENTRY: 2. LABORATORY / PRACTICAL FACULTY */}
-              {(formData.facultyType === 'lab_faculty' || (formData.facultyType === 'both' && !formData.subjectName.toLowerCase().includes('laboratory'))) && (
+              {/* 3B. LABORATORY / PRACTICAL ALLOCATION (ALL 8 SEMESTERS) */}
+              {formData.allocationType === 'lab' && (
                 <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
@@ -2848,7 +2347,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Laboratory / Practical Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Labs Sem 3, 5, 7
+                      Semesters 1 – 8
                     </span>
                   </div>
 
@@ -2856,7 +2355,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Laboratory Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                        Laboratory Name *
                       </label>
                       <input
                         type="text"
@@ -2868,7 +2367,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Lab Code * <span className="text-gray-400 font-normal">(Type code)</span>
+                        Lab Code *
                       </label>
                       <input
                         type="text"
@@ -2880,21 +2379,21 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Lab Presets across Active Semesters (3, 5, 7) */}
+                  {/* Quick-Fill Lab Presets across All 8 Semesters */}
                   <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
-                        Quick-Fill Lab from Semester:
+                        Quick-Fill Lab from Semester (All 8 Sems):
                       </span>
                       <div className="flex items-center gap-1.5 overflow-x-auto">
-                        {[3, 5, 7].map((s) => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                           <button
                             key={s}
                             type="button"
                             onClick={() => setQuickLabTab(`sem${s}`)}
                             className={cn(
-                              'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                              'px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                               quickLabTab === `sem${s}` ? 'bg-purple-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             )}
                           >
@@ -2904,7 +2403,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    <div className="flex flex-wrap gap-1.5 pt-1 max-h-36 overflow-y-auto">
                       {semestersLabs[quickLabTab as keyof typeof semestersLabs]?.labs.map((l) => (
                         <button
                           key={l.id}
@@ -2992,30 +2491,28 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* COMBINED TIMINGS & LIVE SCHEDULE PREVIEW */}
-              {(formData.facultyType !== 'advisor') && (
-                <div className="space-y-2 p-3 rounded-2xl bg-gray-50 border border-gray-200">
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                      Combined Time of Classes (Auto-calculated / Editable):
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 01:20 PM - 04:30 PM"
-                      value={formData.classTime}
-                      onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
-                    />
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 text-[11px]">
-                    <span className="text-gray-500 font-bold">Schedule Summary:</span>
-                    <span className="font-mono font-bold text-[#1455D9] text-right truncate">
-                      {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
-                    </span>
-                  </div>
+              {/* 4. COMBINED TIMINGS & LIVE SCHEDULE PREVIEW */}
+              <div className="space-y-2 p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                    Combined Time of Classes (Auto-calculated / Editable):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 01:20 PM - 04:30 PM"
+                    value={formData.classTime}
+                    onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
+                  />
                 </div>
-              )}
+
+                <div className="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-gray-500 font-bold">Schedule Summary:</span>
+                  <span className="font-mono font-bold text-[#1455D9] text-right truncate">
+                    {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
+                  </span>
+                </div>
+              </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
                 <button
@@ -3058,87 +2555,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             </div>
 
             <form onSubmit={handleEditSubmit} className="space-y-3.5 text-xs">
-              {/* Role / Type Selector: Advisor, Theory Subject, Lab Practical, or Both */}
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1.5">
-                  Faculty Role / Allocation Type *
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        facultyType: 'advisor',
-                        advisorBatch: formData.advisorBatch || 'Year II - Sem 3 - Sec A',
-                        advisorYear: formData.advisorYear || 2,
-                        advisorSem: formData.advisorSem || 3,
-                        advisorSec: formData.advisorSec || 'A',
-                      })
-                    }
-                    className={cn(
-                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
-                      formData.facultyType === 'advisor'
-                        ? 'bg-blue-50 border-[#1455D9] text-[#1455D9] shadow-xs ring-2 ring-[#1455D9]/20'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    )}
-                  >
-                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                    <span>Class Advisor</span>
-                    <span className="text-[10px] font-normal text-gray-400">Batch Mentor</span>
-                  </button>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        facultyType: 'subject_handler',
-                        advisorBatch: '',
-                        advisorYear: '' as any,
-                        advisorSem: '' as any,
-                        advisorSec: '',
-                      })
-                    }
-                    className={cn(
-                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
-                      formData.facultyType === 'subject_handler'
-                        ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-xs ring-2 ring-indigo-600/20'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    )}
-                  >
-                    <BookOpen className="w-4 h-4 text-indigo-600" />
-                    <span>Theory Subject</span>
-                    <span className="text-[10px] font-normal text-gray-400">Course Instructor</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        facultyType: 'lab_faculty',
-                        advisorBatch: '',
-                        advisorYear: '' as any,
-                        advisorSem: '' as any,
-                        advisorSec: '',
-                      })
-                    }
-                    className={cn(
-                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
-                      formData.facultyType === 'lab_faculty'
-                        ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                    )}
-                  >
-                    <FlaskConical className="w-4 h-4 text-purple-600" />
-                    <span>Lab / Practical</span>
-                    <span className="text-[10px] font-normal text-gray-400">Lab In-Charge</span>
-                  </button>
-
-
-                </div>
-              </div>
 
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
@@ -3255,14 +2672,50 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 />
               </div>
 
-              {/* Class Advisor Assignment in Edit */}
-              {(formData.facultyType === 'advisor' || formData.facultyType === 'both') && (
-                <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2 animate-fade-in">
-                  <span className="font-black text-[#071A3D] flex items-center gap-1.5">
-                    <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                    Class Advisor Allocation (Active Semesters 3, 5, 7):
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
+              {/* 1. CLASS IN-CHARGE / BATCH MENTOR ALLOCATION */}
+              <div className={cn(
+                "p-3.5 rounded-2xl border transition-all space-y-2.5",
+                formData.isClassAdvisor ? "bg-blue-50/80 border-[#1455D9]/40 ring-2 ring-[#1455D9]/10" : "bg-gray-50/60 border-gray-200"
+              )}>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={formData.isClassAdvisor}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setFormData({
+                          ...formData,
+                          isClassAdvisor: checked,
+                          advisorBatch: checked ? (formData.advisorBatch || `Year ${formData.advisorYear || 2} - Sem ${formData.advisorSem || 3} - Sec ${formData.advisorSec || 'A'}`) : '',
+                          advisorYear: checked ? (formData.advisorYear || 2) : ('' as any),
+                          advisorSem: checked ? (formData.advisorSem || 3) : ('' as any),
+                          advisorSec: checked ? (formData.advisorSec || 'A') : '',
+                          facultyType: checked ? 'both' : (formData.allocationType === 'lab' ? 'lab_faculty' : 'subject_handler'),
+                        })
+                      }}
+                      className="w-4 h-4 rounded text-[#1455D9] focus:ring-[#1455D9] cursor-pointer"
+                    />
+                    <div>
+                      <span className="font-black text-[#071A3D] text-xs flex items-center gap-1.5">
+                        <UserCheck className="w-4 h-4 text-[#1455D9]" />
+                        Appointed as Class In-charge (Batch Mentor)
+                      </span>
+                      <span className="text-[10px] text-gray-500 block">
+                        Assign faculty as mentor &amp; class advisor for an academic batch
+                      </span>
+                    </div>
+                  </label>
+
+                  {formData.isClassAdvisor && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[10px] font-black font-mono">
+                      Active In-charge
+                    </span>
+                  )}
+                </div>
+
+                {formData.isClassAdvisor && (
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-blue-100 animate-fade-in">
                     <div>
                       <label className="block font-bold text-gray-600 text-[11px] mb-0.5">Semester</label>
                       <select
@@ -3274,7 +2727,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             ...formData,
                             advisorSem: sem,
                             advisorYear: yr,
-                            advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                            advisorBatch: `Year ${yr} - Sem ${sem} - Sec ${formData.advisorSec || 'A'}`,
                           })
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9]"
@@ -3298,7 +2751,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             ...formData,
                             advisorYear: y,
                             advisorSem: sem,
-                            advisorBatch: `Year ${y} - Sem ${sem} - Sec ${formData.advisorSec}`,
+                            advisorBatch: `Year ${y} - Sem ${sem} - Sec ${formData.advisorSec || 'A'}`,
                           })
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
@@ -3331,11 +2784,67 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </select>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* INDIVIDUAL ENTRY: 1. THEORY SUBJECT FACULTY in EDIT MODAL */}
-              {(formData.facultyType === 'subject_handler' || formData.facultyType === 'both') && (
+              {/* 2. TEACHING ALLOCATION (THEORY COURSE OR LABORATORY PRACTICAL) */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1.5">
+                  Teaching Allocation (Theory Course or Laboratory Practical) *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        allocationType: 'theory',
+                        facultyType: formData.isClassAdvisor ? 'both' : 'subject_handler',
+                        classPeriod: formData.classPeriod.includes('Lab') ? 'Period 1' : formData.classPeriod,
+                        classTime: formData.classTime.includes('01:20') ? '09:15 AM - 10:00 AM' : formData.classTime,
+                        classDay: formData.classDay || 'Mon, Wed, Fri',
+                      })
+                    }
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.allocationType === 'theory'
+                        ? 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-xs ring-2 ring-indigo-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <BookOpen className="w-4 h-4 text-indigo-600" />
+                    <span>Theory Course</span>
+                    <span className="text-[10px] font-normal text-gray-400">Classroom Lecture</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        allocationType: 'lab',
+                        facultyType: formData.isClassAdvisor ? 'both' : 'lab_faculty',
+                        classPeriod: 'Lab Session (AN)',
+                        classTime: '01:20 PM - 04:30 PM',
+                        classDay: formData.classDay || 'Tue',
+                      })
+                    }
+                    className={cn(
+                      'p-2.5 rounded-2xl border text-center font-bold text-xs transition-all cursor-pointer flex flex-col items-center gap-1',
+                      formData.allocationType === 'lab'
+                        ? 'bg-purple-50 border-purple-600 text-purple-700 shadow-xs ring-2 ring-purple-600/20'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    )}
+                  >
+                    <FlaskConical className="w-4 h-4 text-purple-600" />
+                    <span>Laboratory / Practical</span>
+                    <span className="text-[10px] font-normal text-gray-400">Lab In-Charge &amp; Sessions</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 3A. THEORY SUBJECT ALLOCATION */}
+              {formData.allocationType === 'theory' && (
                 <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
@@ -3343,7 +2852,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Theory Subject Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
-                      Theory Sem 3, 5, 7
+                      Theory Curricula
                     </span>
                   </div>
 
@@ -3351,7 +2860,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Theory Subject Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                        Theory Subject Name *
                       </label>
                       <input
                         type="text"
@@ -3363,7 +2872,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Subject Code * <span className="text-gray-400 font-normal">(Type code)</span>
+                        Subject Code *
                       </label>
                       <input
                         type="text"
@@ -3375,7 +2884,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Theory Subject Presets across Active Semesters (3, 5, 7) */}
+                  {/* Quick-Fill Theory Subject Presets */}
                   <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
@@ -3488,8 +2997,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* INDIVIDUAL ENTRY: 2. LABORATORY / PRACTICAL FACULTY in EDIT MODAL */}
-              {(formData.facultyType === 'lab_faculty' || (formData.facultyType === 'both' && !formData.subjectName.toLowerCase().includes('laboratory'))) && (
+              {/* 3B. LABORATORY / PRACTICAL ALLOCATION (ALL 8 SEMESTERS) */}
+              {formData.allocationType === 'lab' && (
                 <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3 animate-fade-in">
                   <div className="flex items-center justify-between">
                     <span className="font-black text-[#071A3D] flex items-center gap-1.5">
@@ -3497,7 +3006,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       Laboratory / Practical Allocation &amp; Timetable:
                     </span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                      Labs Sem 3, 5, 7
+                      Semesters 1 – 8
                     </span>
                   </div>
 
@@ -3505,7 +3014,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Laboratory Name * <span className="text-gray-400 font-normal">(Type any name)</span>
+                        Laboratory Name *
                       </label>
                       <input
                         type="text"
@@ -3517,7 +3026,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                     <div>
                       <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                        Lab Code * <span className="text-gray-400 font-normal">(Type code)</span>
+                        Lab Code *
                       </label>
                       <input
                         type="text"
@@ -3529,21 +3038,21 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </div>
                   </div>
 
-                  {/* Quick-Fill Lab Presets across Active Semesters (3, 5, 7) */}
+                  {/* Quick-Fill Lab Presets across All 8 Semesters */}
                   <div className="p-3 rounded-2xl bg-white border border-purple-200/90 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
                         <Zap className="w-3.5 h-3.5 text-amber-500" />
-                        Quick-Fill Lab from Semester:
+                        Quick-Fill Lab from Semester (All 8 Sems):
                       </span>
                       <div className="flex items-center gap-1.5 overflow-x-auto">
-                        {[3, 5, 7].map((s) => (
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                           <button
                             key={s}
                             type="button"
                             onClick={() => setQuickLabTab(`sem${s}`)}
                             className={cn(
-                              'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
+                              'px-2 py-0.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
                               quickLabTab === `sem${s}` ? 'bg-purple-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             )}
                           >
@@ -3553,7 +3062,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 pt-1">
+                    <div className="flex flex-wrap gap-1.5 pt-1 max-h-36 overflow-y-auto">
                       {semestersLabs[quickLabTab as keyof typeof semestersLabs]?.labs.map((l) => (
                         <button
                           key={l.id}
@@ -3641,30 +3150,28 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </div>
               )}
 
-              {/* COMBINED TIMINGS & LIVE SCHEDULE PREVIEW */}
-              {(formData.facultyType !== 'advisor') && (
-                <div className="space-y-2 p-3 rounded-2xl bg-gray-50 border border-gray-200">
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
-                      Combined Time of Classes (Auto-calculated / Editable):
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 01:20 PM - 04:30 PM"
-                      value={formData.classTime}
-                      onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
-                    />
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 text-[11px]">
-                    <span className="text-gray-500 font-bold">Schedule Summary:</span>
-                    <span className="font-mono font-bold text-[#1455D9] text-right truncate">
-                      {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
-                    </span>
-                  </div>
+              {/* 4. COMBINED TIMINGS & LIVE SCHEDULE PREVIEW */}
+              <div className="space-y-2 p-3 rounded-2xl bg-gray-50 border border-gray-200">
+                <div>
+                  <label className="block font-bold text-gray-700 text-[11px] mb-0.5">
+                    Combined Time of Classes (Auto-calculated / Editable):
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 01:20 PM - 04:30 PM"
+                    value={formData.classTime}
+                    onChange={(e) => setFormData({ ...formData, classTime: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono text-[11px] font-bold text-[#071A3D]"
+                  />
                 </div>
-              )}
+
+                <div className="p-2.5 rounded-xl bg-white border border-gray-200 flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-gray-500 font-bold">Schedule Summary:</span>
+                  <span className="font-mono font-bold text-[#1455D9] text-right truncate">
+                    {formData.classDay || 'No days selected'} · {formData.classPeriod || 'No periods'}
+                  </span>
+                </div>
+              </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t">
                 <button
@@ -3687,221 +3194,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* EDIT / ADD LABORATORY MODAL */}
-      {/* ========================================================================= */}
-      {isLabModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto border border-gray-100">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-black">
-                  <FlaskConical className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-lg text-[#071A3D]">
-                    {editingLabId ? 'Edit Laboratory Course' : 'Add New Laboratory Course'}
-                  </h3>
-                  <p className="text-xs text-gray-500 font-medium">
-                    Configure curriculum details, default sessions, timings and schedule days
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsLabModalOpen(false)}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <form onSubmit={handleSaveLab} className="space-y-4 text-xs">
-              {/* Target Semester */}
-              <div>
-                <label className="block font-bold text-gray-700 text-xs mb-1">Target Semester *</label>
-                <select
-                  value={labFormData.targetSem}
-                  onChange={(e) => setLabFormData({ ...labFormData, targetSem: e.target.value as any })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9] focus:border-[#1455D9] focus:outline-none"
-                  disabled={Boolean(editingLabId)}
-                >
-                  <option value="sem1">Semester 1 · Year 1 (Freshman - Odd)</option>
-                  <option value="sem2">Semester 2 · Year 1 (Freshman - Even)</option>
-                  <option value="sem3">Semester 3 · Year 2 (Sophomore - Odd)</option>
-                  <option value="sem4">Semester 4 · Year 2 (Sophomore - Even)</option>
-                  <option value="sem5">Semester 5 · Year 3 (Junior - Odd)</option>
-                  <option value="sem6">Semester 6 · Year 3 (Junior - Even)</option>
-                  <option value="sem7">Semester 7 · Year 4 (Senior - Odd)</option>
-                  <option value="sem8">Semester 8 · Year 4 (Capstone - Even)</option>
-                </select>
-              </div>
-
-              {/* Lab Full Name */}
-              <div>
-                <label className="block font-bold text-gray-700 text-xs mb-1">
-                  Full Laboratory Name * <span className="text-gray-400 font-normal">(e.g. Object Oriented Programming Laboratory)</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Object Oriented Programming Laboratory"
-                  value={labFormData.name}
-                  onChange={(e) => setLabFormData({ ...labFormData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-purple-600 focus:outline-none"
-                />
-              </div>
-
-              {/* Code & Short Name */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 text-xs mb-1">
-                    Course Code * <span className="text-gray-400 font-normal">(e.g. AD2311)</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. AD2311"
-                    value={labFormData.code}
-                    onChange={(e) => setLabFormData({ ...labFormData, code: e.target.value.toUpperCase() })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-purple-800 focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-gray-700 text-xs mb-1">
-                    Short Name <span className="text-gray-400 font-normal">(e.g. OOP Lab)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. OOP Lab"
-                    value={labFormData.shortName}
-                    onChange={(e) => setLabFormData({ ...labFormData, shortName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Credits & Period Preset */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 text-xs mb-1">Credits</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={12}
-                    value={labFormData.credits}
-                    onChange={(e) => setLabFormData({ ...labFormData, credits: Number(e.target.value) || 1 })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#071A3D] focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-gray-700 text-xs mb-1">Standard Lab Session</label>
-                  <select
-                    value={labFormData.defaultPeriod}
-                    onChange={(e) => {
-                      const period = e.target.value
-                      let time = labFormData.defaultTime
-                      if (period === 'Lab Session (FN)') time = '09:15 AM - 12:30 PM'
-                      else if (period === 'Lab Session (AN)') time = '01:20 PM - 04:30 PM'
-                      else if (period === 'Period 7, Period 8') time = '03:05 PM - 03:50 PM, 03:50 PM - 04:30 PM'
-                      setLabFormData({
-                        ...labFormData,
-                        defaultPeriod: period,
-                        defaultTime: time,
-                      })
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-semibold text-[#071A3D] focus:border-purple-600 focus:outline-none"
-                  >
-                    <option value="Lab Session (FN)">Forenoon: Lab Session (FN) [09:15 - 12:30]</option>
-                    <option value="Lab Session (AN)">Afternoon: Lab Session (AN) [01:20 - 04:30]</option>
-                    <option value="Period 7, Period 8">Evening: Period 7, Period 8 [03:05 - 04:30]</option>
-                    <option value="Full Day Block">Full Day Dedicated Project Block</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Default Time & Default Days */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-700 text-xs mb-1">Default Timings</label>
-                  <input
-                    type="text"
-                    value={labFormData.defaultTime}
-                    onChange={(e) => setLabFormData({ ...labFormData, defaultTime: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-mono font-bold text-gray-700 focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-gray-700 text-xs mb-1">Default Class Days</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Tuesday, Friday"
-                    value={labFormData.defaultDays}
-                    onChange={(e) => setLabFormData({ ...labFormData, defaultDays: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-gray-700 focus:border-purple-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Quick Day Chips */}
-              <div>
-                <label className="block font-bold text-gray-500 text-[11px] mb-1">Click to toggle day:</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d) => {
-                    const active = labFormData.defaultDays.includes(d)
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => {
-                          const currentDays = labFormData.defaultDays
-                            ? labFormData.defaultDays.split(',').map((x) => x.trim()).filter(Boolean)
-                            : []
-                          const updated = currentDays.includes(d)
-                            ? currentDays.filter((x) => x !== d)
-                            : [...currentDays, d]
-                          setLabFormData({
-                            ...labFormData,
-                            defaultDays: updated.join(', '),
-                          })
-                        }}
-                        className={cn(
-                          'px-2.5 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer border',
-                          active
-                            ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
-                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-purple-50'
-                        )}
-                      >
-                        {d}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                <button
-                  type="button"
-                  onClick={() => setIsLabModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold cursor-pointer shadow-md flex items-center gap-1.5"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>{editingLabId ? 'Save Lab Changes' : 'Create Laboratory'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
