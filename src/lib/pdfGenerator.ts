@@ -926,17 +926,17 @@ export function downloadStudentCardPDF(student: {
   doc.setFillColor(238, 244, 255)
   doc.setDrawColor(190, 215, 250)
   doc.setLineWidth(0.25)
-  doc.roundedRect(cardW / 2 - 28, 31.5, 56, 4.2, 1.2, 1.2, 'FD')
+  doc.roundedRect(cardW / 2 - 24, 31.5, 48, 4.2, 1.2, 1.2, 'FD')
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.8)
+  doc.setFontSize(6.0)
   doc.setTextColor(20, 85, 217)
-  doc.text('STUDENT DIGITAL ACADEMIC ID CARD', cardW / 2, 34.5, { align: 'center' })
+  doc.text('STUDENT IDENTITY CARD', cardW / 2, 34.5, { align: 'center' })
 
   // 6. Center Student Photograph Flanked by DOB & Blood Group (Left) and Year & Batch (Right)
   const photoW = 26
   const photoH = 30
   const photoX = (cardW - photoW) / 2
-  const photoY = 38.0
+  const photoY = 37.8
 
   const flankW = 26.5
   const leftX = 5.5
@@ -959,7 +959,7 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(7, 26, 61)
   doc.text(student.dob || '01/01/2004', leftCenterX, photoY + 10.5, { align: 'center' })
 
-  // Left Divider Line (Exactly half-height)
+  // Left Divider Line
   doc.setDrawColor(225, 235, 248)
   doc.line(leftX + 2.5, photoY + 15.0, leftX + flankW - 2.5, photoY + 15.0)
 
@@ -998,11 +998,20 @@ export function downloadStudentCardPDF(student: {
     doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 18, { align: 'center' })
   }
 
-  // RIGHT FLANK: Year/Sem & Batch (Aligned identically to Left Flank)
+  // RIGHT FLANK: Year/Sem & Batch
   doc.setFillColor(248, 250, 254)
   doc.setDrawColor(215, 228, 245)
   doc.setLineWidth(0.3)
   doc.roundedRect(rightX, photoY, flankW, photoH, 2, 2, 'FD')
+
+  // Intelligent Year & Semester sanitization for academic accuracy
+  const yr = student.year || 1
+  let sem = student.semester || 1
+  const minSem = (yr - 1) * 2 + 1
+  const maxSem = yr * 2
+  if (sem < minSem || sem > maxSem) {
+    sem = minSem
+  }
 
   const rightCenterX = rightX + flankW / 2
   // Top: YEAR / SEM
@@ -1013,9 +1022,9 @@ export function downloadStudentCardPDF(student: {
 
   doc.setFontSize(5.4)
   doc.setTextColor(7, 26, 61)
-  doc.text(`Year ${student.year} · Sem ${student.semester} (${student.section})`, rightCenterX, photoY + 10.5, { align: 'center' })
+  doc.text(`Year ${yr} · Sem ${sem} (${student.section || 'A'})`, rightCenterX, photoY + 10.5, { align: 'center' })
 
-  // Right Divider Line (Exactly half-height)
+  // Right Divider Line
   doc.setDrawColor(225, 235, 248)
   doc.line(rightX + 2.5, photoY + 15.0, rightX + flankW - 2.5, photoY + 15.0)
 
@@ -1029,25 +1038,33 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(7, 26, 61)
   doc.text(student.batch || '2025 - 2029', rightCenterX, photoY + 25.8, { align: 'center' })
 
-  // 7. Student Name & Registration Pill
+  // 7. Student Name, Registration Pill & Degree Subtitle
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(11)
+  doc.setFontSize(10.5)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.name.toUpperCase(), cardW / 2, 72.5, { align: 'center' })
+  doc.text(student.name.toUpperCase(), cardW / 2, 71.8, { align: 'center' })
 
   // Registration Pill
   doc.setFillColor(7, 26, 61)
-  doc.roundedRect(cardW / 2 - 24, 74.8, 48, 5.2, 1.5, 1.5, 'F')
+  doc.roundedRect(cardW / 2 - 24, 73.8, 48, 5.0, 1.4, 1.4, 'F')
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.2)
+  doc.setFontSize(7.0)
   doc.setTextColor(244, 196, 48)
-  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 78.5, { align: 'center' })
+  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 77.4, { align: 'center' })
 
-  // 8. Structured Information Card (DEGREE & EXAM REMOVED, exactly 3 clear contact rows!)
+  // Academic Degree & Branch Subtitle
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.2)
+  doc.setTextColor(21, 87, 192) // Royal Cobalt
+  const rawDegree = student.degreeProgram || 'B.Tech - Artificial Intelligence & Data Science'
+  const displayDegree = rawDegree.toUpperCase()
+  doc.text(displayDegree, cardW / 2, 82.2, { align: 'center' })
+
+  // 8. Structured Academic & Contact Information Matrix
   const gridX = 5.5
   const gridW = cardW - 11
-  const gridY = 83.5
-  const gridH = 26
+  const gridY = 84.8
+  const gridH = 28.0
 
   doc.setFillColor(252, 254, 255)
   doc.setDrawColor(215, 228, 245)
@@ -1055,32 +1072,35 @@ export function downloadStudentCardPDF(student: {
   doc.roundedRect(gridX, gridY, gridW, gridH, 2, 2, 'FD')
 
   const cardRows = [
+    { label: 'PROGRAMME / BRANCH:', val: student.degreeProgram || 'B.Tech - Artificial Intelligence & Data Science' },
+    { label: 'ACADEMIC REGULATION:', val: student.regulation || 'R-2021 (Autonomous System)' },
     { label: 'RESIDENCY STATUS:', val: student.residencyStatus || 'Day Scholar' },
-    { label: 'CONTACT NUMBER:', val: student.phone },
-    { label: 'OFFICIAL EMAIL:', val: student.email },
+    { label: 'CONTACT NUMBER:', val: student.phone || 'Not Provided' },
+    { label: 'OFFICIAL EMAIL:', val: student.email || 'Not Provided' },
   ]
 
-  let curY = gridY + 5.5
-  const rowStep = 7.6
+  let curY = gridY + 4.8
+  const rowStep = 5.4
 
   for (let i = 0; i < cardRows.length; i++) {
     const row = cardRows[i]
     if (i % 2 === 1) {
       doc.setFillColor(248, 250, 254)
-      doc.rect(gridX + 0.5, curY - 4.5, gridW - 1, 7.2, 'F')
+      doc.rect(gridX + 0.5, curY - 3.8, gridW - 1, 5.2, 'F')
     }
 
     doc.setFillColor(21, 87, 192)
-    doc.circle(gridX + 3.2, curY - 0.8, 0.7, 'F')
+    doc.circle(gridX + 3.0, curY - 0.9, 0.65, 'F')
 
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(5.0)
+    doc.setFontSize(4.7)
     doc.setTextColor(100, 115, 135)
-    doc.text(row.label, gridX + 5.5, curY - 0.2)
+    doc.text(row.label, gridX + 5.2, curY - 0.2)
 
-    doc.setFontSize(5.6)
+    doc.setFontSize(5.1)
     doc.setTextColor(7, 26, 61)
-    doc.text(row.val, gridX + 34, curY - 0.2)
+    const valText = doc.splitTextToSize(row.val, gridW - 39)[0] || row.val
+    doc.text(valText, gridX + 35.5, curY - 0.2)
 
     curY += rowStep
   }
@@ -1111,7 +1131,7 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(90, 105, 125)
   doc.text('PRINCIPAL', 78.5, sigY + 3.2, { align: 'center' })
 
-  // 10. Institutional Footer Styled Like the Header (Clean Academic Letterhead Format)
+  // 10. Institutional Footer (Clean, Authoritative College Identity Strip)
   // Mirror Beam Separator (Sapphire & Gold)
   doc.setFillColor(231, 185, 62)
   doc.rect(3, 125.5, cardW - 6, 0.6, 'F')
@@ -1125,29 +1145,27 @@ export function downloadStudentCardPDF(student: {
   doc.setFillColor(7, 26, 61)
   doc.circle(cardW / 2, 126.7, 0.7, 'F')
 
-  // Clean Light Background Panel Matching Header
+  // Clean Light Background Panel
   doc.setFillColor(250, 252, 255)
-  doc.rect(3, 128.0, cardW - 6, 12.0, 'F')
+  doc.rect(3, 127.8, cardW - 6, 12.8, 'F')
 
-  // Line 1: College Name
+  // Line 1: College Name & Autonomous Status
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.4)
+  doc.setFontSize(6.2)
   doc.setTextColor(7, 26, 61)
-  doc.text('V.S.B. ENGINEERING COLLEGE', cardW / 2, 132.5, { align: 'center' })
+  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', cardW / 2, 131.8, { align: 'center' })
 
-  // Line 2: Autonomous Pill Tag (Matching Header's Autonomous Pill!)
-  doc.setFillColor(231, 185, 62)
-  doc.roundedRect(cardW / 2 - 24, 134.0, 48, 3.0, 0.8, 0.8, 'F')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.6)
-  doc.setTextColor(7, 26, 61)
-  doc.text('AN AUTONOMOUS INSTITUTION · KARUR - 639 111', cardW / 2, 136.2, { align: 'center' })
-
-  // Line 3: Address & Return Notice
+  // Line 2: Campus Address & Web Portal
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(3.5)
-  doc.setTextColor(90, 105, 125)
-  doc.text('NH-67, Covai Road, Karur · www.vsbec.com · If found, please return to College Office', cardW / 2, 139.5, { align: 'center' })
+  doc.setFontSize(4.0)
+  doc.setTextColor(80, 95, 120)
+  doc.text('NH-67, Covai Road, Karur - 639 111, Tamil Nadu · www.vsbec.com', cardW / 2, 135.2, { align: 'center' })
+
+  // Line 3: Institutional Notice & Contact
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(3.6)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Institutional Identity Document · If found, return to College Office · Ph: 04324-290141', cardW / 2, 138.6, { align: 'center' })
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }

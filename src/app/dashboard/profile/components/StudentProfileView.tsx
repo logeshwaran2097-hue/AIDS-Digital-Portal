@@ -121,13 +121,13 @@ export function StudentProfileView({
     dateOfBirth: initialStudent.dateOfBirth
       ? new Date(initialStudent.dateOfBirth).toISOString().split('T')[0]
       : '',
-    bloodGroup: '',
-    residencyStatus: '',
+    bloodGroup: 'O+ve',
+    residencyStatus: 'Day Scholar',
     registerNumber: regNo,
     department: initialStudent.department || 'Artificial Intelligence & Data Science',
     degreeProgram: 'B.Tech Artificial Intelligence & Data Science',
     regulation: 'R-2021 (Autonomous System)',
-    batch: initialStudent.batch || '',
+    batch: initialStudent.batch || '2025 - 2029',
     year: initialStudent.year || 1,
     semester: initialStudent.semester || 1,
     section: initialStudent.section || 'A',
@@ -1166,7 +1166,14 @@ export function StudentProfileView({
                       <label className="block font-bold text-[#071A3D] mb-1">Year</label>
                       <select
                         value={formData.year}
-                        onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const y = Number(e.target.value)
+                          const minS = (y - 1) * 2 + 1
+                          const maxS = y * 2
+                          const currentSem = formData.semester
+                          const newSem = (currentSem >= minS && currentSem <= maxS) ? currentSem : minS
+                          setFormData({ ...formData, year: y, semester: newSem })
+                        }}
                         className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
                       >
                         <option value={1}>Year 1</option>
@@ -1183,11 +1190,14 @@ export function StudentProfileView({
                         onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
                         className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                          <option key={s} value={s}>
-                            Semester {s}
-                          </option>
-                        ))}
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => {
+                          const sYear = Math.ceil(s / 2)
+                          return (
+                            <option key={s} value={s}>
+                              Semester {s} (Year {sYear} {s % 2 === 1 ? 'Odd' : 'Even'})
+                            </option>
+                          )
+                        })}
                       </select>
                     </div>
 
