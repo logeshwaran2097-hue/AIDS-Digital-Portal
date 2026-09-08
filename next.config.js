@@ -59,6 +59,27 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: '/:path*.apk',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/vnd.android.package-archive',
+          },
+          {
+            key: 'Content-Disposition',
+            value: 'attachment; filename="Digital-Portal-of-AI-and-DS.apk"',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
     ]
   },
   webpack: (config, { isServer }) => {

@@ -17,6 +17,7 @@ export async function GET() {
         'Content-Disposition': 'attachment; filename="Digital-Portal-of-AI-and-DS.apk"',
         'Content-Length': fileBuffer.length.toString(),
         'Cache-Control': 'public, max-age=86400',
+        'X-Content-Type-Options': 'nosniff',
       },
     })
   } catch (error) {
