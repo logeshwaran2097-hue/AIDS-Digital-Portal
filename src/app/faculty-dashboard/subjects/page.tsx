@@ -27,8 +27,26 @@ export default async function FacultySubjectsPage() {
     orderBy: { code: 'asc' },
   }).catch(() => [])
 
-  const subjectIds = dbSubjects.map(s => s.id)
-  const subjectCodes = dbSubjects.map(s => s.code)
+  let effectiveSubjects = [...dbSubjects]
+  if (effectiveSubjects.length === 0 && (faculty?.subjectName || parsedSubjectCodes.length > 0)) {
+    const subCode = parsedSubjectCodes[0] || (faculty?.facultyType === 'lab_faculty' ? 'AD2311' : 'AD3301')
+    const subName = faculty?.subjectName || (faculty?.facultyType === 'lab_faculty' ? 'Object Oriented Programming Laboratory' : 'Department Course')
+    effectiveSubjects = [
+      {
+        id: 'alloc-' + (faculty?.facultyId || 'sub'),
+        code: subCode,
+        name: subName,
+        credits: faculty?.facultyType === 'lab_faculty' ? 2 : 4,
+        description: 'Laboratory Practical & Applied Curriculum',
+        yearId: null,
+        semesterId: null,
+        academicYearId: 'cmtmnsw30000apv1wxafyfv59',
+      } as any
+    ]
+  }
+
+  const subjectIds = effectiveSubjects.map(s => s.id)
+  const subjectCodes = effectiveSubjects.map(s => s.code)
   const [dbUnits, dbSyllabi, dbNotes, dbResources, dbQuestions, dbAttendanceSessions, totalStudentsCount] = await Promise.all([
     prisma.unit.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { number: 'asc' } }).catch(() => []),
     prisma.syllabus.findMany({ where: { subjectId: { in: subjectIds } } }).catch(() => []),
@@ -47,7 +65,7 @@ export default async function FacultySubjectsPage() {
     }).catch(() => 0),
   ])
 
-  const initialCourses = dbSubjects.map(sub => {
+  const initialCourses = effectiveSubjects.map(sub => {
     const unitsForSub = dbUnits.filter(u => u.subjectId === sub.id)
     const syllabusForSub = dbSyllabi.find(s => s.subjectId === sub.id)
     const notesForSub = dbNotes.filter(n => n.subjectId === sub.id)
