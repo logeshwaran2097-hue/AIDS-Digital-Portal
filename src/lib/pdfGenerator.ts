@@ -865,7 +865,58 @@ function drawEmoji(
   doc.circle(x + size / 2, y + size / 2, size / 3, 'F')
 }
 
-export function downloadStudentCardPDF(student: {
+function getRoundedSquareImage(src: string, size = 320, radius = 56): Promise<string> {
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined' || !src) return resolve(src)
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve(src)
+
+        // Draw rounded squircle path (matching rounded-3xl in profile UI)
+        ctx.beginPath()
+        ctx.moveTo(radius, 0)
+        ctx.lineTo(size - radius, 0)
+        ctx.quadraticCurveTo(size, 0, size, radius)
+        ctx.lineTo(size, size - radius)
+        ctx.quadraticCurveTo(size, size, size - radius, size)
+        ctx.lineTo(radius, size)
+        ctx.quadraticCurveTo(0, size, 0, size - radius)
+        ctx.lineTo(0, radius)
+        ctx.quadraticCurveTo(0, 0, radius, 0)
+        ctx.closePath()
+        ctx.clip()
+
+        // Center square crop (object-cover)
+        let sWidth = img.width
+        let sHeight = img.height
+        let sx = 0
+        let sy = 0
+        if (sWidth > sHeight) {
+          sx = (sWidth - sHeight) / 2
+          sWidth = sHeight
+        } else if (sHeight > sWidth) {
+          sy = (sHeight - sWidth) / 2
+          sHeight = sWidth
+        }
+
+        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, size, size)
+        resolve(canvas.toDataURL('image/png'))
+      } catch {
+        resolve(src)
+      }
+    }
+    img.onerror = () => resolve(src)
+    img.src = src
+  })
+}
+
+export async function downloadStudentCardPDF(student: {
   name: string
   registerNumber: string
   department: string
@@ -981,54 +1032,60 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(20, 85, 217)
   doc.text('STUDENT IDENTITY CARD', cardW / 2, 34.5, { align: 'center' })
 
-  // 6. Centered Authentic Passport Ratio Photograph (True 35:45 Ratio, No Side Details)
-  const photoW = 28
-  const photoH = 36 // Exact 35:45 passport ratio (28/36 = 0.778)
-  const photoX = (cardW - photoW) / 2
+  // 6. Centered Squircle Photograph (1:1 Ratio with Rounded-3xl Corners Matching UI Avatar)
+  const photoSize = 33
+  const photoX = (cardW - photoSize) / 2
   const photoY = 37.0
 
-  // Dual Frame for Centered Portrait
-  doc.setFillColor(245, 248, 253)
-  doc.roundedRect(photoX - 0.8, photoY - 0.8, photoW + 1.6, photoH + 1.6, 2.2, 2.2, 'F')
-  doc.setDrawColor(215, 228, 245)
-  doc.setLineWidth(0.35)
-  doc.roundedRect(photoX - 0.8, photoY - 0.8, photoW + 1.6, photoH + 1.6, 2.2, 2.2, 'S')
+  // Outer Squircle Shadow Ring
+  doc.setFillColor(242, 247, 255)
+  doc.roundedRect(photoX - 1.2, photoY - 1.2, photoSize + 2.4, photoSize + 2.4, 5.0, 5.0, 'F')
+  doc.setDrawColor(200, 218, 242)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(photoX - 1.2, photoY - 1.2, photoSize + 2.4, photoSize + 2.4, 5.0, 5.0, 'S')
 
-  doc.setDrawColor(21, 87, 192)
-  doc.setLineWidth(0.7)
-  doc.roundedRect(photoX, photoY, photoW, photoH, 1.8, 1.8, 'S')
+  // Crisp White Squircle Inset Border (matching second photo)
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(photoX - 0.4, photoY - 0.4, photoSize + 0.8, photoSize + 0.8, 4.4, 4.4, 'F')
 
+  let hasImage = false
   if (student.profileImage && (student.profileImage.startsWith('data:image') || student.profileImage.startsWith('http'))) {
     try {
-      const format = student.profileImage.includes('png') ? 'PNG' : 'JPEG'
-      doc.addImage(student.profileImage, format, photoX + 0.8, photoY + 0.8, photoW - 1.6, photoH - 1.6)
+      const roundedImg = await getRoundedSquareImage(student.profileImage, 320, 54)
+      doc.addImage(roundedImg, 'PNG', photoX, photoY, photoSize, photoSize)
+      hasImage = true
     } catch (e) {
-      console.error('Failed to embed student photo:', e)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(22)
-      doc.setTextColor(7, 26, 61)
-      doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 22, { align: 'center' })
+      console.error('Failed to embed squircle student photo:', e)
     }
-  } else {
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(22)
-    doc.setTextColor(7, 26, 61)
-    doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 22, { align: 'center' })
   }
+
+  if (!hasImage) {
+    doc.setFillColor(14, 85, 217) // Royal Cobalt gradient tone
+    doc.roundedRect(photoX, photoY, photoSize, photoSize, 4.2, 4.2, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(26)
+    doc.setTextColor(255, 255, 255)
+    doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + photoSize / 2 + 3.2, { align: 'center' })
+  }
+
+  // Elegant Squircle Outline Stroke
+  doc.setDrawColor(210, 226, 246)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(photoX, photoY, photoSize, photoSize, 4.2, 4.2, 'S')
 
   // 7. Student Name & Registration Pill
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11.0)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.name.toUpperCase(), cardW / 2, 77.0, { align: 'center' })
+  doc.text(student.name.toUpperCase(), cardW / 2, 75.0, { align: 'center' })
 
   // Registration Pill
   doc.setFillColor(7, 26, 61)
-  doc.roundedRect(cardW / 2 - 24, 79.5, 48, 5.2, 1.5, 1.5, 'F')
+  doc.roundedRect(cardW / 2 - 24, 77.2, 48, 5.2, 1.5, 1.5, 'F')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.2)
   doc.setTextColor(244, 196, 48)
-  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 83.2, { align: 'center' })
+  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 80.9, { align: 'center' })
 
   // 8. Comprehensive Student Details Matrix (All Details Shown Below)
   const yr = student.year || 1
@@ -1041,7 +1098,7 @@ export function downloadStudentCardPDF(student: {
 
   const gridX = 5.5
   const gridW = cardW - 11
-  const gridY = 87.0
+  const gridY = 85.5
   const gridH = 35.0
 
   doc.setFillColor(252, 254, 255)
