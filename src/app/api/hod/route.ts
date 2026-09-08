@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseSafeDateOfBirth } from '@/lib/utils'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
@@ -131,7 +132,7 @@ export async function POST(request: Request) {
         designation,
         qualification,
         experience: Number(experience) || 15,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('1980-01-01'),
+        dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('1980-01-01')),
       },
       create: {
         userId: user.id,
@@ -140,7 +141,7 @@ export async function POST(request: Request) {
         designation,
         qualification,
         experience: Number(experience) || 15,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('1980-01-01'),
+        dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('1980-01-01')),
       },
     })
 

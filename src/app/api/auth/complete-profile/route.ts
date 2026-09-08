@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, createToken, verifyOTPChallenge } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { verifyOTP } from '@/lib/utils'
+import { verifyOTP, parseSafeDateOfBirth } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    const parsedDob = dateOfBirth ? new Date(dateOfBirth) : null
+    const parsedDob = parseSafeDateOfBirth(dateOfBirth)
 
     // 5. Update Profile Record based on role
     if (targetRole === 'student' || targetRegNumber) {

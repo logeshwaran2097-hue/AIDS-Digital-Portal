@@ -1502,6 +1502,8 @@ export default function LoginPage() {
                       <input
                         type="date"
                         required
+                        min="1960-01-01"
+                        max="2035-12-31"
                         value={onboardingForm.dateOfBirth}
                         onChange={(e) => setOnboardingForm({ ...onboardingForm, dateOfBirth: e.target.value })}
                         className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"

@@ -151,3 +151,85 @@ export function getRoleColor(role: string): string {
   }
   return colors[role] || 'bg-gray-100 text-gray-800'
 }
+
+/**
+ * Safely parses any date-of-birth representation into a valid Date object within realistic human ranges (1920 - 2050).
+ * Prevents abnormal formats like "+092007-02-06", invalid strings, or out-of-range dates from crashing Prisma/Postgres.
+ */
+export function parseSafeDateOfBirth(input: any, defaultFallback: Date): Date
+export function parseSafeDateOfBirth(input: any, defaultFallback?: Date | null): Date | null
+export function parseSafeDateOfBirth(input: any, defaultFallback: Date | null = null): Date | null {
+  if (!input) return defaultFallback
+
+  if (input instanceof Date) {
+    if (isNaN(input.getTime())) return defaultFallback
+    const year = input.getUTCFullYear()
+    if (year >= 1920 && year <= 2050) return input
+    return defaultFallback
+  }
+
+  let str = String(input).trim()
+  if (!str) return defaultFallback
+
+  // Fix anomalous leading '+' or six-digit years like +092007-02-06
+  if (str.startsWith('+')) {
+    str = str.replace(/^\++/, '')
+  }
+
+  // Handle DD-MM-YYYY or DD/MM/YYYY
+  const dmyMatch = str.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})$/)
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10)
+    const month = parseInt(dmyMatch[2], 10) - 1
+    let year = parseInt(dmyMatch[3], 10)
+    if (year < 100) {
+      year += year > 30 ? 1900 : 2000
+    }
+    if (year >= 1920 && year <= 2050 && month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      const d = new Date(Date.UTC(year, month, day))
+      if (!isNaN(d.getTime())) return d
+    }
+  }
+
+  // Handle YYYY-MM-DD (including cases where year has accidental extra digits or zeros like 092007)
+  const ymdMatch = str.match(/^(\d{4,6})[-/.](\d{1,2})[-/.](\d{1,2})/)
+  if (ymdMatch) {
+    let yearStr = ymdMatch[1]
+    // If year has 6 digits like 092007, try to extract last 4 digits (2007)
+    if (yearStr.length === 6) {
+      const sub4 = yearStr.slice(-4)
+      const num4 = parseInt(sub4, 10)
+      if (num4 >= 1920 && num4 <= 2050) {
+        yearStr = sub4
+      }
+    }
+    const year = parseInt(yearStr, 10)
+    const month = parseInt(ymdMatch[2], 10) - 1
+    const day = parseInt(ymdMatch[3], 10)
+    if (year >= 1920 && year <= 2050 && month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      const d = new Date(Date.UTC(year, month, day))
+      if (!isNaN(d.getTime())) return d
+    }
+  }
+
+  // Fallback to standard Date constructor
+  try {
+    const d = new Date(str)
+    if (!isNaN(d.getTime())) {
+      const year = d.getUTCFullYear()
+      if (year >= 1920 && year <= 2050) {
+        return d
+      }
+      // If year is anomalously huge like 92007, check if last 4 digits form a valid year
+      if (year > 2050) {
+        const last4 = year % 10000
+        if (last4 >= 1920 && last4 <= 2050) {
+          d.setUTCFullYear(last4)
+          return d
+        }
+      }
+    }
+  } catch {}
+
+  return defaultFallback
+}

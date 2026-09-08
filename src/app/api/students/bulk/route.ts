@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { parseSafeDateOfBirth } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,13 +84,7 @@ export async function POST(request: Request) {
             const department = st.department || 'Artificial Intelligence & Data Science'
             const batch = st.batch ? String(st.batch).trim() : `${2026 - parsedYear + 1}-${2030 - parsedYear + 1}`
 
-            let dob = new Date('2004-01-01')
-            if (st.dateOfBirth) {
-              const parsedDate = new Date(st.dateOfBirth)
-              if (!isNaN(parsedDate.getTime())) {
-                dob = parsedDate
-              }
-            }
+            const dob = parseSafeDateOfBirth(st.dateOfBirth, new Date('2004-01-01'))!
 
             const existingStudent = await prisma.student.findFirst({
               where: {

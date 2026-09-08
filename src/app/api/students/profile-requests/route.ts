@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseSafeDateOfBirth } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -136,6 +137,8 @@ export async function PATCH(request: Request) {
 
       let student = await prisma.student.findUnique({ where: { registerNumber: regUpper } }).catch(() => null)
       if (student) {
+        const parsedReqDob = parseSafeDateOfBirth(requested.dateOfBirth)
+
         // Update student record
         await prisma.student.update({
           where: { id: student.id },
@@ -144,7 +147,7 @@ export async function PATCH(request: Request) {
             ...(requested.year ? { year: Number(requested.year) } : {}),
             ...(requested.semester ? { semester: Number(requested.semester) } : {}),
             ...(requested.section ? { section: requested.section } : {}),
-            ...(requested.dateOfBirth ? { dateOfBirth: new Date(requested.dateOfBirth) } : {}),
+            ...(parsedReqDob ? { dateOfBirth: parsedReqDob } : {}),
           },
         }).catch(() => {})
 

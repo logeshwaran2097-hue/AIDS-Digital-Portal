@@ -260,10 +260,22 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
     setIsLoading(true)
     try {
+      let cleanDob = formData.dateOfBirth ? formData.dateOfBirth.trim() : ''
+      if (cleanDob.includes('-')) {
+        const parts = cleanDob.replace(/^\+/, '').split('-')
+        if (parts[0] && parts[0].length > 4) {
+          parts[0] = parts[0].slice(-4)
+          cleanDob = parts.join('-')
+        }
+      }
+
       const res = await fetch('/api/students', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          dateOfBirth: cleanDob,
+        }),
       })
       const result = await res.json()
 
@@ -308,12 +320,22 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
     setIsLoading(true)
     try {
+      let cleanDob = formData.dateOfBirth ? formData.dateOfBirth.trim() : ''
+      if (cleanDob.includes('-')) {
+        const parts = cleanDob.replace(/^\+/, '').split('-')
+        if (parts[0] && parts[0].length > 4) {
+          parts[0] = parts[0].slice(-4)
+          cleanDob = parts.join('-')
+        }
+      }
+
       const res = await fetch('/api/students', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: selectedStudent.id,
           ...formData,
+          dateOfBirth: cleanDob,
         }),
       })
       const result = await res.json()
@@ -1311,6 +1333,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="date"
                     autoComplete="off"
+                    min="1960-01-01"
+                    max="2035-12-31"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -1464,6 +1488,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <input
                     type="date"
                     autoComplete="off"
+                    min="1960-01-01"
+                    max="2035-12-31"
                     value={formData.dateOfBirth}
                     onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"

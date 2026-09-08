@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { parseSafeDateOfBirth } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -171,7 +172,7 @@ export async function POST(request: Request) {
         data: {
           userId: user.id,
           registerNumber: regUpper,
-          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : existingStudent.dateOfBirth,
+          dateOfBirth: parseSafeDateOfBirth(dateOfBirth, existingStudent.dateOfBirth),
           department: department || existingStudent.department,
           year: Number(year) || existingStudent.year,
           semester: Number(semester) || existingStudent.semester,
@@ -203,7 +204,7 @@ export async function POST(request: Request) {
             section: section || studentByUserId.section,
             advisorName: advisorName ? String(advisorName).trim() : (studentByUserId as any).advisorName,
             parentPhone: parentPhone ? String(parentPhone).trim() : (studentByUserId as any).parentPhone,
-            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : studentByUserId.dateOfBirth,
+            dateOfBirth: parseSafeDateOfBirth(dateOfBirth, studentByUserId.dateOfBirth),
           } as any,
         })
       } else {
@@ -211,7 +212,7 @@ export async function POST(request: Request) {
           data: {
             userId: user.id,
             registerNumber: regUpper,
-            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2004-01-01'),
+            dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('2004-01-01')),
             department: department || 'Artificial Intelligence & Data Science',
             year: Number(year) || 1,
             semester: Number(semester) || 1,
@@ -354,7 +355,7 @@ export async function PUT(request: Request) {
           ...(section !== undefined ? { section: section.trim() } : {}),
           ...(advisorName !== undefined ? { advisorName: String(advisorName).trim() } : {}),
           ...(parentPhone !== undefined ? { parentPhone: parentPhone ? String(parentPhone).trim() : null } : {}),
-          ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+          ...(dateOfBirth !== undefined ? { dateOfBirth: parseSafeDateOfBirth(dateOfBirth) } : {}),
           ...(bloodGroup !== undefined ? { bloodGroup } : {}),
           ...(residencyStatus !== undefined ? { residencyStatus } : {}),
           ...(data.hostelBlock !== undefined ? { hostelBlock: data.hostelBlock } : {}),
@@ -452,7 +453,7 @@ export async function PUT(request: Request) {
       where: { registerNumber: finalRegNo },
       update: {
         userId: user.id,
-        ...(dateOfBirth ? { dateOfBirth: new Date(dateOfBirth) } : {}),
+        ...(dateOfBirth !== undefined ? { dateOfBirth: parseSafeDateOfBirth(dateOfBirth) } : {}),
         department: department || 'Artificial Intelligence & Data Science',
         year: Number(year) || 1,
         semester: Number(semester) || 1,
@@ -468,7 +469,7 @@ export async function PUT(request: Request) {
       create: {
         userId: user.id,
         registerNumber: finalRegNo,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('2000-01-01'),
+        dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('2000-01-01')),
         department: department || 'Artificial Intelligence & Data Science',
         year: Number(year) || 1,
         semester: Number(semester) || 1,

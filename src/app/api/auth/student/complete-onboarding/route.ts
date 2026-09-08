@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, createToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyOTP } from '@/lib/utils'
+import { verifyOTP, parseSafeDateOfBirth } from '@/lib/utils'
 import bcrypt from 'bcryptjs'
 
 import { revalidatePath } from 'next/cache'
@@ -61,7 +61,10 @@ export async function POST(request: NextRequest) {
 
       // Update DOB and Parent Phone in Student record if provided
       const studentUpdateData: any = {}
-      if (dateOfBirth) studentUpdateData.dateOfBirth = new Date(dateOfBirth)
+      if (dateOfBirth) {
+        const parsedDob = parseSafeDateOfBirth(dateOfBirth)
+        if (parsedDob) studentUpdateData.dateOfBirth = parsedDob
+      }
       if (parentPhone !== undefined) studentUpdateData.parentPhone = parentPhone ? parentPhone.trim() : null
       if (isParentWhatsapp !== undefined) studentUpdateData.isParentWhatsapp = Boolean(isParentWhatsapp)
       if (bloodGroup !== undefined) studentUpdateData.bloodGroup = bloodGroup
@@ -212,7 +215,10 @@ export async function POST(request: NextRequest) {
 
     // Update Student DOB & Parent Phone
     const studentUpdateData: any = {}
-    if (dateOfBirth) studentUpdateData.dateOfBirth = new Date(dateOfBirth)
+    if (dateOfBirth) {
+      const parsedDob = parseSafeDateOfBirth(dateOfBirth)
+      if (parsedDob) studentUpdateData.dateOfBirth = parsedDob
+    }
     if (parentPhone) studentUpdateData.parentPhone = parentPhone.trim()
     if (isParentWhatsapp !== undefined) studentUpdateData.isParentWhatsapp = Boolean(isParentWhatsapp)
     if (bloodGroup !== undefined) studentUpdateData.bloodGroup = bloodGroup

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { parseSafeDateOfBirth } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -174,11 +175,14 @@ export async function POST(request: Request) {
     const cleanAdvisorSem = advisorSem ? Number(advisorSem) : null
     const cleanAdvisorSec = advisorSec ? String(advisorSec).trim().toUpperCase() : null
 
+    const parsedFacultyDob = parseSafeDateOfBirth(dateOfBirth)
+
     // Upsert Faculty
     const faculty = await prisma.faculty.upsert({
       where: { facultyId: fid },
       update: {
         userId: user.id,
+        ...(parsedFacultyDob ? { dateOfBirth: parsedFacultyDob } : {}),
         designation,
         qualification,
         experience: Number(experience) || 1,
@@ -197,7 +201,7 @@ export async function POST(request: Request) {
       create: {
         userId: user.id,
         facultyId: fid,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date('1990-01-01'),
+        dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('1990-01-01')),
         designation,
         qualification,
         experience: Number(experience) || 1,
