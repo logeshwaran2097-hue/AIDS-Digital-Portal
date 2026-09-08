@@ -8,16 +8,11 @@ import {
   GraduationCap,
   MapPin,
   Search,
-  Phone,
-  PhoneCall,
   MessageCircle,
   Clock,
   UserCheck,
   BookMarked,
   ShieldCheck,
-  Building2,
-  X,
-  ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -91,7 +86,6 @@ export default function FacultyList({
   // Two distinct views: 'advisors' (Class Advisors) and 'handlers' (Subject Handlers)
   const [activeTab, setActiveTab] = useState<'advisors' | 'handlers'>('advisors')
   const [searchQuery, setSearchQuery] = useState('')
-  const [phoneModalFaculty, setPhoneModalFaculty] = useState<FacultyUser | null>(null)
 
   const detailByUser = new Map(details.map((d) => [d.userId, d]))
 
@@ -456,145 +450,43 @@ export default function FacultyList({
                     </div>
                   </div>
 
-                  {/* Contact Action Footer: DIRECT PHONE CONTACT (Email Contact Removed as Requested) */}
+                  {/* Contact Action Footer: WHATSAPP ONLY */}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 shadow-2xs">
-                        <Phone className="w-4 h-4" />
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#25D366] border border-emerald-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                        <MessageCircle className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">
-                          {activeTab === 'advisors' ? 'Advisor Mobile' : 'Faculty Mobile'}
+                          {activeTab === 'advisors' ? 'Advisor WhatsApp' : 'Faculty WhatsApp'}
                         </span>
                         <span className="font-mono font-black text-xs text-[#071A3D] truncate block">
-                          {u.phone ? `+91 ${u.phone}` : '+91 4324 246001'}
+                          {u.phone ? `+91 ${u.phone}` : '+91 94432 46001'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {u.phone ? (
-                        <>
-                          <a
-                            href={`tel:${u.phone}`}
-                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                            title={`Call ${u.name}`}
-                          >
-                            <PhoneCall className="w-3.5 h-3.5" />
-                            <span>Call</span>
-                          </a>
-
-                          <a
-                            href={`https://wa.me/91${u.phone.replace(/\D/g, '')}?text=Hello%20Prof.%20${encodeURIComponent(
-                              u.name
-                            )},%20I%20am%20${encodeURIComponent(
-                              student?.registerNumber || 'Student'
-                            )}%20from%20Year%20${student?.year || 2}%20Sec%20${student?.section || 'B'}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                            title={`WhatsApp ${u.name}`}
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            <span>WhatsApp</span>
-                          </a>
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setPhoneModalFaculty(u)}
-                          className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-                        >
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>Contact Phone</span>
-                        </button>
-                      )}
+                    <div className="flex items-center shrink-0">
+                      <a
+                        href={`https://wa.me/91${(u.phone || '9443246001').replace(/\D/g, '')}?text=Hello%20Prof.%20${encodeURIComponent(
+                          u.name
+                        )},%20I%20am%20${encodeURIComponent(
+                          student?.registerNumber || 'Student'
+                        )}%20from%20Year%20${student?.year || 2}%20Sec%20${student?.section || 'B'}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        title={`Message ${u.name} on WhatsApp`}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        <span>WhatsApp</span>
+                      </a>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             )
           })}
-        </div>
-      )}
-
-      {/* Official Advisor & Faculty Phone Contact Modal */}
-      {phoneModalFaculty && (
-        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center">
-                  <PhoneCall className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-[#071A3D]">Contact {phoneModalFaculty.name}</h3>
-                  <p className="text-xs text-emerald-700 font-semibold">Direct Telephone &amp; Department Desk</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPhoneModalFaculty(null)}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-emerald-900 tracking-wider">
-                    Official Mobile Line
-                  </span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-white px-2 py-0.5 rounded-md border border-emerald-200">
-                    Direct Contact
-                  </span>
-                </div>
-                <p className="font-mono font-black text-base text-[#071A3D]">
-                  {phoneModalFaculty.phone ? `+91 ${phoneModalFaculty.phone}` : '+91 4324 246001'}
-                </p>
-                <p className="text-[11px] text-emerald-800 font-medium">
-                  Available for official student advising, academic queries, and attendance counseling.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
-                <div className="flex items-center gap-1.5 text-slate-700 font-bold">
-                  <Building2 className="w-3.5 h-3.5 text-[#1455D9]" />
-                  <span>Cabin &amp; Office Intercom</span>
-                </div>
-                <p className="text-slate-600">AI Department Faculty Block · Cabin 204</p>
-                <p className="text-slate-500 text-[11px]">College Intercom: +91 4324 246001 (Extension: 214)</p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-1">
-                <div className="flex items-center gap-1.5 text-[#071A3D] font-bold">
-                  <Clock className="w-3.5 h-3.5 text-[#1455D9]" />
-                  <span>Student Mentoring Hours</span>
-                </div>
-                <p className="text-slate-600">Monday - Friday: 03:30 PM - 05:00 PM</p>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPhoneModalFaculty(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-colors"
-              >
-                Close
-              </button>
-
-              <a
-                href={`tel:${phoneModalFaculty.phone || '+914324246001'}`}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md transition-colors cursor-pointer"
-              >
-                <PhoneCall className="w-3.5 h-3.5" />
-                <span>Call Now</span>
-              </a>
-            </div>
-          </div>
         </div>
       )}
     </div>
