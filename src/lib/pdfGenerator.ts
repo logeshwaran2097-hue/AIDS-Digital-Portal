@@ -994,69 +994,36 @@ export function downloadStudentCardPDF(student: {
     doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 18, { align: 'center' })
   }
 
-  // RIGHT FLANK: Year/Sem & Batch (Clean Borderless Typography)
-  // Intelligent Year & Semester sanitization for academic accuracy
-  const yr = student.year || 1
-  let sem = student.semester || 1
-  const minSem = (yr - 1) * 2 + 1
-  const maxSem = yr * 2
-  if (sem < minSem || sem > maxSem) {
-    sem = minSem
-  }
-
+  // RIGHT FLANK: Batch (Clean Borderless Typography, Vertically Centered)
   const rightCenterX = rightX + flankW / 2
-  // Top: YEAR / SEM
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(4.4)
   doc.setTextColor(100, 115, 135)
-  doc.text('YEAR / SEM', rightCenterX, photoY + 6.0, { align: 'center' })
+  doc.text('BATCH', rightCenterX, photoY + 13.0, { align: 'center' })
 
-  doc.setFontSize(5.5)
+  doc.setFontSize(6.2)
   doc.setTextColor(7, 26, 61)
-  doc.text(`Year ${yr} · Sem ${sem} (${student.section || 'A'})`, rightCenterX, photoY + 11.2, { align: 'center' })
+  doc.text(student.batch || '2025 - 2029', rightCenterX, photoY + 18.5, { align: 'center' })
 
-  // Right Subtle Divider Hairline
-  doc.setDrawColor(228, 236, 248)
-  doc.setLineWidth(0.25)
-  doc.line(rightX + 3.0, photoY + 15.0, rightX + flankW - 3.0, photoY + 15.0)
-
-  // Bottom: BATCH
+  // 7. Student Name & Registration Pill
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
-  doc.setTextColor(100, 115, 135)
-  doc.text('BATCH', rightCenterX, photoY + 20.5, { align: 'center' })
-
-  doc.setFontSize(6.0)
+  doc.setFontSize(11.0)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.batch || '2025 - 2029', rightCenterX, photoY + 26.0, { align: 'center' })
-
-  // 7. Student Name, Registration Pill & Degree Subtitle
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text(student.name.toUpperCase(), cardW / 2, 71.8, { align: 'center' })
+  doc.text(student.name.toUpperCase(), cardW / 2, 72.5, { align: 'center' })
 
   // Registration Pill
   doc.setFillColor(7, 26, 61)
-  doc.roundedRect(cardW / 2 - 24, 73.8, 48, 5.0, 1.4, 1.4, 'F')
+  doc.roundedRect(cardW / 2 - 24, 75.0, 48, 5.2, 1.5, 1.5, 'F')
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.0)
+  doc.setFontSize(7.2)
   doc.setTextColor(244, 196, 48)
-  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 77.4, { align: 'center' })
-
-  // Academic Degree & Branch Subtitle
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.2)
-  doc.setTextColor(21, 87, 192) // Royal Cobalt
-  const rawDegree = student.degreeProgram || 'B.Tech - Artificial Intelligence & Data Science'
-  const displayDegree = rawDegree.toUpperCase()
-  doc.text(displayDegree, cardW / 2, 82.2, { align: 'center' })
+  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 78.8, { align: 'center' })
 
   // 8. Structured Contact & Residency Information Card
   const gridX = 5.5
   const gridW = cardW - 11
-  const gridY = 84.8
-  const gridH = 24.0
+  const gridY = 85.0
+  const gridH = 26.0
 
   doc.setFillColor(252, 254, 255)
   doc.setDrawColor(215, 228, 245)
@@ -1069,57 +1036,31 @@ export function downloadStudentCardPDF(student: {
     { label: 'OFFICIAL EMAIL:', val: student.email || 'Not Provided' },
   ]
 
-  let curY = gridY + 5.2
-  const rowStep = 7.0
+  let curY = gridY + 5.5
+  const rowStep = 7.5
 
   for (let i = 0; i < cardRows.length; i++) {
     const row = cardRows[i]
     if (i % 2 === 1) {
       doc.setFillColor(248, 250, 254)
-      doc.rect(gridX + 0.5, curY - 4.2, gridW - 1, 6.6, 'F')
+      doc.rect(gridX + 0.5, curY - 4.5, gridW - 1, 7.0, 'F')
     }
 
     doc.setFillColor(21, 87, 192)
     doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
 
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(4.9)
+    doc.setFontSize(5.0)
     doc.setTextColor(100, 115, 135)
     doc.text(row.label, gridX + 5.5, curY - 0.2)
 
-    doc.setFontSize(5.4)
+    doc.setFontSize(5.5)
     doc.setTextColor(7, 26, 61)
     const valText = doc.splitTextToSize(row.val, gridW - 38)[0] || row.val
     doc.text(valText, gridX + 34.5, curY - 0.2)
 
     curY += rowStep
   }
-
-  // 9. Signatures Row
-  const sigY = 117.5
-  doc.setDrawColor(180, 195, 215)
-  doc.setLineWidth(0.3)
-
-  // Student Signature
-  doc.line(7, sigY, 28, sigY)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.5)
-  doc.setTextColor(90, 105, 125)
-  doc.text('STUDENT SIGN', 17.5, sigY + 3.2, { align: 'center' })
-
-  // HOD Signature
-  doc.line(38, sigY, 58, sigY)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.5)
-  doc.setTextColor(90, 105, 125)
-  doc.text('HOD / AI & DS', 48, sigY + 3.2, { align: 'center' })
-
-  // Principal Signature
-  doc.line(68, sigY, 89, sigY)
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.5)
-  doc.setTextColor(90, 105, 125)
-  doc.text('PRINCIPAL', 78.5, sigY + 3.2, { align: 'center' })
 
   // 10. Institutional Footer (Clean, Authoritative College Identity Strip)
   // Mirror Beam Separator (Sapphire & Gold)
