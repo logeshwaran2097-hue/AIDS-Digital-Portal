@@ -255,55 +255,6 @@ export function StaffOnboardingModal({
     }
   }
 
-  // FAST PATH: Staff confirms particulars & enters portal immediately
-  const handleFastConfirmAndEnter = async () => {
-    if (!form.phone.trim()) {
-      toast.error('Please enter your direct mobile / WhatsApp number.')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const payload = {
-        name: form.name || initialData.name,
-        email: form.email ? form.email.trim().toLowerCase() : initialData.email,
-        phone: form.phone.trim(),
-        facultyId: initialData.facultyId,
-        dateOfBirth: form.dateOfBirth || (initialData.dateOfBirth ? initialData.dateOfBirth.split('T')[0] : '1990-01-01'),
-        qualification: form.qualification || initialData.qualification || '',
-        specialization: form.specialization || '',
-        experience: Number(form.experience) || initialData.experience || 0,
-        classPeriod: form.cabin || '',
-        role,
-        profileImage: form.profileImage || undefined,
-      }
-
-      const res = await fetch('/api/auth/complete-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await res.json()
-      if (res.ok && data.success) {
-        const staffKey = initialData.facultyId || initialData.email || 'staff'
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
-          sessionStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
-        }
-        toast.success('Particulars verified! Entering portal...')
-        setTimeout(() => {
-          onComplete(data.user || {})
-        }, 500)
-      } else {
-        toast.error(data.message || 'Failed to save particulars.')
-      }
-    } catch {
-      toast.error('Network error saving particulars.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // STEP 1 -> STEP 2: Proceed to Security Step
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
@@ -927,23 +878,23 @@ export function StaffOnboardingModal({
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={handleFastConfirmAndEnter}
-                disabled={loading}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all text-xs sm:text-sm"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                <span>Confirm Particulars &amp; Enter Portal</span>
-              </button>
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium order-2 sm:order-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#1557C0]" />
+                <span>Step 1 of 3: Verification &amp; Attestation</span>
+              </div>
 
               <button
                 type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 bg-[#1557C0]/10 hover:bg-[#1557C0]/20 text-[#1557C0] border border-[#1557C0]/30 cursor-pointer hover:scale-[1.02] transition-all text-xs"
+                className={cn(
+                  "w-full sm:w-auto px-7 py-3 rounded-xl font-black flex items-center justify-center gap-2.5 shadow-md transition-all text-xs sm:text-sm order-1 sm:order-2 group",
+                  form.detailsConfirmed
+                    ? "bg-gradient-to-r from-[#071A41] via-[#0E387A] to-[#1557C0] hover:from-[#051330] hover:to-[#0d45b5] text-white shadow-blue-900/25 hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                    : "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed shadow-none"
+                )}
               >
-                <span>Change Password &amp; Email (Optional)</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>Proceed to Password &amp; Email Setup</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
           </form>
