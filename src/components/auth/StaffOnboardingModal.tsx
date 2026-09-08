@@ -269,7 +269,7 @@ export function StaffOnboardingModal({
         email: form.email ? form.email.trim().toLowerCase() : initialData.email,
         phone: form.phone.trim(),
         facultyId: initialData.facultyId,
-        dateOfBirth: form.dateOfBirth || undefined,
+        dateOfBirth: form.dateOfBirth || (initialData.dateOfBirth ? initialData.dateOfBirth.split('T')[0] : '1990-01-01'),
         qualification: form.qualification || initialData.qualification || '',
         specialization: form.specialization || '',
         experience: Number(form.experience) || initialData.experience || 0,
@@ -550,7 +550,7 @@ export function StaffOnboardingModal({
         {/* STEP 1: REVIEW OFFICIAL PARTICULARS & REQUEST CORRECTION */}
         {/* ========================================================================= */}
         {onboardingStep === 1 && (
-          <form onSubmit={handleProceedToSecurityStep} className="space-y-4 text-xs">
+          <form onSubmit={handleProceedToSecurityStep} noValidate className="space-y-4 text-xs">
             <p className="text-[11px] text-gray-500 font-medium">
               Please carefully verify your official department appointment records below. If any academic or designation details are incorrect, you can request an instant admin correction.
             </p>
@@ -735,17 +735,92 @@ export function StaffOnboardingModal({
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Date of Birth *
+                <div className="sm:col-span-2 pt-1 border-t border-blue-200/50">
+                  <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center justify-between">
+                    <span>Date of Birth (Day / Month / Year) *</span>
+                    {form.dateOfBirth && form.dateOfBirth.includes('-') && (
+                      <span className="text-[10px] font-bold text-[#1557C0] bg-blue-100/70 px-2 py-0.5 rounded-md">
+                        Selected: {form.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(form.dateOfBirth.split('-')[1], 10)] || form.dateOfBirth.split('-')[1]}-{form.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
+                      </span>
+                    )}
                   </label>
-                  <input
-                    type="date"
-                    required
-                    value={form.dateOfBirth}
-                    onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
-                  />
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Day Selector */}
+                    <div>
+                      <select
+                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[2] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (form.dateOfBirth || '1990-01-01').split('-')
+                          const y = parts[0] || '1990'
+                          const m = parts[1] || '01'
+                          setForm({ ...form, dateOfBirth: `${y}-${m}-${e.target.value.padStart(2, '0')}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="">Day (DD)</option>
+                        {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
+                          <option key={d} value={d}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Month Selector */}
+                    <div>
+                      <select
+                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[1] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (form.dateOfBirth || '1990-01-01').split('-')
+                          const y = parts[0] || '1990'
+                          const d = parts[2] || '01'
+                          setForm({ ...form, dateOfBirth: `${y}-${e.target.value.padStart(2, '0')}-${d}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="">Month (MM)</option>
+                        {[
+                          { val: '01', label: '01 - January' },
+                          { val: '02', label: '02 - February' },
+                          { val: '03', label: '03 - March' },
+                          { val: '04', label: '04 - April' },
+                          { val: '05', label: '05 - May' },
+                          { val: '06', label: '06 - June' },
+                          { val: '07', label: '07 - July' },
+                          { val: '08', label: '08 - August' },
+                          { val: '09', label: '09 - September' },
+                          { val: '10', label: '10 - October' },
+                          { val: '11', label: '11 - November' },
+                          { val: '12', label: '12 - December' },
+                        ].map((m) => (
+                          <option key={m.val} value={m.val}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Year Selector */}
+                    <div>
+                      <select
+                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[0] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (form.dateOfBirth || '1990-01-01').split('-')
+                          const m = parts[1] || '01'
+                          const d = parts[2] || '01'
+                          setForm({ ...form, dateOfBirth: `${e.target.value}-${m}-${d}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      >
+                        <option value="">Year (YYYY)</option>
+                        {Array.from({ length: 55 }, (_, i) => String(2005 - i)).map((y) => (
+                          <option key={y} value={y}>
+                            {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -808,19 +883,46 @@ export function StaffOnboardingModal({
               </div>
             </div>
 
-            {/* Details Confirmed Checkbox */}
-            <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
-              <label className="flex items-start gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  required
-                  checked={form.detailsConfirmed}
-                  onChange={(e) => setForm({ ...form, detailsConfirmed: e.target.checked })}
-                  className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
-                />
-                <span className="text-xs font-bold text-[#071A41]">
-                  I confirm that I have reviewed my staff particulars, contact numbers, and departmental appointment.
-                </span>
+            {/* Institutional Staff Declaration & Attestation Card */}
+            <div className={cn(
+              "relative rounded-2xl border-2 p-4 transition-all duration-200",
+              form.detailsConfirmed
+                ? "bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-emerald-50/30 border-blue-400/90 shadow-sm shadow-blue-500/10"
+                : "bg-slate-50/90 border-slate-200/90 hover:border-slate-300 shadow-xs"
+            )}>
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <div className="mt-0.5 flex items-center justify-center shrink-0">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={form.detailsConfirmed}
+                    onChange={(e) => setForm({ ...form, detailsConfirmed: e.target.checked })}
+                    className="w-5 h-5 rounded-md text-[#1557C0] border-slate-300 focus:ring-2 focus:ring-[#1557C0] focus:ring-offset-1 cursor-pointer transition-all"
+                  />
+                </div>
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className={cn("w-4 h-4", form.detailsConfirmed ? "text-emerald-600" : "text-[#1557C0]")} />
+                      <span className="text-xs font-black text-[#071A41] uppercase tracking-wide">
+                        Staff Particulars &amp; Official Identity Attestation
+                      </span>
+                    </div>
+                    {form.detailsConfirmed ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200 shadow-2xs">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        Attested by Faculty
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-black text-blue-800 bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-200">
+                        Mandatory Confirmation
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                    I solemnly declare and confirm that I have reviewed my staff appointment particulars, direct contact numbers, and departmental allocations.
+                  </p>
+                </div>
               </label>
             </div>
 
