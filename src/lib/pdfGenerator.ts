@@ -932,49 +932,22 @@ export function downloadStudentCardPDF(student: {
   doc.setTextColor(20, 85, 217)
   doc.text('STUDENT IDENTITY CARD', cardW / 2, 34.5, { align: 'center' })
 
-  // 6. Center Student Photograph Flanked by DOB & Blood Group (Left) and Year & Batch (Right)
-  const photoW = 26
-  const photoH = 30
+  // 6. Centered Authentic Passport Ratio Photograph (True 35:45 Ratio, No Side Details)
+  const photoW = 28
+  const photoH = 36 // Exact 35:45 passport ratio (28/36 = 0.778)
   const photoX = (cardW - photoW) / 2
-  const photoY = 37.8
+  const photoY = 37.0
 
-  const flankW = 26.5
-  const leftX = 5.5
-  const rightX = photoX + photoW + 3.0
-
-  // LEFT FLANK: Date of Birth & Blood Group (Clean Borderless Typography)
-  const leftCenterX = leftX + flankW / 2
-  // Top: DATE OF BIRTH
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
-  doc.setTextColor(100, 115, 135)
-  doc.text('DATE OF BIRTH', leftCenterX, photoY + 6.0, { align: 'center' })
-
-  doc.setFontSize(6.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text(student.dob || '01/01/2004', leftCenterX, photoY + 11.2, { align: 'center' })
-
-  // Left Subtle Divider Hairline
-  doc.setDrawColor(228, 236, 248)
-  doc.setLineWidth(0.25)
-  doc.line(leftX + 3.0, photoY + 15.0, leftX + flankW - 3.0, photoY + 15.0)
-
-  // Bottom: BLOOD GROUP
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
-  doc.setTextColor(100, 115, 135)
-  doc.text('BLOOD GROUP', leftCenterX, photoY + 20.5, { align: 'center' })
-
-  doc.setFontSize(7.0)
-  doc.setTextColor(220, 38, 38) // Medical Red
-  doc.text(student.bloodGroup || 'O+ve', leftCenterX, photoY + 26.0, { align: 'center' })
-
-  // CENTER: Framed Student Photograph
+  // Dual Frame for Centered Portrait
   doc.setFillColor(245, 248, 253)
-  doc.roundedRect(photoX, photoY, photoW, photoH, 2, 2, 'F')
+  doc.roundedRect(photoX - 0.8, photoY - 0.8, photoW + 1.6, photoH + 1.6, 2.2, 2.2, 'F')
+  doc.setDrawColor(215, 228, 245)
+  doc.setLineWidth(0.35)
+  doc.roundedRect(photoX - 0.8, photoY - 0.8, photoW + 1.6, photoH + 1.6, 2.2, 2.2, 'S')
+
   doc.setDrawColor(21, 87, 192)
   doc.setLineWidth(0.7)
-  doc.roundedRect(photoX, photoY, photoW, photoH, 2, 2, 'S')
+  doc.roundedRect(photoX, photoY, photoW, photoH, 1.8, 1.8, 'S')
 
   if (student.profileImage && (student.profileImage.startsWith('data:image') || student.profileImage.startsWith('http'))) {
     try {
@@ -983,84 +956,146 @@ export function downloadStudentCardPDF(student: {
     } catch (e) {
       console.error('Failed to embed student photo:', e)
       doc.setFont('helvetica', 'bold')
-      doc.setFontSize(20)
+      doc.setFontSize(22)
       doc.setTextColor(7, 26, 61)
-      doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 18, { align: 'center' })
+      doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 22, { align: 'center' })
     }
   } else {
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(20)
+    doc.setFontSize(22)
     doc.setTextColor(7, 26, 61)
-    doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 18, { align: 'center' })
+    doc.text(student.name.charAt(0) || 'S', cardW / 2, photoY + 22, { align: 'center' })
   }
-
-  // RIGHT FLANK: Batch (Clean Borderless Typography, Vertically Centered)
-  const rightCenterX = rightX + flankW / 2
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.4)
-  doc.setTextColor(100, 115, 135)
-  doc.text('BATCH', rightCenterX, photoY + 13.0, { align: 'center' })
-
-  doc.setFontSize(6.2)
-  doc.setTextColor(7, 26, 61)
-  doc.text(student.batch || '2025 - 2029', rightCenterX, photoY + 18.5, { align: 'center' })
 
   // 7. Student Name & Registration Pill
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11.0)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.name.toUpperCase(), cardW / 2, 72.5, { align: 'center' })
+  doc.text(student.name.toUpperCase(), cardW / 2, 77.0, { align: 'center' })
 
   // Registration Pill
   doc.setFillColor(7, 26, 61)
-  doc.roundedRect(cardW / 2 - 24, 75.0, 48, 5.2, 1.5, 1.5, 'F')
+  doc.roundedRect(cardW / 2 - 24, 79.5, 48, 5.2, 1.5, 1.5, 'F')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.2)
   doc.setTextColor(244, 196, 48)
-  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 78.8, { align: 'center' })
+  doc.text(`REG NO: ${student.registerNumber}`, cardW / 2, 83.2, { align: 'center' })
 
-  // 8. Structured Contact & Residency Information Card
+  // 8. Comprehensive Student Details Matrix (All Details Shown Below)
+  const yr = student.year || 1
+  let sem = student.semester || 1
+  const minSem = (yr - 1) * 2 + 1
+  const maxSem = yr * 2
+  if (sem < minSem || sem > maxSem) {
+    sem = minSem
+  }
+
   const gridX = 5.5
   const gridW = cardW - 11
-  const gridY = 85.0
-  const gridH = 26.0
+  const gridY = 87.0
+  const gridH = 35.0
 
   doc.setFillColor(252, 254, 255)
   doc.setDrawColor(215, 228, 245)
   doc.setLineWidth(0.3)
   doc.roundedRect(gridX, gridY, gridW, gridH, 2, 2, 'FD')
 
-  const cardRows = [
-    { label: 'RESIDENCY STATUS:', val: student.residencyStatus || 'Day Scholar' },
-    { label: 'CONTACT NUMBER:', val: student.phone || 'Not Provided' },
-    { label: 'OFFICIAL EMAIL:', val: student.email || 'Not Provided' },
-  ]
+  const rowH = 7.0
 
-  let curY = gridY + 5.5
-  const rowStep = 7.5
-
-  for (let i = 0; i < cardRows.length; i++) {
-    const row = cardRows[i]
-    if (i % 2 === 1) {
+  // Zebra backgrounds
+  for (let r = 0; r < 5; r++) {
+    if (r % 2 === 0) {
       doc.setFillColor(248, 250, 254)
-      doc.rect(gridX + 0.5, curY - 4.5, gridW - 1, 7.0, 'F')
+      doc.rect(gridX + 0.5, gridY + r * rowH, gridW - 1, rowH, 'F')
     }
-
-    doc.setFillColor(21, 87, 192)
-    doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
-
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(5.0)
-    doc.setTextColor(100, 115, 135)
-    doc.text(row.label, gridX + 5.5, curY - 0.2)
-
-    doc.setFontSize(5.5)
-    doc.setTextColor(7, 26, 61)
-    const valText = doc.splitTextToSize(row.val, gridW - 38)[0] || row.val
-    doc.text(valText, gridX + 34.5, curY - 0.2)
-
-    curY += rowStep
+    // Row dividers
+    if (r > 0) {
+      doc.setDrawColor(228, 236, 248)
+      doc.setLineWidth(0.2)
+      doc.line(gridX + 1.0, gridY + r * rowH, gridX + gridW - 1.0, gridY + r * rowH)
+    }
   }
+
+  // Row 1: Date of Birth & Blood Group
+  let curY = gridY + 4.8
+  doc.setFillColor(21, 87, 192)
+  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('DATE OF BIRTH:', gridX + 5.5, curY - 0.2)
+  doc.setFontSize(5.4)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.dob || '01/01/2004', gridX + 25.5, curY - 0.2)
+
+  doc.setFillColor(21, 87, 192)
+  doc.circle(gridX + 46.5, curY - 0.9, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('BLOOD GROUP:', gridX + 48.8, curY - 0.2)
+  doc.setFontSize(5.8)
+  doc.setTextColor(220, 38, 38)
+  doc.text(student.bloodGroup || 'O+ve', gridX + 68.5, curY - 0.2)
+
+  // Row 2: Year/Sem & Batch
+  curY += rowH
+  doc.setFillColor(21, 87, 192)
+  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('YEAR / SEM:', gridX + 5.5, curY - 0.2)
+  doc.setFontSize(5.4)
+  doc.setTextColor(7, 26, 61)
+  doc.text(`Year ${yr} · Sem ${sem} (${student.section || 'A'})`, gridX + 22.0, curY - 0.2)
+
+  doc.setFillColor(21, 87, 192)
+  doc.circle(gridX + 46.5, curY - 0.9, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('BATCH:', gridX + 48.8, curY - 0.2)
+  doc.setFontSize(5.4)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.batch || '2025 - 2029', gridX + 58.5, curY - 0.2)
+
+  // Row 3: Residency Status
+  curY += rowH
+  doc.setFillColor(21, 87, 192)
+  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('RESIDENCY STATUS:', gridX + 5.5, curY - 0.2)
+  doc.setFontSize(5.4)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.residencyStatus || 'Day Scholar', gridX + 34.5, curY - 0.2)
+
+  // Row 4: Contact Number
+  curY += rowH
+  doc.setFillColor(21, 87, 192)
+  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('CONTACT NUMBER:', gridX + 5.5, curY - 0.2)
+  doc.setFontSize(5.4)
+  doc.setTextColor(7, 26, 61)
+  doc.text(student.phone || 'Not Provided', gridX + 34.5, curY - 0.2)
+
+  // Row 5: Official Email
+  curY += rowH
+  doc.setFillColor(21, 87, 192)
+  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('OFFICIAL EMAIL:', gridX + 5.5, curY - 0.2)
+  doc.setFontSize(5.4)
+  doc.setTextColor(7, 26, 61)
+  const emailText = doc.splitTextToSize(student.email || 'Not Provided', gridW - 38)[0] || student.email
+  doc.text(emailText, gridX + 34.5, curY - 0.2)
 
   // 10. Institutional Footer (Clean, Authoritative College Identity Strip)
   // Mirror Beam Separator (Sapphire & Gold)
