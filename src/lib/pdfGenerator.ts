@@ -816,6 +816,55 @@ export function generateAttendanceBarGraphPDF(options: {
   doc.save(`${safeFileName}.pdf`)
 }
 
+const emojiDataUrlCache: Record<string, string> = {}
+
+function getEmojiDataUrl(emoji: string, size = 64): string {
+  if (typeof document === 'undefined') return ''
+  if (emojiDataUrlCache[emoji]) return emojiDataUrlCache[emoji]
+
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return ''
+
+    ctx.clearRect(0, 0, size, size)
+    ctx.font = `${Math.round(size * 0.72)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(emoji, size / 2, size / 2 + Math.round(size * 0.04))
+
+    const url = canvas.toDataURL('image/png')
+    emojiDataUrlCache[emoji] = url
+    return url
+  } catch {
+    return ''
+  }
+}
+
+function drawEmoji(
+  doc: jsPDF,
+  emoji: string,
+  x: number,
+  y: number,
+  size = 3.6,
+  fallbackColor: [number, number, number] = [21, 87, 192]
+) {
+  const dataUrl = getEmojiDataUrl(emoji)
+  if (dataUrl && dataUrl.startsWith('data:image')) {
+    try {
+      doc.addImage(dataUrl, 'PNG', x, y, size, size)
+      return
+    } catch {
+      // Fallback below
+    }
+  }
+
+  doc.setFillColor(fallbackColor[0], fallbackColor[1], fallbackColor[2])
+  doc.circle(x + size / 2, y + size / 2, size / 3, 'F')
+}
+
 export function downloadStudentCardPDF(student: {
   name: string
   registerNumber: string
@@ -1016,82 +1065,67 @@ export function downloadStudentCardPDF(student: {
     }
   }
 
-  // Row 1: Date of Birth & Blood Group
+  // Row 1: Date of Birth & Blood Group (with emojis)
   let curY = gridY + 4.8
-  doc.setFillColor(21, 87, 192)
-  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  const emojiSize = 3.6
+  drawEmoji(doc, '📅', gridX + 2.5, curY - 2.7, emojiSize, [21, 87, 192])
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(4.8)
   doc.setTextColor(100, 115, 135)
-  doc.text('DATE OF BIRTH:', gridX + 5.5, curY - 0.2)
+  doc.text('DATE OF BIRTH:', gridX + 7.0, curY - 0.2)
   doc.setFontSize(5.4)
   doc.setTextColor(7, 26, 61)
-  doc.text(student.dob || '01/01/2004', gridX + 25.5, curY - 0.2)
+  doc.text(student.dob || '01/01/2004', gridX + 27.0, curY - 0.2)
 
-  doc.setFillColor(21, 87, 192)
-  doc.circle(gridX + 46.5, curY - 0.9, 0.7, 'F')
+  drawEmoji(doc, '🩸', gridX + 46.5, curY - 2.7, emojiSize, [220, 38, 38])
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(4.8)
   doc.setTextColor(100, 115, 135)
-  doc.text('BLOOD GROUP:', gridX + 48.8, curY - 0.2)
-  doc.setFontSize(5.8)
-  doc.setTextColor(220, 38, 38)
-  doc.text(student.bloodGroup || 'O+ve', gridX + 68.5, curY - 0.2)
+  doc.text('BLOOD GROUP:', gridX + 51.0, curY - 0.2)
+  doc.setFontSize(6.2)
+  doc.setTextColor(220, 38, 38) // Medical Red Highlight
+  doc.text(student.bloodGroup || 'O+ve', gridX + 70.0, curY - 0.2)
 
-  // Row 2: Year/Sem & Batch
+  // Row 2: Batch (with emoji)
   curY += rowH
-  doc.setFillColor(21, 87, 192)
-  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  drawEmoji(doc, '🎓', gridX + 2.5, curY - 2.7, emojiSize, [21, 87, 192])
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(4.8)
   doc.setTextColor(100, 115, 135)
-  doc.text('YEAR / SEM:', gridX + 5.5, curY - 0.2)
-  doc.setFontSize(5.4)
+  doc.text('BATCH:', gridX + 7.0, curY - 0.2)
+  doc.setFontSize(5.5)
   doc.setTextColor(7, 26, 61)
-  doc.text(`Year ${yr} · Sem ${sem} (${student.section || 'A'})`, gridX + 22.0, curY - 0.2)
+  doc.text(student.batch || '2025 - 2029', gridX + 26.0, curY - 0.2)
 
-  doc.setFillColor(21, 87, 192)
-  doc.circle(gridX + 46.5, curY - 0.9, 0.7, 'F')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(4.8)
-  doc.setTextColor(100, 115, 135)
-  doc.text('BATCH:', gridX + 48.8, curY - 0.2)
-  doc.setFontSize(5.4)
-  doc.setTextColor(7, 26, 61)
-  doc.text(student.batch || '2025 - 2029', gridX + 58.5, curY - 0.2)
-
-  // Row 3: Residency Status
+  // Row 3: Residency Status (with emoji)
   curY += rowH
-  doc.setFillColor(21, 87, 192)
-  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  drawEmoji(doc, '🏠', gridX + 2.5, curY - 2.7, emojiSize, [21, 87, 192])
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(4.8)
   doc.setTextColor(100, 115, 135)
-  doc.text('RESIDENCY STATUS:', gridX + 5.5, curY - 0.2)
+  doc.text('RESIDENCY STATUS:', gridX + 7.0, curY - 0.2)
   doc.setFontSize(5.4)
   doc.setTextColor(7, 26, 61)
   doc.text(student.residencyStatus || 'Day Scholar', gridX + 34.5, curY - 0.2)
 
-  // Row 4: Contact Number
+  // Row 4: Contact Number (with emoji)
   curY += rowH
-  doc.setFillColor(21, 87, 192)
-  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  drawEmoji(doc, '📞', gridX + 2.5, curY - 2.7, emojiSize, [16, 140, 75])
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(4.8)
   doc.setTextColor(100, 115, 135)
-  doc.text('CONTACT NUMBER:', gridX + 5.5, curY - 0.2)
+  doc.text('CONTACT NUMBER:', gridX + 7.0, curY - 0.2)
   doc.setFontSize(5.4)
   doc.setTextColor(7, 26, 61)
   doc.text(student.phone || 'Not Provided', gridX + 34.5, curY - 0.2)
 
-  // Row 5: Official Email
+  // Row 5: Official Email (with emoji)
   curY += rowH
-  doc.setFillColor(21, 87, 192)
-  doc.circle(gridX + 3.2, curY - 0.9, 0.7, 'F')
+  drawEmoji(doc, '✉️', gridX + 2.5, curY - 2.7, emojiSize, [20, 85, 217])
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(4.8)
   doc.setTextColor(100, 115, 135)
-  doc.text('OFFICIAL EMAIL:', gridX + 5.5, curY - 0.2)
+  doc.text('OFFICIAL EMAIL:', gridX + 7.0, curY - 0.2)
   doc.setFontSize(5.4)
   doc.setTextColor(7, 26, 61)
   const emailText = doc.splitTextToSize(student.email || 'Not Provided', gridW - 38)[0] || student.email
