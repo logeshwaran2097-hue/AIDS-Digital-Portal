@@ -148,15 +148,20 @@ export default async function FacultyDashboardPage() {
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+    faculty?.facultyType === 'both'
+
+  const roleBadgeLabel = isAdvisor
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
 
   return (
     <PortalLayout
       role="faculty"
       userName={user.name || session.name || 'Faculty'}
       userEmail={user.email || session.email}
-      roleBadgeLabel={isAdvisor ? 'Class Advisor' : 'Faculty Member'}
+      roleBadgeLabel={roleBadgeLabel}
       isAdvisor={isAdvisor}
     >
       <div className="py-2 animate-fade-in">

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
@@ -47,8 +48,11 @@ export default async function FacultyStudentsPage() {
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+    faculty?.facultyType === 'both'
+
+  if (!isAdvisor) {
+    redirect('/faculty-dashboard')
+  }
 
   // Collect exclusively the faculty's assigned classes / cohorts:
   // Key format: `${year}_${section || 'ALL'}`

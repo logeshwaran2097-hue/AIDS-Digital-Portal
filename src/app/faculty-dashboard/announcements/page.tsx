@@ -43,8 +43,20 @@ export default async function FacultyAnnouncementsPage() {
     createdAt: a.createdAt,
   }))
 
+  const roleBadgeLabel = isAdvisor
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
+
   return (
-    <PortalLayout role="faculty" userName={facultyName}>
+    <PortalLayout
+      role="faculty"
+      userName={facultyName}
+      userEmail={user?.email || session.email}
+      roleBadgeLabel={roleBadgeLabel}
+      isAdvisor={isAdvisor}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyAnnouncementsView
           initialAnnouncements={mappedAnnouncements}

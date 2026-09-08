@@ -296,10 +296,34 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
     return null
   })
 
-  const isFacultyAdvisor = isAdvisor ?? (roleBadgeLabel ? roleBadgeLabel.toLowerCase().includes('advisor') : (cachedAdvisor ?? false))
+  const isFacultyAdvisor =
+    typeof isAdvisor === 'boolean'
+      ? isAdvisor
+      : roleBadgeLabel
+      ? roleBadgeLabel.toLowerCase().includes('advisor')
+      : (cachedAdvisor ?? false)
+
+  const roleBadge = roleBadgeMap[role] || roleBadgeMap.student
+  const isLabHandler = roleBadgeLabel === 'Lab Handler' || roleBadgeLabel === 'Lab In-charge'
+
+  const effectiveRoleBadgeColor = isLabHandler
+    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+    : isFacultyAdvisor
+    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+    : roleBadge.color
+
+  const effectiveRoleBadgeLabel =
+    roleBadgeLabel ||
+    (role === 'faculty' ? (isFacultyAdvisor ? 'Class Advisor' : isLabHandler ? 'Lab Handler' : 'Faculty Member') : roleBadge.label)
 
   const rawNavItems = navItems || navItemsMap[role] || []
-  const baseNavItems = rawNavItems
+  const baseNavItems = rawNavItems.filter((item) => {
+    // If faculty is not a class advisor, hide the Class Students link
+    if (role === 'faculty' && !isFacultyAdvisor && item.href.includes('/faculty-dashboard/students')) {
+      return false
+    }
+    return true
+  })
   
   // Filter nav items based on admin menu preferences
   const resolvedNavItems = baseNavItems.filter((item) => {
@@ -340,8 +364,6 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
     }
   }, [pathname, activePath, resolvedNavItems])
   
-  const roleBadge = roleBadgeMap[role] || roleBadgeMap.student
-
   const unreadCount = notifications.filter((n) => n.unread).length
 
   // Role-specific URLs
@@ -487,10 +509,10 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
             <span
               className={cn(
                 'inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1.5',
-                roleBadge.color
+                effectiveRoleBadgeColor
               )}
             >
-              {roleBadgeLabel || (role === 'faculty' ? (isFacultyAdvisor ? 'Class Advisor' : 'Faculty Member') : roleBadge.label)}
+              {effectiveRoleBadgeLabel}
             </span>
           </div>
         </Link>
@@ -798,8 +820,11 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
                 <span className="text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">
                   {userName}
                 </span>
-                <span className="text-[9px] font-extrabold text-emerald-600 mt-0.5">
-                  {(roleBadgeLabel || (role === 'faculty' ? 'Faculty' : role)).toUpperCase()}
+                <span className={cn(
+                  'text-[9px] font-extrabold mt-0.5',
+                  isLabHandler ? 'text-cyan-600' : isFacultyAdvisor ? 'text-emerald-600' : 'text-slate-600'
+                )}>
+                  {effectiveRoleBadgeLabel.toUpperCase()}
                 </span>
               </div>
             </Link>

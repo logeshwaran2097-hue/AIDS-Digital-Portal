@@ -25,8 +25,7 @@ export default async function FacultyProfilePage() {
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch)
+    faculty?.facultyType === 'both'
 
   let studentCount = 0
   if (isAdvisor) {
@@ -88,12 +87,19 @@ export default async function FacultyProfilePage() {
     studentCount,
   }
 
+  const roleBadgeLabel = isAdvisor
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
+
   return (
     <PortalLayout
       role="faculty"
       userName={user?.name || 'Faculty'}
       userEmail={user?.email || session.email}
-      roleBadgeLabel={isAdvisor ? 'Class Advisor' : (faculty?.facultyType === 'lab_faculty' ? 'Lab In-charge' : 'Faculty Member')}
+      roleBadgeLabel={roleBadgeLabel}
+      isAdvisor={isAdvisor}
     >
       <div className="py-2 animate-fade-in">
         <FacultyProfileView data={profileData} />

@@ -14,8 +14,13 @@ export default async function FacultyQuestionPapersPage() {
   const facultyName = user?.name || session.name || 'Faculty Member'
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    Boolean(faculty?.advisorBatch) ||
     faculty?.facultyType === 'both'
+
+  const roleBadgeLabel = isAdvisor
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
 
   const dbSubjects = await prisma.subject.findMany({
     orderBy: { code: 'asc' },
@@ -48,7 +53,13 @@ export default async function FacultyQuestionPapersPage() {
   })
 
   return (
-    <PortalLayout role="faculty" userName={facultyName}>
+    <PortalLayout
+      role="faculty"
+      userName={facultyName}
+      userEmail={user?.email || session.email}
+      roleBadgeLabel={roleBadgeLabel}
+      isAdvisor={isAdvisor}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyQuestionPapersView
           initialPapers={mappedPapers}

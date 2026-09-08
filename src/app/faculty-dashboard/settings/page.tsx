@@ -14,11 +14,16 @@ export default async function FacultySettingsPage() {
 
   const isAdvisor =
     faculty?.facultyType === 'advisor' ||
-    Boolean(faculty?.advisorBatch) ||
     faculty?.facultyType === 'both'
 
+  const roleBadgeLabel = isAdvisor
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
+
   let advisorStudentCount = 0
-  if (faculty?.advisorYear && faculty?.advisorSec) {
+  if (isAdvisor && faculty?.advisorYear && faculty?.advisorSec) {
     advisorStudentCount = await prisma.student.count({
       where: {
         year: faculty.advisorYear,
@@ -32,7 +37,8 @@ export default async function FacultySettingsPage() {
       role="faculty"
       userName={user?.name || session.name || 'Faculty'}
       userEmail={user?.email || session.email}
-      roleBadgeLabel={isAdvisor ? 'Class Advisor' : 'Faculty Member'}
+      roleBadgeLabel={roleBadgeLabel}
+      isAdvisor={isAdvisor}
     >
       <div className="py-2 animate-fade-in">
         <FacultySettingsView

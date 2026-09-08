@@ -16,9 +16,14 @@ export default async function FacultyResourcesPage() {
     where: { userId: session.userId },
   })
 
-  const isAdvisor = faculty?.facultyType === 'advisor'
-  const advisorBatch = faculty?.advisorBatch || (isAdvisor ? 'Year II - Sem 3 - Sec A' : null)
-  const advisorSem = faculty?.advisorSem || (isAdvisor ? 3 : null)
+  const isAdvisor = faculty?.facultyType === 'advisor' || faculty?.facultyType === 'both'
+  const roleBadgeLabel = isAdvisor
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
+  const advisorBatch = isAdvisor ? (faculty?.advisorBatch || 'Year II - Sem 3 - Sec A') : null
+  const advisorSem = isAdvisor ? (faculty?.advisorSem || 3) : null
 
   const [resourcesFromDb, subjectsFromDb] = await Promise.all([
     prisma.resource.findMany({
@@ -58,7 +63,13 @@ export default async function FacultyResourcesPage() {
   })
 
   return (
-    <PortalLayout role="faculty" userName={facultyName}>
+    <PortalLayout
+      role="faculty"
+      userName={facultyName}
+      userEmail={session.email}
+      roleBadgeLabel={roleBadgeLabel}
+      isAdvisor={isAdvisor}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyResourcesView
           initialResources={mappedResources}

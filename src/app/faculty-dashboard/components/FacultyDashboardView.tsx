@@ -82,8 +82,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
 
   const isClassAdvisor =
     data.faculty?.facultyType === 'advisor' ||
-    data.faculty?.facultyType === 'both' ||
-    (!data.faculty?.facultyType && Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)))
+    data.faculty?.facultyType === 'both'
 
   const quickNav = useMemo(() => [
     { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
@@ -170,8 +169,13 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider shadow-xs">
-                  {isClassAdvisor ? 'Class Advisor & Faculty' : 'Faculty Member'}
+                <span className={cn(
+                  "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs",
+                  data.faculty?.facultyType === 'lab_faculty'
+                    ? "bg-[#22C7E8] text-[#051330]"
+                    : "bg-[#F4C430] text-[#071A3D]"
+                )}>
+                  {isClassAdvisor ? 'Class Advisor & Faculty' : data.faculty?.facultyType === 'lab_faculty' ? 'Lab Handler' : 'Faculty Member'}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
@@ -205,7 +209,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
             <p className="text-[10px] text-gray-300 uppercase font-bold">Enrolled Students</p>
             <p className="text-xl font-black text-emerald-300 mt-0.5">{data.totalStudents} Student{data.totalStudents === 1 ? '' : 's'}</p>
-            <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || 'Active Students'}</p>
+            <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || (data.faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Sessions' : 'Active Students')}</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">

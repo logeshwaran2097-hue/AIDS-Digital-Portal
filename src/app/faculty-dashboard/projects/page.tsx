@@ -29,11 +29,26 @@ export default async function FacultyProjectsPage() {
     createdAt: p.createdAt || new Date(),
   }))
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
+  const [user, faculty] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+    prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null),
+  ])
   const facultyName = user?.name || session.name || 'Faculty Member'
+  const isAdvisor = faculty?.facultyType === 'advisor' || faculty?.facultyType === 'both'
+  const roleBadgeLabel = isAdvisor
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
 
   return (
-    <PortalLayout role="faculty" userName={facultyName}>
+    <PortalLayout
+      role="faculty"
+      userName={facultyName}
+      userEmail={user?.email || session.email}
+      roleBadgeLabel={roleBadgeLabel}
+      isAdvisor={isAdvisor}
+    >
       <div className="py-2 animate-fade-in">
         <FacultyProjectsView initialProjects={projectsList} facultyName={facultyName} />
       </div>
