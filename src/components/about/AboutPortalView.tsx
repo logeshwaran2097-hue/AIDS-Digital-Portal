@@ -9,26 +9,17 @@ import {
   ShieldCheck,
   Code2,
   Cpu,
-  Layers,
   CheckCircle2,
-  ExternalLink,
   GraduationCap,
   Users,
-  CalendarDays,
-  FileQuestion,
-  FolderOpen,
   MessageSquare,
-  BookOpen,
   Database,
   Smartphone,
-  Server,
   Globe,
   Zap,
   ArrowRight,
   UserCheck,
   Heart,
-  ChevronRight,
-  Info
 } from 'lucide-react'
 
 interface AboutPortalViewProps {
@@ -36,7 +27,7 @@ interface AboutPortalViewProps {
 }
 
 export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'roles' | 'architect' | 'tech'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'roles' | 'tech' | 'architect'>('overview')
 
   const backUrl =
     role === 'admin'
@@ -126,9 +117,9 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
         <div className="relative z-10 flex flex-wrap gap-2 mt-8 pt-6 border-t border-white/10">
           {[
             { id: 'overview', label: 'Platform Overview', icon: <Globe className="w-4 h-4" /> },
-            { id: 'architect', label: 'Designed & Implemented By', icon: <Sparkles className="w-4 h-4 text-amber-300" /> },
             { id: 'roles', label: 'Role Workflows (Admin, HOD, Faculty, Student)', icon: <Users className="w-4 h-4" /> },
             { id: 'tech', label: 'System Architecture & Tech Stack', icon: <Cpu className="w-4 h-4" /> },
+            { id: 'architect', label: 'Designed & Implemented By', icon: <Sparkles className="w-4 h-4 text-amber-300" /> },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -146,137 +137,15 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
         </div>
       </div>
 
-      {/* TAB 1: DESIGNED & IMPLEMENTED BY (FEATURED PROMINENTLY) */}
-      {(activeTab === 'architect' || activeTab === 'overview') && (
+      {/* SECTION 1: PLATFORM OVERVIEW & CAPABILITIES */}
+      {activeTab === 'overview' && (
         <section className="space-y-6">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Designed &amp; Implemented By
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                The lead developer, system architect &amp; visionary behind the Digital Portal of AI &amp; DS
-              </p>
-            </div>
-          </div>
-
-          {/* Hero Developer Card */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#071739] via-[#0B2556] to-[#040E26] text-white p-6 sm:p-10 shadow-xl border-2 border-amber-400/40">
-            {/* Background luxury gradient flares */}
-            <div className="absolute -right-12 -top-12 w-64 h-64 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -left-12 -bottom-12 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
-              {/* Profile Details */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                {/* 24K Luxury Monogram Avatar */}
-                <div className="relative shrink-0">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-[#E7B93E] via-[#FFE58F] to-[#B8860B] p-[2.5px] shadow-[0_0_28px_rgba(244,196,48,0.5)]">
-                    <div className="w-full h-full rounded-[14px] bg-gradient-to-b from-[#071A3D] to-[#0A2540] flex items-center justify-center font-black text-2xl sm:text-3xl text-[#FFE58F] tracking-widest">
-                      LG
-                    </div>
-                  </div>
-                  {/* Live Pulse Beacon */}
-                  <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-4 w-4 bg-amber-400 ring-2 ring-[#071A3D]" />
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[11px] font-black uppercase tracking-wider">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Lead Developer &amp; System Architect</span>
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight bg-gradient-to-r from-amber-100 via-yellow-200 to-amber-300 bg-clip-text text-transparent">
-                    Logeshwaran G
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-300">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-500/20 border border-blue-400/30 text-blue-200 font-bold">
-                      Second Year · AI &amp; DS
-                    </span>
-                    <span>•</span>
-                    <span>Batch 2023 - 2027</span>
-                    <span>•</span>
-                    <span className="text-amber-200 font-bold">V.S.B. Engineering College (Autonomous)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Badge */}
-              <div className="shrink-0 flex flex-col gap-2 w-full sm:w-auto">
-                <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm">
-                  <p className="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Project Role</p>
-                  <p className="text-sm font-extrabold text-white mt-0.5">End-to-End Creator &amp; Maintainer</p>
-                  <p className="text-xs text-blue-200 mt-1">Full-Stack · DevOps · UI/UX · API Gateways</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Architect Statement */}
-            <div className="relative z-10 mt-8 pt-6 border-t border-white/10">
-              <blockquote className="text-sm sm:text-base text-blue-100/90 leading-relaxed italic">
-                "Conceived, designed, and engineered from the ground up to revolutionize departmental academic governance.
-                This portal combines institutional-grade security, instant automated parent WhatsApp notifications via Fast2SMS Cloud API,
-                modular 8-semester laboratory tracking, paperless question archives, and cross-platform PWA offline capabilities
-                tailored specifically for the Department of Artificial Intelligence &amp; Data Science."
-              </blockquote>
-            </div>
-
-            {/* Core Architectural Contributions Grid */}
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
-              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2 text-amber-300 text-xs font-black uppercase tracking-wide mb-1">
-                  <Code2 className="w-4 h-4" /> Full-Stack Engineering
-                </div>
-                <p className="text-xs text-slate-300 leading-normal">
-                  Engineered the complete Next.js 14 App Router, dynamic server rendering, custom REST API endpoints, and client-side reactive state.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2 text-cyan-300 text-xs font-black uppercase tracking-wide mb-1">
-                  <MessageSquare className="w-4 h-4" /> Fast2SMS WhatsApp API
-                </div>
-                <p className="text-xs text-slate-300 leading-normal">
-                  Integrated Fast2SMS WhatsApp Cloud API for automated absence notices, multi-channel templates, and live SMS/WhatsApp gateway configurations.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2 text-emerald-300 text-xs font-black uppercase tracking-wide mb-1">
-                  <Database className="w-4 h-4" /> Curricula &amp; All 8 Labs
-                </div>
-                <p className="text-xs text-slate-300 leading-normal">
-                  Designed the comprehensive 8-semester laboratory architecture with zero mock data and dedicated Year &amp; Semester-wise filtering.
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="flex items-center gap-2 text-purple-300 text-xs font-black uppercase tracking-wide mb-1">
-                  <Smartphone className="w-4 h-4" /> Offline-Ready PWA
-                </div>
-                <p className="text-xs text-slate-300 leading-normal">
-                  Built 1-click installable Progressive Web App for Windows, Android, Mac, and iOS with Service Worker cache and Web Push notifications.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* TAB 2: PLATFORM OVERVIEW & CAPABILITIES */}
-      {(activeTab === 'overview' || activeTab === 'tech') && (
-        <section className="space-y-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-600">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-[#1455D9]">
               <Globe className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-[#071A3D] tracking-tight">
                 About the Website &amp; Portal
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
@@ -286,31 +155,31 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1455D9] border border-blue-200/80 flex items-center justify-center mb-4 shadow-2xs">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">Institutional Governance</h3>
+              <h3 className="text-base font-black text-[#071A3D] mb-1.5">Institutional Governance</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Replaces fragmented physical registers with a centralized, immutable cloud registry for student records, faculty allocations, and departmental audits.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/80 flex items-center justify-center mb-4 shadow-2xs">
                 <Zap className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">Automated Communications</h3>
+              <h3 className="text-base font-black text-[#071A3D] mb-1.5">Automated Communications</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Connects faculty directly to parents through automated Fast2SMS WhatsApp dispatch on student absence, internal exam announcements, and department notices.
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 border border-purple-200/80 flex items-center justify-center mb-4 shadow-2xs">
                 <GraduationCap className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 mb-1">Curricular Excellence</h3>
+              <h3 className="text-base font-black text-[#071A3D] mb-1.5">Curricular Excellence</h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Features full 8-semester syllabus tracking, laboratory course allocations, semester question paper archives, and student capstone project showcases.
               </p>
@@ -319,7 +188,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
         </section>
       )}
 
-      {/* TAB 3: ROLE WORKFLOWS */}
+      {/* SECTION 2: ROLE WORKFLOWS */}
       {(activeTab === 'roles' || activeTab === 'overview') && (
         <section className="space-y-6">
           <div className="flex items-center gap-2.5">
@@ -327,7 +196,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-[#071A3D] tracking-tight">
                 Role-Based Portals &amp; Access Controls
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
@@ -338,15 +207,15 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Admin Role Card */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-red-300 transition-all">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-red-300 transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center font-bold shadow-2xs">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-900">Admin Portal</h3>
-                    <p className="text-xs text-slate-500">Tier-0 Root Governance</p>
+                    <h3 className="text-base font-black text-[#071A3D]">Admin Portal</h3>
+                    <p className="text-xs text-slate-500 font-medium">Tier-0 Root Governance</p>
                   </div>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-extrabold">
@@ -374,15 +243,15 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
             </div>
 
             {/* HOD Role Card */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-amber-300 transition-all">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-amber-300 transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center font-bold shadow-2xs">
                     <Award className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-900">HOD Portal</h3>
-                    <p className="text-xs text-slate-500">Department Leadership &amp; Direction</p>
+                    <h3 className="text-base font-black text-[#071A3D]">HOD Portal</h3>
+                    <p className="text-xs text-slate-500 font-medium">Department Leadership &amp; Direction</p>
                   </div>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-extrabold">
@@ -410,15 +279,15 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
             </div>
 
             {/* Faculty Role Card */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-emerald-300 transition-all">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-emerald-300 transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold shadow-2xs">
                     <UserCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-900">Faculty Portal</h3>
-                    <p className="text-xs text-slate-500">Instruction &amp; Class Advisory</p>
+                    <h3 className="text-base font-black text-[#071A3D]">Faculty Portal</h3>
+                    <p className="text-xs text-slate-500 font-medium">Instruction &amp; Class Advisory</p>
                   </div>
                 </div>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-extrabold">
@@ -446,36 +315,36 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
             </div>
 
             {/* Student Role Card */}
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:border-blue-300 transition-all">
+            <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:border-blue-300 transition-all">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#1455D9] border border-blue-200 flex items-center justify-center font-bold shadow-2xs">
                     <GraduationCap className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-black text-slate-900">Student Portal</h3>
-                    <p className="text-xs text-slate-500">Learner Workspace</p>
+                    <h3 className="text-base font-black text-[#071A3D]">Student Portal</h3>
+                    <p className="text-xs text-slate-500 font-medium">Learner Workspace</p>
                   </div>
                 </div>
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-extrabold">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[11px] font-extrabold">
                   Undergraduates
                 </span>
               </div>
               <ul className="space-y-2 text-xs text-slate-600 mt-4">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
                   <span>Live attendance percentage tracking with 75% eligibility warning indicators.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
                   <span>Access to semester syllabi, lecture notes, lab manuals, and timetables.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
                   <span>Question paper bank for internal tests and Anna University end-sem exams.</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
                   <span>Capstone project showcase, event registrations, and departmental broadcast alerts.</span>
                 </li>
               </ul>
@@ -484,7 +353,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
         </section>
       )}
 
-      {/* TAB 4: SYSTEM ARCHITECTURE & TECH STACK */}
+      {/* SECTION 3: SYSTEM ARCHITECTURE & TECH STACK */}
       {(activeTab === 'tech' || activeTab === 'overview') && (
         <section className="space-y-6">
           <div className="flex items-center gap-2.5">
@@ -492,7 +361,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
               <Cpu className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-[#071A3D] tracking-tight">
                 System Architecture &amp; Technology Stack
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 font-medium">
@@ -502,55 +371,189 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
-              <span className="text-2xl mb-1 block">⚛️</span>
-              <h4 className="text-xs font-bold text-slate-900">Next.js 14</h4>
-              <p className="text-[10px] text-slate-500 mt-0.5">App Router &amp; SSR</p>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 text-center shadow-xs hover:border-blue-300 transition-all">
+              <span className="text-2xl mb-1.5 block">⚛️</span>
+              <h4 className="text-xs font-black text-[#071A3D]">Next.js 14</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">App Router &amp; SSR</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
-              <span className="text-2xl mb-1 block">📘</span>
-              <h4 className="text-xs font-bold text-slate-900">TypeScript</h4>
-              <p className="text-[10px] text-slate-500 mt-0.5">Strict Type Safety</p>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 text-center shadow-xs hover:border-blue-300 transition-all">
+              <span className="text-2xl mb-1.5 block">📘</span>
+              <h4 className="text-xs font-black text-[#071A3D]">TypeScript</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Strict Type Safety</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
-              <span className="text-2xl mb-1 block">🎨</span>
-              <h4 className="text-xs font-bold text-slate-900">TailwindCSS</h4>
-              <p className="text-[10px] text-slate-500 mt-0.5">Modern Glassmorphism</p>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 text-center shadow-xs hover:border-blue-300 transition-all">
+              <span className="text-2xl mb-1.5 block">🎨</span>
+              <h4 className="text-xs font-black text-[#071A3D]">TailwindCSS</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Modern Responsive UI</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
-              <span className="text-2xl mb-1 block">🐘</span>
-              <h4 className="text-xs font-bold text-slate-900">PostgreSQL</h4>
-              <p className="text-[10px] text-slate-500 mt-0.5">Prisma ORM Cloud</p>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 text-center shadow-xs hover:border-blue-300 transition-all">
+              <span className="text-2xl mb-1.5 block">🐘</span>
+              <h4 className="text-xs font-black text-[#071A3D]">PostgreSQL</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Prisma ORM Cloud</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
-              <span className="text-2xl mb-1 block">💬</span>
-              <h4 className="text-xs font-bold text-slate-900">Fast2SMS</h4>
-              <p className="text-[10px] text-slate-500 mt-0.5">WhatsApp Cloud API</p>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 text-center shadow-xs hover:border-blue-300 transition-all">
+              <span className="text-2xl mb-1.5 block">💬</span>
+              <h4 className="text-xs font-black text-[#071A3D]">Fast2SMS</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">WhatsApp Cloud API</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-white border border-slate-200 text-center shadow-xs">
-              <span className="text-2xl mb-1 block">📲</span>
-              <h4 className="text-xs font-bold text-slate-900">PWA Engine</h4>
-              <p className="text-[10px] text-slate-500 mt-0.5">Offline Desktop &amp; Mobile</p>
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 text-center shadow-xs hover:border-blue-300 transition-all">
+              <span className="text-2xl mb-1.5 block">📲</span>
+              <h4 className="text-xs font-black text-[#071A3D]">PWA Engine</h4>
+              <p className="text-[10px] text-slate-500 mt-0.5 font-medium">Offline Desktop &amp; App</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* SECTION 4: DESIGNED & IMPLEMENTED BY (PLACED AT BOTTOM OF WEBSITE, MATCHED WEBSITE UI/UX) */}
+      {(activeTab === 'architect' || activeTab === 'overview') && (
+        <section className="space-y-6 pt-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-2xs">
+              <Sparkles className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-[#071A3D] tracking-tight">
+                Designed &amp; Implemented By
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                The lead developer, system architect &amp; visionary behind the Digital Portal of AI &amp; DS
+              </p>
+            </div>
+          </div>
+
+          {/* Website Matched Premium Developer Card */}
+          <div className="relative overflow-hidden rounded-3xl bg-white border border-slate-200/90 shadow-lg shadow-slate-900/5 p-6 sm:p-10 transition-all">
+            {/* Soft Ambient Brand Gradients */}
+            <div className="absolute -right-16 -top-16 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -left-16 -bottom-16 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+              {/* Profile Details */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
+                {/* Official Monogram Avatar */}
+                <div className="relative shrink-0">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-[#061A3D] via-[#0A295C] to-[#1455D9] p-[3px] shadow-md">
+                    <div className="w-full h-full rounded-[13px] bg-gradient-to-b from-[#071A3D] to-[#0A2540] flex items-center justify-center font-black text-2xl sm:text-3xl text-amber-300 tracking-wider">
+                      LG
+                    </div>
+                  </div>
+                  {/* Live Active Beacon */}
+                  <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 ring-2 ring-white" />
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-black uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Lead Developer &amp; System Architect</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#071A3D] tracking-tight">
+                    Logeshwaran G
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-[#1455D9] font-black">
+                      Second Year · AI &amp; DS
+                    </span>
+                    <span>•</span>
+                    <span className="font-bold text-slate-700">Batch 2023 - 2027</span>
+                    <span>•</span>
+                    <span className="text-[#1455D9] font-bold">V.S.B. Engineering College (Autonomous)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              <div className="shrink-0 flex flex-col gap-2 w-full lg:w-auto">
+                <div className="px-5 py-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80 shadow-2xs">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Project Role</p>
+                  <p className="text-sm font-black text-[#071A3D] mt-0.5">End-to-End Creator &amp; Maintainer</p>
+                  <p className="text-xs font-bold text-[#1455D9] mt-0.5">Full-Stack · DevOps · UI/UX · API Gateways</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Architect Statement */}
+            <div className="relative z-10 mt-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/60 via-indigo-50/30 to-slate-50 border-l-4 border-[#1455D9]">
+              <blockquote className="text-xs sm:text-sm text-slate-700 leading-relaxed italic font-medium">
+                &ldquo;Conceived, designed, and engineered from the ground up to revolutionize departmental academic governance.
+                This portal combines institutional-grade security, instant automated parent WhatsApp notifications via Fast2SMS Cloud API,
+                modular 8-semester laboratory tracking, paperless question archives, and cross-platform PWA offline capabilities
+                tailored specifically for the Department of Artificial Intelligence &amp; Data Science.&rdquo;
+              </blockquote>
+            </div>
+
+            {/* Core Architectural Contributions Grid */}
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
+              <div className="p-4 rounded-2xl bg-slate-50/80 hover:bg-white border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-blue-300 transition-all">
+                <div className="flex items-center gap-2 text-[#1455D9] text-xs font-black uppercase tracking-wide mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-100/70 flex items-center justify-center">
+                    <Code2 className="w-4 h-4" />
+                  </div>
+                  <span>Full-Stack Engineering</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Engineered the complete Next.js 14 App Router, dynamic server rendering, custom REST API endpoints, and client-side reactive state.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50/80 hover:bg-white border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-emerald-300 transition-all">
+                <div className="flex items-center gap-2 text-emerald-700 text-xs font-black uppercase tracking-wide mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100/70 flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <span>Fast2SMS WhatsApp API</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Integrated Fast2SMS WhatsApp Cloud API for automated absence notices, multi-channel templates, and live SMS/WhatsApp gateway configurations.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50/80 hover:bg-white border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-purple-300 transition-all">
+                <div className="flex items-center gap-2 text-purple-700 text-xs font-black uppercase tracking-wide mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-purple-100/70 flex items-center justify-center">
+                    <Database className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <span>Curricula &amp; All 8 Labs</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Designed the comprehensive 8-semester laboratory architecture with zero mock data and dedicated Year &amp; Semester-wise filtering.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50/80 hover:bg-white border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-amber-300 transition-all">
+                <div className="flex items-center gap-2 text-amber-800 text-xs font-black uppercase tracking-wide mb-1.5">
+                  <div className="w-7 h-7 rounded-lg bg-amber-100/70 flex items-center justify-center">
+                    <Smartphone className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <span>Offline-Ready PWA</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Built 1-click installable Progressive Web App for Windows, Android, Mac, and iOS with Service Worker cache and Web Push notifications.
+                </p>
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* Institutional Footer */}
-      <div className="p-6 rounded-2xl bg-white border border-slate-200 text-center space-y-2">
-        <div className="flex items-center justify-center gap-1 text-xs font-bold text-slate-700">
+      <div className="p-6 rounded-3xl bg-white border border-slate-200 text-center space-y-2 shadow-2xs">
+        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700">
           <span>Crafted with</span>
           <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 inline" />
           <span>by</span>
-          <span className="font-black text-blue-600">Logeshwaran G</span>
+          <span className="font-black text-[#1455D9]">Logeshwaran G</span>
           <span>for Department of Artificial Intelligence &amp; Data Science</span>
         </div>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-slate-500 font-medium">
           V.S.B. Engineering College (Autonomous), NH-67 Karur-Coimbatore Highway, Karur - 639 111, Tamil Nadu, India.
         </p>
       </div>
