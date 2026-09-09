@@ -160,6 +160,26 @@ export function GovernmentAttendanceSystem({
     }
     return initialMode
   })
+
+  const [effectiveLoginRole, setEffectiveLoginRole] = useState<string>(() => {
+    if (loginRole) return loginRole
+    if (typeof window !== 'undefined') {
+      const urlRole = new URLSearchParams(window.location.search).get('role')
+      if (urlRole) return urlRole
+      const saved = localStorage.getItem('portal_login_role')
+      if (saved) return saved
+      const match = document.cookie.match(/portal_login_role=([^;]+)/)
+      if (match) return match[1]
+    }
+    return initialMode === 'morning' ? 'advisor' : 'faculty'
+  })
+
+  useEffect(() => {
+    if (loginRole) {
+      setEffectiveLoginRole(loginRole)
+    }
+  }, [loginRole])
+
   const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS)
   const [allCurriculumSubjects, setAllCurriculumSubjects] = useState<Subject[]>([])
   const [hasAssignedSubjects, setHasAssignedSubjects] = useState(false)
@@ -685,67 +705,42 @@ export function GovernmentAttendanceSystem({
         </div>
       </div>
 
-      {/* ── Mode Switcher (Subject Attendance vs Morning Roll Call) ──────────── */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-1.5 flex gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            setMode('subject')
-            setDataLoaded(false)
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('portal_login_role', 'faculty')
-              document.cookie = 'portal_login_role=faculty; path=/; max-age=604800; SameSite=Lax'
-            }
-          }}
-          className={cn(
-            'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
-            mode === 'subject'
-              ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20 ring-2 ring-[#1455D9]/30'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-          )}
-        >
-          <BookOpen className="w-4 h-4 shrink-0" />
-          <span>Faculty Subject Attendance</span>
-          <span className={cn(
-            'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
-            mode === 'subject' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#1455D9]'
-          )}>
-            Faculty Mode
-          </span>
-        </button>
-
-        {isAdvisor && (
-          <button
-            type="button"
-            onClick={() => {
-              setMode('morning')
-              setDataLoaded(false)
-              if (advisorClass) {
-                setSelectedClass(advisorClass)
-              }
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('portal_login_role', 'advisor')
-                document.cookie = 'portal_login_role=advisor; path=/; max-age=604800; SameSite=Lax'
-              }
-            }}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
-              mode === 'morning'
-                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 ring-2 ring-amber-500/30'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            )}
-          >
-            <Sun className="w-4 h-4 shrink-0" />
-            <span>Class Advisor Roll Call</span>
-            <span className={cn(
-              'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
-              mode === 'morning' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800'
-            )}>
-              Advisor Mode
+      {/* ── Mode Header / Switcher ──────────── */}
+      {effectiveLoginRole === 'advisor' || mode === 'morning' ? (
+        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white rounded-2xl shadow-md p-3 px-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold shrink-0">
+              <Sun className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-black tracking-wide">Class Advisor Roll Call</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white/25 text-white">
+                  Advisor Mode
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-100 font-medium hidden sm:block">
+                Daily section roll call &amp; official institutional attendance advisory
+              </p>
+            </div>
+          </div>
+          {advisorClass && (
+            <span className="text-xs font-bold bg-black/20 px-3 py-1 rounded-xl text-amber-100 border border-white/10 shrink-0">
+              {advisorClass.label}
             </span>
-          </button>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-xs p-1.5 flex gap-2">
+          <div className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20">
+            <BookOpen className="w-4 h-4 shrink-0" />
+            <span>Faculty Subject Attendance</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline bg-white/20 text-white">
+              Faculty Mode
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── Real-Time KPI Stats Summary ────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
