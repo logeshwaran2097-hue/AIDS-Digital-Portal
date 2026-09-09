@@ -78,17 +78,6 @@ export async function GET(request: Request) {
     <image href="${VSB_LOGO_BASE64}" x="8" y="8" width="80" height="80" preserveAspectRatio="xMidYMid meet"/>
   </g>
 
-  <!-- Right: NAAC 'A' Grade & NBA Quality Seal in Royal Navy & Gold -->
-  <g transform="translate(706, 48)">
-    <circle cx="48" cy="48" r="46" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
-    <circle cx="48" cy="48" r="43.5" fill="#FFFFFF" stroke="#1455D9" stroke-width="1.8"/>
-    <circle cx="48" cy="48" r="40" fill="#F8FAFC" stroke="#F4C430" stroke-width="1.2" stroke-dasharray="3,1.5"/>
-    <circle cx="48" cy="48" r="32" fill="#071A3D"/>
-    <text x="48" y="32" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.5" font-weight="900" fill="#F4C430" text-anchor="middle" letter-spacing="1.5">NAAC</text>
-    <text x="48" y="50" font-family="'Segoe UI', Roboto, sans-serif" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle">A</text>
-    <text x="48" y="60" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="bold" fill="#E2E8F0" text-anchor="middle" letter-spacing="1">GRADE</text>
-    <text x="48" y="71" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.5" font-weight="bold" fill="#F4C430" text-anchor="middle" letter-spacing="0.5">NBA · ISO 9001</text>
-  </g>
 
   <!-- Center Institution Master Typography -->
   <text x="425" y="68" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1">V.S.B. ENGINEERING COLLEGE</text>
