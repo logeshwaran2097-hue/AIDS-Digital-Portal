@@ -565,3 +565,45 @@ model ProfileChangeRequest {
   @@index([status])
   @@index([createdAt])
 }
+
+model ODProof {
+  id                 String    @id @default(cuid())
+  studentId          String?
+  registerNumber     String
+  studentName        String
+  year               Int
+  section            String
+  semester           Int
+  odRequestId        String?
+  eventName          String
+  category           String    @default("Hackathon")
+  eventDate          String
+  venueCollege       String?
+  
+  // Phase 1: Geo-tag Venue Photo
+  geoPhotoUrl        String?
+  latitude           Float?
+  longitude          Float?
+  geoAddress         String?
+  geoTimestamp       DateTime?
+  
+  // Phase 2: Event Certificate
+  certificateUrl     String?
+  certificateName    String?
+  achievement        String?   @default("Participation")
+  
+  // Verification by Class Advisor
+  status             String    @default("pending_proofs") // pending_proofs | under_review | verified | resubmit_requested
+  advisorRemarks     String?
+  verifiedByName     String?
+  verifiedAt         DateTime?
+  attendanceCredited Boolean   @default(false)
+  
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([registerNumber])
+  @@index([year, section])
+  @@index([status])
+  @@index([createdAt])
+}

@@ -318,8 +318,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
 
   const rawNavItems = navItems || navItemsMap[role] || []
   const baseNavItems = rawNavItems.filter((item) => {
-    // If faculty is not a class advisor, hide the Class Students link
-    if (role === 'faculty' && !isFacultyAdvisor && item.href.includes('/faculty-dashboard/students')) {
+    // If faculty is not a class advisor, hide the Class Students and OD & Event Proofs links
+    if (role === 'faculty' && !isFacultyAdvisor && (item.href.includes('/faculty-dashboard/students') || item.href.includes('/faculty-dashboard/od-proofs'))) {
       return false
     }
     // If faculty is a class advisor, they have no allocated teaching subjects:
