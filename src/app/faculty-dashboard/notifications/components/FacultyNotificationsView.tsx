@@ -16,9 +16,14 @@ import {
   Filter,
   Check,
   Send,
+  Eye,
+  FileCheck,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NotificationSettingsUI } from '@/components/notifications/NotificationSettingsUI'
+import { AdvisorODReviewModal } from '@/components/od/AdvisorODReviewModal'
 
 interface NotificationItem {
   id: string
@@ -36,6 +41,7 @@ export function FacultyNotificationsView({
 }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [selectedODNotification, setSelectedODNotification] = useState<NotificationItem | null>(null)
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -166,7 +172,22 @@ export function FacultyNotificationsView({
                       )}
                     </div>
 
-                    <div className="space-y-1 flex-1 min-w-0">
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      {/* OD Indicator Badge if application */}
+                      {(n.title.toLowerCase().includes('od application') ||
+                        n.title.toLowerCase().includes('class advisor review') ||
+                        n.title.toLowerCase().includes('hod approval') ||
+                        n.message.toLowerCase().includes('od application') ||
+                        n.message.toLowerCase().includes('requested personal')) && (
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3 text-amber-600" />
+                            Class Advisor Action Required
+                          </span>
+                          <span className="text-[10px] font-bold text-gray-400">· Student OD / Leave Request</span>
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-sm text-[#071A3D] leading-snug">{n.title}</h3>
                         {isUnread && (
@@ -174,7 +195,25 @@ export function FacultyNotificationsView({
                         )}
                       </div>
                       <p className="text-xs text-gray-600 leading-relaxed">{n.message}</p>
-                      <span className="text-[10px] text-gray-400 font-semibold">{n.time}</span>
+                      
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <span className="text-[10px] text-gray-400 font-semibold">{n.time}</span>
+
+                        {(n.title.toLowerCase().includes('od application') ||
+                          n.title.toLowerCase().includes('class advisor review') ||
+                          n.title.toLowerCase().includes('hod approval') ||
+                          n.message.toLowerCase().includes('od application') ||
+                          n.message.toLowerCase().includes('requested personal')) && (
+                          <button
+                            onClick={() => setSelectedODNotification(n)}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] hover:from-[#0F42A8] hover:to-[#071A3D] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer group"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#F4C430]" />
+                            <span>Review OD Details</span>
+                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform text-white/80" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -200,6 +239,29 @@ export function FacultyNotificationsView({
           })
         )}
       </div>
+
+      {/* Advisor OD Review Dossier Modal */}
+      <AdvisorODReviewModal
+        isOpen={selectedODNotification !== null}
+        onClose={() => setSelectedODNotification(null)}
+        notification={selectedODNotification}
+        onStatusUpdated={(notifId, status) => {
+          setNotifications((prev) =>
+            prev.map((item) =>
+              item.id === notifId
+                ? {
+                    ...item,
+                    isRead: true,
+                    title:
+                      status === 'endorsed'
+                        ? item.title.replace('[Class Advisor Review]', '✅ [Endorsed]')
+                        : item.title.replace('[Class Advisor Review]', '❌ [Declined]'),
+                  }
+                : item
+            )
+          )
+        }}
+      />
     </div>
   )
 }
