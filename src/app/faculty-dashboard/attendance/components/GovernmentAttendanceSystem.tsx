@@ -134,9 +134,32 @@ function checkPeriodEnded(periodStr: string, dateStr: string): boolean {
   return currentHours > hours || (currentHours === hours && currentMinutes >= minutes)
 }
 
-export function GovernmentAttendanceSystem() {
+export interface GovernmentAttendanceSystemProps {
+  initialMode?: 'morning' | 'subject'
+  loginRole?: string
+  isAdvisorServer?: boolean
+}
+
+export function GovernmentAttendanceSystem({
+  initialMode = 'subject',
+  loginRole,
+  isAdvisorServer = false,
+}: GovernmentAttendanceSystemProps = {}) {
   // Metadata
-  const [mode, setMode] = useState<AttendanceMode>('morning')
+  const [mode, setMode] = useState<AttendanceMode>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlMode = urlParams.get('mode')
+      const urlRole = urlParams.get('role')
+      if (urlMode === 'subject' || urlRole === 'faculty') return 'subject'
+      if (urlMode === 'morning' || urlRole === 'advisor') return 'morning'
+
+      const savedRole = localStorage.getItem('portal_login_role')
+      if (savedRole === 'faculty') return 'subject'
+      if (savedRole === 'advisor') return 'morning'
+    }
+    return initialMode
+  })
   const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS)
   const [allCurriculumSubjects, setAllCurriculumSubjects] = useState<Subject[]>([])
   const [hasAssignedSubjects, setHasAssignedSubjects] = useState(false)
@@ -144,7 +167,7 @@ export function GovernmentAttendanceSystem() {
   const [allPeriodOptions, setAllPeriodOptions] = useState<string[]>(DEFAULT_INSTITUTIONAL_PERIODS)
   const [hasAssignedPeriods, setHasAssignedPeriods] = useState(false)
   const [classOptions, setClassOptions] = useState<ClassOption[]>(INITIAL_CLASS_OPTIONS)
-  const [isAdvisor, setIsAdvisor] = useState(false)
+  const [isAdvisor, setIsAdvisor] = useState(isAdvisorServer)
   const [advisorClass, setAdvisorClass] = useState<ClassOption | null>(null)
 
   // Session fields
@@ -251,7 +274,11 @@ export function GovernmentAttendanceSystem() {
               label: `Year ${data.advisorClass.year} - Section ${data.advisorClass.section} (Sem ${data.advisorClass.semester})`,
             }
             setAdvisorClass(ac)
-            setSelectedClass(ac)
+            if (mode === 'morning') {
+              setSelectedClass(ac)
+            } else if (data.classOptions?.length > 0) {
+              setSelectedClass(data.classOptions[0])
+            }
           } else if (data.classOptions?.length > 0) {
             setSelectedClass(data.classOptions[0])
           }
@@ -576,10 +603,15 @@ export function GovernmentAttendanceSystem() {
                 <ShieldCheck className="w-3 h-3 text-cyan-300" />
                 AU Norm 75% Regs
               </span>
-              {isAdvisor && (
+              {isAdvisor && mode === 'morning' ? (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/25 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
                   <Award className="w-3 h-3" />
-                  Class Advisor
+                  Class Advisor · Roll Call Active
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-cyan-400/20 text-cyan-200 text-[10px] font-bold border border-cyan-400/30">
+                  <BookOpen className="w-3 h-3" />
+                  Faculty Member · Subject Attendance
                 </span>
               )}
             </div>
@@ -603,10 +635,10 @@ export function GovernmentAttendanceSystem() {
               <p className="text-xs text-blue-100/80 mt-1 flex items-center gap-2 flex-wrap">
                 <span>
                   {mode === 'morning'
-                    ? '☀ Morning Roll Call · Section Advisory'
+                    ? '☀ Advisor Attendance · Morning Roll Call (Section Advisory)'
                     : selectedSubject
-                      ? `📘 Subject: ${selectedSubject.code} — ${selectedSubject.name}`
-                      : '📘 Subject: Select a Subject'}
+                      ? `📘 Faculty Attendance · Subject: ${selectedSubject.code} — ${selectedSubject.name}`
+                      : '📘 Faculty Attendance · Subject Course Lecture / Practical Session'}
                 </span>
                 <span className="text-blue-300">•</span>
                 <span className="text-[#F4C430] font-semibold">B.Tech AI &amp; DS</span>
@@ -660,21 +692,25 @@ export function GovernmentAttendanceSystem() {
           onClick={() => {
             setMode('subject')
             setDataLoaded(false)
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('portal_login_role', 'faculty')
+              document.cookie = 'portal_login_role=faculty; path=/; max-age=604800; SameSite=Lax'
+            }
           }}
           className={cn(
             'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
             mode === 'subject'
-              ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20'
+              ? 'bg-[#1455D9] text-white shadow-md shadow-[#1455D9]/20 ring-2 ring-[#1455D9]/30'
               : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
           )}
         >
           <BookOpen className="w-4 h-4 shrink-0" />
-          <span>Subject Attendance</span>
+          <span>Faculty Subject Attendance</span>
           <span className={cn(
             'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
             mode === 'subject' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#1455D9]'
           )}>
-            Faculty
+            Faculty Mode
           </span>
         </button>
 
@@ -684,21 +720,28 @@ export function GovernmentAttendanceSystem() {
             onClick={() => {
               setMode('morning')
               setDataLoaded(false)
+              if (advisorClass) {
+                setSelectedClass(advisorClass)
+              }
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('portal_login_role', 'advisor')
+                document.cookie = 'portal_login_role=advisor; path=/; max-age=604800; SameSite=Lax'
+              }
             }}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer',
               mode === 'morning'
-                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20 ring-2 ring-amber-500/30'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             )}
           >
             <Sun className="w-4 h-4 shrink-0" />
-            <span>Morning Roll Call</span>
+            <span>Class Advisor Roll Call</span>
             <span className={cn(
               'text-[10px] px-2 py-0.5 rounded-full font-bold hidden sm:inline',
               mode === 'morning' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800'
             )}>
-              Advisor
+              Advisor Mode
             </span>
           </button>
         )}
@@ -1142,10 +1185,10 @@ export function GovernmentAttendanceSystem() {
             <ShieldCheck className="w-5 h-5 text-[#1455D9]" />
             <span className="text-xs font-black uppercase tracking-wider text-[#071A3D]">
               {mode === 'morning'
-                ? `Morning Roll Call — ${selectedClass?.label || 'Selected Class'}`
+                ? `Morning Roll Call (Advisor) — ${selectedClass?.label || 'Selected Class'}`
                 : selectedSubject
-                  ? `${selectedSubject.code} — ${selectedSubject.name} (${hour})`
-                  : `Subject Period (${hour})`}
+                  ? `Faculty Subject Attendance — ${selectedSubject.code}: ${selectedSubject.name} (${hour})`
+                  : `Faculty Subject Attendance (${hour})`}
             </span>
             {isLocked && (
               <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px] font-bold border border-amber-200 flex items-center gap-1">

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
@@ -9,8 +10,24 @@ export const dynamic = 'force-dynamic'
 export default async function FacultyDashboardPage() {
   const session = await requireRoleSession(['faculty'])
 
+  const cookieStore = cookies()
+  const rawLoginRole = cookieStore.get('portal_login_role')?.value || 'faculty'
+
   const faculty = (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
     (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
+
+  const isAdvisor =
+    faculty?.facultyType === 'advisor' ||
+    faculty?.facultyType === 'both' ||
+    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+
+  const effectiveRole = (rawLoginRole === 'advisor' && isAdvisor) ? 'advisor' : 'faculty'
+
+  const roleBadgeLabel = effectiveRole === 'advisor'
+    ? 'Class Advisor'
+    : faculty?.facultyType === 'lab_faculty'
+    ? 'Lab Handler'
+    : 'Faculty Member'
 
   const user = (await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)) || {
     id: session.userId,
@@ -146,21 +163,10 @@ export default async function FacultyDashboardPage() {
     todayTimetable: timetableSlots,
   }
 
-  const isAdvisor =
-    faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
-
-  const roleBadgeLabel = isAdvisor
-    ? 'Class Advisor'
-    : faculty?.facultyType === 'lab_faculty'
-    ? 'Lab Handler'
-    : 'Faculty Member'
-
   return (
     <PortalLayout
       role="faculty"
-      userName={user.name || session.name || 'Faculty'}
+      userName={user.name || session.name || (effectiveRole === 'advisor' ? 'Class Advisor' : 'Faculty Member')}
       userEmail={user.email || session.email}
       roleBadgeLabel={roleBadgeLabel}
       isAdvisor={isAdvisor}

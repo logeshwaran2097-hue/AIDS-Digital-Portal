@@ -254,10 +254,15 @@ export default function LoginPage() {
       }
 
       // Success Luxury Animation & Immediate Navigation
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('portal_login_role', selectedRole)
+        document.cookie = `portal_login_role=${selectedRole}; path=/; max-age=604800; SameSite=Lax`
+      }
+
       const dashboardMap: Record<string, string> = {
         student: '/dashboard',
         faculty: '/faculty-dashboard',
-        advisor: '/faculty-dashboard/students',
+        advisor: '/faculty-dashboard/attendance?mode=morning&role=advisor',
         hod: '/hod-dashboard',
       }
       const targetUrl = dashboardMap[selectedRole] || '/dashboard'
