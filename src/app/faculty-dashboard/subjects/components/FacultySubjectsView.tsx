@@ -52,17 +52,21 @@ interface CourseSubject {
     status: 'Completed' | 'In-Progress'
   }[]
   notes: {
+    id?: string
     unit: string
     title: string
     fileName: string
     fileSize: string
+    fileUrl?: string
     uploadedDate: string
   }[]
   labs: {
+    id?: string
     expNo: number
     title: string
     tools: string
     guideFile: string
+    fileUrl?: string
   }[]
   questions: {
     id?: string
@@ -84,6 +88,11 @@ export function FacultySubjectsView({
   const [activeTab, setActiveTab] = useState<'syllabus' | 'notes' | 'labs' | 'questions'>('syllabus')
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [uploadCategory, setUploadCategory] = useState<'notes' | 'lab_manual' | 'handout'>('notes')
+  const [uploadDescription, setUploadDescription] = useState('')
+  const [uploadLoading, setUploadLoading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [uploadTargetCode, setUploadTargetCode] = useState(
     courses[0]?.code ? `${courses[0].code} - ${courses[0].name}` : ''
   )
@@ -529,7 +538,10 @@ export function FacultySubjectsView({
     })
   }
 
-  const openUploadModal = () => {
+  const openUploadModal = (category: 'notes' | 'lab_manual' | 'handout' = 'notes') => {
+    setUploadCategory(category)
+    setUploadError(null)
+    setUploadSuccess(false)
     if (currentCourse) {
       setUploadTargetCode(`${currentCourse.code} - ${currentCourse.name}`)
       if (currentCourse.units && currentCourse.units.length > 0) {
@@ -543,7 +555,7 @@ export function FacultySubjectsView({
     if (!currentCourse) return
     const sections = currentCourse.units.map((u) => ({
       heading: `${u.unit.toUpperCase()}: ${u.title.toUpperCase()}`,
-      body: u.topics.map((t) => `${t} (Completed: ${u.status === 'Completed' ? 'Yes' : 'In-Progress'})`),
+      body: u.topics.map((t) => `${t} (Status: ${u.status === 'Completed' ? 'Completed' : 'In-Progress'})`),
     }))
 
     generateAndDownloadPDF({
@@ -557,79 +569,187 @@ export function FacultySubjectsView({
     })
   }
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
+  const handleDownloadNote = (n: CourseSubject['notes'][0]) => {
+    if (n.fileUrl) {
+      const a = document.createElement('a')
+      a.href = n.fileUrl
+      a.download = n.fileName || `${n.title}.pdf`
+      a.target = '_blank'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } else {
+      generateAndDownloadPDF({
+        title: `${currentCourse?.code || 'COURSE'} - ${n.title}`,
+        subtitle: `${n.unit} · Department of Artificial Intelligence & Data Science`,
+        subjectCode: currentCourse?.code || 'COURSE',
+        author: 'Faculty In-Charge',
+        category: 'Official Lecture Handout',
+        sections: [
+          {
+            heading: `${n.unit}: ${n.title}`,
+            body: [
+              `Official lecture material for ${currentCourse?.name || 'Department Subject'}.`,
+              `Document archived on: ${n.uploadedDate}`,
+              'Students are instructed to read through the prescribed references and complete relevant assessments.',
+            ],
+          },
+        ],
+        fileName: `${currentCourse?.code || 'DOC'}_${n.title.replace(/\s+/g, '_')}`,
+      })
+    }
+  }
+
+  const handleDownloadLabGuide = (l: CourseSubject['labs'][0]) => {
+    if (l.fileUrl) {
+      const a = document.createElement('a')
+      a.href = l.fileUrl
+      a.download = l.guideFile || `${currentCourse?.code}_Exp${l.expNo}.pdf`
+      a.target = '_blank'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } else {
+      generateAndDownloadPDF({
+        title: `${currentCourse?.code} - Experiment ${l.expNo}`,
+        subtitle: l.title,
+        subjectCode: currentCourse?.code || 'LAB',
+        author: 'Department Lab In-Charge',
+        category: 'Autonomous Laboratory Practical Manual',
+        sections: [
+          {
+            heading: `AIM & OBJECTIVE`,
+            body: [
+              `To write, test, and execute a practical program for: ${l.title}`,
+              `Regulation: ${currentCourse?.regulation || 'Regulation 2021 (Autonomous)'}`,
+            ],
+          },
+          {
+            heading: `HARDWARE & SOFTWARE SPECIFICATIONS`,
+            body: [
+              `Development Tools: ${l.tools}`,
+              'Operating Environment: Linux / Windows 64-bit Workstation',
+              'Compiler / Runtime: OpenJDK 17 or later',
+            ],
+          },
+          {
+            heading: `PROCEDURE & EXECUTION GUIDELINES`,
+            body: [
+              '1. Formulate problem requirements and identify required classes, methods, and variables.',
+              '2. Include robust input verification and error handling mechanisms.',
+              '3. Compile source code using modern IDE/CLI compiler and fix syntax warnings.',
+              '4. Execute across test vectors and capture standard console/GUI output.',
+              '5. Record verified outputs in the laboratory observation record.',
+            ],
+          },
+          {
+            heading: `VIVA VOCE QUESTIONS`,
+            body: [
+              '1. What core principles of Object Oriented Programming are exercised here?',
+              '2. How does the Java Virtual Machine manage memory and garbage collection for these classes?',
+              '3. What are the advantages of modular package separation for this implementation?',
+            ],
+          },
+        ],
+        fileName: `${currentCourse?.code}_Exp${l.expNo}_Lab_Manual`,
+      })
+    }
+  }
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!uploadDocTitle.trim() || !uploadTargetCode.trim()) return
 
     const rawTarget = uploadTargetCode.trim()
     const codePart = rawTarget.split(' - ')[0].trim().toUpperCase()
-    const namePart = rawTarget.includes(' - ')
-      ? rawTarget.split(' - ').slice(1).join(' - ').trim()
-      : rawTarget
-
     const rawUnit = uploadUnitTitle.trim()
-    const unitLabel = rawUnit.includes(' - ')
-      ? rawUnit.split(' - ')[0].trim()
-      : rawUnit || 'Unit I'
+    const unitLabel = rawUnit.includes(' - ') ? rawUnit.split(' - ')[0].trim() : rawUnit || 'Unit I'
 
-    // Add note to courses state
-    const newNote = {
-      unit: unitLabel,
-      title: uploadDocTitle.trim(),
-      fileName: uploadFile ? uploadFile.name : `${codePart}_${uploadDocTitle.replace(/\s+/g, '_')}.pdf`,
-      fileSize: uploadFile ? `${(uploadFile.size / (1024 * 1024)).toFixed(1)} MB` : '2.4 MB',
-      uploadedDate: 'Just now',
-    }
+    setUploadLoading(true)
+    setUploadError(null)
 
-    setCourses((prev) => {
-      const existingIdx = prev.findIndex((c) => c.code.toUpperCase() === codePart)
-      if (existingIdx >= 0) {
-        return prev.map((c, idx) => {
-          if (idx === existingIdx) {
-            return {
-              ...c,
-              notes: [newNote, ...c.notes],
+    try {
+      const formData = new FormData()
+      formData.append('subjectCode', codePart)
+      formData.append('title', uploadDocTitle.trim())
+      formData.append('unit', unitLabel)
+      formData.append('category', uploadCategory)
+      formData.append('description', uploadDescription.trim())
+      if (uploadFile) {
+        formData.append('file', uploadFile)
+      }
+
+      const res = await fetch('/api/faculty/materials', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to upload material')
+      }
+
+      // Update state with real response from DB
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (c.code.toUpperCase() === codePart) {
+            if (uploadCategory === 'lab_manual' && data.lab) {
+              return {
+                ...c,
+                labs: [...c.labs, data.lab],
+              }
+            } else if (data.note) {
+              return {
+                ...c,
+                notes: [data.note, ...c.notes],
+              }
             }
           }
           return c
         })
-      } else {
-        // Faculty typed a new subject not yet in list - create it dynamically!
-        const newCourse: CourseSubject = {
-          code: codePart,
-          name: namePart || codePart,
-          regulation: 'Regulation 2021 (Autonomous)',
-          credits: 3,
-          year: 2,
-          semester: 3,
-          section: 'A',
-          enrolledStudents: 68,
-          hoursTaught: 1,
-          attendanceRate: '100%',
-          units: [
-            {
-              unit: unitLabel,
-              title: rawUnit || 'Introduction & Foundations',
-              hours: 9,
-              topics: ['Fundamental Concepts', 'Core Principles', 'Architecture Overview'],
-              status: 'In-Progress',
-            },
-          ],
-          notes: [newNote],
-          labs: [],
-          questions: [],
-        }
-        return [...prev, newCourse]
-      }
-    })
+      )
 
-    setUploadSuccess(true)
-    setTimeout(() => {
-      setUploadSuccess(false)
-      setShowUploadModal(false)
-      setUploadDocTitle('')
-      setUploadFile(null)
-    }, 1500)
+      setUploadSuccess(true)
+      setTimeout(() => {
+        setUploadSuccess(false)
+        setShowUploadModal(false)
+        setUploadDocTitle('')
+        setUploadDescription('')
+        setUploadFile(null)
+      }, 1200)
+    } catch (err: any) {
+      setUploadError(err.message || 'Error uploading file')
+    } finally {
+      setUploadLoading(false)
+    }
+  }
+
+  const handleDeleteMaterial = async (id?: string, type: 'note' | 'lab' = 'note') => {
+    if (!id) return
+    if (!confirm(`Are you sure you want to remove this ${type === 'lab' ? 'experiment guide' : 'material'}?`)) return
+
+    setDeletingId(id)
+    try {
+      const res = await fetch(`/api/faculty/materials?id=${encodeURIComponent(id)}&type=${type}`, {
+        method: 'DELETE',
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.message || 'Failed to delete')
+
+      setCourses((prev) =>
+        prev.map((c) => {
+          if (type === 'lab') {
+            return { ...c, labs: c.labs.filter((l) => l.id !== id) }
+          } else {
+            return { ...c, notes: c.notes.filter((n) => n.id !== id) }
+          }
+        })
+      )
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete material')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
@@ -651,7 +771,7 @@ export function FacultySubjectsView({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={openUploadModal}
+            onClick={() => openUploadModal('notes')}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
           >
             <Upload className="w-4 h-4 text-[#22C7E8]" /> Upload Material (PDF)
@@ -1058,68 +1178,150 @@ export function FacultySubjectsView({
           {/* Tab 2: Lecture Materials */}
           {activeTab === 'notes' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm text-[#071A3D]">Uploaded Notes &amp; Handouts</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-sm text-[#071A3D]">Uploaded Notes &amp; Handouts</h3>
+                  <p className="text-xs text-gray-500">Official course reading materials and unit lecture slides</p>
+                </div>
                 <button
-                  onClick={openUploadModal}
-                  className="px-3 py-1.5 bg-[#1455D9] text-white rounded-xl text-xs font-bold flex items-center gap-1 hover:bg-[#0e44b5] cursor-pointer shadow-xs"
+                  onClick={() => openUploadModal('notes')}
+                  className="px-3.5 py-1.5 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors self-start sm:self-auto"
                 >
                   <Plus className="w-3.5 h-3.5" /> Upload Material
                 </button>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                {currentCourse.notes.map((n, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between gap-3">
-                    <div className="space-y-1 min-w-0">
-                      <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold">
-                        {n.unit}
-                      </span>
-                      <p className="font-bold text-xs text-[#071A3D] truncate">{n.title}</p>
-                      <p className="text-[10px] text-gray-400">{n.fileName} · {n.fileSize} · {n.uploadedDate}</p>
-                    </div>
-
-                    <button
-                      onClick={handleDownloadCoursePack}
-                      className="p-2 rounded-xl bg-blue-50 text-[#1455D9] hover:bg-[#1455D9] hover:text-white transition-all shrink-0 cursor-pointer"
-                      title="Download PDF"
-                    >
-                      <Download className="w-4 h-4" />
-                    </button>
+              {currentCourse.notes.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-gray-50/80 border border-dashed border-gray-200 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto">
+                    <FileText className="w-6 h-6" />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-[#071A3D]">No Materials Uploaded Yet</h4>
+                    <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+                      Upload PDF notes, handouts, or reference slides for {currentCourse.code} to make them available to your students.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => openUploadModal('notes')}
+                    className="px-4 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Upload Material (PDF)
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {currentCourse.notes.map((n, idx) => (
+                    <div key={n.id || idx} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between gap-3 hover:border-blue-200 hover:bg-white transition-all shadow-xs">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 text-[10px] font-bold">
+                          {n.unit}
+                        </span>
+                        <p className="font-bold text-xs text-[#071A3D] truncate">{n.title}</p>
+                        <p className="text-[10px] text-gray-400">{n.fileName} · {n.fileSize} · {n.uploadedDate}</p>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          onClick={() => handleDownloadNote(n)}
+                          className="p-2 rounded-xl bg-blue-50 text-[#1455D9] hover:bg-[#1455D9] hover:text-white transition-all cursor-pointer"
+                          title="Download PDF"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                        {n.id && (
+                          <button
+                            onClick={() => handleDeleteMaterial(n.id, 'note')}
+                            disabled={deletingId === n.id}
+                            className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer disabled:opacity-50"
+                            title="Delete Material"
+                          >
+                            {deletingId === n.id ? <Loader2 className="w-4 h-4 animate-spin text-red-600" /> : <Trash2 className="w-4 h-4" />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {/* Tab 3: Laboratory Manuals */}
           {activeTab === 'labs' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-sm text-[#071A3D]">Practical Experiments &amp; Lab Guidelines</h3>
-                <span className="text-xs text-gray-400">Autonomous Laboratory Schedule</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-sm text-[#071A3D]">Practical Experiments &amp; Lab Guidelines</h3>
+                  <span className="text-xs text-gray-400">Anna University Autonomous Laboratory Schedule · 10 Structured Experiments</span>
+                </div>
+                <button
+                  onClick={() => openUploadModal('lab_manual')}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors self-start sm:self-auto"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Upload Lab Manual
+                </button>
               </div>
 
-              <div className="space-y-3">
-                {currentCourse.labs.map((l) => (
-                  <div key={l.expNo} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-black">
-                        Experiment {l.expNo}
-                      </span>
-                      <h4 className="font-bold text-xs sm:text-sm text-[#071A3D]">{l.title}</h4>
-                      <p className="text-[11px] text-gray-400 font-mono">Tools: {l.tools}</p>
-                    </div>
-
-                    <button
-                      onClick={handleDownloadCoursePack}
-                      className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1 shrink-0 cursor-pointer shadow-xs"
-                    >
-                      <Download className="w-3.5 h-3.5" /> Guide PDF
-                    </button>
+              {currentCourse.labs.length === 0 ? (
+                <div className="p-8 rounded-2xl bg-gray-50/80 border border-dashed border-gray-200 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto">
+                    <Code2 className="w-6 h-6" />
                   </div>
-                ))}
-              </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-[#071A3D]">No Lab Experiments Registered Yet</h4>
+                    <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+                      Add practical experiment manuals and lab guidelines for {currentCourse.code}.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => openUploadModal('lab_manual')}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Upload Lab Manual
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {currentCourse.labs.map((l) => (
+                    <div key={l.expNo} className="p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-emerald-200 hover:bg-white transition-all shadow-xs">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-black">
+                            Experiment {l.expNo}
+                          </span>
+                          {l.fileUrl && (
+                            <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 text-[10px] font-bold">
+                              Custom Uploaded File
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-xs sm:text-sm text-[#071A3D]">{l.title}</h4>
+                        <p className="text-[11px] text-gray-500 font-mono">Tools: {l.tools}</p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleDownloadLabGuide(l)}
+                          className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Guide PDF
+                        </button>
+                        {l.id && (
+                          <button
+                            onClick={() => handleDeleteMaterial(l.id, 'lab')}
+                            disabled={deletingId === l.id}
+                            className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer disabled:opacity-50"
+                            title="Delete Experiment"
+                          >
+                            {deletingId === l.id ? <Loader2 className="w-3.5 h-3.5 animate-spin text-red-600" /> : <Trash2 className="w-3.5 h-3.5" />}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -1357,29 +1559,73 @@ export function FacultySubjectsView({
       {/* Upload Material Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-start justify-between border-b pb-3">
               <div>
-                <h3 className="text-base font-bold text-[#071A3D]">Upload Lecture Material</h3>
+                <h3 className="text-base font-bold text-[#071A3D]">
+                  {uploadCategory === 'lab_manual' ? 'Upload Laboratory Manual' : 'Upload Course Material'}
+                </h3>
                 <p className="text-xs text-gray-500">
-                  Publish notes or lab guide for {currentCourse?.code || uploadTargetCode || 'Curriculum Subject'}
+                  Save real documents to database for <span className="font-bold text-[#1455D9]">{currentCourse?.code || uploadTargetCode}</span>
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowUploadModal(false)}
                 className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Category Switcher Tabs */}
+            <div className="flex rounded-xl bg-gray-100 p-1 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setUploadCategory('notes')}
+                className={cn(
+                  'flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer',
+                  uploadCategory === 'notes' ? 'bg-white text-[#1455D9] shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                )}
+              >
+                Lecture Notes
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadCategory('lab_manual')}
+                className={cn(
+                  'flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer',
+                  uploadCategory === 'lab_manual' ? 'bg-white text-emerald-600 shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                )}
+              >
+                Lab Manual
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadCategory('handout')}
+                className={cn(
+                  'flex-1 py-1.5 rounded-lg text-center transition-all cursor-pointer',
+                  uploadCategory === 'handout' ? 'bg-white text-purple-600 shadow-xs' : 'text-gray-500 hover:text-gray-900'
+                )}
+              >
+                Handout / Guide
+              </button>
+            </div>
+
+            {uploadError && (
+              <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-2xl text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
 
             {uploadSuccess ? (
               <div className="py-6 text-center space-y-2">
                 <div className="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-sm font-bold text-[#071A3D]">Material Published!</h4>
-                <p className="text-xs text-gray-500">Students can now view and download this PDF in their portal.</p>
+                <h4 className="text-sm font-bold text-[#071A3D]">Material Uploaded &amp; Published!</h4>
+                <p className="text-xs text-gray-500">Document saved to database and live on the student portal.</p>
               </div>
             ) : (
               <form onSubmit={handleUploadSubmit} className="space-y-3.5 text-xs">
@@ -1404,7 +1650,7 @@ export function FacultySubjectsView({
                         setUploadUnitTitle(`${matching.units[0].unit} - ${matching.units[0].title}`)
                       }
                     }}
-                    placeholder="Type subject code or title (e.g. AD3301 - Design and Analysis of Algorithms)"
+                    placeholder="Type subject code or title (e.g. AD2311 - Object Oriented Programming Laboratory)"
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
                     required
                   />
@@ -1445,80 +1691,105 @@ export function FacultySubjectsView({
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-[#071A3D] block">Select / Type Unit *</label>
-                    <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                {uploadCategory !== 'lab_manual' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-[#071A3D] block">Select / Type Unit *</label>
+                      <span className="text-[10px] text-[#1455D9] font-bold">Typable &amp; Searchable</span>
+                    </div>
+                    <input
+                      type="text"
+                      list="target-units-datalist"
+                      value={uploadUnitTitle}
+                      onChange={(e) => setUploadUnitTitle(e.target.value)}
+                      placeholder="Type custom unit or topic (e.g. Unit I - Foundations)"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
+                      required
+                    />
+                    <datalist id="target-units-datalist">
+                      {((courses.find((c) => uploadTargetCode.toUpperCase().includes(c.code.toUpperCase())) || currentCourse)?.units || []).map((u) => (
+                        <option key={u.unit} value={`${u.unit} - ${u.title}`}>
+                          {u.unit} — {u.title}
+                        </option>
+                      ))}
+                      <option value="Unit I - Introduction & Foundations" />
+                      <option value="Unit II - Core Algorithms & Models" />
+                      <option value="Unit III - Advanced Paradigms & Kernels" />
+                      <option value="Unit IV - Unsupervised & High Dimension" />
+                      <option value="Unit V - Modern Frameworks & Deep Networks" />
+                    </datalist>
+
+                    {/* Quick Unit Chips */}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
+                      {['Unit I', 'Unit II', 'Unit III', 'Unit IV', 'Unit V'].map((uTag) => {
+                        const matchedUnit = (
+                          courses.find((c) => uploadTargetCode.toUpperCase().includes(c.code.toUpperCase())) || currentCourse
+                        )?.units?.find((u) => u.unit === uTag)
+                        const fillVal = matchedUnit ? `${matchedUnit.unit} - ${matchedUnit.title}` : uTag
+                        const isSelected = uploadUnitTitle.startsWith(uTag)
+
+                        return (
+                          <button
+                            key={uTag}
+                            type="button"
+                            onClick={() => setUploadUnitTitle(fillVal)}
+                            className={cn(
+                              'text-[10px] px-2.5 py-1 rounded-lg border font-bold cursor-pointer transition-all',
+                              isSelected
+                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9] hover:text-[#1455D9]'
+                            )}
+                          >
+                            {uTag}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    list="target-units-datalist"
-                    value={uploadUnitTitle}
-                    onChange={(e) => setUploadUnitTitle(e.target.value)}
-                    placeholder="Type custom unit or topic (e.g. Unit I - Foundations)"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all shadow-xs"
-                    required
-                  />
-                  <datalist id="target-units-datalist">
-                    {((courses.find((c) => uploadTargetCode.toUpperCase().includes(c.code.toUpperCase())) || currentCourse)?.units || []).map((u) => (
-                      <option key={u.unit} value={`${u.unit} - ${u.title}`}>
-                        {u.unit} — {u.title}
-                      </option>
-                    ))}
-                    <option value="Unit I - Introduction & Foundations" />
-                    <option value="Unit II - Core Algorithms & Models" />
-                    <option value="Unit III - Advanced Paradigms & Kernels" />
-                    <option value="Unit IV - Unsupervised & High Dimension" />
-                    <option value="Unit V - Modern Frameworks & Deep Networks" />
-                  </datalist>
-
-                  {/* Quick Unit Chips */}
-                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                    <span className="text-[10px] text-gray-400 font-bold">Quick Select:</span>
-                    {['Unit I', 'Unit II', 'Unit III', 'Unit IV', 'Unit V'].map((uTag) => {
-                      const matchedUnit = (
-                        courses.find((c) => uploadTargetCode.toUpperCase().includes(c.code.toUpperCase())) || currentCourse
-                      )?.units?.find((u) => u.unit === uTag)
-                      const fillVal = matchedUnit ? `${matchedUnit.unit} - ${matchedUnit.title}` : uTag
-                      const isSelected = uploadUnitTitle.startsWith(uTag)
-
-                      return (
-                        <button
-                          key={uTag}
-                          type="button"
-                          onClick={() => setUploadUnitTitle(fillVal)}
-                          className={cn(
-                            'text-[10px] px-2.5 py-1 rounded-lg border font-bold cursor-pointer transition-all',
-                            isSelected
-                              ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs scale-105'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-[#1455D9] hover:text-[#1455D9]'
-                          )}
-                        >
-                          {uTag}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
+                )}
 
                 <div>
-                  <label className="font-bold text-[#071A3D] block mb-1">Document Title *</label>
+                  <label className="font-bold text-[#071A3D] block mb-1">
+                    {uploadCategory === 'lab_manual' ? 'Experiment Title *' : 'Document Title *'}
+                  </label>
                   <input
                     type="text"
                     value={uploadDocTitle}
                     onChange={(e) => setUploadDocTitle(e.target.value)}
-                    placeholder="e.g. Unit 3 State Space Search & TSP Notes"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium"
+                    placeholder={
+                      uploadCategory === 'lab_manual'
+                        ? 'e.g. Multithreaded Application with Synchronization'
+                        : 'e.g. Unit 1 Object Oriented Paradigm & Core Java Foundations'
+                    }
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:bg-white focus:border-[#1455D9] transition-all shadow-xs"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="font-bold text-[#071A3D] block mb-1">PDF File Document</label>
+                  <label className="font-bold text-[#071A3D] block mb-1">
+                    {uploadCategory === 'lab_manual' ? 'Tools / Software Specification' : 'Description / Chapter Notes (Optional)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={uploadDescription}
+                    onChange={(e) => setUploadDescription(e.target.value)}
+                    placeholder={
+                      uploadCategory === 'lab_manual'
+                        ? 'e.g. Java JDK 17 / Eclipse / VS Code'
+                        : 'e.g. Comprehensive notes with sample problems and solutions'
+                    }
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:bg-white focus:border-[#1455D9] transition-all shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-[#071A3D] block mb-1">Upload File (.PDF, .DOCX, .DOC)</label>
                   <div className="relative border-2 border-dashed border-gray-300 hover:border-[#1455D9] rounded-2xl p-4 text-center transition-colors bg-gray-50/50">
                     <input
                       type="file"
-                      accept=".pdf"
+                      accept=".pdf,.docx,.doc"
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
                           setUploadFile(e.target.files[0])
@@ -1537,8 +1808,8 @@ export function FacultySubjectsView({
                     ) : (
                       <div className="space-y-1">
                         <Upload className="w-5 h-5 text-gray-400 mx-auto" />
-                        <p className="text-[11px] font-bold text-gray-700">Click or drag &amp; drop PDF notes</p>
-                        <p className="text-[10px] text-gray-400">PDF up to 25 MB</p>
+                        <p className="text-[11px] font-bold text-gray-700">Click or drag &amp; drop document</p>
+                        <p className="text-[10px] text-gray-400">PDF, DOCX up to 25 MB</p>
                       </div>
                     )}
                   </div>
@@ -1548,15 +1819,27 @@ export function FacultySubjectsView({
                   <button
                     type="button"
                     onClick={() => setShowUploadModal(false)}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
+                    disabled={uploadLoading}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                    disabled={uploadLoading}
+                    className="px-5 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                   >
-                    Upload &amp; Publish
+                    {uploadLoading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Uploading &amp; Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload &amp; Publish</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

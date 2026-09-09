@@ -47,7 +47,7 @@ export default async function FacultySubjectsPage() {
 
   const subjectIds = effectiveSubjects.map(s => s.id)
   const subjectCodes = effectiveSubjects.map(s => s.code)
-  const [dbUnits, dbSyllabi, dbNotes, dbResources, dbQuestions, dbAttendanceSessions, totalStudentsCount] = await Promise.all([
+  const [dbUnits, dbSyllabi, dbNotes, dbResources, dbQuestions, dbAttendanceSessions, dbLabManuals, totalStudentsCount] = await Promise.all([
     prisma.unit.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { number: 'asc' } }).catch(() => []),
     prisma.syllabus.findMany({ where: { subjectId: { in: subjectIds } } }).catch(() => []),
     prisma.note.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { createdAt: 'desc' } }).catch(() => []),
@@ -56,6 +56,10 @@ export default async function FacultySubjectsPage() {
     prisma.attendanceSession.findMany({
       where: { subjectCode: { in: subjectCodes } },
       include: { records: true },
+    }).catch(() => []),
+    prisma.labManual.findMany({
+      where: { subjectId: { in: subjectIds } },
+      orderBy: { experimentNumber: 'asc' },
     }).catch(() => []),
     prisma.student.count({
       where: faculty?.advisorYear && faculty?.advisorSec ? {
@@ -70,6 +74,7 @@ export default async function FacultySubjectsPage() {
     const syllabusForSub = dbSyllabi.find(s => s.subjectId === sub.id)
     const notesForSub = dbNotes.filter(n => n.subjectId === sub.id)
     const questionsForSub = dbQuestions.filter(q => q.subjectId === sub.id)
+    const labsForSub = dbLabManuals.filter(l => l.subjectId === sub.id)
     const subSessions = dbAttendanceSessions.filter(s => s.subjectCode === sub.code)
     const hoursTaught = subSessions.length
     let attendanceRate = '—'
@@ -126,14 +131,24 @@ export default async function FacultySubjectsPage() {
       attendanceRate,
       units: parsedUnits,
       notes: notesForSub.map(n => ({
-        unit: 'Study Notes',
+        id: n.id,
+        unit: n.content?.includes('Unit') ? n.content.split(' - ')[0].trim() : 'Study Notes',
         title: n.title,
-        fileName: `${sub.code}_Notes.pdf`,
-        fileSize: '2.5 MB',
+        fileName: n.fileUrl ? n.fileUrl.split('/').pop()?.split('?')[0] || `${sub.code}_${n.title.replace(/\s+/g, '_')}.pdf` : `${sub.code}_${n.title.replace(/\s+/g, '_')}.pdf`,
+        fileSize: '1.8 MB',
+        fileUrl: n.fileUrl || undefined,
         uploadedDate: n.createdAt ? new Date(n.createdAt).toLocaleDateString('en-GB') : 'Recently',
       })),
-      labs: [],
+      labs: labsForSub.map(l => ({
+        id: l.id,
+        expNo: l.experimentNumber,
+        title: l.experimentName || l.title,
+        tools: l.description || 'Java JDK 17 / Eclipse / VS Code',
+        guideFile: l.fileUrl ? l.fileUrl.split('/').pop() || `${sub.code}_Exp${l.experimentNumber}.pdf` : `${sub.code}_Exp${l.experimentNumber}.pdf`,
+        fileUrl: l.fileUrl || undefined,
+      })),
       questions: questionsForSub.map(q => ({
+        id: q.id,
         type: (q.marks && q.marks > 5 ? '16_mark' : '2_mark') as '2_mark' | '16_mark',
         q: q.question,
         bloom: 'K2 (Understand)',
