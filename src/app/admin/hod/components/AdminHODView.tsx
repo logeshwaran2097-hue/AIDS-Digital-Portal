@@ -21,6 +21,11 @@ import {
   Search,
   Eye,
   EyeOff,
+  LayoutGrid,
+  Table as TableIcon,
+  ShieldCheck,
+  CheckCircle2,
+  BookOpen,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -37,6 +42,7 @@ export interface HODRecord {
   designation?: string | null
   qualification?: string | null
   experience?: number | null
+  specialization?: string | null
   status: string
 }
 
@@ -46,6 +52,7 @@ interface AdminHODViewProps {
 
 export function AdminHODView({ initialHOD }: AdminHODViewProps) {
   const [hodList, setHODList] = useState<HODRecord[]>(initialHOD)
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedHOD, setSelectedHOD] = useState<HODRecord | null>(null)
@@ -86,7 +93,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
         {
           heading: '2. APPOINTED HEAD OF DEPARTMENT PARTICULARS',
           body: hodList.map((h, idx) => 
-            `${idx + 1}. ${h.name} — ${h.designation || 'Professor & Head'} | Email: ${h.email} | Phone: ${h.phone || 'N/A'} | Qualification: ${h.qualification || 'Ph.D.'} | Experience: ${h.experience || 15} Yrs`
+            `${idx + 1}. ${h.name} — ${h.designation || 'Professor & Head'} | Email: ${h.email} | Phone: ${h.phone || 'N/A'} | Qualification: ${h.qualification || 'Ph.D. (AI & DS)'} | Experience: ${h.experience || 15} Yrs | Department: ${h.department}`
           ),
         },
       ],
@@ -172,6 +179,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   designation: formData.designation,
                   qualification: formData.qualification,
                   experience: Number(formData.experience) || 15,
+                  specialization: formData.specialization,
                   dateOfBirth: formData.dateOfBirth,
                   department: formData.department,
                   status: formData.status,
@@ -216,7 +224,8 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
   const filteredHODList = hodList.filter((h) =>
     h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     h.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    h.department.toLowerCase().includes(searchQuery.toLowerCase())
+    h.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (h.designation && h.designation.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   return (
@@ -291,8 +300,8 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between gap-3">
+      {/* Filter, Search & View Toggle Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -303,106 +312,289 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20 font-medium"
           />
         </div>
-        <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
-          {filteredHODList.length} Head(s) Listed
-        </span>
+
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <span className="text-xs text-gray-500 font-bold px-2.5 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
+            {filteredHODList.length} Head(s) Listed
+          </span>
+
+          {/* Table / Cards View Toggle matching Faculty Members */}
+          <div className="flex items-center bg-gray-100 p-1 rounded-xl border border-gray-200">
+            <button
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
+                viewMode === 'table'
+                  ? 'bg-white text-[#1455D9] shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900'
+              )}
+              title="Table View (Like Faculty)"
+            >
+              <TableIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Table</span>
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              className={cn(
+                'p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer',
+                viewMode === 'cards'
+                  ? 'bg-white text-[#1455D9] shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900'
+              )}
+              title="Card View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Cards</span>
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Appointed HOD Directory Grid / List */}
-      <div className="space-y-4">
-        {filteredHODList.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center border border-gray-200">
-            <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-gray-700">No Head of Department Appointed</h3>
-            <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-              Click &quot;+ Appoint / Add HOD&quot; above to assign the Head of Department. Only Full Name and Temporary Password are required!
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredHODList.map((hod) => (
-              <div
-                key={hod.id}
-                className="bg-white rounded-3xl p-6 border border-gray-200 hover:border-[#1455D9] transition-all shadow-xs space-y-4 relative group"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
-                      {hod.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-black text-base text-[#071A3D]">{hod.name}</h3>
-                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black">
-                          {hod.status?.toUpperCase() || 'ACTIVE'}
-                        </span>
-                      </div>
-                      <p className="text-xs font-bold text-[#1455D9] mt-0.5">
-                        {hod.designation || 'Professor & Head of Department'}
+      {/* Appointed HOD Directory: TABLE VIEW (Matching Faculty Members Table) */}
+      {viewMode === 'table' && (
+        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
+                <tr>
+                  <th className="px-4 py-3.5">#</th>
+                  <th className="px-4 py-3.5">Head of Department</th>
+                  <th className="px-4 py-3.5">Department &amp; Jurisdiction</th>
+                  <th className="px-4 py-3.5">Designation &amp; Qualification</th>
+                  <th className="px-4 py-3.5">Experience &amp; Domain</th>
+                  <th className="px-4 py-3.5">Contact Details</th>
+                  <th className="px-4 py-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 font-medium">
+                {filteredHODList.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-12 text-gray-400">
+                      <UserCheck className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                      <p className="font-bold text-gray-600">No Head of Department Appointed</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        Click &quot;+ Appoint / Add HOD&quot; to register the Head of Department.
                       </p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredHODList.map((hod, idx) => (
+                    <tr key={hod.id} className="hover:bg-blue-50/40 transition-colors">
+                      <td className="px-4 py-3.5 text-gray-400 font-mono">{idx + 1}</td>
+
+                      {/* Head of Department Name & Avatar */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white font-black text-sm flex items-center justify-center border border-blue-200 shadow-xs shrink-0">
+                            {hod.name.charAt(0)}
+                          </div>
+                          <div>
+                            <span className="font-bold text-[#071A3D] text-sm block">
+                              {hod.name}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="px-1.5 py-0.2 rounded-md bg-blue-50 text-[#1455D9] border border-blue-200 text-[9px] font-black font-mono">
+                                {hod.facultyId}
+                              </span>
+                              <span className="px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold">
+                                {hod.status?.toUpperCase() || 'ACTIVE'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Department & Jurisdiction */}
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-[#071A3D] block">
+                          {hod.department}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md mt-1 border border-blue-200 font-semibold">
+                          <ShieldCheck className="w-3 h-3 text-blue-600" />
+                          Academic Authority &amp; BoS
+                        </span>
+                      </td>
+
+                      {/* Designation & Qualification */}
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-[#1455D9] block">
+                          {hod.designation || 'Professor & Head'}
+                        </span>
+                        <span className="text-gray-600 text-[11px] block mt-0.5">
+                          {hod.qualification || 'Ph.D. (AI & Data Science)'}
+                        </span>
+                      </td>
+
+                      {/* Experience & Domain */}
+                      <td className="px-4 py-3.5">
+                        <span className="font-bold text-gray-800 block">
+                          {hod.experience ? `${hod.experience} Yrs Experience` : '15 Yrs Experience'}
+                        </span>
+                        <span className="text-gray-500 text-[11px] block mt-0.5 truncate max-w-[200px]" title={hod.specialization || 'Artificial Intelligence & Data Science'}>
+                          {hod.specialization || 'AI, Deep Learning & Autonomous Systems'}
+                        </span>
+                      </td>
+
+                      {/* Contact Details */}
+                      <td className="px-4 py-3.5">
+                        <div className="space-y-0.5 text-[11px] text-gray-600">
+                          <div className="flex items-center gap-1.5">
+                            <Mail className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                            <span className="font-mono">{hod.email}</span>
+                          </div>
+                          {hod.phone && (
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                              <span>{hod.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedHOD(hod)
+                              setFormData({
+                                name: hod.name,
+                                email: hod.email,
+                                phone: hod.phone || '',
+                                password: '',
+                                dateOfBirth: hod.dateOfBirth || '',
+                                designation: hod.designation || 'Professor & Head',
+                                qualification: hod.qualification || 'Ph.D. (AI & Data Science)',
+                                experience: hod.experience || '15',
+                                specialization: hod.specialization || 'Artificial Intelligence, Deep Learning & Autonomous Systems',
+                                department: hod.department,
+                                status: hod.status || 'active',
+                              })
+                              setIsEditModalOpen(true)
+                            }}
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                            title="Edit HOD Profile"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(hod.id, hod.name)}
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                            title="Remove HOD Record"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Appointed HOD Directory: CARDS VIEW */}
+      {viewMode === 'cards' && (
+        <div className="space-y-4">
+          {filteredHODList.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-gray-200">
+              <UserCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <h3 className="text-base font-bold text-gray-700">No Head of Department Appointed</h3>
+              <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
+                Click &quot;+ Appoint / Add HOD&quot; above to assign the Head of Department.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredHODList.map((hod) => (
+                <div
+                  key={hod.id}
+                  className="bg-white rounded-3xl p-6 border border-gray-200 hover:border-[#1455D9] transition-all shadow-xs space-y-4 relative group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-black text-lg shadow-md shrink-0">
+                        {hod.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-black text-base text-[#071A3D]">{hod.name}</h3>
+                          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black font-mono">
+                            {hod.facultyId}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black">
+                            {hod.status?.toUpperCase() || 'ACTIVE'}
+                          </span>
+                        </div>
+                        <p className="text-xs font-bold text-[#1455D9] mt-0.5">
+                          {hod.designation || 'Professor & Head of Department'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => {
+                          setSelectedHOD(hod)
+                          setFormData({
+                            name: hod.name,
+                            email: hod.email,
+                            phone: hod.phone || '',
+                            password: '',
+                            dateOfBirth: hod.dateOfBirth || '',
+                            designation: hod.designation || 'Professor & Head',
+                            qualification: hod.qualification || 'Ph.D. (AI & Data Science)',
+                            experience: hod.experience || '15',
+                            specialization: hod.specialization || 'Artificial Intelligence, Deep Learning & Autonomous Systems',
+                            department: hod.department,
+                            status: hod.status || 'active',
+                          })
+                          setIsEditModalOpen(true)
+                        }}
+                        className="p-2 rounded-xl text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer border border-gray-100"
+                        title="Edit HOD Profile"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(hod.id, hod.name)}
+                        className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer border border-gray-100"
+                        title="Remove HOD Record"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={() => {
-                        setSelectedHOD(hod)
-                        setFormData({
-                          name: hod.name,
-                          email: hod.email,
-                          phone: hod.phone || '',
-                          password: '',
-                          dateOfBirth: hod.dateOfBirth || '',
-                          designation: hod.designation || 'Professor & Head',
-                          qualification: hod.qualification || 'Ph.D. (AI & Data Science)',
-                          experience: hod.experience || '15',
-                          specialization: 'Artificial Intelligence, Deep Learning & Autonomous Systems',
-                          department: hod.department,
-                          status: hod.status || 'active',
-                        })
-                        setIsEditModalOpen(true)
-                      }}
-                      className="p-2 rounded-xl text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer border border-gray-100"
-                      title="Edit HOD Profile"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(hod.id, hod.name)}
-                      className="p-2 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer border border-gray-100"
-                      title="Remove HOD Record"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Mail className="w-4 h-4 text-[#1455D9] shrink-0" />
+                      <span className="truncate font-mono">{hod.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Phone className="w-4 h-4 text-[#1455D9] shrink-0" />
+                      <span>{hod.phone || '+91 94431 87654'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <GraduationCap className="w-4 h-4 text-[#1455D9] shrink-0" />
+                      <span>{hod.qualification || 'Ph.D. (AI & DS)'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Building className="w-4 h-4 text-[#1455D9] shrink-0" />
+                      <span className="truncate">{hod.department}</span>
+                    </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Mail className="w-4 h-4 text-[#1455D9] shrink-0" />
-                    <span className="truncate">{hod.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Phone className="w-4 h-4 text-[#1455D9] shrink-0" />
-                    <span>{hod.phone || '+91 94431 87654'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <GraduationCap className="w-4 h-4 text-[#1455D9] shrink-0" />
-                    <span>{hod.qualification || 'Ph.D. (AI & DS)'}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Building className="w-4 h-4 text-[#1455D9] shrink-0" />
-                    <span className="truncate">{hod.department}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ========================================================================= */}
-      {/* MODAL: APPOINT REAL HEAD OF DEPARTMENT (LIKE FACULTY) */}
+      {/* MODAL: REGISTER / APPOINT HEAD OF DEPARTMENT (MATCHING FACULTY MEMBERS) */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
@@ -410,7 +602,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">
-                  Appoint Real Head of Department
+                  Appoint Head of Department
                 </h3>
                 <p className="text-xs text-gray-500">Record will be saved directly into institutional database</p>
               </div>
@@ -424,7 +616,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
 
             <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">HOD Full Name with Title *</label>
+                <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
                 <input
                   type="text"
                   required
@@ -471,7 +663,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="Enter temporary password"
+                    placeholder="e.g. TempPass@2026"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
@@ -481,7 +673,9 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
               </div>
 
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Phone Number <span className="text-gray-400 font-normal">(Optional)</span></label>
+                <label className="block font-bold text-[#071A3D] mb-1">
+                  Phone Number <span className="text-gray-400 font-normal">(Optional)</span>
+                </label>
                 <input
                   type="text"
                   placeholder="e.g. +91 94431 87654"
@@ -500,6 +694,8 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
                   >
                     <option value="Professor & Head">Professor &amp; Head</option>
+                    <option value="Professor">Professor</option>
+                    <option value="Associate Professor">Associate Professor</option>
                     <option value="Head of Department">Head of Department</option>
                     <option value="Director & HOD">Director &amp; HOD</option>
                   </select>
@@ -508,7 +704,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   <label className="block font-bold text-[#071A3D] mb-1">Qualification</label>
                   <input
                     type="text"
-                    placeholder="e.g. Ph.D."
+                    placeholder="e.g. Ph.D. (AI & DS)"
                     value={formData.qualification}
                     onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200"
@@ -527,6 +723,17 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
               </div>
 
               <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Specialization Domain</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Artificial Intelligence, Machine Learning & Autonomous Systems"
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                />
+              </div>
+
+              <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Department</label>
                 <input
                   type="text"
@@ -534,13 +741,6 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                   className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                 />
-              </div>
-
-              <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200 text-gray-700 text-[11px] space-y-1">
-                <span className="font-bold text-[#1455D9] block">Self-Service Onboarding:</span>
-                <p>
-                  Upon first login using their temporary password{formData.password ? ` (${formData.password})` : ''}, the HOD will be prompted to set a permanent secure password and complete any remaining profile details.
-                </p>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t">
@@ -565,11 +765,11 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: EDIT HOD */}
+      {/* MODAL: EDIT HOD (MATCHING FACULTY MEMBERS EDIT FORM) */}
       {/* ========================================================================= */}
       {isEditModalOpen && selectedHOD && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Edit HOD Directorate Profile</h3>
@@ -625,6 +825,8 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
                   >
                     <option value="Professor & Head">Professor &amp; Head</option>
+                    <option value="Professor">Professor</option>
+                    <option value="Associate Professor">Associate Professor</option>
                     <option value="Head of Department">Head of Department</option>
                     <option value="Director & HOD">Director &amp; HOD</option>
                   </select>
@@ -647,6 +849,17 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Specialization Domain</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Artificial Intelligence, Machine Learning & Autonomous Systems"
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                />
               </div>
 
               <div>
