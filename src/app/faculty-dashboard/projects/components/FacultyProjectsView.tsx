@@ -66,6 +66,8 @@ export interface FacultyProjectItem {
   teamMembers: string
   createdAt: Date
   dailyUpdates?: DailyUpdateLog[]
+  isClassProject?: boolean
+  isMentoredByMe?: boolean
 }
 
 export const PRESET_DOMAINS = [
@@ -128,14 +130,24 @@ function parseDailyUpdates(raw: string | null | undefined): DailyUpdateLog[] {
 export function FacultyProjectsView({
   initialProjects,
   facultyName = 'Faculty Member',
+  facultyEmail = '',
+  isAdvisor = false,
+  advisorYear = 2,
+  advisorSec = 'B',
+  advisorBatch = 'Year 2 · Sec B',
 }: {
   initialProjects: FacultyProjectItem[]
   facultyName?: string
+  facultyEmail?: string
+  isAdvisor?: boolean
+  advisorYear?: number
+  advisorSec?: string
+  advisorBatch?: string
 }) {
   const [projects, setProjects] = useState<FacultyProjectItem[]>(initialProjects)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDomain, setSelectedDomain] = useState('ALL')
-  const [filterGuide, setFilterGuide] = useState<'ALL' | 'MY_PROJECTS'>('ALL')
+  const [filterScope, setFilterScope] = useState<'ALL' | 'CLASS' | 'MY_PROJECTS'>('ALL')
   const [selectedProject, setSelectedProject] = useState<FacultyProjectItem | null>(null)
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [assignModalMode, setAssignModalMode] = useState<'edit' | 'preview'>('edit')
@@ -148,7 +160,7 @@ export function FacultyProjectsView({
     domainSelection: 'Computer Vision & Deep Learning',
     customDomain: '',
     technologies: '',
-    guideName: '',
+    guideName: facultyName,
     teamMembers: '',
     problemStatement: '',
     proposedSolution: '',
@@ -166,34 +178,51 @@ export function FacultyProjectsView({
   const [feedbackLogId, setFeedbackLogId] = useState<string | null>(null)
   const [feedbackText, setFeedbackText] = useState('')
 
-  // Real-time polling
+  // Real-time polling filtered strictly for Class Projects or Mentored Projects
   useEffect(() => {
     const fetchLatest = async () => {
       try {
         const res = await fetch('/api/projects', { cache: 'no-store' })
         const data = await res.json()
         if (data.success && Array.isArray(data.projects)) {
+          const inScope = data.projects.filter((p: any) => {
+            const isClass = isAdvisor && Number(p.year) === advisorYear
+            const isMentor =
+              (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase()) ||
+              Boolean(facultyEmail && p.guideEmail && p.guideEmail.toLowerCase() === facultyEmail.toLowerCase())
+            return isClass || isMentor
+          })
+
           setProjects(
-            data.projects.map((p: any) => ({
-              id: p.id,
-              title: p.title,
-              description: p.description,
-              problemStatement: p.problemStatement,
-              proposedSolution: p.proposedSolution,
-              technologies: p.technologies || 'Python, PyTorch',
-              dataset: p.dataset,
-              results: p.results,
-              futureScope: p.futureScope,
-              documentation: p.documentation,
-              domain: p.domain || 'Applied AI',
-              year: Number(p.year) || 4,
-              status: p.status || 'Active & Supervised',
-              guideName: p.guideName,
-              guideEmail: p.guideEmail,
-              teamMembers: p.teamMembers || 'B.Tech AI & DS Team',
-              createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-              dailyUpdates: parseDailyUpdates(p.futureScope),
-            }))
+            inScope.map((p: any) => {
+              const isClass = isAdvisor && Number(p.year) === advisorYear
+              const isMentor =
+                (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase()) ||
+                Boolean(facultyEmail && p.guideEmail && p.guideEmail.toLowerCase() === facultyEmail.toLowerCase())
+
+              return {
+                id: p.id,
+                title: p.title,
+                description: p.description,
+                problemStatement: p.problemStatement,
+                proposedSolution: p.proposedSolution,
+                technologies: p.technologies || 'Python, PyTorch',
+                dataset: p.dataset,
+                results: p.results,
+                futureScope: p.futureScope,
+                documentation: p.documentation,
+                domain: p.domain || 'Applied AI',
+                year: Number(p.year) || advisorYear,
+                status: p.status || 'Active & Supervised',
+                guideName: p.guideName || facultyName,
+                guideEmail: p.guideEmail || facultyEmail,
+                teamMembers: p.teamMembers || 'B.Tech AI & DS Team',
+                createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+                dailyUpdates: parseDailyUpdates(p.futureScope),
+                isClassProject: isClass,
+                isMentoredByMe: isMentor,
+              }
+            })
           )
         }
       } catch {}
@@ -201,12 +230,25 @@ export function FacultyProjectsView({
 
     const interval = setInterval(fetchLatest, 45000)
     return () => clearInterval(interval)
-  }, [])
+  }, [isAdvisor, advisorYear, facultyName, facultyEmail])
 
   const domains = useMemo(() => {
     const set = new Set(projects.map((p) => p.domain))
     return ['ALL', ...Array.from(set)]
   }, [projects])
+
+  const classProjectsCount = useMemo(() => {
+    return projects.filter((p) => p.isClassProject || p.year === advisorYear).length
+  }, [projects, advisorYear])
+
+  const mentoredProjectsCount = useMemo(() => {
+    return projects.filter(
+      (p) =>
+        p.isMentoredByMe ||
+        (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase()) ||
+        Boolean(facultyEmail && p.guideEmail && p.guideEmail.toLowerCase() === facultyEmail.toLowerCase())
+    ).length
+  }, [projects, facultyName, facultyEmail])
 
   const filtered = useMemo(() => {
     return projects.filter((p) => {
@@ -219,13 +261,20 @@ export function FacultyProjectsView({
 
       const matchesDomain = selectedDomain === 'ALL' || p.domain === selectedDomain
 
-      const matchesGuide =
-        filterGuide === 'ALL' ||
-        (filterGuide === 'MY_PROJECTS' && (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase()))
+      let matchesScope = true
+      if (filterScope === 'CLASS') {
+        matchesScope = Boolean(p.isClassProject || p.year === advisorYear)
+      } else if (filterScope === 'MY_PROJECTS') {
+        matchesScope = Boolean(
+          p.isMentoredByMe ||
+          (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase()) ||
+          Boolean(facultyEmail && p.guideEmail && p.guideEmail.toLowerCase() === facultyEmail.toLowerCase())
+        )
+      }
 
-      return matchesSearch && matchesDomain && matchesGuide
+      return matchesSearch && matchesDomain && matchesScope
     })
-  }, [projects, searchQuery, selectedDomain, filterGuide, facultyName])
+  }, [projects, searchQuery, selectedDomain, filterScope, advisorYear, facultyName, facultyEmail])
 
   // Open Details Modal
   const handleOpenDetails = (proj: FacultyProjectItem) => {
@@ -309,9 +358,10 @@ export function FacultyProjectsView({
           proposedSolution: assignFormData.proposedSolution,
           dataset: assignFormData.dataset,
           teamMembers: assignFormData.teamMembers,
-          guideName: assignFormData.guideName,
+          guideName: assignFormData.guideName || facultyName,
+          guideEmail: facultyEmail || null,
           documentation: combinedDocs,
-          year: 4,
+          year: advisorYear || 2,
           status: 'Active & Supervised',
         }),
       })
@@ -326,7 +376,7 @@ export function FacultyProjectsView({
           domainSelection: 'Computer Vision & Deep Learning',
           customDomain: '',
           technologies: '',
-          guideName: '',
+          guideName: facultyName,
           teamMembers: '',
           problemStatement: '',
           proposedSolution: '',
@@ -388,18 +438,37 @@ export function FacultyProjectsView({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Faculty Mentorship Hub
+              {isAdvisor ? 'Class Advisor Projects Hub' : 'Faculty Mentorship Hub'}
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Technical Blueprints &amp; Daily Progress Tracking</span>
+            <span className="text-xs text-blue-200 font-medium">
+              · {isAdvisor ? `${advisorBatch} & Mentored Teams` : 'Technical Blueprints & Daily Tracking'}
+            </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Student Projects &amp; Innovation Workspace</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">
+            {isAdvisor ? 'Class & Mentored Projects Workspace' : 'Student Projects & Innovation Workspace'}
+          </h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Guide student research teams, review daily work logs, and inspect technical blueprints.
+            {isAdvisor
+              ? `Supervise and review technical blueprints, daily progress logs, and deliverables for your assigned class (${advisorBatch}) and guided research teams.`
+              : 'Guide student research teams, review daily work logs, and inspect technical blueprints.'}
           </p>
         </div>
 
         <button
           onClick={() => {
+            setAssignFormData({
+              title: '',
+              domainSelection: 'Computer Vision & Deep Learning',
+              customDomain: '',
+              technologies: '',
+              guideName: facultyName,
+              teamMembers: '',
+              problemStatement: '',
+              proposedSolution: '',
+              dataset: '',
+              githubUrl: '',
+              liveUrl: '',
+            })
             setAssignModalMode('edit')
             setShowAssignModal(true)
           }}
@@ -413,9 +482,9 @@ export function FacultyProjectsView({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white p-5 rounded-3xl border border-blue-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Active Blueprints</p>
-            <p className="text-2xl font-black text-[#1455D9] mt-0.5">{projects.length} Teams</p>
-            <p className="text-[10px] text-gray-400">Department R&amp;D</p>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{isAdvisor ? 'Class Projects' : 'In-Scope Projects'}</p>
+            <p className="text-2xl font-black text-[#1455D9] mt-0.5">{classProjectsCount} Projects</p>
+            <p className="text-[10px] text-gray-400">{isAdvisor ? advisorBatch : 'Department Cohort'}</p>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black">
             <FolderOpen className="w-5 h-5" />
@@ -423,46 +492,57 @@ export function FacultyProjectsView({
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-purple-200/80 shadow-xs bg-purple-50/20">
-          <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">My Guided Teams</p>
+          <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">My Mentored Teams</p>
           <p className="text-2xl font-black text-purple-700 mt-0.5">
-            {projects.filter((p) => (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase())).length} Projects
+            {mentoredProjectsCount} Projects
           </p>
           <p className="text-[10px] text-purple-600 font-semibold truncate">Guided by {facultyName}</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-green-200/80 shadow-xs bg-green-50/20">
-          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Project Cohort</p>
-          <p className="text-2xl font-black text-green-600 mt-0.5">{projects.length > 0 ? `${projects.length} Active` : '0 Active'}</p>
-          <p className="text-[10px] text-green-600 font-semibold">Department Portfolio</p>
+          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">{isAdvisor ? 'Class Jurisdiction' : 'Project Cohort'}</p>
+          <p className="text-2xl font-black text-green-600 mt-0.5">{isAdvisor ? advisorBatch : `${projects.length} Active`}</p>
+          <p className="text-[10px] text-green-600 font-semibold">{isAdvisor ? 'Assigned Class Cohort' : 'Department Portfolio'}</p>
         </div>
 
         <div className="bg-white p-5 rounded-3xl border border-amber-200/80 shadow-xs bg-amber-50/20">
           <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Daily Standups</p>
           <p className="text-2xl font-black text-amber-600 mt-0.5">Continuous</p>
-          <p className="text-[10px] text-amber-600 font-semibold">Faculty Monitored</p>
+          <p className="text-[10px] text-amber-600 font-semibold">Advisor &amp; Guide Monitored</p>
         </div>
       </div>
 
       {/* Filter Tabs & Search Bar */}
       <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
           <button
-            onClick={() => setFilterGuide('ALL')}
+            onClick={() => setFilterScope('ALL')}
             className={cn(
-              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer',
-              filterGuide === 'ALL' ? 'bg-[#071A3D] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap',
+              filterScope === 'ALL' ? 'bg-[#071A3D] text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             )}
           >
-            All Department Projects ({projects.length})
+            All In-Scope Projects ({projects.length})
           </button>
+          {isAdvisor && (
+            <button
+              onClick={() => setFilterScope('CLASS')}
+              className={cn(
+                'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap',
+                filterScope === 'CLASS' ? 'bg-[#1455D9] text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              )}
+            >
+              Class Projects ({advisorBatch}) ({classProjectsCount})
+            </button>
+          )}
           <button
-            onClick={() => setFilterGuide('MY_PROJECTS')}
+            onClick={() => setFilterScope('MY_PROJECTS')}
             className={cn(
-              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer',
-              filterGuide === 'MY_PROJECTS' ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap',
+              filterScope === 'MY_PROJECTS' ? 'bg-purple-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             )}
           >
-            My Mentored Teams ({projects.filter((p) => (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase())).length})
+            My Mentored Teams ({mentoredProjectsCount})
           </button>
         </div>
 
@@ -478,83 +558,139 @@ export function FacultyProjectsView({
         </div>
       </div>
 
-      {/* Projects Grid */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {filtered.map((p) => {
-          const updatesCount = (p.dailyUpdates || parseDailyUpdates(p.futureScope)).length
-          const links = extractProjectLinks(p.documentation)
-
-          return (
-            <Card
-              key={p.id}
-              className="rounded-3xl border border-gray-200 hover:shadow-lg transition-all duration-200 bg-white"
+      {/* Projects Grid / Empty State */}
+      {filtered.length === 0 ? (
+        <Card className="rounded-3xl border-gray-200 bg-white shadow-xs">
+          <CardContent className="p-8 sm:p-12 text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto shadow-inner">
+              <FolderOpen className="w-8 h-8" />
+            </div>
+            <div className="max-w-md mx-auto space-y-2">
+              <h3 className="font-black text-lg text-[#071A3D]">
+                {filterScope === 'CLASS'
+                  ? `No Projects Found in Class ${advisorBatch}`
+                  : filterScope === 'MY_PROJECTS'
+                  ? `No Mentored Teams Yet for ${facultyName}`
+                  : `No Projects Registered Yet for ${advisorBatch}`}
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                This workspace strictly displays projects from your assigned class cohort ({advisorBatch}) and teams directly mentored by you.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setAssignFormData({
+                  title: '',
+                  domainSelection: 'Computer Vision & Deep Learning',
+                  customDomain: '',
+                  technologies: '',
+                  guideName: facultyName,
+                  teamMembers: '',
+                  problemStatement: '',
+                  proposedSolution: '',
+                  dataset: '',
+                  githubUrl: '',
+                  liveUrl: '',
+                })
+                setAssignModalMode('edit')
+                setShowAssignModal(true)
+              }}
+              className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-black inline-flex items-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105"
             >
-              <CardContent className="p-5 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-black text-purple-700 px-2.5 py-0.5 rounded-lg bg-purple-50 border border-purple-200 uppercase">
-                    {p.domain}
-                  </span>
-                  <span className="text-[10px] font-bold text-emerald-700 px-2.5 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-emerald-600" />
-                    {updatesCount} Daily Logs
-                  </span>
-                </div>
+              <Plus className="w-4 h-4" /> Propose / Assign Blueprint
+            </button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {filtered.map((p) => {
+            const updatesCount = (p.dailyUpdates || parseDailyUpdates(p.futureScope)).length
+            const links = extractProjectLinks(p.documentation)
 
-                <h3 className="font-bold text-base text-[#071A3D] leading-snug">{p.title}</h3>
-                <p className="text-xs text-gray-600 line-clamp-2">
-                  {p.problemStatement || p.description || 'Undergraduate Capstone Research reference blueprint.'}
-                </p>
-
-                <div className="p-3 bg-gray-50 rounded-2xl text-xs space-y-1 border border-gray-100">
-                  <p className="font-bold text-[#071A3D]">Team: {p.teamMembers}</p>
-                  <p className="text-gray-500">Mentor: {p.guideName || facultyName}</p>
-                  <p className="font-mono text-[11px] text-[#1455D9] font-bold">Stack: {p.technologies}</p>
-                </div>
-
-                <div className="pt-3 border-t flex items-center justify-between gap-2 flex-wrap">
-                  <button
-                    onClick={() => handleOpenDetails(p)}
-                    className="px-3.5 py-1.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 text-[#22C7E8]" /> Blueprint &amp; Daily Updates
-                  </button>
-
-                  <div className="flex items-center gap-1.5">
-                    {links.liveUrl && (
-                      <a
-                        href={links.liveUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition"
-                        title="Open Live Deployment"
-                      >
-                        <Globe className="w-4 h-4" />
-                      </a>
-                    )}
-                    {links.githubUrl && (
-                      <a
-                        href={links.githubUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
-                        title="Open GitHub Repository"
-                      >
-                        <Code2 className="w-4 h-4" />
-                      </a>
-                    )}
-                    <button
-                      onClick={() => handleDownloadDossier(p)}
-                      className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5 text-[#1455D9]" /> Dossier PDF
-                    </button>
+            return (
+              <Card
+                key={p.id}
+                className="rounded-3xl border border-gray-200 hover:shadow-lg transition-all duration-200 bg-white"
+              >
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-black text-purple-700 px-2.5 py-0.5 rounded-lg bg-purple-50 border border-purple-200 uppercase">
+                        {p.domain}
+                      </span>
+                      {(p.isClassProject || p.year === advisorYear) && (
+                        <span className="text-[10px] font-bold text-[#1455D9] px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200">
+                          Class Project · {advisorBatch}
+                        </span>
+                      )}
+                      {(p.isMentoredByMe || (p.guideName || '').toLowerCase().includes(facultyName.toLowerCase())) && (
+                        <span className="text-[10px] font-bold text-emerald-700 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200">
+                          Guided by You
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-600 px-2.5 py-0.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-slate-500" />
+                      {updatesCount} Daily Logs
+                    </span>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+
+                  <h3 className="font-bold text-base text-[#071A3D] leading-snug">{p.title}</h3>
+                  <p className="text-xs text-gray-600 line-clamp-2">
+                    {p.problemStatement || p.description || 'Undergraduate Capstone Research reference blueprint.'}
+                  </p>
+
+                  <div className="p-3 bg-gray-50 rounded-2xl text-xs space-y-1 border border-gray-100">
+                    <p className="font-bold text-[#071A3D]">Team: {p.teamMembers}</p>
+                    <p className="text-gray-500">Mentor: {p.guideName || facultyName}</p>
+                    <p className="font-mono text-[11px] text-[#1455D9] font-bold">Stack: {p.technologies}</p>
+                  </div>
+
+                  <div className="pt-3 border-t flex items-center justify-between gap-2 flex-wrap">
+                    <button
+                      onClick={() => handleOpenDetails(p)}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#071A3D] hover:bg-[#1455D9] text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 text-[#22C7E8]" /> Blueprint &amp; Daily Updates
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      {links.liveUrl && (
+                        <a
+                          href={links.liveUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition"
+                          title="Open Live Deployment"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                      )}
+                      {links.githubUrl && (
+                        <a
+                          href={links.githubUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+                          title="Open GitHub Repository"
+                        >
+                          <Code2 className="w-4 h-4" />
+                        </a>
+                      )}
+                      <button
+                        onClick={() => handleDownloadDossier(p)}
+                        className="px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5 text-[#1455D9]" /> Dossier PDF
+                      </button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* FACULTY PROJECT BLUEPRINT & DAILY UPDATES MODAL                           */}
