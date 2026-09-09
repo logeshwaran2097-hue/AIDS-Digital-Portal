@@ -454,7 +454,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
                       Second Year · AI &amp; DS
                     </span>
                     <span>•</span>
-                    <span className="font-bold text-slate-700">Batch 2023 - 2027</span>
+                    <span className="font-bold text-slate-700">Batch 2025 - 2029</span>
                     <span>•</span>
                     <span className="text-[#1455D9] font-bold">V.S.B. Engineering College (Autonomous)</span>
                   </div>
