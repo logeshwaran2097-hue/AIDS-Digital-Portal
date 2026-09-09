@@ -88,32 +88,7 @@ export async function GET(request: Request) {
   const eToDate = escapeXml(toDate)
   const eEventTitle = escapeXml(rawEventTitle)
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 850 1150" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-  <style>
-    :root {
-      background-color: #0F172A;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 16px 0;
-      box-sizing: border-box;
-    }
-    @media (prefers-color-scheme: light) {
-      :root {
-        background-color: #F8FAFC;
-      }
-    }
-    svg {
-      margin: 0 auto;
-      display: block;
-      filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.12));
-      max-width: 95vw;
-      max-height: 96vh;
-    }
-  </style>
-
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 850 1150" width="850" height="1150">
   <defs>
     <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#071A3D"/>

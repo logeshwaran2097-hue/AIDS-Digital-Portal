@@ -886,26 +886,24 @@ export function AdvisorODReviewModal({
             </div>
 
             {/* Lightbox Body with Document Rendering */}
-            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-100 flex items-center justify-center min-h-[350px]">
-              <div className="max-w-full max-h-full bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-300 p-2 sm:p-4 flex items-center justify-center">
-                {selectedPreviewFile.url.endsWith('.pdf') || selectedPreviewFile.url.startsWith('data:application/pdf') ? (
+            <div className="flex-1 overflow-auto p-3 sm:p-5 bg-slate-100/90 flex items-center justify-center min-h-[380px]">
+              <div className="max-w-full max-h-full bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-300 p-1 sm:p-2 flex items-center justify-center">
+                {selectedPreviewFile.url.endsWith('.pdf') ||
+                selectedPreviewFile.url.startsWith('data:application/pdf') ||
+                selectedPreviewFile.url.includes('/api/od-applications/proof-document') ||
+                selectedPreviewFile.type === 'image/svg+xml' ||
+                selectedPreviewFile.url.endsWith('.svg') ? (
                   <iframe
                     src={selectedPreviewFile.url}
-                    className="w-full h-[75vh] min-w-[300px] sm:min-w-[650px] rounded-lg border-0"
+                    className="w-[850px] max-w-full h-[76vh] min-h-[500px] rounded-xl border-0 shadow-xs bg-white"
                     title={selectedPreviewFile.title}
                   />
                 ) : (
-                  <object
-                    data={selectedPreviewFile.url}
-                    type="image/svg+xml"
-                    className="max-h-[75vh] w-auto max-w-full rounded-lg"
-                  >
-                    <img
-                      src={selectedPreviewFile.url}
-                      alt={selectedPreviewFile.title || 'Proof Document'}
-                      className="max-h-[75vh] w-auto max-w-full object-contain mx-auto rounded-lg"
-                    />
-                  </object>
+                  <img
+                    src={selectedPreviewFile.url}
+                    alt={selectedPreviewFile.title || 'Proof Document'}
+                    className="max-h-[76vh] w-auto max-w-full object-contain mx-auto rounded-lg"
+                  />
                 )}
               </div>
             </div>
