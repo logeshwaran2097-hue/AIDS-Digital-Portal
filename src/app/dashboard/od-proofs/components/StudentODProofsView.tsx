@@ -24,6 +24,8 @@ import {
   FileText,
   User,
   GraduationCap,
+  Eye,
+  Download,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 
@@ -78,6 +80,32 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
   const [isGeoModalOpen, setIsGeoModalOpen] = useState(false)
   const [isCertModalOpen, setIsCertModalOpen] = useState(false)
   const [selectedProof, setSelectedProof] = useState<ODProofItem | null>(null)
+  const [previewMedia, setPreviewMedia] = useState<{ url: string; title: string; category?: string } | null>(null)
+
+  // Safely open base64 data URLs in a new browser tab without Chrome top-frame navigation block
+  const openInNewTabSafely = (url: string) => {
+    if (!url) return
+    if (url.startsWith('data:')) {
+      try {
+        const parts = url.split(',')
+        const mimeMatch = parts[0].match(/:(.*?);/)
+        const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+        const bstr = atob(parts[1])
+        let n = bstr.length
+        const u8arr = new Uint8Array(n)
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n)
+        }
+        const blob = new Blob([u8arr], { type: mime })
+        const blobUrl = URL.createObjectURL(blob)
+        window.open(blobUrl, '_blank')
+        return
+      } catch {
+        // Fallback
+      }
+    }
+    window.open(url, '_blank')
+  }
 
   // Register Form
   const [registerForm, setRegisterForm] = useState({
@@ -517,12 +545,19 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                         {/* Geo-Tag Preview */}
                         {isGeoUploaded && (
                           <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-start gap-3">
-                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-black/10 shrink-0 relative border border-gray-300">
+                            <div 
+                              onClick={() => setPreviewMedia({ url: p.geoPhotoUrl || '', title: `${p.eventName} — Venue Geo-Tag Photo`, category: 'Venue Geo-Tag Photo' })}
+                              className="w-16 h-16 rounded-xl overflow-hidden bg-black/10 shrink-0 relative border border-gray-300 cursor-pointer group"
+                              title="Click to view full photo"
+                            >
                               <img
                                 src={p.geoPhotoUrl || ''}
                                 alt="Venue Geotag"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                               />
+                              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                                <Eye className="w-4 h-4" />
+                              </div>
                             </div>
                             <div className="space-y-1 text-xs min-w-0 flex-1">
                               <span className="font-bold text-[#071A3D] flex items-center gap-1">
@@ -536,14 +571,13 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                                 <p className="text-[11px] text-gray-500 truncate">{p.geoAddress}</p>
                               )}
                               <div className="pt-1 flex items-center gap-2">
-                                <a
-                                  href={p.geoPhotoUrl || ''}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-[10px] text-[#1455D9] font-bold flex items-center gap-0.5 hover:underline"
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewMedia({ url: p.geoPhotoUrl || '', title: `${p.eventName} — Venue Geo-Tag Photo`, category: 'Venue Geo-Tag Photo' })}
+                                  className="text-[11px] text-[#1455D9] font-bold flex items-center gap-1 hover:underline cursor-pointer"
                                 >
-                                  View Geo-Tag Photo <ExternalLink className="w-2.5 h-2.5" />
-                                </a>
+                                  <Eye className="w-3.5 h-3.5" /> View Geo-Tag Photo
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -552,16 +586,23 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                         {/* Certificate Preview */}
                         {isCertUploaded && (
                           <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-start gap-3">
-                            <div className="w-16 h-16 rounded-xl overflow-hidden bg-purple-100 shrink-0 relative border border-purple-200 flex items-center justify-center">
+                            <div 
+                              onClick={() => setPreviewMedia({ url: p.certificateUrl || '', title: `${p.eventName} — ${p.achievement || 'Certificate'}`, category: 'Event Certificate' })}
+                              className="w-16 h-16 rounded-xl overflow-hidden bg-purple-100 shrink-0 relative border border-purple-200 flex items-center justify-center cursor-pointer group"
+                              title="Click to view certificate"
+                            >
                               {p.certificateUrl?.startsWith('data:image') || p.certificateUrl?.endsWith('.png') || p.certificateUrl?.endsWith('.jpg') ? (
                                 <img
                                   src={p.certificateUrl || ''}
                                   alt="Certificate"
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                 />
                               ) : (
-                                <FileText className="w-8 h-8 text-purple-600" />
+                                <FileText className="w-8 h-8 text-purple-600 group-hover:scale-105 transition-transform" />
                               )}
+                              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
+                                <Eye className="w-4 h-4" />
+                              </div>
                             </div>
                             <div className="space-y-1 text-xs min-w-0 flex-1">
                               <span className="font-bold text-[#071A3D] flex items-center gap-1">
@@ -571,16 +612,15 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                               <p className="text-[11px] text-gray-500 truncate">
                                 {p.certificateName || 'Certificate Document'}
                               </p>
-                              {p.certificateUrl && (
-                                <a
-                                  href={p.certificateUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-[10px] text-purple-700 font-bold inline-flex items-center gap-0.5 hover:underline pt-0.5"
+                              <div className="pt-1 flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewMedia({ url: p.certificateUrl || '', title: `${p.eventName} — ${p.achievement || 'Certificate'}`, category: 'Event Certificate' })}
+                                  className="text-[11px] text-purple-700 font-bold inline-flex items-center gap-1 hover:underline cursor-pointer"
                                 >
-                                  Open Certificate <ExternalLink className="w-2.5 h-2.5" />
-                                </a>
-                              )}
+                                  <Eye className="w-3.5 h-3.5" /> Open Certificate
+                                </button>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -833,6 +873,76 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 4: FULLSCREEN MEDIA PREVIEW LIGHTBOX */}
+      {/* ========================================================================= */}
+      {previewMedia && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
+          onClick={() => setPreviewMedia(null)}
+        >
+          <div 
+            className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 bg-gray-50/90">
+              <div className="min-w-0 pr-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[10px] font-black uppercase tracking-wide">
+                  {previewMedia.category || 'Proof Document'}
+                </span>
+                <h3 className="text-sm sm:text-base font-black text-[#071A3D] mt-0.5 truncate">
+                  {previewMedia.title}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => openInNewTabSafely(previewMedia.url)}
+                  className="px-3 py-1.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Open in new browser tab"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">New Tab</span>
+                </button>
+                <a
+                  href={previewMedia.url}
+                  download={`OD-Proof-${Date.now()}`}
+                  className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Download</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMedia(null)}
+                  className="p-1.5 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-700 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Media Viewer Body */}
+            <div className="flex-1 overflow-auto p-3 sm:p-5 bg-neutral-900 flex items-center justify-center min-h-[320px]">
+              {previewMedia.url.startsWith('data:application/pdf') ? (
+                <iframe
+                  src={previewMedia.url}
+                  className="w-full h-[70vh] rounded-xl border-0"
+                  title={previewMedia.title}
+                />
+              ) : (
+                <img
+                  src={previewMedia.url}
+                  alt={previewMedia.title}
+                  className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl"
+                />
+              )}
+            </div>
           </div>
         </div>
       )}
