@@ -70,7 +70,13 @@ export function PWAInstall() {
     }
 
     // On mobile devices, ask to install the APK version
-    const dismissed = typeof window !== 'undefined' && sessionStorage.getItem('vsb_apk_prompt_dismissed')
+    let dismissed = false
+    try {
+      dismissed =
+        localStorage.getItem('vsb_apk_prompt_dismissed') === 'true' ||
+        sessionStorage.getItem('vsb_apk_prompt_dismissed') === 'true'
+    } catch {}
+
     if (isMobileDevice && !dismissed) {
       // Delay slightly so the page smoothly loads first
       const timer = setTimeout(() => {
@@ -95,16 +101,71 @@ export function PWAInstall() {
       promptRef.current = evt
       window.__pwaInstallPrompt = evt
 
-      // Automatically ask to download/install via native browser prompt
+      // Check if user previously chose "Not now" or dismissed the install prompt
+      let isDismissed = false
+      try {
+        isDismissed =
+          localStorage.getItem('pwa_install_dismissed') === 'true' ||
+          localStorage.getItem('pwa_installed') === 'true'
+      } catch {}
+
+      if (isDismissed) {
+        // User already opted out by choosing "Not now". Respect their choice and do NOT auto-prompt.
+        return
+      }
+
+      // Automatically ask to download/install via native browser prompt (only on first visit, before dismissal)
       try {
         await evt.prompt()
+        if (evt.userChoice) {
+          evt.userChoice
+            .then(({ outcome }) => {
+              if (outcome === 'dismissed') {
+                try {
+                  localStorage.setItem('pwa_install_dismissed', 'true')
+                } catch {}
+              } else if (outcome === 'accepted') {
+                try {
+                  localStorage.setItem('pwa_installed', 'true')
+                  setIsInstalled(true)
+                } catch {}
+              }
+            })
+            .catch(() => {})
+        }
       } catch {
         const triggerNativePrompt = async () => {
           window.removeEventListener('click', triggerNativePrompt)
           window.removeEventListener('touchstart', triggerNativePrompt)
+
+          let dismissedNow = false
+          try {
+            dismissedNow =
+              localStorage.getItem('pwa_install_dismissed') === 'true' ||
+              localStorage.getItem('pwa_installed') === 'true'
+          } catch {}
+
+          if (dismissedNow) return
+
           if (promptRef.current) {
             try {
               await promptRef.current.prompt()
+              if (promptRef.current.userChoice) {
+                promptRef.current.userChoice
+                  .then(({ outcome }) => {
+                    if (outcome === 'dismissed') {
+                      try {
+                        localStorage.setItem('pwa_install_dismissed', 'true')
+                      } catch {}
+                    } else if (outcome === 'accepted') {
+                      try {
+                        localStorage.setItem('pwa_installed', 'true')
+                        setIsInstalled(true)
+                      } catch {}
+                    }
+                  })
+                  .catch(() => {})
+              }
             } catch {}
           }
         }
@@ -120,6 +181,9 @@ export function PWAInstall() {
       setIsDownloaderOpen(false)
       promptRef.current = null
       window.__pwaInstallPrompt = null
+      try {
+        localStorage.setItem('pwa_installed', 'true')
+      } catch {}
     })
 
     return () => {
@@ -146,9 +210,16 @@ export function PWAInstall() {
           setIsInstalled(true)
           promptRef.current = null
           if (typeof window !== 'undefined') window.__pwaInstallPrompt = null
+          try {
+            localStorage.setItem('pwa_installed', 'true')
+          } catch {}
           toast.success('App installed successfully!')
           setInstalling(false)
           return
+        } else if (outcome === 'dismissed') {
+          try {
+            localStorage.setItem('pwa_install_dismissed', 'true')
+          } catch {}
         }
       } catch (e) {
         console.warn(e)
@@ -185,6 +256,7 @@ export function PWAInstall() {
   const handleDismissMobileApkPrompt = () => {
     setShowMobileApkPrompt(false)
     try {
+      localStorage.setItem('vsb_apk_prompt_dismissed', 'true')
       sessionStorage.setItem('vsb_apk_prompt_dismissed', 'true')
     } catch {}
   }
