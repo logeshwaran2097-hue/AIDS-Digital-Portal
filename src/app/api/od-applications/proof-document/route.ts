@@ -40,6 +40,8 @@ export async function GET(request: Request) {
   const residency = student?.residencyStatus || 'Day Scholar'
   const busNo = student?.busNo ? `College Bus ${student.busNo}` : 'College Bus 44'
 
+  const batch = student?.batch || '2025–2029'
+
   const totalRecords = await prisma.attendanceRecord.count({ where: { registerNumber } }).catch(() => 0)
   const presentRecords = await prisma.attendanceRecord.count({
     where: { registerNumber, status: { in: ['P', 'OD', 'ML'] } },
@@ -57,6 +59,7 @@ export async function GET(request: Request) {
   const eRegisterNumber = escapeXml(registerNumber)
   const eYear = escapeXml(year)
   const eSection = escapeXml(section)
+  const eBatch = escapeXml(batch)
   const eParentPhone = escapeXml(parentPhone)
   const eResidency = escapeXml(residency)
   const eBusNo = escapeXml(busNo)
@@ -176,20 +179,20 @@ export async function GET(request: Request) {
   <text x="75" y="388" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">CLASS / SECTION:</text>
   <text x="210" y="388" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D">Year ${eYear} · Section ${eSection} (B.Tech AI &amp; DS)</text>
 
-  <text x="450" y="388" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">ANNA UNIV ATTENDANCE:</text>
-  <text x="620" y="388" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="900" fill="#059669">${eAttRate}% (Compliant &gt;= 75%)</text>
+  <text x="450" y="388" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">LEAVE DURATION:</text>
+  <text x="620" y="388" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="900" fill="#1455D9">2 Days (${eFromDate} to ${eToDate})</text>
 
   <text x="75" y="420" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">REQUEST TYPE:</text>
   <text x="210" y="420" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#B45309">${eCustomType}</text>
 
-  <text x="450" y="420" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">LEAVE DURATION:</text>
-  <text x="620" y="420" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="900" fill="#1455D9">2 Days (${eFromDate} to ${eToDate})</text>
+  <text x="450" y="420" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">RESIDENCY / BUS:</text>
+  <text x="620" y="420" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" fill="#334155">${eResidency} (${eBusNo})</text>
 
   <text x="75" y="450" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">PARENT PHONE:</text>
   <text x="210" y="450" font-family="'Courier New', monospace" font-size="12" font-weight="bold" fill="#071A3D">+91-${eParentPhone}</text>
 
-  <text x="450" y="450" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">RESIDENCY / BUS:</text>
-  <text x="620" y="450" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" fill="#334155">${eResidency} (${eBusNo})</text>
+  <text x="450" y="450" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">ACADEMIC BATCH:</text>
+  <text x="620" y="450" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D">Batch ${eBatch}</text>
 
   <!-- Attached Proof: Event Invitation and Requisition Box -->
   <rect x="50" y="488" width="750" height="355" rx="10" fill="#FFFBEB" stroke="#FDE68A"/>
@@ -213,8 +216,8 @@ export async function GET(request: Request) {
 
   <text x="95" y="668" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#475569" font-style="italic">"To: The Class Advisor, Department of AI &amp; DS, V.S.B. Engineering College (Autonomous)."</text>
   <text x="95" y="688" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"Respected Faculty / Class Advisor, My ward ${eStudentNameSig} (${eRegisterNumber}) requires leave on ${eFromDate} and ${eToDate}"</text>
-  <text x="95" y="708" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"to participate in our family traditional temple function. We affirm her attendance will remain above the mandatory 75%"</text>
-  <text x="95" y="728" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"Anna University threshold, and she will submit all academic lab assignments promptly upon return."</text>
+  <text x="95" y="708" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"to participate in our family traditional ceremony. We affirm our ward will promptly complete all academic lab"</text>
+  <text x="95" y="728" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"assignments upon return and maintain diligent compliance with all departmental academic requirements."</text>
 
   <line x1="95" y1="746" x2="755" y2="746" stroke="#E2E8F0" stroke-width="1"/>
 
