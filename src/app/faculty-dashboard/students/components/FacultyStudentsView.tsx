@@ -34,6 +34,8 @@ import {
   Check,
   ArrowUpDown,
   PhoneCall,
+  Eye,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -47,6 +49,7 @@ export interface StudentRosterItem {
   year: number
   semester: number
   section: string
+  department?: string | null
   cgpa: number
   attendance: number
   arrears: number
@@ -57,6 +60,8 @@ export interface StudentRosterItem {
   roomNo?: string | null
   busNo?: string | null
   boardingPoint?: string | null
+  busDetails?: string | null
+  address?: string | null
   batch?: string | null
   advisorName?: string | null
   isParentWhatsapp?: boolean
@@ -215,6 +220,136 @@ export function FacultyStudentsView({
     attendanceFilter !== 'ALL' ||
     searchQuery.trim() !== ''
 
+  const handleExportCSV = () => {
+    const headers = [
+      'Register Number',
+      'Student Name',
+      'Department',
+      'Year',
+      'Semester',
+      'Section',
+      'Batch',
+      'CGPA',
+      'Attendance (%)',
+      'Standing Arrears',
+      'Date of Birth',
+      'Blood Group',
+      'Residency Status',
+      'Hostel Block',
+      'Hostel Room',
+      'Bus Number',
+      'Boarding Point',
+      'Bus Details',
+      'Student Phone',
+      'Student Email',
+      'Parent Phone',
+      'Parent WhatsApp',
+      'Address',
+      'Class Advisor',
+    ]
+
+    const rows = filteredStudents.map((s) => [
+      `"${s.registerNumber}"`,
+      `"${(s.name || '').replace(/"/g, '""')}"`,
+      `"${(s.department || 'Artificial Intelligence & Data Science').replace(/"/g, '""')}"`,
+      s.year,
+      s.semester,
+      `"${s.section}"`,
+      `"${(s.batch || '').replace(/"/g, '""')}"`,
+      s.cgpa > 0 ? s.cgpa.toFixed(2) : '0.00',
+      s.attendance > 0 ? s.attendance.toFixed(1) : '0.0',
+      s.arrears,
+      `"${s.dob || ''}"`,
+      `"${s.bloodGroup || ''}"`,
+      `"${s.residencyStatus || 'Day Scholar'}"`,
+      `"${s.hostelBlock || ''}"`,
+      `"${s.roomNo || ''}"`,
+      `"${s.busNo || ''}"`,
+      `"${(s.boardingPoint || '').replace(/"/g, '""')}"`,
+      `"${(s.busDetails || '').replace(/"/g, '""')}"`,
+      `"${s.phone || ''}"`,
+      `"${s.email || ''}"`,
+      `"${s.parentPhone || ''}"`,
+      s.isParentWhatsapp ? 'Yes' : 'No',
+      `"${(s.address || '').replace(/"/g, '""')}"`,
+      `"${(s.advisorName || advisorDetails?.facultyName || '').replace(/"/g, '""')}"`,
+    ])
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `Class_Roster_Full_Year_${selectedYear}_Sec_${selectedSection}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleDownloadStudentDossier = (s: StudentRosterItem) => {
+    const isHostel = s.residencyStatus?.toLowerCase().includes('hostel') || Boolean(s.hostelBlock)
+    const sections = [
+      {
+        heading: 'OFFICIAL STUDENT IDENTITY & ACADEMIC DOSSIER',
+        body: [
+          `Register Number: ${s.registerNumber}`,
+          `Student Full Name: ${s.name}`,
+          `Department: ${s.department || 'Artificial Intelligence & Data Science (AI & DS)'}`,
+          `Class Cohort: Year ${s.year} · Semester ${s.semester} · Section ${s.section}`,
+          `Academic Batch: ${s.batch || 'B.Tech AI & DS'}`,
+          `Class Advisor In-Charge: ${s.advisorName || advisorDetails?.facultyName || 'Faculty Member'}`,
+          `Date of Birth: ${s.dob || 'Not Recorded'}`,
+          `Blood Group: ${s.bloodGroup || 'Not Recorded'}`,
+        ],
+      },
+      {
+        heading: 'ACADEMIC STANDING & ATTENDANCE RECORD',
+        body: [
+          `Cumulative Attendance: ${s.attendance > 0 ? `${s.attendance.toFixed(1)}%` : 'Not Recorded'}`,
+          `Attendance Eligibility: ${s.attendance >= 75 ? 'ELIGIBLE FOR EXAMINATIONS (Compliant)' : 'ATTENDANCE SHORTAGE / CONDONATION RISK (<75%)'}`,
+          `Cumulative Grade Point Average (CGPA): ${s.cgpa > 0 ? `${s.cgpa.toFixed(2)} / 10.0` : 'N/A'}`,
+          `Standing Arrears: ${s.arrears === 0 ? '0 Standing Arrears (Clean Record)' : `${s.arrears} Arrear(s)`}`,
+        ],
+      },
+      {
+        heading: 'CAMPUS RESIDENCY & LOGISTICS PROFILE',
+        body: [
+          `Residency Classification: ${s.residencyStatus || (isHostel ? 'Hosteller' : 'Day Scholar')}`,
+          ...(isHostel
+            ? [
+                `Hostel Block: ${s.hostelBlock || 'Campus Hostel'}`,
+                `Room Allocation: ${s.roomNo ? `Room ${s.roomNo}` : 'Assigned Room'}`,
+              ]
+            : [
+                `College Bus Number: ${s.busNo ? `Route Bus #${s.busNo}` : 'College Bus'}`,
+                `Boarding Point: ${s.boardingPoint || 'Main Bus Stop'}`,
+                `Transit Particulars: ${s.busDetails || 'Day Scholar Route'}`,
+              ]),
+        ],
+      },
+      {
+        heading: 'COMMUNICATION & FAMILY CONTACT PARTICULARS',
+        body: [
+          `Student Contact Mobile: ${s.phone || 'Not Recorded'}`,
+          `Institutional Email: ${s.email}`,
+          `Parent / Guardian Contact: ${s.parentPhone || 'Not Recorded'}`,
+          `WhatsApp Enabled for Parent: ${s.isParentWhatsapp ? 'Active' : 'No'}`,
+          `Permanent / Residential Address: ${s.address || 'Address on record at college administration'}`,
+        ],
+      },
+    ]
+
+    generateAndDownloadPDF({
+      title: `STUDENT PROFILE DOSSIER: ${s.name.toUpperCase()}`,
+      subtitle: `Register No: ${s.registerNumber} · Dept of AI & DS · Year ${s.year} Sec ${s.section}`,
+      author: advisorDetails?.facultyName || 'Class Advisor',
+      category: 'Student Comprehensive Record',
+      sections,
+      fileName: `Student_Dossier_${s.registerNumber}_${s.name.replace(/\s+/g, '_')}`,
+    })
+  }
+
   const handleDownloadRosterPDF = () => {
     const activeScope = `${selectedYear !== 'ALL' ? `Year ${selectedYear}` : 'All Assigned Years'} · ${
       selectedSection !== 'ALL' ? `Section ${selectedSection}` : 'All Assigned Sections'
@@ -242,7 +377,7 @@ export function FacultyStudentsView({
               s.cgpa > 0 ? s.cgpa.toFixed(2) : 'N/A'
             } | Attendance: ${s.attendance > 0 ? `${s.attendance.toFixed(1)}%` : 'N/A'} | Arrears: ${s.arrears} | Phone: ${
               s.phone || 'N/A'
-            } | Parent: ${s.parentPhone || 'N/A'}`
+            } | Parent: ${s.parentPhone || 'N/A'}${s.address ? ` | Address: ${s.address}` : ''}`
         ),
       },
     ]
@@ -286,20 +421,29 @@ export function FacultyStudentsView({
               </span>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Student Registry &amp; Academic Roster</h1>
+          <h1 className="text-2xl sm:text-3xl font-black">Student Registry &amp; Complete Information Roster</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            {advisorDetails?.facultyName || 'Faculty'} · Easily filter by Year, Class Section, Residency &amp; Attendance
+            {advisorDetails?.facultyName || 'Faculty'} · Class Advisor 360° View: Academic, Personal, Transit &amp; Parent Details
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {filteredStudents.length > 0 && (
-            <button
-              onClick={handleDownloadRosterPDF}
-              className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
-            >
-              <Download className="w-4 h-4" /> Download Class Roster (PDF)
-            </button>
+            <>
+              <button
+                onClick={handleExportCSV}
+                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 cursor-pointer hover:scale-102"
+                title="Export all student details into Excel / CSV format"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-[#22C7E8]" /> Export Full Roster (.CSV)
+              </button>
+              <button
+                onClick={handleDownloadRosterPDF}
+                className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105"
+              >
+                <Download className="w-4 h-4" /> Download PDF Roster
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -761,9 +905,10 @@ export function FacultyStudentsView({
                               <button
                                 type="button"
                                 onClick={() => setSelectedStudent(s)}
-                                className="px-3 py-1 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-lg text-[10.5px] font-bold transition-all cursor-pointer shadow-2xs"
+                                className="px-3 py-1 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-lg text-[10.5px] font-black transition-all cursor-pointer shadow-2xs flex items-center gap-1"
+                                title="View All Student Information & Complete Dossier"
                               >
-                                View ID
+                                <Eye className="w-3.5 h-3.5" /> Full Info
                               </button>
                             </div>
                           </td>
@@ -898,9 +1043,9 @@ export function FacultyStudentsView({
                     <button
                       type="button"
                       onClick={() => setSelectedStudent(s)}
-                      className="flex-1 py-1.5 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition shadow-2xs"
+                      className="flex-1 py-1.5 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-black transition shadow-2xs flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      View Profile
+                      <Eye className="w-3.5 h-3.5" /> Full Info
                     </button>
                   </div>
                 </div>
@@ -910,21 +1055,22 @@ export function FacultyStudentsView({
         </div>
       )}
 
-      {/* ── Comprehensive Student Dossier Modal ── */}
+      {/* ── Comprehensive Student Dossier Modal (Complete 360° Information for Class Advisor) ── */}
       {selectedStudent && (
-        <div className="fixed inset-0 z-50 bg-[#071A3D]/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto animate-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto animate-in zoom-in-95 border border-gray-100">
             {/* Modal Top Header */}
-            <div className="flex items-start justify-between border-b pb-3">
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#1455D9] via-[#0A2A5E] to-[#22C7E8] text-white font-black text-xl flex items-center justify-center shadow-md shrink-0">
+            <div className="flex items-start justify-between border-b border-gray-100 pb-4">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#1455D9] via-[#0A2A5E] to-[#22C7E8] text-white font-black text-2xl flex items-center justify-center shadow-md shrink-0">
                   {selectedStudent.name.charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-[#071A3D]">{selectedStudent.name}</h3>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs font-mono text-[#1455D9] font-black">{selectedStudent.registerNumber}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-[#1455D9] border border-blue-100">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs font-mono text-[#1455D9] font-black bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                      {selectedStudent.registerNumber}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#F4C430]/20 text-[#071A3D] border border-[#F4C430]/40">
                       Year {selectedStudent.year} · Sec {selectedStudent.section}
                     </span>
                     {selectedStudent.bloodGroup && (
@@ -933,124 +1079,247 @@ export function FacultyStudentsView({
                       </span>
                     )}
                   </div>
+                  <h3 className="text-xl font-black text-[#071A3D] mt-1">{selectedStudent.name}</h3>
+                  <p className="text-xs text-gray-500 font-medium">
+                    {selectedStudent.department || 'B.Tech Artificial Intelligence & Data Science'} · {selectedStudent.batch || 'Class Cohort'}
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedStudent(null)}
-                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer"
+                className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl cursor-pointer transition"
+                title="Close"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Structured Dossier Sections */}
-            <div className="space-y-3 text-xs">
-              {/* Academic Highlights */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100">
-                  <span className="text-gray-500 font-bold block text-[10px] uppercase">Attendance Record</span>
-                  <p className={cn('text-lg font-black mt-0.5', selectedStudent.attendance >= 75 ? 'text-green-700' : 'text-red-600')}>
-                    {selectedStudent.attendance.toFixed(1)}%
+            {/* Direct Instant Action Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {selectedStudent.phone ? (
+                <a
+                  href={`tel:${selectedStudent.phone}`}
+                  className="py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] font-bold text-xs flex items-center justify-center gap-1.5 border border-blue-200 transition"
+                >
+                  <PhoneCall className="w-3.5 h-3.5" /> Call Student
+                </a>
+              ) : (
+                <span className="py-2 px-3 rounded-xl bg-gray-50 text-gray-400 font-medium text-xs flex items-center justify-center gap-1.5 border border-gray-200">
+                  <Phone className="w-3.5 h-3.5" /> No Student Ph
+                </span>
+              )}
+
+              {selectedStudent.parentPhone ? (
+                <a
+                  href={`tel:${selectedStudent.parentPhone}`}
+                  className="py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center gap-1.5 border border-amber-200 transition"
+                >
+                  <PhoneCall className="w-3.5 h-3.5" /> Call Parent
+                </a>
+              ) : (
+                <span className="py-2 px-3 rounded-xl bg-gray-50 text-gray-400 font-medium text-xs flex items-center justify-center gap-1.5 border border-gray-200">
+                  <Phone className="w-3.5 h-3.5" /> No Parent Ph
+                </span>
+              )}
+
+              {selectedStudent.parentPhone ? (
+                <a
+                  href={`https://wa.me/91${selectedStudent.parentPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                    `Dear Parent, Greetings from Dept of AI&DS, VSB Engineering College. Academic update for ${selectedStudent.name} (${selectedStudent.registerNumber}): Cumulative Attendance: ${selectedStudent.attendance.toFixed(1)}%, CGPA: ${selectedStudent.cgpa.toFixed(2)}.`
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
+                </a>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => handleDownloadStudentDossier(selectedStudent)}
+                className="py-2 px-3 rounded-xl bg-[#071A3D] hover:bg-[#0A2A5E] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
+                title="Download complete printable student profile PDF"
+              >
+                <Download className="w-3.5 h-3.5" /> PDF Dossier
+              </button>
+            </div>
+
+            {/* Comprehensive Dossier Grid */}
+            <div className="space-y-3.5 text-xs">
+              {/* 1. Academic Highlights & Exam Eligibility */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100">
+                  <span className="text-gray-500 font-bold block text-[10px] uppercase tracking-wider">Attendance Standing</span>
+                  <p className={cn('text-xl font-black mt-0.5', selectedStudent.attendance >= 75 ? 'text-green-700' : 'text-red-600')}>
+                    {selectedStudent.attendance > 0 ? `${selectedStudent.attendance.toFixed(1)}%` : 'No Data'}
                   </p>
-                  <span className="text-[10px] text-gray-400 font-semibold">
-                    {selectedStudent.attendance >= 75 ? 'Compliant (>75%)' : 'Condonation Risk (<75%)'}
+                  <div className="w-full bg-gray-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                    <div
+                      className={cn(
+                        'h-full rounded-full',
+                        selectedStudent.attendance >= 75 ? 'bg-emerald-500' : selectedStudent.attendance > 0 ? 'bg-rose-500' : 'bg-gray-300'
+                      )}
+                      style={{ width: `${Math.min(selectedStudent.attendance, 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold block mt-1 text-gray-500">
+                    {selectedStudent.attendance >= 75 ? '✓ Exam Eligible (Compliant)' : '⚠️ Attendance Risk (<75%)'}
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-purple-50/50 border border-purple-100">
-                  <span className="text-gray-500 font-bold block text-[10px] uppercase">Academic CGPA</span>
-                  <p className="text-lg font-black text-purple-700 mt-0.5">
-                    {selectedStudent.cgpa > 0 ? selectedStudent.cgpa.toFixed(2) : 'N/A'}
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-100">
+                  <span className="text-gray-500 font-bold block text-[10px] uppercase tracking-wider">Cumulative GPA (CGPA)</span>
+                  <p className="text-xl font-black text-purple-700 mt-0.5">
+                    {selectedStudent.cgpa > 0 ? `${selectedStudent.cgpa.toFixed(2)} / 10.0` : '—'}
                   </p>
-                  <span className="text-[10px] text-gray-400 font-semibold">
-                    {selectedStudent.arrears === 0 ? '0 Standing Arrears' : `${selectedStudent.arrears} Arrear(s)`}
+                  <span className="text-[10px] text-gray-400 font-semibold block mt-2">
+                    Academic Standing
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-gray-200">
+                  <span className="text-gray-500 font-bold block text-[10px] uppercase tracking-wider">Standing Arrears</span>
+                  <p className={cn('text-xl font-black mt-0.5', selectedStudent.arrears === 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                    {selectedStudent.arrears === 0 ? '0 Arrears' : `${selectedStudent.arrears} Arrear(s)`}
+                  </p>
+                  <span className="text-[10px] text-gray-400 font-semibold block mt-2">
+                    {selectedStudent.arrears === 0 ? 'All subjects cleared' : 'Requires academic remedial'}
                   </span>
                 </div>
               </div>
 
-              {/* Personal & Cohort Particulars */}
-              <div className="bg-gray-50 rounded-2xl p-3 border space-y-2">
-                <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider block">
-                  Cohort &amp; Academic Identity
+              {/* 2. Institutional Identity & Cohort Details */}
+              <div className="bg-gray-50/80 rounded-2xl p-4 border border-gray-200/80 space-y-2.5">
+                <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5">
+                  <School className="w-3.5 h-3.5 text-[#1455D9]" /> Institutional Academic Identity
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <span className="text-gray-400 text-[10px] block">Semester</span>
-                    <span className="font-bold text-[#071A3D]">Semester {selectedStudent.semester}</span>
+                    <span className="text-gray-400 text-[10px] block">Department</span>
+                    <span className="font-bold text-[#071A3D]">{selectedStudent.department || 'Artificial Intelligence & Data Science'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px] block">Current Year &amp; Semester</span>
+                    <span className="font-bold text-[#071A3D]">Year {selectedStudent.year} · Semester {selectedStudent.semester}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px] block">Section</span>
+                    <span className="font-bold text-[#071A3D]">Section {selectedStudent.section}</span>
                   </div>
                   <div>
                     <span className="text-gray-400 text-[10px] block">Academic Batch</span>
                     <span className="font-bold text-[#071A3D]">{selectedStudent.batch || 'B.Tech AI & DS'}</span>
                   </div>
-                  {selectedStudent.dob && (
-                    <div>
-                      <span className="text-gray-400 text-[10px] block">Date of Birth</span>
-                      <span className="font-bold text-[#071A3D]">{selectedStudent.dob}</span>
-                    </div>
-                  )}
                   <div>
-                    <span className="text-gray-400 text-[10px] block">Class Advisor</span>
-                    <span className="font-bold text-[#071A3D]">{selectedStudent.advisorName || advisorDetails?.facultyName || 'AI & DS Faculty'}</span>
+                    <span className="text-gray-400 text-[10px] block">Date of Birth</span>
+                    <span className="font-bold text-[#071A3D]">{selectedStudent.dob || 'Not Recorded'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400 text-[10px] block">Class Advisor In-Charge</span>
+                    <span className="font-bold text-[#1455D9]">{selectedStudent.advisorName || advisorDetails?.facultyName || 'Class Advisor'}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Residency & Campus Transit Particulars */}
-              <div className="bg-gray-50 rounded-2xl p-3 border space-y-2">
-                <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider block">
-                  Residency &amp; Campus Logistics
+              {/* 3. Campus Logistics, Residency & Transportation */}
+              <div className="bg-gray-50/80 rounded-2xl p-4 border border-gray-200/80 space-y-2.5">
+                <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Campus Logistics &amp; Accommodation
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
                     <span className="text-gray-400 text-[10px] block">Residency Type</span>
-                    <span className="font-bold text-[#071A3D]">{selectedStudent.residencyStatus || 'Day Scholar'}</span>
+                    <span className="font-bold text-[#071A3D] inline-flex items-center gap-1">
+                      {selectedStudent.residencyStatus?.toLowerCase().includes('hostel') || selectedStudent.hostelBlock ? (
+                        <>
+                          <Building className="w-3.5 h-3.5 text-amber-600" /> Hosteller
+                        </>
+                      ) : (
+                        <>
+                          <Bus className="w-3.5 h-3.5 text-emerald-600" /> Day Scholar
+                        </>
+                      )}
+                    </span>
                   </div>
-                  {selectedStudent.residencyStatus?.toLowerCase().includes('hostel') ? (
-                    <div>
-                      <span className="text-gray-400 text-[10px] block">Hostel Room</span>
-                      <span className="font-bold text-[#071A3D]">
-                        {selectedStudent.hostelBlock ? `Block ${selectedStudent.hostelBlock}` : 'Hostel'} {selectedStudent.roomNo ? `Room ${selectedStudent.roomNo}` : ''}
-                      </span>
-                    </div>
+
+                  {selectedStudent.residencyStatus?.toLowerCase().includes('hostel') || selectedStudent.hostelBlock ? (
+                    <>
+                      <div>
+                        <span className="text-gray-400 text-[10px] block">Hostel Block</span>
+                        <span className="font-bold text-[#071A3D]">{selectedStudent.hostelBlock ? `Block ${selectedStudent.hostelBlock}` : 'Campus Hostel'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 text-[10px] block">Room Number</span>
+                        <span className="font-bold text-[#071A3D] font-mono">{selectedStudent.roomNo ? `Room ${selectedStudent.roomNo}` : 'Assigned Room'}</span>
+                      </div>
+                    </>
                   ) : (
-                    <div>
-                      <span className="text-gray-400 text-[10px] block">College Bus Route</span>
-                      <span className="font-bold text-[#071A3D]">
-                        {selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit'} {selectedStudent.boardingPoint ? `(${selectedStudent.boardingPoint})` : ''}
-                      </span>
-                    </div>
+                    <>
+                      <div>
+                        <span className="text-gray-400 text-[10px] block">College Bus Route</span>
+                        <span className="font-bold text-[#071A3D]">{selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 text-[10px] block">Boarding Point</span>
+                        <span className="font-bold text-[#071A3D]">{selectedStudent.boardingPoint || 'Main Bus Stop'}</span>
+                      </div>
+                      {selectedStudent.busDetails && (
+                        <div className="col-span-full">
+                          <span className="text-gray-400 text-[10px] block">Transit Details</span>
+                          <span className="font-medium text-[#071A3D]">{selectedStudent.busDetails}</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
 
-              {/* Contact Particulars */}
-              <div className="bg-gray-50 rounded-2xl p-3 border space-y-2">
-                <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider block">
-                  Communication Channels
+              {/* 4. Family Contacts & Postal Address */}
+              <div className="bg-gray-50/80 rounded-2xl p-4 border border-gray-200/80 space-y-2.5">
+                <span className="text-[10px] font-black uppercase text-gray-500 tracking-wider flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-purple-600" /> Communication Channels &amp; Family Address
                 </span>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Student Phone:</span>
-                    <span className="font-bold text-[#071A3D] font-mono">{selectedStudent.phone || 'Not Registered'}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <span className="text-gray-400 text-[10px] block">Student Personal Phone</span>
+                    <span className="font-bold text-[#071A3D] font-mono text-sm">
+                      {selectedStudent.phone || 'Not Registered'}
+                    </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Parent Phone:</span>
-                    <span className="font-bold text-[#1455D9] font-mono">{selectedStudent.parentPhone || 'Not Registered'}</span>
+                  <div>
+                    <span className="text-gray-400 text-[10px] block">Parent / Guardian Phone</span>
+                    <span className="font-bold text-[#1455D9] font-mono text-sm flex items-center gap-1.5">
+                      {selectedStudent.parentPhone || 'Not Registered'}
+                      {selectedStudent.isParentWhatsapp && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-sm bg-emerald-100 text-emerald-800">
+                          WhatsApp Active
+                        </span>
+                      )}
+                    </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500">Institutional Email:</span>
-                    <span className="font-mono text-[#071A3D]">{selectedStudent.email}</span>
+                  <div className="sm:col-span-2">
+                    <span className="text-gray-400 text-[10px] block">Official Institutional Email</span>
+                    <span className="font-medium font-mono text-[#071A3D] text-xs">
+                      {selectedStudent.email}
+                    </span>
+                  </div>
+                  <div className="sm:col-span-2 pt-1 border-t border-gray-200/60">
+                    <span className="text-gray-400 text-[10px] block font-bold uppercase">Permanent / Home Address</span>
+                    <p className="font-medium text-[#071A3D] text-xs mt-0.5">
+                      {selectedStudent.address || 'Address registered on admission record in college office.'}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              {/* Faculty Remarks & Academic Case Notes */}
+              {/* 5. Faculty Remarks & Mentoring Notes */}
               <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-black uppercase text-[#1455D9] tracking-wider block">
-                    Faculty Observation &amp; Case Notes
+                    Class Advisor Observation &amp; Mentoring Record
                   </span>
-                  <span className="text-[10px] text-gray-400 font-medium">Record</span>
+                  <span className="text-[10px] text-gray-400 font-medium">Auto-saved</span>
                 </div>
                 <select
                   value={studentRemarksMap[selectedStudent.id]?.category || ''}
@@ -1097,36 +1366,32 @@ export function FacultyStudentsView({
             </div>
 
             {/* Modal Bottom Actions */}
-            <div className="pt-3 border-t flex flex-wrap justify-end gap-2">
-              {selectedStudent.parentPhone && (
-                <a
-                  href={`https://wa.me/91${selectedStudent.parentPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                    `Hello, Greetings from Department of AI&DS (VSBEC). Update regarding ${selectedStudent.name} (${selectedStudent.registerNumber}): Attendance: ${selectedStudent.attendance.toFixed(
-                      1
-                    )}%, CGPA: ${selectedStudent.cgpa.toFixed(2)}.`
-                  )}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-4 py-2 bg-[#25D366] hover:bg-[#1EBE5D] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition"
+            <div className="pt-3 border-t border-gray-100 flex flex-wrap justify-between items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleDownloadStudentDossier(selectedStudent)}
+                className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-[#1455D9] rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-blue-200"
+              >
+                <FileText className="w-3.5 h-3.5" /> Printable Profile Dossier
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    handleSendParentAlert(selectedStudent)
+                    setSelectedStudent(null)
+                  }}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer transition shadow-xs"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" /> WhatsApp Parent
-                </a>
-              )}
-              <button
-                onClick={() => {
-                  handleSendParentAlert(selectedStudent)
-                  setSelectedStudent(null)
-                }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 cursor-pointer"
-              >
-                <Send className="w-3.5 h-3.5" /> Send Parent SMS
-              </button>
-              <button
-                onClick={() => setSelectedStudent(null)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer"
-              >
-                Close
-              </button>
+                  <Send className="w-3.5 h-3.5" /> SMS Parent
+                </button>
+                <button
+                  onClick={() => setSelectedStudent(null)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold cursor-pointer transition"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

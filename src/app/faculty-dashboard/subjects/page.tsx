@@ -27,23 +27,8 @@ export default async function FacultySubjectsPage() {
     orderBy: { code: 'asc' },
   }).catch(() => [])
 
-  let effectiveSubjects = [...dbSubjects]
-  if (effectiveSubjects.length === 0 && (faculty?.subjectName || parsedSubjectCodes.length > 0)) {
-    const subCode = parsedSubjectCodes[0] || (faculty?.facultyType === 'lab_faculty' ? 'AD2311' : 'AD3301')
-    const subName = faculty?.subjectName || (faculty?.facultyType === 'lab_faculty' ? 'Object Oriented Programming Laboratory' : 'Department Course')
-    effectiveSubjects = [
-      {
-        id: 'alloc-' + (faculty?.facultyId || 'sub'),
-        code: subCode,
-        name: subName,
-        credits: faculty?.facultyType === 'lab_faculty' ? 2 : 4,
-        description: 'Laboratory Practical & Applied Curriculum',
-        yearId: null,
-        semesterId: null,
-        academicYearId: 'cmtmnsw30000apv1wxafyfv59',
-      } as any
-    ]
-  }
+  // Strictly use real allocated subjects from DB (do NOT fabricate mock subjects for advisors)
+  const effectiveSubjects = parsedSubjectCodes.length > 0 ? dbSubjects : []
 
   const subjectIds = effectiveSubjects.map(s => s.id)
   const subjectCodes = effectiveSubjects.map(s => s.code)

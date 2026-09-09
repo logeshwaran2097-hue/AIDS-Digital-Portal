@@ -175,7 +175,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
                     ? "bg-[#22C7E8] text-[#051330]"
                     : "bg-[#F4C430] text-[#071A3D]"
                 )}>
-                  {isClassAdvisor ? 'Class Advisor & Faculty' : data.faculty?.facultyType === 'lab_faculty' ? 'Lab Handler' : 'Faculty Member'}
+                  {isClassAdvisor ? 'Class Advisor' : data.faculty?.facultyType === 'lab_faculty' ? 'Lab Handler' : 'Faculty Member'}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
@@ -201,15 +201,27 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         {/* Academic KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/15">
           <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
-            <p className="text-[10px] text-slate-300 uppercase font-bold">Allocated Courses</p>
-            <p className="text-xl font-black text-[#F4C430] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
-            <p className="text-[10px] text-slate-300">Curriculum &amp; Labs</p>
+            {isClassAdvisor && data.totalSubjects === 0 ? (
+              <>
+                <p className="text-[10px] text-slate-300 uppercase font-bold">Class Advisory Scope</p>
+                <p className="text-xl font-black text-[#F4C430] mt-0.5">
+                  {data.faculty?.advisorBatch || (data.faculty?.advisorYear ? `Year ${data.faculty.advisorYear} · Sec ${data.faculty.advisorSec || 'B'}` : 'Year 2 · Sec B')}
+                </p>
+                <p className="text-[10px] text-slate-300">Class Advisor In-Charge</p>
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] text-slate-300 uppercase font-bold">Allocated Courses</p>
+                <p className="text-xl font-black text-[#F4C430] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
+                <p className="text-[10px] text-slate-300">Curriculum &amp; Labs</p>
+              </>
+            )}
           </div>
 
           <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
             <p className="text-[10px] text-gray-300 uppercase font-bold">Enrolled Students</p>
             <p className="text-xl font-black text-emerald-300 mt-0.5">{data.totalStudents} Student{data.totalStudents === 1 ? '' : 's'}</p>
-            <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || (data.faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Sessions' : 'Active Students')}</p>
+            <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || (data.faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Sessions' : 'Class Advisor Scope')}</p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
@@ -269,32 +281,45 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-[#1455D9]" />
-              <span>Allocated Subjects &amp; Class Performance</span>
+              <span>{isClassAdvisor && assignedSubjects.length === 0 ? 'Class Advisory Overview' : 'Allocated Subjects & Class Performance'}</span>
             </h2>
-            <Link href="/faculty-dashboard/subjects" className="text-xs font-bold text-[#1455D9] hover:underline flex items-center gap-1">
-              View All Courses <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            {assignedSubjects.length > 0 && (
+              <Link href="/faculty-dashboard/subjects" className="text-xs font-bold text-[#1455D9] hover:underline flex items-center gap-1">
+                View All Courses <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
           </div>
 
           <div className="space-y-3">
             {assignedSubjects.length === 0 ? (
               <Card className="rounded-3xl border-gray-200 bg-white shadow-xs">
-                <CardContent className="p-8 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto">
-                    <BookOpen className="w-6 h-6" />
+                <CardContent className="p-6 sm:p-8 text-center space-y-4">
+                  <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto shadow-inner">
+                    <Users className="w-7 h-7" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-[#071A3D]">No Subjects Currently Allocated</h3>
-                    <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
-                      Courses assigned by the HOD or Department Admin will automatically appear here with enrolled batch analytics.
+                  <div className="max-w-md mx-auto space-y-1.5">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-black">
+                      <Sparkles className="w-3.5 h-3.5" /> Class Advisor Assignment
+                    </div>
+                    <h3 className="font-black text-base sm:text-lg text-[#071A3D]">
+                      {data.faculty?.advisorBatch || (data.faculty?.advisorYear ? `Year ${data.faculty.advisorYear} · Section ${data.faculty.advisorSec || 'B'}` : 'Year 2 · Section B')}
+                    </h3>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      You are assigned as the Class Advisor with full student information oversight, attendance management, and parent communication for all {data.totalStudents} enrolled students.
                     </p>
                   </div>
-                  <div className="pt-2 flex justify-center gap-2">
+                  <div className="pt-2 flex flex-wrap justify-center gap-2.5">
+                    <Link
+                      href="/faculty-dashboard/students"
+                      className="px-4 py-2.5 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-all shadow-xs inline-flex items-center gap-2 cursor-pointer"
+                    >
+                      <Users className="w-4 h-4" /> View All Student Information
+                    </Link>
                     <Link
                       href="/faculty-dashboard/attendance"
-                      className="px-4 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+                      className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs inline-flex items-center gap-2 cursor-pointer"
                     >
-                      <UserCheck className="w-4 h-4" /> Go to Attendance
+                      <UserCheck className="w-4 h-4" /> Mark Class Attendance
                     </Link>
                   </div>
                 </CardContent>
