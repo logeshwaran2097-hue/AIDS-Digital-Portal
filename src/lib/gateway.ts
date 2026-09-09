@@ -206,9 +206,128 @@ async function sendFast2Sms(toLast10: string, body: string, cfg: GatewayConfig):
   }
 }
 
+export interface WhatsappMessageParams {
+  studentName?: string
+  date?: string
+  status?: string
+  remarks?: string | null
+  reason?: string
+  fullMessage?: string
+}
+
+export function getEnglishStatus(status?: string | null): string {
+  const s = String(status || '').trim().toUpperCase()
+  if (s === 'A' || s === 'ABSENT') return 'Absent'
+  if (s === 'OD' || s === 'ON-DUTY' || s === 'ON DUTY') return 'On-Duty (OD)'
+  if (s === 'ML' || s === 'MEDICAL LEAVE') return 'Medical Leave (ML)'
+  if (s === 'L' || s === 'LATE') return 'Late Entry (Late)'
+  if (s === 'P' || s === 'PRESENT') return 'Present'
+  return status || 'Status Notification'
+}
+
+export function getTamilStatus(status?: string | null): string {
+  const s = String(status || '').trim().toUpperCase()
+  if (s === 'A' || s === 'ABSENT') return 'வருகை தரவில்லை (Absent)'
+  if (s === 'OD' || s === 'ON-DUTY' || s === 'ON DUTY') return 'அலுவல் முறை அனுமதி (On-Duty / OD)'
+  if (s === 'ML' || s === 'MEDICAL LEAVE') return 'மருத்துவ விடுப்பு (Medical Leave / ML)'
+  if (s === 'L' || s === 'LATE') return 'தாமத வருகை (Late Entry)'
+  if (s === 'P' || s === 'PRESENT') return 'வருகை புரிந்துள்ளார் (Present)'
+  return 'மாணவர் நிலை அறிவிப்பு'
+}
+
+export function getEnglishRemarks(remarks?: string | null, status?: string | null): string {
+  const r = (remarks || '').trim()
+  if (r) return r
+  const s = String(status || '').trim().toUpperCase()
+  if (s === 'A') return 'Uninformed Absence'
+  if (s === 'OD') return 'On-Duty Permission Approved'
+  if (s === 'ML') return 'Medical Leave Approved'
+  if (s === 'L') return 'Late Entry to Class'
+  return 'Official College Record'
+}
+
+export function getTamilRemarks(remarks?: string | null, status?: string | null): string {
+  const r = (remarks || '').trim()
+  if (!r) {
+    const s = String(status || '').trim().toUpperCase()
+    if (s === 'A') return 'முன்னறிவிப்பற்ற விடுப்பு'
+    if (s === 'OD') return 'அலுவல் முறை பணி அனுமதி (அங்கீகரிக்கப்பட்டது)'
+    if (s === 'ML') return 'மருத்துவ விடுப்பு (அங்கீகரிக்கப்பட்டது)'
+    if (s === 'L') return 'வகுப்பிற்கு தாமத வருகை'
+    return 'கல்லூரி அதிகாரப்பூர்வ பதிவு'
+  }
+
+  const lower = r.toLowerCase()
+  if (lower.includes('uninformed absence')) return 'முன்னறிவிப்பற்ற விடுப்பு'
+  if (lower.includes('medical leave')) return 'மருத்துவ விடுப்பு (சான்றிதழ் சமர்ப்பிக்கப்பட்டது)'
+  if (lower.includes('symposium') || lower.includes('hackathon')) return 'கருத்தரங்கம் / ஹேக்கத்தான் அலுவல் அனுமதி'
+  if (lower.includes('sports') || lower.includes('ncc') || lower.includes('nss')) return 'விளையாட்டு / NCC / NSS அலுவல் அனுமதி'
+  if (lower.includes('placement') || lower.includes('internship')) return 'வேலைவாய்ப்பு / பயிற்சி முகாம் அனுமதி'
+  if (lower.includes('family emergency') || lower.includes('permission')) return 'குடும்ப அவசரக் காரண விடுப்பு'
+  if (lower.includes('late entry') || lower.includes('gate pass')) return 'தாமத வருகை அனுமதி (Gate Pass)'
+  if (lower.includes('personal reason')) return 'தனிப்பட்ட காரண விடுப்பு'
+  if (lower.includes('sick') || lower.includes('fever')) return 'உடல்நலக் குறைவு விடுப்பு'
+
+  return `${r} (வகுப்பு ஆலோசகர் பதிவு)`
+}
+
+export function buildBilingualStatusMessage(opts: {
+  studentName: string
+  date: string
+  status: string
+  remarks?: string | null
+}): string {
+  const engStatus = getEnglishStatus(opts.status)
+  const tamStatus = getTamilStatus(opts.status)
+  const engRemarks = getEnglishRemarks(opts.remarks, opts.status)
+  const tamRemarks = getTamilRemarks(opts.remarks, opts.status)
+
+  return `Dear Parent,
+
+OFFICIAL STUDENT STATUS NOTIFICATION
+
+Department of AI & DS
+V.S.B. Engineering College (Autonomous)
+
+Student Name: ${opts.studentName}
+Date: ${opts.date}
+Status: ${engStatus}
+Remarks: ${engRemarks}
+
+This is an official notification regarding your son/daughter's student status.
+
+For any clarification, please contact the Class Advisor.
+
+Regards,
+Class Advisor
+Department of AI & DS
+V.S.B. Engineering College (Autonomous)
+
+அன்புள்ள பெற்றோரே,
+
+மாணவர் நிலை தொடர்பான அதிகாரப்பூர்வ அறிவிப்பு
+
+AI & DS துறை
+வி.எஸ்.பி. பொறியியல் கல்லூரி (தன்னாட்சி)
+
+மாணவர் பெயர்: ${opts.studentName}
+தேதி: ${opts.date}
+நிலை: ${tamStatus}
+குறிப்பு: ${tamRemarks}
+
+உங்கள் மகன்/மகளின் மாணவர் நிலை தொடர்பான அதிகாரப்பூர்வ அறிவிப்பு இது.
+
+மேலும் விளக்கங்களுக்கு வகுப்பு ஆலோசகரை தொடர்பு கொள்ளவும்.
+
+நன்றி,
+வகுப்பு ஆலோசகர்
+AI & DS துறை
+வி.எஸ்.பி. பொறியியல் கல்லூரி (தன்னாட்சி)`
+}
+
 async function sendFast2SmsWhatsapp(
   toLast10: string,
-  bodyOrParams: string | { studentName?: string; date?: string; reason?: string },
+  bodyOrParams: string | WhatsappMessageParams,
   cfg: GatewayConfig
 ): Promise<SendResult> {
   const token =
@@ -232,23 +351,40 @@ async function sendFast2SmsWhatsapp(
     process.env.FAST2SMS_WHATSAPP_MESSAGE_ID ||
     '31679'
 
-  let variablesValues = ''
+  let sName = 'Student'
+  let sDate = new Date().toLocaleDateString('en-GB')
+  let sStatus = 'Absent'
+  let sRemarks = 'Uninformed Absence'
+
   if (typeof bodyOrParams === 'object') {
-    const sName = bodyOrParams.studentName || 'Student'
-    const sDate = bodyOrParams.date || new Date().toLocaleDateString('en-GB')
-    const sReason = bodyOrParams.reason || 'Absent'
-    variablesValues = `${sName}|${sDate}|${sReason}|${sReason}`
+    sName = bodyOrParams.studentName || 'Student'
+    sDate = bodyOrParams.date || new Date().toLocaleDateString('en-GB')
+    sStatus = bodyOrParams.status || bodyOrParams.reason || 'Absent'
+    sRemarks = (bodyOrParams.remarks !== undefined && bodyOrParams.remarks !== null) ? bodyOrParams.remarks : (sStatus === 'A' ? 'Uninformed Absence' : sStatus === 'OD' ? 'On-Duty' : sStatus === 'ML' ? 'Medical Leave' : 'Official Notification')
   } else {
     // Attempt extracting name and date from text
-    const nameMatch = bodyOrParams.match(/ward\s+([^(]+)\s*\(/i)
-    const dateMatch = bodyOrParams.match(/on\s+([0-9\-/]+)/i)
-    const sName = nameMatch ? nameMatch[1].trim() : 'Student'
-    const sDate = dateMatch ? dateMatch[1].trim() : new Date().toLocaleDateString('en-GB')
-    variablesValues = `${sName}|${sDate}|Absent|Absent`
+    const nameMatch = bodyOrParams.match(/Student Name:\s*([^\n]+)/i) || bodyOrParams.match(/ward\s+([^(]+)\s*\(/i) || bodyOrParams.match(/மாணவர் பெயர்:\s*([^\n]+)/i)
+    if (nameMatch) sName = nameMatch[1].trim()
+    const dateMatch = bodyOrParams.match(/Date:\s*([0-9\-/]+)/i) || bodyOrParams.match(/on\s+([0-9\-/]+)/i) || bodyOrParams.match(/தேதி:\s*([0-9\-/]+)/i)
+    if (dateMatch) sDate = dateMatch[1].trim()
+    const statusMatch = bodyOrParams.match(/Status:\s*([^\n]+)/i) || bodyOrParams.match(/நிலை:\s*([^\n]+)/i)
+    if (statusMatch) sStatus = statusMatch[1].trim()
+    const remarksMatch = bodyOrParams.match(/Remarks:\s*([^\n]+)/i) || bodyOrParams.match(/குறிப்பு:\s*([^\n]+)/i)
+    if (remarksMatch) sRemarks = remarksMatch[1].trim()
   }
 
+  const engStatus = getEnglishStatus(sStatus)
+  const tamStatus = getTamilStatus(sStatus)
+  const engRemarks = getEnglishRemarks(sRemarks, sStatus)
+  const tamRemarks = getTamilRemarks(sRemarks, sStatus)
+
+  // 8 variables matching bilingual template
+  const variablesValues8 = `${sName}|${sDate}|${engStatus}|${engRemarks}|${sName}|${sDate}|${tamStatus}|${tamRemarks}`
+  // 4 variables fallback if template requires 4 params
+  const variablesValues4 = `${sName}|${sDate}|${engStatus} (${tamStatus})|${engRemarks} (${tamRemarks})`
+
   try {
-    const res = await fetch('https://www.fast2sms.com/dev/whatsapp', {
+    let res = await fetch('https://www.fast2sms.com/dev/whatsapp', {
       method: 'POST',
       headers: {
         authorization: token,
@@ -258,10 +394,38 @@ async function sendFast2SmsWhatsapp(
         message_id: messageId,
         phone_number_id: phoneId,
         numbers: toLast10,
-        variables_values: variablesValues,
+        variables_values: variablesValues8,
       }),
     })
-    const data = await res.json().catch(() => ({}))
+    let data = await res.json().catch(() => ({}))
+
+    // If Fast2SMS returned error mentioning variables not matching, auto-retry with 4 variables
+    if (
+      data.return !== true &&
+      data.message &&
+      Array.isArray(data.message) &&
+      (data.message[0]?.toLowerCase().includes('variable') || data.message[0]?.toLowerCase().includes('match'))
+    ) {
+      const resRetry = await fetch('https://www.fast2sms.com/dev/whatsapp', {
+        method: 'POST',
+        headers: {
+          authorization: token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message_id: messageId,
+          phone_number_id: phoneId,
+          numbers: toLast10,
+          variables_values: variablesValues4,
+        }),
+      })
+      const dataRetry = await resRetry.json().catch(() => ({}))
+      if (dataRetry.return === true) {
+        return { success: true, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', sid: dataRetry.request_id, details: dataRetry }
+      }
+      data = dataRetry
+    }
+
     if (data.return === true) {
       return { success: true, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', sid: data.request_id, details: data }
     }
@@ -294,7 +458,7 @@ export async function sendSms(toRaw: string, body: string, cfg?: GatewayConfig):
 
 export async function sendWhatsapp(
   toRaw: string,
-  bodyOrParams: string | { studentName?: string; date?: string; reason?: string },
+  bodyOrParams: string | WhatsappMessageParams,
   cfg?: GatewayConfig
 ): Promise<SendResult> {
   const config = cfg || (await getGatewayConfig())
@@ -309,7 +473,13 @@ export async function sendWhatsapp(
   const bodyStr =
     typeof bodyOrParams === 'string'
       ? bodyOrParams
-      : `[VSB AI&DS] Official Notification: Your ward ${bodyOrParams.studentName || 'Student'} is marked absent on ${bodyOrParams.date || ''}.`
+      : (bodyOrParams.fullMessage ||
+          buildBilingualStatusMessage({
+            studentName: bodyOrParams.studentName || 'Student',
+            date: bodyOrParams.date || new Date().toLocaleDateString('en-GB'),
+            status: bodyOrParams.status || bodyOrParams.reason || 'Absent',
+            remarks: bodyOrParams.remarks,
+          }))
 
   if (config.whatsappProvider === 'twilio') {
     const e164 = toE164(toRaw)
@@ -323,7 +493,7 @@ export async function sendWhatsapp(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Absent-notification helpers
+// Notification helpers
 // ─────────────────────────────────────────────────────────────────────────────
 export function buildAbsentMessage(opts: {
   studentName: string
@@ -333,14 +503,19 @@ export function buildAbsentMessage(opts: {
   takenByName?: string
   reason?: string
 }): string {
-  const { studentName, registerNumber, date, sessionLabel, takenByName, reason } = opts
-  const reasonText = reason ? ` Reason: ${reason}.` : ''
-  return `[VSB AI&DS] Dear Parent, your ward ${studentName} (${registerNumber}) is marked ABSENT on ${date} (${sessionLabel}).${reasonText} Marked by Class Advisor (${takenByName || 'Class Advisor'}). V.S.B. Engineering College (Autonomous).`
+  return buildBilingualStatusMessage({
+    studentName: opts.studentName,
+    date: opts.date,
+    status: 'Absent',
+    remarks: opts.reason || 'Uninformed Absence',
+  })
 }
 
 export interface AbsentTarget {
   registerNumber: string
   studentName: string
+  status?: string
+  remarks?: string | null
   parentPhone?: string | null
   studentPhone?: string | null
 }
@@ -355,7 +530,6 @@ export async function dispatchAbsentAlerts(
   const waResults: SendResult[] = []
 
   // Fire all in parallel with concurrency cap 5
-  const allTasks: Promise<void>[] = []
   const concurrency = 5
   let idx = 0
 
@@ -370,18 +544,28 @@ export async function dispatchAbsentAlerts(
         waResults.push({ ...err, channel: 'whatsapp' })
         continue
       }
-      const body = buildAbsentMessage({
+      const st = (t.status || 'A').toUpperCase()
+      const body = buildBilingualStatusMessage({
         studentName: t.studentName,
-        registerNumber: t.registerNumber,
         date: meta.date,
-        sessionLabel: meta.sessionLabel,
-        takenByName: meta.takenByName,
+        status: st,
+        remarks: t.remarks,
       })
 
-      // Send both channels in parallel, collecting individual results
+      // Send both channels in parallel
       const [smsRes, waRes] = await Promise.allSettled([
         sendSms(phone, body, config),
-        sendWhatsapp(phone, { studentName: t.studentName, date: meta.date, reason: 'Absent' }, config),
+        sendWhatsapp(
+          phone,
+          {
+            studentName: t.studentName,
+            date: meta.date,
+            status: st,
+            remarks: t.remarks,
+            fullMessage: body,
+          },
+          config
+        ),
       ])
 
       const smsVal: SendResult =
@@ -392,14 +576,16 @@ export async function dispatchAbsentAlerts(
       smsResults.push({ ...smsVal, details: { ...(smsVal.details || {}), registerNumber: t.registerNumber } })
       waResults.push({ ...waVal, details: { ...(waVal.details || {}), registerNumber: t.registerNumber } })
 
+      const actionPrefix = st === 'OD' ? 'OD_ALERT' : st === 'ML' ? 'ML_ALERT' : st === 'L' ? 'LATE_ALERT' : 'ABSENT_ALERT'
+
       // Audit trail — best effort, don't block
       prisma.auditLog
         .create({
           data: {
             userName: meta.takenByName || 'System',
-            action: smsVal.success || waVal.success ? 'ABSENT_ALERT_SENT' : 'ABSENT_ALERT_FAILED',
+            action: smsVal.success || waVal.success ? `${actionPrefix}_SENT` : `${actionPrefix}_FAILED`,
             module: 'attendance',
-            details: `Absent alert for ${t.studentName} (${t.registerNumber}) to ${phone}: SMS=${smsVal.success ? 'OK ' + smsVal.sid : smsVal.error} | WA=${waVal.success ? 'OK ' + (waVal.sid || waVal.messageId) : waVal.error} | Session ${meta.attendanceSessionId || meta.sessionLabel} ${meta.date}`,
+            details: `Official status alert [${st}] for ${t.studentName} (${t.registerNumber}) to ${phone}: SMS=${smsVal.success ? 'OK ' + smsVal.sid : smsVal.error} | WA=${waVal.success ? 'OK ' + (waVal.sid || waVal.messageId) : waVal.error} | Session ${meta.attendanceSessionId || meta.sessionLabel} ${meta.date}`,
             status: smsVal.success || waVal.success ? 'SUCCESS' : 'FAILED',
           },
         })
@@ -411,3 +597,4 @@ export async function dispatchAbsentAlerts(
   await Promise.all(workers)
   return { sms: smsResults, whatsapp: waResults }
 }
+

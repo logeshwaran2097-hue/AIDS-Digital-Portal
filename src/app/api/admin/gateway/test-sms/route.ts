@@ -103,9 +103,11 @@ export async function POST(request: NextRequest) {
 
         const messageId = process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || '31679'
         const todayStr = new Date().toLocaleDateString('en-GB')
+        const variables8 = `Student Name|${todayStr}|Official Notification|Gateway Verified|மாணவர் பெயர்|${todayStr}|அதிகாரப்பூர்வ அறிவிப்பு|சரிபார்க்கப்பட்டது`
+        const variables4 = `Student Name|${todayStr}|Verified (சரிபார்க்கப்பட்டது)|Test (சோதனை)`
 
         try {
-          const waRes = await fetch('https://www.fast2sms.com/dev/whatsapp', {
+          let waRes = await fetch('https://www.fast2sms.com/dev/whatsapp', {
             method: 'POST',
             headers: {
               authorization: token,
@@ -115,11 +117,34 @@ export async function POST(request: NextRequest) {
               message_id: messageId,
               phone_number_id: phoneId,
               numbers: last10,
-              variables_values: `Verification Test|${todayStr}|Gateway Verified|Verified`,
+              variables_values: variables8,
             }),
           })
 
-          const waData = await waRes.json()
+          let waData = await waRes.json()
+
+          // Fallback to 4 variables if template in Fast2SMS uses 4 variables
+          if (
+            waData.return !== true &&
+            waData.message &&
+            Array.isArray(waData.message) &&
+            (waData.message[0]?.toLowerCase().includes('variable') || waData.message[0]?.toLowerCase().includes('match'))
+          ) {
+            const retryRes = await fetch('https://www.fast2sms.com/dev/whatsapp', {
+              method: 'POST',
+              headers: {
+                authorization: token,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                message_id: messageId,
+                phone_number_id: phoneId,
+                numbers: last10,
+                variables_values: variables4,
+              }),
+            })
+            waData = await retryRes.json()
+          }
 
           if (waData.return === true) {
             await prisma.auditLog
@@ -141,7 +166,7 @@ export async function POST(request: NextRequest) {
               sid: waData.request_id,
               targetNumber: e164,
               message: `✅ Live WhatsApp message dispatched to +91-${last10} via Fast2SMS WhatsApp API! (Request ID: ${waData.request_id})`,
-              details: `Official attendance alert template [vsb_attendance_alert] delivered to recipient +91-${last10}.`,
+              details: `Official bilingual English-Tamil attendance alert template delivered to recipient +91-${last10}.`,
               whatsappWebUrl: waWebUrl,
             })
           } else {

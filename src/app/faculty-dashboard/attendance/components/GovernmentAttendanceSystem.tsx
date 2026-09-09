@@ -592,12 +592,12 @@ export function GovernmentAttendanceSystem({
       if (data.success) {
         setIsLocked(shouldLock)
         setLastSyncedAt(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
-        showToast(
-          'success',
-          shouldLock
-            ? 'Attendance submitted & locked to portal. Changes require HOD permission ✓'
+        const alertInfo = data.absentAlerts?.whatsappSent > 0
+          ? `Attendance locked ✓ WhatsApp alerts sent to ${data.absentAlerts.whatsappSent} parent(s) for Absent/OD/ML students.`
+          : shouldLock
+            ? 'Attendance submitted & locked to portal. Parent alerts processed ✓'
             : 'Attendance draft saved ✓'
-        )
+        showToast('success', alertInfo)
       } else {
         showToast('error', data.message || 'Failed to save attendance')
       }

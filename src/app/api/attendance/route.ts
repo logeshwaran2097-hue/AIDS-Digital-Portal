@@ -524,14 +524,21 @@ export async function POST(request: Request) {
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // Real-time Parent Alerts for Absent Students — SMS + WhatsApp
-    // Triggers automatically on every attendance save. Non-blocking but
-    // awaited with audit logging. Respects portal_config toggles.
+    // Real-time Parent Alerts for Non-Present Students (Absent, OD, ML, Late)
+    // English & Tamil Bilingual WhatsApp + SMS Official Notifications
+    // Triggers automatically on attendance submission.
+    // If student is Present ('P'), NO message is sent to parent.
     // ─────────────────────────────────────────────────────────────────
     let absentAlertSummary: any = null
     try {
-      const absentRecords = records.filter((r: any) => r.status === 'A')
-      if (absentRecords.length > 0) {
+      // Filter non-present records: Absent (A), On-Duty (OD), Medical Leave (ML), Late (L)
+      // Exclude Present (P)
+      const alertableRecords = records.filter((r: any) => {
+        const s = String(r.status || '').toUpperCase().trim()
+        return s === 'A' || s === 'OD' || s === 'ML' || s === 'L'
+      })
+
+      if (alertableRecords.length > 0) {
         // Load portal config toggles
         let portalCfg: any = {}
         try {
@@ -542,9 +549,9 @@ export async function POST(request: Request) {
         const notifyWa = portalCfg.notifyAbsentViaWhatsapp !== false && portalCfg.whatsappEnabled !== false
 
         if (notifySms || notifyWa) {
-          // Resolve parent/student phones for absent regs
-          const regNos: string[] = absentRecords.map((r: any) => r.registerNumber).filter(Boolean)
-          const stuIds: string[] = absentRecords.map((r: any) => r.id || r.studentId).filter(Boolean)
+          // Resolve parent/student phones for alertable records
+          const regNos: string[] = alertableRecords.map((r: any) => r.registerNumber).filter(Boolean)
+          const stuIds: string[] = alertableRecords.map((r: any) => r.id || r.studentId).filter(Boolean)
 
           let stuRows: any[] = []
           try {
@@ -568,9 +575,16 @@ export async function POST(request: Request) {
             }
           } catch {}
 
-          // Build targets with resolved phones
-          type AbsentT = { registerNumber: string; studentName: string; remarks?: string | null; parentPhone?: string | null; studentPhone?: string | null }
-          const targets: AbsentT[] = absentRecords
+          // Build targets with resolved phones, student status & advisor remarks
+          type AlertTarget = {
+            registerNumber: string
+            studentName: string
+            status: string
+            remarks?: string | null
+            parentPhone?: string | null
+            studentPhone?: string | null
+          }
+          const targets: AlertTarget[] = alertableRecords
             .map((r: any) => {
               const found = stuRows.find((s: any) => s.registerNumber === r.registerNumber || s.id === (r.id || r.studentId))
               const parentPhone = found?.parentPhone || null
@@ -578,51 +592,72 @@ export async function POST(request: Request) {
               return {
                 registerNumber: r.registerNumber,
                 studentName: r.name || r.studentName || r.registerNumber,
+                status: r.status,
                 remarks: r.remarks || null,
                 parentPhone,
                 studentPhone,
               }
             })
-            .filter((t: AbsentT) => {
+            .filter((t: AlertTarget) => {
               const ph = (t.parentPhone || t.studentPhone || '').replace(/\D/g, '')
               return ph.length >= 10
             })
 
           if (targets.length > 0) {
             // Lazy import to avoid circular init issues
-            const { getGatewayConfig, buildAbsentMessage, sendSms, sendWhatsapp } = await import('@/lib/gateway')
+            const { getGatewayConfig, buildBilingualStatusMessage, sendSms, sendWhatsapp } = await import('@/lib/gateway')
             const baseCfg = await getGatewayConfig()
             const scopeLabel = sessionType === 'morning'
               ? `Morning Attendance · ${date} · Year ${year} Sec ${section}`
               : `${subjectCode || 'Subject'} (${(hour || '').trim()}) · ${date} · Year ${year} Sec ${section}`
 
-            // Fire per-target per-channel in parallel (cap handled by gateway concurrency internally if using dispatch, but we manual here)
+            // Fire per-target per-channel in parallel
             const tasks = targets.map(async (t) => {
               const phone = (t.parentPhone || t.studentPhone || '').trim()
-              const body = buildAbsentMessage({
+              const st = (t.status || 'A').toUpperCase()
+              const fullBilingualBody = buildBilingualStatusMessage({
                 studentName: t.studentName,
-                registerNumber: t.registerNumber,
                 date,
-                sessionLabel: scopeLabel,
-                takenByName: session.name || 'Class Advisor',
-                reason: t.remarks || 'Uninformed Absence',
+                status: st,
+                remarks: t.remarks,
               })
-              const results: any = { registerNumber: t.registerNumber, phone, sms: null, whatsapp: null }
+
+              const results: any = { registerNumber: t.registerNumber, status: st, phone, sms: null, whatsapp: null }
               const promises: Promise<any>[] = []
-              if (notifySms) promises.push(sendSms(phone, body, baseCfg).then((r) => (results.sms = r)))
+
+              if (notifySms) promises.push(sendSms(phone, fullBilingualBody, baseCfg).then((r) => (results.sms = r)))
               else results.sms = { success: false, skipped: true, reason: 'notifyAbsentViaSms disabled' }
-              if (notifyWa) promises.push(sendWhatsapp(phone, body, baseCfg).then((r) => (results.whatsapp = r)))
-              else results.whatsapp = { success: false, skipped: true, reason: 'notifyAbsentViaWhatsapp disabled' }
+
+              if (notifyWa) {
+                promises.push(
+                  sendWhatsapp(
+                    phone,
+                    {
+                      studentName: t.studentName,
+                      date,
+                      status: st,
+                      remarks: t.remarks,
+                      fullMessage: fullBilingualBody,
+                    },
+                    baseCfg
+                  ).then((r) => (results.whatsapp = r))
+                )
+              } else {
+                results.whatsapp = { success: false, skipped: true, reason: 'notifyAbsentViaWhatsapp disabled' }
+              }
+
               await Promise.allSettled(promises)
-              // Per-target audit is done inside send*? No — log aggregated here as well
+
               const anySuccess = results.sms?.success || results.whatsapp?.success
+              const actionPrefix = st === 'OD' ? 'OD_ALERT' : st === 'ML' ? 'ML_ALERT' : st === 'L' ? 'LATE_ALERT' : 'ABSENT_ALERT'
+
               await prisma.auditLog
                 .create({
                   data: {
-                    userName: session.name || 'System',
-                    action: anySuccess ? 'ABSENT_ALERT_SENT' : 'ABSENT_ALERT_FAILED',
+                    userName: session.name || 'Class Advisor',
+                    action: anySuccess ? `${actionPrefix}_SENT` : `${actionPrefix}_FAILED`,
                     module: 'attendance',
-                    details: `Absent auto-alert for ${t.studentName} (${t.registerNumber}) → ${phone} | SMS=${results.sms?.success ? 'OK ' + (results.sms.sid || '') : results.sms?.error || results.sms?.reason} | WA=${results.whatsapp?.success ? 'OK ' + (results.whatsapp.sid || results.whatsapp.messageId || '') : results.whatsapp?.error || results.whatsapp?.reason} | ${scopeLabel}`,
+                    details: `Official status alert [${st}] for ${t.studentName} (${t.registerNumber}) → ${phone} | SMS=${results.sms?.success ? 'OK ' + (results.sms.sid || '') : results.sms?.error || results.sms?.reason} | WA=${results.whatsapp?.success ? 'OK ' + (results.whatsapp.sid || results.whatsapp.messageId || '') : results.whatsapp?.error || results.whatsapp?.reason} | ${scopeLabel}`,
                     status: anySuccess ? 'SUCCESS' : 'FAILED',
                   },
                 })
@@ -636,6 +671,7 @@ export async function POST(request: Request) {
             const waOk = details.filter((d: any) => d.whatsapp?.success).length
             absentAlertSummary = {
               attempted: targets.length,
+              totalAlertable: alertableRecords.length,
               smsProvider: baseCfg.smsProvider,
               whatsappProvider: baseCfg.whatsappProvider,
               smsSent: smsOk,
@@ -645,7 +681,7 @@ export async function POST(request: Request) {
               details,
             }
           } else {
-            absentAlertSummary = { attempted: 0, note: 'No valid parent/student phone found for absent records' }
+            absentAlertSummary = { attempted: 0, note: 'No valid parent/student phone found for non-present records' }
           }
         } else {
           absentAlertSummary = { attempted: 0, note: 'Auto absent alerts disabled in portal settings' }
