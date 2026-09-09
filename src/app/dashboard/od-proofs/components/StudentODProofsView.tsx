@@ -69,19 +69,6 @@ interface StudentODProofsViewProps {
   }
 }
 
-const COLLEGE_GPS_PRESETS = [
-  { name: 'VSB Engineering College, Karur', lat: 10.9602, lng: 78.0766 },
-  { name: 'PSG College of Technology, Coimbatore', lat: 11.0247, lng: 76.9934 },
-  { name: 'Coimbatore Institute of Technology (CIT)', lat: 11.0168, lng: 76.9558 },
-  { name: 'Kongu Engineering College, Perundurai', lat: 11.2743, lng: 77.6074 },
-  { name: 'Kumaraguru College of Technology (KCT)', lat: 11.0827, lng: 76.9922 },
-  { name: 'Bannari Amman Institute of Tech (BIT)', lat: 11.4969, lng: 77.2764 },
-  { name: 'Government College of Technology (GCT)', lat: 11.0183, lng: 76.9360 },
-  { name: 'Anna University (CEG), Chennai', lat: 13.0110, lng: 80.2354 },
-  { name: 'NIT Trichy', lat: 10.7589, lng: 78.8132 },
-  { name: 'Thiagarajar College of Engg (TCE), Madurai', lat: 9.8828, lng: 78.0820 },
-]
-
 export function StudentODProofsView({ initialProofs, studentInfo }: StudentODProofsViewProps) {
   const [proofs, setProofs] = useState<ODProofItem[]>(initialProofs)
   const [loading, setLoading] = useState(false)
@@ -100,12 +87,13 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     venueCollege: '',
   })
 
-  // Geo-tag Upload Form
+  // Geo-tag Upload Form with separate collegeName and collegeAddress
   const [geoForm, setGeoForm] = useState({
     photoUrl: '',
     latitude: '' as number | string,
     longitude: '' as number | string,
-    address: '',
+    collegeName: '',
+    collegeAddress: '',
     isDetectingGPS: false,
     gpsCaptured: false,
   })
@@ -116,17 +104,6 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     certificateName: '',
     achievement: 'Participation',
   })
-
-  const handleSelectPreset = (preset: { name: string; lat: number; lng: number }) => {
-    setGeoForm((prev) => ({
-      ...prev,
-      latitude: preset.lat,
-      longitude: preset.lng,
-      address: `${preset.name} (GPS: ${preset.lat}°, ${preset.lng}°)`,
-      gpsCaptured: true,
-    }))
-    toast.success(`Coordinates set for ${preset.name}!`)
-  }
 
   // 1. AUTO-DETECT GPS LOCATION VIA BROWSER
   const handleDetectGPS = () => {
@@ -147,18 +124,15 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
           longitude: lng,
           gpsCaptured: true,
           isDetectingGPS: false,
-          address: prev.address || `${selectedProof?.venueCollege || 'Host Event Campus'} (GPS Verified: ${lat}°, ${lng}°)`,
         }))
         toast.success(`GPS Location Captured! (Lat: ${lat}, Long: ${lng})`)
       },
       (error) => {
         setGeoForm((prev) => ({ ...prev, isDetectingGPS: false }))
         if (error.code === 1) {
-          toast.error('Location permission was denied. Click the lock/tune icon near your browser address bar to allow location, or choose a college preset below.')
-        } else if (error.message && error.message.toLowerCase().includes('permissions policy')) {
-          toast.error('Please refresh your page to load the updated security policy, or choose a college preset below.')
+          toast.error('Location permission was denied. Click the lock/tune icon near your browser address bar to allow location, or enter coordinates manually.')
         } else {
-          toast.error(`GPS: ${error.message}. You can select a college preset below or enter coordinates manually.`)
+          toast.error(`GPS Error: ${error.message}. You can enter coordinates manually below.`)
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -236,6 +210,10 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       toast.error('Please snap or select a venue photo.')
       return
     }
+    if (!geoForm.collegeName.trim()) {
+      toast.error('Please enter the College / Institution Name.')
+      return
+    }
 
     setLoading(true)
     try {
@@ -248,7 +226,9 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
           geoPhotoUrl: geoForm.photoUrl,
           latitude: geoForm.latitude ? Number(geoForm.latitude) : null,
           longitude: geoForm.longitude ? Number(geoForm.longitude) : null,
-          geoAddress: geoForm.address.trim() || selectedProof.venueCollege,
+          collegeName: geoForm.collegeName.trim(),
+          collegeAddress: geoForm.collegeAddress.trim(),
+          geoAddress: geoForm.collegeAddress.trim(),
           geoTimestamp: new Date().toISOString(),
         }),
       })
@@ -312,7 +292,8 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       photoUrl: p.geoPhotoUrl || '',
       latitude: p.latitude || '',
       longitude: p.longitude || '',
-      address: p.geoAddress || p.venueCollege || '',
+      collegeName: p.venueCollege || '',
+      collegeAddress: p.geoAddress || '',
       isDetectingGPS: false,
       gpsCaptured: Boolean(p.latitude && p.longitude),
     })
@@ -603,7 +584,12 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                                 <MapPin className="w-3.5 h-3.5 text-blue-600" />
                                 <span>Venue Geo-Tag Photo</span>
                               </span>
-                              <p className="text-[11px] text-gray-500 truncate">{p.geoAddress || p.venueCollege}</p>
+                              {p.venueCollege && (
+                                <p className="font-bold text-[11px] text-[#071A3D] truncate">{p.venueCollege}</p>
+                              )}
+                              {p.geoAddress && (
+                                <p className="text-[11px] text-gray-500 truncate">{p.geoAddress}</p>
+                              )}
                               {p.latitude && p.longitude && (
                                 <div className="flex items-center gap-2 pt-0.5">
                                   <span className="font-mono text-[10px] text-gray-600 bg-white px-2 py-0.5 rounded-md border">
@@ -804,8 +790,13 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-3 text-white space-y-0.5">
                     <p className="font-bold text-[11px] flex items-center gap-1 text-emerald-300">
                       <MapPin className="w-3 h-3" />
-                      {geoForm.address || selectedProof.venueCollege || 'Event Venue'}
+                      {geoForm.collegeName || selectedProof.venueCollege || 'Host Event Campus'}
                     </p>
+                    {geoForm.collegeAddress && (
+                      <p className="text-[10px] text-gray-200 truncate">
+                        {geoForm.collegeAddress}
+                      </p>
+                    )}
                     <p className="font-mono text-[10px] text-gray-300">
                       GPS: {geoForm.latitude || 'Lat: --'} | {geoForm.longitude || 'Long: --'} · {new Date().toLocaleTimeString()}
                     </p>
@@ -860,33 +851,31 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                 </div>
 
                 <div>
-                  <label className="text-[10px] text-gray-500 font-bold block mb-0.5">Host Venue / College Address</label>
+                  <label className="text-[10px] text-gray-700 font-bold block mb-1">
+                    College Name *
+                  </label>
                   <input
                     type="text"
-                    placeholder="Host Campus Name"
-                    value={geoForm.address}
-                    onChange={(e) => setGeoForm({ ...geoForm, address: e.target.value })}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"
+                    required
+                    placeholder="e.g. Coimbatore Institute of Technology (CIT)"
+                    value={geoForm.collegeName}
+                    onChange={(e) => setGeoForm({ ...geoForm, collegeName: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
 
-                {/* Popular College Venue Presets */}
-                <div className="pt-1">
-                  <span className="text-[10px] text-gray-500 font-bold block mb-1.5">
-                    Or 1-Click Select Host College Campus Preset:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                    {COLLEGE_GPS_PRESETS.map((preset, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSelectPreset(preset)}
-                        className="px-2 py-1 rounded-lg bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-[10px] font-medium text-gray-700 transition-all text-left cursor-pointer"
-                      >
-                        {preset.name.split(',')[0]}
-                      </button>
-                    ))}
-                  </div>
+                <div>
+                  <label className="text-[10px] text-gray-700 font-bold block mb-1">
+                    College Address *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Civil Aerodrome Post, Coimbatore, Tamil Nadu - 641014"
+                    value={geoForm.collegeAddress}
+                    onChange={(e) => setGeoForm({ ...geoForm, collegeAddress: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#1455D9]"
+                  />
                 </div>
               </div>
 

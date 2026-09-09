@@ -386,9 +386,9 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
                         )}
                         <div className="truncate">
                           <p className="font-bold text-[#071A3D]">Stage 1: Venue Geo-Tag Photo</p>
-                          <p className="text-[11px] text-gray-500 truncate">
+                          <p className="text-[11px] text-gray-600 truncate">
                             {hasGeo
-                              ? `${p.latitude}°, ${p.longitude}° · ${p.geoAddress || 'Campus'}`
+                              ? `${p.venueCollege ? p.venueCollege + ' · ' : ''}${p.geoAddress || 'Campus'}`
                               : 'Student has not checked in yet'}
                           </p>
                         </div>
@@ -521,14 +521,27 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="p-3 rounded-xl bg-white border border-blue-200 space-y-1">
-                      <p className="font-bold text-[#071A3D] text-[11px] truncate">
-                        {selectedProof.geoAddress || selectedProof.venueCollege || 'Campus'}
-                      </p>
+                    <div className="p-3.5 rounded-xl bg-white border border-blue-200 space-y-1.5">
+                      {selectedProof.venueCollege && (
+                        <div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase">Host College / Institution:</span>
+                          <p className="font-black text-[#071A3D] text-xs">
+                            {selectedProof.venueCollege}
+                          </p>
+                        </div>
+                      )}
+                      {selectedProof.geoAddress && (
+                        <div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase">College Address / Venue:</span>
+                          <p className="text-gray-700 text-[11px] leading-snug">
+                            {selectedProof.geoAddress}
+                          </p>
+                        </div>
+                      )}
                       {selectedProof.latitude && selectedProof.longitude && (
-                        <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
                           <span className="font-mono text-[10px] text-gray-600">
-                            Lat: {selectedProof.latitude}° | Long: {selectedProof.longitude}°
+                            GPS: {selectedProof.latitude}°, {selectedProof.longitude}°
                           </span>
                           <a
                             href={`https://maps.google.com/?q=${selectedProof.latitude},${selectedProof.longitude}`}

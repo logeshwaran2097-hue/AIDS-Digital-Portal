@@ -223,7 +223,7 @@ export async function POST(request: Request) {
 
     // 2. UPLOAD STAGE 1: GEOTAGGED VENUE PHOTO
     if (action === 'UPLOAD_GEOTAG') {
-      const { id, geoPhotoUrl, latitude, longitude, geoAddress, geoTimestamp } = body
+      const { id, geoPhotoUrl, latitude, longitude, collegeName, collegeAddress, geoAddress, geoTimestamp } = body
 
       if (!id || !geoPhotoUrl) {
         return NextResponse.json({ success: false, message: 'Proof ID and photo data required' }, { status: 400 })
@@ -235,6 +235,8 @@ export async function POST(request: Request) {
       }
 
       const updatedStatus = existing.certificateUrl ? 'under_review' : 'pending_proofs'
+      const finalCollege = (collegeName || existing.venueCollege || '').trim()
+      const finalAddress = (collegeAddress || geoAddress || '').trim()
 
       const updated = await prisma.oDProof.update({
         where: { id },
@@ -242,7 +244,8 @@ export async function POST(request: Request) {
           geoPhotoUrl,
           latitude: latitude ? Number(latitude) : null,
           longitude: longitude ? Number(longitude) : null,
-          geoAddress: geoAddress || null,
+          venueCollege: finalCollege || null,
+          geoAddress: finalAddress || null,
           geoTimestamp: geoTimestamp ? new Date(geoTimestamp) : new Date(),
           status: updatedStatus,
         },
@@ -252,7 +255,7 @@ export async function POST(request: Request) {
       await prisma.notification.create({
         data: {
           title: `📍 [OD Geo-Tag Uploaded] ${existing.studentName} (${existing.registerNumber})`,
-          message: `${existing.studentName} uploaded a live geo-tagged venue photo for "${existing.eventName}" at ${geoAddress || 'host venue'}.`,
+          message: `${existing.studentName} uploaded a live geo-tagged venue photo for "${existing.eventName}" at ${finalCollege || 'host venue'}${finalAddress ? ` (${finalAddress})` : ''}.`,
           target: 'faculty',
           createdByName: existing.studentName,
           status: 'published',
