@@ -851,6 +851,15 @@ export function AdvisorODReviewModal({
               <div className="flex items-center gap-2 shrink-0">
                 <a
                   href={selectedPreviewFile.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  title="Open full document in new tab"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" /> Open Tab
+                </a>
+                <a
+                  href={selectedPreviewFile.url}
                   download="VSB_Official_Verification_Dossier.svg"
                   target="_blank"
                   rel="noreferrer"
@@ -877,13 +886,27 @@ export function AdvisorODReviewModal({
             </div>
 
             {/* Lightbox Body with Document Rendering */}
-            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-100 flex items-center justify-center">
-              <div className="max-w-full max-h-full bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-300 p-2 sm:p-4">
-                <img
-                  src={selectedPreviewFile.url}
-                  alt="Proof Document"
-                  className="max-h-[75vh] w-auto max-w-full object-contain mx-auto rounded-lg"
-                />
+            <div className="flex-1 overflow-auto p-4 sm:p-6 bg-slate-100 flex items-center justify-center min-h-[350px]">
+              <div className="max-w-full max-h-full bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-300 p-2 sm:p-4 flex items-center justify-center">
+                {selectedPreviewFile.url.endsWith('.pdf') || selectedPreviewFile.url.startsWith('data:application/pdf') ? (
+                  <iframe
+                    src={selectedPreviewFile.url}
+                    className="w-full h-[75vh] min-w-[300px] sm:min-w-[650px] rounded-lg border-0"
+                    title={selectedPreviewFile.title}
+                  />
+                ) : (
+                  <object
+                    data={selectedPreviewFile.url}
+                    type="image/svg+xml"
+                    className="max-h-[75vh] w-auto max-w-full rounded-lg"
+                  >
+                    <img
+                      src={selectedPreviewFile.url}
+                      alt={selectedPreviewFile.title || 'Proof Document'}
+                      className="max-h-[75vh] w-auto max-w-full object-contain mx-auto rounded-lg"
+                    />
+                  </object>
+                )}
               </div>
             </div>
 

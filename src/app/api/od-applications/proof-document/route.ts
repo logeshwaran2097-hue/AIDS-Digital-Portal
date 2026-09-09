@@ -4,6 +4,16 @@ import { VSB_LOGO_BASE64 } from '@/lib/logoBase64'
 
 export const dynamic = 'force-dynamic'
 
+function escapeXml(unsafe: string | number | null | undefined): string {
+  if (unsafe == null) return ''
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const registerNumber = searchParams.get('registerNumber') || '922525243007'
@@ -23,7 +33,7 @@ export async function GET(request: Request) {
     userName = u?.name || null
   }
 
-  const studentName = userName || (registerNumber === '922525243007' ? 'Anusuya P' : 'Student')
+  const rawStudentName = userName || (registerNumber === '922525243007' ? 'Anusuya P' : 'Student')
   const year = student?.year || 2
   const section = student?.section || 'A'
   const parentPhone = student?.parentPhone || '6381366088'
@@ -37,11 +47,26 @@ export async function GET(request: Request) {
   const attRate = totalRecords > 0 ? ((presentRecords / totalRecords) * 100).toFixed(1) : '100.0'
 
   const isTemple = customReason.toLowerCase().includes('temple')
-  const eventTitle = isTemple
+  const rawEventTitle = isTemple
     ? 'Sri Maha Mariamman Temple Annual Festival & Family Religious Ceremony'
     : customReason.length > 5 ? customReason : customType
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 1150" width="850" height="1150">
+  // Safe XML Escaped Values
+  const eStudentNameUpper = escapeXml(rawStudentName.toUpperCase())
+  const eStudentNameSig = escapeXml(rawStudentName)
+  const eRegisterNumber = escapeXml(registerNumber)
+  const eYear = escapeXml(year)
+  const eSection = escapeXml(section)
+  const eParentPhone = escapeXml(parentPhone)
+  const eResidency = escapeXml(residency)
+  const eBusNo = escapeXml(busNo)
+  const eAttRate = escapeXml(attRate)
+  const eCustomType = escapeXml(customType)
+  const eFromDate = escapeXml(fromDate)
+  const eToDate = escapeXml(toDate)
+  const eEventTitle = escapeXml(rawEventTitle)
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 850 1150" width="850" height="1150">
   <defs>
     <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#071A3D"/>
@@ -51,6 +76,7 @@ export async function GET(request: Request) {
     <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.12"/>
     </filter>
+    <image id="vsbLogoAsset" xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" width="80" height="80" preserveAspectRatio="xMidYMid meet"/>
   </defs>
 
   <rect width="850" height="1150" fill="#FFFFFF"/>
@@ -64,7 +90,7 @@ export async function GET(request: Request) {
   <rect x="33" y="33" width="784" height="6" fill="url(#headerGrad)"/>
 
   <!-- Central Watermark Emblem (Subtle 3.5% Opacity) -->
-  <image href="${VSB_LOGO_BASE64}" x="275" y="450" width="300" height="300" opacity="0.035" preserveAspectRatio="xMidYMid meet"/>
+  <use xlink:href="#vsbLogoAsset" href="#vsbLogoAsset" x="275" y="450" width="300" height="300" opacity="0.035" preserveAspectRatio="xMidYMid meet"/>
 
   <!-- ========================================================================= -->
   <!-- PRESTIGIOUS ACADEMIC LETTERHEAD (PDF FORMAT) -->
@@ -75,9 +101,8 @@ export async function GET(request: Request) {
     <circle cx="48" cy="48" r="46" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
     <circle cx="48" cy="48" r="43.5" fill="#FFFFFF" stroke="#F4C430" stroke-width="2"/>
     <circle cx="48" cy="48" r="40" fill="#FFFFFF" stroke="#071A3D" stroke-width="0.8"/>
-    <image href="${VSB_LOGO_BASE64}" x="8" y="8" width="80" height="80" preserveAspectRatio="xMidYMid meet"/>
+    <use xlink:href="#vsbLogoAsset" href="#vsbLogoAsset" x="8" y="8" width="80" height="80"/>
   </g>
-
 
   <!-- Center Institution Master Typography -->
   <text x="425" y="68" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1">V.S.B. ENGINEERING COLLEGE</text>
@@ -89,16 +114,16 @@ export async function GET(request: Request) {
   <!-- Department Headline -->
   <text x="425" y="112" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="1.2">DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE</text>
 
-  <!-- Accreditations & Approvals Line 1 -->
+  <!-- Accreditations and Approvals Line 1 -->
   <text x="425" y="129" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</text>
 
-  <!-- Accreditations & Approvals Line 2 -->
+  <!-- Accreditations and Approvals Line 2 -->
   <text x="425" y="144" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="bold" fill="#64748B" text-anchor="middle">Accredited by NAAC with 'A' Grade · NBA Accredited Programs · ISO 9001:2015 Certified</text>
 
   <!-- Campus Address Line 3 -->
   <text x="425" y="158" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.8" fill="#64748B" text-anchor="middle">NH-67, Karur - Coimbatore National Highway, Karudayampalayam, Karur - 639 111, Tamil Nadu, India</text>
 
-  <!-- Master Gold & Sapphire Ornamental Beam Separator with Center Diamond -->
+  <!-- Master Gold and Sapphire Ornamental Beam Separator with Center Diamond -->
   <rect x="48" y="171" width="754" height="2.5" fill="#071A3D" rx="1"/>
   <rect x="48" y="174.5" width="754" height="1.2" fill="#F4C430" rx="0.6"/>
   <polygon points="425,168.5 431,174 425,179.5 419,174" fill="#F4C430"/>
@@ -118,36 +143,36 @@ export async function GET(request: Request) {
   <rect x="50" y="262" width="750" height="152" rx="10" fill="#F8FAFC" stroke="#CBD5E1"/>
   
   <text x="75" y="295" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">STUDENT NAME:</text>
-  <text x="210" y="295" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="900" fill="#071A3D">${studentName.toUpperCase()}</text>
+  <text x="210" y="295" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="900" fill="#071A3D">${eStudentNameUpper}</text>
   
   <text x="450" y="295" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">REGISTER NUMBER:</text>
-  <text x="620" y="295" font-family="'Courier New', monospace" font-size="14" font-weight="900" fill="#1455D9">${registerNumber}</text>
+  <text x="620" y="295" font-family="'Courier New', monospace" font-size="14" font-weight="900" fill="#1455D9">${eRegisterNumber}</text>
 
   <text x="75" y="330" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">CLASS / SECTION:</text>
-  <text x="210" y="330" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D">Year ${year} · Section ${section} (B.Tech AI &amp; DS)</text>
+  <text x="210" y="330" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D">Year ${eYear} · Section ${eSection} (B.Tech AI &amp; DS)</text>
 
   <text x="450" y="330" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">ANNA UNIV ATTENDANCE:</text>
-  <text x="620" y="330" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="900" fill="#059669">${attRate}% (Compliant &gt;= 75%)</text>
+  <text x="620" y="330" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="900" fill="#059669">${eAttRate}% (Compliant &gt;= 75%)</text>
 
   <text x="75" y="365" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">REQUEST TYPE:</text>
-  <text x="210" y="365" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#B45309">${customType}</text>
+  <text x="210" y="365" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#B45309">${eCustomType}</text>
 
   <text x="450" y="365" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">LEAVE DURATION:</text>
-  <text x="620" y="365" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="900" fill="#1455D9">2 Days (${fromDate} to ${toDate})</text>
+  <text x="620" y="365" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="900" fill="#1455D9">2 Days (${eFromDate} to ${eToDate})</text>
 
   <text x="75" y="398" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">PARENT PHONE:</text>
-  <text x="210" y="398" font-family="'Courier New', monospace" font-size="12" font-weight="bold" fill="#071A3D">+91-${parentPhone}</text>
+  <text x="210" y="398" font-family="'Courier New', monospace" font-size="12" font-weight="bold" fill="#071A3D">+91-${eParentPhone}</text>
 
   <text x="450" y="398" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#475569">RESIDENCY / BUS:</text>
-  <text x="620" y="398" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" fill="#334155">${residency} (${busNo})</text>
+  <text x="620" y="398" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" fill="#334155">${eResidency} (${eBusNo})</text>
 
-  <!-- Attached Proof: Event Invitation & Requisition Box -->
+  <!-- Attached Proof: Event Invitation and Requisition Box -->
   <rect x="50" y="432" width="750" height="395" rx="10" fill="#FFFBEB" stroke="#FDE68A"/>
   <rect x="65" y="447" width="720" height="32" rx="6" fill="#FEF3C7" stroke="#FCD34D"/>
   <text x="80" y="468" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="900" fill="#92400E" letter-spacing="1">ATTACHED DIGITAL VERIFICATION PROOF 1: EVENT PARTICULAR &amp; PARENT UNDERTAKING</text>
 
   <text x="80" y="510" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#78350F">Event Title &amp; Purpose:</text>
-  <text x="240" y="510" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="900" fill="#071A3D">${eventTitle}</text>
+  <text x="240" y="510" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="900" fill="#071A3D">${eEventTitle}</text>
 
   <text x="80" y="538" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#78350F">Location / Venue:</text>
   <text x="240" y="538" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" fill="#334155">Olapalayam, Karur District, Tamil Nadu</text>
@@ -162,19 +187,19 @@ export async function GET(request: Request) {
   <text x="760" y="609" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#059669" text-anchor="end">✓ TELEPHONIC CONSENT VERIFIED</text>
 
   <text x="95" y="640" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#475569" font-style="italic">"To: The Class Advisor, Department of AI &amp; DS, V.S.B. Engineering College (Autonomous)."</text>
-  <text x="95" y="665" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#1E293B">"Respected Faculty / Class Advisor, My ward ${studentName} (${registerNumber}) requires leave on ${fromDate} and ${toDate}"</text>
+  <text x="95" y="665" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#1E293B">"Respected Faculty / Class Advisor, My ward ${eStudentNameSig} (${eRegisterNumber}) requires leave on ${eFromDate} and ${eToDate}"</text>
   <text x="95" y="685" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#1E293B">"to participate in our family traditional temple function. We affirm her attendance will remain above the mandatory 75%"</text>
   <text x="95" y="705" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" fill="#1E293B">"Anna University threshold, and she will submit all academic lab assignments promptly upon return."</text>
 
   <line x1="95" y1="725" x2="755" y2="725" stroke="#E2E8F0" stroke-width="1"/>
 
   <text x="95" y="750" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D">Parent / Guardian: Periasamy M</text>
-  <text x="350" y="750" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D">Verified Contact: +91-${parentPhone}</text>
+  <text x="350" y="750" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D">Verified Contact: +91-${eParentPhone}</text>
   <text x="610" y="750" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#059669">Status: Contact Verified ✓</text>
   
   <text x="95" y="780" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#64748B">Security Hash: #VSB-OD-VERIF-77291-ANNAP · Cryptographic System Token Generated</text>
 
-  <!-- Signatures & Official Validation Block -->
+  <!-- Signatures and Official Validation Block -->
   <rect x="50" y="845" width="750" height="210" rx="10" fill="#F8FAFC" stroke="#CBD5E1"/>
 
   <!-- College Stamp Seal -->
@@ -186,7 +211,7 @@ export async function GET(request: Request) {
   <text x="160" y="982" font-family="'Segoe UI', Roboto, sans-serif" font-size="8" fill="#64748B" text-anchor="middle">AUTONOMOUS</text>
 
   <!-- Signatures Block -->
-  <text x="380" y="925" font-family="'Brush Script MT', cursive, sans-serif" font-size="22" fill="#071A3D">${studentName}</text>
+  <text x="380" y="925" font-family="'Brush Script MT', cursive, sans-serif" font-size="22" fill="#071A3D">${eStudentNameSig}</text>
   <line x1="310" y1="945" x2="470" y2="945" stroke="#64748B" stroke-width="1.2"/>
   <text x="390" y="962" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D" text-anchor="middle">Student Applicant</text>
   <text x="390" y="978" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#64748B" text-anchor="middle">Digital App Submission</text>
@@ -209,3 +234,4 @@ export async function GET(request: Request) {
     },
   })
 }
+
