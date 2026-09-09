@@ -50,13 +50,15 @@ export default async function FacultyProfilePage() {
     }
   }
 
-  const dbSubjects = await prisma.subject.findMany({
-    where: parsedSubjects.length > 0 ? { code: { in: parsedSubjects } } : undefined,
-  }).catch(() => [])
+  const dbSubjects = parsedSubjects.length > 0
+    ? await prisma.subject.findMany({
+        where: { code: { in: parsedSubjects } },
+      }).catch(() => [])
+    : []
 
   const allocatedCourseList = dbSubjects.length > 0
     ? dbSubjects.map(s => `${s.code} - ${s.name} (${s.credits} Credits)`)
-    : (faculty?.subjectName ? [faculty.subjectName] : [])
+    : (!isAdvisor && faculty?.subjectName ? [faculty.subjectName] : [])
 
   const defaultRoleTitle = isAdvisor
     ? 'Assistant Professor & Class Advisor'

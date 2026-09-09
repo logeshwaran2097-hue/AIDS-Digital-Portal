@@ -537,59 +537,139 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
           </CardContent>
         </Card>
 
-        {/* Allocated Subjects & Teaching Load */}
-        <Card className="rounded-3xl border-gray-200 shadow-xs bg-white">
-          <CardContent className="p-6 space-y-4">
-            <h3 className="font-bold text-sm text-[#071A3D] flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[#1455D9]" /> Allocated Teaching Subjects &amp; Workload
-            </h3>
+        {/* Right Card: Class Advisor Student Information Hub OR Teaching Workload */}
+        {isAdvisor ? (
+          <Card className="rounded-3xl border-blue-200/80 shadow-xs bg-gradient-to-br from-blue-50/40 via-white to-white">
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-blue-100 pb-3">
+                <h3 className="font-bold text-sm text-[#071A3D] flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#1455D9]" /> Class Cohort &amp; Student Information Hub
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100/80 text-[#1455D9] text-[10px] font-black uppercase tracking-wider">
+                  {data.advisorBatch || 'Year 2 · Sec B'}
+                </span>
+              </div>
 
-            <div className="space-y-2.5 text-xs">
-              {data.allocatedCourses.length === 0 ? (
-                <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2 text-center">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center mx-auto">
-                    <Award className="w-5 h-5" />
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 rounded-2xl bg-white border border-blue-100/80 space-y-1 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#071A3D] flex items-center gap-1.5">
+                      <GraduationCap className="w-4 h-4 text-[#1455D9]" /> Full Student Roster &amp; Academic Dossiers
+                    </span>
+                    <span className="text-[11px] font-bold text-[#1455D9]">
+                      {data.studentCount && data.studentCount > 0 ? `${data.studentCount} Enrolled Students` : 'Direct Cohort Scope'}
+                    </span>
                   </div>
-                  <p className="font-black text-sm text-[#071A3D]">Full-Time Class Advisory Portfolio</p>
-                  <p className="text-[11px] text-gray-600 max-w-sm mx-auto">
-                    Designated as Head Class Advisor for <strong>{data.advisorBatch}</strong>. Primary workload centers on cohort mentorship, attendance regularizations, and student counseling.
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Complete student profiles, Anna University register numbers, roll numbers, semester CGPA progression, and internal assessment marks.
                   </p>
-                  <div className="pt-2">
-                    <Link
-                      href="/faculty-dashboard/students"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1455D9] text-white text-xs font-bold shadow-xs hover:bg-[#0e44b5]"
-                    >
-                      Manage Class Students <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
                 </div>
-              ) : (
-                data.allocatedCourses.map((c, idx) => (
-                  <div key={idx} className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-between gap-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0" />
-                      <span className="font-bold text-[#071A3D]">{c}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Link
-                        href="/faculty-dashboard/attendance"
-                        className="px-2.5 py-1 rounded-lg bg-[#1455D9] text-white text-[11px] font-bold hover:bg-[#0e44b5] transition-all shadow-2xs"
-                      >
-                        Attendance
-                      </Link>
-                      <Link
-                        href="/faculty-dashboard/subjects"
-                        className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-[#1455D9] text-[11px] font-bold hover:bg-blue-50 transition-all shadow-2xs"
-                      >
-                        Syllabus
-                      </Link>
-                    </div>
+
+                <div className="p-3.5 rounded-2xl bg-white border border-blue-100/80 space-y-1 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#071A3D] flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-emerald-600" /> Attendance Monitoring &amp; Defaulter Tracking
+                    </span>
+                    <span className="text-[11px] font-bold text-emerald-600">75% Threshold Policy</span>
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Live period attendance logs, absentees tracking, parent SMS / WhatsApp notification alerts, and condonation compliance.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white border border-blue-100/80 space-y-1 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#071A3D] flex items-center gap-1.5">
+                      <FileCheck className="w-4 h-4 text-purple-600" /> On-Duty (OD) &amp; Leave Authorizations
+                    </span>
+                    <span className="text-[11px] font-bold text-purple-600">Primary Sign-off</span>
+                  </div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Primary verification and digital approval authority for symposiums, external hackathons, paper presentations, and medical leaves with document proofs.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-white border border-blue-100/80 space-y-1 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-[#071A3D] flex items-center gap-1.5">
+                      <Phone className="w-4 h-4 text-amber-600" /> Parent &amp; Guardian Direct Liaison
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-700">Verified Contact Directory</span>
+                  </div>
+                  <p className="text-gray-500 text-[11px] leading-relaxed">
+                    Direct access to parent mobile numbers, address details, and official emergency contacts for regular counseling and meeting intimations.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-wrap gap-2">
+                <Link
+                  href="/faculty-dashboard/students"
+                  className="flex-1 min-w-[140px] text-center px-4 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold transition-all shadow-xs"
+                >
+                  Manage Class Students ({data.studentCount || 0})
+                </Link>
+                <Link
+                  href="/faculty-dashboard/attendance"
+                  className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-blue-300 text-[#071A3D] text-xs font-bold transition-all shadow-xs"
+                >
+                  Attendance Log
+                </Link>
+                <Link
+                  href="/faculty-dashboard/projects"
+                  className="px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-blue-300 text-[#071A3D] text-xs font-bold transition-all shadow-xs"
+                >
+                  Class Projects
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="rounded-3xl border-gray-200 shadow-xs bg-white">
+            <CardContent className="p-6 space-y-4">
+              <h3 className="font-bold text-sm text-[#071A3D] flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#1455D9]" /> Allocated Teaching Subjects &amp; Workload
+              </h3>
+
+              <div className="space-y-2.5 text-xs">
+                {data.allocatedCourses.length === 0 ? (
+                  <div className="p-5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2 text-center">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center mx-auto">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <p className="font-black text-sm text-[#071A3D]">Department Academic Portfolio</p>
+                    <p className="text-[11px] text-gray-600 max-w-sm mx-auto">
+                      No primary teaching subjects currently assigned for this semester.
+                    </p>
+                  </div>
+                ) : (
+                  data.allocatedCourses.map((c, idx) => (
+                    <div key={idx} className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-[#1455D9] shrink-0" />
+                        <span className="font-bold text-[#071A3D]">{c}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Link
+                          href="/faculty-dashboard/attendance"
+                          className="px-2.5 py-1 rounded-lg bg-[#1455D9] text-white text-[11px] font-bold hover:bg-[#0e44b5] transition-all shadow-2xs"
+                        >
+                          Attendance
+                        </Link>
+                        <Link
+                          href="/faculty-dashboard/subjects"
+                          className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-[#1455D9] text-[11px] font-bold hover:bg-blue-50 transition-all shadow-2xs"
+                        >
+                          Syllabus
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* EDIT PROFILE MODAL */}
