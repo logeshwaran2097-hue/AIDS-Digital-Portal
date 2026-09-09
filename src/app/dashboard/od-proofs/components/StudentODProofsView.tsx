@@ -69,6 +69,19 @@ interface StudentODProofsViewProps {
   }
 }
 
+const COLLEGE_GPS_PRESETS = [
+  { name: 'VSB Engineering College, Karur', lat: 10.9602, lng: 78.0766 },
+  { name: 'PSG College of Technology, Coimbatore', lat: 11.0247, lng: 76.9934 },
+  { name: 'Coimbatore Institute of Technology (CIT)', lat: 11.0168, lng: 76.9558 },
+  { name: 'Kongu Engineering College, Perundurai', lat: 11.2743, lng: 77.6074 },
+  { name: 'Kumaraguru College of Technology (KCT)', lat: 11.0827, lng: 76.9922 },
+  { name: 'Bannari Amman Institute of Tech (BIT)', lat: 11.4969, lng: 77.2764 },
+  { name: 'Government College of Technology (GCT)', lat: 11.0183, lng: 76.9360 },
+  { name: 'Anna University (CEG), Chennai', lat: 13.0110, lng: 80.2354 },
+  { name: 'NIT Trichy', lat: 10.7589, lng: 78.8132 },
+  { name: 'Thiagarajar College of Engg (TCE), Madurai', lat: 9.8828, lng: 78.0820 },
+]
+
 export function StudentODProofsView({ initialProofs, studentInfo }: StudentODProofsViewProps) {
   const [proofs, setProofs] = useState<ODProofItem[]>(initialProofs)
   const [loading, setLoading] = useState(false)
@@ -104,6 +117,17 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     achievement: 'Participation',
   })
 
+  const handleSelectPreset = (preset: { name: string; lat: number; lng: number }) => {
+    setGeoForm((prev) => ({
+      ...prev,
+      latitude: preset.lat,
+      longitude: preset.lng,
+      address: `${preset.name} (GPS: ${preset.lat}°, ${preset.lng}°)`,
+      gpsCaptured: true,
+    }))
+    toast.success(`Coordinates set for ${preset.name}!`)
+  }
+
   // 1. AUTO-DETECT GPS LOCATION VIA BROWSER
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
@@ -129,7 +153,11 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       },
       (error) => {
         setGeoForm((prev) => ({ ...prev, isDetectingGPS: false }))
-        toast.error(`GPS Error: ${error.message}. You can manually enter coordinates if needed.`)
+        if (error.code === 1) {
+          toast.error('Location permission was denied. Please allow location in your browser or select a college campus preset below.')
+        } else {
+          toast.error(`GPS Error: ${error.message}. You can select a college preset or enter coordinates manually.`)
+        }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     )
@@ -838,6 +866,25 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                     onChange={(e) => setGeoForm({ ...geoForm, address: e.target.value })}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"
                   />
+                </div>
+
+                {/* Popular College Venue Presets */}
+                <div className="pt-1">
+                  <span className="text-[10px] text-gray-500 font-bold block mb-1.5">
+                    Or 1-Click Select Host College Campus Preset:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                    {COLLEGE_GPS_PRESETS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectPreset(preset)}
+                        className="px-2 py-1 rounded-lg bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-[10px] font-medium text-gray-700 transition-all text-left cursor-pointer"
+                      >
+                        {preset.name.split(',')[0]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
