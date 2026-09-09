@@ -87,15 +87,9 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     venueCollege: '',
   })
 
-  // Geo-tag Upload Form with separate collegeName and collegeAddress
+  // Geo-tag Upload Form (Image contains embedded GPS timestamp & map from GeoTag/GPS camera)
   const [geoForm, setGeoForm] = useState({
     photoUrl: '',
-    latitude: '' as number | string,
-    longitude: '' as number | string,
-    collegeName: '',
-    collegeAddress: '',
-    isDetectingGPS: false,
-    gpsCaptured: false,
   })
 
   // Certificate Upload Form
@@ -104,40 +98,6 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     certificateName: '',
     achievement: 'Participation',
   })
-
-  // 1. AUTO-DETECT GPS LOCATION VIA BROWSER
-  const handleDetectGPS = () => {
-    if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser.')
-      return
-    }
-
-    setGeoForm((prev) => ({ ...prev, isDetectingGPS: true }))
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = Number(position.coords.latitude.toFixed(6))
-        const lng = Number(position.coords.longitude.toFixed(6))
-        setGeoForm((prev) => ({
-          ...prev,
-          latitude: lat,
-          longitude: lng,
-          gpsCaptured: true,
-          isDetectingGPS: false,
-        }))
-        toast.success(`GPS Location Captured! (Lat: ${lat}, Long: ${lng})`)
-      },
-      (error) => {
-        setGeoForm((prev) => ({ ...prev, isDetectingGPS: false }))
-        if (error.code === 1) {
-          toast.error('Location permission was denied. Click the lock/tune icon near your browser address bar to allow location, or enter coordinates manually.')
-        } else {
-          toast.error(`GPS Error: ${error.message}. You can enter coordinates manually below.`)
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    )
-  }
 
   // Handle Photo File Select (Convert to Base64)
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,11 +167,7 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     e.preventDefault()
     if (!selectedProof) return
     if (!geoForm.photoUrl) {
-      toast.error('Please snap or select a venue photo.')
-      return
-    }
-    if (!geoForm.collegeName.trim()) {
-      toast.error('Please enter the College / Institution Name.')
+      toast.error('Please snap or select your Geo-Tag photo.')
       return
     }
 
@@ -224,11 +180,6 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
           action: 'UPLOAD_GEOTAG',
           id: selectedProof.id,
           geoPhotoUrl: geoForm.photoUrl,
-          latitude: geoForm.latitude ? Number(geoForm.latitude) : null,
-          longitude: geoForm.longitude ? Number(geoForm.longitude) : null,
-          collegeName: geoForm.collegeName.trim(),
-          collegeAddress: geoForm.collegeAddress.trim(),
-          geoAddress: geoForm.collegeAddress.trim(),
           geoTimestamp: new Date().toISOString(),
         }),
       })
@@ -290,12 +241,6 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     setSelectedProof(p)
     setGeoForm({
       photoUrl: p.geoPhotoUrl || '',
-      latitude: p.latitude || '',
-      longitude: p.longitude || '',
-      collegeName: p.venueCollege || '',
-      collegeAddress: p.geoAddress || '',
-      isDetectingGPS: false,
-      gpsCaptured: Boolean(p.latitude && p.longitude),
     })
     setIsGeoModalOpen(true)
   }
@@ -590,21 +535,16 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                               {p.geoAddress && (
                                 <p className="text-[11px] text-gray-500 truncate">{p.geoAddress}</p>
                               )}
-                              {p.latitude && p.longitude && (
-                                <div className="flex items-center gap-2 pt-0.5">
-                                  <span className="font-mono text-[10px] text-gray-600 bg-white px-2 py-0.5 rounded-md border">
-                                    {p.latitude}°, {p.longitude}°
-                                  </span>
-                                  <a
-                                    href={`https://maps.google.com/?q=${p.latitude},${p.longitude}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-[10px] text-[#1455D9] font-bold flex items-center gap-0.5 hover:underline"
-                                  >
-                                    View Map <ExternalLink className="w-2.5 h-2.5" />
-                                  </a>
-                                </div>
-                              )}
+                              <div className="pt-1 flex items-center gap-2">
+                                <a
+                                  href={p.geoPhotoUrl || ''}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[10px] text-[#1455D9] font-bold flex items-center gap-0.5 hover:underline"
+                                >
+                                  View Geo-Tag Photo <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -769,121 +709,47 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
             <form onSubmit={handleGeoSubmit} className="space-y-4 text-xs">
               {/* Camera / Photo Upload input */}
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Select / Snap Photo *</label>
+                <label className="block font-bold text-[#071A3D] mb-1">
+                  Select / Snap Geo-Tag Photo *
+                </label>
                 <input
                   type="file"
                   accept="image/*"
                   capture="environment"
                   onChange={handlePhotoSelect}
-                  className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-[#1455D9] hover:file:bg-blue-100 cursor-pointer"
+                  className="w-full text-xs text-gray-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-[#1455D9] hover:file:bg-blue-100 cursor-pointer"
                 />
+                <p className="text-[11px] text-gray-500 mt-1.5">
+                  Upload the photo captured with GPS Map Camera / Geo-Tag app at the venue (with embedded GPS location &amp; timestamp).
+                </p>
               </div>
 
-              {/* Photo Preview with Institutional GPS Overlay */}
-              {geoForm.photoUrl && (
-                <div className="relative rounded-2xl overflow-hidden border border-gray-200 shadow-xs max-h-56 bg-black">
+              {/* Photo Preview Clean - Shows the full photo so embedded GPS stamp is visible */}
+              {geoForm.photoUrl ? (
+                <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-black flex items-center justify-center p-1">
                   <img
                     src={geoForm.photoUrl}
                     alt="Geo-Tag Preview"
-                    className="w-full h-full object-cover"
+                    className="w-full h-auto max-h-80 object-contain rounded-xl"
                   />
-                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-3 text-white space-y-0.5">
-                    <p className="font-bold text-[11px] flex items-center gap-1 text-emerald-300">
-                      <MapPin className="w-3 h-3" />
-                      {geoForm.collegeName || selectedProof.venueCollege || 'Host Event Campus'}
-                    </p>
-                    {geoForm.collegeAddress && (
-                      <p className="text-[10px] text-gray-200 truncate">
-                        {geoForm.collegeAddress}
-                      </p>
-                    )}
-                    <p className="font-mono text-[10px] text-gray-300">
-                      GPS: {geoForm.latitude || 'Lat: --'} | {geoForm.longitude || 'Long: --'} · {new Date().toLocaleTimeString()}
-                    </p>
+                </div>
+              ) : (
+                <div className="p-8 rounded-2xl border-2 border-dashed border-gray-200 text-center space-y-2 bg-gray-50/50">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto">
+                    <Camera className="w-6 h-6" />
                   </div>
+                  <p className="font-bold text-[#071A3D] text-xs">No Geo-Tag Photo Chosen Yet</p>
+                  <p className="text-[11px] text-gray-400">
+                    Snap or choose a photo taken with GPS Map Camera
+                  </p>
                 </div>
               )}
-
-              {/* GPS Geolocation Auto-Detection Button */}
-              <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#071A3D] flex items-center gap-1.5">
-                    <Navigation className="w-4 h-4 text-[#1455D9]" /> Live Device GPS Geolocation
-                  </span>
-                  {geoForm.gpsCaptured && (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Locked
-                    </span>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleDetectGPS}
-                  disabled={geoForm.isDetectingGPS}
-                  className="w-full py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-60"
-                >
-                  <MapPin className="w-3.5 h-3.5" />
-                  {geoForm.isDetectingGPS ? 'Detecting Satellite GPS...' : '1-Click Detect Live GPS Coordinates'}
-                </button>
-
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <label className="text-[10px] text-gray-500 font-bold block mb-0.5">Latitude</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 11.0168"
-                      value={geoForm.latitude}
-                      onChange={(e) => setGeoForm({ ...geoForm, latitude: e.target.value })}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 font-mono text-[11px] bg-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-gray-500 font-bold block mb-0.5">Longitude</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 76.9558"
-                      value={geoForm.longitude}
-                      onChange={(e) => setGeoForm({ ...geoForm, longitude: e.target.value })}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 font-mono text-[11px] bg-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-gray-700 font-bold block mb-1">
-                    College Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Coimbatore Institute of Technology (CIT)"
-                    value={geoForm.collegeName}
-                    onChange={(e) => setGeoForm({ ...geoForm, collegeName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-gray-700 font-bold block mb-1">
-                    College Address *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Civil Aerodrome Post, Coimbatore, Tamil Nadu - 641014"
-                    value={geoForm.collegeAddress}
-                    onChange={(e) => setGeoForm({ ...geoForm, collegeAddress: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs bg-white focus:outline-none focus:border-[#1455D9]"
-                  />
-                </div>
-              </div>
 
               <div className="pt-2 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setIsGeoModalOpen(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-all"
+                  className="flex-1 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>

@@ -388,20 +388,20 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
                           <p className="font-bold text-[#071A3D]">Stage 1: Venue Geo-Tag Photo</p>
                           <p className="text-[11px] text-gray-600 truncate">
                             {hasGeo
-                              ? `${p.venueCollege ? p.venueCollege + ' · ' : ''}${p.geoAddress || 'Campus'}`
+                              ? p.venueCollege ? `${p.venueCollege} · Uploaded` : 'Geo-Tag Photo Uploaded'
                               : 'Student has not checked in yet'}
                           </p>
                         </div>
                       </div>
 
-                      {hasGeo && p.latitude && p.longitude && (
+                      {hasGeo && p.geoPhotoUrl && (
                         <a
-                          href={`https://maps.google.com/?q=${p.latitude},${p.longitude}`}
+                          href={p.geoPhotoUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-[#1455D9] text-[11px] font-bold shrink-0 hover:bg-blue-50 flex items-center gap-1"
                         >
-                          Map <ExternalLink className="w-3 h-3" />
+                          View <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
                     </div>
@@ -514,44 +514,39 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
 
                 {selectedProof.geoPhotoUrl ? (
                   <div className="space-y-2">
-                    <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-xs max-h-60 bg-black">
-                      <img
-                        src={selectedProof.geoPhotoUrl}
-                        alt="Venue Geo-tag"
-                        className="w-full h-full object-cover"
-                      />
+                    <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-xs max-h-72 bg-black flex items-center justify-center p-1">
+                      <a href={selectedProof.geoPhotoUrl} target="_blank" rel="noreferrer" className="w-full flex items-center justify-center">
+                        <img
+                          src={selectedProof.geoPhotoUrl}
+                          alt="Venue Geo-tag"
+                          className="w-full h-auto max-h-72 object-contain rounded-xl hover:opacity-95"
+                          title="Click to view full photo"
+                        />
+                      </a>
                     </div>
                     <div className="p-3.5 rounded-xl bg-white border border-blue-200 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">GPS Geotag Photo:</span>
+                        <a
+                          href={selectedProof.geoPhotoUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] text-[#1455D9] font-bold flex items-center gap-1 hover:underline"
+                        >
+                          Open Full Image ↗
+                        </a>
+                      </div>
                       {selectedProof.venueCollege && (
                         <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase">Host College / Institution:</span>
                           <p className="font-black text-[#071A3D] text-xs">
                             {selectedProof.venueCollege}
                           </p>
                         </div>
                       )}
                       {selectedProof.geoAddress && (
-                        <div>
-                          <span className="text-[10px] font-bold text-gray-400 uppercase">College Address / Venue:</span>
-                          <p className="text-gray-700 text-[11px] leading-snug">
-                            {selectedProof.geoAddress}
-                          </p>
-                        </div>
-                      )}
-                      {selectedProof.latitude && selectedProof.longitude && (
-                        <div className="flex items-center justify-between pt-1.5 border-t border-gray-100">
-                          <span className="font-mono text-[10px] text-gray-600">
-                            GPS: {selectedProof.latitude}°, {selectedProof.longitude}°
-                          </span>
-                          <a
-                            href={`https://maps.google.com/?q=${selectedProof.latitude},${selectedProof.longitude}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[10px] text-[#1455D9] font-bold flex items-center gap-1 hover:underline"
-                          >
-                            Google Maps ↗
-                          </a>
-                        </div>
+                        <p className="text-gray-700 text-[11px] leading-snug">
+                          {selectedProof.geoAddress}
+                        </p>
                       )}
                     </div>
                   </div>
