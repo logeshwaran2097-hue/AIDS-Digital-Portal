@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { VSB_LOGO_BASE64 } from '@/lib/logoBase64'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,33 +49,81 @@ export async function GET(request: Request) {
       <stop offset="100%" stop-color="#1455D9"/>
     </linearGradient>
     <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.1"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.12"/>
     </filter>
   </defs>
 
   <rect width="850" height="1150" fill="#FFFFFF"/>
-  <rect x="24" y="24" width="802" height="1102" fill="none" stroke="#071A3D" stroke-width="3" rx="4"/>
-  <rect x="32" y="32" width="786" height="1086" fill="none" stroke="#F4C430" stroke-width="1.5" rx="2"/>
+  <rect x="22" y="22" width="806" height="1106" fill="none" stroke="#071A3D" stroke-width="2.5" rx="6"/>
+  <rect x="28" y="28" width="794" height="1094" fill="none" stroke="#F4C430" stroke-width="1.2" rx="4"/>
+  <rect x="32" y="32" width="786" height="1086" fill="none" stroke="#E2E8F0" stroke-width="0.6" rx="2"/>
 
-  <!-- Top Header Banner -->
-  <rect x="33" y="33" width="784" height="14" fill="url(#headerGrad)"/>
+  <!-- Top Ambient Header Background Fill -->
+  <rect x="33" y="33" width="784" height="142" fill="#F8FAFC"/>
+  <!-- Top Slim Gradient Accent Ribbon -->
+  <rect x="33" y="33" width="784" height="6" fill="url(#headerGrad)"/>
 
-  <!-- Institution Branding -->
-  <text x="425" y="75" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#64748B" text-anchor="middle" letter-spacing="2">AUTONOMOUS INSTITUTION · AFFILIATED TO ANNA UNIVERSITY · ACCREDITED BY NAAC 'A' GRADE</text>
-  <text x="425" y="105" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.5">V.S.B. ENGINEERING COLLEGE</text>
-  <text x="425" y="132" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" fill="#1455D9" text-anchor="middle" letter-spacing="1">DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE</text>
-  <text x="425" y="152" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#475569" text-anchor="middle">NH-67, Karur - Coimbatore National Highway, Karudayampalayam, Karur - 639111, Tamil Nadu</text>
+  <!-- Central Watermark Emblem (Subtle 3.5% Opacity) -->
+  <image href="${VSB_LOGO_BASE64}" x="275" y="450" width="300" height="300" opacity="0.035" preserveAspectRatio="xMidYMid meet"/>
 
-  <line x1="50" y1="168" x2="800" y2="168" stroke="#071A3D" stroke-width="2"/>
-  <line x1="50" y1="172" x2="800" y2="172" stroke="#F4C430" stroke-width="1"/>
+  <!-- ========================================================================= -->
+  <!-- PRESTIGIOUS ACADEMIC LETTERHEAD (PDF FORMAT) -->
+  <!-- ========================================================================= -->
 
-  <!-- Document Title Badge -->
-  <rect x="180" y="188" width="490" height="34" rx="8" fill="#071A3D" filter="url(#shadow)"/>
-  <text x="425" y="210" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5">OFFICIAL STUDENT LEAVE &amp; EVENT PROOF VERIFICATION DOSSIER</text>
+  <!-- Left: College Official Circular Emblem in Gold Mount -->
+  <g transform="translate(48, 48)">
+    <circle cx="48" cy="48" r="46" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <circle cx="48" cy="48" r="43.5" fill="#FFFFFF" stroke="#F4C430" stroke-width="2"/>
+    <circle cx="48" cy="48" r="40" fill="#FFFFFF" stroke="#071A3D" stroke-width="0.8"/>
+    <image href="${VSB_LOGO_BASE64}" x="8" y="8" width="80" height="80" preserveAspectRatio="xMidYMid meet"/>
+  </g>
 
-  <!-- Dossier Meta Bar -->
-  <text x="60" y="248" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#334155">Ref: VSB/AIDS/OD-LV/2026/092</text>
-  <text x="790" y="248" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#334155" text-anchor="end">Submission Date: 08-Sep-2026</text>
+  <!-- Right: NAAC 'A' Grade & NBA Quality Seal in Royal Navy & Gold -->
+  <g transform="translate(706, 48)">
+    <circle cx="48" cy="48" r="46" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <circle cx="48" cy="48" r="43.5" fill="#FFFFFF" stroke="#1455D9" stroke-width="1.8"/>
+    <circle cx="48" cy="48" r="40" fill="#F8FAFC" stroke="#F4C430" stroke-width="1.2" stroke-dasharray="3,1.5"/>
+    <circle cx="48" cy="48" r="32" fill="#071A3D"/>
+    <text x="48" y="32" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.5" font-weight="900" fill="#F4C430" text-anchor="middle" letter-spacing="1.5">NAAC</text>
+    <text x="48" y="50" font-family="'Segoe UI', Roboto, sans-serif" font-size="17" font-weight="900" fill="#FFFFFF" text-anchor="middle">A</text>
+    <text x="48" y="60" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="bold" fill="#E2E8F0" text-anchor="middle" letter-spacing="1">GRADE</text>
+    <text x="48" y="71" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.5" font-weight="bold" fill="#F4C430" text-anchor="middle" letter-spacing="0.5">NBA · ISO 9001</text>
+  </g>
+
+  <!-- Center Institution Master Typography -->
+  <text x="425" y="68" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1">V.S.B. ENGINEERING COLLEGE</text>
+
+  <!-- Autonomous Gold Pill Tag -->
+  <rect x="330" y="76" width="190" height="17" rx="8.5" fill="#F4C430"/>
+  <text x="425" y="88.5" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1.5">AN AUTONOMOUS INSTITUTION</text>
+
+  <!-- Department Headline -->
+  <text x="425" y="112" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="1.2">DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE</text>
+
+  <!-- Accreditations & Approvals Line 1 -->
+  <text x="425" y="129" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="600" fill="#334155" text-anchor="middle">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</text>
+
+  <!-- Accreditations & Approvals Line 2 -->
+  <text x="425" y="144" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="bold" fill="#64748B" text-anchor="middle">Accredited by NAAC with 'A' Grade · NBA Accredited Programs · ISO 9001:2015 Certified</text>
+
+  <!-- Campus Address Line 3 -->
+  <text x="425" y="158" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.8" fill="#64748B" text-anchor="middle">NH-67, Karur - Coimbatore National Highway, Karudayampalayam, Karur - 639 111, Tamil Nadu, India</text>
+
+  <!-- Master Gold & Sapphire Ornamental Beam Separator with Center Diamond -->
+  <rect x="48" y="171" width="754" height="2.5" fill="#071A3D" rx="1"/>
+  <rect x="48" y="174.5" width="754" height="1.2" fill="#F4C430" rx="0.6"/>
+  <polygon points="425,168.5 431,174 425,179.5 419,174" fill="#F4C430"/>
+  <polygon points="425,170.5 428.5,174 425,177.5 421.5,174" fill="#071A3D"/>
+
+  <!-- Official Document Title Section Badge -->
+  <rect x="155" y="193" width="540" height="36" rx="8" fill="#071A3D" filter="url(#shadow)"/>
+  <rect x="157" y="195" width="536" height="32" rx="6" fill="none" stroke="#F4C430" stroke-width="1"/>
+  <text x="425" y="216" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5">OFFICIAL STUDENT LEAVE &amp; EVENT PROOF VERIFICATION DOSSIER</text>
+
+  <!-- Dossier Meta Ribbon Bar -->
+  <text x="55" y="252" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="bold" fill="#334155">Ref. No: <tspan fill="#1455D9" font-weight="900">VSB/AIDS/OD-LV/2026/092</tspan></text>
+  <text x="425" y="252" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="600" fill="#64748B" text-anchor="middle">Academic Year: 2025–2026 · Anna University Regulation</text>
+  <text x="795" y="252" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="bold" fill="#334155" text-anchor="end">Generation Date: <tspan fill="#071A3D" font-weight="900">08-Sep-2026</tspan></text>
 
   <!-- Student Particulars Card -->
   <rect x="50" y="262" width="750" height="152" rx="10" fill="#F8FAFC" stroke="#CBD5E1"/>

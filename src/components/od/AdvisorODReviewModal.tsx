@@ -851,7 +851,7 @@ export function AdvisorODReviewModal({
               <div className="flex items-center gap-2 shrink-0">
                 <a
                   href={selectedPreviewFile.url}
-                  download="Verification_Proof_Document"
+                  download="VSB_Official_Verification_Dossier.svg"
                   target="_blank"
                   rel="noreferrer"
                   className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
