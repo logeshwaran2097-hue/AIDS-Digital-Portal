@@ -322,6 +322,17 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
     if (role === 'faculty' && !isFacultyAdvisor && item.href.includes('/faculty-dashboard/students')) {
       return false
     }
+    // If faculty is a class advisor, they have no allocated teaching subjects:
+    // Hide "My Subjects", "Resources", and "Question Papers"
+    if (role === 'faculty' && isFacultyAdvisor) {
+      if (
+        item.href.includes('/faculty-dashboard/subjects') ||
+        item.href.includes('/faculty-dashboard/resources') ||
+        item.href.includes('/faculty-dashboard/question-papers')
+      ) {
+        return false
+      }
+    }
     return true
   })
   

@@ -22,6 +22,16 @@ export default async function FacultySubjectsPage() {
     }
   }
 
+  const isAdvisor =
+    faculty?.facultyType === 'advisor' ||
+    faculty?.facultyType === 'both' ||
+    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+
+  // Class Advisors have no allocated teaching subjects; redirect to Class Students
+  if (faculty?.facultyType === 'advisor' || (isAdvisor && parsedSubjectCodes.length === 0)) {
+    redirect('/faculty-dashboard/students')
+  }
+
   const dbSubjects = await prisma.subject.findMany({
     where: parsedSubjectCodes.length > 0 ? { code: { in: parsedSubjectCodes } } : undefined,
     orderBy: { code: 'asc' },
@@ -142,7 +152,6 @@ export default async function FacultySubjectsPage() {
   })
 
 
-  const isAdvisor = faculty?.facultyType === 'advisor' || faculty?.facultyType === 'both'
   const roleBadgeLabel = isAdvisor
     ? 'Class Advisor'
     : faculty?.facultyType === 'lab_faculty'
