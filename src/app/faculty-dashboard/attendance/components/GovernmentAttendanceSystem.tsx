@@ -189,6 +189,20 @@ export function GovernmentAttendanceSystem({
   const [classOptions, setClassOptions] = useState<ClassOption[]>(INITIAL_CLASS_OPTIONS)
   const [isAdvisor, setIsAdvisor] = useState(isAdvisorServer)
   const [advisorClass, setAdvisorClass] = useState<ClassOption | null>(null)
+  const [advisorClasses, setAdvisorClasses] = useState<ClassOption[]>([])
+
+  // Strictly filter to ONLY allocated classes for Class Advisors
+  const displayedClassOptions = useMemo(() => {
+    if (mode === 'morning' || effectiveLoginRole === 'advisor') {
+      if (advisorClasses.length > 0) {
+        return advisorClasses
+      }
+      if (advisorClass) {
+        return [advisorClass]
+      }
+    }
+    return classOptions
+  }, [mode, effectiveLoginRole, advisorClasses, advisorClass, classOptions])
 
   // Session fields
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
@@ -294,7 +308,18 @@ export function GovernmentAttendanceSystem({
               label: `Year ${data.advisorClass.year} - Section ${data.advisorClass.section} (Sem ${data.advisorClass.semester})`,
             }
             setAdvisorClass(ac)
-            if (mode === 'morning') {
+
+            const classesList: ClassOption[] = (data.advisorClasses?.length > 0)
+              ? data.advisorClasses.map((item: any) => ({
+                  year: item.year,
+                  section: item.section,
+                  semester: item.semester,
+                  label: item.label || `Year ${item.year} - Section ${item.section} (Sem ${item.semester})`,
+                }))
+              : [ac]
+            setAdvisorClasses(classesList)
+
+            if (mode === 'morning' || effectiveLoginRole === 'advisor') {
               setSelectedClass(ac)
             } else if (data.classOptions?.length > 0) {
               setSelectedClass(data.classOptions[0])
@@ -828,22 +853,33 @@ export function GovernmentAttendanceSystem({
         >
           {/* Class Selector */}
           <div>
-            <label className="text-[11px] font-bold text-gray-700 mb-1 flex items-center gap-1">
-              <GraduationCap className="w-3.5 h-3.5 text-[#1455D9]" /> Class / Section
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+                <GraduationCap className="w-3.5 h-3.5 text-[#1455D9]" /> Class / Section
+              </label>
+              {(mode === 'morning' || effectiveLoginRole === 'advisor') && (
+                <span className="text-[9px] font-extrabold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                  Allocated Section Only
+                </span>
+              )}
+            </div>
             <select
               value={selectedClass ? `${selectedClass.year}-${selectedClass.section}-${selectedClass.semester}` : ''}
               onChange={(e) => {
-                const opt = classOptions.find(
+                const opt = displayedClassOptions.find(
                   (c) => `${c.year}-${c.section}-${c.semester}` === e.target.value
                 )
                 setSelectedClass(opt || null)
                 setDataLoaded(false)
               }}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9]/20 focus:bg-white transition-all"
+              disabled={displayedClassOptions.length <= 1}
+              className={cn(
+                "w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9]/20 focus:bg-white transition-all",
+                displayedClassOptions.length <= 1 && "cursor-default bg-gray-100/80 font-bold"
+              )}
             >
-              {classOptions.length === 0 && <option value="">No classes found</option>}
-              {classOptions.map((c) => (
+              {displayedClassOptions.length === 0 && <option value="">No classes found</option>}
+              {displayedClassOptions.map((c) => (
                 <option key={`${c.year}-${c.section}-${c.semester}`} value={`${c.year}-${c.section}-${c.semester}`}>
                   {c.label}
                 </option>

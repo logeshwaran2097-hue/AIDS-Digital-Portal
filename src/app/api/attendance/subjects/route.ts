@@ -62,6 +62,8 @@ export async function GET() {
     let isAdvisor = false
     let advisorClass: { year: number; section: string; semester: number; label: string } | null = null
 
+    let advisorClasses: { year: number; section: string; semester: number; label: string }[] = []
+
     if (session.role === 'faculty' || session.role === 'hod' || session.role === 'admin') {
       faculty = await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)
       if (faculty) {
@@ -82,19 +84,22 @@ export async function GET() {
           customSubjectName = faculty.subjectName.trim()
         }
 
-        const advisorRecord = await prisma.classAdvisor.findFirst({
+        const advisorRecords = await prisma.classAdvisor.findMany({
           where: { facultyId: faculty.id },
-        }).catch(() => null)
+          orderBy: [{ year: 'asc' }, { section: 'asc' }],
+        }).catch(() => [])
 
         const isAdvisorRole = faculty.facultyType === 'advisor' || faculty.facultyType === 'both'
-        if (advisorRecord && isAdvisorRole) {
+
+        if (advisorRecords.length > 0 && isAdvisorRole) {
           isAdvisor = true
-          advisorClass = {
-            year: advisorRecord.year,
-            section: advisorRecord.section,
-            semester: advisorRecord.semester,
-            label: `Year ${advisorRecord.year} - Section ${advisorRecord.section} (Sem ${advisorRecord.semester})`,
-          }
+          advisorClasses = advisorRecords.map((ar) => ({
+            year: ar.year,
+            section: ar.section,
+            semester: ar.semester,
+            label: `Year ${ar.year} - Section ${ar.section} (Sem ${ar.semester})`,
+          }))
+          advisorClass = advisorClasses[0]
         } else if (isAdvisorRole && (faculty.advisorBatch || faculty.advisorYear)) {
           isAdvisor = true
           advisorClass = {
@@ -103,6 +108,7 @@ export async function GET() {
             semester: faculty.advisorSem || 3,
             label: faculty.advisorBatch || `Year ${faculty.advisorYear || 2} - Section ${faculty.advisorSec || 'A'}`,
           }
+          advisorClasses = [advisorClass]
         }
       }
     }
@@ -189,6 +195,7 @@ export async function GET() {
       classOptions,
       isAdvisor,
       advisorClass,
+      advisorClasses,
       assignedClassDay: faculty?.classDay || null,
       assignedClassTime: faculty?.classTime || null,
     })
