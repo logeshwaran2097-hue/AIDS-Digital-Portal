@@ -1162,30 +1162,6 @@ export function FacultySettingsView({
             </CardContent>
           </Card>
 
-          {/* Account Security Overview */}
-          <Card className="rounded-3xl border-gray-200 shadow-xs bg-white">
-            <CardContent className="p-6 space-y-4">
-              <h3 className="font-bold text-base text-[#071A3D] flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#1455D9]" /> Account &amp; Session Credentials
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Institutional ID</span>
-                  <span className="font-mono font-bold text-[#071A3D] mt-0.5 block">{facultyId}</span>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Registered Email</span>
-                  <span className="font-bold text-[#071A3D] mt-0.5 block truncate">{userEmail}</span>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100">
-                  <span className="text-[10px] text-gray-400 font-bold uppercase block">Last Authenticated</span>
-                  <span className="font-bold text-gray-700 mt-0.5 block truncate">
-                    {lastLogin ? new Date(lastLogin).toLocaleDateString() : 'Active Session'}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
 

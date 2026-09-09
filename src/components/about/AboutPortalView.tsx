@@ -42,22 +42,13 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
 
   return (
     <div className="min-h-screen pb-16 space-y-8 animate-fade-in text-slate-800">
-      {/* Top Breadcrumb & Quick Action */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <Link href={backUrl} className="hover:text-blue-600 transition-colors flex items-center gap-1">
-            <span>Portal</span>
-          </Link>
-          <span>/</span>
-          <span className="text-blue-600 font-bold">About Portal &amp; Developer</span>
-        </div>
-        <Link
-          href={backUrl}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-xs transition-all"
-        >
-          <span>Return to Dashboard</span>
-          <ArrowRight className="w-3.5 h-3.5" />
+      {/* Top Breadcrumb */}
+      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 px-1">
+        <Link href={backUrl} className="hover:text-blue-600 transition-colors flex items-center gap-1">
+          <span>Portal</span>
         </Link>
+        <span>/</span>
+        <span className="text-blue-600 font-bold">About Portal &amp; Developer</span>
       </div>
 
       {/* Hero Section: Institutional Banner */}
