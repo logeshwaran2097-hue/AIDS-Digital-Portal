@@ -141,6 +141,30 @@ export async function GET(request: Request) {
     } catch {}
 
     const sourceStudents = studentDetails
+    const studentRegNos = sourceStudents.map((s) => s.registerNumber).filter(Boolean)
+
+    let odLogs: any[] = []
+    let odNotifications: any[] = []
+
+    if (studentRegNos.length > 0) {
+      odLogs = await prisma.auditLog.findMany({
+        where: {
+          action: 'od_application_submitted',
+          OR: studentRegNos.map((reg) => ({ userName: { contains: reg } })),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }).catch(() => [])
+
+      odNotifications = await prisma.notification.findMany({
+        where: {
+          target: 'faculty',
+          OR: studentRegNos.map((reg) => ({ title: { contains: reg } })),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }).catch(() => [])
+    }
 
     const studentsWithAttendance = sourceStudents.map((s) => {
       let currentStatus: 'P' | 'A' | 'OD' | 'ML' | 'L' = 'P'
@@ -153,12 +177,45 @@ export async function GET(request: Request) {
         }
       }
 
+      const matchedLog = odLogs.find((log) => log.userName?.toUpperCase().includes(s.registerNumber.toUpperCase()))
+      const matchedNotif = odNotifications.find((n) => n.title?.toUpperCase().includes(s.registerNumber.toUpperCase()))
+
+      let appliedOD: any = null
+      if (matchedLog || matchedNotif) {
+        const details = matchedLog?.details || matchedNotif?.message || ''
+        const typeMatch = details.match(/OD Type:\s*([^|]+)/i) || matchedNotif?.title.match(/\[([^\]]+)\]/i)
+        const durationMatch =
+          details.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i) ||
+          matchedNotif?.message.match(/from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
+        const eventMatch = details.match(/Event:\s*([^|.]+)/i) || matchedNotif?.message.match(/Event:\s*([^.]+)/i)
+        const reasonMatch = details.match(/Reason:\s*([^|]+)/i)
+
+        const fromDate = durationMatch ? durationMatch[1] : ''
+        const toDate = durationMatch ? durationMatch[2] : ''
+        const isCoveringDate = Boolean(fromDate && toDate && date >= fromDate && date <= toDate)
+
+        appliedOD = {
+          id: matchedLog?.id || matchedNotif?.id || `od-${s.registerNumber}`,
+          notificationId: matchedNotif?.id || null,
+          title: matchedNotif?.title || `[Class Advisor Review] OD Application: ${s.name} (${s.registerNumber})`,
+          message: matchedNotif?.message || matchedLog?.details || '',
+          applicationType: typeMatch ? typeMatch[1].trim() : 'On Duty (OD) / Leave',
+          fromDate,
+          toDate,
+          eventName: eventMatch ? eventMatch[1].trim() : 'Academic Activity',
+          reason: reasonMatch ? reasonMatch[1].trim() : '',
+          status: matchedLog?.status || 'pending_advisor_approval',
+          isCoveringDate,
+        }
+      }
+
       return {
         ...s,
         gender: s.gender || 'M',
         cumulativeAttendance: s.cumulativeAttendance || 100,
         status: currentStatus,
         remarks: currentRemarks,
+        appliedOD,
       }
     })
 
