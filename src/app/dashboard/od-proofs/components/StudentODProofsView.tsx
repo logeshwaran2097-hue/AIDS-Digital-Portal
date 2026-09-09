@@ -154,9 +154,11 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       (error) => {
         setGeoForm((prev) => ({ ...prev, isDetectingGPS: false }))
         if (error.code === 1) {
-          toast.error('Location permission was denied. Please allow location in your browser or select a college campus preset below.')
+          toast.error('Location permission was denied. Click the lock/tune icon near your browser address bar to allow location, or choose a college preset below.')
+        } else if (error.message && error.message.toLowerCase().includes('permissions policy')) {
+          toast.error('Please refresh your page to load the updated security policy, or choose a college preset below.')
         } else {
-          toast.error(`GPS Error: ${error.message}. You can select a college preset or enter coordinates manually.`)
+          toast.error(`GPS: ${error.message}. You can select a college preset below or enter coordinates manually.`)
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
