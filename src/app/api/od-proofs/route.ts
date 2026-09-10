@@ -40,27 +40,7 @@ export async function GET(request: Request) {
         orderBy: { createdAt: 'desc' },
       })
 
-      // If student has no OD proofs yet, auto-seed with a sample pending record so they can immediately test
-      if (proofs.length === 0 && student) {
-        const defaultSample = await prisma.oDProof.create({
-          data: {
-            studentId: student.id,
-            registerNumber: student.registerNumber,
-            studentName: session.name || 'Student',
-            year: student.year || 2,
-            section: student.section || 'B',
-            semester: student.semester || 3,
-            eventName: 'Smart India Hackathon (SIH) 2026 - Regional Round',
-            category: 'Hackathon',
-            eventDate: new Date().toISOString().split('T')[0],
-            venueCollege: 'PSG College of Technology, Coimbatore',
-            status: 'pending_proofs',
-          },
-        }).catch(() => null)
-        if (defaultSample) {
-          proofs = [defaultSample]
-        }
-      }
+
 
       return NextResponse.json({
         success: true,
@@ -135,38 +115,7 @@ export async function GET(request: Request) {
         orderBy: { createdAt: 'desc' },
       })
 
-      // If no proofs in class yet, check if there are students in this class to seed a demo entry
-      if (proofs.length === 0) {
-        const classStudent = await prisma.student.findFirst({
-          where: { year: advisorYear, section: advisorSec },
-        })
-        if (classStudent) {
-          const sample = await prisma.oDProof.create({
-            data: {
-              studentId: classStudent.id,
-              registerNumber: classStudent.registerNumber,
-              studentName: 'Logeshwaran S',
-              year: advisorYear,
-              section: advisorSec,
-              semester: classStudent.semester || 3,
-              eventName: 'National AI & Data Science Symposium - KEC HackFest',
-              category: 'Symposium',
-              eventDate: '2026-09-08',
-              venueCollege: 'Kongu Engineering College, Perundurai',
-              geoPhotoUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
-              latitude: 11.2743,
-              longitude: 77.6074,
-              geoAddress: 'Kongu Engineering College Campus, Perundurai, Tamil Nadu',
-              geoTimestamp: new Date('2026-09-08T10:30:00Z'),
-              certificateUrl: 'https://images.unsplash.com/photo-1589330694653-dad6d3240a2b?auto=format&fit=crop&w=800&q=80',
-              certificateName: 'KEC_HackFest_FirstPrize_Certificate.pdf',
-              achievement: '1st Prize / Winner',
-              status: 'under_review',
-            },
-          }).catch(() => null)
-          if (sample) proofs = [sample]
-        }
-      }
+
 
       // Stats calculation for advisor
       const allClassProofs = await prisma.oDProof.findMany({
