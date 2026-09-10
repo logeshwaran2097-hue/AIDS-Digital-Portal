@@ -6,6 +6,7 @@ import { PortalLayout } from '@/components/layout/PortalLayout'
 import { HODOnboardingWrapper } from './components/HODOnboardingWrapper'
 import { HODAttendanceApprovals } from './notifications/components/HODAttendanceApprovals'
 import { DepartmentAttendanceAnalytics } from './components/DepartmentAttendanceAnalytics'
+import { HODAdvisorODApprovalsMonitor } from './components/HODAdvisorODApprovalsMonitor'
 import {
   Users,
   GraduationCap,
@@ -36,6 +37,7 @@ export default async function HODDashboardPage() {
     pendingResources,
     pendingQP,
     pendingAchievements,
+    pendingODProofs,
     user,
     hodRec,
   ] = await Promise.all([
@@ -45,24 +47,28 @@ export default async function HODDashboardPage() {
     prisma.project.count().catch(() => 0),
     prisma.resource.count({ where: { status: 'published' } }).catch(() => 0),
     prisma.questionPaper.count({ where: { status: 'published' } }).catch(() => 0),
-    prisma.event.count({ where: { isPublished: true, date: { gte: new Date() } } }).catch(() => 0),
+    prisma.event.count({ where: { isPublished: true } }).catch(() => 0),
     prisma.resource.count({ where: { status: 'pending' } }).catch(() => 0),
     prisma.questionPaper.count({ where: { status: 'pending' } }).catch(() => 0),
     prisma.achievement.count({ where: { status: 'pending' } }).catch(() => 0),
+    prisma.oDProof.count({ where: { status: { in: ['advisor_approved', 'under_review'] } } }).catch(() => 0),
     prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
     prisma.hOD.findFirst({ where: { OR: [{ userId: session.userId }, { facultyId: session.facultyId || '' }] } }).catch(() => null),
   ])
 
-  const totalPending = pendingResources + pendingQP + pendingAchievements
+  const totalPending = pendingResources + pendingQP + pendingAchievements + pendingODProofs
+
+  const rawName = user?.name || session.name || 'Head of Department'
+  const displayName = rawName.toLowerCase() === 'hello' ? 'Dr. Head of Department' : rawName
 
   return (
-    <PortalLayout role="hod" userName={user?.name || session.name || 'Head of Department'}>
+    <PortalLayout role="hod" userName={displayName}>
       <div className="space-y-8 animate-fade-in">
         {/* HOD Onboarding & Security Wizard */}
         <HODOnboardingWrapper
           initialMustChangePassword={Boolean(user?.mustChangePassword)}
           hodData={{
-            name: user?.name || session.name || 'Head of Department',
+            name: displayName,
             email: user?.email || session.email || '',
             phone: user?.phone || '',
             facultyId: hodRec?.facultyId || session.facultyId || '',
@@ -79,7 +85,7 @@ export default async function HODDashboardPage() {
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#F4C430] flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg">
-                {user?.name?.charAt(0) || session.name?.charAt(0) || 'H'}
+                {displayName.charAt(0) || 'H'}
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -87,7 +93,7 @@ export default async function HODDashboardPage() {
                   <span className="text-xs sm:text-sm font-bold text-[#F4C430]">Head of Department</span>
                 </div>
                 <h1 className="text-xl sm:text-3xl font-black text-white truncate mt-1">
-                  {user?.name || session.name || 'Head of Department'}
+                  {displayName}
                 </h1>
                 <p className="text-xs sm:text-sm text-gray-300 mt-1">
                   Department of Artificial Intelligence &amp; Data Science · V.S.B. Engineering College
@@ -139,7 +145,7 @@ export default async function HODDashboardPage() {
             <p className="text-[11px] text-slate-400 font-semibold mt-1">Curriculum Courses</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(6,182,212,0.12)] hover:border-cyan-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(6,182,212,0.12)] hover:border-cyan-200/90 hover:-translate-y-1 transition-all duration-300 group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Student Projects</span>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-teal-400 text-white flex items-center justify-center shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform">
@@ -172,7 +178,7 @@ export default async function HODDashboardPage() {
             <p className="text-[11px] text-slate-400 font-semibold mt-1">Internal &amp; University</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(244,63,94,0.12)] hover:border-rose-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(244,63,94,0.12)] hover:border-rose-200/90 hover:-translate-y-1 transition-all duration-300 group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Upcoming Events</span>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
@@ -198,6 +204,11 @@ export default async function HODDashboardPage() {
         {/* Department Attendance Analytics: Class-wise Average & Class Breakdown */}
         <section aria-label="Department Attendance Analytics">
           <DepartmentAttendanceAnalytics />
+        </section>
+
+        {/* Advisor OD Verification & Student Proofs Monitoring */}
+        <section aria-label="Advisor OD Verification & Student Proofs Monitoring">
+          <HODAdvisorODApprovalsMonitor />
         </section>
 
         {/* Attendance Register Unlock Approvals for HOD */}

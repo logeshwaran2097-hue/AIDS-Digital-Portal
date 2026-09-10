@@ -87,11 +87,23 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
     return () => clearInterval(interval)
   }, [fetchLiveAttendance])
 
+  const [showOnlyEnrolled, setShowOnlyEnrolled] = useState<boolean>(true)
+
+  const enrolledClassesCount = useMemo(() => {
+    return data.filter((c) => c.totalStudents > 0).length
+  }, [data])
+
   const filteredData = useMemo(() => {
-    if (yearFilter === 'ALL') return data
-    const yr = Number(yearFilter)
-    return data.filter((c) => c.year === yr)
-  }, [data, yearFilter])
+    let list = data
+    if (showOnlyEnrolled && enrolledClassesCount > 0) {
+      list = list.filter((c) => c.totalStudents > 0)
+    }
+    if (yearFilter !== 'ALL') {
+      const yr = Number(yearFilter)
+      list = list.filter((c) => c.year === yr)
+    }
+    return list
+  }, [data, showOnlyEnrolled, enrolledClassesCount, yearFilter])
 
   // Summary Metrics
   const summary = useMemo(() => {
@@ -105,9 +117,10 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
     }, 0)
     const avgPct =
       totalEnrolled > 0 ? Math.round((totalPresent / totalEnrolled) * 10000) / 100 : 0
-    const topClass = [...filteredData].sort((a, b) => b.attendancePct - a.attendancePct)[0]
-    const compliantCount = filteredData.filter((c) => c.attendancePct >= 75).length
-    const shortageCount = filteredData.filter((c) => c.attendancePct < 75).length
+    const activeWithStudents = filteredData.filter((c) => c.totalStudents > 0)
+    const topClass = (activeWithStudents.length > 0 ? activeWithStudents : filteredData)
+      .slice()
+      .sort((a, b) => b.attendancePct - a.attendancePct)[0]
 
     return {
       totalEnrolled,
@@ -115,8 +128,6 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       totalAbsent,
       avgPct,
       topClass,
-      compliantCount,
-      shortageCount,
     }
   }, [filteredData])
 
@@ -159,69 +170,62 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       c.presentAvg,
       c.absentCount !== undefined ? c.absentCount : (c.attendancePct > 0 ? Math.max(0, c.totalStudents - c.presentAvg) : 0),
       `${c.attendancePct}%`,
-      `"${c.statusNote || (c.attendancePct >= 75 ? 'Advisor Verified' : 'Shortage Alert')}"`,
-    ])
+      `"${c.statusNote || 'Operational'}"`,
+    ].join(','))
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n')
-    const encodedUri = encodeURI(csvContent)
+    const csv = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `Advisor_Attendance_Breakdown_${new Date().toISOString().split('T')[0]}.csv`)
+    link.href = url
+    link.setAttribute('download', `Department_Attendance_Roll_${new Date().toISOString().split('T')[0]}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
+  // Y-axis tick marks for visual scale (100 down to 0)
   const yTicks = [100, 80, 60, 40, 20, 0]
 
   return (
     <div className="space-y-6">
-      {/* Top Banner / Filter Bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white p-6 sm:p-7 rounded-3xl shadow-xl">
+      {/* Visual Analytics Header Banner */}
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-3 py-1 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider shadow-xs">
               Advisor Attendance Intelligence
             </span>
             <span className="text-xs text-blue-200 font-medium">· Morning Roll-Call Verified</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black">
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
             Department Attendance Report &amp; Analytics
           </h2>
-          <p className="text-xs text-slate-300 mt-1 max-w-2xl">
+          <p className="text-xs sm:text-sm text-blue-100/90 mt-1 max-w-2xl leading-relaxed">
             Real-time visual bar chart &amp; class-wise roll audit updated directly from Class Advisors' morning attendance submissions.
           </p>
         </div>
 
-        {/* Action Buttons: Export PDF, CSV, Print, Refresh */}
-        <div className="flex items-center flex-wrap gap-2 shrink-0">
+        {/* Action Controls & Filters */}
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={handleExportPDF}
             disabled={isExporting}
-            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e5b729] text-[#071A3D] text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-md active:scale-95 disabled:opacity-50"
-            title="Download Official Advisor Attendance PDF Report"
+            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e5b726] text-[#071A3D] text-xs font-black flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            title="Download Official Advisor Morning Attendance PDF Report"
           >
-            <Download className="w-4 h-4" />
-            <span>{isExporting ? 'Generating...' : 'Export Advisor Report (PDF)'}</span>
+            <Download className="w-4 h-4 text-[#071A3D]" />
+            <span>{isExporting ? 'Generating PDF...' : 'Export Advisor Report (PDF)'}</span>
           </button>
 
           <button
             onClick={handleExportCSV}
             className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer text-white shadow-xs active:scale-95"
-            title="Download CSV Spreadsheet"
+            title="Download CSV spreadsheet"
           >
             <FileText className="w-4 h-4 text-blue-200" />
             <span>CSV</span>
-          </button>
-
-          <button
-            onClick={() => window.print()}
-            className="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer text-white shadow-xs active:scale-95"
-            title="Print Attendance Report"
-          >
-            <Printer className="w-4 h-4 text-blue-200" />
-            <span>Print</span>
           </button>
 
           <button
@@ -233,21 +237,47 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#F4C430]' : ''}`} />
           </button>
 
+          {/* Enrolled vs All Toggle Pill */}
+          <div className="flex items-center gap-1 bg-black/25 backdrop-blur-md p-1 rounded-2xl border border-white/15">
+            <button
+              onClick={() => setShowOnlyEnrolled(true)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                showOnlyEnrolled
+                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+              title="Display only classes with students enrolled by admin"
+            >
+              Enrolled ({enrolledClassesCount})
+            </button>
+            <button
+              onClick={() => setShowOnlyEnrolled(false)}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                !showOnlyEnrolled
+                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+              title="Display all 10 academic sections"
+            >
+              All ({data.length})
+            </button>
+          </div>
+
           {/* Year Filter Pill Tabs */}
-          <div className="flex items-center gap-1 bg-black/25 backdrop-blur-md p-1 rounded-2xl border border-white/15 ml-1">
+          <div className="flex items-center gap-1 bg-black/25 backdrop-blur-md p-1 rounded-2xl border border-white/15">
             <button
               onClick={() => setYearFilter('ALL')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === 'ALL'
                   ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
-              All (10)
+              All
             </button>
             <button
               onClick={() => setYearFilter('2')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === '2'
                   ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -257,7 +287,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
             </button>
             <button
               onClick={() => setYearFilter('3')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === '3'
                   ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -267,7 +297,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
             </button>
             <button
               onClick={() => setYearFilter('4')}
-              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === '4'
                   ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -293,22 +323,20 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
           <p className="text-[11px] text-blue-600 font-medium mt-1">{summary.avgPct}% Department Average</p>
         </div>
 
+        <div className="bg-white p-4 rounded-2xl border border-rose-200/80 shadow-xs bg-rose-50/20">
+          <p className="text-[10px] text-rose-700 font-bold uppercase tracking-wider">No. of Absentees</p>
+          <p className="text-2xl font-black text-rose-700 mt-0.5">{summary.totalAbsent}</p>
+          <p className="text-[11px] text-rose-600 font-medium mt-1">Leave, OD &amp; Absent Today</p>
+        </div>
+
         <div className="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-xs bg-emerald-50/20">
           <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Top Performing Class</p>
           <p className="text-xl font-black text-emerald-700 mt-0.5 truncate">
-            {summary.topClass ? `${summary.topClass.className}` : 'N/A'}
+            {summary.topClass && summary.topClass.totalStudents > 0 ? `${summary.topClass.className}` : 'N/A'}
           </p>
           <p className="text-[11px] text-emerald-600 font-medium mt-1">
-            {summary.topClass ? `${summary.topClass.attendancePct}% Attendance` : ''}
+            {summary.topClass && summary.topClass.totalStudents > 0 ? `${summary.topClass.attendancePct}% Attendance` : 'Awaiting Submissions'}
           </p>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs bg-amber-50/20">
-          <p className="text-[10px] text-amber-800 font-bold uppercase tracking-wider">Regulation 75% Status</p>
-          <p className="text-xl font-black text-amber-900 mt-0.5">
-            {summary.compliantCount} Eligible / {summary.shortageCount} Low
-          </p>
-          <p className="text-[11px] text-amber-700 font-medium mt-1">Exam Eligibility Threshold</p>
         </div>
       </div>
 
