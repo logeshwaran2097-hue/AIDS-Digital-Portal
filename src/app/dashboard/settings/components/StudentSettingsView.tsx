@@ -72,9 +72,6 @@ export function StudentSettingsView({
         return 'https://leetcode.com/u/your-username'
       case 'portfolio':
         return 'https://your-portfolio-site.vercel.app'
-
-      case 'vsbcollege':
-        return 'https://vsbec.com'
       default:
         return 'https://...'
     }
@@ -88,17 +85,19 @@ export function StudentSettingsView({
         try {
           const parsed = JSON.parse(saved)
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Clean up any stale placeholder links from earlier builds
-            return parsed.map((item: CustomLink) => {
-              if (
-                item.url &&
-                (item.url.includes('logeshwaran') ||
-                  item.url.includes('example.com'))
-              ) {
-                return { ...item, url: '' }
-              }
-              return item
-            })
+            // Clean up any stale placeholder links from earlier builds & omit removed portal links
+            return parsed
+              .filter((item: CustomLink) => item.id !== 'annauniv' && item.id !== 'vsbcollege')
+              .map((item: CustomLink) => {
+                if (
+                  item.url &&
+                  (item.url.includes('logeshwaran') ||
+                    item.url.includes('example.com'))
+                ) {
+                  return { ...item, url: '' }
+                }
+                return item
+              })
           }
         } catch {
           // fallback
@@ -129,18 +128,6 @@ export function StudentSettingsView({
         title: 'Personal Portfolio & Resume',
         url: '',
         category: 'portfolio',
-      },
-      {
-        id: 'annauniv',
-        title: 'Anna University CoE Examination Portal',
-        url: '',
-        category: 'academic',
-      },
-      {
-        id: 'vsbcollege',
-        title: 'V.S.B. Engineering College Official Site',
-        url: '',
-        category: 'academic',
       },
     ]
   })
