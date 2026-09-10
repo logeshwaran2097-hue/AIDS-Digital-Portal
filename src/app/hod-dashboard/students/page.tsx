@@ -5,17 +5,17 @@ import { HODStudentsView, DBStudent, ClassMeta } from './components/HODStudentsV
 
 export const dynamic = 'force-dynamic'
 
-const BASELINE_DEPARTMENT_CLASSES = [
-  { className: 'II AIDS A', year: 2, section: 'A', semester: 3, defaultTotal: 64, defaultPresent: 48, defaultPct: 75.0, defaultAdvisor: 'Dr. S. Kabilan' },
-  { className: 'II AIDS B', year: 2, section: 'B', semester: 3, defaultTotal: 64, defaultPresent: 52, defaultPct: 81.25, defaultAdvisor: 'Prof. Raja' },
-  { className: 'II AIDS C', year: 2, section: 'C', semester: 3, defaultTotal: 60, defaultPresent: 0, defaultPct: 0.0, defaultAdvisor: 'Prof. M. Selvakumar' },
-  { className: 'II AIDS D', year: 2, section: 'D', semester: 3, defaultTotal: 64, defaultPresent: 43, defaultPct: 67.19, defaultAdvisor: 'Prof. K. Anand' },
-  { className: 'III AIDS A', year: 3, section: 'A', semester: 5, defaultTotal: 65, defaultPresent: 0, defaultPct: 0.0, defaultAdvisor: 'Dr. P. Sharmila' },
-  { className: 'III AIDS B', year: 3, section: 'B', semester: 5, defaultTotal: 61, defaultPresent: 10, defaultPct: 16.39, defaultAdvisor: 'Dr. V. Sasidharan' },
-  { className: 'III AIDS C', year: 3, section: 'C', semester: 5, defaultTotal: 61, defaultPresent: 16, defaultPct: 26.23, defaultAdvisor: 'Prof. R. Balaji' },
-  { className: 'III AIDS D', year: 3, section: 'D', semester: 5, defaultTotal: 63, defaultPresent: 0, defaultPct: 0.0, defaultAdvisor: 'Prof. S. Priyadharshini' },
-  { className: 'IV AIDS A', year: 4, section: 'A', semester: 7, defaultTotal: 60, defaultPresent: 53, defaultPct: 88.33, defaultAdvisor: 'Dr. G. Santhosh Kumar' },
-  { className: 'IV AIDS B', year: 4, section: 'B', semester: 7, defaultTotal: 65, defaultPresent: 63, defaultPct: 96.92, defaultAdvisor: 'Dr. K. Balamurugan' },
+const DEPARTMENT_CLASS_DEFINITIONS = [
+  { className: 'II AIDS A', year: 2, section: 'A', semester: 3 },
+  { className: 'II AIDS B', year: 2, section: 'B', semester: 3 },
+  { className: 'II AIDS C', year: 2, section: 'C', semester: 3 },
+  { className: 'II AIDS D', year: 2, section: 'D', semester: 3 },
+  { className: 'III AIDS A', year: 3, section: 'A', semester: 5 },
+  { className: 'III AIDS B', year: 3, section: 'B', semester: 5 },
+  { className: 'III AIDS C', year: 3, section: 'C', semester: 5 },
+  { className: 'III AIDS D', year: 3, section: 'D', semester: 5 },
+  { className: 'IV AIDS A', year: 4, section: 'A', semester: 7 },
+  { className: 'IV AIDS B', year: 4, section: 'B', semester: 7 },
 ]
 
 export default async function HODStudentsPage() {
@@ -26,7 +26,7 @@ export default async function HODStudentsPage() {
   const [students, studentUsers, faculties, facultyUsers, sessions] = await Promise.all([
     prisma.student.findMany({ orderBy: [{ year: 'asc' }, { section: 'asc' }, { registerNumber: 'asc' }] }).catch(() => []),
     prisma.user.findMany({ where: { role: 'student' }, select: { id: true, name: true, email: true, phone: true } }).catch(() => []),
-    prisma.faculty.findMany().catch(() => []),
+    prisma.faculty.findMany({ where: { advisorYear: { not: null }, advisorSec: { not: null } } }).catch(() => []),
     prisma.user.findMany({ where: { role: 'faculty' }, select: { id: true, name: true, email: true } }).catch(() => []),
     db.attendanceSession
       ? db.attendanceSession.findMany({ where: { sessionType: 'morning' }, orderBy: { date: 'desc' } }).catch(() => [])
@@ -42,12 +42,14 @@ export default async function HODStudentsPage() {
   faculties.forEach((f: any) => {
     if (f.advisorYear && f.advisorSec) {
       const u = facultyUserMap.get(f.userId)
-      const advisorName = u?.name ? (u.name.toLowerCase().startsWith('dr') || u.name.toLowerCase().startsWith('prof') ? u.name : `Prof. ${u.name}`) : f.facultyId
+      const advisorName = u?.name
+        ? (u.name.toLowerCase().startsWith('dr') || u.name.toLowerCase().startsWith('prof') ? u.name : `Prof. ${u.name}`)
+        : f.facultyId
       advisorMap.set(`${f.advisorYear}-${f.advisorSec.toUpperCase()}`, advisorName)
     }
   })
 
-  // Format real students from DB
+  // Format purely real students from DB
   const initialStudents: DBStudent[] = students.map((s: any) => {
     const u: any = studentUserMap.get(s.userId)
     const key = `${s.year}-${(s.section || 'A').toUpperCase()}`
@@ -62,7 +64,7 @@ export default async function HODStudentsPage() {
       semester: s.semester,
       section: (s.section || 'A').toUpperCase(),
       batch: s.batch,
-      advisorName: s.advisorName || matchedAdvisor || null,
+      advisorName: s.advisorName || matchedAdvisor || 'Unassigned',
       parentPhone: s.parentPhone || u?.phone || null,
       residencyStatus: s.residencyStatus || 'Day Scholar',
       busNo: s.busNo || null,
@@ -71,24 +73,29 @@ export default async function HODStudentsPage() {
       roomNo: s.roomNo || null,
       cgpa: s.cgpa || null,
       isDbVerified: true,
+      attendancePct: 0,
     }
   })
 
-  // Build department classes with live attendance and advisor overrides
-  const departmentClasses: ClassMeta[] = BASELINE_DEPARTMENT_CLASSES.map((cls) => {
+  // Build department classes with 100% real database data
+  const departmentClasses: ClassMeta[] = DEPARTMENT_CLASS_DEFINITIONS.map((cls) => {
     const key = `${cls.year}-${cls.section.toUpperCase()}`
     const dbAdvisor = advisorMap.get(key)
+    const realStudentCount = initialStudents.filter(
+      (s) => s.year === cls.year && s.section === cls.section
+    ).length
+
     const latestSession = (sessions as any[]).find(
       (sess) => sess.year === cls.year && (sess.section || 'A').toUpperCase() === cls.section.toUpperCase()
     )
 
-    let totalStudents = cls.defaultTotal
-    let presentCount = cls.defaultPresent
-    let attendancePct = cls.defaultPct
-    let advisorName = dbAdvisor || cls.defaultAdvisor
+    let totalStudents = realStudentCount
+    let presentCount = 0
+    let attendancePct = 0
+    let advisorName = dbAdvisor || 'Unassigned'
 
     if (latestSession) {
-      totalStudents = latestSession.totalStudents || cls.defaultTotal
+      totalStudents = latestSession.totalStudents || realStudentCount
       presentCount = (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0)
       attendancePct = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 10000) / 100 : 0
       if (latestSession.takenByName) {

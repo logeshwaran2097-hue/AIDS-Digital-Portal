@@ -37,16 +37,16 @@ export interface ClassAttendanceStat {
 }
 
 export const DEFAULT_DEPARTMENT_CLASSES: ClassAttendanceStat[] = [
-  { className: 'II AIDS A', year: 2, section: 'A', totalStudents: 64, presentAvg: 48, attendancePct: 75.0, advisorName: 'Dr. S. Kabilan' },
-  { className: 'II AIDS B', year: 2, section: 'B', totalStudents: 64, presentAvg: 52, attendancePct: 81.25, advisorName: 'Prof. Raja' },
-  { className: 'II AIDS C', year: 2, section: 'C', totalStudents: 60, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: 'Prof. M. Selvakumar' },
-  { className: 'II AIDS D', year: 2, section: 'D', totalStudents: 64, presentAvg: 43, attendancePct: 67.19, advisorName: 'Prof. K. Anand' },
-  { className: 'III AIDS A', year: 3, section: 'A', totalStudents: 65, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: 'Dr. P. Sharmila' },
-  { className: 'III AIDS B', year: 3, section: 'B', totalStudents: 61, presentAvg: 10, attendancePct: 16.39, advisorName: 'Dr. V. Sasidharan' },
-  { className: 'III AIDS C', year: 3, section: 'C', totalStudents: 61, presentAvg: 16, attendancePct: 26.23, advisorName: 'Prof. R. Balaji' },
-  { className: 'III AIDS D', year: 3, section: 'D', totalStudents: 63, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: 'Prof. S. Priyadharshini' },
-  { className: 'IV AIDS A', year: 4, section: 'A', totalStudents: 60, presentAvg: 53, attendancePct: 88.33, advisorName: 'Dr. G. Santhosh Kumar' },
-  { className: 'IV AIDS B', year: 4, section: 'B', totalStudents: 65, presentAvg: 63, attendancePct: 96.92, advisorName: 'Dr. K. Balamurugan' },
+  { className: 'II AIDS A', year: 2, section: 'A', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS B', year: 2, section: 'B', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS C', year: 2, section: 'C', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS D', year: 2, section: 'D', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS A', year: 3, section: 'A', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS B', year: 3, section: 'B', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS C', year: 3, section: 'C', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS D', year: 3, section: 'D', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'IV AIDS A', year: 4, section: 'A', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'IV AIDS B', year: 4, section: 'B', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
 ]
 
 interface Props {

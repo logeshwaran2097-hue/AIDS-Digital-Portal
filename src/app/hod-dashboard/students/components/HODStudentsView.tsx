@@ -67,35 +67,6 @@ interface Props {
   departmentClasses: ClassMeta[]
 }
 
-// Comprehensive name pool for realistic department roll display
-const SAMPLE_STUDENT_NAMES = [
-  'Abinaya M', 'Adhavan R', 'Ajay Kumar S', 'Anand K', 'Anusuya P',
-  'Archana S', 'Ashwin Kumar V', 'Balaji R', 'Balamurugan K', 'Bharathi S',
-  'Charumathi V', 'Deepak Raj S', 'Dhanush V', 'Dharanidharan M', 'Divyadharshini P',
-  'Gokul Nath V', 'Gowtham M', 'Gunasekaran R', 'Hariharan K', 'Harini K',
-  'Hari Prasad S', 'Hemalatha R', 'Indhumathi S', 'Jaganathan P', 'Jeevitha G',
-  'Kabilan S', 'Karthikeyan R', 'Kaviraj R', 'Keerthana P', 'Kishore Kumar M',
-  'Kowsalya M', 'Liju S', 'Lonely Boy', 'Madhavan T', 'Manoj Kumar P',
-  'Meena S', 'Mohan Raj K', 'Monisha R', 'Muthukumar S', 'Nandhini V',
-  'Naveen Kumar M', 'Nithya Shree P', 'Parthiban S', 'Pavithra M', 'Pradeep R',
-  'Prakash K', 'Praveena S', 'Priyadharshini M', 'Ragul K', 'Rahul Dravid M',
-  'Rajesh Kannan S', 'Rithanya V', 'Rohit S', 'Sabarish M', 'Sakthivel P',
-  'Sandhiya R', 'Santhosh Kumar G', 'Saranya M', 'Sasidharan V', 'Selvakumar K',
-  'Sharmila P', 'Sivaranjani R', 'Soundarya S', 'Subash Chandra Bose K', 'Sudharsan M',
-  'Suriya Narayanan V', 'Swetha R', 'Tamilselvan P', 'Tharani M', 'Vaishnavi S',
-  'Vigneshwaran K', 'Vijay Anand S', 'Vinothini P', 'Yuvaraj S',
-]
-
-const BUS_ROUTES = [
-  { no: '17', stop: 'Kabilarmalai' },
-  { no: '28', stop: 'Vedasandur' },
-  { no: '44', stop: 'Olappalayam' },
-  { no: '12', stop: 'Paramathi' },
-  { no: '35', stop: 'Karur Bus Stand' },
-  { no: '08', stop: 'Aravakurichi' },
-  { no: '19', stop: 'Velur' },
-]
-
 export function HODStudentsView({ initialStudents, facultyAdvisors, departmentClasses }: Props) {
   // Navigation & Filter States
   const [selectedClass, setSelectedClass] = useState<string>('ALL')
@@ -108,74 +79,19 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
   const [copiedReg, setCopiedReg] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
 
-  // Generate full department roster incorporating real DB students with priority
+  // Real department roster strictly from DB
   const fullRoster = useMemo(() => {
-    const list: DBStudent[] = []
-
-    departmentClasses.forEach((cls) => {
-      // Find real DB students belonging to this class
-      const realForClass = initialStudents.filter(
-        (s) => s.year === cls.year && (s.section || 'A').toUpperCase() === cls.section.toUpperCase()
+    return initialStudents.map((s) => {
+      const cls = departmentClasses.find(
+        (c) => c.year === s.year && c.section.toUpperCase() === (s.section || 'A').toUpperCase()
       )
-
-      // Add all real DB students first
-      realForClass.forEach((s) => {
-        list.push({
-          ...s,
-          isDbVerified: true,
-          advisorName: s.advisorName || cls.advisorName,
-          attendancePct: s.attendancePct ?? cls.attendancePct,
-        })
-      })
-
-      // Generate cohort up to class total so HOD can inspect the entire class register
-      const needed = Math.max(0, cls.totalStudents - realForClass.length)
-      const yearPrefix = cls.year === 2 ? '922525243' : cls.year === 3 ? '922524243' : '922523243'
-      const existingRegs = new Set(realForClass.map((s) => s.registerNumber))
-
-      let generatedCount = 0
-      let rollIndex = 1
-
-      while (generatedCount < needed && rollIndex <= 99) {
-        const regStr = `${yearPrefix}${String(rollIndex).padStart(3, '0')}`
-        rollIndex++
-
-        if (existingRegs.has(regStr)) continue
-
-        const nameIndex = (rollIndex * 7 + cls.year * 13 + cls.section.charCodeAt(0)) % SAMPLE_STUDENT_NAMES.length
-        const sName = SAMPLE_STUDENT_NAMES[nameIndex]
-        const isHosteller = (rollIndex + cls.year) % 3 === 0
-        const bus = BUS_ROUTES[rollIndex % BUS_ROUTES.length]
-
-        // Dynamic attendance variation around class average
-        const variance = ((rollIndex * 17) % 15) - 7
-        const studentAttPct = Math.min(100, Math.max(45, Math.round((cls.attendancePct + variance) * 10) / 10))
-
-        list.push({
-          id: `gen-${cls.year}-${cls.section}-${regStr}`,
-          registerNumber: regStr,
-          name: sName,
-          email: `${regStr.toLowerCase()}@vsb.ac.in`,
-          year: cls.year,
-          semester: cls.semester,
-          section: cls.section,
-          batch: `${cls.year === 2 ? '2023-2027' : cls.year === 3 ? '2022-2026' : '2021-2025'}`,
-          advisorName: cls.advisorName,
-          parentPhone: `9${String(100000000 + ((rollIndex * 892341) % 899999999))}`,
-          residencyStatus: isHosteller ? 'Hosteller' : `Day Scholar · Bus No. ${bus.no} (${bus.stop})`,
-          busNo: isHosteller ? null : bus.no,
-          boardingPoint: isHosteller ? null : bus.stop,
-          hostelBlock: isHosteller ? (rollIndex % 2 === 0 ? 'Block B (Boys)' : 'Block A (Girls)') : null,
-          roomNo: isHosteller ? `${(rollIndex % 3) + 1}0${(rollIndex % 8) + 1}` : null,
-          cgpa: Math.round((7.0 + ((rollIndex * 3) % 25) / 10) * 100) / 100,
-          isDbVerified: false,
-          attendancePct: studentAttPct,
-        })
-        generatedCount++
+      return {
+        ...s,
+        isDbVerified: true,
+        advisorName: s.advisorName || cls?.advisorName || 'Unassigned',
+        attendancePct: s.attendancePct ?? cls?.attendancePct ?? 0,
       }
     })
-
-    return list
   }, [departmentClasses, initialStudents])
 
   // Filter students based on current selection
@@ -940,8 +856,20 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                   })
                 ) : (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-gray-400 font-medium">
-                      No students found matching current class or filter criteria.
+                    <td colSpan={9} className="py-16 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto text-gray-400">
+                        <Users className="w-10 h-10 text-gray-300 stroke-1" />
+                        <p className="font-bold text-sm text-gray-600">
+                          {selectedClass !== 'ALL'
+                            ? `No students enrolled yet in ${selectedClass}`
+                            : 'No students found'}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {selectedClass !== 'ALL'
+                            ? 'Students can be registered or imported into this section via the Admin portal.'
+                            : 'Try adjusting your search query or filter selection.'}
+                        </p>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -1007,8 +935,20 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                 )
               })
             ) : (
-              <div className="col-span-full py-12 text-center text-gray-400">
-                No students match your filter criteria.
+              <div className="col-span-full py-16 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto text-gray-400">
+                  <Users className="w-10 h-10 text-gray-300 stroke-1" />
+                  <p className="font-bold text-sm text-gray-600">
+                    {selectedClass !== 'ALL'
+                      ? `No students enrolled yet in ${selectedClass}`
+                      : 'No students match your criteria'}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {selectedClass !== 'ALL'
+                      ? 'Students can be registered or imported into this section via the Admin portal.'
+                      : 'Try adjusting your search query or filter selection.'}
+                  </p>
+                </div>
               </div>
             )}
           </div>

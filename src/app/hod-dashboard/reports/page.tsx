@@ -65,7 +65,7 @@ export default async function HODReportsPage() {
     }
     const totalWorking = att.present + att.absent + att.od + att.ml
     const effectiveAttended = att.present + att.od + att.ml
-    const pct = totalWorking > 0 ? Math.round((effectiveAttended / totalWorking) * 1000) / 10 : 100
+    const pct = totalWorking > 0 ? Math.round((effectiveAttended / totalWorking) * 1000) / 10 : 0
 
     return {
       id: s.id,
