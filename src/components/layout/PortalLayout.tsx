@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Download,
   Smartphone,
+  ShieldCheck,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
@@ -882,20 +883,20 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
           <span>Home</span>
         </Link>
         <Link
-          href={role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects'}
+          href={role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects'}
           prefetch={true}
-          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
-          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
-          onClick={() => handleNavClick(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/academics' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
+          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
+          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
+          onClick={() => handleNavClick(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
             'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
-            (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('courses')
+            (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
-          <BookOpen className="h-5 w-5" />
-          <span>Courses</span>
+          {role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+          <span>{role === 'hod' ? 'OD Proofs' : 'Courses'}</span>
         </Link>
         <Link
           href={role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects'}

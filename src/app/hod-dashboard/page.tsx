@@ -16,6 +16,8 @@ import {
   CalendarDays,
   AlertCircle,
   BarChart3,
+  ShieldCheck,
+  Trophy,
 } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -212,10 +214,10 @@ export default async function HODDashboardPage() {
             {[
               { label: 'Students', href: '/hod-dashboard/students', icon: <Users className="w-5 h-5" />, desc: 'Student database & batch lists', color: 'bg-blue-50 text-[#1455D9] group-hover:bg-[#1455D9] group-hover:text-white' },
               { label: 'Faculty', href: '/hod-dashboard/faculty', icon: <GraduationCap className="w-5 h-5" />, desc: 'Faculty profiles & workload', color: 'bg-purple-50 text-purple-700 group-hover:bg-purple-600 group-hover:text-white' },
-              { label: 'Academics', href: '/hod-dashboard/academics', icon: <BookOpen className="w-5 h-5" />, desc: 'Syllabus & subject mapping', color: 'bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white' },
-              { label: 'Resources', href: '/hod-dashboard/resources', icon: <Database className="w-5 h-5" />, desc: 'Approve study materials', color: 'bg-indigo-50 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white' },
-              { label: 'Projects', href: '/hod-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, desc: 'Review student projects', color: 'bg-amber-50 text-amber-700 group-hover:bg-amber-600 group-hover:text-white' },
-              { label: 'Reports', href: '/hod-dashboard/reports', icon: <BarChart3 className="w-5 h-5" />, desc: 'Department analytics', color: 'bg-rose-50 text-rose-700 group-hover:bg-rose-600 group-hover:text-white' },
+              { label: 'OD & Proofs', href: '/hod-dashboard/od-proofs', icon: <ShieldCheck className="w-5 h-5" />, desc: 'Verify geo-tags & certificates', color: 'bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white' },
+              { label: 'Achievements', href: '/hod-dashboard/achievements', icon: <Trophy className="w-5 h-5" />, desc: 'Department honors & awards', color: 'bg-amber-50 text-amber-700 group-hover:bg-amber-600 group-hover:text-white' },
+              { label: 'Projects', href: '/hod-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, desc: 'Review student projects', color: 'bg-indigo-50 text-indigo-700 group-hover:bg-indigo-600 group-hover:text-white' },
+              { label: 'Reports', href: '/hod-dashboard/reports', icon: <BarChart3 className="w-5 h-5" />, desc: 'Department analytics & PDF', color: 'bg-rose-50 text-rose-700 group-hover:bg-rose-600 group-hover:text-white' },
             ].map((action) => (
               <Link
                 key={action.label}

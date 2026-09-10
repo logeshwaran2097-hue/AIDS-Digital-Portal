@@ -77,7 +77,46 @@ export async function GET(request: Request) {
     }
 
     // 2. FACULTY / CLASS ADVISOR VIEW
-    if (session.role === 'faculty' || session.role === 'hod' || session.role === 'admin') {
+    // 2. HOD / SUPER ADMIN VIEW (Department-wide)
+    if (session.role === 'hod' || session.role === 'admin') {
+      const qYear = searchParams.get('year')
+      const qSec = searchParams.get('section')
+      const whereClause: any = {
+        ...(qYear && qYear !== 'ALL' ? { year: Number(qYear) } : {}),
+        ...(qSec && qSec !== 'ALL' ? { section: qSec.toUpperCase() } : {}),
+        ...(filterStatus && filterStatus !== 'ALL' ? { status: filterStatus } : {}),
+      }
+
+      const proofs = await prisma.oDProof.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+      })
+
+      const allProofs = await prisma.oDProof.findMany()
+      const stats = {
+        total: allProofs.length,
+        pendingGeoTag: allProofs.filter((p) => !p.geoPhotoUrl).length,
+        pendingCertificate: allProofs.filter((p) => !p.certificateUrl).length,
+        readyForReview: allProofs.filter((p) => p.geoPhotoUrl && p.certificateUrl && p.status !== 'verified').length,
+        verified: allProofs.filter((p) => p.status === 'verified').length,
+      }
+
+      return NextResponse.json({
+        success: true,
+        proofs,
+        count: proofs.length,
+        stats,
+        advisorJurisdiction: {
+          year: 'ALL',
+          section: 'ALL',
+          batch: 'Department of AI & DS',
+          advisorName: session.name || 'Head of Department',
+        },
+      })
+    }
+
+    // 3. FACULTY / CLASS ADVISOR VIEW
+    if (session.role === 'faculty') {
       const faculty = await prisma.faculty.findFirst({
         where: { userId: session.userId },
       }).catch(() => null)
@@ -310,8 +349,8 @@ export async function POST(request: Request) {
       })
     }
 
-    // 4. CLASS ADVISOR: VERIFY & CREDIT OD ATTENDANCE
-    if (action === 'ADVISOR_VERIFY') {
+    // 4. CLASS ADVISOR / HOD: VERIFY & CREDIT OD ATTENDANCE
+    if (action === 'ADVISOR_VERIFY' || action === 'HOD_APPROVE') {
       const { id, remarks } = body
 
       if (!id) {
@@ -323,12 +362,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
       }
 
+      const defaultRemark =
+        session.role === 'hod'
+          ? 'HOD Sanctioned: Geo-tag and Certificate verified. Officially approved for On-Duty attendance.'
+          : 'Geo-tag and Certificate verified. Officially endorsed for OD attendance credit.'
+
       const updated = await prisma.oDProof.update({
         where: { id },
         data: {
           status: 'verified',
-          advisorRemarks: remarks ? remarks.trim() : 'Geo-tag and Certificate verified. Officially endorsed for OD attendance credit.',
-          verifiedByName: session.name || 'Class Advisor',
+          advisorRemarks: remarks ? remarks.trim() : defaultRemark,
+          verifiedByName: session.name || (session.role === 'hod' ? 'Head of Department' : 'Class Advisor'),
           verifiedAt: new Date(),
           attendanceCredited: true,
         },
@@ -363,8 +407,8 @@ export async function POST(request: Request) {
       })
     }
 
-    // 5. CLASS ADVISOR: REQUEST RESUBMISSION
-    if (action === 'ADVISOR_REJECT') {
+    // 5. CLASS ADVISOR / HOD: REQUEST RESUBMISSION
+    if (action === 'ADVISOR_REJECT' || action === 'HOD_REJECT') {
       const { id, remarks } = body
 
       if (!id || !remarks) {
