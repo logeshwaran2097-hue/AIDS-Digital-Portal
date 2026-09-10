@@ -57,8 +57,9 @@ export async function GET(request: Request) {
   const totalLeavesTakenStr = totalLeavesTakenParam || (leaveRecordsCount > 0 ? `${leaveRecordsCount} Days` : '1 Day (Cumulative)')
 
   // Separate residency and bus number
-  const residency = student?.residencyStatus || 'Day Scholar'
-  const isHosteller = residency.toLowerCase().includes('hostel')
+  const rawResidency = student?.residencyStatus || 'Day Scholar'
+  const isHosteller = rawResidency.toLowerCase().includes('hostel')
+  const residency = isHosteller ? 'Hosteller' : 'Day Scholar'
   const busNo = isHosteller
     ? (student?.hostelBlock ? `Hostel: ${student.hostelBlock}${student.roomNo ? ` · Rm ${student.roomNo}` : ''}` : 'Hostel Resident')
     : (student?.busNo ? `College Bus ${student.busNo}${student.boardingPoint ? ` (${student.boardingPoint})` : ''}` : 'College Bus 44 (Olappalayam)')
