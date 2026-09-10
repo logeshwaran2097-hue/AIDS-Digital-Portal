@@ -95,33 +95,63 @@ export async function POST(request: Request) {
       passwordHash = await bcrypt.hash(password.trim(), 10)
     }
 
-    // Upsert User
-    const userUpdate: any = {
-      name: name.trim(),
-      phone: phone?.trim() || null,
-      role: 'hod',
-      status: status || 'active',
-    }
-    if (passwordHash) {
-      userUpdate.passwordHash = passwordHash
-      userUpdate.mustChangePassword = true
-    }
+    // Check if HOD already exists
+    const existingHOD = await prisma.hOD.findUnique({ where: { facultyId: fid } }).catch(() => null)
 
-    const userCreate: any = {
-      email: finalEmail,
-      name: name.trim(),
-      phone: phone?.trim() || null,
-      role: 'hod',
-      status: status || 'active',
-      passwordHash: passwordHash || '',
-      mustChangePassword: true,
-    }
+    let user: any = null
+    if (existingHOD) {
+      // Direct update of the existing linked user
+      const userUpdate: any = {
+        name: name.trim(),
+        email: finalEmail,
+        phone: phone?.trim() || null,
+        role: 'hod',
+        status: status || 'active',
+      }
+      if (passwordHash) {
+        userUpdate.passwordHash = passwordHash
+        userUpdate.mustChangePassword = false
+      }
+      user = await prisma.user.update({
+        where: { id: existingHOD.userId },
+        data: userUpdate,
+      }).catch(async () => {
+        // Fallback to upsert by email if userId missing
+        return (prisma.user as any).upsert({
+          where: { email: finalEmail },
+          update: userUpdate,
+          create: { ...userUpdate, passwordHash: passwordHash || '' },
+        })
+      })
+    } else {
+      // Upsert User for new appointment
+      const userUpdate: any = {
+        name: name.trim(),
+        phone: phone?.trim() || null,
+        role: 'hod',
+        status: status || 'active',
+      }
+      if (passwordHash) {
+        userUpdate.passwordHash = passwordHash
+        userUpdate.mustChangePassword = false
+      }
 
-    const user = await (prisma.user as any).upsert({
-      where: { email: finalEmail },
-      update: userUpdate,
-      create: userCreate,
-    })
+      const userCreate: any = {
+        email: finalEmail,
+        name: name.trim(),
+        phone: phone?.trim() || null,
+        role: 'hod',
+        status: status || 'active',
+        passwordHash: passwordHash || '',
+        mustChangePassword: false,
+      }
+
+      user = await (prisma.user as any).upsert({
+        where: { email: finalEmail },
+        update: userUpdate,
+        create: userCreate,
+      })
+    }
 
     // Upsert HOD
     const hod = await prisma.hOD.upsert({

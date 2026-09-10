@@ -1140,7 +1140,7 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>HOD Name</span>
+                      <span>HOD Name, ID or Email</span>
                     </span>
                     <span className="text-[9px] font-bold text-slate-400">Head of Department</span>
                   </label>
@@ -1150,7 +1150,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. Prof. Dr. V. Sundar or hod.ai@vsb.edu.in"
+                      placeholder="e.g. hello, HOD001, or hod.hello@vsb.edu.in"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
