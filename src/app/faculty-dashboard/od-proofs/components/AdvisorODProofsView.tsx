@@ -108,11 +108,11 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
   const filteredProofs = proofs.filter((p) => {
     // Tab Filter
     if (activeTab === 'READY') {
-      if (!p.geoPhotoUrl || !p.certificateUrl || p.status === 'verified') return false
+      if (!p.geoPhotoUrl || !p.certificateUrl || p.status === 'verified' || p.status === 'advisor_approved') return false
     } else if (activeTab === 'PENDING') {
       if (p.geoPhotoUrl && p.certificateUrl) return false
     } else if (activeTab === 'VERIFIED') {
-      if (p.status !== 'verified') return false
+      if (p.status !== 'verified' && p.status !== 'advisor_approved') return false
     }
 
     // Search Query
@@ -200,9 +200,9 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
 
   // Stats calculation
   const totalCount = proofs.length
-  const readyCount = proofs.filter((p) => p.geoPhotoUrl && p.certificateUrl && p.status !== 'verified').length
-  const pendingProofsCount = proofs.filter((p) => (!p.geoPhotoUrl || !p.certificateUrl) && p.status !== 'verified').length
-  const verifiedCount = proofs.filter((p) => p.status === 'verified').length
+  const readyCount = proofs.filter((p) => p.geoPhotoUrl && p.certificateUrl && p.status !== 'verified' && p.status !== 'advisor_approved').length
+  const pendingProofsCount = proofs.filter((p) => (!p.geoPhotoUrl || !p.certificateUrl) && p.status !== 'verified' && p.status !== 'advisor_approved').length
+  const verifiedCount = proofs.filter((p) => p.status === 'verified' || p.status === 'advisor_approved').length
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -335,7 +335,7 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
           filteredProofs.map((p) => {
             const hasGeo = Boolean(p.geoPhotoUrl)
             const hasCert = Boolean(p.certificateUrl)
-            const isVerified = p.status === 'verified'
+            const isVerified = p.status === 'verified' || p.status === 'advisor_approved'
             const isReady = hasGeo && hasCert && !isVerified
 
             return (

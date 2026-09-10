@@ -287,7 +287,7 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
   const totalCount = proofs.length
   const geoUploadedCount = proofs.filter((p) => p.geoPhotoUrl).length
   const certUploadedCount = proofs.filter((p) => p.certificateUrl).length
-  const verifiedCount = proofs.filter((p) => p.status === 'verified').length
+  const verifiedCount = proofs.filter((p) => p.status === 'verified' || p.status === 'advisor_approved').length
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -386,7 +386,7 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
             {proofs.map((p) => {
               const isGeoUploaded = Boolean(p.geoPhotoUrl)
               const isCertUploaded = Boolean(p.certificateUrl)
-              const isVerified = p.status === 'verified'
+              const isVerified = p.status === 'verified' || p.status === 'advisor_approved'
               const isResubmit = p.status === 'resubmit_requested'
 
               return (
@@ -417,9 +417,13 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                       </div>
 
                       <div className="shrink-0">
-                        {isVerified ? (
+                        {p.status === 'verified' ? (
                           <Badge className="bg-emerald-500 text-white font-black text-xs px-3 py-1 flex items-center gap-1 shadow-xs">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> OD Attendance Credited
+                            <CheckCircle2 className="w-3.5 h-3.5" /> OD Sanctioned & Credited
+                          </Badge>
+                        ) : p.status === 'advisor_approved' ? (
+                          <Badge className="bg-teal-600 text-white font-black text-xs px-3 py-1 flex items-center gap-1 shadow-xs">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Approved by Advisor
                           </Badge>
                         ) : isResubmit ? (
                           <Badge className="bg-rose-500 text-white font-black text-xs px-3 py-1 flex items-center gap-1 shadow-xs">

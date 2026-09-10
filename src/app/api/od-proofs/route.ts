@@ -349,8 +349,8 @@ export async function POST(request: Request) {
       })
     }
 
-    // 4. CLASS ADVISOR / HOD: VERIFY & CREDIT OD ATTENDANCE
-    if (action === 'ADVISOR_VERIFY' || action === 'HOD_APPROVE') {
+    // 4. CLASS ADVISOR: VERIFY & ENDORSE OD ATTENDANCE
+    if (action === 'ADVISOR_VERIFY') {
       const { id, remarks } = body
 
       if (!id) {
@@ -362,17 +362,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
       }
 
-      const defaultRemark =
-        session.role === 'hod'
-          ? 'HOD Sanctioned: Geo-tag and Certificate verified. Officially approved for On-Duty attendance.'
-          : 'Geo-tag and Certificate verified. Officially endorsed for OD attendance credit.'
+      const defaultRemark = 'Geo-tag and Certificate verified. Officially approved and endorsed by Class Advisor.'
 
       const updated = await prisma.oDProof.update({
         where: { id },
         data: {
-          status: 'verified',
+          status: 'advisor_approved',
           advisorRemarks: remarks ? remarks.trim() : defaultRemark,
-          verifiedByName: session.name || (session.role === 'hod' ? 'Head of Department' : 'Class Advisor'),
+          verifiedByName: session.name || 'Class Advisor',
           verifiedAt: new Date(),
           attendanceCredited: true,
         },
@@ -381,8 +378,8 @@ export async function POST(request: Request) {
       // 1. Dispatch confirmation notification to student
       await prisma.notification.create({
         data: {
-          title: `✅ [OD Verified & Credited] ${existing.eventName}`,
-          message: `Congratulations! Your Class Advisor (${session.name || 'Advisor'}) has verified your venue geo-tag and certificate. Your On-Duty attendance has been officially sanctioned.`,
+          title: `✅ [OD Approved by Class Advisor] ${existing.eventName}`,
+          message: `Your Class Advisor (${session.name || 'Advisor'}) has verified your venue geo-tag and certificate. Your On-Duty attendance has been endorsed and credited.`,
           target: 'student',
           createdByName: session.name || 'Class Advisor',
           status: 'published',
@@ -393,16 +390,75 @@ export async function POST(request: Request) {
       await prisma.auditLog.create({
         data: {
           userName: session.name || 'Class Advisor',
-          action: 'od_proof_verified',
+          action: 'od_proof_advisor_verified',
           module: 'attendance_portal',
-          details: `Advisor signed off OD for ${existing.studentName} (${existing.registerNumber}). Event: ${existing.eventName}. Attendance officially credited.`,
+          details: `Class Advisor ${session.name} approved and endorsed OD for ${existing.studentName} (${existing.registerNumber}). Event: ${existing.eventName}.`,
           status: 'success',
         },
       }).catch(() => {})
 
       return NextResponse.json({
         success: true,
-        message: `OD Attendance officially credited for ${existing.studentName}!`,
+        message: `OD Attendance approved by Class Advisor for ${existing.studentName}!`,
+        proof: updated,
+      })
+    }
+
+    // 5. HOD: EXECUTIVE SANCTION & FINAL VERIFY
+    if (action === 'HOD_APPROVE') {
+      const { id, remarks } = body
+
+      if (!id) {
+        return NextResponse.json({ success: false, message: 'Proof ID required' }, { status: 400 })
+      }
+
+      const existing = await prisma.oDProof.findUnique({ where: { id } })
+      if (!existing) {
+        return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
+      }
+
+      const defaultRemark = 'HOD Sanctioned: Evidence verified. Officially sanctioned for department On-Duty attendance credit.'
+
+      const finalEndorser = existing.verifiedByName
+        ? `${existing.verifiedByName} (Advisor) & ${session.name || 'HOD'} (HOD)`
+        : (session.name || 'Head of Department')
+
+      const updated = await prisma.oDProof.update({
+        where: { id },
+        data: {
+          status: 'verified',
+          advisorRemarks: remarks ? remarks.trim() : (existing.advisorRemarks || defaultRemark),
+          verifiedByName: finalEndorser,
+          verifiedAt: new Date(),
+          attendanceCredited: true,
+        },
+      })
+
+      // 1. Dispatch notification to student
+      await prisma.notification.create({
+        data: {
+          title: `🏛️ [HOD Executive Sanction] ${existing.eventName}`,
+          message: `Head of Department has officially sanctioned your On-Duty event request for "${existing.eventName}". Attendance credit finalized.`,
+          target: 'student',
+          createdByName: session.name || 'Head of Department',
+          status: 'published',
+        },
+      }).catch(() => {})
+
+      // 2. Audit Trail
+      await prisma.auditLog.create({
+        data: {
+          userName: session.name || 'HOD',
+          action: 'od_proof_hod_sanctioned',
+          module: 'attendance_portal',
+          details: `HOD granted executive sanction for ${existing.studentName} (${existing.registerNumber}). Event: ${existing.eventName}.`,
+          status: 'success',
+        },
+      }).catch(() => {})
+
+      return NextResponse.json({
+        success: true,
+        message: `OD Attendance officially sanctioned by HOD for ${existing.studentName}!`,
         proof: updated,
       })
     }
