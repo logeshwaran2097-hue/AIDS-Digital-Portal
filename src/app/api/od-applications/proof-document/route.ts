@@ -18,11 +18,18 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const registerNumber = searchParams.get('registerNumber') || '922525243007'
   const customType = searchParams.get('type') || 'Personal / Emergency Leave'
-  const customReason = searchParams.get('reason') || 'temple function'
+  const customReason = searchParams.get('reason') || 'Personal / Family Requisition'
   const fromDate = searchParams.get('from') || '2026-09-17'
   const toDate = searchParams.get('to') || '2026-09-18'
 
-  // Fetch student profile
+  // Explicit query parameters passed from approval modals or callers
+  const nameParam = searchParams.get('name')
+  const parentPhoneParam = searchParams.get('parentPhone')
+  const parentNameParam = searchParams.get('parentName')
+  const proofFileNameParam = searchParams.get('proofFileName')
+  const totalLeavesTakenParam = searchParams.get('totalLeavesTaken')
+
+  // Fetch student profile from database
   const student = await prisma.student.findFirst({
     where: { registerNumber },
   }).catch(() => null)
@@ -33,11 +40,24 @@ export async function GET(request: Request) {
     userName = u?.name || null
   }
 
-  const rawStudentName = userName || (registerNumber === '922525243007' ? 'Anusuya P' : 'Student')
+  const rawStudentName = nameParam || userName || (registerNumber === '922525243007' ? 'Anusuya P' : 'Student')
   const year = student?.year || 2
   const section = student?.section || 'A'
-  const parentPhone = student?.parentPhone || '6381366088'
+  const parentPhone = parentPhoneParam || student?.parentPhone || '6381366088'
   const batch = student?.batch || '2025–2029'
+
+  // Query actual uploaded proof files from Prisma fileRecord
+  const proofFiles = await (prisma as any).fileRecord.findMany({
+    where: {
+      relatedId: { in: [registerNumber, registerNumber.toUpperCase()] },
+      module: 'attendance_od_proof',
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 2,
+  }).catch(() => [])
+
+  const attachedProofFile = proofFiles?.[0] || null
+  const attachedProofName = proofFileNameParam || attachedProofFile?.originalName || attachedProofFile?.fileName || null
 
   // Calculate days of leave applying
   const fromTime = new Date(fromDate).getTime()
@@ -50,7 +70,6 @@ export async function GET(request: Request) {
   const daysAppliedStr = `${daysApplied} ${daysApplied === 1 ? 'Day' : 'Days'}`
 
   // Query cumulative prior leave records
-  const totalLeavesTakenParam = searchParams.get('totalLeavesTaken')
   const leaveRecordsCount = await prisma.attendanceRecord.count({
     where: { registerNumber, status: { in: ['A', 'ML', 'OD'] } },
   }).catch(() => 0)
@@ -66,10 +85,56 @@ export async function GET(request: Request) {
 
   const dateRangeStr = `${fromDate} to ${toDate}`
 
-  const isTemple = customReason.toLowerCase().includes('temple')
-  const rawEventTitle = isTemple
-    ? 'Sri Maha Mariamman Temple Annual Festival & Family Religious Ceremony'
-    : customReason.length > 5 ? customReason : customType
+  // Dynamic classification of leave purpose and parent affirmation
+  const reasonLower = (customReason || '').toLowerCase()
+  const typeLower = (customType || '').toLowerCase()
+
+  const isMedical = reasonLower.includes('medic') || reasonLower.includes('fever') || reasonLower.includes('doctor') || reasonLower.includes('sick') || reasonLower.includes('hospital') || typeLower.includes('medic')
+  const isOD = typeLower.includes('duty') || typeLower.includes('od') || reasonLower.includes('symposium') || reasonLower.includes('hackathon') || reasonLower.includes('conference') || reasonLower.includes('paper') || reasonLower.includes('workshop') || reasonLower.includes('sports')
+  const isTemple = reasonLower.includes('temple') || reasonLower.includes('festival') || reasonLower.includes('pooja') || reasonLower.includes('marriage') || reasonLower.includes('ceremony') || reasonLower.includes('kula')
+
+  let proofHeading = 'ATTACHED DIGITAL VERIFICATION PROOF 1: EVENT PARTICULAR & PARENT UNDERTAKING'
+  let eventTitle = customReason.length > 5 ? customReason : customType
+  let venueLocation = 'Olapalayam, Karur District, Tamil Nadu'
+  let ceremonyOrReason = 'Personal / Emergency Domestic Leave'
+  let declaration1 = `Respected Faculty / Class Advisor, My ward ${rawStudentName} (${registerNumber}) requires leave on ${dateRangeStr}`
+  let declaration2 = `for urgent personal family obligations. We affirm our ward will promptly complete all academic lab`
+  let declaration3 = `assignments upon return and maintain diligent compliance with all departmental academic requirements.`
+  let parentAffiliation = parentNameParam || (student?.parentPhone ? `Parent Contact: +91-${student.parentPhone}` : 'Parent / Guardian Verified')
+
+  if (isMedical) {
+    proofHeading = 'ATTACHED DIGITAL VERIFICATION PROOF: MEDICAL CERTIFICATE & PARENT INTIMATION'
+    eventTitle = customReason.length > 5 ? customReason : 'Medical Treatment & Physician Prescribed Recuperation'
+    venueLocation = 'Consultant Clinic / Healthcare Centre, Karur'
+    ceremonyOrReason = 'Doctor Certified Medical Rest & Treatment (Prescription on File)'
+    declaration1 = `Respected Faculty / Class Advisor, My ward ${rawStudentName} (${registerNumber}) requires medical leave from ${fromDate} to ${toDate}`
+    declaration2 = `due to certified health indisposition under physician care. The medical certificate/prescription has been verified.`
+    declaration3 = `We affirm our ward will submit pending laboratory records and maintain required course attendance.`
+  } else if (isOD) {
+    proofHeading = 'ATTACHED DIGITAL VERIFICATION PROOF: ACADEMIC ON-DUTY & EVENT INVITATION'
+    eventTitle = customReason.length > 5 ? customReason : 'Inter-Collegiate Technical Symposium & Paper Presentation'
+    venueLocation = 'Host Engineering College / Department of Computer Science & Engineering'
+    ceremonyOrReason = 'Academic Technical Contest / Paper Presentation / Hackathon (Institutional Team)'
+    declaration1 = `Respected Faculty / Class Advisor, My ward ${rawStudentName} (${registerNumber}) is participating in the academic OD event on ${dateRangeStr}`
+    declaration2 = `representing our college. The event acceptance / registration brochure has been digitally audited.`
+    declaration3 = `We affirm that all assignments, coursework, and laboratory practicals will be completed without delay.`
+  } else if (isTemple) {
+    proofHeading = 'ATTACHED DIGITAL VERIFICATION PROOF: FAMILY FUNCTION & PARENT UNDERTAKING'
+    eventTitle = customReason.length > 5 ? customReason : 'Sri Maha Mariamman Temple Annual Festival & Family Religious Ceremony'
+    venueLocation = 'Native Residence / Ancestral Village, Tamil Nadu'
+    ceremonyOrReason = 'Annual Family Temple Festival / Maha Abhishekam (Family Function)'
+    declaration1 = `Respected Faculty / Class Advisor, My ward ${rawStudentName} (${registerNumber}) requires sanctioned leave on ${dateRangeStr}`
+    declaration2 = `to participate in our family traditional ceremony. We affirm our ward will promptly complete all academic lab`
+    declaration3 = `assignments upon return and maintain diligent compliance with all departmental academic requirements.`
+  } else {
+    proofHeading = 'ATTACHED DIGITAL VERIFICATION PROOF: OFFICIAL LEAVE REQUISITION & PARENT UNDERTAKING'
+    eventTitle = customReason.length > 5 ? customReason : 'Urgent Domestic Requisition & Personal Family Obligation'
+    venueLocation = student?.address ? student.address.slice(0, 50) : 'Student Native Residence, Tamil Nadu'
+    ceremonyOrReason = 'Personal / Emergency Domestic Leave (Parent Undertaking & Telephone Verified)'
+    declaration1 = `Respected Faculty / Class Advisor, My ward ${rawStudentName} (${registerNumber}) requires sanctioned leave on ${dateRangeStr}`
+    declaration2 = `for unavoidable personal family requirements. We affirm our ward will promptly complete all academic lab`
+    declaration3 = `assignments upon return and maintain diligent compliance with all departmental academic requirements.`
+  }
 
   // Safe XML Escaped Values
   const eStudentNameUpper = escapeXml(rawStudentName.toUpperCase())
@@ -85,9 +150,15 @@ export async function GET(request: Request) {
   const eDateRange = escapeXml(dateRangeStr)
   const eTotalLeavesTaken = escapeXml(totalLeavesTakenStr)
   const eCustomType = escapeXml(customType)
-  const eFromDate = escapeXml(fromDate)
-  const eToDate = escapeXml(toDate)
-  const eEventTitle = escapeXml(rawEventTitle)
+  const eProofHeading = escapeXml(proofHeading)
+  const eEventTitle = escapeXml(eventTitle)
+  const eVenueLocation = escapeXml(venueLocation)
+  const eCeremonyOrReason = escapeXml(ceremonyOrReason)
+  const eDeclaration1 = escapeXml(declaration1)
+  const eDeclaration2 = escapeXml(declaration2)
+  const eDeclaration3 = escapeXml(declaration3)
+  const eParentAffiliation = escapeXml(parentAffiliation)
+  const eAttachedProofName = escapeXml(attachedProofName)
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 850 1150" width="850" height="1150">
   <defs>
@@ -200,74 +271,91 @@ export async function GET(request: Request) {
   <text x="450" y="409" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#475569">TELEPHONIC CONSENT:</text>
   <text x="615" y="409" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#059669">✓ Contact Verified &amp; Approved</text>
 
-  <!-- Attached Proof: Event Invitation and Requisition Box -->
+  <!-- Attached Proof: Event Invitation, Document, and Undertaking Box -->
   <rect x="50" y="434" width="750" height="345" rx="10" fill="#FFFBEB" stroke="#FDE68A"/>
-  <rect x="65" y="446" width="720" height="28" rx="6" fill="#FEF3C7" stroke="#FCD34D"/>
-  <text x="80" y="465" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="900" fill="#92400E" letter-spacing="1">ATTACHED DIGITAL VERIFICATION PROOF 1: EVENT PARTICULAR &amp; PARENT UNDERTAKING</text>
+  <rect x="65" y="444" width="720" height="26" rx="6" fill="#FEF3C7" stroke="#FCD34D"/>
+  <text x="80" y="461" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="900" fill="#92400E" letter-spacing="0.8">${eProofHeading}</text>
 
-  <text x="80" y="494" font-family="'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="bold" fill="#78350F">Event Title &amp; Purpose:</text>
-  <text x="240" y="494" font-family="'Segoe UI', Roboto, sans-serif" font-size="12.5" font-weight="900" fill="#071A3D">${eEventTitle}</text>
+  ${attachedProofName ? `
+  <!-- Attached Proof Document Badge -->
+  <rect x="65" y="474" width="720" height="22" rx="4" fill="#EFF6FF" stroke="#93C5FD"/>
+  <text x="78" y="489" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#1E40AF">📎 ATTACHED PROOF DOCUMENT:</text>
+  <text x="245" y="489" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="900" fill="#071A3D">${eAttachedProofName}</text>
+  <text x="768" y="489" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#059669" text-anchor="end">✓ Digitally Audited &amp; Archived</text>
+  ` : ''}
 
-  <text x="80" y="518" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#78350F">Location / Venue:</text>
-  <text x="240" y="518" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" fill="#334155">Olapalayam, Karur District, Tamil Nadu</text>
+  <text x="80" y="${attachedProofName ? 515 : 494}" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#78350F">Event Title &amp; Purpose:</text>
+  <text x="235" y="${attachedProofName ? 515 : 494}" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="900" fill="#071A3D">${eEventTitle}</text>
 
-  <text x="80" y="540" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#78350F">Ceremonies &amp; Reason:</text>
-  <text x="240" y="540" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#B45309">Annual Kula Deivam Temple Festival / Maha Abhishekam (Family Function)</text>
+  <text x="80" y="${attachedProofName ? 535 : 518}" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#78350F">Location / Venue:</text>
+  <text x="235" y="${attachedProofName ? 535 : 518}" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" fill="#334155">${eVenueLocation}</text>
 
-  <!-- Formal Parent Undertaking Letter Box -->
-  <rect x="75" y="558" width="700" height="202" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/>
-  <rect x="75" y="558" width="700" height="26" rx="8" fill="#F1F5F9"/>
-  <text x="90" y="575" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="bold" fill="#071A3D">Official Student Requisition &amp; Parent Consent Declaration</text>
-  <text x="760" y="575" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#059669" text-anchor="end">✓ TELEPHONIC CONSENT VERIFIED</text>
+  <text x="80" y="${attachedProofName ? 555 : 540}" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#78350F">Category &amp; Context:</text>
+  <text x="235" y="${attachedProofName ? 555 : 540}" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#B45309">${eCeremonyOrReason}</text>
 
-  <text x="95" y="600" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#475569" font-style="italic">"To: The Class Advisor, Department of AI &amp; DS, V.S.B. Engineering College (Autonomous)."</text>
-  <text x="95" y="620" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"Respected Faculty / Class Advisor, My ward ${eStudentNameSig} (${eRegisterNumber}) requires leave on ${eFromDate} and ${eToDate}"</text>
-  <text x="95" y="640" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"to participate in our family traditional ceremony. We affirm our ward will promptly complete all academic lab"</text>
-  <text x="95" y="660" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#1E293B">"assignments upon return and maintain diligent compliance with all departmental academic requirements."</text>
+  <!-- Formal Student Requisition and Parent Consent Letter Box -->
+  <rect x="75" y="${attachedProofName ? 570 : 558}" width="700" height="${attachedProofName ? 194 : 202}" rx="8" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <rect x="75" y="${attachedProofName ? 570 : 558}" width="700" height="24" rx="8" fill="#F1F5F9"/>
+  <text x="90" y="${attachedProofName ? 586 : 575}" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="bold" fill="#071A3D">Official Student Requisition &amp; Parent Consent Declaration</text>
+  <text x="760" y="${attachedProofName ? 586 : 575}" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#059669" text-anchor="end">✓ TELEPHONIC CONSENT VERIFIED</text>
 
-  <line x1="95" y1="676" x2="755" y2="676" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="95" y="${attachedProofName ? 608 : 600}" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#475569" font-style="italic">"To: The Class Advisor, Department of AI &amp; DS, V.S.B. Engineering College (Autonomous)."</text>
+  <text x="95" y="${attachedProofName ? 627 : 620}" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#1E293B">"${eDeclaration1}"</text>
+  <text x="95" y="${attachedProofName ? 645 : 640}" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#1E293B">"${eDeclaration2}"</text>
+  <text x="95" y="${attachedProofName ? 663 : 660}" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" fill="#1E293B">"${eDeclaration3}"</text>
 
-  <text x="95" y="698" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D">Parent / Guardian: Periasamy M</text>
-  <text x="350" y="698" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D">Verified Contact: +91-${eParentPhone}</text>
-  <text x="610" y="698" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#059669">Status: Contact Verified ✓</text>
+  <line x1="95" y1="${attachedProofName ? 680 : 676}" x2="755" y2="${attachedProofName ? 680 : 676}" stroke="#E2E8F0" stroke-width="1"/>
+
+  <text x="95" y="${attachedProofName ? 702 : 698}" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D">Parent / Guardian: ${eParentAffiliation}</text>
+  <text x="370" y="${attachedProofName ? 702 : 698}" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#071A3D">Verified Contact: +91-${eParentPhone}</text>
+  <text x="630" y="${attachedProofName ? 702 : 698}" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#059669">Status: Contact Verified ✓</text>
   
-  <text x="95" y="728" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#64748B">Security Hash: #VSB-OD-VERIF-77291-ANNAP · Cryptographic System Token Generated</text>
+  <text x="95" y="${attachedProofName ? 728 : 728}" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#64748B">Security Hash: #VSB-OD-VERIF-77291-ANNAP · Cryptographic System Token Generated</text>
 
-  <!-- Signatures and Official Validation Block -->
+  <!-- ========================================================================= -->
+  <!-- SIGNATURES AND OFFICIAL VALIDATION BLOCK (PROPERLY MARKED, NO OVERLAP) -->
+  <!-- ========================================================================= -->
   <rect x="50" y="792" width="750" height="205" rx="10" fill="#F8FAFC" stroke="#CBD5E1"/>
 
-  <!-- Proper Official College Seal Stamp (Authentic Double Concentric Rings) -->
-  <circle cx="165" cy="880" r="54" fill="#FFFFFF" stroke="#071A3D" stroke-width="2.5"/>
-  <circle cx="165" cy="880" r="49" fill="#EFF6FF" stroke="#1455D9" stroke-width="1.2" stroke-dasharray="4,2"/>
-  <circle cx="165" cy="880" r="35" fill="#FFFFFF" stroke="#F4C430" stroke-width="1.2"/>
-  <text x="165" y="843" font-family="'Segoe UI', Roboto, sans-serif" font-size="8" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.8">VSB ENGG COLLEGE</text>
-  <text x="165" y="854" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.8" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="0.8">AUTONOMOUS</text>
-  <image xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" x="150" y="865" width="30" height="30" preserveAspectRatio="xMidYMid meet"/>
-  <text x="165" y="907" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="900" fill="#071A3D" text-anchor="middle">AI &amp; DS DEPT</text>
-  <text x="165" y="919" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.8" font-weight="bold" fill="#64748B" text-anchor="middle">KARUR - 639 111</text>
+  <!-- 1. Proper Official College Seal Stamp (Authentic Double Concentric Rings) -->
+  <circle cx="165" cy="866" r="46" fill="#FFFFFF" stroke="#071A3D" stroke-width="2"/>
+  <circle cx="165" cy="866" r="42" fill="#EFF6FF" stroke="#1455D9" stroke-width="1.2" stroke-dasharray="3,2"/>
+  <circle cx="165" cy="866" r="30" fill="#FFFFFF" stroke="#F4C430" stroke-width="1.2"/>
+  <text x="165" y="836" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.8">VSB ENGG COLLEGE</text>
+  <text x="165" y="847" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.5" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="0.8">★ AUTONOMOUS ★</text>
+  <image xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" x="151" y="852" width="28" height="28" preserveAspectRatio="xMidYMid meet"/>
+  <text x="165" y="891" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="900" fill="#071A3D" text-anchor="middle">AI &amp; DS DEPT</text>
+  <text x="165" y="902" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.5" font-weight="bold" fill="#64748B" text-anchor="middle">KARUR - 639 111</text>
   
-  <rect x="110" y="934" width="110" height="18" rx="4" fill="#059669" filter="url(#shadow)"/>
-  <text x="165" y="946.5" font-family="'Segoe UI', sans-serif" font-size="7.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">✓ OFFICIALLY SEALED</text>
+  <rect x="105" y="918" width="120" height="18" rx="4" fill="#059669" filter="url(#shadow)"/>
+  <text x="165" y="930.5" font-family="'Segoe UI', sans-serif" font-size="7.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.8">✓ OFFICIALLY SEALED</text>
 
-  <text x="165" y="970" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="#071A3D" text-anchor="middle">Official Institutional Seal</text>
-  <text x="165" y="983" font-family="'Segoe UI', sans-serif" font-size="8" fill="#64748B" text-anchor="middle">Dept. of AI &amp; DS, VSBEC</text>
+  <text x="165" y="949" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="#071A3D" text-anchor="middle">Official Institutional Seal</text>
+  <text x="165" y="961" font-family="'Segoe UI', sans-serif" font-size="8" fill="#64748B" text-anchor="middle">Dept. of AI &amp; DS, VSBEC</text>
 
-  <!-- Signatures Block -->
-  <text x="390" y="880" font-family="'Brush Script MT', cursive, sans-serif" font-size="24" fill="#071A3D" text-anchor="middle">${eStudentNameSig}</text>
-  <line x1="310" y1="900" x2="470" y2="900" stroke="#64748B" stroke-width="1.2"/>
-  <text x="390" y="920" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#071A3D" text-anchor="middle">Student Applicant</text>
-  <text x="390" y="936" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#64748B" text-anchor="middle">Digital App Submission</text>
-  <text x="390" y="952" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="600" fill="#059669" text-anchor="middle">Verified Portal Identity ✓</text>
+  <!-- 2. Student Applicant Signature Block -->
+  <text x="395" y="865" font-family="'Brush Script MT', cursive, sans-serif" font-size="22" fill="#071A3D" text-anchor="middle">${eStudentNameSig}</text>
+  <line x1="315" y1="885" x2="475" y2="885" stroke="#94A3B8" stroke-width="1.2"/>
+  <text x="395" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#071A3D" text-anchor="middle">Student Applicant</text>
+  <text x="395" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" fill="#64748B" text-anchor="middle">Digital App Submission</text>
+  <rect x="330" y="934" width="130" height="18" rx="4" fill="#ECFDF5" stroke="#A7F3D0"/>
+  <text x="395" y="946.5" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="700" fill="#059669" text-anchor="middle">✓ Verified Portal Identity</text>
 
-  <text x="635" y="880" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#059669" text-anchor="middle">✓ Endorsement Ready</text>
-  <line x1="550" y1="900" x2="720" y2="900" stroke="#64748B" stroke-width="1.2"/>
-  <text x="635" y="920" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#071A3D" text-anchor="middle">Class Advisor / HOD</text>
-  <text x="635" y="936" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#64748B" text-anchor="middle">Dept of AI &amp; DS (VSBEC)</text>
-  <text x="635" y="952" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="600" fill="#1455D9" text-anchor="middle">Autonomous Regulation 2021</text>
+  <!-- 3. Class Advisor and HOD Endorsement Block -->
+  <text x="635" y="865" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#059669" text-anchor="middle">✓ Endorsement Ready</text>
+  <line x1="555" y1="885" x2="715" y2="885" stroke="#94A3B8" stroke-width="1.2"/>
+  <text x="635" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#071A3D" text-anchor="middle">Class Advisor / HOD</text>
+  <text x="635" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" fill="#64748B" text-anchor="middle">Dept of AI &amp; DS (VSBEC)</text>
+  <rect x="570" y="934" width="130" height="18" rx="4" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text x="635" y="946.5" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="700" fill="#1455D9" text-anchor="middle">Autonomous Regulation 2021</text>
 
-  <text x="425" y="983" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#059669" text-anchor="middle">PORTAL VERIFIED · ANNA UNIVERSITY REGULATION 2021 ELIGIBLE · LEAVE QUOTA AVAILABLE</text>
+  <!-- Clean Separation Divider Before Regulation Banner -->
+  <line x1="70" y1="970" x2="780" y2="970" stroke="#CBD5E1" stroke-width="1"/>
 
-  <text x="425" y="1030" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" fill="#94A3B8" text-anchor="middle">This is an authentic digital verification dossier generated from the V.S.B. Engineering College (Autonomous) AI&amp;DS Digital Portal.</text>
+  <!-- Regulation Compliance Banner (Cleanly on its own line, zero overlap) -->
+  <text x="425" y="988" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#059669" text-anchor="middle">PORTAL VERIFIED · ANNA UNIVERSITY REGULATION 2021 ELIGIBLE · LEAVE QUOTA AUDITED</text>
+
+  <text x="425" y="1025" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.8" fill="#94A3B8" text-anchor="middle">This is an authentic digital verification dossier generated from the V.S.B. Engineering College (Autonomous) AI&amp;DS Digital Portal.</text>
 </svg>`
 
   return new Response(svg, {

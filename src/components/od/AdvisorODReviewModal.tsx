@@ -340,6 +340,29 @@ export function AdvisorODReviewModal({
   const isAttendanceCompliant = effectiveRate >= 75.0
   const effectiveParentPhone = studentDetails?.parentPhone || '6381366088'
 
+  const buildDossierUrl = () => {
+    const reg = studentDetails?.registerNumber || parsed.registerNumber || '922525243103'
+    const name = studentDetails?.name || parsed.studentName || 'Student'
+    const type = parsed.applicationType || 'On Duty / Leave Request'
+    const reason = extractReason()
+    const from = parsed.fromDate || '2026-09-17'
+    const to = parsed.toDate || '2026-09-18'
+    const phone = studentDetails?.parentPhone || parsed.parentPhone || effectiveParentPhone || '6381366088'
+    const proofName = proofFiles?.[0]?.originalName || proofFiles?.[0]?.fileName || ''
+
+    const params = new URLSearchParams({
+      registerNumber: reg,
+      name,
+      type,
+      reason,
+      from,
+      to,
+      parentPhone: phone,
+    })
+    if (proofName) params.set('proofFileName', proofName)
+    return `/api/od-applications/proof-document?${params.toString()}`
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-[#071126]/80 backdrop-blur-xl flex items-center justify-center p-3 sm:p-5 overflow-y-auto print:p-0 print:bg-white print:static">
       {/* Glow Effects */}
@@ -622,7 +645,7 @@ export function AdvisorODReviewModal({
                       type="button"
                       onClick={() =>
                         setSelectedPreviewFile({
-                          url: `/api/od-applications/proof-document?registerNumber=${encodeURIComponent(studentDetails?.registerNumber || parsed.registerNumber)}&type=${encodeURIComponent(parsed.applicationType)}&reason=${encodeURIComponent(extractReason())}&from=${parsed.fromDate || '2026-09-17'}&to=${parsed.toDate || '2026-09-18'}`,
+                          url: buildDossierUrl(),
                           title: `Official Leave & Verification Dossier - ${studentDetails?.name || parsed.studentName} (${parsed.registerNumber})`,
                           type: 'image/svg+xml',
                         })
@@ -634,8 +657,7 @@ export function AdvisorODReviewModal({
                     <button
                       type="button"
                       onClick={() => {
-                        const url = `/api/od-applications/proof-document?registerNumber=${encodeURIComponent(studentDetails?.registerNumber || parsed.registerNumber)}&type=${encodeURIComponent(parsed.applicationType)}&reason=${encodeURIComponent(extractReason())}&from=${parsed.fromDate || '2026-09-17'}&to=${parsed.toDate || '2026-09-18'}`
-                        handleDownloadPdf(url, `Official_Verification_Dossier_${parsed.registerNumber || 'Student'}.pdf`)
+                        handleDownloadPdf(buildDossierUrl(), `Official_Verification_Dossier_${parsed.registerNumber || 'Student'}.pdf`)
                       }}
                       disabled={downloadingPdf}
                       className="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#071A3D] font-bold text-xs flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
@@ -649,7 +671,7 @@ export function AdvisorODReviewModal({
                       PDF
                     </button>
                     <a
-                      href={`/api/od-applications/proof-document?registerNumber=${encodeURIComponent(studentDetails?.registerNumber || parsed.registerNumber)}&type=${encodeURIComponent(parsed.applicationType)}&reason=${encodeURIComponent(extractReason())}&from=${parsed.fromDate || '2026-09-17'}&to=${parsed.toDate || '2026-09-18'}`}
+                      href={buildDossierUrl()}
                       download={`Official_Verification_Dossier_${parsed.registerNumber}.svg`}
                       className="px-2 py-1.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs flex items-center gap-1 transition-colors"
                       title="Download SVG"
@@ -663,7 +685,7 @@ export function AdvisorODReviewModal({
                 <div
                   onClick={() =>
                     setSelectedPreviewFile({
-                      url: `/api/od-applications/proof-document?registerNumber=${encodeURIComponent(studentDetails?.registerNumber || parsed.registerNumber)}&type=${encodeURIComponent(parsed.applicationType)}&reason=${encodeURIComponent(extractReason())}&from=${parsed.fromDate || '2026-09-17'}&to=${parsed.toDate || '2026-09-18'}`,
+                      url: buildDossierUrl(),
                       title: `Official Leave & Verification Dossier - ${studentDetails?.name || parsed.studentName} (${parsed.registerNumber})`,
                       type: 'image/svg+xml',
                     })
@@ -672,7 +694,7 @@ export function AdvisorODReviewModal({
                 >
                   <div className="h-24 w-full overflow-hidden flex items-center justify-center bg-slate-50 relative">
                     <img
-                      src={`/api/od-applications/proof-document?registerNumber=${encodeURIComponent(studentDetails?.registerNumber || parsed.registerNumber)}&type=${encodeURIComponent(parsed.applicationType)}&reason=${encodeURIComponent(extractReason())}&from=${parsed.fromDate || '2026-09-17'}&to=${parsed.toDate || '2026-09-18'}`}
+                      src={buildDossierUrl()}
                       alt="Official Leave Dossier Preview"
                       className="w-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
                     />
