@@ -83,6 +83,9 @@ export async function GET(request: Request) {
       if (latestSession) {
         const total = latestSession.totalStudents || dbCount
         const presents = (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0)
+        const absents = typeof latestSession.absentCount === 'number'
+          ? latestSession.absentCount
+          : Math.max(0, total - presents)
         const pct = total > 0 ? Math.round((presents / total) * 10000) / 100 : 0
         const isPending = (latestSession.presentCount || 0) === 0 && (latestSession.absentCount || 0) === 0
 
@@ -92,6 +95,7 @@ export async function GET(request: Request) {
           section: cls.section,
           totalStudents: total,
           presentAvg: presents,
+          absentCount: isPending ? 0 : absents,
           attendancePct: pct,
           statusNote: isPending
             ? 'Register Pending'
@@ -111,6 +115,7 @@ export async function GET(request: Request) {
         section: cls.section,
         totalStudents: dbCount,
         presentAvg: 0,
+        absentCount: 0,
         attendancePct: 0,
         statusNote: dbCount === 0 ? 'No Students Enrolled' : 'Register Pending',
         advisorName: assignedAdvisor,
@@ -135,6 +140,7 @@ export async function GET(request: Request) {
         section: cls.section,
         totalStudents: 0,
         presentAvg: 0,
+        absentCount: 0,
         attendancePct: 0,
         statusNote: 'Register Pending',
         advisorName: 'Not Allocated',

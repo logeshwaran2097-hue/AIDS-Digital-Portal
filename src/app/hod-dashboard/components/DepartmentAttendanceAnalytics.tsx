@@ -29,6 +29,7 @@ export interface ClassAttendanceStat {
   section: string
   totalStudents: number
   presentAvg: number
+  absentCount?: number
   attendancePct: number
   statusNote?: string
   advisorName?: string | null
@@ -37,16 +38,16 @@ export interface ClassAttendanceStat {
 }
 
 export const DEFAULT_DEPARTMENT_CLASSES: ClassAttendanceStat[] = [
-  { className: 'II AIDS A', year: 2, section: 'A', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'II AIDS B', year: 2, section: 'B', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'II AIDS C', year: 2, section: 'C', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'II AIDS D', year: 2, section: 'D', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'III AIDS A', year: 3, section: 'A', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'III AIDS B', year: 3, section: 'B', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'III AIDS C', year: 3, section: 'C', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'III AIDS D', year: 3, section: 'D', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'IV AIDS A', year: 4, section: 'A', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'IV AIDS B', year: 4, section: 'B', totalStudents: 0, presentAvg: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS A', year: 2, section: 'A', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS B', year: 2, section: 'B', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS C', year: 2, section: 'C', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS D', year: 2, section: 'D', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS A', year: 3, section: 'A', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS B', year: 3, section: 'B', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS C', year: 3, section: 'C', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'III AIDS D', year: 3, section: 'D', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'IV AIDS A', year: 4, section: 'A', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'IV AIDS B', year: 4, section: 'B', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
 ]
 
 interface Props {
@@ -96,6 +97,12 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
   const summary = useMemo(() => {
     const totalEnrolled = filteredData.reduce((acc, c) => acc + c.totalStudents, 0)
     const totalPresent = filteredData.reduce((acc, c) => acc + c.presentAvg, 0)
+    const totalAbsent = filteredData.reduce((acc, c) => {
+      const abs = c.absentCount !== undefined
+        ? c.absentCount
+        : (c.attendancePct > 0 ? Math.max(0, c.totalStudents - c.presentAvg) : 0)
+      return acc + abs
+    }, 0)
     const avgPct =
       totalEnrolled > 0 ? Math.round((totalPresent / totalEnrolled) * 10000) / 100 : 0
     const topClass = [...filteredData].sort((a, b) => b.attendancePct - a.attendancePct)[0]
@@ -105,6 +112,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
     return {
       totalEnrolled,
       totalPresent,
+      totalAbsent,
       avgPct,
       topClass,
       compliantCount,
@@ -137,6 +145,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       'Class Advisor',
       'Total Enrolled',
       'Present Count',
+      'Absent Count',
       'Attendance %',
       'Status Note',
     ]
@@ -148,6 +157,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       `"${c.advisorName || 'Class Advisor'}"`,
       c.totalStudents,
       c.presentAvg,
+      c.absentCount !== undefined ? c.absentCount : (c.attendancePct > 0 ? Math.max(0, c.totalStudents - c.presentAvg) : 0),
       `${c.attendancePct}%`,
       `"${c.statusNote || (c.attendancePct >= 75 ? 'Advisor Verified' : 'Shortage Alert')}"`,
     ])
@@ -473,6 +483,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                   <th className="py-3.5 px-4 font-bold">CLASS ADVISOR</th>
                   <th className="py-3.5 px-4 font-bold text-center">TOTAL STUDENTS</th>
                   <th className="py-3.5 px-4 font-bold text-center">PRESENT (AVG)</th>
+                  <th className="py-3.5 px-4 font-bold text-center">ABSENTEES</th>
                   <th className="py-3.5 px-4 font-bold text-center">ATTENDANCE %</th>
                   <th className="py-3.5 px-4 font-bold text-right">STUDENT DIRECTORY</th>
                 </tr>
@@ -523,6 +534,23 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                       {row.presentAvg}
                     </td>
 
+                    <td className="py-4 px-4 text-center font-mono text-sm font-semibold">
+                      {(() => {
+                        const abs = row.absentCount !== undefined
+                          ? row.absentCount
+                          : (row.attendancePct > 0 ? Math.max(0, row.totalStudents - row.presentAvg) : 0)
+
+                        if (abs > 0) {
+                          return (
+                            <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-rose-700 bg-rose-50 border border-rose-200 text-xs font-bold font-mono">
+                              {abs}
+                            </span>
+                          )
+                        }
+                        return <span className="text-slate-400 font-medium">0</span>
+                      })()}
+                    </td>
+
                     <td className="py-4 px-4 text-center">
                       <span
                         className={`font-bold font-mono text-sm px-2.5 py-1 rounded-lg ${
@@ -559,6 +587,9 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                   </td>
                   <td className="py-4 px-4 text-center font-mono text-sm">
                     {summary.totalPresent} Present
+                  </td>
+                  <td className="py-4 px-4 text-center font-mono text-sm text-rose-600 font-bold">
+                    {summary.totalAbsent} Absent
                   </td>
                   <td className="py-4 px-4 text-center font-mono text-sm text-emerald-700">
                     {summary.avgPct}%

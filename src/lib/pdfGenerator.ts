@@ -1304,6 +1304,7 @@ export interface AdvisorAttendancePDFOptions {
     section: string
     totalStudents: number
     presentAvg: number
+    absentCount?: number
     attendancePct: number
     advisorName?: string | null
     statusNote?: string
@@ -1528,13 +1529,14 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
 
   // Table Header
   const tableHeaders = [
-    { title: '#', w: 8, align: 'center' },
-    { title: 'CLASS SECTION', w: 26, align: 'left' },
-    { title: 'ADVISOR NAME', w: 42, align: 'left' },
-    { title: 'ENROLLED', w: 20, align: 'center' },
-    { title: 'PRESENT (AVG)', w: 24, align: 'center' },
-    { title: 'ATTENDANCE %', w: 26, align: 'center' },
-    { title: 'VERIFICATION STATUS', w: 40, align: 'left' },
+    { title: '#', w: 7, align: 'center' },
+    { title: 'CLASS SECTION', w: 25, align: 'left' },
+    { title: 'ADVISOR NAME', w: 38, align: 'left' },
+    { title: 'ENROLLED', w: 18, align: 'center' },
+    { title: 'PRESENT', w: 18, align: 'center' },
+    { title: 'ABSENT', w: 18, align: 'center' },
+    { title: 'ATTENDANCE %', w: 24, align: 'center' },
+    { title: 'VERIFICATION STATUS', w: 38, align: 'left' },
   ]
 
   const rowHeight = 6.2
@@ -1571,38 +1573,48 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(6.8)
     doc.setTextColor(100, 115, 135)
-    doc.text(String(idx + 1), tdX + 4, currentY + 4.2, { align: 'center' })
-    tdX += 8
+    doc.text(String(idx + 1), tdX + 3.5, currentY + 4.2, { align: 'center' })
+    tdX += 7
 
     // 2. Class Section
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(7)
     doc.setTextColor(7, 26, 61)
     doc.text(cls.className, tdX + 2, currentY + 4.2)
-    tdX += 26
+    tdX += 25
 
     // 3. Advisor Name
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(6.8)
     doc.setTextColor(40, 50, 70)
     doc.text(cls.advisorName || 'Faculty Advisor', tdX + 2, currentY + 4.2)
-    tdX += 42
+    tdX += 38
 
     // 4. Enrolled
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(6.8)
     doc.setTextColor(7, 26, 61)
-    doc.text(String(cls.totalStudents), tdX + 10, currentY + 4.2, { align: 'center' })
-    tdX += 20
+    doc.text(String(cls.totalStudents), tdX + 9, currentY + 4.2, { align: 'center' })
+    tdX += 18
 
     // 5. Present Count
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(6.8)
     doc.setTextColor(21, 87, 192)
-    doc.text(String(cls.presentAvg), tdX + 12, currentY + 4.2, { align: 'center' })
-    tdX += 24
+    doc.text(String(cls.presentAvg), tdX + 9, currentY + 4.2, { align: 'center' })
+    tdX += 18
 
-    // 6. Attendance %
+    // 6. Absent Count
+    const absVal = cls.absentCount !== undefined 
+      ? cls.absentCount 
+      : (cls.attendancePct > 0 ? Math.max(0, cls.totalStudents - cls.presentAvg) : 0)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.setTextColor(absVal > 0 ? 220 : 140, absVal > 0 ? 38 : 140, absVal > 0 ? 38 : 140)
+    doc.text(String(absVal), tdX + 9, currentY + 4.2, { align: 'center' })
+    tdX += 18
+
+    // 7. Attendance %
     const isGood = cls.attendancePct >= 75
     const isPending = cls.attendancePct === 0
     doc.setFont('helvetica', 'bold')
@@ -1614,10 +1626,10 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     } else {
       doc.setTextColor(220, 38, 38) // red
     }
-    doc.text(`${cls.attendancePct}%`, tdX + 13, currentY + 4.2, { align: 'center' })
-    tdX += 26
+    doc.text(`${cls.attendancePct}%`, tdX + 12, currentY + 4.2, { align: 'center' })
+    tdX += 24
 
-    // 7. Status Note
+    // 8. Status Note
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(6.2)
     const status = cls.statusNote || (isPending ? 'Register Pending' : isGood ? 'Advisor Verified' : 'Shortage Alert (<75%)')
