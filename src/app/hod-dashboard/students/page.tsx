@@ -21,9 +21,9 @@ const DEPARTMENT_CLASS_DEFINITIONS = [
 export default async function HODStudentsPage() {
   const session = await requireRoleSession(['hod'])
 
-  // Fetch all students, users, faculties, and morning attendance sessions
+  // Fetch all students, users, faculties, morning attendance sessions, and student attendance records
   const db = prisma as any
-  const [students, studentUsers, faculties, facultyUsers, sessions] = await Promise.all([
+  const [students, studentUsers, faculties, facultyUsers, sessions, allRecords] = await Promise.all([
     prisma.student.findMany({ orderBy: [{ year: 'asc' }, { section: 'asc' }, { registerNumber: 'asc' }] }).catch(() => []),
     prisma.user.findMany({ where: { role: 'student' }, select: { id: true, name: true, email: true, phone: true } }).catch(() => []),
     prisma.faculty.findMany({ where: { advisorYear: { not: null }, advisorSec: { not: null } } }).catch(() => []),
@@ -31,7 +31,23 @@ export default async function HODStudentsPage() {
     db.attendanceSession
       ? db.attendanceSession.findMany({ where: { sessionType: 'morning' }, orderBy: { date: 'desc' } }).catch(() => [])
       : [],
+    db.attendanceRecord ? db.attendanceRecord.findMany().catch(() => []) : [],
   ])
+
+  // Aggregate attendance per student register number
+  const attendanceByRegNo = new Map<string, { present: number; absent: number; od: number; ml: number }>()
+  allRecords.forEach((rec: any) => {
+    const reg = (rec.registerNumber || '').toUpperCase().trim()
+    if (!attendanceByRegNo.has(reg)) {
+      attendanceByRegNo.set(reg, { present: 0, absent: 0, od: 0, ml: 0 })
+    }
+    const current = attendanceByRegNo.get(reg)!
+    const st = (rec.status || 'P').toUpperCase()
+    if (st === 'P') current.present++
+    else if (st === 'A') current.absent++
+    else if (st === 'OD') current.od++
+    else if (st === 'ML') current.ml++
+  })
 
   // Build lookup maps
   const studentUserMap = new Map<string, any>(studentUsers.map((u: any) => [u.id, u]))
@@ -49,11 +65,16 @@ export default async function HODStudentsPage() {
     }
   })
 
-  // Format purely real students from DB
+  // Format purely real students from DB with attendance metrics
   const initialStudents: DBStudent[] = students.map((s: any) => {
     const u: any = studentUserMap.get(s.userId)
     const key = `${s.year}-${(s.section || 'A').toUpperCase()}`
     const matchedAdvisor = advisorMap.get(key)
+    const reg = (s.registerNumber || '').toUpperCase().trim()
+    const att = attendanceByRegNo.get(reg) || { present: 0, absent: 0, od: 0, ml: 0 }
+    const totalWorking = att.present + att.absent + att.od + att.ml
+    const effectiveAttended = att.present + att.od + att.ml
+    const pct = totalWorking > 0 ? Math.round((effectiveAttended / totalWorking) * 1000) / 10 : 0
 
     return {
       id: s.id,
@@ -73,7 +94,10 @@ export default async function HODStudentsPage() {
       roomNo: s.roomNo || null,
       cgpa: s.cgpa || null,
       isDbVerified: true,
-      attendancePct: 0,
+      attendancePct: pct,
+      totalDays: totalWorking,
+      presentDays: effectiveAttended,
+      absentDays: att.absent,
     }
   })
 

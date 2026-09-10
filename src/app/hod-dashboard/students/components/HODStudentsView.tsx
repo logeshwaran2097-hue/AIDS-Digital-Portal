@@ -48,6 +48,9 @@ export interface DBStudent {
   cgpa?: number | null
   isDbVerified?: boolean
   attendancePct?: number
+  totalDays?: number
+  presentDays?: number
+  absentDays?: number
 }
 
 export interface ClassMeta {
@@ -77,7 +80,8 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
   const [attendanceFilter, setAttendanceFilter] = useState<'ALL' | 'good' | 'shortage'>('ALL')
   const [activeStudentModal, setActiveStudentModal] = useState<DBStudent | null>(null)
   const [copiedReg, setCopiedReg] = useState<string | null>(null)
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
+  const [viewMode, setViewMode] = useState<'table' | 'cards' | 'attendance'>('table')
+  const [activeAttendanceClass, setActiveAttendanceClass] = useState<string>('II AIDS A')
 
   // Real department roster strictly from DB
   const fullRoster = useMemo(() => {
@@ -90,9 +94,43 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
         isDbVerified: true,
         advisorName: s.advisorName || cls?.advisorName || 'Unassigned',
         attendancePct: s.attendancePct ?? cls?.attendancePct ?? 0,
+        totalDays: s.totalDays ?? 0,
+        presentDays: s.presentDays ?? 0,
+        absentDays: s.absentDays ?? 0,
       }
     })
   }, [departmentClasses, initialStudents])
+
+  // 10 Department Class Pills for Attendance View
+  const attendanceClassPills = useMemo(() => [
+    'II AIDS A',
+    'II AIDS B',
+    'II AIDS C',
+    'II AIDS D',
+    'III AIDS A',
+    'III AIDS B',
+    'III AIDS C',
+    'III AIDS D',
+    'IV AIDS A',
+    'IV AIDS B',
+  ], [])
+
+  // Filter students for Attendance View by active class pill & search
+  const attendanceStudents = useMemo(() => {
+    return fullRoster.filter((s) => {
+      const cls = departmentClasses.find((c) => c.className === activeAttendanceClass)
+      if (cls && (s.year !== cls.year || (s.section || 'A').toUpperCase() !== cls.section.toUpperCase())) {
+        return false
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim()
+        const matchesName = s.name.toLowerCase().includes(q)
+        const matchesReg = s.registerNumber.toLowerCase().includes(q)
+        if (!matchesName && !matchesReg) return false
+      }
+      return true
+    })
+  }, [fullRoster, activeAttendanceClass, departmentClasses, searchQuery])
 
   // Filter students based on current selection
   const filteredStudents = useMemo(() => {
@@ -565,12 +603,16 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-base font-black text-[#071A3D]">
-                    {selectedClass === 'ALL' ? 'Department Student Roll' : `${selectedClass} Roll`}
+                    {viewMode === 'attendance'
+                      ? `${activeAttendanceClass} Attendance Register`
+                      : selectedClass === 'ALL'
+                      ? 'Department Student Roll'
+                      : `${selectedClass} Roll`}
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9]/10 text-[#1455D9] text-xs font-bold font-mono">
-                    {filteredStudents.length} Students
+                    {viewMode === 'attendance' ? attendanceStudents.length : filteredStudents.length} Students
                   </span>
-                  {selectedClass !== 'ALL' && (
+                  {viewMode !== 'attendance' && selectedClass !== 'ALL' && (
                     <button
                       onClick={() => setSelectedClass('ALL')}
                       className="text-xs text-blue-600 hover:underline font-bold flex items-center gap-1 ml-1"
@@ -580,7 +622,9 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Showing {filteredStudents.length} students matching active filters
+                  {viewMode === 'attendance'
+                    ? `Showing live attendance audit register for ${activeAttendanceClass}`
+                    : `Showing ${filteredStudents.length} students matching active filters`}
                 </p>
               </div>
             </div>
@@ -588,7 +632,7 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
             {/* Quick Actions & View Mode Toggle */}
             <div className="flex flex-wrap items-center gap-2">
               {/* Search Bar */}
-              <div className="relative min-w-[240px] sm:min-w-[280px]">
+              <div className="relative min-w-[220px] sm:min-w-[260px]">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
@@ -625,16 +669,28 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                 >
                   Cards
                 </button>
+                <button
+                  onClick={() => setViewMode('attendance')}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition flex items-center gap-1.5 ${
+                    viewMode === 'attendance'
+                      ? 'bg-[#071A3D] text-white shadow-xs'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Attendance View</span>
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Secondary Filter Dropdowns */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200/60 text-xs">
-            <div className="flex items-center gap-1.5 text-gray-500 font-bold mr-1">
-              <Filter className="w-3.5 h-3.5" />
-              <span>Filters:</span>
-            </div>
+          {/* Secondary Filter Dropdowns (Shown for Table and Cards mode) */}
+          {viewMode !== 'attendance' && (
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200/60 text-xs">
+              <div className="flex items-center gap-1.5 text-gray-500 font-bold mr-1">
+                <Filter className="w-3.5 h-3.5" />
+                <span>Filters:</span>
+              </div>
 
             {/* Section Filter */}
             <select
@@ -691,178 +747,371 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
               </button>
             )}
           </div>
+          )}
         </div>
 
-        {/* View Mode 1: Table View */}
-        {viewMode === 'table' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-[#071A3D] text-white">
-                <tr>
-                  <th className="py-3.5 px-3 font-bold text-center w-12">#</th>
-                  <th className="py-3.5 px-4 font-bold">Reg. Number</th>
-                  <th className="py-3.5 px-4 font-bold">Student Name &amp; Email</th>
-                  <th className="py-3.5 px-3 font-bold text-center">Class / Section</th>
-                  <th className="py-3.5 px-3 font-bold text-center">Semester</th>
-                  <th className="py-3.5 px-4 font-bold text-center">Attendance %</th>
-                  <th className="py-3.5 px-4 font-bold">Residency / Transit</th>
-                  <th className="py-3.5 px-4 font-bold">Parent Contact</th>
-                  <th className="py-3.5 px-3 font-bold text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredStudents.length > 0 ? (
-                  filteredStudents.map((s, index) => {
-                    const attPct = s.attendancePct ?? 0
-                    const isGood = attPct >= 75
-                    const isCopied = copiedReg === s.registerNumber
+              {/* View Mode 1: Attendance Roll Register (Matching Uploaded Screenshot) */}
+              {viewMode === 'attendance' ? (
+                <div className="bg-[#0B132B] text-white">
+                  {/* Horizontal Class Pills Bar */}
+                  <div className="flex items-center gap-2 overflow-x-auto py-3.5 px-4 sm:px-6 bg-[#071A3D] border-b border-slate-800 scrollbar-none">
+                    {attendanceClassPills.map((pill) => {
+                      const isActive = activeAttendanceClass === pill
+                      return (
+                        <button
+                          key={pill}
+                          onClick={() => setActiveAttendanceClass(pill)}
+                          className={`px-5 py-2 rounded-full text-xs font-bold tracking-wide transition-all whitespace-nowrap cursor-pointer ${
+                            isActive
+                              ? 'bg-white text-[#071A3D] font-black shadow-md scale-[1.02]'
+                              : 'bg-[#0D1B2A]/90 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/80 font-semibold'
+                          }`}
+                        >
+                          {pill}
+                        </button>
+                      )
+                    })}
+                  </div>
 
-                    return (
-                      <tr
-                        key={s.id}
-                        className={`hover:bg-blue-50/40 transition-colors ${
-                          s.isDbVerified ? 'bg-amber-50/30' : ''
-                        }`}
-                      >
-                        {/* Roll Number Index */}
-                        <td className="py-3.5 px-3 text-center text-gray-400 font-mono font-medium">
-                          {index + 1}
-                        </td>
+                  {/* Attendance Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left border-collapse">
+                      <thead className="bg-[#071A3D]/95 border-b border-slate-800 text-slate-400 uppercase text-[10.5px] font-bold tracking-wider select-none">
+                        <tr>
+                          <th className="py-4 px-6 text-left font-bold tracking-wider">REG NO</th>
+                          <th className="py-4 px-6 text-left font-bold tracking-wider">STUDENT NAME</th>
+                          <th className="py-4 px-6 text-center font-bold tracking-wider">TOTAL DAYS</th>
+                          <th className="py-4 px-6 text-center font-bold tracking-wider">PRESENT DAYS</th>
+                          <th className="py-4 px-6 text-center font-bold tracking-wider">ABSENT DAYS</th>
+                          <th className="py-4 px-6 text-center font-bold tracking-wider">ATTENDANCE %</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80 text-slate-200">
+                        {attendanceStudents.length > 0 ? (
+                          attendanceStudents.map((s) => {
+                            const attPct = s.attendancePct ?? 0
+                            const isGood = attPct >= 75
+                            const isCopied = copiedReg === s.registerNumber
 
-                        {/* Register Number */}
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#1455D9] whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <span>{s.registerNumber}</span>
-                            <button
-                              onClick={() => handleCopy(s.registerNumber)}
-                              title="Copy Register Number"
-                              className="text-gray-400 hover:text-gray-700 p-0.5 rounded transition"
-                            >
-                              {isCopied ? (
-                                <Check className="w-3.5 h-3.5 text-green-600" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
-                              )}
-                            </button>
-                          </div>
-                        </td>
+                            return (
+                              <tr
+                                key={s.id}
+                                className="hover:bg-slate-800/50 transition-colors group cursor-pointer"
+                                onClick={() => setActiveStudentModal(s)}
+                              >
+                                {/* Reg No */}
+                                <td className="py-4 px-6 font-mono font-bold text-white whitespace-nowrap">
+                                  <div className="flex items-center gap-2">
+                                    <span className="group-hover:text-blue-400 transition-colors">{s.registerNumber}</span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleCopy(s.registerNumber)
+                                      }}
+                                      title="Copy Register Number"
+                                      className="text-slate-500 hover:text-slate-300 p-0.5 rounded transition opacity-0 group-hover:opacity-100"
+                                    >
+                                      {isCopied ? (
+                                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                      ) : (
+                                        <Copy className="w-3.5 h-3.5" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </td>
 
-                        {/* Student Name & Email */}
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-xs">
-                              {s.name.charAt(0)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-bold text-[#071A3D]">{s.name}</span>
-                                {s.isDbVerified && (
-                                  <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-bold text-[9px] border border-amber-300">
-                                    DB Enrolled
+                                {/* Student Name */}
+                                <td className="py-4 px-6 whitespace-nowrap">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-bold text-[11px] shrink-0 border border-slate-700">
+                                      {s.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-slate-100">{s.name}</p>
+                                      <p className="text-[10px] text-slate-400 font-mono">{s.email}</p>
+                                    </div>
+                                  </div>
+                                </td>
+
+                                {/* Total Days */}
+                                <td className="py-4 px-6 text-center font-mono font-bold text-slate-300">
+                                  {s.totalDays ?? 0}
+                                </td>
+
+                                {/* Present Days */}
+                                <td className="py-4 px-6 text-center font-mono font-bold text-emerald-400">
+                                  {s.presentDays ?? 0}
+                                </td>
+
+                                {/* Absent Days */}
+                                <td className="py-4 px-6 text-center font-mono font-bold text-rose-400">
+                                  {s.absentDays ?? 0}
+                                </td>
+
+                                {/* Attendance % */}
+                                <td className="py-4 px-6 text-center whitespace-nowrap">
+                                  <span
+                                    className={`px-3 py-1 rounded-full font-mono text-xs font-black inline-block ${
+                                      isGood
+                                        ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/80'
+                                        : 'bg-rose-950/80 text-rose-400 border border-rose-800/80'
+                                    }`}
+                                  >
+                                    {attPct}%
                                   </span>
-                                )}
+                                </td>
+                              </tr>
+                            )
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="py-16 text-center">
+                              <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto text-slate-400">
+                                <Users className="w-10 h-10 text-slate-600 stroke-1" />
+                                <p className="font-bold text-sm text-slate-300">
+                                  No students enrolled yet in {activeAttendanceClass}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Students will appear here once registered under this section.
+                                </p>
                               </div>
-                              <p className="text-[11px] text-gray-500 font-mono">{s.email}</p>
-                            </div>
-                          </div>
-                        </td>
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : viewMode === 'table' ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-[#071A3D] text-white">
+                      <tr>
+                        <th className="py-3.5 px-3 font-bold text-center w-12">#</th>
+                        <th className="py-3.5 px-4 font-bold">Reg. Number</th>
+                        <th className="py-3.5 px-4 font-bold">Student Name &amp; Email</th>
+                        <th className="py-3.5 px-3 font-bold text-center">Class / Section</th>
+                        <th className="py-3.5 px-3 font-bold text-center">Semester</th>
+                        <th className="py-3.5 px-4 font-bold text-center">Attendance %</th>
+                        <th className="py-3.5 px-4 font-bold">Residency / Transit</th>
+                        <th className="py-3.5 px-4 font-bold">Parent Contact</th>
+                        <th className="py-3.5 px-3 font-bold text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredStudents.length > 0 ? (
+                        filteredStudents.map((s, index) => {
+                          const attPct = s.attendancePct ?? 0
+                          const isGood = attPct >= 75
+                          const isCopied = copiedReg === s.registerNumber
 
-                        {/* Class / Section */}
-                        <td className="py-3.5 px-3 text-center whitespace-nowrap">
-                          <span className="px-2 py-1 rounded-lg bg-blue-50 text-[#1455D9] font-black text-xs border border-blue-100">
-                            {s.year === 2 ? 'II' : s.year === 3 ? 'III' : 'IV'} AIDS {s.section}
-                          </span>
-                        </td>
-
-                        {/* Semester */}
-                        <td className="py-3.5 px-3 text-center font-bold text-gray-700">
-                          Sem {s.semester}
-                        </td>
-
-                        {/* Attendance Percentage */}
-                        <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-2">
-                            <span
-                              className={`font-mono font-black text-xs px-2 py-0.5 rounded-full ${
-                                isGood
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-rose-100 text-rose-800'
+                          return (
+                            <tr
+                              key={s.id}
+                              className={`hover:bg-blue-50/40 transition-colors ${
+                                s.isDbVerified ? 'bg-amber-50/30' : ''
                               }`}
                             >
-                              {attPct}%
-                            </span>
-                          </div>
-                          <div className="w-16 h-1 bg-gray-100 rounded-full mx-auto mt-1 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${isGood ? 'bg-green-500' : 'bg-rose-500'}`}
-                              style={{ width: `${Math.min(100, attPct)}%` }}
-                            />
-                          </div>
-                        </td>
-
-                        {/* Residency / Transit */}
-                        <td className="py-3.5 px-4 max-w-[200px]">
-                          <div className="flex items-center gap-1.5 text-gray-700">
-                            {s.residencyStatus?.toLowerCase().includes('hostel') ? (
-                              <>
-                                <Home className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                                <span className="text-[11px] font-medium truncate">
-                                  {s.hostelBlock ? `${s.hostelBlock} · Rm ${s.roomNo || '-'}` : 'Hosteller'}
+                              <td className="py-3.5 px-3 text-center text-gray-400 font-mono font-medium">
+                                {index + 1}
+                              </td>
+                              <td className="py-3.5 px-4 font-mono font-bold text-[#1455D9] whitespace-nowrap">
+                                <div className="flex items-center gap-1.5">
+                                  <span>{s.registerNumber}</span>
+                                  <button
+                                    onClick={() => handleCopy(s.registerNumber)}
+                                    title="Copy Register Number"
+                                    className="text-gray-400 hover:text-gray-700 p-0.5 rounded transition"
+                                  >
+                                    {isCopied ? (
+                                      <Check className="w-3.5 h-3.5 text-green-600" />
+                                    ) : (
+                                      <Copy className="w-3.5 h-3.5" />
+                                    )}
+                                  </button>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center font-bold text-[11px] shrink-0 shadow-xs">
+                                    {s.name.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-bold text-[#071A3D]">{s.name}</span>
+                                      {s.isDbVerified && (
+                                        <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-bold text-[9px] border border-amber-300">
+                                          DB Enrolled
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-[11px] text-gray-500 font-mono">{s.email}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                                <span className="px-2 py-1 rounded-lg bg-blue-50 text-[#1455D9] font-black text-xs border border-blue-100">
+                                  {s.year === 2 ? 'II' : s.year === 3 ? 'III' : 'IV'} AIDS {s.section}
                                 </span>
-                              </>
-                            ) : (
-                              <>
-                                <Bus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                <span className="text-[11px] font-medium truncate">
-                                  {s.busNo ? `Bus ${s.busNo} (${s.boardingPoint || 'Stop'})` : 'Day Scholar'}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Parent Contact */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          {s.parentPhone ? (
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-gray-700 text-xs font-semibold">{s.parentPhone}</span>
-                              <a
-                                href={`https://wa.me/91${s.parentPhone.replace(/[^0-9]/g, '')}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="Chat on WhatsApp"
-                                className="text-emerald-600 hover:text-emerald-700 p-1 hover:bg-emerald-50 rounded transition"
-                              >
-                                <MessageSquare className="w-3.5 h-3.5" />
-                              </a>
+                              </td>
+                              <td className="py-3.5 px-3 text-center font-bold text-gray-700">
+                                Sem {s.semester}
+                              </td>
+                              <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                                <div className="flex items-center justify-center gap-2">
+                                  <span
+                                    className={`font-mono font-black text-xs px-2 py-0.5 rounded-full ${
+                                      isGood
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-rose-100 text-rose-800'
+                                    }`}
+                                  >
+                                    {attPct}%
+                                  </span>
+                                </div>
+                                <div className="w-16 h-1 bg-gray-100 rounded-full mx-auto mt-1 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${isGood ? 'bg-green-500' : 'bg-rose-500'}`}
+                                    style={{ width: `${Math.min(100, attPct)}%` }}
+                                  />
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4 text-gray-600 whitespace-nowrap">
+                                <div className="flex items-center gap-1.5 font-medium">
+                                  {s.residencyStatus === 'Hosteller' ? (
+                                    <>
+                                      <Home className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                      <span>Hostel ({s.hostelBlock || 'Block'} - Rm {s.roomNo || 'N/A'})</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Bus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                      <span>
+                                        {s.busNo ? `Bus ${s.busNo} (${s.boardingPoint || 'Route'})` : 'Day Scholar'}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                {s.parentPhone ? (
+                                  <div className="flex items-center gap-2">
+                                    <a
+                                      href={`tel:${s.parentPhone}`}
+                                      className="font-mono text-gray-700 hover:text-[#1455D9] font-medium flex items-center gap-1"
+                                    >
+                                      <Phone className="w-3 h-3 text-gray-400" />
+                                      <span>{s.parentPhone}</span>
+                                    </a>
+                                    <a
+                                      href={`https://wa.me/91${s.parentPhone.replace(/[^0-9]/g, '')}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      title="Chat on WhatsApp"
+                                      className="text-green-600 hover:text-green-700 p-0.5 rounded"
+                                    >
+                                      <MessageSquare className="w-3.5 h-3.5" />
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 italic">Not Provided</span>
+                                )}
+                              </td>
+                              <td className="py-3.5 px-3 text-center">
+                                <button
+                                  onClick={() => setActiveStudentModal(s)}
+                                  className="p-1.5 bg-gray-100 hover:bg-[#1455D9] text-gray-600 hover:text-white rounded-lg transition"
+                                  title="View Full Student Profile"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={9} className="py-16 text-center">
+                            <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto text-gray-400">
+                              <Users className="w-10 h-10 text-gray-300 stroke-1" />
+                              <p className="font-bold text-sm text-gray-600">
+                                {selectedClass !== 'ALL'
+                                  ? `No students enrolled yet in ${selectedClass}`
+                                  : 'No students found'}
+                              </p>
                             </div>
-                          ) : (
-                            <span className="text-gray-400 italic">Not Provided</span>
-                          )}
-                        </td>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                /* View Mode 2: Student Cards Grid */
+                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredStudents.length > 0 ? (
+                    filteredStudents.map((s) => {
+                      const attPct = s.attendancePct ?? 0
+                      const isGood = attPct >= 75
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => setActiveStudentModal(s)}
+                          className="p-4 rounded-2xl border border-gray-200/90 hover:border-blue-300 hover:shadow-md transition cursor-pointer bg-white flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-xl bg-[#071A3D] text-white flex items-center justify-center font-black text-xs">
+                                  {s.name.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm text-[#071A3D] truncate max-w-[130px]">{s.name}</p>
+                                  <p className="font-mono text-[11px] font-bold text-[#1455D9]">{s.registerNumber}</p>
+                                </div>
+                              </div>
+                              <span
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                  isGood ? 'bg-green-100 text-green-800' : 'bg-rose-100 text-rose-800'
+                                }`}
+                              >
+                                {attPct}%
+                              </span>
+                            </div>
 
-                        {/* Action: View Modal */}
-                        <td className="py-3.5 px-3 text-center">
-                          <button
-                            onClick={() => setActiveStudentModal(s)}
-                            className="p-1.5 bg-gray-100 hover:bg-[#1455D9] text-gray-600 hover:text-white rounded-lg transition"
-                            title="View Full Student Profile"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={9} className="py-16 text-center">
+                            <div className="mt-3 pt-2.5 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-400">Class:</span>
+                                <span className="font-bold text-[#071A3D]">
+                                  {s.year === 2 ? 'II' : s.year === 3 ? 'III' : 'IV'} AIDS {s.section} (Sem {s.semester})
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-400">Advisor:</span>
+                                <span className="font-medium text-gray-800 truncate max-w-[120px]">{s.advisorName}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-400">Parent:</span>
+                                <span className="font-mono text-gray-700">{s.parentPhone || '-'}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-[#1455D9] font-bold">
+                            <span>View Full Profile</span>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="col-span-full py-16 text-center">
                       <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto text-gray-400">
                         <Users className="w-10 h-10 text-gray-300 stroke-1" />
                         <p className="font-bold text-sm text-gray-600">
                           {selectedClass !== 'ALL'
                             ? `No students enrolled yet in ${selectedClass}`
-                            : 'No students found'}
+                            : 'No students match your criteria'}
                         </p>
                         <p className="text-xs text-gray-400">
                           {selectedClass !== 'ALL'
@@ -870,90 +1119,11 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                             : 'Try adjusting your search query or filter selection.'}
                         </p>
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          /* View Mode 2: Student Cards Grid */
-          <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredStudents.length > 0 ? (
-              filteredStudents.map((s) => {
-                const attPct = s.attendancePct ?? 0
-                const isGood = attPct >= 75
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => setActiveStudentModal(s)}
-                    className="p-4 rounded-2xl border border-gray-200/90 hover:border-blue-300 hover:shadow-md transition cursor-pointer bg-white flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-xl bg-[#071A3D] text-white flex items-center justify-center font-black text-xs">
-                            {s.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-bold text-sm text-[#071A3D] truncate max-w-[130px]">{s.name}</p>
-                            <p className="font-mono text-[11px] font-bold text-[#1455D9]">{s.registerNumber}</p>
-                          </div>
-                        </div>
-                        <span
-                          className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                            isGood ? 'bg-green-100 text-green-800' : 'bg-rose-100 text-rose-800'
-                          }`}
-                        >
-                          {attPct}%
-                        </span>
-                      </div>
-
-                      <div className="mt-3 pt-2.5 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-400">Class:</span>
-                          <span className="font-bold text-[#071A3D]">
-                            {s.year === 2 ? 'II' : s.year === 3 ? 'III' : 'IV'} AIDS {s.section} (Sem {s.semester})
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-400">Advisor:</span>
-                          <span className="font-medium text-gray-800 truncate max-w-[120px]">{s.advisorName}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-gray-400">Parent:</span>
-                          <span className="font-mono text-gray-700">{s.parentPhone || '-'}</span>
-                        </div>
-                      </div>
                     </div>
-
-                    <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-[#1455D9] font-bold">
-                      <span>View Full Profile</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <div className="col-span-full py-16 text-center">
-                <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto text-gray-400">
-                  <Users className="w-10 h-10 text-gray-300 stroke-1" />
-                  <p className="font-bold text-sm text-gray-600">
-                    {selectedClass !== 'ALL'
-                      ? `No students enrolled yet in ${selectedClass}`
-                      : 'No students match your criteria'}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {selectedClass !== 'ALL'
-                      ? 'Students can be registered or imported into this section via the Admin portal.'
-                      : 'Try adjusting your search query or filter selection.'}
-                  </p>
+                  )}
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              )}
+            </div>
 
       {/* Student Profile Drawer / Modal */}
       {activeStudentModal && (
