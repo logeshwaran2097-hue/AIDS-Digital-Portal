@@ -241,7 +241,7 @@ Central department governance hub:
 | **Period 6** | `02:05 PM - 02:50 PM` | 45 mins | Afternoon Theory / Lab Practical Block |
 | 🍵 **Tea Break** | `02:50 PM - 03:05 PM` | 15 mins | Evening Tea & Refreshment Interval |
 | **Period 7** | `03:05 PM - 03:50 PM` | 45 mins | Soft Skills / Communication / Lab |
-| **Period 8** | `03:50 PM - 04:30 PM` | 40 mins | Aptitude Bootcamps / Faculty Mentorship |
+| **Period 8** | `03:50 PM - 04:40 PM` | 50 mins | Aptitude Bootcamps / Faculty Mentorship |
 
 ---
 
