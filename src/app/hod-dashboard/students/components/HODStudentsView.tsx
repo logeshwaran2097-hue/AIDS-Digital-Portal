@@ -83,9 +83,11 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
   const [viewMode, setViewMode] = useState<'table' | 'cards' | 'attendance'>('table')
   const [activeAttendanceClass, setActiveAttendanceClass] = useState<string>('II AIDS A')
 
-  // Real department roster strictly from DB
+  // Real department roster strictly from DB (strictly only Admin-enrolled students)
   const fullRoster = useMemo(() => {
-    return initialStudents.map((s) => {
+    return initialStudents
+      .filter((s) => s.isDbVerified !== false)
+      .map((s) => {
       const cls = departmentClasses.find(
         (c) => c.year === s.year && c.section.toUpperCase() === (s.section || 'A').toUpperCase()
       )
@@ -908,9 +910,7 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                           return (
                             <tr
                               key={s.id}
-                              className={`hover:bg-blue-50/40 transition-colors ${
-                                s.isDbVerified ? 'bg-amber-50/30' : ''
-                              }`}
+                              className="hover:bg-blue-50/40 transition-colors"
                             >
                               <td className="py-3.5 px-3 text-center text-gray-400 font-mono font-medium">
                                 {index + 1}
@@ -940,8 +940,8 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                                     <div className="flex items-center gap-1.5">
                                       <span className="font-bold text-[#071A3D]">{s.name}</span>
                                       {s.isDbVerified && (
-                                        <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 font-bold text-[9px] border border-amber-300">
-                                          DB Enrolled
+                                        <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold text-[9px] border border-emerald-300">
+                                          Admin Enrolled
                                         </span>
                                       )}
                                     </div>
@@ -1145,8 +1145,8 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                   <div className="flex items-center gap-2">
                     <h3 className="text-xl font-black">{activeStudentModal.name}</h3>
                     {activeStudentModal.isDbVerified && (
-                      <span className="px-2 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] font-black text-[10px]">
-                        Verified in DB
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-900 font-black text-[10px] border border-emerald-300">
+                        Admin Enrolled
                       </span>
                     )}
                   </div>

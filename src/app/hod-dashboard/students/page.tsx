@@ -119,8 +119,8 @@ export default async function HODStudentsPage() {
     let advisorName = dbAdvisor || 'Unassigned'
 
     if (latestSession) {
-      totalStudents = latestSession.totalStudents || realStudentCount
-      presentCount = (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0)
+      totalStudents = realStudentCount
+      presentCount = Math.min(realStudentCount, (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0))
       attendancePct = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 10000) / 100 : 0
       if (latestSession.takenByName) {
         advisorName = latestSession.takenByName

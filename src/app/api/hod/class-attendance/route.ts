@@ -81,10 +81,10 @@ export async function GET(request: Request) {
       )
 
       if (latestSession) {
-        const total = latestSession.totalStudents || dbCount
-        const presents = (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0)
+        const total = dbCount
+        const presents = Math.min(dbCount, (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0))
         const absents = typeof latestSession.absentCount === 'number'
-          ? latestSession.absentCount
+          ? Math.min(dbCount, latestSession.absentCount)
           : Math.max(0, total - presents)
         const pct = total > 0 ? Math.round((presents / total) * 10000) / 100 : 0
         const isPending = (latestSession.presentCount || 0) === 0 && (latestSession.absentCount || 0) === 0
