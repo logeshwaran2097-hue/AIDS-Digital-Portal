@@ -1,84 +1,108 @@
-import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
-import { CalendarDays, MapPin, Clock, Plus, Users, ExternalLink } from 'lucide-react'
-import { Badge } from '@/components/ui/Badge'
-import { Card, CardContent } from '@/components/ui/Card'
-import { formatDate } from '@/lib/utils'
+import { HODEventsView, HODEventItem } from './components/HODEventsView'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HODEventsPage() {
   const session = await requireRoleSession(['hod'])
 
-  const events = await prisma.event.findMany({
+  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
+  const hodName = user?.name || session.name || 'Head of Department'
+
+  let dbEvents = await prisma.event.findMany({
     orderBy: { date: 'asc' },
-  })
+  }).catch(() => [])
+
+  // If no events exist yet in the database, automatically seed official department events
+  if (dbEvents.length === 0) {
+    const initialEvents = [
+      {
+        name: 'National AI & Data Science Symposium — Mirai 2k26',
+        description:
+          'Flagship annual technical symposium featuring paper presentations, live project exhibitions, ML coding sprint, and reverse engineering challenges with cash prizes worth ₹50,000.',
+        category: 'Symposium',
+        date: new Date('2026-09-22T09:30:00Z'),
+        time: '09:30 AM - 04:30 PM',
+        venue: 'VSB Central Auditorium & AI Seminar Hall',
+        registrationInfo: 'ALL',
+        registrationUrl: 'https://forms.gle/vsb-aids-mirai2k26',
+        createdByName: 'Dr. Head of Department',
+        status: 'published',
+        isPublished: true,
+      },
+      {
+        name: 'Smart India Hackathon (SIH) 2026 — Internal Department HackFest',
+        description:
+          '36-hour intense hardware & software prototype building competition for shortlisting AI & DS teams for national ministry problem statements.',
+        category: 'Hackathon',
+        date: new Date('2026-09-28T09:00:00Z'),
+        time: '09:00 AM - 09:00 PM (36 Hours)',
+        venue: 'AI & DS High Performance Computing Lab 3',
+        registrationInfo: 'ALL',
+        registrationUrl: 'https://sih.gov.in',
+        createdByName: 'Dr. Head of Department',
+        status: 'published',
+        isPublished: true,
+      },
+      {
+        name: 'Deep Learning & Large Language Models Hands-on Bootcamp',
+        description:
+          'Intensive practical training on PyTorch, HuggingFace transformers, fine-tuning LLMs with LoRA/QLoRA, and building retrieval-augmented generation (RAG) pipelines.',
+        category: 'Workshop',
+        date: new Date('2026-10-05T10:00:00Z'),
+        time: '10:00 AM - 04:00 PM',
+        venue: 'Advanced AI Research Lab',
+        registrationInfo: 'Semesters 3, 5, 7',
+        registrationUrl: 'https://forms.gle/dl-llm-bootcamp',
+        createdByName: 'Prof. Raja (Class Advisor)',
+        status: 'published',
+        isPublished: true,
+      },
+      {
+        name: 'Industry Keynote: Scalable Cloud AI Architectures & MLOps in Production',
+        description:
+          'Guest lecture by Senior Principal AI Engineer from Google Cloud on production ML model deployments, Kubernetes inference pipelines, and latency optimization.',
+        category: 'Guest Lecture',
+        date: new Date('2026-10-12T14:00:00Z'),
+        time: '02:00 PM - 04:30 PM',
+        venue: 'VSB Mechanical / Computing Seminar Complex',
+        registrationInfo: 'ALL',
+        registrationUrl: null,
+        createdByName: 'Dr. Head of Department',
+        status: 'published',
+        isPublished: true,
+      },
+    ]
+
+    await prisma.event.createMany({ data: initialEvents }).catch(() => {})
+    dbEvents = await prisma.event.findMany({ orderBy: { date: 'asc' } }).catch(() => [])
+  }
+
+  const mappedEvents: HODEventItem[] = dbEvents.map((e: any) => ({
+    id: e.id,
+    name: e.name,
+    description: e.description,
+    category: e.category,
+    date: e.date
+      ? typeof e.date === 'string'
+        ? e.date
+        : new Date(e.date).toISOString().split('T')[0]
+      : '',
+    time: e.time || '09:30 AM - 04:30 PM',
+    venue: e.venue || 'AI & DS Lab',
+    registrationUrl: e.registrationUrl || null,
+    registrationInfo: e.registrationInfo || 'ALL',
+    createdByName: e.createdByName || hodName,
+    status: e.status || 'published',
+    isPublished: Boolean(e.isPublished),
+  }))
 
   return (
-    <PortalLayout role="hod" userName={session.name || 'Head of Department'}>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-                Department Activities
-              </span>
-            </div>
-            <h1 className="text-2xl font-black">Events, Workshops &amp; Hackathons</h1>
-            <p className="text-xs text-gray-300 mt-1">
-              Organize and review upcoming technical symposiums, coding challenges &amp; industry guest lectures
-            </p>
-          </div>
-        </div>
-
-        {/* Events Grid */}
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((e: any) => (
-            <Card key={e.id} className="rounded-3xl border-gray-200 hover:shadow-lg transition-all flex flex-col justify-between">
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <Badge variant="role" className="text-[10px] font-bold">
-                    {e.category}
-                  </Badge>
-                  <span className="text-xs text-gray-400 font-semibold">{formatDate(e.date)}</span>
-                </div>
-
-                <div>
-                  <h3 className="font-bold text-base text-[#071A3D] leading-snug">{e.name}</h3>
-                  <p className="text-xs text-gray-500 line-clamp-3 mt-1.5 leading-relaxed">{e.description}</p>
-                </div>
-
-                <div className="pt-3 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
-                  <p className="flex items-center gap-1.5 text-[#1455D9] font-medium">
-                    <Clock className="w-3.5 h-3.5 shrink-0" /> {e.time}
-                  </p>
-                  <p className="flex items-center gap-1.5 text-gray-600 truncate">
-                    <MapPin className="w-3.5 h-3.5 shrink-0 text-red-500" /> {e.venue}
-                  </p>
-                </div>
-
-                <div className="pt-2 flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full font-bold text-[10px]">
-                    Published
-                  </span>
-                  {e.registrationUrl && (
-                    <a
-                      href={e.registrationUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-[#1455D9] hover:underline font-bold inline-flex items-center gap-1"
-                    >
-                      Register Link <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+    <PortalLayout role="hod" userName={hodName}>
+      <div className="py-2 animate-fade-in">
+        <HODEventsView initialEvents={mappedEvents} hodName={hodName} />
       </div>
     </PortalLayout>
   )
