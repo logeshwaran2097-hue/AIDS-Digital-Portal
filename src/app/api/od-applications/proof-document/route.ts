@@ -99,7 +99,6 @@ export async function GET(request: Request) {
     <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.12"/>
     </filter>
-    <image id="vsbLogoAsset" xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" width="80" height="80" preserveAspectRatio="xMidYMid meet"/>
   </defs>
 
   <rect width="850" height="1150" fill="#FFFFFF"/>
@@ -113,38 +112,38 @@ export async function GET(request: Request) {
   <rect x="33" y="33" width="784" height="6" fill="url(#headerGrad)"/>
 
   <!-- Central Watermark Emblem (Subtle 3.5% Opacity) -->
-  <use xlink:href="#vsbLogoAsset" href="#vsbLogoAsset" x="275" y="440" width="300" height="300" opacity="0.035" preserveAspectRatio="xMidYMid meet"/>
+  <image xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" x="285" y="440" width="280" height="280" opacity="0.035" preserveAspectRatio="xMidYMid meet"/>
 
   <!-- ========================================================================= -->
   <!-- PRESTIGIOUS ACADEMIC LETTERHEAD (PDF FORMAT) -->
   <!-- ========================================================================= -->
 
   <!-- Left: College Official Circular Emblem in Gold Mount (PDF Format) -->
-  <g transform="translate(48, 46)">
-    <circle cx="44" cy="44" r="43" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
-    <circle cx="44" cy="44" r="40.5" fill="#FFFFFF" stroke="#F4C430" stroke-width="2"/>
-    <circle cx="44" cy="44" r="37.5" fill="#FFFFFF" stroke="#071A3D" stroke-width="0.8"/>
-    <use xlink:href="#vsbLogoAsset" href="#vsbLogoAsset" x="7" y="7" width="74" height="74"/>
+  <g transform="translate(48, 44)">
+    <circle cx="45" cy="45" r="44" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+    <circle cx="45" cy="45" r="41.5" fill="#FFFFFF" stroke="#F4C430" stroke-width="2"/>
+    <circle cx="45" cy="45" r="38" fill="#FFFFFF" stroke="#071A3D" stroke-width="0.8"/>
+    <image xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" x="10" y="10" width="70" height="70" preserveAspectRatio="xMidYMid meet"/>
   </g>
 
   <!-- Center Institution Master Typography -->
-  <text x="450" y="66" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="23" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1.2">V.S.B. ENGINEERING COLLEGE</text>
+  <text x="465" y="66" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="23" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1.2">V.S.B. ENGINEERING COLLEGE</text>
 
   <!-- Autonomous Gold Pill Tag -->
-  <rect x="355" y="75" width="190" height="17" rx="8.5" fill="#F4C430"/>
-  <text x="450" y="87.5" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1.5">AN AUTONOMOUS INSTITUTION</text>
+  <rect x="370" y="75" width="190" height="17" rx="8.5" fill="#F4C430"/>
+  <text x="465" y="87.5" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="1.5">AN AUTONOMOUS INSTITUTION</text>
 
   <!-- Department Headline -->
-  <text x="450" y="111" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="1.2">DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE</text>
+  <text x="465" y="111" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="1.2">DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE</text>
 
   <!-- Accreditations and Approvals Line 1 -->
-  <text x="450" y="127" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.2" font-weight="600" fill="#334155" text-anchor="middle">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</text>
+  <text x="465" y="127" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.2" font-weight="600" fill="#334155" text-anchor="middle">Approved by AICTE, New Delhi &amp; Affiliated to Anna University, Chennai</text>
 
   <!-- Accreditations and Approvals Line 2 -->
-  <text x="450" y="141" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.8" font-weight="bold" fill="#64748B" text-anchor="middle">Accredited by NAAC with 'A' Grade · NBA Accredited Programs · ISO 9001:2015 Certified</text>
+  <text x="465" y="141" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.8" font-weight="bold" fill="#64748B" text-anchor="middle">Accredited by NAAC with 'A' Grade · NBA Accredited Programs · ISO 9001:2015 Certified</text>
 
   <!-- Campus Address Line 3 -->
-  <text x="450" y="155" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">NH-67, Karur - Coimbatore National Highway, Karudayampalayam, Karur - 639 111, Tamil Nadu, India</text>
+  <text x="465" y="155" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">NH-67, Karur - Coimbatore National Highway, Karudayampalayam, Karur - 639 111, Tamil Nadu, India</text>
 
   <!-- Master Gold and Sapphire Ornamental Beam Separator with Center Diamond -->
   <rect x="48" y="167" width="754" height="2.5" fill="#071A3D" rx="1"/>
@@ -241,11 +240,11 @@ export async function GET(request: Request) {
   <circle cx="165" cy="880" r="54" fill="#FFFFFF" stroke="#071A3D" stroke-width="2.5"/>
   <circle cx="165" cy="880" r="49" fill="#EFF6FF" stroke="#1455D9" stroke-width="1.2" stroke-dasharray="4,2"/>
   <circle cx="165" cy="880" r="35" fill="#FFFFFF" stroke="#F4C430" stroke-width="1.2"/>
-  <text x="165" y="844" font-family="'Segoe UI', Roboto, sans-serif" font-size="8" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.8">VSB ENGG COLLEGE</text>
-  <text x="165" y="855" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.8" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="0.8">AUTONOMOUS</text>
-  <use xlink:href="#vsbLogoAsset" href="#vsbLogoAsset" x="149" y="864" width="32" height="32"/>
-  <text x="165" y="909" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="900" fill="#071A3D" text-anchor="middle">AI &amp; DS DEPT</text>
-  <text x="165" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.8" font-weight="bold" fill="#64748B" text-anchor="middle">KARUR - 639 111</text>
+  <text x="165" y="843" font-family="'Segoe UI', Roboto, sans-serif" font-size="8" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.8">VSB ENGG COLLEGE</text>
+  <text x="165" y="854" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.8" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="0.8">AUTONOMOUS</text>
+  <image xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" x="150" y="865" width="30" height="30" preserveAspectRatio="xMidYMid meet"/>
+  <text x="165" y="907" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="900" fill="#071A3D" text-anchor="middle">AI &amp; DS DEPT</text>
+  <text x="165" y="919" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.8" font-weight="bold" fill="#64748B" text-anchor="middle">KARUR - 639 111</text>
   
   <rect x="110" y="934" width="110" height="18" rx="4" fill="#059669" filter="url(#shadow)"/>
   <text x="165" y="946.5" font-family="'Segoe UI', sans-serif" font-size="7.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1">✓ OFFICIALLY SEALED</text>
