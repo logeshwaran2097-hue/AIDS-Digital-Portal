@@ -868,30 +868,6 @@ export function AdvisorODReviewModal({
               </div>
             )}
           </div>
-
-          {/* Official Signatures & Seal Block for Print */}
-          <div className="pt-8 border-t border-gray-300 grid grid-cols-3 gap-4 text-center">
-            <div className="space-y-12">
-              <div className="text-xs font-semibold text-gray-500">Student Signature</div>
-              <div className="border-t border-gray-400 pt-1 text-[11px] font-bold text-[#071A3D]">
-                {studentDetails?.name || parsed.studentName}
-              </div>
-            </div>
-
-            <div className="space-y-12">
-              <div className="text-xs font-semibold text-gray-500">Class Advisor Endorsement</div>
-              <div className="border-t border-gray-400 pt-1 text-[11px] font-bold text-[#071A3D]">
-                Class Advisor (Yr {studentDetails?.year || 2} Sec {studentDetails?.section || 'A'})
-              </div>
-            </div>
-
-            <div className="space-y-12">
-              <div className="text-xs font-semibold text-gray-500">HOD Sanction & Seal</div>
-              <div className="border-t border-gray-400 pt-1 text-[11px] font-bold text-[#071A3D]">
-                Head of Department / AI&DS
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Modal Footer */}
