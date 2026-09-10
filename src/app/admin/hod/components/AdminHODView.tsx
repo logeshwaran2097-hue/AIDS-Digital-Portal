@@ -59,6 +59,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showEditPassword, setShowEditPassword] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -597,53 +598,74 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
       {/* MODAL: REGISTER / APPOINT HEAD OF DEPARTMENT (MATCHING FACULTY MEMBERS) */}
       {/* ========================================================================= */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h3 className="text-lg font-black text-[#071A3D]">
-                  Appoint Head of Department
-                </h3>
-                <p className="text-xs text-gray-500">Record will be saved directly into institutional database</p>
+        <div className="fixed inset-0 z-50 bg-[#071126]/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up border border-slate-100 my-auto">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center shadow-md shadow-blue-950/20 shrink-0">
+                  <Plus className="w-6 h-6 text-[#22C7E8]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black uppercase tracking-wider">
+                      Department Leadership
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-cyan-50 text-[#0284C7] border border-cyan-200 text-[10px] font-bold">
+                      Institutional Appointee
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black text-[#071A3D] mt-0.5">
+                    Appoint Head of Department (HOD)
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">Record will be saved directly into institutional database</p>
+                </div>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                title="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
+                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                  <UserCheck className="w-4 h-4 text-[#1455D9]" />
+                  <span>Full Name with Academic Title *</span>
+                </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Prof. Dr. V. Sundar"
+                  placeholder="e.g. Prof. Dr. V. Sundar, M.E., Ph.D."
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-sm text-[#071A3D] transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">
-                    Institutional Email <span className="text-gray-400 font-normal">(Optional)</span>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Mail className="w-4 h-4 text-[#1455D9]" />
+                    <span>Institutional Email <span className="text-gray-400 font-normal">(Optional)</span></span>
                   </label>
                   <input
                     type="email"
                     placeholder="e.g. hod.ai@vsb.edu.in"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-mono text-xs text-slate-800 transition-all"
                   />
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block font-bold text-[#071A3D]">Temporary Password *</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="flex items-center gap-1.5 font-bold text-[#071A3D]">
+                      <Lock className="w-4 h-4 text-[#1455D9]" />
+                      <span>Temporary Password *</span>
+                    </label>
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -666,32 +688,34 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     placeholder="e.g. TempPass@2026"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-blue-200 bg-blue-50/20 focus:bg-white focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#071A3D]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 bg-blue-50/30 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-mono font-bold text-[#071A3D] transition-all"
                   />
-                  <p className="text-[10px] text-[#1455D9] font-medium mt-1">Admin-assigned temporary password.</p>
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">
-                  Phone Number <span className="text-gray-400 font-normal">(Optional)</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. +91 94431 87654"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Designation</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Phone className="w-4 h-4 text-[#1455D9]" />
+                    <span>Phone Number <span className="text-gray-400 font-normal">(Optional)</span></span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. +91 94431 87654"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Briefcase className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Designation</span>
+                  </label>
                   <select
                     value={formData.designation}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all cursor-pointer"
                   >
                     <option value="Professor & Head">Professor &amp; Head</option>
                     <option value="Professor">Professor</option>
@@ -700,62 +724,80 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     <option value="Director & HOD">Director &amp; HOD</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Qualification</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Qualification</span>
+                  </label>
                   <input
                     type="text"
-                    placeholder="e.g. Ph.D. (AI & DS)"
+                    placeholder="e.g. Ph.D. (AI & Data Science)"
                     value={formData.qualification}
                     onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Experience (Yrs)</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Award className="w-4 h-4 text-[#1455D9]" />
+                    <span>Total Experience (Years)</span>
+                  </label>
                   <input
                     type="number"
+                    min={0}
+                    max={60}
                     placeholder="e.g. 15"
                     value={formData.experience}
                     onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Specialization Domain</label>
+                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                  <Sparkles className="w-4 h-4 text-[#F4C430]" />
+                  <span>Specialization &amp; Research Domain</span>
+                </label>
                 <input
                   type="text"
                   placeholder="e.g. Artificial Intelligence, Machine Learning & Autonomous Systems"
                   value={formData.specialization}
                   onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Department</label>
+                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                  <Building className="w-4 h-4 text-[#1455D9]" />
+                  <span>Department &amp; Jurisdiction</span>
+                </label>
                 <input
                   type="text"
                   value={formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-semibold text-slate-800 transition-all"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#071A3D] to-[#1455D9] hover:from-[#0A2A5E] hover:to-[#0f44b0] text-white font-bold cursor-pointer shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
                 >
+                  <CheckCircle2 className="w-4 h-4 text-[#F4C430]" />
                   {isLoading ? 'Saving...' : 'Save HOD to Database'}
                 </button>
               </div>
@@ -765,64 +807,101 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: EDIT HOD (MATCHING FACULTY MEMBERS EDIT FORM) */}
+      {/* MODAL: EDIT HOD DIRECTORATE PROFILE */}
       {/* ========================================================================= */}
       {isEditModalOpen && selectedHOD && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Edit HOD Directorate Profile</h3>
-                <p className="text-xs text-[#1455D9] font-bold">{selectedHOD.name}</p>
+        <div className="fixed inset-0 z-50 bg-[#071126]/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up border border-slate-100 my-auto">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white flex items-center justify-center shadow-md shadow-blue-950/20 shrink-0">
+                  <ShieldCheck className="w-6 h-6 text-[#F4C430]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black uppercase tracking-wider">
+                      Directorate Administration
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold font-mono">
+                      {selectedHOD.facultyId}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black text-[#071A3D] mt-0.5">
+                    Edit HOD Directorate Profile
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Department Leadership Profile: <span className="font-bold text-[#1455D9]">{selectedHOD.name}</span>
+                  </p>
+                </div>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400"
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                title="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleEditSubmit} className="space-y-4 text-xs">
+              {/* Full Name with Title */}
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Full Name &amp; Title</label>
+                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                  <UserCheck className="w-4 h-4 text-[#1455D9]" />
+                  <span>Full Name &amp; Academic Title *</span>
+                </label>
                 <input
                   type="text"
                   required
+                  placeholder="e.g. Prof. Dr. V. Sundar"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-sm text-[#071A3D] transition-all"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              {/* Contact Information Row (2 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Email</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Mail className="w-4 h-4 text-[#1455D9]" />
+                    <span>Institutional Email Address</span>
+                  </label>
                   <input
                     type="email"
+                    placeholder="e.g. hod.ai@vsb.edu.in"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-mono text-xs text-slate-800 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Phone className="w-4 h-4 text-[#1455D9]" />
+                    <span>Official Phone / Mobile</span>
+                  </label>
                   <input
                     type="text"
+                    placeholder="e.g. +91 94431 87654"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 transition-all"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              {/* Designation & Qualification Row (2 Columns with ample breathing room!) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Designation</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Briefcase className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Designation</span>
+                  </label>
                   <select
                     value={formData.designation}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all cursor-pointer"
                   >
                     <option value="Professor & Head">Professor &amp; Head</option>
                     <option value="Professor">Professor</option>
@@ -832,74 +911,118 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Qualification</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Qualification</span>
+                  </label>
                   <input
                     type="text"
+                    placeholder="e.g. Ph.D. (AI & Data Science)"
                     value={formData.qualification}
                     onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Experience & Department Row (2 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Award className="w-4 h-4 text-[#1455D9]" />
+                    <span>Total Experience (Years)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={60}
+                    placeholder="e.g. 15"
+                    value={formData.experience}
+                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Experience (Yrs)</label>
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                    <Building className="w-4 h-4 text-[#1455D9]" />
+                    <span>Department &amp; Jurisdiction</span>
+                  </label>
                   <input
-                    type="number"
-                    value={formData.experience}
-                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
+                    type="text"
+                    value={formData.department}
+                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-semibold text-slate-800 transition-all"
                   />
                 </div>
               </div>
 
+              {/* Specialization Domain */}
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Specialization Domain</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Artificial Intelligence, Machine Learning & Autonomous Systems"
-                  value={formData.specialization}
-                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Department</label>
-                <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">
-                  Reset Password <span className="text-gray-400 font-normal">(Optional)</span>
+                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
+                  <Sparkles className="w-4 h-4 text-[#F4C430]" />
+                  <span>Specialization &amp; Research Domain</span>
                 </label>
                 <input
                   type="text"
+                  placeholder="e.g. Artificial Intelligence, Deep Learning & Autonomous Systems"
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 transition-all"
+                />
+              </div>
+
+              {/* Password Reset Section (Sleek Box with Show/Hide Toggle) */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/60 to-slate-50 border border-blue-100 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D]">
+                    <Lock className="w-4 h-4 text-[#1455D9]" />
+                    <span>Reset Access Password</span>
+                    <span className="text-gray-400 font-normal text-[11px]">(Optional)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditPassword(!showEditPassword)}
+                    className="text-[11px] text-[#1455D9] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    {showEditPassword ? (
+                      <>
+                        <EyeOff className="w-3.5 h-3.5" /> Hide
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-3.5 h-3.5" /> Show
+                      </>
+                    )}
+                  </button>
+                </div>
+                <input
+                  type={showEditPassword ? 'text' : 'password'}
                   placeholder="Leave blank to keep existing password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 font-mono"
+                  className="w-full px-3.5 py-2 rounded-xl border border-blue-200 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-mono text-xs text-[#071A3D] transition-all"
                 />
-                <p className="text-[10px] text-gray-500 mt-1">If entered, HOD must use this password on their next login.</p>
+                <p className="text-[10px] text-slate-500 font-medium">
+                  Leave blank to retain current password. If entered, HOD will use this new password on next login.
+                </p>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t">
+              {/* Form Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 font-bold transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#071A3D] to-[#1455D9] hover:from-[#0A2A5E] hover:to-[#0f44b0] text-white font-bold cursor-pointer shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
                 >
-                  {isLoading ? 'Saving...' : 'Save Changes'}
+                  <CheckCircle2 className="w-4 h-4 text-[#F4C430]" />
+                  {isLoading ? 'Saving Changes...' : 'Save Changes'}
                 </button>
               </div>
             </form>
