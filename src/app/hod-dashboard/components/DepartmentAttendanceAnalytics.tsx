@@ -305,35 +305,35 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       {/* Grid Layout: Chart & Table */}
       <div className="space-y-6">
         {/* ========================================================================= */}
-        {/* 1. CLASS-WISE AVERAGE BAR CHART (UPGRADED CRISP VISUALS, NO OVERFLOW) */}
+        {/* 1. CLASS-WISE AVERAGE BAR CHART (SEAMLESS PORTAL UI/UX BACKGROUND) */}
         {/* ========================================================================= */}
-        <div className="bg-[#111111] text-white rounded-3xl p-6 sm:p-8 border border-neutral-800 shadow-2xl space-y-6">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
+                <h3 className="text-lg sm:text-xl font-black tracking-tight text-[#071A3D]">
                   Class-wise Average (Bar Chart)
                 </h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-[#60A5FA] border border-blue-500/30 text-[10px] font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-bold">
                   Advisor Roll-Call Verified
                 </span>
               </div>
-              <p className="text-xs text-neutral-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Department attendance distribution across active academic sections (Updated from morning register)
               </p>
             </div>
             <div className="flex items-center gap-3">
               {lastSyncTime && (
-                <div className="text-[11px] text-neutral-400 flex items-center gap-1.5">
+                <div className="text-[11px] text-slate-500 flex items-center gap-1.5 font-medium">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Last updated: {lastSyncTime}</span>
                 </div>
               )}
               <button
                 onClick={handleExportPDF}
-                className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-bold border border-neutral-700 flex items-center gap-1.5 transition"
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-200 flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
               >
-                <Download className="w-3.5 h-3.5 text-[#F4C430]" />
+                <Download className="w-3.5 h-3.5 text-[#1455D9]" />
                 <span>Export PDF</span>
               </button>
             </div>
@@ -341,9 +341,9 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
 
           {/* Canvas Chart Area */}
           <div className="relative pt-6 pb-2 px-1 sm:px-2 overflow-x-auto xl:overflow-x-visible">
-            <div className="flex items-end h-80 sm:h-92 pl-10 sm:pl-12 pr-4 pb-20 sm:pb-24 relative border-b border-l border-neutral-800 min-w-[620px] lg:min-w-0">
+            <div className="flex items-end h-80 sm:h-92 pl-10 sm:pl-12 pr-4 pb-20 sm:pb-24 relative border-b border-l border-slate-200 min-w-[620px] lg:min-w-0">
               {/* Y-Axis Labels: 100, 80, 60, 40, 20, 0 */}
-              <div className="absolute left-0 top-0 bottom-20 sm:bottom-24 w-8 sm:w-10 flex flex-col justify-between items-end pr-2 text-xs font-mono text-neutral-400 font-medium select-none">
+              <div className="absolute left-0 top-0 bottom-20 sm:bottom-24 w-8 sm:w-10 flex flex-col justify-between items-end pr-2 text-xs font-mono text-slate-400 font-medium select-none">
                 {yTicks.map((tick) => (
                   <span key={tick} className="leading-none">
                     {tick}
@@ -354,13 +354,13 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
               {/* Horizontal Gridlines */}
               <div className="absolute left-10 sm:left-12 right-4 top-0 bottom-20 sm:bottom-24 flex flex-col justify-between pointer-events-none">
                 {yTicks.map((tick) => (
-                  <div key={tick} className="w-full border-b border-neutral-800/80" />
+                  <div key={tick} className="w-full border-b border-slate-100" />
                 ))}
               </div>
 
               {/* Benchmark 75% Line */}
               <div
-                className="absolute left-10 sm:left-12 right-4 border-b border-rose-500/40 border-dashed pointer-events-none z-0"
+                className="absolute left-10 sm:left-12 right-4 border-b border-rose-400/70 border-dashed pointer-events-none z-0"
                 style={{ bottom: 'calc(20px + (100% - 20px) * 0.75)' }}
               />
 
@@ -380,12 +380,12 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                       {/* Floating Percentage Indicator Above Bar */}
                       <div className="mb-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
                         <span
-                          className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold tracking-tight whitespace-nowrap shadow-xs ${
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-tight whitespace-nowrap shadow-2xs ${
                             isPending
-                              ? 'bg-neutral-800 text-amber-400 border border-amber-900/50'
+                              ? 'bg-slate-100 text-slate-600 border border-slate-200'
                               : c.attendancePct >= 75
-                              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60'
-                              : 'bg-rose-950/80 text-rose-300 border border-rose-800/60'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : 'bg-rose-50 text-rose-800 border border-rose-200'
                           }`}
                         >
                           {isPending ? 'Pending' : `${c.attendancePct}%`}
@@ -395,23 +395,23 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                       {/* Bar Column with Rounded Top Corners */}
                       <div className="w-full max-w-[42px] sm:max-w-[50px] flex flex-col justify-end h-full">
                         <div
-                          className={`w-full rounded-t-md transition-all duration-300 shadow-md ${
+                          className={`w-full rounded-t-lg transition-all duration-300 shadow-sm ${
                             isPending
-                              ? 'bg-neutral-800 border-t-2 border-neutral-600'
+                              ? 'bg-slate-200 border-t-2 border-slate-400'
                               : c.attendancePct >= 75
-                              ? 'bg-[#4F83F0] hover:bg-[#60A5FA] group-hover:brightness-110'
-                              : 'bg-rose-500/80 hover:bg-rose-500 group-hover:brightness-110'
+                              ? 'bg-[#1455D9] hover:bg-blue-600 group-hover:scale-y-[1.02] origin-bottom'
+                              : 'bg-rose-500 hover:bg-rose-600 group-hover:scale-y-[1.02] origin-bottom'
                           }`}
                           style={{
                             height: `${heightPct}%`,
-                            minHeight: isPending ? '2px' : heightPct > 0 ? '4px' : '0px',
+                            minHeight: isPending ? '3px' : heightPct > 0 ? '5px' : '0px',
                           }}
                         />
                       </div>
 
                       {/* Clean Angled Label Underneath */}
                       <div className="absolute -bottom-20 sm:-bottom-22 left-1/2 flex flex-col items-start pointer-events-none origin-top-left -rotate-45">
-                        <span className="text-[11px] font-bold text-neutral-300 group-hover:text-white transition-colors whitespace-nowrap">
+                        <span className="text-[11px] font-bold text-slate-600 group-hover:text-[#1455D9] transition-colors whitespace-nowrap">
                           {c.className}
                         </span>
                       </div>
@@ -424,41 +424,41 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
         </div>
 
         {/* ========================================================================= */}
-        {/* 2. CLASS BREAKDOWN TABLE (ENRICHED WITH ADVISOR NAMES & ROSTER JUMP) */}
+        {/* 2. CLASS BREAKDOWN TABLE (SEAMLESS PORTAL UI/UX BACKGROUND) */}
         {/* ========================================================================= */}
-        <div className="bg-[#111111] text-white rounded-3xl p-6 sm:p-8 border border-neutral-800 shadow-2xl space-y-5">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg sm:text-xl font-black tracking-tight text-white">
+                <h3 className="text-lg sm:text-xl font-black tracking-tight text-[#071A3D]">
                   Class Breakdown &amp; Advisor Roster
                 </h3>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
                   Active Department Register
                 </span>
               </div>
-              <p className="text-xs text-neutral-400 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Detailed section roster, allocated Class Advisors, enrolled headcount, average attendees and live attendance rates
               </p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleExportPDF}
-                className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-bold text-[#F4C430] border border-neutral-700 flex items-center gap-1.5 transition"
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-[#071A3D] border border-slate-200 flex items-center gap-1.5 transition cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 text-[#1455D9]" />
                 <span>Export Dossier (PDF)</span>
               </button>
-              <span className="px-3 py-1.5 rounded-xl bg-neutral-800 border border-neutral-700 text-xs font-bold text-neutral-300">
+              <span className="px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-600 font-mono">
                 {filteredData.length} Classes Listed
               </span>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200">
             <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-neutral-800 text-neutral-400 uppercase text-[11px] font-bold tracking-wider">
+              <thead className="bg-[#071A3D] text-white">
+                <tr className="text-[11px] font-bold tracking-wider">
                   <th className="py-3.5 px-4 font-bold">CLASS NAME</th>
                   <th className="py-3.5 px-4 font-bold">CLASS ADVISOR</th>
                   <th className="py-3.5 px-4 font-bold text-center">TOTAL STUDENTS</th>
@@ -467,21 +467,21 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                   <th className="py-3.5 px-4 font-bold text-right">STUDENT DIRECTORY</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800/80 font-medium">
+              <tbody className="divide-y divide-slate-100 font-medium">
                 {filteredData.map((row, idx) => (
                   <tr
                     key={idx}
-                    className="hover:bg-neutral-800/40 transition-colors group"
+                    className="hover:bg-blue-50/40 transition-colors group"
                   >
-                    <td className="py-4 px-4 font-bold text-white text-sm group-hover:text-[#60A5FA] transition-colors">
+                    <td className="py-4 px-4 font-bold text-[#071A3D] text-sm group-hover:text-[#1455D9] transition-colors">
                       <div className="flex items-center gap-2">
                         <span>{row.className}</span>
                         {row.statusNote && (
                           <span
                             className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                               row.attendancePct === 0
-                                ? 'bg-amber-950/50 text-amber-300 border border-amber-800/50'
-                                : 'bg-neutral-800 text-neutral-400'
+                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                : 'bg-slate-100 text-slate-600 border border-slate-200'
                             }`}
                           >
                             {row.statusNote}
@@ -491,8 +491,8 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                           <span
                             className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
                               row.attendancePct >= 75
-                                ? 'bg-emerald-950/40 text-emerald-300 border border-emerald-800/50'
-                                : 'bg-rose-950/40 text-rose-300 border border-rose-800/50'
+                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-800 border border-rose-200'
                             }`}
                           >
                             {row.attendancePct >= 75 ? 'Advisor Verified' : 'Shortage Alert'}
@@ -501,26 +501,26 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                       </div>
                     </td>
 
-                    <td className="py-4 px-4 text-neutral-300 text-sm">
-                      <span className="font-semibold text-white">{row.advisorName || 'Faculty Advisor'}</span>
+                    <td className="py-4 px-4 text-slate-700 text-sm">
+                      <span className="font-semibold text-[#071A3D]">{row.advisorName || 'Faculty Advisor'}</span>
                     </td>
 
-                    <td className="py-4 px-4 text-center text-neutral-300 font-mono text-sm">
+                    <td className="py-4 px-4 text-center text-slate-800 font-mono text-sm font-bold">
                       {row.totalStudents}
                     </td>
 
-                    <td className="py-4 px-4 text-center text-neutral-300 font-mono text-sm">
+                    <td className="py-4 px-4 text-center text-slate-800 font-mono text-sm font-bold">
                       {row.presentAvg}
                     </td>
 
                     <td className="py-4 px-4 text-center">
                       <span
-                        className={`font-bold font-mono text-sm px-2.5 py-1 rounded-lg ${
+                        className={`font-bold font-mono text-xs px-2.5 py-1 rounded-full ${
                           row.attendancePct === 0
-                            ? 'text-neutral-500 bg-neutral-800/60'
+                            ? 'text-slate-500 bg-slate-100'
                             : row.attendancePct >= 75
-                            ? 'text-emerald-400 bg-emerald-950/40'
-                            : 'text-rose-400 bg-rose-950/40'
+                            ? 'text-emerald-800 bg-emerald-100'
+                            : 'text-rose-800 bg-rose-100'
                         }`}
                       >
                         {row.attendancePct}%
@@ -530,7 +530,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                     <td className="py-4 px-4 text-right">
                       <Link
                         href={`/hod-dashboard/students`}
-                        className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-[#60A5FA] border border-blue-500/30 text-xs font-bold transition"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-[#1455D9] hover:text-white text-[#1455D9] border border-blue-200 text-xs font-bold transition shadow-2xs"
                       >
                         <span>View Class Roll</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
@@ -540,23 +540,23 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-neutral-700 text-white font-bold bg-neutral-900/50">
-                  <td className="py-4 px-4 text-sm font-black text-[#F4C430]" colSpan={2}>
+                <tr className="border-t-2 border-slate-200 text-[#071A3D] font-bold bg-slate-50">
+                  <td className="py-4 px-4 text-sm font-black text-[#071A3D]" colSpan={2}>
                     DEPARTMENT COHORT SUMMARY
                   </td>
-                  <td className="py-4 px-4 text-center font-mono text-sm">
+                  <td className="py-4 px-4 text-center font-mono text-sm text-slate-800">
                     {summary.totalEnrolled} Students
                   </td>
-                  <td className="py-4 px-4 text-center font-mono text-sm">
+                  <td className="py-4 px-4 text-center font-mono text-sm text-slate-800">
                     {summary.totalPresent} Present
                   </td>
-                  <td className="py-4 px-4 text-center font-mono text-sm text-emerald-400">
+                  <td className="py-4 px-4 text-center font-mono text-sm font-black text-emerald-700">
                     {summary.avgPct}%
                   </td>
                   <td className="py-4 px-4 text-right">
                     <button
                       onClick={handleExportPDF}
-                      className="text-xs text-[#F4C430] hover:underline font-bold"
+                      className="text-xs text-[#1455D9] hover:underline font-bold cursor-pointer"
                     >
                       Export Full Report PDF →
                     </button>
