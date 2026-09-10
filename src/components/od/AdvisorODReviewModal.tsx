@@ -13,6 +13,7 @@ import {
   MessageCircle,
   ShieldCheck,
   FileText,
+  FileDown,
   Download,
   Printer,
   Sparkles,
@@ -78,6 +79,7 @@ export function AdvisorODReviewModal({
   const [remarks, setRemarks] = useState('')
   const [endorsementDone, setEndorsementDone] = useState<'endorsed' | 'rejected' | null>(null)
   const [selectedPreviewFile, setSelectedPreviewFile] = useState<{ url: string; title: string; type?: string } | null>(null)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [uploadingProof, setUploadingProof] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
@@ -218,6 +220,31 @@ export function AdvisorODReviewModal({
       return stated.length > 3 ? `${stated.charAt(0).toUpperCase() + stated.slice(1)} (Personal Leave)` : parsed.applicationType
     }
     return parsed.eventName || 'Academic Activity'
+  }
+
+  // Download official verification dossier as PDF
+  const handleDownloadPdf = async (customUrl?: string, customName?: string) => {
+    const targetUrl = customUrl || selectedPreviewFile?.url
+    if (!targetUrl) return
+
+    setDownloadingPdf(true)
+    const toastId = toast.loading('Generating official high-resolution PDF...')
+    try {
+      const reg = studentDetails?.registerNumber || parsed.registerNumber || '922525243103'
+      const fileName = customName || `Official_Student_Leave_Verification_Dossier_${reg}.pdf`
+      const { downloadSvgAsPdf } = await import('@/lib/pdfGenerator')
+      await downloadSvgAsPdf(targetUrl, fileName)
+      toast.dismiss(toastId)
+      toast.success('Dossier downloaded as PDF successfully!')
+    } catch (err) {
+      console.error('Failed to generate PDF:', err)
+      toast.dismiss(toastId)
+      toast.error('Direct PDF export encountered an issue. Opening printable tab...')
+      const w = window.open(targetUrl, '_blank')
+      if (w) w.focus()
+    } finally {
+      setDownloadingPdf(false)
+    }
   }
 
   // Handle Class Advisor uploading/attaching a paper proof or written slip
@@ -604,11 +631,28 @@ export function AdvisorODReviewModal({
                     >
                       <Eye className="w-3.5 h-3.5" /> View Proof
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = `/api/od-applications/proof-document?registerNumber=${encodeURIComponent(studentDetails?.registerNumber || parsed.registerNumber)}&type=${encodeURIComponent(parsed.applicationType)}&reason=${encodeURIComponent(extractReason())}&from=${parsed.fromDate || '2026-09-17'}&to=${parsed.toDate || '2026-09-18'}`
+                        handleDownloadPdf(url, `Official_Verification_Dossier_${parsed.registerNumber || 'Student'}.pdf`)
+                      }}
+                      disabled={downloadingPdf}
+                      className="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#071A3D] font-bold text-xs flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                      title="Download as Official PDF"
+                    >
+                      {downloadingPdf ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <FileDown className="w-3.5 h-3.5" />
+                      )}
+                      PDF
+                    </button>
                     <a
                       href={`/api/od-applications/proof-document?registerNumber=${encodeURIComponent(studentDetails?.registerNumber || parsed.registerNumber)}&type=${encodeURIComponent(parsed.applicationType)}&reason=${encodeURIComponent(extractReason())}&from=${parsed.fromDate || '2026-09-17'}&to=${parsed.toDate || '2026-09-18'}`}
                       download={`Official_Verification_Dossier_${parsed.registerNumber}.svg`}
                       className="px-2 py-1.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs flex items-center gap-1 transition-colors"
-                      title="Download Dossier"
+                      title="Download SVG"
                     >
                       <Download className="w-3.5 h-3.5" />
                     </a>
@@ -849,28 +893,51 @@ export function AdvisorODReviewModal({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                {/* Prominent Download as PDF Button */}
+                <button
+                  type="button"
+                  onClick={() => handleDownloadPdf()}
+                  disabled={downloadingPdf}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  title="Download official high-resolution PDF document"
+                >
+                  {downloadingPdf ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <FileDown className="w-3.5 h-3.5" />
+                  )}
+                  Download PDF
+                </button>
+
                 <a
                   href={selectedPreviewFile.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
                   title="Open full document in new tab"
                 >
                   <ExternalLink className="w-3.5 h-3.5" /> Open Tab
                 </a>
                 <a
                   href={selectedPreviewFile.url}
-                  download="VSB_Official_Verification_Dossier.svg"
+                  download={`Official_Verification_Dossier_${parsed.registerNumber || 'Student'}.svg`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+                  title="Download Vector SVG"
                 >
-                  <Download className="w-3.5 h-3.5" /> Download
+                  <Download className="w-3.5 h-3.5" /> SVG
                 </a>
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  onClick={() => {
+                    const w = window.open(selectedPreviewFile.url, '_blank')
+                    if (w) {
+                      w.addEventListener('load', () => w.print())
+                    }
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Print official document"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print
                 </button>

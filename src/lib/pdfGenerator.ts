@@ -1226,3 +1226,73 @@ export async function downloadStudentCardPDF(student: {
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }
+
+/**
+ * Converts an SVG URL (such as the official verification dossier) or raster image to an official high-resolution A4 PDF and triggers immediate browser download.
+ */
+export async function downloadSvgAsPdf(
+  fileUrl: string,
+  fileName: string = 'Official_Student_Leave_Verification_Dossier.pdf'
+): Promise<void> {
+  if (typeof window === 'undefined') return
+
+  // If already a PDF, trigger direct download
+  if (fileUrl.endsWith('.pdf') || fileUrl.startsWith('data:application/pdf')) {
+    const a = document.createElement('a')
+    a.href = fileUrl
+    a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
+    a.target = '_blank'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    return
+  }
+
+  let blobUrl = fileUrl
+  let needsRevoke = false
+
+  if (!fileUrl.startsWith('data:') && !fileUrl.startsWith('blob:')) {
+    const res = await fetch(fileUrl)
+    const blob = await res.blob()
+    blobUrl = URL.createObjectURL(blob)
+    needsRevoke = true
+  }
+
+  try {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve()
+      img.onerror = () => reject(new Error('Failed to load image asset for PDF rendering'))
+      img.src = blobUrl
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = 1700
+    canvas.height = 2300
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('HTML Canvas 2D context unavailable')
+
+    ctx.fillStyle = '#FFFFFF'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.98)
+
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    })
+
+    doc.addImage(imgData, 'JPEG', 0, 0, 210, 297)
+
+    const finalName = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
+    doc.save(finalName)
+  } finally {
+    if (needsRevoke) {
+      URL.revokeObjectURL(blobUrl)
+    }
+  }
+}
