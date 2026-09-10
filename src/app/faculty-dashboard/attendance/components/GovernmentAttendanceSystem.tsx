@@ -2260,6 +2260,7 @@ export function GovernmentAttendanceSystem({
                 id: selectedODModal.notificationId || selectedODModal.id,
                 title: selectedODModal.title,
                 message: selectedODModal.message,
+                applicationType: selectedODModal.applicationType,
               }
             : null
         }

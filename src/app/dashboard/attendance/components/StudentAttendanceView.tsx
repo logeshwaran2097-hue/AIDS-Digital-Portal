@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import {
   CalendarDays,
@@ -13,6 +13,15 @@ import {
   Plus,
   Sparkles,
   Info,
+  ShieldCheck,
+  FileText,
+  ExternalLink,
+  Eye,
+  RefreshCw,
+  FileDown,
+  Printer,
+  ChevronRight,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
@@ -49,6 +58,22 @@ export interface AttendanceStatsData {
   history: AttendanceHistoryItem[]
 }
 
+export interface TrackedODApplication {
+  id: string
+  applicationType: string
+  fromDate: string
+  toDate: string
+  days?: string
+  eventName: string
+  reason?: string
+  proofs?: string
+  status: string
+  statusLabel: string
+  statusBadge: string
+  createdAt?: string
+  dossierUrl: string
+}
+
 export function StudentAttendanceView({
   student,
   user,
@@ -60,6 +85,28 @@ export function StudentAttendanceView({
 }) {
   const [showODModal, setShowODModal] = useState(false)
   const [odSubmitted, setOdSubmitted] = useState(false)
+  const [trackedApplications, setTrackedApplications] = useState<TrackedODApplication[]>([])
+  const [loadingTracked, setLoadingTracked] = useState(false)
+
+  const fetchTrackedApplications = useCallback(async () => {
+    if (!student.registerNumber) return
+    setLoadingTracked(true)
+    try {
+      const res = await fetch(`/api/od-applications?registerNumber=${encodeURIComponent(student.registerNumber)}`)
+      const data = await res.json()
+      if (data.success && Array.isArray(data.trackedApplications)) {
+        setTrackedApplications(data.trackedApplications)
+      }
+    } catch (err) {
+      console.error('Failed to fetch tracked applications:', err)
+    } finally {
+      setLoadingTracked(false)
+    }
+  }, [student.registerNumber])
+
+  useEffect(() => {
+    fetchTrackedApplications()
+  }, [fetchTrackedApplications])
 
   const isCompliant = stats.totalSessions === 0 || stats.percentage >= 75
 
@@ -190,6 +237,193 @@ export function StudentAttendanceView({
           </p>
         </div>
       </div>
+
+      {/* ── On-Duty & Leave Application Tracker ── */}
+      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1455D9] shadow-2xs shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-black text-base text-[#071A3D]">OD &amp; Leave Application Tracker</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[10px] font-bold">
+                    Live Status
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Track clearance workflow: Class Advisor Endorsement → HOD Sanction → Attendance Roll Sync
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                onClick={fetchTrackedApplications}
+                disabled={loadingTracked}
+                title="Refresh application status"
+                className="p-2 rounded-xl border border-gray-200 text-gray-600 hover:text-[#1455D9] hover:bg-blue-50 transition-colors text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", loadingTracked && "animate-spin text-[#1455D9]")} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+              <button
+                onClick={() => setShowODModal(true)}
+                className="px-3.5 py-2 rounded-xl bg-[#1455D9] hover:bg-[#0f44b3] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" /> Apply OD / Leave
+              </button>
+            </div>
+          </div>
+
+          {/* List of Tracked Requests */}
+          {loadingTracked && trackedApplications.length === 0 ? (
+            <div className="py-8 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin text-[#1455D9]" />
+              <span>Checking your submitted applications...</span>
+            </div>
+          ) : trackedApplications.length > 0 ? (
+            <div className="space-y-3">
+              {trackedApplications.map((app) => {
+                const isEndorsed = app.status === 'endorsed_by_advisor'
+                const isApproved = app.status === 'approved_by_hod' || app.status === 'approved'
+                const isDeclined = app.status === 'rejected_by_advisor' || app.status === 'declined' || app.status === 'rejected'
+                const isPending = !isEndorsed && !isApproved && !isDeclined
+
+                return (
+                  <div
+                    key={app.id}
+                    className="p-4 rounded-2xl border border-gray-200/80 bg-gradient-to-r from-slate-50/50 via-white to-blue-50/20 hover:border-blue-200 transition-all space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] text-xs font-black shadow-2xs">
+                          {app.applicationType}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600 font-semibold bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-200">
+                          <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
+                          <span>
+                            {app.fromDate} → {app.toDate} {app.days ? `(${app.days})` : ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          className={cn(
+                            'px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5',
+                            isPending && 'bg-amber-50 border border-amber-200 text-amber-800',
+                            isEndorsed && 'bg-blue-50 border border-blue-200 text-[#1455D9]',
+                            isApproved && 'bg-emerald-50 border border-emerald-200 text-emerald-800',
+                            isDeclined && 'bg-red-50 border border-red-200 text-red-800'
+                          )}
+                        >
+                          {isPending && <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />}
+                          {isEndorsed && <CheckCircle2 className="w-3.5 h-3.5 text-[#1455D9]" />}
+                          {isApproved && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                          {isDeclined && <XCircle className="w-3.5 h-3.5 text-red-600" />}
+                          <span>{app.statusLabel}</span>
+                        </span>
+
+                        <a
+                          href={app.dossierUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 shadow-2xs transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-[#1455D9]" />
+                          <span>Verification Slip</span>
+                          <ExternalLink className="w-3 h-3 text-gray-400" />
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/80 p-3 rounded-xl border border-gray-100 text-xs space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#071A3D]">Event / Activity:</span>
+                        <span className="text-gray-700 font-medium">{app.eventName}</span>
+                      </div>
+                      {app.reason && (
+                        <div className="text-gray-500 text-[11px] italic">
+                          "{app.reason}"
+                        </div>
+                      )}
+                      {app.proofs && (
+                        <div className="text-[11px] text-gray-500 flex items-center gap-1.5 pt-0.5">
+                          <FileText className="w-3.5 h-3.5 text-gray-400" />
+                          <span>Submitted Verification: {app.proofs}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Stage Progress Visualizer */}
+                    <div className="pt-1">
+                      <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                        <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <span>1. Application Submitted</span>
+                        </div>
+                        <div
+                          className={cn(
+                            'p-2 rounded-xl border flex items-center justify-center gap-1',
+                            isEndorsed || isApproved
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                              : isDeclined
+                              ? 'bg-red-50 border-red-200 text-red-800'
+                              : 'bg-amber-50 border-amber-200 text-amber-800'
+                          )}
+                        >
+                          {isEndorsed || isApproved ? (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          ) : isDeclined ? (
+                            <XCircle className="w-3 h-3 text-red-600" />
+                          ) : (
+                            <Clock className="w-3 h-3 text-amber-600" />
+                          )}
+                          <span>2. Class Advisor Review</span>
+                        </div>
+                        <div
+                          className={cn(
+                            'p-2 rounded-xl border flex items-center justify-center gap-1',
+                            isApproved
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                              : isDeclined
+                              ? 'bg-gray-100 border-gray-200 text-gray-400'
+                              : 'bg-gray-50 border-gray-200 text-gray-500'
+                          )}
+                        >
+                          {isApproved ? (
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Clock className="w-3 h-3 text-gray-400" />
+                          )}
+                          <span>3. HOD Sanction &amp; Roll Sync</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-xs text-gray-500 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 space-y-2">
+              <CalendarDays className="w-8 h-8 text-gray-300 mx-auto" />
+              <p className="font-bold text-gray-700">No On-Duty or Leave Applications Submitted Yet</p>
+              <p className="text-[11px] text-gray-400 max-w-sm mx-auto">
+                When you apply for On-Duty (OD) or leave, you can track class advisor endorsement and HOD sanction status right here in real-time.
+              </p>
+              <button
+                onClick={() => setShowODModal(true)}
+                className="mt-2 px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] border border-blue-200 text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" /> Submit Permission Request
+              </button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Course-Wise Attendance Table */}
       <Card className="rounded-3xl border-gray-200 shadow-xs">
@@ -330,7 +564,10 @@ export function StudentAttendanceView({
       {/* Dynamic Proof-Based On-Duty (OD) / Leave Modal */}
       <ApplyODPermissionModal
         isOpen={showODModal}
-        onClose={() => setShowODModal(false)}
+        onClose={() => {
+          setShowODModal(false)
+          fetchTrackedApplications()
+        }}
         student={student}
         userName={user.name}
       />

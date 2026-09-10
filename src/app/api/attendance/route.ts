@@ -183,7 +183,11 @@ export async function GET(request: Request) {
       let appliedOD: any = null
       if (matchedLog || matchedNotif) {
         const details = matchedLog?.details || matchedNotif?.message || ''
-        const typeMatch = details.match(/OD Type:\s*([^|]+)/i) || matchedNotif?.title.match(/\[([^\]]+)\]/i)
+        const typeMatch =
+          details.match(/OD Type:\s*([^|]+)/i) ||
+          details.match(/(?:requested|applied for)\s+([^.,\n]+?)\s+from/i) ||
+          matchedNotif?.title.match(/\[(?:OD Request|HOD Approval Needed|Class Advisor Review)\]\s*([^:]+)/i)
+
         const durationMatch =
           details.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i) ||
           matchedNotif?.message.match(/from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)

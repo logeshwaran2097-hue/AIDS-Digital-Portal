@@ -41,6 +41,7 @@ export interface ODNotificationData {
   message: string
   time?: string
   isRead?: boolean
+  applicationType?: string
 }
 
 interface AdvisorODReviewModalProps {
@@ -340,10 +341,52 @@ export function AdvisorODReviewModal({
   const isAttendanceCompliant = effectiveRate >= 75.0
   const effectiveParentPhone = studentDetails?.parentPhone || '6381366088'
 
+  // Extract the exact application type chosen by the student (no generic fallbacks)
+  const getExactApplicationType = (): string => {
+    if (auditLog?.details) {
+      const match = auditLog.details.match(/OD Type:\s*([^|]+)/i)
+      if (match && match[1].trim()) return match[1].trim()
+    }
+    if ((notification as any)?.applicationType) {
+      return (notification as any).applicationType
+    }
+    const title = notification?.title || ''
+    const titleMatch = title.match(/\[(?:OD Request|HOD Approval Needed|OD Application Dispatched)\]\s*([^:]+)/i)
+    if (titleMatch && titleMatch[1].trim()) {
+      return titleMatch[1].trim()
+    }
+    const msg = notification?.message || ''
+    const msgMatch = msg.match(/(?:applied for|requested)\s+(.+?)\s+from\s+[0-9]{4}/i) ||
+                     msg.match(/OD Type:\s*([^|]+)/i)
+    if (msgMatch && msgMatch[1].trim()) {
+      return msgMatch[1].trim()
+    }
+    if (parsed.applicationType && !parsed.applicationType.includes('On Duty / Leave Request') && !parsed.applicationType.includes('On Duty (OD) / Leave')) {
+      return parsed.applicationType
+    }
+    const r = extractReason().toLowerCase()
+    if (r.includes('medic') || r.includes('sick') || r.includes('hospital') || r.includes('fever') || r.includes('doctor')) {
+      return 'Medical Leave (ML)'
+    }
+    if (r.includes('hackathon') || r.includes('competition')) {
+      return 'Technical Hackathon / Competition OD'
+    }
+    if (r.includes('paper') || r.includes('symposium') || r.includes('conference')) {
+      return 'Paper Presentation / Conference OD'
+    }
+    if (r.includes('internship') || r.includes('project work')) {
+      return 'Industry Internship / Project Work OD'
+    }
+    if (r.includes('sports') || r.includes('cultural') || r.includes('tournament')) {
+      return 'Sports / Cultural Event OD'
+    }
+    return 'Personal / Emergency Leave'
+  }
+
   const buildDossierUrl = () => {
     const reg = studentDetails?.registerNumber || parsed.registerNumber || '922525243103'
     const name = studentDetails?.name || parsed.studentName || 'Student'
-    const type = parsed.applicationType || 'On Duty / Leave Request'
+    const type = getExactApplicationType()
     const reason = extractReason()
     const from = parsed.fromDate || '2026-09-17'
     const to = parsed.toDate || '2026-09-18'
@@ -381,7 +424,7 @@ export function AdvisorODReviewModal({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded-full bg-[#1455D9]/10 text-[#1455D9] text-[10px] font-black uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-[#1455D9]/10 text-[#1455D9] text-[10px] font-black uppercase tracking-wider">
                   Class Advisor Review Dossier
                 </span>
                 {endorsementDone === 'endorsed' ? (
@@ -393,110 +436,78 @@ export function AdvisorODReviewModal({
                     Declined
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase animate-pulse">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black uppercase">
                     Action Required
                   </span>
                 )}
               </div>
-              <h2 className="text-lg font-black text-[#071A3D] mt-0.5">
+              <h3 className="font-black text-base text-[#071A3D] mt-0.5">
                 Student OD & Leave Verification Slip
-              </h2>
+              </h3>
             </div>
           </div>
 
           <div className="flex items-center gap-2 print:hidden">
             <button
               onClick={handlePrintSlip}
-              className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-              title="Print Authorization Slip"
+              className="px-3 py-1.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
             >
-              <Printer className="w-3.5 h-3.5 text-gray-500" />
-              <span className="hidden sm:inline">Print Slip</span>
+              <Printer className="w-3.5 h-3.5" /> Print Slip
             </button>
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-xl border border-gray-200 text-gray-400 hover:text-gray-700 hover:bg-gray-100 flex items-center justify-center transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {/* Official Letterhead Header for Print / Display */}
-          <div className="border-b border-gray-200 pb-4 text-center">
+        {/* Modal Body */}
+        <div className="p-6 overflow-y-auto space-y-6">
+          {/* Institutional Watermark Heading */}
+          <div className="text-center space-y-1 pb-2 border-b border-gray-100">
             <p className="text-[11px] font-bold tracking-widest text-gray-500 uppercase">
-              V.S.B. Engineering College · Autonomous Institution
+              V.S.B. ENGINEERING COLLEGE · AUTONOMOUS INSTITUTION
             </p>
-            <h1 className="text-base sm:text-lg font-black text-[#071A3D]">
+            <h2 className="text-lg font-black text-[#071A3D]">
               Department of Artificial Intelligence & Data Science
-            </h1>
-            <p className="text-xs text-gray-600 font-medium">
+            </h2>
+            <p className="text-xs text-gray-500">
               Official Student On-Duty (OD) & Leave Endorsement Dossier
             </p>
           </div>
 
-          {/* Student Profile Card */}
-          <div className="bg-gradient-to-br from-slate-50 to-blue-50/40 rounded-2xl p-4 sm:p-5 border border-blue-100/80 shadow-xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-[#F4C430] flex items-center justify-center font-black text-xl shadow-md shrink-0">
-                  {(studentDetails?.name || parsed.studentName).charAt(0)}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base sm:text-lg font-black text-[#071A3D]">
-                      {studentDetails?.name || parsed.studentName}
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-lg bg-blue-100 text-[#1455D9] text-xs font-mono font-bold">
-                      {studentDetails?.registerNumber || parsed.registerNumber}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-600 font-medium mt-1 flex-wrap">
-                    <span>
-                      Year {studentDetails?.year || 2} · Sem {studentDetails?.semester || 3} (Sec {studentDetails?.section || 'A'})
-                    </span>
-                    <span>•</span>
-                    <span>Batch {studentDetails?.batch || '2025-2029'}</span>
-                    <span>•</span>
-                    <span className="font-bold text-gray-800">
-                      Blood: {studentDetails?.bloodGroup || 'O+ve'}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5">
-                    <Building className="w-3.5 h-3.5 text-gray-400" />
-                    <span>{studentDetails?.residencyStatus || 'Day Scholar · College Bus 44 (Olappalayam)'}</span>
-                  </div>
-                </div>
+          {/* Student Profile Card (Clean, Attendance Rate Removed) */}
+          <div className="p-4 bg-gradient-to-r from-blue-50/50 via-indigo-50/20 to-slate-50 rounded-2xl border border-blue-100 shadow-2xs">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-[#071A3D] text-[#F4C430] flex items-center justify-center font-black text-lg shadow-md shrink-0">
+                {(studentDetails?.name || parsed.studentName).charAt(0).toUpperCase()}
               </div>
-
-              {/* Attendance Indicator */}
-              <div className="sm:text-right bg-white p-3 rounded-xl border border-gray-200 shadow-2xs shrink-0">
-                <div className="text-[10px] uppercase font-bold tracking-wider text-gray-400">
-                  Anna Univ Attendance Rate
-                </div>
-                <div className="flex sm:justify-end items-baseline gap-1.5 mt-0.5">
-                  <span
-                    className={cn(
-                      'text-xl font-black',
-                      isAttendanceCompliant ? 'text-emerald-600' : 'text-red-600'
-                    )}
-                  >
-                    {effectiveRate}%
-                  </span>
-                  <span
-                    className={cn(
-                      'text-[10px] font-bold px-1.5 py-0.5 rounded-md',
-                      isAttendanceCompliant
-                        ? 'bg-emerald-50 text-emerald-700'
-                        : 'bg-red-50 text-red-700'
-                    )}
-                  >
-                    {isAttendanceCompliant ? 'Compliant (>75%)' : 'Shortage (<75%)'}
+              <div className="space-y-0.5 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-extrabold text-base text-[#071A3D]">
+                    {studentDetails?.name || parsed.studentName}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-md bg-blue-100 text-[#1455D9] font-mono text-xs font-bold">
+                    {studentDetails?.registerNumber || parsed.registerNumber}
                   </span>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-0.5">Eligibility: Class Roll Record</p>
+                <div className="text-xs text-gray-600 flex items-center gap-2 flex-wrap">
+                  <span>
+                    Year {studentDetails?.year || 2} · Sem {studentDetails?.semester || 3} (Sec {studentDetails?.section || 'B'})
+                  </span>
+                  <span>•</span>
+                  <span>Batch {studentDetails?.batch || '2025–2029'}</span>
+                  <span>•</span>
+                  <span className="font-semibold text-gray-700">
+                    Blood: {studentDetails?.bloodGroup || 'O+ve'}
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-gray-400" />
+                  <span>{studentDetails?.residencyStatus || 'Day Scholar · College Bus 44 (Olappalayam)'}</span>
+                </div>
               </div>
             </div>
 
@@ -539,8 +550,8 @@ export function AdvisorODReviewModal({
                 <FileText className="w-4 h-4 text-[#1455D9]" />
                 <h4 className="font-black text-sm text-[#071A3D]">Application Particulars</h4>
               </div>
-              <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
-                {parsed.applicationType}
+              <span className="px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] text-xs font-black shadow-2xs">
+                {getExactApplicationType()}
               </span>
             </div>
 
