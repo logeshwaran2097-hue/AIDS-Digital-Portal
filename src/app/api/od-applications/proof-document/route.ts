@@ -313,41 +313,28 @@ export async function GET(request: Request) {
   <text x="95" y="${attachedProofName ? 728 : 728}" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#64748B">Security Hash: #VSB-OD-VERIF-77291-ANNAP · Cryptographic System Token Generated</text>
 
   <!-- ========================================================================= -->
-  <!-- SIGNATURES AND OFFICIAL VALIDATION BLOCK (PROPERLY MARKED, NO OVERLAP) -->
+  <!-- SIGNATURES AND OFFICIAL VALIDATION BLOCK (BALANCED 2-COLUMN LAYOUT) -->
   <!-- ========================================================================= -->
   <rect x="50" y="792" width="750" height="205" rx="10" fill="#F8FAFC" stroke="#CBD5E1"/>
 
-  <!-- 1. Proper Official College Seal Stamp (Authentic Double Concentric Rings) -->
-  <circle cx="165" cy="866" r="46" fill="#FFFFFF" stroke="#071A3D" stroke-width="2"/>
-  <circle cx="165" cy="866" r="42" fill="#EFF6FF" stroke="#1455D9" stroke-width="1.2" stroke-dasharray="3,2"/>
-  <circle cx="165" cy="866" r="30" fill="#FFFFFF" stroke="#F4C430" stroke-width="1.2"/>
-  <text x="165" y="836" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.8">VSB ENGG COLLEGE</text>
-  <text x="165" y="847" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.5" font-weight="800" fill="#1455D9" text-anchor="middle" letter-spacing="0.8">★ AUTONOMOUS ★</text>
-  <image xlink:href="${VSB_LOGO_BASE64}" href="${VSB_LOGO_BASE64}" x="151" y="852" width="28" height="28" preserveAspectRatio="xMidYMid meet"/>
-  <text x="165" y="891" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="900" fill="#071A3D" text-anchor="middle">AI &amp; DS DEPT</text>
-  <text x="165" y="902" font-family="'Segoe UI', Roboto, sans-serif" font-size="6.5" font-weight="bold" fill="#64748B" text-anchor="middle">KARUR - 639 111</text>
-  
-  <rect x="105" y="918" width="120" height="18" rx="4" fill="#059669" filter="url(#shadow)"/>
-  <text x="165" y="930.5" font-family="'Segoe UI', sans-serif" font-size="7.5" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.8">✓ OFFICIALLY SEALED</text>
+  <!-- Vertical Divider between Student and Advisor Columns -->
+  <line x1="425" y1="815" x2="425" y2="955" stroke="#E2E8F0" stroke-width="1.2" stroke-dasharray="4,4"/>
 
-  <text x="165" y="949" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="#071A3D" text-anchor="middle">Official Institutional Seal</text>
-  <text x="165" y="961" font-family="'Segoe UI', sans-serif" font-size="8" fill="#64748B" text-anchor="middle">Dept. of AI &amp; DS, VSBEC</text>
+  <!-- 1. Student Applicant Signature Block -->
+  <text x="245" y="865" font-family="'Brush Script MT', cursive, sans-serif" font-size="26" fill="#071A3D" text-anchor="middle">${eStudentNameSig}</text>
+  <line x1="145" y1="885" x2="345" y2="885" stroke="#94A3B8" stroke-width="1.2"/>
+  <text x="245" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D" text-anchor="middle">Student Applicant</text>
+  <text x="245" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#64748B" text-anchor="middle">Digital App Submission · Reg: ${eRegisterNumber}</text>
+  <rect x="165" y="934" width="160" height="20" rx="5" fill="#ECFDF5" stroke="#A7F3D0"/>
+  <text x="245" y="947.5" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="700" fill="#059669" text-anchor="middle">✓ Verified Portal Identity</text>
 
-  <!-- 2. Student Applicant Signature Block -->
-  <text x="395" y="865" font-family="'Brush Script MT', cursive, sans-serif" font-size="22" fill="#071A3D" text-anchor="middle">${eStudentNameSig}</text>
-  <line x1="315" y1="885" x2="475" y2="885" stroke="#94A3B8" stroke-width="1.2"/>
-  <text x="395" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#071A3D" text-anchor="middle">Student Applicant</text>
-  <text x="395" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" fill="#64748B" text-anchor="middle">Digital App Submission</text>
-  <rect x="330" y="934" width="130" height="18" rx="4" fill="#ECFDF5" stroke="#A7F3D0"/>
-  <text x="395" y="946.5" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="700" fill="#059669" text-anchor="middle">✓ Verified Portal Identity</text>
-
-  <!-- 3. Class Advisor and HOD Endorsement Block -->
-  <text x="635" y="865" font-family="'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="bold" fill="#059669" text-anchor="middle">✓ Endorsement Ready</text>
-  <line x1="555" y1="885" x2="715" y2="885" stroke="#94A3B8" stroke-width="1.2"/>
-  <text x="635" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#071A3D" text-anchor="middle">Class Advisor / HOD</text>
-  <text x="635" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" fill="#64748B" text-anchor="middle">Dept of AI &amp; DS (VSBEC)</text>
-  <rect x="570" y="934" width="130" height="18" rx="4" fill="#EFF6FF" stroke="#BFDBFE"/>
-  <text x="635" y="946.5" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="700" fill="#1455D9" text-anchor="middle">Autonomous Regulation 2021</text>
+  <!-- 2. Class Advisor and HOD Endorsement Block -->
+  <text x="605" y="865" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="bold" fill="#059669" text-anchor="middle">✓ Endorsement Ready</text>
+  <line x1="505" y1="885" x2="705" y2="885" stroke="#94A3B8" stroke-width="1.2"/>
+  <text x="605" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D" text-anchor="middle">Class Advisor / HOD</text>
+  <text x="605" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#64748B" text-anchor="middle">Dept of AI &amp; DS · V.S.B. Engineering College</text>
+  <rect x="525" y="934" width="160" height="20" rx="5" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text x="605" y="947.5" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="700" fill="#1455D9" text-anchor="middle">Autonomous Regulation 2021</text>
 
   <!-- Clean Separation Divider Before Regulation Banner -->
   <line x1="70" y1="970" x2="780" y2="970" stroke="#CBD5E1" stroke-width="1"/>
