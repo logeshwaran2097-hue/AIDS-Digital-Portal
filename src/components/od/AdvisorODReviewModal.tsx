@@ -392,6 +392,7 @@ export function AdvisorODReviewModal({
     const to = parsed.toDate || '2026-09-18'
     const phone = studentDetails?.parentPhone || parsed.parentPhone || effectiveParentPhone || '6381366088'
     const proofName = proofFiles?.[0]?.originalName || proofFiles?.[0]?.fileName || ''
+    const currentStatus = endorsementDone || (auditLog?.status === 'endorsed_by_advisor' ? 'endorsed' : auditLog?.status === 'rejected_by_advisor' ? 'rejected' : '')
 
     const params = new URLSearchParams({
       registerNumber: reg,
@@ -403,6 +404,7 @@ export function AdvisorODReviewModal({
       parentPhone: phone,
     })
     if (proofName) params.set('proofFileName', proofName)
+    if (currentStatus) params.set('status', currentStatus)
     return `/api/od-applications/proof-document?${params.toString()}`
   }
 
@@ -796,10 +798,10 @@ export function AdvisorODReviewModal({
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#F4C430]" />
                 <h4 className="font-black text-sm text-[#071A3D]">
-                  Class Advisor Endorsement & Recommendation
+                  Class Advisor Evidence Verification &amp; Endorsement
                 </h4>
               </div>
-              <span className="text-[11px] font-bold text-gray-400">Step 1 of 2 (Next: HOD Approval)</span>
+              <span className="text-[11px] font-bold text-gray-400">Step 1 of 2 (Next: HOD Sanction)</span>
             </div>
 
             {endorsementDone ? (
@@ -814,12 +816,12 @@ export function AdvisorODReviewModal({
                 {endorsementDone === 'endorsed' ? (
                   <>
                     <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    <span>Application Endorsed & Forwarded to Head of Department!</span>
+                    <span>✓ Evidence Approved &amp; Endorsed — Forwarded to Head of Department (HOD) for Sanction!</span>
                   </>
                 ) : (
                   <>
                     <XCircle className="w-5 h-5 text-red-600" />
-                    <span>Application Declined by Advisor. Notification dispatched to student.</span>
+                    <span>✕ Evidence Declined by Advisor. Notification dispatched to student.</span>
                   </>
                 )}
               </div>
@@ -827,12 +829,12 @@ export function AdvisorODReviewModal({
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-bold text-gray-700 block mb-1">
-                    Advisor Endorsement Remarks / Directives (Optional if endorsing, required if declining):
+                    Advisor Review Remarks / Directives (Optional if approving, required if declining evidence):
                   </label>
                   <textarea
                     value={remarks}
                     onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="e.g. Verified parent consent over phone; attendance is above 75%. Recommended for sanction."
+                    placeholder="e.g. Evidence verified over phone and found authentic. Recommended and forwarded for HOD sanction."
                     rows={2}
                     className="w-full text-xs p-3 rounded-xl border border-gray-300 focus:border-[#1455D9] focus:ring-1 focus:ring-[#1455D9] outline-none transition-all resize-none"
                   />
@@ -849,7 +851,7 @@ export function AdvisorODReviewModal({
                     ) : (
                       <XCircle className="w-4 h-4 text-red-600" />
                     )}
-                    Decline / Reject Request
+                    Decline Evidence / Reject Request
                   </button>
 
                   <button
@@ -862,7 +864,7 @@ export function AdvisorODReviewModal({
                     ) : (
                       <CheckCircle2 className="w-4 h-4 text-white" />
                     )}
-                    Endorse & Forward to HOD
+                    Approve Evidence &amp; Forward to HOD
                   </button>
                 </div>
               </div>

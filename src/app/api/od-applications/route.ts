@@ -236,7 +236,7 @@ export async function GET(request: Request) {
           statusBadge = 'rejected'
         }
 
-        const dossierUrl = `/api/od-applications/proof-document?registerNumber=${targetRegNo}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}`
+        const dossierUrl = `/api/od-applications/proof-document?registerNumber=${targetRegNo}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}&status=${encodeURIComponent(status)}`
 
         trackedApplications.push({
           id: log.id,
@@ -278,7 +278,7 @@ export async function GET(request: Request) {
           const fromDate = durationMatch ? durationMatch[1] : '2026-09-17'
           const toDate = durationMatch ? durationMatch[2] : '2026-09-18'
           const eventName = eventMatch ? eventMatch[1].trim() : 'Permission Request'
-          const dossierUrl = `/api/od-applications/proof-document?registerNumber=${targetRegNo}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&from=${fromDate}&to=${toDate}`
+          const dossierUrl = `/api/od-applications/proof-document?registerNumber=${targetRegNo}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&from=${fromDate}&to=${toDate}&status=pending`
 
           trackedApplications.push({
             id: notif.id,

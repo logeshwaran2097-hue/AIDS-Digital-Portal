@@ -184,6 +184,73 @@ export async function GET(request: Request) {
   const eParentAffiliation = escapeXml(parentAffiliation)
   const eAttachedProofName = escapeXml(attachedProofName)
 
+  const statusParam = searchParams.get('status')
+  let resolvedStatus = (statusParam || '').toLowerCase()
+  if (!resolvedStatus) {
+    const latestAudit = await prisma.auditLog.findFirst({
+      where: {
+        userName: { contains: registerNumber },
+        action: 'od_application_submitted',
+      },
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => null)
+    if (latestAudit?.status) {
+      resolvedStatus = latestAudit.status.toLowerCase()
+    }
+  }
+
+  const isApprovedOrEndorsed =
+    resolvedStatus === 'endorsed' ||
+    resolvedStatus === 'endorsed_by_advisor' ||
+    resolvedStatus === 'approved_by_hod' ||
+    resolvedStatus === 'approved'
+
+  const isDeclined =
+    resolvedStatus === 'rejected' ||
+    resolvedStatus === 'rejected_by_advisor' ||
+    resolvedStatus === 'rejected_by_hod'
+
+  let evidenceStatusTitle = 'EVIDENCE PENDING ADVISOR APPROVAL'
+  let evidenceStatusBadge = '⏳ PENDING ADVISOR APPROVAL'
+  let evidenceStatusColor = '#B45309'
+  let evidenceStatusBg = '#FEF3C7'
+  let evidenceWorkflowText = 'Step 1 of 2: Class Advisor Review → Forward to HOD'
+  let bottomEndorseColor = '#B45309'
+  let bottomEndorseTitle = '⏳ Awaiting Advisor Verification'
+  let bottomEndorseSubtitle = 'Advisor Review Pending · Next Stage: Forward to HOD'
+  let bottomEndorsePillBg = '#EFF6FF'
+  let bottomEndorsePillStroke = '#BFDBFE'
+  let bottomEndorsePillColor = '#1455D9'
+  let bottomEndorsePillText = 'Step 1 of 2: Advisor Review → HOD'
+
+  if (isApprovedOrEndorsed) {
+    evidenceStatusTitle = 'EVIDENCE APPROVED BY CLASS ADVISOR'
+    evidenceStatusBadge = '✓ APPROVED &amp; FORWARDED TO HOD'
+    evidenceStatusColor = '#059669'
+    evidenceStatusBg = '#ECFDF5'
+    evidenceWorkflowText = 'Approved by Class Advisor · Forwarded to Head of Department (HOD)'
+    bottomEndorseColor = '#059669'
+    bottomEndorseTitle = '✓ Approved &amp; Endorsed by Advisor'
+    bottomEndorseSubtitle = 'Evidence Verified · Forwarded to HOD for Sanction'
+    bottomEndorsePillBg = '#ECFDF5'
+    bottomEndorsePillStroke = '#A7F3D0'
+    bottomEndorsePillColor = '#059669'
+    bottomEndorsePillText = 'Forwarded to HOD for Sanction ✓'
+  } else if (isDeclined) {
+    evidenceStatusTitle = 'EVIDENCE DECLINED BY CLASS ADVISOR'
+    evidenceStatusBadge = '✕ EVIDENCE DECLINED'
+    evidenceStatusColor = '#DC2626'
+    evidenceStatusBg = '#FEF2F2'
+    evidenceWorkflowText = 'Declined by Advisor — Incomplete Proofs / Criteria Not Met'
+    bottomEndorseColor = '#DC2626'
+    bottomEndorseTitle = '✕ Declined by Class Advisor'
+    bottomEndorseSubtitle = 'Evidence Declined · Application Not Recommended'
+    bottomEndorsePillBg = '#FEF2F2'
+    bottomEndorsePillStroke = '#FECACA'
+    bottomEndorsePillColor = '#DC2626'
+    bottomEndorsePillText = 'Application Declined ✕'
+  }
+
   const hasUploadedProofImage = Boolean(
     uploadedImageFile &&
     uploadedImageFile.fileUrl &&
@@ -192,12 +259,9 @@ export async function GET(request: Request) {
   )
   const eUploadedImageUrl = hasUploadedProofImage ? escapeXml(uploadedImageFile.fileUrl) : ''
 
-  const eEventTitleShort = escapeXml(eventTitle.length > 44 ? eventTitle.slice(0, 42) + '...' : eventTitle)
-  const eVenueLocationShort = escapeXml(venueLocation.length > 44 ? venueLocation.slice(0, 42) + '...' : venueLocation)
-  const eCeremonyOrReasonShort = escapeXml(ceremonyOrReason.length > 36 ? ceremonyOrReason.slice(0, 34) + '...' : ceremonyOrReason)
-  const eDeclaration1Short = escapeXml(declaration1.length > 56 ? declaration1.slice(0, 54) + '...' : declaration1)
-  const eDeclaration2Short = escapeXml(declaration2.length > 56 ? declaration2.slice(0, 54) + '...' : declaration2)
-  const eDeclaration3Short = escapeXml(declaration3.length > 56 ? declaration3.slice(0, 54) + '...' : declaration3)
+  const eEventTitleShort = escapeXml(eventTitle.length > 52 ? eventTitle.slice(0, 50) + '...' : eventTitle)
+  const eVenueLocationShort = escapeXml(venueLocation.length > 52 ? venueLocation.slice(0, 50) + '...' : venueLocation)
+  const eCeremonyOrReasonShort = escapeXml(ceremonyOrReason.length > 48 ? ceremonyOrReason.slice(0, 46) + '...' : ceremonyOrReason)
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 850 1150" width="850" height="1150">
   <defs>
@@ -310,83 +374,75 @@ export async function GET(request: Request) {
   <text x="450" y="409" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#475569">TELEPHONIC CONSENT:</text>
   <text x="615" y="409" font-family="'Segoe UI', Roboto, sans-serif" font-size="11.5" font-weight="bold" fill="#059669">✓ Contact Verified &amp; Approved</text>
 
-  <!-- Attached Proof: Event Invitation, Document, and Undertaking Box -->
+  <!-- ========================================================================= -->
+  <!-- DEDICATED ATTACHED EVIDENCE OF PROOFS CANVAS (ONLY SHOW EVIDENCE) -->
+  <!-- ========================================================================= -->
   <rect x="50" y="434" width="750" height="345" rx="10" fill="#FFFBEB" stroke="#FDE68A"/>
   <rect x="65" y="444" width="720" height="26" rx="6" fill="#FEF3C7" stroke="#FCD34D"/>
-  <text x="80" y="461" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="900" fill="#92400E" letter-spacing="0.8">${eProofHeading}</text>
+  <text x="80" y="461" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="900" fill="#92400E" letter-spacing="0.8">OFFICIAL ATTACHED EVIDENCE OF PROOFS (CLASS ADVISOR AUDITED)</text>
 
-  <!-- Attached Proof Document Badge -->
-  <rect x="65" y="474" width="720" height="22" rx="4" fill="#EFF6FF" stroke="#93C5FD"/>
-  <text x="78" y="489" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#1E40AF">📎 ATTACHED PROOF DOCUMENT:</text>
-  <text x="245" y="489" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="900" fill="#071A3D">${eAttachedProofName}</text>
-  <text x="768" y="489" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="bold" fill="#059669" text-anchor="end">✓ Digitally Audited &amp; Embedded in Dossier</text>
+  <!-- Evidence Audit & Clearance Ribbon -->
+  <rect x="65" y="474" width="720" height="24" rx="4" fill="#EFF6FF" stroke="#93C5FD"/>
+  <text x="78" y="490" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#1E40AF">📎 EVIDENCE OF PROOF:</text>
+  <text x="215" y="490" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="900" fill="#071A3D">${eAttachedProofName}</text>
+  <rect x="510" y="476" width="270" height="20" rx="4" fill="${evidenceStatusBg}" stroke="${evidenceStatusColor}"/>
+  <text x="645" y="490" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="900" fill="${evidenceStatusColor}" text-anchor="middle">${evidenceStatusBadge}</text>
 
-  <!-- Left Column: Event Context and Parent Undertaking Declaration (x=65, width=390) -->
-  <text x="70" y="515" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#78350F">Event Title &amp; Purpose:</text>
-  <text x="70" y="530" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="900" fill="#071A3D">${eEventTitleShort}</text>
+  <!-- Main Evidence Display Canvas (Full-width 720px, Only Showing Evidence) -->
+  <rect x="65" y="504" width="720" height="264" rx="8" fill="#FFFFFF" stroke="#071A3D" stroke-width="1.2"/>
 
-  <text x="70" y="549" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#78350F">Location / Venue:</text>
-  <text x="175" y="549" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" fill="#334155">${eVenueLocationShort}</text>
-
-  <text x="70" y="566" font-family="'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="bold" fill="#78350F">Category &amp; Context:</text>
-  <text x="185" y="566" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="bold" fill="#B45309">${eCeremonyOrReasonShort}</text>
-
-  <!-- Student & Parent Undertaking Box (x=68, y=578, width=387, height=188) -->
-  <rect x="68" y="578" width="387" height="188" rx="6" fill="#FFFFFF" stroke="#CBD5E1"/>
-  <rect x="68" y="578" width="387" height="22" rx="6" fill="#F1F5F9"/>
-  <text x="78" y="593" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#071A3D">Student &amp; Parent Undertaking Declaration</text>
-  <text x="445" y="593" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="bold" fill="#059669" text-anchor="end">✓ VERIFIED</text>
-  <text x="78" y="611" font-family="'Segoe UI', sans-serif" font-size="9" fill="#475569" font-style="italic">"To: Class Advisor, Dept of AI &amp; DS, VSB Engg College (Autonomous)"</text>
-  <text x="78" y="628" font-family="'Segoe UI', sans-serif" font-size="8.8" fill="#1E293B">"${eDeclaration1Short}"</text>
-  <text x="78" y="643" font-family="'Segoe UI', sans-serif" font-size="8.8" fill="#1E293B">"${eDeclaration2Short}"</text>
-  <text x="78" y="658" font-family="'Segoe UI', sans-serif" font-size="8.8" fill="#1E293B">"${eDeclaration3Short}"</text>
-  <line x1="78" y1="672" x2="445" y2="672" stroke="#E2E8F0" stroke-width="1"/>
-  <text x="78" y="690" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#071A3D">Parent / Guardian: ${eParentAffiliation}</text>
-  <text x="78" y="708" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#071A3D">Verified Contact: +91-${eParentPhone}</text>
-  <text x="78" y="728" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#059669">Telephonic Consent Status: Contact Verified ✓</text>
-  <text x="78" y="750" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="bold" fill="#64748B">Security Hash: #VSB-OD-VERIF-77291-ANNAP · System Verified</text>
-
-  <!-- Right Column: ATTACHED PROOF DOCUMENT IMAGE (x=470, y=505, width=315, height=261) -->
-  <rect x="470" y="505" width="315" height="261" rx="8" fill="#FFFFFF" stroke="#071A3D" stroke-width="1.2"/>
-  <rect x="471" y="506" width="313" height="26" rx="7" fill="#071A3D"/>
-  <rect x="478" y="510" width="18" height="18" rx="4" fill="#F4C430"/>
-  <text x="487" y="523" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="900" fill="#071A3D" text-anchor="middle">📎</text>
-  <text x="502" y="523" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="900" fill="#FFFFFF" letter-spacing="0.5">ATTACHED PROOF DOCUMENT</text>
-  <rect x="716" y="511" width="62" height="16" rx="4" fill="#059669"/>
-  <text x="747" y="522.5" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="900" fill="#FFFFFF" text-anchor="middle">✓ ATTACHED</text>
+  <!-- Top Frame Header -->
+  <rect x="66" y="505" width="718" height="28" rx="7" fill="#071A3D"/>
+  <rect x="74" y="510" width="18" height="18" rx="4" fill="#F4C430"/>
+  <text x="83" y="523" font-family="'Segoe UI', sans-serif" font-size="11" font-weight="900" fill="#071A3D" text-anchor="middle">📎</text>
+  <text x="100" y="523" font-family="'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="900" fill="#FFFFFF" letter-spacing="0.6">STUDENT SUBMITTED EVIDENCE OF PROOF (AUDITED BY CLASS ADVISOR)</text>
+  <rect x="545" y="510" width="232" height="18" rx="4" fill="${evidenceStatusColor}"/>
+  <text x="661" y="522.5" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="900" fill="#FFFFFF" text-anchor="middle">${evidenceStatusTitle}</text>
 
   ${hasUploadedProofImage ? `
   <!-- Uploaded Proof Image from Database -->
-  <rect x="476" y="536" width="303" height="204" rx="4" fill="#F8FAFC" stroke="#E2E8F0"/>
-  <image xlink:href="${eUploadedImageUrl}" href="${eUploadedImageUrl}" x="480" y="540" width="295" height="196" preserveAspectRatio="xMidYMid meet"/>
+  <rect x="72" y="538" width="706" height="204" rx="4" fill="#F8FAFC" stroke="#E2E8F0"/>
+  <image xlink:href="${eUploadedImageUrl}" href="${eUploadedImageUrl}" x="76" y="542" width="698" height="196" preserveAspectRatio="xMidYMid meet"/>
+
+  <!-- Evidence Approval / Decline Stamp on uploaded image -->
+  <g transform="translate(710, 680) rotate(-7)">
+    <circle cx="0" cy="0" r="30" fill="${evidenceStatusBg}" fill-opacity="0.95" stroke="${evidenceStatusColor}" stroke-width="1.8" stroke-dasharray="4,1"/>
+    <circle cx="0" cy="0" r="25" fill="none" stroke="${evidenceStatusColor}" stroke-width="0.9"/>
+    <text x="0" y="-12" font-family="'Segoe UI', sans-serif" font-size="5.2" font-weight="900" fill="${evidenceStatusColor}" text-anchor="middle" letter-spacing="0.5">EVIDENCE PROOF</text>
+    <text x="0" y="-2" font-family="'Segoe UI', sans-serif" font-size="6.5" font-weight="900" fill="${evidenceStatusColor}" text-anchor="middle">${isApprovedOrEndorsed ? '★ APPROVED ★' : isDeclined ? '✕ DECLINED ✕' : '★ AUDITED ★'}</text>
+    <text x="0" y="7" font-family="'Segoe UI', sans-serif" font-size="5.8" font-weight="800" fill="${evidenceStatusColor}" text-anchor="middle">BY ADVISOR</text>
+    <text x="0" y="17" font-family="'Segoe UI', sans-serif" font-size="5" font-weight="700" fill="${evidenceStatusColor}" text-anchor="middle">${isApprovedOrEndorsed ? 'FORWARD TO HOD' : 'AUDITED'}</text>
+  </g>
   ` : `
   <!-- Photorealistic Attached Proof Document Slip Canvas -->
-  <rect x="476" y="536" width="303" height="204" rx="4" fill="#FFFDF8" stroke="#E2E8F0"/>
-  <rect x="480" y="540" width="295" height="196" rx="3" fill="none" stroke="#FDE68A" stroke-width="1"/>
+  <rect x="72" y="538" width="706" height="204" rx="4" fill="#FFFDF8" stroke="#E2E8F0"/>
+  <rect x="76" y="542" width="698" height="196" rx="3" fill="none" stroke="#FDE68A" stroke-width="1"/>
 
-  <!-- Document Masthead -->
-  <rect x="481" y="541" width="293" height="34" fill="#F8FAFC"/>
-  <line x1="481" y1="575" x2="774" y2="575" stroke="#CBD5E1" stroke-width="0.8"/>
-  <text x="627" y="555" font-family="'Segoe UI', Roboto, sans-serif" font-size="9" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.4">${isMedical ? 'DISTRICT HEALTH CLINIC &amp; RECOVERY ADVICE' : isOD ? 'INTER-COLLEGIATE TECHNICAL SYMPOSIUM 2026' : 'ANNUAL CEREMONY &amp; SPECIAL INTIMATION'}</text>
-  <text x="627" y="568" font-family="'Segoe UI', Roboto, sans-serif" font-size="7.5" font-weight="bold" fill="#B45309" text-anchor="middle">${isMedical ? 'OFFICIAL MEDICAL PRACTITIONER PRESCRIPTION &amp; ADVICE' : isOD ? 'OFFICIAL INVITATION &amp; REGISTRATION CONFIRMATION' : 'PARENTAL / GUARDIAN ATTESTATION SLIP'}</text>
+  <!-- Document Header -->
+  <rect x="77" y="543" width="696" height="34" fill="#F8FAFC"/>
+  <line x1="77" y1="577" x2="773" y2="577" stroke="#CBD5E1" stroke-width="0.8"/>
+  <text x="425" y="557" font-family="'Segoe UI', Roboto, sans-serif" font-size="10.5" font-weight="900" fill="#071A3D" text-anchor="middle" letter-spacing="0.5">${isMedical ? 'DISTRICT HEALTH CLINIC &amp; RECOVERY ADVICE' : isOD ? 'INTER-COLLEGIATE TECHNICAL SYMPOSIUM 2026' : 'ANNUAL CEREMONY &amp; SPECIAL INTIMATION'}</text>
+  <text x="425" y="571" font-family="'Segoe UI', Roboto, sans-serif" font-size="8.5" font-weight="bold" fill="#B45309" text-anchor="middle">${isMedical ? 'OFFICIAL MEDICAL PRACTITIONER PRESCRIPTION &amp; ADVICE' : isOD ? 'OFFICIAL INVITATION &amp; REGISTRATION CONFIRMATION' : 'PARENTAL / GUARDIAN ATTESTATION SLIP'}</text>
 
-  <!-- Candidate Details Block inside document -->
-  <rect x="488" y="581" width="279" height="50" rx="4" fill="#F1F5F9" stroke="#E2E8F0"/>
-  <text x="496" y="595" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="bold" fill="#475569">Candidate:</text>
-  <text x="548" y="595" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="900" fill="#071A3D">${eStudentNameUpper}</text>
-  <text x="496" y="610" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="bold" fill="#475569">Reg No:</text>
-  <text x="548" y="610" font-family="'Courier New', monospace" font-size="9" font-weight="bold" fill="#1455D9">${eRegisterNumber}</text>
-  <text x="496" y="624" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="bold" fill="#475569">Valid Dates:</text>
-  <text x="548" y="624" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="bold" fill="#059669">${eDateRange}</text>
+  <!-- Left Side: Evidence Particulars (x=88 to x=465) -->
+  <rect x="86" y="583" width="374" height="66" rx="4" fill="#F1F5F9" stroke="#E2E8F0"/>
+  <text x="96" y="600" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#475569">Candidate Name:</text>
+  <text x="195" y="600" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="900" fill="#071A3D">${eStudentNameUpper}</text>
+  <text x="96" y="618" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#475569">Register Number:</text>
+  <text x="195" y="618" font-family="'Courier New', monospace" font-size="10" font-weight="bold" fill="#1455D9">${eRegisterNumber}</text>
+  <text x="96" y="636" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#475569">Approved Period:</text>
+  <text x="195" y="636" font-family="'Segoe UI', sans-serif" font-size="9.5" font-weight="bold" fill="#059669">${eDateRange} (${eDaysApplied})</text>
 
-  <!-- Event Summary lines -->
-  <text x="496" y="643" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="bold" fill="#78350F">Subject / Scope:</text>
-  <text x="496" y="655" font-family="'Segoe UI', sans-serif" font-size="8" fill="#1E293B">${eEventTitleShort}</text>
-  <text x="496" y="668" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="bold" fill="#78350F">Venue / Host:</text>
-  <text x="496" y="680" font-family="'Segoe UI', sans-serif" font-size="8" fill="#334155">${eVenueLocationShort}</text>
+  <text x="90" y="663" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="#78350F">Event / Scope:</text>
+  <text x="190" y="663" font-family="'Segoe UI', sans-serif" font-size="9" fill="#1E293B">${eEventTitleShort}</text>
+  <text x="90" y="680" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="#78350F">Venue / Host:</text>
+  <text x="190" y="680" font-family="'Segoe UI', sans-serif" font-size="9" fill="#334155">${eVenueLocationShort}</text>
 
-  <!-- Simulated Verification Barcode -->
-  <g transform="translate(496, 691)">
+  <text x="90" y="697" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="#78350F">Evidence Type:</text>
+  <text x="190" y="697" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="#B45309">${eCeremonyOrReasonShort}</text>
+
+  <!-- Right Side: Security Barcode & Advisor Endorsement Stamp (x=475 to x=765) -->
+  <g transform="translate(476, 588)">
     <rect x="0" y="0" width="2" height="15" fill="#071A3D"/>
     <rect x="4" y="0" width="1" height="15" fill="#071A3D"/>
     <rect x="7" y="0" width="3" height="15" fill="#071A3D"/>
@@ -405,20 +461,25 @@ export async function GET(request: Request) {
     <text x="31" y="22" font-family="'Courier New', monospace" font-size="6.5" fill="#64748B" text-anchor="middle">*DOC-EVID-${eRegisterNumber.slice(-6)}*</text>
   </g>
 
-  <!-- Evidence Stamp (rotated -10deg) -->
-  <g transform="translate(710, 706) rotate(-10)">
-    <circle cx="0" cy="0" r="23" fill="#FEF3C7" fill-opacity="0.92" stroke="#B45309" stroke-width="1.3" stroke-dasharray="3,1"/>
-    <circle cx="0" cy="0" r="19" fill="none" stroke="#B45309" stroke-width="0.7"/>
-    <text x="0" y="-9" font-family="'Segoe UI', sans-serif" font-size="4.8" font-weight="900" fill="#B45309" text-anchor="middle" letter-spacing="0.5">EVIDENCE</text>
-    <text x="0" y="-2" font-family="'Segoe UI', sans-serif" font-size="5.2" font-weight="900" fill="#92400E" text-anchor="middle">★ VERIFIED ★</text>
-    <text x="0" y="5" font-family="'Segoe UI', sans-serif" font-size="4.8" font-weight="800" fill="#B45309" text-anchor="middle">OFFICIAL</text>
-    <text x="0" y="12" font-family="'Segoe UI', sans-serif" font-size="4.5" font-weight="700" fill="#78350F" text-anchor="middle">ATTACHED</text>
+  <!-- Evidence Approval / Decline Stamp (rotated -7deg) -->
+  <g transform="translate(685, 622) rotate(-7)">
+    <circle cx="0" cy="0" r="32" fill="${evidenceStatusBg}" fill-opacity="0.95" stroke="${evidenceStatusColor}" stroke-width="1.8" stroke-dasharray="4,1"/>
+    <circle cx="0" cy="0" r="27" fill="none" stroke="${evidenceStatusColor}" stroke-width="0.9"/>
+    <text x="0" y="-14" font-family="'Segoe UI', sans-serif" font-size="5.5" font-weight="900" fill="${evidenceStatusColor}" text-anchor="middle" letter-spacing="0.5">EVIDENCE OF PROOF</text>
+    <text x="0" y="-3" font-family="'Segoe UI', sans-serif" font-size="7" font-weight="900" fill="${evidenceStatusColor}" text-anchor="middle">${isApprovedOrEndorsed ? '★ APPROVED ★' : isDeclined ? '✕ DECLINED ✕' : '★ AUDITED ★'}</text>
+    <text x="0" y="7" font-family="'Segoe UI', sans-serif" font-size="6" font-weight="800" fill="${evidenceStatusColor}" text-anchor="middle">BY CLASS ADVISOR</text>
+    <text x="0" y="18" font-family="'Segoe UI', sans-serif" font-size="5.5" font-weight="700" fill="${evidenceStatusColor}" text-anchor="middle">${isApprovedOrEndorsed ? 'FORWARD TO HOD' : 'PORTAL AUDITED'}</text>
   </g>
+
+  <!-- Forwarding Statement -->
+  <rect x="475" y="660" width="290" height="30" rx="4" fill="#F8FAFC" stroke="#CBD5E1"/>
+  <text x="620" y="673" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="bold" fill="#071A3D" text-anchor="middle">Clearance Routing: Class Advisor → HOD</text>
+  <text x="620" y="685" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="bold" fill="${evidenceStatusColor}" text-anchor="middle">${evidenceWorkflowText}</text>
   `}
 
   <!-- Bottom Document Footer Tag -->
-  <rect x="471" y="744" width="313" height="21" rx="2" fill="#ECFDF5" stroke="#A7F3D0"/>
-  <text x="627" y="758" font-family="'Segoe UI', sans-serif" font-size="8" font-weight="bold" fill="#059669" text-anchor="middle">✓ ATTACHED PROOF: ${eAttachedProofName}</text>
+  <rect x="66" y="744" width="718" height="23" rx="2" fill="${evidenceStatusBg}" stroke="${evidenceStatusColor}"/>
+  <text x="425" y="759" font-family="'Segoe UI', sans-serif" font-size="9" font-weight="bold" fill="${evidenceStatusColor}" text-anchor="middle">✓ ATTACHED PROOF: ${eAttachedProofName} · ${evidenceStatusBadge} · FORWARDED TO HOD</text>
 
   <!-- ========================================================================= -->
   <!-- SIGNATURES AND OFFICIAL VALIDATION BLOCK (BALANCED 2-COLUMN LAYOUT) -->
@@ -437,12 +498,12 @@ export async function GET(request: Request) {
   <text x="245" y="947.5" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="700" fill="#059669" text-anchor="middle">✓ Verified Portal Identity</text>
 
   <!-- 2. Class Advisor and HOD Endorsement Block -->
-  <text x="605" y="865" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="bold" fill="#059669" text-anchor="middle">✓ Endorsement Ready</text>
+  <text x="605" y="865" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="bold" fill="${bottomEndorseColor}" text-anchor="middle">${bottomEndorseTitle}</text>
   <line x1="505" y1="885" x2="705" y2="885" stroke="#94A3B8" stroke-width="1.2"/>
-  <text x="605" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D" text-anchor="middle">Class Advisor / HOD</text>
-  <text x="605" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#64748B" text-anchor="middle">Dept of AI &amp; DS · V.S.B. Engineering College</text>
-  <rect x="525" y="934" width="160" height="20" rx="5" fill="#EFF6FF" stroke="#BFDBFE"/>
-  <text x="605" y="947.5" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="700" fill="#1455D9" text-anchor="middle">Autonomous Regulation 2021</text>
+  <text x="605" y="905" font-family="'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="bold" fill="#071A3D" text-anchor="middle">Class Advisor → HOD Sanction</text>
+  <text x="605" y="921" font-family="'Segoe UI', Roboto, sans-serif" font-size="9.5" fill="#64748B" text-anchor="middle">${bottomEndorseSubtitle}</text>
+  <rect x="495" y="934" width="220" height="20" rx="5" fill="${bottomEndorsePillBg}" stroke="${bottomEndorsePillStroke}"/>
+  <text x="605" y="947.5" font-family="'Segoe UI', sans-serif" font-size="8.5" font-weight="700" fill="${bottomEndorsePillColor}" text-anchor="middle">${bottomEndorsePillText}</text>
 
   <!-- Clean Separation Divider Before Regulation Banner -->
   <line x1="70" y1="970" x2="780" y2="970" stroke="#CBD5E1" stroke-width="1"/>
