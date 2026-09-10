@@ -1296,3 +1296,393 @@ export async function downloadSvgAsPdf(
     }
   }
 }
+
+export interface AdvisorAttendancePDFOptions {
+  classes: {
+    className: string
+    year: number
+    section: string
+    totalStudents: number
+    presentAvg: number
+    attendancePct: number
+    advisorName?: string | null
+    statusNote?: string
+  }[]
+  date?: string
+  hodName?: string
+  department?: string
+  fileName?: string
+}
+
+export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePDFOptions) {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  })
+
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const marginX = 12
+  const contentW = pageWidth - marginX * 2
+
+  // 1. Double Document Border
+  doc.setDrawColor(215, 226, 242)
+  doc.setLineWidth(0.4)
+  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+
+  doc.setDrawColor(238, 243, 250)
+  doc.setLineWidth(0.2)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+
+  // 2. Letterhead
+  doc.setFillColor(250, 252, 255)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, 36, 'F')
+
+  const logoX = marginX + 2
+  const logoY = marginX + 2
+  const logoSize = 22
+
+  doc.setFillColor(255, 255, 255)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+  doc.setDrawColor(231, 185, 62)
+  doc.setLineWidth(0.5)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
+
+  try {
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4)
+  } catch (e) {
+    console.error('Failed to embed logo:', e)
+  }
+
+  const headerCenterX = marginX + logoSize + (contentW - logoSize) / 2
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(13.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', headerCenterX, marginX + 5.5, { align: 'center' })
+
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(headerCenterX - 24, marginX + 7.5, 48, 4, 1, 1, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION — NBA & NAAC "A"', headerCenterX, marginX + 10.3, { align: 'center' })
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.setTextColor(21, 87, 192)
+  doc.text(
+    options.department || 'DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
+    headerCenterX,
+    marginX + 16.5,
+    { align: 'center' }
+  )
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.8)
+  doc.setTextColor(75, 85, 105)
+  doc.text(
+    'Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111',
+    headerCenterX,
+    marginX + 21,
+    { align: 'center' }
+  )
+
+  // Gold & Blue Beam
+  const beamY = marginX + 32
+  doc.setFillColor(21, 87, 192)
+  doc.rect(marginX, beamY, contentW, 1.2, 'F')
+  doc.setFillColor(231, 185, 62)
+  doc.rect(marginX, beamY + 1.2, contentW, 0.6, 'F')
+
+  let currentY = beamY + 6
+
+  // 3. Document Title
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(7, 26, 61)
+  doc.text('ADVISOR MORNING ROLL-CALL & CLASS-WISE ATTENDANCE AUDIT REPORT', marginX, currentY)
+
+  const printDate = options.date || new Date().toISOString().split('T')[0]
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.5)
+  doc.setTextColor(100, 115, 135)
+  doc.text(`Academic Jurisdiction: AI & DS Directorate  ·  Session: Morning Roll-Call  ·  Date: ${printDate}`, marginX, currentY + 4)
+
+  currentY += 8
+
+  // 4. Metrics Summary Strip
+  const totalEnrolled = options.classes.reduce((acc, c) => acc + c.totalStudents, 0)
+  const totalPresent = options.classes.reduce((acc, c) => acc + c.presentAvg, 0)
+  const avgPct = totalEnrolled > 0 ? Math.round((totalPresent / totalEnrolled) * 10000) / 100 : 0
+  const compliantCount = options.classes.filter((c) => c.attendancePct >= 75).length
+  const shortageCount = options.classes.filter((c) => c.attendancePct < 75).length
+
+  doc.setFillColor(246, 249, 254)
+  doc.roundedRect(marginX, currentY, contentW, 11, 2, 2, 'F')
+  doc.setDrawColor(215, 225, 245)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, currentY, contentW, 11, 2, 2, 'S')
+
+  const colW = contentW / 5
+  const metrics = [
+    { label: 'TOTAL ENROLLED', val: `${totalEnrolled} Students` },
+    { label: 'PRESENT (AVG)', val: `${totalPresent} Attendees` },
+    { label: 'DEPT. ATTENDANCE', val: `${avgPct}%` },
+    { label: 'ELIGIBLE (>=75%)', val: `${compliantCount} Classes` },
+    { label: 'SHORTAGE (<75%)', val: `${shortageCount} Classes` },
+  ]
+
+  metrics.forEach((m, idx) => {
+    const mx = marginX + idx * colW + 4
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(6)
+    doc.setTextColor(100, 115, 135)
+    doc.text(m.label, mx, currentY + 4)
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8)
+    doc.setTextColor(7, 26, 61)
+    doc.text(m.val, mx, currentY + 8.5)
+  })
+
+  currentY += 15
+
+  // 5. Visual Bar Graph
+  const chartH = 45
+  doc.setFillColor(17, 17, 17) // Sleek dark matching dark mode aesthetics
+  doc.roundedRect(marginX, currentY, contentW, chartH, 2, 2, 'F')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(244, 196, 48)
+  doc.text('Class-wise Average Attendance (%)', marginX + 5, currentY + 5.5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6)
+  doc.setTextColor(160, 170, 185)
+  doc.text('75% Anna University Minimum Compliance Threshold', marginX + contentW - 55, currentY + 5.5)
+
+  // Chart axes area
+  const chartInnerX = marginX + 10
+  const chartInnerY = currentY + 9
+  const chartInnerW = contentW - 14
+  const chartInnerH = 26
+
+  // 75% Benchmark Dashed Line
+  const benchmarkY = chartInnerY + chartInnerH * (1 - 75 / 100)
+  doc.setDrawColor(239, 68, 68)
+  doc.setLineWidth(0.3)
+  doc.setLineDashPattern([1.5, 1.5], 0)
+  doc.line(chartInnerX, benchmarkY, chartInnerX + chartInnerW, benchmarkY)
+  doc.setLineDashPattern([], 0) // reset dash
+
+  const barCount = options.classes.length
+  const barSlotW = chartInnerW / barCount
+  const barActualW = Math.min(10, barSlotW * 0.65)
+
+  options.classes.forEach((cls, idx) => {
+    const bx = chartInnerX + idx * barSlotW + (barSlotW - barActualW) / 2
+    const h = (cls.attendancePct / 100) * chartInnerH
+    const by = chartInnerY + chartInnerH - h
+
+    // Bar column
+    if (cls.attendancePct === 0) {
+      doc.setFillColor(55, 65, 81) // dark gray for pending
+    } else if (cls.attendancePct >= 75) {
+      doc.setFillColor(79, 131, 240) // royal blue
+    } else {
+      doc.setFillColor(239, 68, 68) // red for low
+    }
+    doc.rect(bx, by, barActualW, Math.max(0.5, h), 'F')
+
+    // Percentage text above bar
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(5.5)
+    doc.setTextColor(255, 255, 255)
+    doc.text(
+      cls.attendancePct === 0 ? '0%' : `${cls.attendancePct}%`,
+      bx + barActualW / 2,
+      Math.max(chartInnerY + 2, by - 1),
+      { align: 'center' }
+    )
+
+    // Angled or short x-label
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(5.5)
+    doc.setTextColor(200, 210, 225)
+    const shortName = cls.className.replace(' AIDS', '')
+    doc.text(shortName, bx + barActualW / 2, chartInnerY + chartInnerH + 4, { align: 'center' })
+  })
+
+  currentY += chartH + 5
+
+  // 6. Detailed Class Breakdown Table
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('CLASS BREAKDOWN & ADVISOR ALLOCATION ROSTER', marginX, currentY)
+
+  currentY += 3
+
+  // Table Header
+  const tableHeaders = [
+    { title: '#', w: 8, align: 'center' },
+    { title: 'CLASS SECTION', w: 26, align: 'left' },
+    { title: 'ADVISOR NAME', w: 42, align: 'left' },
+    { title: 'ENROLLED', w: 20, align: 'center' },
+    { title: 'PRESENT (AVG)', w: 24, align: 'center' },
+    { title: 'ATTENDANCE %', w: 26, align: 'center' },
+    { title: 'VERIFICATION STATUS', w: 40, align: 'left' },
+  ]
+
+  const rowHeight = 6.2
+  doc.setFillColor(7, 26, 61)
+  doc.rect(marginX, currentY, contentW, rowHeight, 'F')
+
+  let thX = marginX
+  tableHeaders.forEach((th) => {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.5)
+    doc.setTextColor(255, 255, 255)
+    const tx = th.align === 'center' ? thX + th.w / 2 : thX + 2
+    doc.text(th.title, tx, currentY + 4.2, { align: th.align as any })
+    thX += th.w
+  })
+
+  currentY += rowHeight
+
+  // Table Rows
+  options.classes.forEach((cls, idx) => {
+    const isEven = idx % 2 === 0
+    if (isEven) {
+      doc.setFillColor(250, 252, 255)
+      doc.rect(marginX, currentY, contentW, rowHeight, 'F')
+    }
+
+    doc.setDrawColor(235, 240, 248)
+    doc.setLineWidth(0.2)
+    doc.line(marginX, currentY + rowHeight, marginX + contentW, currentY + rowHeight)
+
+    let tdX = marginX
+
+    // 1. Index
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(6.8)
+    doc.setTextColor(100, 115, 135)
+    doc.text(String(idx + 1), tdX + 4, currentY + 4.2, { align: 'center' })
+    tdX += 8
+
+    // 2. Class Section
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7)
+    doc.setTextColor(7, 26, 61)
+    doc.text(cls.className, tdX + 2, currentY + 4.2)
+    tdX += 26
+
+    // 3. Advisor Name
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(6.8)
+    doc.setTextColor(40, 50, 70)
+    doc.text(cls.advisorName || 'Faculty Advisor', tdX + 2, currentY + 4.2)
+    tdX += 42
+
+    // 4. Enrolled
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.setTextColor(7, 26, 61)
+    doc.text(String(cls.totalStudents), tdX + 10, currentY + 4.2, { align: 'center' })
+    tdX += 20
+
+    // 5. Present Count
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.8)
+    doc.setTextColor(21, 87, 192)
+    doc.text(String(cls.presentAvg), tdX + 12, currentY + 4.2, { align: 'center' })
+    tdX += 24
+
+    // 6. Attendance %
+    const isGood = cls.attendancePct >= 75
+    const isPending = cls.attendancePct === 0
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7)
+    if (isPending) {
+      doc.setTextColor(217, 119, 6) // amber
+    } else if (isGood) {
+      doc.setTextColor(22, 163, 74) // green
+    } else {
+      doc.setTextColor(220, 38, 38) // red
+    }
+    doc.text(`${cls.attendancePct}%`, tdX + 13, currentY + 4.2, { align: 'center' })
+    tdX += 26
+
+    // 7. Status Note
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.2)
+    const status = cls.statusNote || (isPending ? 'Register Pending' : isGood ? 'Advisor Verified' : 'Shortage Alert (<75%)')
+    doc.text(status, tdX + 2, currentY + 4.2)
+
+    currentY += rowHeight
+  })
+
+  currentY += 6
+
+  // 7. Official Endorsement Signatures
+  doc.setDrawColor(215, 226, 242)
+  doc.setLineWidth(0.3)
+  doc.line(marginX, currentY, marginX + contentW, currentY)
+
+  currentY += 6
+
+  const signColW = contentW / 3
+
+  // Signatory 1
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.setTextColor(7, 26, 61)
+  doc.text('CLASS ADVISORS COMMITTEE', marginX + 4, currentY)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Morning Roll-Call Verified', marginX + 4, currentY + 3.5)
+  doc.text('Signature: ___________________', marginX + 4, currentY + 11)
+
+  // Signatory 2
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.setTextColor(7, 26, 61)
+  doc.text('DEPARTMENT ACADEMIC CELL', marginX + signColW + 4, currentY)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Regulation 2021 Monitoring', marginX + signColW + 4, currentY + 3.5)
+  doc.text('Signature: ___________________', marginX + signColW + 4, currentY + 11)
+
+  // Signatory 3: HOD
+  const hodX = marginX + signColW * 2 + 4
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.setTextColor(7, 26, 61)
+  doc.text('HEAD OF DEPARTMENT (HOD)', hodX, currentY)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6)
+  doc.setTextColor(100, 115, 135)
+  doc.text(`Prof. ${options.hodName || 'hello'} · AI & DS`, hodX, currentY + 3.5)
+  doc.text('Approved: ___________________', hodX, currentY + 11)
+
+  // Footer compliance text
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(130, 145, 165)
+  doc.text(
+    'This official document is generated from the VSB Digital Portal AI&DS Directorate system. Compliant with Anna University R-2021 Autonomous attendance criteria.',
+    pageWidth / 2,
+    pageHeight - 8,
+    { align: 'center' }
+  )
+
+  const downloadName = options.fileName || `Advisor_Attendance_Report_${printDate}.pdf`
+  doc.save(downloadName)
+}
+
