@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { generateAttendanceBarGraphPDF, generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { StudentAttendanceRecord } from '@/app/admin/reports/components/AdminReportsView'
+import { DepartmentAttendanceAnalytics } from '@/app/hod-dashboard/components/DepartmentAttendanceAnalytics'
 
 export function HODReportsView({
   studentCount = 0,
@@ -367,6 +368,11 @@ export function HODReportsView({
           <span className="text-[10px] text-blue-600 font-semibold">{startDate} to {endDate}</span>
         </div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* DEPARTMENT CLASS-WISE ATTENDANCE ANALYTICS & BREAKDOWN */}
+      {/* ========================================================================= */}
+      <DepartmentAttendanceAnalytics />
 
       {/* ========================================================================= */}
       {/* 5-COLUMN BAR CHART: TOTAL STUDENTS | PRESENTS | ABSENTS | OD | ML         */}

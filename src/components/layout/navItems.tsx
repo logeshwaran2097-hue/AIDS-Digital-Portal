@@ -41,6 +41,7 @@ export const facultyNavItems: NavItem[] = [
 
 export const hodNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/hod-dashboard', icon: <Home className="h-4 w-4" /> },
+  { label: 'Attendance', href: '/hod-dashboard/attendance', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'Students', href: '/hod-dashboard/students', icon: <Users className="h-4 w-4" /> },
   { label: 'Faculty', href: '/hod-dashboard/faculty', icon: <GraduationCap className="h-4 w-4" /> },
   { label: 'Academics', href: '/hod-dashboard/academics', icon: <BookOpen className="h-4 w-4" /> },

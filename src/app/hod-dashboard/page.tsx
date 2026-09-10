@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { HODOnboardingWrapper } from './components/HODOnboardingWrapper'
 import { HODAttendanceApprovals } from './notifications/components/HODAttendanceApprovals'
+import { DepartmentAttendanceAnalytics } from './components/DepartmentAttendanceAnalytics'
 import {
   Users,
   GraduationCap,
@@ -191,6 +192,11 @@ export default async function HODDashboardPage() {
             <p className="text-[11px] text-amber-700 font-bold mt-1">Requires HOD Sign-off</p>
           </div>
         </div>
+
+        {/* Department Attendance Analytics: Class-wise Average & Class Breakdown */}
+        <section aria-label="Department Attendance Analytics">
+          <DepartmentAttendanceAnalytics />
+        </section>
 
         {/* Attendance Register Unlock Approvals for HOD */}
         <section aria-label="Attendance Register Unlock Approvals">
