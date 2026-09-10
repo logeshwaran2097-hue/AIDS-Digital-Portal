@@ -56,6 +56,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Achievement title is required' }, { status: 400 })
     }
 
+    if (!certificateUrl || !certificateUrl.trim()) {
+      return NextResponse.json(
+        { success: false, message: 'Valid proof document (Certificate or Award Letter file) is required to post an achievement' },
+        { status: 400 }
+      )
+    }
+
     const isPrivileged = session.role === 'admin' || session.role === 'hod'
 
     const created = await prisma.achievement.create({

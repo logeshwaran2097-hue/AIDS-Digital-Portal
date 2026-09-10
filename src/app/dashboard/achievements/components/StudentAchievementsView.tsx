@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -19,6 +19,13 @@ import {
   X,
   Share2,
   Medal,
+  UploadCloud,
+  FileText,
+  Eye,
+  CheckCircle2,
+  Download,
+  AlertCircle,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -46,6 +53,13 @@ const CATEGORIES = [
   'Certifications & Honors',
 ]
 
+interface ProofFileState {
+  dataUrl: string
+  fileName: string
+  fileType: string
+  fileSize: number
+}
+
 export function StudentAchievementsView({
   initialAchievements,
   userName,
@@ -59,6 +73,8 @@ export function StudentAchievementsView({
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [previewCert, setPreviewCert] = useState<{ title: string; url: string } | null>(null)
+  const [proofFile, setProofFile] = useState<ProofFileState | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
     title: '',
@@ -66,9 +82,42 @@ export function StudentAchievementsView({
     category: 'Hackathon & Coding',
     awardName: '',
     eventName: '',
-    certificateUrl: '',
     date: new Date().toISOString().split('T')[0],
   })
+
+  // File select handler: validates and converts to Data URL (base64)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // 10MB limit
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size exceeds 10MB. Please upload a smaller image or compressed PDF.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setProofFile({
+        dataUrl: reader.result as string,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size,
+      })
+      toast.success(`Proof document "${file.name}" attached!`)
+    }
+    reader.onerror = () => {
+      toast.error('Failed to read file. Please try another image or PDF.')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeSelectedFile = () => {
+    setProofFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   // Filtered achievements
   const filteredAchievements = useMemo(() => {
@@ -93,8 +142,15 @@ export function StudentAchievementsView({
 
   const handleSubmitAchievement = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!formData.title.trim()) {
       toast.error('Please enter the achievement title')
+      return
+    }
+
+    // MANDATORY PROOF CHECK
+    if (!proofFile || !proofFile.dataUrl) {
+      toast.error('Mandatory: Please upload the Certificate or Award Proof file.')
       return
     }
 
@@ -105,6 +161,7 @@ export function StudentAchievementsView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          certificateUrl: proofFile.dataUrl,
           recipientName: userName,
           recipientType: 'student',
         }),
@@ -112,7 +169,7 @@ export function StudentAchievementsView({
 
       const data = await res.json()
       if (data.success && data.achievement) {
-        toast.success('🎉 Achievement submitted successfully!')
+        toast.success('🎉 Achievement & proof submitted successfully!')
         setAchievements([
           {
             ...data.achievement,
@@ -121,13 +178,13 @@ export function StudentAchievementsView({
           ...achievements,
         ])
         setIsSubmitModalOpen(false)
+        setProofFile(null)
         setFormData({
           title: '',
           description: '',
           category: 'Hackathon & Coding',
           awardName: '',
           eventName: '',
-          certificateUrl: '',
           date: new Date().toISOString().split('T')[0],
         })
       } else {
@@ -149,23 +206,23 @@ export function StudentAchievementsView({
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
               <Sparkles className="w-3.5 h-3.5" />
-              Hall of Fame
+              Verified Hall of Fame
             </span>
             <span className="text-xs text-gray-300">· V.S.B. Engineering College</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Student &amp; Faculty Achievements</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1 max-w-xl">
-            National hackathon victories, research publications, competitive coding honors, and symposium accolades
+            National hackathons, research publications &amp; competitive honors backed by verified certificates
           </p>
         </div>
 
         <div className="relative z-10 flex items-center gap-3">
           <button
             onClick={() => setIsSubmitModalOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-[#F4C430] hover:bg-[#e0b226] text-[#071A3D] font-black text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"
+            className="px-4 py-2.5 rounded-2xl bg-[#F4C430] hover:bg-[#e0b226] text-[#071A3D] font-black text-xs flex items-center gap-1.5 shadow-md hover:scale-105 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Submit Achievement</span>
+            <span>Submit Achievement with Proof</span>
           </button>
 
           <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center min-w-[100px]">
@@ -185,7 +242,7 @@ export function StudentAchievementsView({
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-[#071A3D] text-white shadow-xs'
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
@@ -243,8 +300,8 @@ export function StudentAchievementsView({
                     {item.description}
                   </p>
 
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-                    <span className="font-bold text-gray-700 flex items-center gap-1.5 truncate max-w-[170px]">
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs gap-2">
+                    <span className="font-bold text-gray-700 flex items-center gap-1.5 truncate max-w-[140px]">
                       <Users className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
                       <span className="truncate">{item.recipientName || 'B.Tech AI & DS'}</span>
                     </span>
@@ -252,13 +309,13 @@ export function StudentAchievementsView({
                     {item.certificateUrl ? (
                       <button
                         onClick={() => setPreviewCert({ title: item.title, url: item.certificateUrl! })}
-                        className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-[#1455D9] rounded-lg font-bold text-[10px] flex items-center gap-1 transition"
+                        className="px-3 py-1.5 bg-blue-50 hover:bg-[#1455D9] text-[#1455D9] hover:text-white rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
                       >
-                        <ExternalLink className="w-3 h-3" />
-                        <span>Certificate</span>
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View Proof</span>
                       </button>
                     ) : (
-                      <span className="px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full font-bold text-[10px]">
+                      <span className="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full font-bold text-[10px]">
                         Verified
                       </span>
                     )}
@@ -291,22 +348,22 @@ export function StudentAchievementsView({
             <p className="text-xs text-gray-500 mt-2 leading-relaxed">
               {searchQuery || selectedCategory !== 'ALL'
                 ? 'Try resetting your category filter or search query to view all awards.'
-                : 'National hackathon triumphs, research journal publications, and inter-college symposium laurels will be showcased here once verified by department faculty and HOD.'}
+                : 'National hackathon triumphs, research journal publications, and inter-college symposium laurels will be showcased here once verified by department faculty and HOD with attached proof documents.'}
             </p>
 
             {/* Actions for Students */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <button
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-2 shadow-md hover:scale-105 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-2 shadow-md hover:scale-105 transition-all cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Submit Your Achievement</span>
+                <span>Submit Achievement with Proof File</span>
               </button>
 
               <Link
                 href="/dashboard/od-proofs"
-                className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs flex items-center gap-2 transition"
+                className="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs flex items-center gap-2 transition cursor-pointer"
               >
                 <FileCheck className="w-4 h-4 text-[#1455D9]" />
                 <span>Upload Event Certificate / OD Proof</span>
@@ -316,31 +373,34 @@ export function StudentAchievementsView({
         </div>
       )}
 
-      {/* Student Submit Achievement Modal */}
+      {/* Student Submit Achievement Modal with DIRECT FILE UPLOAD */}
       {isSubmitModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[92vh] flex flex-col">
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white p-5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white p-5 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold">
                   <Trophy className="w-5 h-5 text-[#F4C430]" />
                 </div>
                 <div>
                   <h3 className="font-black text-base">Submit Achievement</h3>
-                  <p className="text-[11px] text-blue-200">Showcase your award or research to the department</p>
+                  <p className="text-[11px] text-blue-200">Upload your certified award proof to the Hall of Fame</p>
                 </div>
               </div>
               <button
-                onClick={() => setIsSubmitModalOpen(false)}
-                className="p-1 rounded-full hover:bg-white/10 text-white transition"
+                onClick={() => {
+                  setIsSubmitModalOpen(false)
+                  setProofFile(null)
+                }}
+                className="p-1 rounded-full hover:bg-white/10 text-white transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmitAchievement} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSubmitAchievement} className="p-6 space-y-4 text-xs overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
               <div>
                 <label className="block font-bold text-gray-700 mb-1">Achievement Title *</label>
                 <input
@@ -349,17 +409,17 @@ export function StudentAchievementsView({
                   placeholder="e.g. 1st Prize — Smart India Hackathon 2025"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Category</label>
+                  <label className="block font-bold text-gray-700 mb-1">Category *</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="Hackathon & Coding">Hackathon &amp; Coding</option>
                     <option value="Research & Publications">Research &amp; Publications</option>
@@ -370,13 +430,14 @@ export function StudentAchievementsView({
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Award / Distinction</label>
+                  <label className="block font-bold text-gray-700 mb-1">Award / Distinction *</label>
                   <input
                     type="text"
+                    required
                     placeholder="e.g. Winner (₹1,00,000 Cash Prize)"
                     value={formData.awardName}
                     onChange={(e) => setFormData({ ...formData, awardName: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -389,57 +450,138 @@ export function StudentAchievementsView({
                     placeholder="e.g. Ministry of Education / IIT Madras"
                     value={formData.eventName}
                     onChange={(e) => setFormData({ ...formData, eventName: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">Date of Award</label>
+                  <label className="block font-bold text-gray-700 mb-1">Date of Award *</label>
                   <input
                     type="date"
+                    required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
 
+              {/* DIRECT PROOF FILE UPLOAD (NO URL/LINK) */}
               <div>
-                <label className="block font-bold text-gray-700 mb-1">Certificate / Proof Link (Drive or URL)</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="font-bold text-[#071A3D] flex items-center gap-1.5">
+                    <FileCheck className="w-4 h-4 text-[#1455D9]" />
+                    <span>Upload Proof Document (Certificate / Award Letter) *</span>
+                  </label>
+                  <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    Required for Verification
+                  </span>
+                </div>
+
                 <input
-                  type="url"
-                  placeholder="https://drive.google.com/file/... or certificate link"
-                  value={formData.certificateUrl}
-                  onChange={(e) => setFormData({ ...formData, certificateUrl: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="proof-file-upload-input"
                 />
+
+                {!proofFile ? (
+                  <label
+                    htmlFor="proof-file-upload-input"
+                    className="border-2 border-dashed border-gray-300 hover:border-[#1455D9] bg-gray-50/80 hover:bg-blue-50/40 rounded-2xl p-6 flex flex-col items-center justify-center gap-2.5 cursor-pointer transition-all group"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-blue-100/80 text-[#1455D9] flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <UploadCloud className="w-6 h-6" />
+                    </div>
+                    <div className="text-center">
+                      <p className="font-bold text-gray-800 text-xs group-hover:text-[#1455D9] transition-colors">
+                        Click to select Certificate or Proof File
+                      </p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">
+                        Supports PDF documents and Image files (PNG, JPG, WEBP up to 10MB)
+                      </p>
+                    </div>
+                    <span className="px-3 py-1 bg-white border border-gray-200 rounded-xl text-[11px] font-bold text-[#1455D9] shadow-2xs">
+                      Browse Computer / Device
+                    </span>
+                  </label>
+                ) : (
+                  <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-[#1455D9] text-white flex items-center justify-center shrink-0 shadow-xs">
+                        {proofFile.fileType.includes('pdf') ? (
+                          <FileText className="w-5 h-5" />
+                        ) : (
+                          <FileCheck className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-900 text-xs truncate">{proofFile.fileName}</p>
+                        <p className="text-[11px] text-blue-700 font-medium">
+                          {(proofFile.fileSize / 1024).toFixed(1)} KB · Official Proof Attached
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewCert({ title: proofFile.fileName, url: proofFile.dataUrl })}
+                        className="p-1.5 rounded-lg bg-white text-[#1455D9] hover:bg-blue-100 border border-blue-200 transition cursor-pointer"
+                        title="Preview uploaded document"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removeSelectedFile}
+                        className="p-1.5 rounded-lg bg-white text-rose-600 hover:bg-rose-100 border border-rose-200 transition cursor-pointer"
+                        title="Remove file"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 mb-1">Brief Description</label>
+                <label className="block font-bold text-gray-700 mb-1">Brief Description / Project Summary</label>
                 <textarea
                   rows={3}
-                  placeholder="Briefly describe the project, problem statement solved, or paper published..."
+                  placeholder="Briefly describe the project, problem statement solved, competition rank, or publication..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
 
-              <div className="pt-3 border-t border-gray-200 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-gray-200 flex items-center justify-end gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setIsSubmitModalOpen(false)}
-                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition"
+                  onClick={() => {
+                    setIsSubmitModalOpen(false)
+                    setProofFile(null)
+                  }}
+                  className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2 bg-[#1455D9] hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-md transition disabled:opacity-50"
+                  disabled={isSubmitting || !proofFile}
+                  className="px-5 py-2.5 bg-[#1455D9] hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-2 shadow-md transition disabled:opacity-50 cursor-pointer"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit for Verification'}
+                  {isSubmitting ? (
+                    'Submitting...'
+                  ) : (
+                    <>
+                      <FileCheck className="w-4 h-4" />
+                      <span>Submit for Verification</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
@@ -447,29 +589,55 @@ export function StudentAchievementsView({
         </div>
       )}
 
-      {/* Certificate Viewer Modal */}
+      {/* FULLSCREEN PROOF VIEWER MODAL / LIGHTBOX */}
       {previewCert && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-gray-200 text-center space-y-4">
-            <h3 className="text-base font-black text-[#071A3D]">{previewCert.title}</h3>
-            <p className="text-xs text-gray-500">Official Certificate / Verification Link</p>
-            <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200">
-              <a
-                href={previewCert.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[#1455D9] hover:underline font-bold flex items-center justify-center gap-1.5 break-all"
-              >
-                <span>{previewCert.url}</span>
-                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-              </a>
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 bg-gray-50/90">
+              <div className="min-w-0 pr-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[10px] font-black uppercase tracking-wide">
+                  Verified Proof Document
+                </span>
+                <h3 className="text-sm sm:text-base font-black text-[#071A3D] mt-0.5 truncate">
+                  {previewCert.title}
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={previewCert.url}
+                  download={`Achievement-Proof-${Date.now()}`}
+                  className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Proof</span>
+                </a>
+                <button
+                  onClick={() => setPreviewCert(null)}
+                  className="p-1.5 rounded-full hover:bg-gray-200 text-gray-400 hover:text-gray-700 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => setPreviewCert(null)}
-              className="px-5 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition"
-            >
-              Close
-            </button>
+
+            {/* Viewer Body */}
+            <div className="p-4 flex-1 overflow-auto flex items-center justify-center bg-gray-900/5 min-h-[400px]">
+              {previewCert.url.startsWith('data:application/pdf') || previewCert.url.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={previewCert.url}
+                  title="Proof Document"
+                  className="w-full h-[70vh] rounded-2xl border border-gray-200 bg-white"
+                />
+              ) : (
+                <img
+                  src={previewCert.url}
+                  alt="Proof Document"
+                  className="max-h-[70vh] max-w-full rounded-2xl object-contain shadow-md border border-gray-200 bg-white"
+                />
+              )}
+            </div>
           </div>
         </div>
       )}
