@@ -1460,25 +1460,11 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   doc.setTextColor(244, 196, 48)
   doc.text('Class-wise Average Attendance (%)', marginX + 5, currentY + 5.5)
 
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6)
-  doc.setTextColor(160, 170, 185)
-  doc.text('75% Anna University Minimum Compliance Threshold', marginX + contentW - 55, currentY + 5.5)
-
   // Chart axes area
   const chartInnerX = marginX + 10
   const chartInnerY = currentY + 9
   const chartInnerW = contentW - 14
   const chartInnerH = 26
-
-  // 75% Benchmark Dashed Line
-  const benchmarkY = chartInnerY + chartInnerH * (1 - 75 / 100)
-  doc.setDrawColor(239, 68, 68)
-  doc.setLineWidth(0.3)
-  doc.setLineDashPattern([1.5, 1.5], 0)
-  doc.line(chartInnerX, benchmarkY, chartInnerX + chartInnerW, benchmarkY)
-  doc.setLineDashPattern([], 0) // reset dash
-
   const barCount = options.classes.length
   const barSlotW = chartInnerW / barCount
   const barActualW = Math.min(10, barSlotW * 0.65)

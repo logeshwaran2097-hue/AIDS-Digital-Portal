@@ -371,15 +371,6 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                 ))}
               </div>
 
-              {/* Benchmark 75% Line */}
-              <div
-                className="absolute left-10 sm:left-12 right-4 border-b-2 border-rose-400 border-dashed pointer-events-none z-0"
-                style={{ bottom: 'calc(20px + (100% - 20px) * 0.75)' }}
-              >
-                <span className="absolute right-0 -top-5 text-[10px] font-bold font-mono text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                  75% Min. Required
-                </span>
-              </div>
 
               {/* Solid Vertical Bars */}
               <div className="w-full h-full flex items-end justify-around gap-1.5 sm:gap-3 relative z-10">
