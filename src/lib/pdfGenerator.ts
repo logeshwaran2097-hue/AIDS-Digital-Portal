@@ -1429,7 +1429,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   const colW = contentW / 5
   const metrics = [
     { label: 'TOTAL ENROLLED', val: `${totalEnrolled} Students` },
-    { label: 'PRESENT (AVG)', val: `${totalPresent} Attendees` },
+    { label: 'NO. OF PRESENTS', val: `${totalPresent} Attendees` },
     { label: 'DEPT. ATTENDANCE', val: `${avgPct}%` },
     { label: 'ELIGIBLE (>=75%)', val: `${compliantCount} Classes` },
     { label: 'SHORTAGE (<75%)', val: `${shortageCount} Classes` },
@@ -1533,10 +1533,10 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     { title: 'CLASS SECTION', w: 25, align: 'left' },
     { title: 'ADVISOR NAME', w: 38, align: 'left' },
     { title: 'ENROLLED', w: 18, align: 'center' },
-    { title: 'PRESENT', w: 18, align: 'center' },
-    { title: 'ABSENT', w: 18, align: 'center' },
-    { title: 'ATTENDANCE %', w: 24, align: 'center' },
-    { title: 'VERIFICATION STATUS', w: 38, align: 'left' },
+    { title: 'NO. OF PRESENTS', w: 20, align: 'center' },
+    { title: 'NO. OF ABSENTEES', w: 20, align: 'center' },
+    { title: 'ATTENDANCE %', w: 22, align: 'center' },
+    { title: 'VERIFICATION STATUS', w: 36, align: 'left' },
   ]
 
   const rowHeight = 6.2
@@ -1601,8 +1601,8 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(6.8)
     doc.setTextColor(21, 87, 192)
-    doc.text(String(cls.presentAvg), tdX + 9, currentY + 4.2, { align: 'center' })
-    tdX += 18
+    doc.text(String(cls.presentAvg), tdX + 10, currentY + 4.2, { align: 'center' })
+    tdX += 20
 
     // 6. Absent Count
     const absVal = cls.absentCount !== undefined 
@@ -1611,8 +1611,8 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(6.8)
     doc.setTextColor(absVal > 0 ? 220 : 140, absVal > 0 ? 38 : 140, absVal > 0 ? 38 : 140)
-    doc.text(String(absVal), tdX + 9, currentY + 4.2, { align: 'center' })
-    tdX += 18
+    doc.text(String(absVal), tdX + 10, currentY + 4.2, { align: 'center' })
+    tdX += 20
 
     // 7. Attendance %
     const isGood = cls.attendancePct >= 75
@@ -1626,8 +1626,8 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     } else {
       doc.setTextColor(220, 38, 38) // red
     }
-    doc.text(`${cls.attendancePct}%`, tdX + 12, currentY + 4.2, { align: 'center' })
-    tdX += 24
+    doc.text(`${cls.attendancePct}%`, tdX + 11, currentY + 4.2, { align: 'center' })
+    tdX += 22
 
     // 8. Status Note
     doc.setFont('helvetica', 'bold')

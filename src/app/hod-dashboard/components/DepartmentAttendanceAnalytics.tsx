@@ -144,8 +144,8 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       'Section',
       'Class Advisor',
       'Total Enrolled',
-      'Present Count',
-      'Absent Count',
+      'No. of Presents',
+      'No. of Absentees',
       'Attendance %',
       'Status Note',
     ]
@@ -288,7 +288,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs bg-blue-50/20">
-          <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">Present (Avg)</p>
+          <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">No. of Presents</p>
           <p className="text-2xl font-black text-[#1455D9] mt-0.5">{summary.totalPresent}</p>
           <p className="text-[11px] text-blue-600 font-medium mt-1">{summary.avgPct}% Department Average</p>
         </div>
@@ -482,8 +482,8 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                   <th className="py-3.5 px-4 font-bold">CLASS NAME</th>
                   <th className="py-3.5 px-4 font-bold">CLASS ADVISOR</th>
                   <th className="py-3.5 px-4 font-bold text-center">TOTAL STUDENTS</th>
-                  <th className="py-3.5 px-4 font-bold text-center">PRESENT (AVG)</th>
-                  <th className="py-3.5 px-4 font-bold text-center">ABSENTEES</th>
+                  <th className="py-3.5 px-4 font-bold text-center">NO. OF PRESENTS</th>
+                  <th className="py-3.5 px-4 font-bold text-center">NO. OF ABSENTEES</th>
                   <th className="py-3.5 px-4 font-bold text-center">ATTENDANCE %</th>
                   <th className="py-3.5 px-4 font-bold text-right">STUDENT DIRECTORY</th>
                 </tr>
@@ -586,10 +586,10 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                     {summary.totalEnrolled} Students
                   </td>
                   <td className="py-4 px-4 text-center font-mono text-sm">
-                    {summary.totalPresent} Present
+                    {summary.totalPresent} Presents
                   </td>
                   <td className="py-4 px-4 text-center font-mono text-sm text-rose-600 font-bold">
-                    {summary.totalAbsent} Absent
+                    {summary.totalAbsent} Absentees
                   </td>
                   <td className="py-4 px-4 text-center font-mono text-sm text-emerald-700">
                     {summary.avgPct}%
