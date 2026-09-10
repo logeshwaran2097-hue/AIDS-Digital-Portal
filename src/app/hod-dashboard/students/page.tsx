@@ -1,22 +1,58 @@
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
-import { Users, Download } from 'lucide-react'
+import { HODStudentsView, DBStudent, ClassMeta } from './components/HODStudentsView'
 
 export const dynamic = 'force-dynamic'
+
+const BASELINE_DEPARTMENT_CLASSES = [
+  { className: 'II AIDS A', year: 2, section: 'A', semester: 3, defaultTotal: 64, defaultPresent: 48, defaultPct: 75.0, defaultAdvisor: 'Dr. S. Kabilan' },
+  { className: 'II AIDS B', year: 2, section: 'B', semester: 3, defaultTotal: 64, defaultPresent: 52, defaultPct: 81.25, defaultAdvisor: 'Prof. Raja' },
+  { className: 'II AIDS C', year: 2, section: 'C', semester: 3, defaultTotal: 60, defaultPresent: 0, defaultPct: 0.0, defaultAdvisor: 'Prof. M. Selvakumar' },
+  { className: 'II AIDS D', year: 2, section: 'D', semester: 3, defaultTotal: 64, defaultPresent: 43, defaultPct: 67.19, defaultAdvisor: 'Prof. K. Anand' },
+  { className: 'III AIDS A', year: 3, section: 'A', semester: 5, defaultTotal: 65, defaultPresent: 0, defaultPct: 0.0, defaultAdvisor: 'Dr. P. Sharmila' },
+  { className: 'III AIDS B', year: 3, section: 'B', semester: 5, defaultTotal: 61, defaultPresent: 10, defaultPct: 16.39, defaultAdvisor: 'Dr. V. Sasidharan' },
+  { className: 'III AIDS C', year: 3, section: 'C', semester: 5, defaultTotal: 61, defaultPresent: 16, defaultPct: 26.23, defaultAdvisor: 'Prof. R. Balaji' },
+  { className: 'III AIDS D', year: 3, section: 'D', semester: 5, defaultTotal: 63, defaultPresent: 0, defaultPct: 0.0, defaultAdvisor: 'Prof. S. Priyadharshini' },
+  { className: 'IV AIDS A', year: 4, section: 'A', semester: 7, defaultTotal: 60, defaultPresent: 53, defaultPct: 88.33, defaultAdvisor: 'Dr. G. Santhosh Kumar' },
+  { className: 'IV AIDS B', year: 4, section: 'B', semester: 7, defaultTotal: 65, defaultPresent: 63, defaultPct: 96.92, defaultAdvisor: 'Dr. K. Balamurugan' },
+]
 
 export default async function HODStudentsPage() {
   const session = await requireRoleSession(['hod'])
 
-  const [students, users] = await Promise.all([
-    prisma.student.findMany({ orderBy: { registerNumber: 'asc' } }).catch(() => []),
+  // Fetch all students, users, faculties, and morning attendance sessions
+  const db = prisma as any
+  const [students, studentUsers, faculties, facultyUsers, sessions] = await Promise.all([
+    prisma.student.findMany({ orderBy: [{ year: 'asc' }, { section: 'asc' }, { registerNumber: 'asc' }] }).catch(() => []),
     prisma.user.findMany({ where: { role: 'student' }, select: { id: true, name: true, email: true, phone: true } }).catch(() => []),
+    prisma.faculty.findMany().catch(() => []),
+    prisma.user.findMany({ where: { role: 'faculty' }, select: { id: true, name: true, email: true } }).catch(() => []),
+    db.attendanceSession
+      ? db.attendanceSession.findMany({ where: { sessionType: 'morning' }, orderBy: { date: 'desc' } }).catch(() => [])
+      : [],
   ])
 
-  const userMap = new Map<string, any>(users.map((u: any) => [u.id, u]))
+  // Build lookup maps
+  const studentUserMap = new Map<string, any>(studentUsers.map((u: any) => [u.id, u]))
+  const facultyUserMap = new Map<string, any>(facultyUsers.map((u: any) => [u.id, u]))
 
-  const studentList = students.map((s: any) => {
-    const u: any = userMap.get(s.userId)
+  // Map advisor names to Year-Section
+  const advisorMap = new Map<string, string>()
+  faculties.forEach((f: any) => {
+    if (f.advisorYear && f.advisorSec) {
+      const u = facultyUserMap.get(f.userId)
+      const advisorName = u?.name ? (u.name.toLowerCase().startsWith('dr') || u.name.toLowerCase().startsWith('prof') ? u.name : `Prof. ${u.name}`) : f.facultyId
+      advisorMap.set(`${f.advisorYear}-${f.advisorSec.toUpperCase()}`, advisorName)
+    }
+  })
+
+  // Format real students from DB
+  const initialStudents: DBStudent[] = students.map((s: any) => {
+    const u: any = studentUserMap.get(s.userId)
+    const key = `${s.year}-${(s.section || 'A').toUpperCase()}`
+    const matchedAdvisor = advisorMap.get(key)
+
     return {
       id: s.id,
       registerNumber: s.registerNumber,
@@ -24,100 +60,66 @@ export default async function HODStudentsPage() {
       email: u?.email || `${s.registerNumber.toLowerCase()}@vsb.ac.in`,
       year: s.year,
       semester: s.semester,
-      section: s.section,
+      section: (s.section || 'A').toUpperCase(),
+      batch: s.batch,
+      advisorName: s.advisorName || matchedAdvisor || null,
+      parentPhone: s.parentPhone || u?.phone || null,
+      residencyStatus: s.residencyStatus || 'Day Scholar',
+      busNo: s.busNo || null,
+      boardingPoint: s.boardingPoint || null,
+      hostelBlock: s.hostelBlock || null,
+      roomNo: s.roomNo || null,
+      cgpa: s.cgpa || null,
+      isDbVerified: true,
     }
+  })
+
+  // Build department classes with live attendance and advisor overrides
+  const departmentClasses: ClassMeta[] = BASELINE_DEPARTMENT_CLASSES.map((cls) => {
+    const key = `${cls.year}-${cls.section.toUpperCase()}`
+    const dbAdvisor = advisorMap.get(key)
+    const latestSession = (sessions as any[]).find(
+      (sess) => sess.year === cls.year && (sess.section || 'A').toUpperCase() === cls.section.toUpperCase()
+    )
+
+    let totalStudents = cls.defaultTotal
+    let presentCount = cls.defaultPresent
+    let attendancePct = cls.defaultPct
+    let advisorName = dbAdvisor || cls.defaultAdvisor
+
+    if (latestSession) {
+      totalStudents = latestSession.totalStudents || cls.defaultTotal
+      presentCount = (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0)
+      attendancePct = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 10000) / 100 : 0
+      if (latestSession.takenByName) {
+        advisorName = latestSession.takenByName
+      }
+    }
+
+    return {
+      className: cls.className,
+      year: cls.year,
+      section: cls.section,
+      semester: cls.semester,
+      totalStudents,
+      advisorName,
+      attendancePct,
+      presentCount,
+    }
+  })
+
+  const facultyAdvisors = Array.from(advisorMap.entries()).map(([k, v]) => {
+    const [yr, sec] = k.split('-')
+    return { year: Number(yr), section: sec, advisorName: v }
   })
 
   return (
     <PortalLayout role="hod" userName={session.name || 'Head of Department'}>
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-                Student Directory
-              </span>
-            </div>
-            <h1 className="text-2xl font-black">Student Enrollment &amp; Records</h1>
-            <p className="text-xs text-gray-300 mt-1">
-              B.Tech Artificial Intelligence &amp; Data Science · Department Student Roster
-            </p>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
-            <p className="text-xs font-bold text-gray-500">Total Enrolled</p>
-            <p className="text-2xl font-black text-[#071A3D] mt-1">{studentList.length}</p>
-            <p className="text-[10px] text-green-600 mt-0.5">● Database Sync Active</p>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
-            <p className="text-xs font-bold text-gray-500">Department</p>
-            <p className="text-2xl font-black text-[#1455D9] mt-1">AI &amp; DS</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Section A &amp; B</p>
-          </div>
-        </div>
-
-        {/* Students Table */}
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#1455D9]" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#071A3D]">Department Student Roll ({studentList.length})</h2>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-[#071A3D] text-white">
-                <tr>
-                  <th className="py-3.5 px-4 font-bold">Reg. No.</th>
-                  <th className="py-3.5 px-4 font-bold">Student Name</th>
-                  <th className="py-3.5 px-4 font-bold">Email</th>
-                  <th className="py-3.5 px-3 font-bold text-center">Year</th>
-                  <th className="py-3.5 px-3 font-bold text-center">Semester</th>
-                  <th className="py-3.5 px-3 font-bold text-center">Section</th>
-                  <th className="py-3.5 px-4 font-bold text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {studentList.length > 0 ? (
-                  studentList.map((s: any) => (
-                    <tr key={s.id} className="hover:bg-blue-50/30 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#1455D9]">{s.registerNumber}</td>
-                      <td className="py-3.5 px-4 font-bold text-[#071A3D]">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-[#1455D9] text-white flex items-center justify-center font-bold text-[10px]">
-                            {s.name?.charAt(0) || 'S'}
-                          </div>
-                          <span>{s.name || 'Student'}</span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-gray-500 font-mono">{s.email}</td>
-                      <td className="py-3.5 px-3 text-center font-bold">{s.year}</td>
-                      <td className="py-3.5 px-3 text-center">{s.semester}</td>
-                      <td className="py-3.5 px-3 text-center font-bold">{s.section}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full font-bold text-[10px]">
-                          Active Enrolled
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-400 font-medium">
-                      No students enrolled yet in this department register.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <HODStudentsView
+        initialStudents={initialStudents}
+        facultyAdvisors={facultyAdvisors}
+        departmentClasses={departmentClasses}
+      />
     </PortalLayout>
   )
 }
