@@ -869,13 +869,34 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
   }
 }
 
-export async function sendStudentVerificationEmail(
-  email: string,
-  otp: string,
-  studentName: string,
-  registerNumber?: string,
-  subjectName?: string,
+export interface VerificationEmailPayload {
+  email: string
+  otp: string
+  name: string
+  role?: string
+  registerNumber?: string
+  facultyId?: string
   department?: string
+  year?: number | string
+  semester?: number | string
+  section?: string
+  advisorName?: string
+  subjectHandlerName?: string
+  advisorYear?: number | string
+  advisorSem?: number | string
+  advisorSec?: string
+  advisorBatch?: string
+  subjectName?: string
+}
+
+export async function sendStudentVerificationEmail(
+  emailOrPayload: string | VerificationEmailPayload,
+  otpParam?: string,
+  studentNameParam?: string,
+  registerNumberParam?: string,
+  subjectNameParam?: string,
+  departmentParam?: string,
+  extraParams?: Partial<VerificationEmailPayload>
 ) {
   const nodemailer = require('nodemailer')
   const dns = require('dns')
@@ -887,14 +908,51 @@ export async function sendStudentVerificationEmail(
       dns.setDefaultResultOrder('ipv4first')
     } catch {}
   }
-  
-  const recipientEmail = email.toLowerCase().trim()
+
+  // Parse arguments cleanly whether invoked with object or positional params
+  const payload: VerificationEmailPayload = typeof emailOrPayload === 'object'
+    ? emailOrPayload
+    : {
+        email: emailOrPayload,
+        otp: otpParam || '',
+        name: studentNameParam || 'User',
+        registerNumber: registerNumberParam,
+        subjectName: subjectNameParam,
+        department: departmentParam,
+        ...extraParams,
+      }
+
+  const recipientEmail = (payload.email || '').toLowerCase().trim()
+  const otp = payload.otp || ''
+  const name = (payload.name || 'User').trim()
+  const departmentName = (payload.department || '').trim() || 'B.Tech Artificial Intelligence & Data Science'
+  const registerNumber = (payload.registerNumber || '').trim().toUpperCase()
+  const facultyId = (payload.facultyId || '').trim().toUpperCase()
+  const resolvedSubjectName = (payload.subjectName || '').trim()
+  const advisorName = (payload.advisorName || '').trim()
+  const subjectHandlerName = (payload.subjectHandlerName || '').trim()
+
+  // Determine role
+  let role = (payload.role || '').toLowerCase().trim()
+  if (!role) {
+    if (facultyId || payload.advisorYear || payload.advisorSec) {
+      if ((payload.advisorYear || payload.advisorSec) && resolvedSubjectName) {
+        role = 'both'
+      } else if (payload.advisorYear || payload.advisorSec) {
+        role = 'advisor'
+      } else if (resolvedSubjectName) {
+        role = 'subject_handler'
+      } else {
+        role = 'faculty'
+      }
+    } else {
+      role = 'student'
+    }
+  }
+
   const smtpUser = process.env.SMTP_USER || 'admin@vsb.edu.in'
   const smtpPass = process.env.SMTP_PASSWORD || ''
   const isRealSmtpConfigured = smtpUser && smtpPass && smtpPass !== 'your-app-password'
-
-  const resolvedSubjectName = (subjectName || '').trim() || 'Artificial Intelligence & Data Science'
-  const departmentName = (department || '').trim() || 'B.Tech Artificial Intelligence & Data Science'
 
   const logoPath = path.join(process.cwd(), 'public', 'logo.png')
   const hasLogo = fs.existsSync(logoPath)
@@ -911,10 +969,207 @@ export async function sendStudentVerificationEmail(
 
   const officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
 
+  // Build role-specific table rows & headers
+  let emailTitle = 'Email & Password Setup Verification'
+  let emailSubject = `V.S.B. AI & DS Portal — Verification OTP [${otp}]`
+  let detailsTableRows = ''
+
+  if (role === 'student') {
+    emailTitle = 'Student Account Verification'
+    emailSubject = `V.S.B. AI & DS Portal — Student Verification OTP [${otp}]`
+    
+    // Class display
+    const classParts: string[] = []
+    if (payload.year) classParts.push(`Year ${payload.year}`)
+    if (payload.section) classParts.push(`Section ${payload.section}`)
+    if (payload.semester) classParts.push(`Sem ${payload.semester}`)
+    const classDisplay = classParts.length > 0 ? classParts.join(' · ') : ''
+
+    detailsTableRows = `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Student Name:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
+      </tr>
+      ${registerNumber ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎓 Register Number:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${registerNumber}</td>
+      </tr>` : ''}
+      ${classDisplay ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🏫 Class / Section:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${classDisplay}</td>
+      </tr>` : ''}
+      ${advisorName ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">👨‍🏫 Class Advisor:</td>
+        <td style="padding: 5px 0; color: #059669; font-weight: 700;">${advisorName}</td>
+      </tr>` : ''}
+      ${subjectHandlerName ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">📚 Subject Handler:</td>
+        <td style="padding: 5px 0; color: #0284c7; font-weight: 700;">${subjectHandlerName}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
+      </tr>
+    `
+  } else if (role === 'advisor') {
+    emailTitle = 'Class Advisor Portal Verification'
+    emailSubject = `V.S.B. AI & DS Portal — Advisor Verification OTP [${otp}]`
+
+    const advParts: string[] = []
+    if (payload.advisorYear) advParts.push(`Year ${payload.advisorYear}`)
+    if (payload.advisorSec) advParts.push(`Section ${payload.advisorSec}`)
+    if (payload.advisorSem) advParts.push(`Sem ${payload.advisorSem}`)
+    if (payload.advisorBatch) advParts.push(`(${payload.advisorBatch})`)
+    const advClassDisplay = advParts.length > 0 ? advParts.join(' · ') : 'Assigned Class'
+
+    detailsTableRows = `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Faculty Name:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
+      </tr>
+      ${facultyId ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
+        <td style="padding: 5px 0; color: #059669; font-weight: 700;">Class Advisor</td>
+      </tr>
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">👥 Assigned Class:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${advClassDisplay}</td>
+      </tr>
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
+      </tr>
+    `
+  } else if (role === 'subject_handler') {
+    emailTitle = 'Subject Handler Portal Verification'
+    emailSubject = `V.S.B. AI & DS Portal — Subject Handler Verification OTP [${otp}]`
+
+    detailsTableRows = `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Faculty Name:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
+      </tr>
+      ${facultyId ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
+        <td style="padding: 5px 0; color: #0284c7; font-weight: 700;">Subject Handler</td>
+      </tr>
+      ${resolvedSubjectName ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">📚 Handled Subject:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${resolvedSubjectName}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
+      </tr>
+    `
+  } else if (role === 'both') {
+    emailTitle = 'Faculty Portal Verification'
+    emailSubject = `V.S.B. AI & DS Portal — Faculty Verification OTP [${otp}]`
+
+    const advParts: string[] = []
+    if (payload.advisorYear) advParts.push(`Year ${payload.advisorYear}`)
+    if (payload.advisorSec) advParts.push(`Section ${payload.advisorSec}`)
+    const advClassDisplay = advParts.length > 0 ? advParts.join(' · ') : 'Assigned Class'
+
+    detailsTableRows = `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Faculty Name:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
+      </tr>
+      ${facultyId ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
+        <td style="padding: 5px 0; color: #059669; font-weight: 700;">Class Advisor &amp; Subject Handler</td>
+      </tr>
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">👥 Assigned Class:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${advClassDisplay}</td>
+      </tr>
+      ${resolvedSubjectName ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">📚 Handled Subject:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${resolvedSubjectName}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
+      </tr>
+    `
+  } else if (role === 'hod') {
+    emailTitle = 'Head of Department (HOD) Verification'
+    emailSubject = `V.S.B. AI & DS Portal — HOD Verification OTP [${otp}]`
+
+    detailsTableRows = `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Head of Dept:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
+      </tr>
+      ${facultyId ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
+        <td style="padding: 5px 0; color: #7c3aed; font-weight: 700;">Head of Department (HOD)</td>
+      </tr>
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
+      </tr>
+    `
+  } else {
+    // Default fallback
+    detailsTableRows = `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Name:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
+      </tr>
+      ${registerNumber ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎓 Register Number:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${registerNumber}</td>
+      </tr>` : ''}
+      ${facultyId ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
+      </tr>` : ''}
+      ${resolvedSubjectName ? `
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">📚 Subject:</td>
+        <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${resolvedSubjectName}</td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
+        <td style="padding: 5px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
+      </tr>
+    `
+  }
+
   const mailOptions = {
     from: officialFrom,
     to: recipientEmail,
-    subject: `V.S.B. AI & DS Portal — Email Verification OTP [${otp}]`,
+    subject: emailSubject,
     attachments,
     html: `
       <!DOCTYPE html>
@@ -938,34 +1193,23 @@ export async function sendStudentVerificationEmail(
           </div>
           
           <div style="padding: 24px 20px;">
-            <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">Email &amp; Password Setup Verification</h2>
-            <p style="margin: 0 0 14px; font-size: 14px; color: #334155;">Dear <strong>${studentName}</strong>,</p>
+            <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">${emailTitle}</h2>
+            <p style="margin: 0 0 14px; font-size: 14px; color: #334155;">Dear <strong>${name}</strong>,</p>
 
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; font-size: 13px;">
               <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 4px 0; color: #64748b; font-weight: 600; width: 140px;">👤 Name:</td>
-                  <td style="padding: 4px 0; color: #071A3D; font-weight: 700;">${studentName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; color: #64748b; font-weight: 600;">📚 Subject Name:</td>
-                  <td style="padding: 4px 0; color: #071A3D; font-weight: 700;">${resolvedSubjectName}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 0; color: #64748b; font-weight: 600;">🛡️ Department:</td>
-                  <td style="padding: 4px 0; color: #1455D9; font-weight: 700;">${departmentName}</td>
-                </tr>
+                ${detailsTableRows}
               </table>
             </div>
 
-            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your portal to verify your institutional account and proceed to set your new permanent password:</p>
+            <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your portal to verify your institutional account and proceed to set your permanent password:</p>
             
             <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; text-align: center; margin: 16px 0;">
               <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
             </div>
             
             <p style="margin: 0 0 10px; font-size: 13px; color: #e11d48; font-weight: 600;">⏱️ Valid for 10 minutes only.</p>
-            <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this email verification, please contact your department administrator.</p>
+            <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this email verification, please contact your department administrator immediately.</p>
             
             <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; text-align: center;">
               <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal • Institutional Verification System</p>
@@ -1007,7 +1251,7 @@ export async function sendStudentVerificationEmail(
     console.log('\n========================================')
     console.log(`  [SIMULATED STUDENT EMAIL DISPATCH]`)
     console.log(`  To: ${recipientEmail}`)
-    console.log(`  Student: ${studentName} (${registerNumber})`)
+    console.log(`  User/Student: ${name} (${registerNumber || facultyId || 'N/A'})`)
     console.log(`  OTP Code: ${otp}`)
     console.log('========================================\n')
     return { success: true, simulated: true }

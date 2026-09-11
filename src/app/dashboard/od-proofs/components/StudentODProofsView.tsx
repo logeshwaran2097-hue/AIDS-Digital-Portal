@@ -74,6 +74,18 @@ interface StudentODProofsViewProps {
 export function StudentODProofsView({ initialProofs, studentInfo }: StudentODProofsViewProps) {
   const [proofs, setProofs] = useState<ODProofItem[]>(initialProofs)
   const [loading, setLoading] = useState(false)
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'SANCTIONED' | 'PENDING_GEO' | 'PENDING_CERT' | 'CREDITED'>('ALL')
+
+  React.useEffect(() => {
+    fetch('/api/od-proofs')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.proofs)) {
+          setProofs(data.proofs)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Modals state
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
@@ -288,6 +300,29 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
   const geoUploadedCount = proofs.filter((p) => p.geoPhotoUrl).length
   const certUploadedCount = proofs.filter((p) => p.certificateUrl).length
   const verifiedCount = proofs.filter((p) => p.status === 'verified' || p.status === 'advisor_approved').length
+  const sanctionedCount = proofs.filter(
+    (p) =>
+      p.status === 'verified' ||
+      p.attendanceCredited ||
+      (p.advisorRemarks && p.advisorRemarks.toLowerCase().includes('sanction'))
+  ).length
+  const pendingGeoCount = proofs.filter((p) => !p.geoPhotoUrl).length
+  const pendingCertCount = proofs.filter((p) => !p.certificateUrl).length
+
+  const filteredProofs = proofs.filter((p) => {
+    const isGeo = Boolean(p.geoPhotoUrl)
+    const isCert = Boolean(p.certificateUrl)
+    const isSanctioned =
+      p.status === 'verified' ||
+      p.attendanceCredited ||
+      (p.advisorRemarks && p.advisorRemarks.toLowerCase().includes('sanction'))
+
+    if (activeFilter === 'SANCTIONED') return isSanctioned
+    if (activeFilter === 'PENDING_GEO') return !isGeo
+    if (activeFilter === 'PENDING_CERT') return !isCert
+    if (activeFilter === 'CREDITED') return p.status === 'verified' || p.attendanceCredited
+    return true
+  })
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -299,10 +334,10 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
             Institutional Compliance &amp; NAAC Verification
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            OD &amp; Hackathon Proofs Hub
+            Event Proofs &amp; Sanctioned OD Hub
           </h1>
           <p className="text-xs sm:text-sm text-blue-100 leading-relaxed">
-            Upload your <strong>Live Venue Geo-Tag Photo</strong> on event day and your <strong>Completion Certificate</strong> post-event to receive official OD attendance credit from your Class Advisor.
+            View your <strong>Sanctioned On-Duty (OD) Events</strong>, upload your <strong>Live Venue Geo-Tag Photo</strong> on event day and submit your <strong>Completion Certificate</strong> to credit your official attendance.
           </p>
           <div className="flex items-center gap-3 text-xs text-blue-200 pt-1 font-mono">
             <span>Student: {studentInfo.name}</span>
@@ -326,9 +361,15 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       {/* KPI Stats Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs text-center">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Total OD Registered</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Total Events</p>
           <p className="text-2xl font-black text-[#071A3D] mt-0.5">{totalCount}</p>
-          <p className="text-[10px] text-gray-500">Official Applications</p>
+          <p className="text-[10px] text-gray-500">Official Registrations</p>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-xs text-center bg-gradient-to-b from-white to-emerald-50/40">
+          <p className="text-[10px] text-emerald-700 font-bold uppercase">Sanctioned ODs</p>
+          <p className="text-2xl font-black text-emerald-700 mt-0.5">{sanctionedCount}</p>
+          <p className="text-[10px] text-emerald-600 font-bold">Approved by HOD / Advisor</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-blue-200 shadow-xs text-center">
@@ -346,36 +387,58 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
           </p>
           <p className="text-[10px] text-purple-600">Post-Event Uploaded</p>
         </div>
+      </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-xs text-center">
-          <p className="text-[10px] text-emerald-600 font-bold uppercase">Advisor Verified</p>
-          <p className="text-2xl font-black text-emerald-700 mt-0.5">{verifiedCount}</p>
-          <p className="text-[10px] text-emerald-600 font-bold">Attendance Sanctioned</p>
-        </div>
+      {/* Filter Tabs Strip */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3">
+        {[
+          { key: 'ALL', label: `All Events (${totalCount})` },
+          { key: 'SANCTIONED', label: `🏛️ Sanctioned ODs (${sanctionedCount})` },
+          { key: 'PENDING_GEO', label: `📍 Need Geo-Tag (${pendingGeoCount})` },
+          { key: 'PENDING_CERT', label: `📜 Need Certificate (${pendingCertCount})` },
+          { key: 'CREDITED', label: `✅ Attendance Credited (${verifiedCount})` },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveFilter(tab.key as any)}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeFilter === tab.key
+                ? 'bg-[#071A3D] text-[#F4C430] shadow-xs'
+                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       {/* OD Proof Submissions List */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base sm:text-lg font-black text-[#071A3D] flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-[#1455D9]" /> My Registered OD Events &amp; Verification Status
+            <ShieldCheck className="w-5 h-5 text-[#1455D9]" /> My Registered &amp; Sanctioned OD Events
           </h2>
-          <span className="text-xs text-gray-500 font-medium">{proofs.length} Event Records</span>
+          <span className="text-xs text-gray-500 font-medium">{filteredProofs.length} of {proofs.length} Events</span>
         </div>
 
-        {proofs.length === 0 ? (
+        {filteredProofs.length === 0 ? (
           <Card className="rounded-3xl border-dashed border-gray-300 p-8 text-center bg-white">
             <CardContent className="space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center mx-auto">
                 <ShieldCheck className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-sm text-[#071A3D]">No OD Events Registered Yet</h3>
+              <h3 className="font-bold text-sm text-[#071A3D]">
+                {activeFilter === 'SANCTIONED' ? 'No Sanctioned OD Events Found' : 'No OD Events Found in This View'}
+              </h3>
               <p className="text-xs text-gray-500 max-w-md mx-auto">
-                When you participate in an external hackathon, paper presentation, or symposium, click the button below to register your event and submit venue proofs.
+                {activeFilter === 'SANCTIONED'
+                  ? 'When your class advisor endorses and HOD sanctions your OD attendance or leave request, it will automatically appear here ready for proof submission.'
+                  : 'Register your external hackathon, symposium, or conference participation to upload venue photos and certificates.'}
               </p>
               <button
                 onClick={() => setIsRegisterOpen(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1455D9] text-white text-xs font-bold shadow-xs hover:bg-[#0e44b5]"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#1455D9] text-white text-xs font-bold shadow-xs hover:bg-[#0e44b5] cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Register Event Now
               </button>
@@ -383,11 +446,15 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
           </Card>
         ) : (
           <div className="grid gap-4">
-            {proofs.map((p) => {
+            {filteredProofs.map((p) => {
               const isGeoUploaded = Boolean(p.geoPhotoUrl)
               const isCertUploaded = Boolean(p.certificateUrl)
               const isVerified = p.status === 'verified' || p.status === 'advisor_approved'
               const isResubmit = p.status === 'resubmit_requested'
+              const isSanctioned =
+                p.status === 'verified' ||
+                p.attendanceCredited ||
+                (p.advisorRemarks && p.advisorRemarks.toLowerCase().includes('sanction'))
 
               return (
                 <Card
@@ -449,6 +516,54 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                           Class Advisor Remarks:
                         </p>
                         <p className="text-rose-700 pl-5">{p.advisorRemarks}</p>
+                      </div>
+                    )}
+
+                    {/* Officially Sanctioned OD Badge Banner */}
+                    {isSanctioned && (
+                      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50/50 border border-emerald-300 rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                        <div className="flex items-start sm:items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 font-bold shadow-xs">
+                            🏛️
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-black text-emerald-950">
+                                Officially Sanctioned On-Duty (OD)
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-wider">
+                                Sanctioned
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-emerald-800 mt-0.5 font-medium">
+                              {p.advisorRemarks || 'Approved by HOD & Advisor · OD Attendance Credited'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Quick upload buttons right in the sanctioned banner */}
+                        {(!isGeoUploaded || !isCertUploaded) && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            {!isGeoUploaded && (
+                              <button
+                                type="button"
+                                onClick={() => openGeoModal(p)}
+                                className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all hover:scale-105"
+                              >
+                                <Camera className="w-3.5 h-3.5" /> Upload Photo
+                              </button>
+                            )}
+                            {!isCertUploaded && (
+                              <button
+                                type="button"
+                                onClick={() => openCertModal(p)}
+                                className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all hover:scale-105"
+                              >
+                                <Award className="w-3.5 h-3.5" /> Upload Certificate
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -628,6 +743,40 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* Direct Proof Upload CTA Footer if proofs are missing */}
+                    {(!isGeoUploaded || !isCertUploaded) && (
+                      <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2.5">
+                        <div className="text-xs text-gray-600 font-medium">
+                          <span className="text-[#071A3D] font-bold">Proof Actions:</span>{' '}
+                          {!isGeoUploaded && !isCertUploaded
+                            ? 'Submit both Stage 1 Geo-Tag photo and Stage 2 Certificate to complete proof dossier.'
+                            : !isGeoUploaded
+                            ? 'Stage 1 Geo-Tag photo is pending submission.'
+                            : 'Stage 2 Certificate is pending submission.'}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!isGeoUploaded && (
+                            <button
+                              type="button"
+                              onClick={() => openGeoModal(p)}
+                              className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all hover:scale-105"
+                            >
+                              <Camera className="w-3.5 h-3.5" /> Upload Geo-Tag Photo
+                            </button>
+                          )}
+                          {!isCertUploaded && (
+                            <button
+                              type="button"
+                              onClick={() => openCertModal(p)}
+                              className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all hover:scale-105"
+                            >
+                              <Award className="w-3.5 h-3.5" /> Upload Certificate
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </CardContent>

@@ -289,6 +289,10 @@ export function StaffOnboardingModal({
           role,
           subjectName: initialData.subjects || '',
           department: initialData.department || 'B.Tech Artificial Intelligence & Data Science',
+          advisorYear: initialData.advisorYear,
+          advisorSem: initialData.advisorSem,
+          advisorSec: initialData.advisorSec,
+          advisorBatch: initialData.advisorBatch,
         }),
       })
 

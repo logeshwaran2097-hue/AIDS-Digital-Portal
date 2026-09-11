@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { syncSanctionedODsForStudent } from '@/lib/odSync'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,20 +33,27 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: true, proofs: [], count: 0 })
       }
 
+      // Auto-sync any sanctioned OD applications from Attendance/HOD approval into Event Proofs
+      await syncSanctionedODsForStudent(activeRegNo, student)
+
       let proofs = await prisma.oDProof.findMany({
         where: {
           registerNumber: activeRegNo,
-          ...(filterStatus ? { status: filterStatus } : {}),
+          ...(filterStatus && filterStatus !== 'ALL' ? { status: filterStatus } : {}),
         },
         orderBy: { createdAt: 'desc' },
       })
 
-
+      const sanctionedProofs = proofs.filter(
+        (p) => p.status === 'verified' || p.attendanceCredited || (p.advisorRemarks && p.advisorRemarks.toLowerCase().includes('sanction'))
+      )
 
       return NextResponse.json({
         success: true,
         proofs,
         count: proofs.length,
+        sanctionedCount: sanctionedProofs.length,
+        sanctionedProofs,
         student: {
           name: session.name,
           registerNumber: activeRegNo,

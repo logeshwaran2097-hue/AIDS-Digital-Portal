@@ -470,6 +470,12 @@ export default function LoginPage() {
           email: onboardingForm.email.trim(),
           name: onboardingForm.name,
           registerNumber: onboardingForm.registerNumber,
+          role: selectedRole || 'student',
+          department: onboardingForm.department,
+          year: onboardingForm.year,
+          semester: onboardingForm.semester,
+          section: onboardingForm.section,
+          advisorName: onboardingForm.advisorName,
         }),
       })
       const data = await res.json()

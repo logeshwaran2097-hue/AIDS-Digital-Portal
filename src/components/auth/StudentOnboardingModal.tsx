@@ -279,6 +279,11 @@ export function StudentOnboardingModal({
           email: form.email.trim().toLowerCase(),
           name: initialData.name,
           regNo: initialData.registerNumber,
+          advisorName: initialData.advisorName,
+          year: initialData.year,
+          semester: initialData.semester,
+          section: initialData.section,
+          department: initialData.department,
         }),
       })
 

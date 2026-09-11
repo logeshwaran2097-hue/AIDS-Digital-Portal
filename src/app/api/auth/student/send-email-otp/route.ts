@@ -54,11 +54,60 @@ export async function POST(request: NextRequest) {
     })
 
     const studentName = session.name || 'Student'
-    const regNo = student?.registerNumber || session.registerNumber || 'Student'
+    const regNo = student?.registerNumber || session.registerNumber || ''
+    let advisorName = student?.advisorName || ''
+    let subjectHandler = ''
+
+    if (!advisorName && student?.year && student?.section) {
+      try {
+        const advFaculty = await prisma.faculty.findFirst({
+          where: {
+            advisorYear: student.year,
+            advisorSec: { equals: student.section, mode: 'insensitive' },
+          },
+        })
+        if (advFaculty) {
+          const advUser = await prisma.user.findUnique({ where: { id: advFaculty.userId } })
+          if (advUser?.name) advisorName = advUser.name
+        }
+      } catch {}
+    }
+
+    try {
+      const subFaculty = await prisma.faculty.findFirst({
+        where: {
+          facultyType: { in: ['subject_handler', 'both'] },
+          subjectName: { not: null },
+        },
+      })
+      if (subFaculty) {
+        const subUser = await prisma.user.findUnique({ where: { id: subFaculty.userId } })
+        const course = subFaculty.subjectName || ''
+        if (subUser?.name && course) {
+          subjectHandler = `${subUser.name} (${course})`
+        } else if (subUser?.name) {
+          subjectHandler = subUser.name
+        } else if (course) {
+          subjectHandler = course
+        }
+      }
+    } catch {}
 
     // Dispatch real verification email
     try {
-      await sendStudentVerificationEmail(normalizedEmail, otp, studentName, regNo)
+      await sendStudentVerificationEmail({
+        email: normalizedEmail,
+        otp,
+        name: studentName,
+        role: 'student',
+        registerNumber: regNo,
+        department: student?.department || 'B.Tech Artificial Intelligence & Data Science',
+        year: student?.year,
+        semester: student?.semester,
+        section: student?.section,
+        advisorName,
+        subjectHandlerName: subjectHandler,
+      })
     } catch (emailErr) {
       console.warn('[OTP] Email dispatch note:', emailErr)
     }
