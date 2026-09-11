@@ -412,6 +412,69 @@ export async function GET(request: Request) {
     .pill-declined { background: #FEF2F2; border: 1px solid #FECACA; color: var(--rose); }
     .pill-verified { background: #ECFDF5; border: 1px solid #A7F3D0; color: var(--emerald); }
 
+    /* ── Evidence Document Viewer ── */
+    .evidence-viewer {
+      margin: 16px 24px;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .evidence-viewer-header {
+      background: linear-gradient(135deg, #1E293B, var(--navy));
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .evidence-viewer-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .evidence-img {
+      max-width: 100%;
+      max-height: 500px;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      object-fit: contain;
+      background: #fff;
+    }
+    .evidence-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--slate-500);
+      font-weight: 600;
+    }
+    .evidence-meta .file-icon {
+      width: 36px; height: 36px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 16px;
+    }
+    .evidence-no-file {
+      padding: 32px 20px;
+      text-align: center;
+      color: var(--slate-400);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .evidence-no-file .icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      opacity: 0.5;
+    }
+
     /* ── Footer ── */
     .doc-footer {
       text-align: center; padding: 10px 24px 16px;
@@ -615,6 +678,31 @@ export async function GET(request: Request) {
     <div class="proof-ribbon ${isApproved ? 'approved' : isDeclined ? 'declined' : 'pending'}">
       <span>📎 ATTACHED PROOF: ${esc(rawProofDocName)}</span>
       <span>${statusIcon} ${esc(statusLabel).toUpperCase()}${isApproved ? ' · FORWARDED TO HOD' : ''}</span>
+    </div>
+
+    <!-- Uploaded Evidence Document Viewer -->
+    <div class="evidence-viewer">
+      <div class="evidence-viewer-header">
+        <span>📄 UPLOADED EVIDENCE DOCUMENT</span>
+        <span style="font-size:9px; opacity:0.7">File: ${esc(rawProofDocName)}</span>
+      </div>
+      <div class="evidence-viewer-body">
+        ${uploadedImageFile && uploadedImageFile.fileUrl
+          ? `<img class="evidence-img" src="${uploadedImageFile.fileUrl}" alt="Evidence Document: ${esc(rawProofDocName)}" />
+             <div class="evidence-meta">
+               <div class="file-icon">📎</div>
+               <div>
+                 <div style="font-weight:800; color: var(--navy); font-size: 12px;">${esc(uploadedImageFile.originalName || uploadedImageFile.fileName || rawProofDocName)}</div>
+                 <div style="font-size:10px; color: var(--slate-400);">Uploaded on ${uploadedImageFile.createdAt ? new Date(uploadedImageFile.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'} · Digitally Verified</div>
+               </div>
+             </div>`
+          : `<div class="evidence-no-file">
+               <div class="icon">📂</div>
+               <div>No evidence document image uploaded yet.</div>
+               <div style="font-size:10px; margin-top:4px; color: var(--slate-300);">The student can upload proof via the OD/Leave application form.</div>
+             </div>`
+        }
+      </div>
     </div>
 
     <!-- Signature Block -->
