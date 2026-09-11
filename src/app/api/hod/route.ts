@@ -158,13 +158,14 @@ export async function POST(request: Request) {
 
     const parsedExp = (experience !== null && experience !== undefined && experience !== '') ? (Number(experience) || 0) : 0
     const parsedHodDob = parseSafeDateOfBirth(dateOfBirth)
+    const finalDepartment = department?.trim() || 'Artificial Intelligence & Data Science'
 
     // Upsert HOD without forced fake defaults
     const hod = await prisma.hOD.upsert({
       where: { facultyId: fid },
       update: {
         userId: user.id,
-        department: department || '',
+        department: finalDepartment,
         designation: designation || '',
         qualification: qualification || '',
         experience: parsedExp,
@@ -173,7 +174,7 @@ export async function POST(request: Request) {
       create: {
         userId: user.id,
         facultyId: fid,
-        department: department || '',
+        department: finalDepartment,
         designation: designation || '',
         qualification: qualification || '',
         experience: parsedExp,

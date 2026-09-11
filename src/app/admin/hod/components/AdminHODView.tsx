@@ -94,7 +94,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
         {
           heading: '2. APPOINTED HEAD OF DEPARTMENT PARTICULARS',
           body: hodList.map((h, idx) => 
-            `${idx + 1}. ${h.name} — ${h.designation || 'Professor & Head'} | Email: ${h.email} | Phone: ${h.phone || 'N/A'} | Qualification: ${h.qualification || 'Ph.D. (AI & DS)'} | Experience: ${h.experience || 15} Yrs | Department: ${h.department}`
+            `${idx + 1}. ${h.name} — ${h.designation || 'Professor & Head'} | Email: ${h.email} | Phone: ${h.phone || 'N/A'} | Qualification: ${h.qualification || 'N/A'} | Experience: ${h.experience ?? 'N/A'} Yrs | Department: ${h.department}`
           ),
         },
       ],
@@ -117,7 +117,8 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          experience: Number(formData.experience) || 15,
+          department: formData.department || 'Artificial Intelligence & Data Science',
+          experience: formData.experience !== '' ? (Number(formData.experience) || 0) : null,
         }),
       })
       const result = await res.json()
@@ -131,11 +132,11 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
           phone: '',
           password: '',
           dateOfBirth: '',
-          designation: '',
+          designation: 'Professor & Head',
           qualification: '',
           experience: '',
           specialization: '',
-          department: '',
+          department: 'Artificial Intelligence & Data Science',
           status: 'active',
         })
         toast.success('HOD successfully registered in database!')
@@ -157,13 +158,15 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
 
     setIsLoading(true)
     try {
+      const parsedExp = formData.experience !== '' ? (Number(formData.experience) || 0) : null
       const res = await fetch('/api/hod', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           facultyId: selectedHOD.facultyId,
-          experience: Number(formData.experience) || 15,
+          department: formData.department || selectedHOD.department || 'Artificial Intelligence & Data Science',
+          experience: parsedExp,
         }),
       })
       const result = await res.json()
@@ -179,10 +182,10 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   phone: formData.phone,
                   designation: formData.designation,
                   qualification: formData.qualification,
-                  experience: Number(formData.experience) || 15,
+                  experience: parsedExp,
                   specialization: formData.specialization,
                   dateOfBirth: formData.dateOfBirth,
-                  department: formData.department,
+                  department: formData.department || h.department,
                   status: formData.status,
                 }
               : h
@@ -262,9 +265,9 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                 password: '',
                 dateOfBirth: '',
                 designation: 'Professor & Head',
-                qualification: 'Ph.D. (AI & Data Science)',
-                experience: '15',
-                specialization: 'Artificial Intelligence, Deep Learning & Autonomous Systems',
+                qualification: '',
+                experience: '',
+                specialization: '',
                 department: 'Artificial Intelligence & Data Science',
                 status: 'active',
               })
@@ -422,18 +425,20 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                           {hod.designation || 'Professor & Head'}
                         </span>
                         <span className="text-gray-600 text-[11px] block mt-0.5">
-                          {hod.qualification || 'Ph.D. (AI & Data Science)'}
+                          {hod.qualification || '—'}
                         </span>
                       </td>
 
-                      {/* Experience & Domain */}
+                      {/* Experience */}
                       <td className="px-4 py-3.5">
                         <span className="font-bold text-gray-800 block">
-                          {hod.experience ? `${hod.experience} Yrs Experience` : '15 Yrs Experience'}
+                          {hod.experience !== null && hod.experience !== undefined && hod.experience !== 0 ? `${hod.experience} Yrs Experience` : '—'}
                         </span>
-                        <span className="text-gray-500 text-[11px] block mt-0.5 truncate max-w-[200px]" title={hod.specialization || 'Artificial Intelligence & Data Science'}>
-                          {hod.specialization || 'AI, Deep Learning & Autonomous Systems'}
-                        </span>
+                        {hod.specialization && (
+                          <span className="text-gray-500 text-[11px] block mt-0.5 truncate max-w-[200px]" title={hod.specialization}>
+                            {hod.specialization}
+                          </span>
+                        )}
                       </td>
 
                       {/* Contact Details */}
@@ -576,11 +581,11 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Phone className="w-4 h-4 text-[#1455D9] shrink-0" />
-                      <span>{hod.phone || '+91 94431 87654'}</span>
+                      <span>{hod.phone || '—'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <GraduationCap className="w-4 h-4 text-[#1455D9] shrink-0" />
-                      <span>{hod.qualification || 'Ph.D. (AI & DS)'}</span>
+                      <span>{hod.qualification || '—'}</span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <Building className="w-4 h-4 text-[#1455D9] shrink-0" />
@@ -735,7 +740,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Ph.D. (AI & Data Science)"
+                    placeholder="e.g. Ph.D."
                     value={formData.qualification}
                     onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all"
@@ -750,39 +755,12 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     type="number"
                     min={0}
                     max={60}
-                    placeholder="e.g. 15"
+                    placeholder="e.g. 5"
                     value={formData.experience}
                     onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
-                  <Sparkles className="w-4 h-4 text-[#F4C430]" />
-                  <span>Specialization &amp; Research Domain</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Artificial Intelligence, Machine Learning & Autonomous Systems"
-                  value={formData.specialization}
-                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
-                  <Building className="w-4 h-4 text-[#1455D9]" />
-                  <span>Department &amp; Jurisdiction</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-semibold text-slate-800 transition-all"
-                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
@@ -912,6 +890,10 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     <option value="Director & HOD">Director &amp; HOD</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Qualification & Experience Row (2 Columns) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
                     <GraduationCap className="w-4 h-4 text-[#1455D9]" />
@@ -919,16 +901,12 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Ph.D. (AI & Data Science)"
+                    placeholder="e.g. Ph.D."
                     value={formData.qualification}
                     onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all"
                   />
                 </div>
-              </div>
-
-              {/* Experience & Department Row (2 Columns) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
                     <Award className="w-4 h-4 text-[#1455D9]" />
@@ -938,39 +916,12 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     type="number"
                     min={0}
                     max={60}
-                    placeholder="e.g. 15"
+                    placeholder="e.g. 5"
                     value={formData.experience}
                     onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all"
                   />
                 </div>
-                <div>
-                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
-                    <Building className="w-4 h-4 text-[#1455D9]" />
-                    <span>Department &amp; Jurisdiction</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-semibold text-slate-800 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Specialization Domain */}
-              <div>
-                <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
-                  <Sparkles className="w-4 h-4 text-[#F4C430]" />
-                  <span>Specialization &amp; Research Domain</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Artificial Intelligence, Deep Learning & Autonomous Systems"
-                  value={formData.specialization}
-                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 text-xs text-slate-800 transition-all"
-                />
               </div>
 
               {/* Password Reset Section (Sleek Box with Show/Hide Toggle) */}
