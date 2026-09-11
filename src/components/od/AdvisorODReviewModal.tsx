@@ -1,5 +1,14 @@
 'use client'
 
+// Normalize Indian phone numbers to 10 digits — handles +91/0/11-digit variants
+function normalizeIndianPhone(raw: string | null | undefined): string {
+  if (!raw) return '6381366088'
+  let num = raw.replace(/\D/g, '')
+  if (num.startsWith('91') && num.length >= 12) num = num.slice(2)
+  if (num.startsWith('0') && num.length >= 11) num = num.slice(1)
+  return num.length >= 10 ? num.slice(-10) : num
+}
+
 import React, { useState, useEffect } from 'react'
 import {
   X,
@@ -518,17 +527,17 @@ export function AdvisorODReviewModal({
               <div className="flex items-center gap-2 text-gray-700">
                 <Phone className="w-3.5 h-3.5 text-[#1455D9]" />
                 <span className="font-semibold">Parent Contact:</span>
-                <span className="font-mono font-bold text-[#071A3D]">{effectiveParentPhone}</span>
+                <span className="font-mono font-bold text-[#071A3D]">{normalizeIndianPhone(effectiveParentPhone)}</span>
               </div>
               <div className="flex items-center gap-2 print:hidden">
                 <a
-                  href={`tel:+91${effectiveParentPhone.replace(/\D/g, '')}`}
+                  href={`tel:+91${normalizeIndianPhone(effectiveParentPhone)}`}
                   className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold text-[11px] flex items-center gap-1 transition-colors"
                 >
                   <Phone className="w-3 h-3 text-emerald-600" /> Call Parent
                 </a>
                 <a
-                  href={`https://wa.me/91${effectiveParentPhone.replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
+                  href={`https://wa.me/91${normalizeIndianPhone(effectiveParentPhone)}?text=${encodeURIComponent(
                     `Dear Parent, regarding the OD/Leave application submitted by ${
                       studentDetails?.name || parsed.studentName
                     } (${studentDetails?.registerNumber || parsed.registerNumber}) for ${
@@ -539,7 +548,7 @@ export function AdvisorODReviewModal({
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     e.preventDefault()
-                    const num = effectiveParentPhone.replace(/\D/g, '').slice(-10)
+                    const num = normalizeIndianPhone(effectiveParentPhone)
                     const msg = encodeURIComponent(
                       `Dear Parent, regarding the OD/Leave application submitted by ${
                         studentDetails?.name || parsed.studentName

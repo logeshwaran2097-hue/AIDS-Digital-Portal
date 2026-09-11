@@ -1,5 +1,14 @@
 'use client'
 
+// Normalize Indian phone numbers to 10 digits — handles +91/0/11-digit variants
+function normalizeIndianPhone(raw: string | null | undefined): string {
+  if (!raw) return '6381366088'
+  let num = raw.replace(/\D/g, '') // strip non-digits
+  if (num.startsWith('91') && num.length >= 12) num = num.slice(2)  // strip +91 prefix
+  if (num.startsWith('0') && num.length >= 11) num = num.slice(1)   // strip leading 0
+  return num.length >= 10 ? num.slice(-10) : num                     // take last 10 digits
+}
+
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import {
@@ -823,22 +832,24 @@ export function ODApplicationsDashboardView({
                         Parent Contact &amp; Verification
                       </span>
                       <div className="flex items-center gap-2 flex-wrap">
+                        {/* Call button */}
                         <a
-                          href={`tel:+91${(app.parentPhone || '6381366088').replace(/\D/g, '')}`}
+                          href={`tel:+91${normalizeIndianPhone(app.parentPhone)}`}
                           className="px-2.5 py-1.5 rounded-xl bg-white border border-gray-200 text-gray-800 text-xs font-bold hover:bg-gray-100 flex items-center gap-1.5 shadow-2xs transition-all"
                         >
                           <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{app.parentPhone || '6381366088'}</span>
+                          <span>{normalizeIndianPhone(app.parentPhone)}</span>
                         </a>
+                        {/* WhatsApp button */}
                         <a
-                          href={`https://wa.me/91${(app.parentPhone || '6381366088').replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
+                          href={`https://wa.me/91${normalizeIndianPhone(app.parentPhone)}?text=${encodeURIComponent(
                             `Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave request for "${app.eventName}".`
                           )}`}
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => {
                             e.preventDefault()
-                            const num = (app.parentPhone || '6381366088').replace(/\D/g, '').slice(-10)
+                            const num = normalizeIndianPhone(app.parentPhone)
                             const msg = encodeURIComponent(`Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave request for "${app.eventName}".`)
                             window.open(`https://wa.me/91${num}?text=${msg}`, '_blank')
                           }}
