@@ -159,7 +159,7 @@ export async function GET(request: Request) {
     const notifications = await prisma.notification.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
-      take: 40,
+      take: 50,
     }).catch(() => [])
 
     let studentProfile: any = null
@@ -167,149 +167,231 @@ export async function GET(request: Request) {
     let proofFiles: any[] = []
     const trackedApplications: any[] = []
 
+    // Fetch audit logs: either for a specific student or for all students (for faculty/advisor/hod/admin)
+    const auditWhere: any = { action: 'od_application_submitted' }
     if (targetRegNo) {
-      studentProfile = await prisma.student.findFirst({
-        where: { registerNumber: targetRegNo },
-      }).catch(() => null)
+      auditWhere.userName = { contains: targetRegNo }
+    }
 
-      if (studentProfile?.userId) {
-        const u = await prisma.user.findUnique({
-          where: { id: studentProfile.userId },
+    const relevantAudits = await prisma.auditLog.findMany({
+      where: auditWhere,
+      orderBy: { createdAt: 'desc' },
+      take: targetRegNo ? 20 : 50,
+    }).catch(() => [])
+
+    if (relevantAudits.length > 0) {
+      latestAudit = relevantAudits[0]
+    }
+
+    // Cache students and attendance rates to avoid N+1 queries
+    const studentCache: Record<string, any> = {}
+    const attendanceCache: Record<string, number> = {}
+
+    for (const log of relevantAudits) {
+      const regMatch =
+        log.userName?.match(/\((9225[0-9]+|[0-9]{12})\)/i) ||
+        log.details?.match(/\((9225[0-9]+|[0-9]{12})\)/i) ||
+        log.userName?.match(/(9225[0-9]+|[0-9]{12})/i)
+      const deducedReg = targetRegNo || (regMatch ? regMatch[1] : null)
+
+      let currentStudent = deducedReg ? studentCache[deducedReg] : null
+      let currentAttendance = deducedReg ? attendanceCache[deducedReg] : null
+
+      if (deducedReg && currentStudent === undefined) {
+        currentStudent = await prisma.student.findFirst({
+          where: { registerNumber: deducedReg },
         }).catch(() => null)
-        if (u) {
-          studentProfile = { ...studentProfile, user: u }
+
+        if (currentStudent?.userId) {
+          const u = await prisma.user.findUnique({
+            where: { id: currentStudent.userId },
+          }).catch(() => null)
+          if (u) {
+            currentStudent = { ...currentStudent, user: u }
+          }
         }
+        studentCache[deducedReg] = currentStudent
+
+        const totalRecords = await prisma.attendanceRecord.count({
+          where: { registerNumber: deducedReg },
+        }).catch(() => 0)
+        const presentRecords = await prisma.attendanceRecord.count({
+          where: {
+            registerNumber: deducedReg,
+            status: { in: ['P', 'OD', 'ML'] },
+          },
+        }).catch(() => 0)
+        currentAttendance = totalRecords > 0 ? Number(((presentRecords / totalRecords) * 100).toFixed(1)) : 100.0
+        attendanceCache[deducedReg] = currentAttendance
       }
 
-      const allStudentAudits = await prisma.auditLog.findMany({
-        where: {
-          userName: { contains: targetRegNo },
-          action: 'od_application_submitted',
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }).catch(() => [])
+      if (targetRegNo && !studentProfile && currentStudent) {
+        studentProfile = currentStudent
+      }
 
-      latestAudit = allStudentAudits[0] || null
+      const details = log.details || ''
+      const typeMatch = details.match(/OD Type:\s*([^|]+)/i)
+      const durationMatch = details.match(
+        /Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})(?:\s*\(([^)]+)\))?/i
+      )
+      const eventMatch = details.match(/Event:\s*([^|]+)/i)
+      const proofMatch = details.match(/Proofs:\s*([^|]+)/i)
+      const reasonMatch = details.match(/Reason:\s*([^|]+)/i)
+      const remarksMatch = details.match(/Remarks:\s*"([^"]+)"/i)
 
-      proofFiles = await (prisma as any).fileRecord.findMany({
-        where: {
-          relatedId: targetRegNo,
-          module: 'attendance_od_proof',
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 20,
-      }).catch(() => [])
+      const appType = typeMatch ? typeMatch[1].trim() : 'Personal / Emergency Leave'
+      const fromDate = durationMatch ? durationMatch[1] : ''
+      const toDate = durationMatch ? durationMatch[2] : ''
+      const days = durationMatch?.[3] ? durationMatch[3].trim() : ''
+      const eventName = eventMatch ? eventMatch[1].trim() : 'Academic / Personal Permission'
+      const reason = reasonMatch ? reasonMatch[1].trim() : ''
+      const proofs = proofMatch ? proofMatch[1].trim() : 'Digital verification'
+      const remarks = remarksMatch ? remarksMatch[1].trim() : ''
 
-      const studentName = studentProfile?.user?.name || studentProfile?.name || 'Student'
+      const status = log.status || 'pending_advisor_approval'
+      let statusLabel = 'Pending Advisor Review'
+      let statusBadge = 'pending'
 
-      for (const log of allStudentAudits) {
-        const details = log.details || ''
-        const typeMatch = details.match(/OD Type:\s*([^|]+)/i)
-        const durationMatch = details.match(
-          /Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})(?:\s*\(([^)]+)\))?/i
+      if (status === 'endorsed_by_advisor') {
+        statusLabel = 'Endorsed by Advisor (Sent to HOD)'
+        statusBadge = 'endorsed'
+      } else if (status === 'approved_by_hod' || status === 'approved') {
+        statusLabel = 'Sanctioned by HOD'
+        statusBadge = 'approved'
+      } else if (status === 'rejected_by_advisor') {
+        statusLabel = 'Declined by Advisor'
+        statusBadge = 'rejected'
+      } else if (status === 'rejected_by_hod' || status === 'rejected') {
+        statusLabel = 'Declined by HOD'
+        statusBadge = 'rejected'
+      }
+
+      const extractedName =
+        currentStudent?.user?.name ||
+        currentStudent?.name ||
+        log.userName?.replace(/\s*\([^)]*\)/, '')?.trim() ||
+        'Student'
+
+      // Fetch proof files for this application
+      let appFiles: any[] = []
+      if (deducedReg) {
+        appFiles = await (prisma as any).fileRecord.findMany({
+          where: {
+            relatedId: deducedReg,
+            module: 'attendance_od_proof',
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        }).catch(() => [])
+      }
+
+      if (targetRegNo && proofFiles.length === 0) {
+        proofFiles = appFiles
+      }
+
+      const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg || targetRegNo || '922525243007'}&name=${encodeURIComponent(extractedName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}&status=${encodeURIComponent(status)}`
+
+      trackedApplications.push({
+        id: log.id,
+        studentName: extractedName,
+        registerNumber: deducedReg || '',
+        year: currentStudent?.year || 2,
+        semester: currentStudent?.semester || 3,
+        section: currentStudent?.section || 'A',
+        batch: currentStudent?.batch || '2025-2029',
+        residencyStatus: currentStudent?.residencyStatus || 'Day Scholar',
+        busNo: currentStudent?.busNo || null,
+        parentPhone: currentStudent?.parentPhone || '6381366088',
+        attendanceRate: currentAttendance ?? 100.0,
+        applicationType: appType,
+        fromDate,
+        toDate,
+        days: days || '2 Days',
+        eventName,
+        reason,
+        proofs,
+        files: appFiles,
+        status,
+        statusLabel,
+        statusBadge,
+        remarks,
+        createdAt: log.createdAt,
+        dossierUrl,
+      })
+    }
+
+    // Fallback: If no audit log yet, extract from notifications
+    if (trackedApplications.length === 0 && notifications.length > 0) {
+      for (const notif of notifications) {
+        const isOdRelated =
+          notif.title?.includes('OD') ||
+          notif.title?.includes('Leave') ||
+          notif.message?.includes('OD') ||
+          notif.message?.includes('leave')
+        if (!isOdRelated) continue
+
+        const regMatch = notif.title?.match(/\((9225[0-9]+|[0-9]{12})\)/i) || notif.message?.match(/\((9225[0-9]+|[0-9]{12})\)/i)
+        const deducedReg = targetRegNo || (regMatch ? regMatch[1] : '922525243007')
+
+        const typeMatch =
+          notif.title?.match(/\[OD Request\]\s*([^:]+)/i) ||
+          notif.title?.match(/Dispatched:\s*([^:]+)/i) ||
+          notif.message?.match(/(?:requested|applied for)\s+([^.]+?)\s+from\s+[0-9]{4}/i)
+        const durationMatch = notif.message?.match(
+          /from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i
         )
-        const eventMatch = details.match(/Event:\s*([^|]+)/i)
-        const proofMatch = details.match(/Proofs:\s*([^|]+)/i)
-        const reasonMatch = details.match(/Reason:\s*([^|]+)/i)
+        const eventMatch = notif.message?.match(/for\s+"([^"]+)"/i) || notif.message?.match(/Event:\s*([^.]+)/i)
+        const nameMatch = notif.title?.match(/OD Application:\s*([A-Za-z\s.]+)\s*\(/i)
 
         const appType = typeMatch ? typeMatch[1].trim() : 'Personal / Emergency Leave'
-        const fromDate = durationMatch ? durationMatch[1] : ''
-        const toDate = durationMatch ? durationMatch[2] : ''
-        const days = durationMatch?.[3] ? durationMatch[3].trim() : ''
-        const eventName = eventMatch ? eventMatch[1].trim() : 'Academic / Personal Permission'
-        const reason = reasonMatch ? reasonMatch[1].trim() : ''
-        const proofs = proofMatch ? proofMatch[1].trim() : 'Digital verification'
-
-        const status = log.status || 'pending_advisor_approval'
-        let statusLabel = 'Pending Advisor Review'
-        let statusBadge = 'pending'
-
-        if (status === 'endorsed_by_advisor') {
-          statusLabel = 'Endorsed by Advisor (Sent to HOD)'
-          statusBadge = 'endorsed'
-        } else if (status === 'approved_by_hod' || status === 'approved') {
-          statusLabel = 'Sanctioned by HOD'
-          statusBadge = 'approved'
-        } else if (status === 'rejected_by_advisor' || status === 'rejected_by_hod' || status === 'rejected') {
-          statusLabel = 'Declined'
-          statusBadge = 'rejected'
-        }
-
-        const dossierUrl = `/api/od-applications/proof-document?registerNumber=${targetRegNo}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}&status=${encodeURIComponent(status)}`
+        const fromDate = durationMatch ? durationMatch[1] : '2026-09-24'
+        const toDate = durationMatch ? durationMatch[2] : '2026-09-27'
+        const eventName = eventMatch ? eventMatch[1].trim() : 'Academic Activity'
+        const studentName = nameMatch ? nameMatch[1].trim() : notif.createdByName || 'Student'
+        const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&from=${fromDate}&to=${toDate}&status=pending`
 
         trackedApplications.push({
-          id: log.id,
+          id: notif.id,
+          studentName,
+          registerNumber: deducedReg,
+          year: 2,
+          semester: 3,
+          section: 'A',
+          batch: '2025-2029',
+          residencyStatus: 'Day Scholar',
+          busNo: null,
+          parentPhone: '6381366088',
+          attendanceRate: 100.0,
           applicationType: appType,
           fromDate,
           toDate,
-          days,
+          days: '4 Days',
           eventName,
-          reason,
-          proofs,
-          status,
-          statusLabel,
-          statusBadge,
-          createdAt: log.createdAt,
+          reason: notif.message,
+          proofs: 'Verified Student Requisition',
+          files: [],
+          status: 'pending_advisor_approval',
+          statusLabel: 'Pending Advisor Review',
+          statusBadge: 'pending',
+          remarks: '',
+          createdAt: notif.createdAt,
           dossierUrl,
         })
-      }
-
-      // Fallback: If no audit log yet, extract from student notifications
-      if (trackedApplications.length === 0 && notifications.length > 0) {
-        for (const notif of notifications) {
-          const isOdRelated =
-            notif.title?.includes('OD') ||
-            notif.title?.includes('Leave') ||
-            notif.message?.includes('OD') ||
-            notif.message?.includes('leave')
-          if (!isOdRelated) continue
-
-          const typeMatch =
-            notif.title?.match(/\[OD Request\]\s*([^:]+)/i) ||
-            notif.title?.match(/Dispatched:\s*([^:]+)/i) ||
-            notif.message?.match(/(?:requested|applied for)\s+([^.]+?)\s+from\s+[0-9]{4}/i)
-          const durationMatch = notif.message?.match(
-            /from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i
-          )
-          const eventMatch = notif.message?.match(/for\s+"([^"]+)"/i) || notif.message?.match(/Event:\s*([^.]+)/i)
-
-          const appType = typeMatch ? typeMatch[1].trim() : 'Personal / Emergency Leave'
-          const fromDate = durationMatch ? durationMatch[1] : '2026-09-17'
-          const toDate = durationMatch ? durationMatch[2] : '2026-09-18'
-          const eventName = eventMatch ? eventMatch[1].trim() : 'Permission Request'
-          const dossierUrl = `/api/od-applications/proof-document?registerNumber=${targetRegNo}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&from=${fromDate}&to=${toDate}&status=pending`
-
-          trackedApplications.push({
-            id: notif.id,
-            applicationType: appType,
-            fromDate,
-            toDate,
-            days: '2 Days',
-            eventName,
-            reason: notif.message,
-            proofs: 'Verified Student Requisition',
-            status: 'pending_advisor_approval',
-            statusLabel: 'Pending Advisor Review',
-            statusBadge: 'pending',
-            createdAt: notif.createdAt,
-            dossierUrl,
-          })
-        }
       }
     }
 
     return NextResponse.json({
       success: true,
-      applications: notifications,
-      trackedApplications,
+      applications: trackedApplications,
+      total: trackedApplications.length,
+      notifications,
       student: studentProfile,
       auditLog: latestAudit,
       files: proofFiles,
     })
   } catch (error) {
     console.error('Error fetching OD applications:', error)
-    return NextResponse.json({ success: true, applications: [], trackedApplications: [] }, { status: 200 })
+    return NextResponse.json({ success: true, applications: [], total: 0 }, { status: 200 })
   }
 }
 
@@ -330,8 +412,23 @@ export async function PATCH(request: Request) {
 
     const regUpper = String(registerNumber).trim().toUpperCase()
     const reviewerName = session.name || (session.role === 'hod' ? 'Head of Department' : 'Class Advisor')
-    const newStatus = action === 'endorse' ? 'endorsed_by_advisor' : 'rejected_by_advisor'
-    const statusLabel = action === 'endorse' ? 'Endorsed by Class Advisor' : 'Rejected by Class Advisor'
+
+    let newStatus = 'pending_advisor_approval'
+    let statusLabel = 'Under Review'
+
+    if (action === 'endorse') {
+      newStatus = 'endorsed_by_advisor'
+      statusLabel = 'Endorsed by Class Advisor'
+    } else if (action === 'reject') {
+      newStatus = session.role === 'hod' ? 'rejected_by_hod' : 'rejected_by_advisor'
+      statusLabel = session.role === 'hod' ? 'Declined by Head of Department' : 'Rejected by Class Advisor'
+    } else if (action === 'hod_approve' || (session.role === 'hod' && action === 'approve')) {
+      newStatus = 'approved_by_hod'
+      statusLabel = 'Sanctioned by Head of Department'
+    } else if (action === 'hod_reject') {
+      newStatus = 'rejected_by_hod'
+      statusLabel = 'Declined by Head of Department'
+    }
 
     // 1. Update Audit Log status
     const latestAudit = await prisma.auditLog.findFirst({
@@ -353,21 +450,50 @@ export async function PATCH(request: Request) {
     }
 
     // 2. Dispatch Notification to Student
-    await prisma.notification.create({
-      data: {
-        title: action === 'endorse'
-          ? `✅ [OD Endorsed] ${eventName || 'On-Duty Leave'} Endorsed by Class Advisor`
-          : `❌ [OD Rejected] ${eventName || 'On-Duty Leave'} Declined by Class Advisor`,
-        message: action === 'endorse'
-          ? `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) has been ENDORSED by Class Advisor ${reviewerName} and forwarded to HOD for final authorization.`
-          : `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) was DECLINED by Class Advisor ${reviewerName}. Reason: "${remarks || 'Incomplete proofs or below 75% attendance criteria.'}"`,
-        target: 'student',
-        createdByName: reviewerName,
-        status: 'published',
-      },
-    }).catch(() => {})
+    if (action === 'endorse') {
+      await prisma.notification.create({
+        data: {
+          title: `✅ [OD Endorsed] ${eventName || 'On-Duty Leave'} Endorsed by Class Advisor`,
+          message: `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) has been ENDORSED by Class Advisor ${reviewerName} and forwarded to HOD for final authorization.`,
+          target: 'student',
+          createdByName: reviewerName,
+          status: 'published',
+        },
+      }).catch(() => {})
+    } else if (action === 'reject' || action === 'hod_reject') {
+      await prisma.notification.create({
+        data: {
+          title: `❌ [OD Declined] ${eventName || 'On-Duty Leave'} Declined`,
+          message: `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) was DECLINED by ${reviewerName}. Reason: "${remarks || 'Incomplete proofs or below 75% attendance criteria.'}"`,
+          target: 'student',
+          createdByName: reviewerName,
+          status: 'published',
+        },
+      }).catch(() => {})
+    } else if (action === 'hod_approve' || (session.role === 'hod' && action === 'approve')) {
+      await prisma.notification.create({
+        data: {
+          title: `🎉 [OD Sanctioned] ${eventName || 'On-Duty Leave'} Officially Authorized by HOD`,
+          message: `Official institutional sanction has been granted by Head of Department ${reviewerName} for "${eventName || 'Activity'}" (${dates || 'scheduled period'}). Official OD attendance has been credited to your academic roll.`,
+          target: 'student',
+          createdByName: reviewerName,
+          status: 'published',
+        },
+      }).catch(() => {})
 
-    // 3. If endorsed, notify HOD for final authorization
+      // Also notify Class Advisor
+      await prisma.notification.create({
+        data: {
+          title: `🏛️ [HOD Sanctioned] OD Approved: ${studentName || 'Student'} (${regUpper})`,
+          message: `HOD ${reviewerName} has granted final sanction for ${studentName || 'Student'} (${regUpper}) for "${eventName || 'Activity'}". OD attendance is credited.`,
+          target: 'faculty',
+          createdByName: reviewerName,
+          status: 'published',
+        },
+      }).catch(() => {})
+    }
+
+    // 3. If endorsed by advisor, notify HOD for final authorization
     if (action === 'endorse') {
       await prisma.notification.create({
         data: {
@@ -380,7 +506,7 @@ export async function PATCH(request: Request) {
       }).catch(() => {})
     }
 
-    // 4. Mark the original notification as read for this advisor
+    // 4. Mark the original notification as read for this reviewer
     if (notificationId) {
       const notif = await prisma.notification.findUnique({ where: { id: notificationId } }).catch(() => null)
       if (notif) {
@@ -404,6 +530,8 @@ export async function PATCH(request: Request) {
       success: true,
       message: action === 'endorse'
         ? `OD Application endorsed successfully! Forwarded to HOD for authorization.`
+        : action === 'hod_approve' || (session.role === 'hod' && action === 'approve')
+        ? `Official sanction granted! OD attendance credited to student roll.`
         : `OD Application declined. Notification dispatched to student.`,
       status: newStatus,
     })

@@ -323,8 +323,12 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
 
   const rawNavItems = navItems || navItemsMap[role] || []
   const baseNavItems = rawNavItems.filter((item) => {
-    // If faculty is not a class advisor, hide the Class Students and OD & Event Proofs links
-    if (role === 'faculty' && !isFacultyAdvisor && (item.href.includes('/faculty-dashboard/students') || item.href.includes('/faculty-dashboard/od-proofs'))) {
+    // If faculty is not a class advisor, hide the Class Students, Event Proofs, and OD & Leave Requests links
+    if (role === 'faculty' && !isFacultyAdvisor && (
+      item.href.includes('/faculty-dashboard/students') ||
+      item.href.includes('/faculty-dashboard/od-proofs') ||
+      item.href.includes('/faculty-dashboard/od-applications')
+    )) {
       return false
     }
     // If faculty is a class advisor, they have no allocated teaching subjects:
@@ -355,6 +359,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
     else if (lower.includes('resource') || lower.includes('study')) key = 'resources'
     else if (lower.includes('question')) key = 'questions'
     else if (lower.includes('project')) key = 'projects'
+    else if (lower.includes('od-applications')) key = 'od-applications'
     else if (lower.includes('event')) key = 'events'
     else if (lower.includes('announcement')) key = 'announcements'
     else if (lower.includes('achievement')) key = 'achievements'
