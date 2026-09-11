@@ -8,7 +8,6 @@ import {
   XCircle,
   Clock,
   Search,
-  Filter,
   Users,
   Award,
   Calendar,
@@ -22,19 +21,23 @@ import {
   Building,
   GraduationCap,
   Eye,
-  Send,
   AlertTriangle,
   RefreshCw,
   Loader2,
   ChevronDown,
-  ChevronRight,
+  ChevronUp,
   Sparkles,
   Paperclip,
   Check,
   X,
-  Layers,
   LayoutGrid,
   Table as TableIcon,
+  Sun,
+  Lightbulb,
+  Cpu,
+  Trophy,
+  ArrowRight,
+  Info,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import { Badge } from '@/components/ui/Badge'
@@ -78,6 +81,68 @@ interface ODApplicationsDashboardViewProps {
   } | null
 }
 
+/**
+ * Clean and parse Hackathon multi-round stages from reason text.
+ * Replaces unicode replacement diamonds and extracts structured stage cards.
+ */
+function parseHackathonStages(rawReason: string) {
+  if (!rawReason) return null
+  const cleaned = rawReason
+    .replace(/[\uFFFD\uFFFE\uFFFF]/g, '')
+    .replace(/Unstop\s*$/i, '')
+    .trim()
+
+  const hasRound1 = /round\s*1|ideathon/i.test(cleaned)
+  const hasRound2 = /round\s*2|prototype/i.test(cleaned)
+  const hasRound3 = /round\s*3|finale|grand finale/i.test(cleaned)
+
+  if (!hasRound1 && !hasRound2 && !hasRound3) {
+    return {
+      isMultiStage: false,
+      cleanedText: cleaned,
+      stages: [],
+    }
+  }
+
+  const round1Match = cleaned.match(/(?:Round 1|1️⃣ Round 1)[^\n]*\n([\s\S]*?)(?=(?:Round 2|2️⃣ Round 2|$))/i)
+  const round2Match = cleaned.match(/(?:Round 2|2️⃣ Round 2)[^\n]*\n([\s\S]*?)(?=(?:Round 3|3️⃣ Grand Finale|3️⃣ Round 3|$))/i)
+  const round3Match = cleaned.match(/(?:Round 3|3️⃣ Grand Finale|3️⃣ Round 3)[^\n]*\n([\s\S]*?)(?=$)/i)
+
+  return {
+    isMultiStage: true,
+    cleanedText: cleaned,
+    stages: [
+      {
+        num: 1,
+        title: 'Round 1 – Ideathon',
+        icon: '💡',
+        badge: 'Top 20 Teams Advance',
+        badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+        summary: 'Problem statement selection, innovation deck (max 12-slide PPT) covering tech stack, feasibility & impact.',
+        raw: round1Match ? round1Match[1].trim() : '',
+      },
+      {
+        num: 2,
+        title: 'Round 2 – Prototype Development',
+        icon: '⚙️',
+        badge: 'Top 10 Teams to Finale',
+        badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
+        summary: 'Working prototype development, GitHub source repository, live video demonstration & system presentation.',
+        raw: round2Match ? round2Match[1].trim() : '',
+      },
+      {
+        num: 3,
+        title: 'Round 3 – Grand Finale',
+        icon: '🏆',
+        badge: 'Jury Evaluation & Awards',
+        badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+        summary: 'Live stage presentation before industry judges: 7 minutes pitch + 5 minutes Q&A on architecture & viability.',
+        raw: round3Match ? round3Match[1].trim() : '',
+      },
+    ],
+  }
+}
+
 export function ODApplicationsDashboardView({
   viewRole,
   advisorClassInfo,
@@ -91,6 +156,7 @@ export function ODApplicationsDashboardView({
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
   const [selectedODModal, setSelectedODModal] = useState<any | null>(null)
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null)
 
   // Decline Dialog State
   const [declineTarget, setDeclineTarget] = useState<TrackedApplication | null>(null)
@@ -329,150 +395,166 @@ export function ODApplicationsDashboardView({
   }
 
   return (
-    <div className="space-y-6">
-      {/* ── Official Institutional Top Bar ───────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#071A3D] via-[#0D2D6C] to-[#1455D9] text-white p-6 sm:p-8 shadow-xl border border-blue-900/40">
+    <div className="space-y-5">
+      {/* ── Official Institutional Top Bar (Matching Attendance Register Prestige) ── */}
+      <div className="bg-[#071A3D] text-white rounded-3xl p-5 sm:p-7 shadow-xl border border-blue-900/30 relative overflow-hidden">
         {/* Glow ambient decorations */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#1455D9]/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#E7B93E]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
+        <div className="relative z-10 space-y-4">
+          {/* Top Institutional Tags */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[11px] font-bold tracking-wider uppercase border border-white/15 backdrop-blur-md">
-                Govt. of Tamil Nadu · EMIS Integration
+              <span className="px-3 py-1 rounded-full bg-black/40 text-[#E7B93E] text-[10px] font-black uppercase tracking-wider border border-[#E7B93E]/40 flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3" />
+                Govt. of Tamil Nadu · EMIS Portal
               </span>
-              <span className="px-3 py-1 rounded-full bg-[#E7B93E]/20 text-[#FCE182] text-[11px] font-black tracking-wide border border-[#E7B93E]/40 flex items-center gap-1.5 backdrop-blur-md">
-                <Sparkles className="w-3 h-3 text-[#E7B93E]" />
-                Official OD &amp; Leave Registry
+              <span className="px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-bold border border-white/15">
+                AU Norm 75% Regs Verified
+              </span>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                Live Synchronized
               </span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              Student OD &amp; Leave Applications Register
-            </h1>
-            <p className="text-blue-100/80 text-xs sm:text-sm font-medium leading-relaxed">
-              Official institutional portal for reviewing, auditing, and sanctioning student On-Duty (OD)
-              permissions, hackathon representations, paper presentations, internships, and medical leave applications.
-            </p>
-
-            {advisorClassInfo && (
-              <div className="pt-2 flex items-center gap-2 text-xs font-semibold text-amber-200">
-                <GraduationCap className="w-4 h-4 text-[#E7B93E]" />
-                <span>
-                  Allocated Advisory Section:{' '}
-                  <strong>
-                    Year {advisorClassInfo.year || 2} - Section {advisorClassInfo.section || 'A'}
-                  </strong>{' '}
-                  ({advisorClassInfo.batch || 'Batch 2025-2029'})
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fetchApplications(true)}
+                disabled={refreshing}
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/15 cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} />
+                <span>Refresh</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/15 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Print Register</span>
+              </button>
+            </div>
           </div>
 
-          {/* Quick Action Tools */}
-          <div className="flex items-center gap-2.5 flex-wrap shrink-0">
-            <button
-              onClick={() => fetchApplications(true)}
-              disabled={refreshing}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-2 transition-all backdrop-blur-md cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin')} />
-              <span>Refresh</span>
-            </button>
-
-            <button
-              onClick={() => window.print()}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-2 transition-all backdrop-blur-md cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Register</span>
-            </button>
+          {/* Main Title & Subtitle */}
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Student OD &amp; Leave Applications Register
+            </h1>
+            <p className="text-xs sm:text-sm text-blue-200/90 font-medium mt-1">
+              Class Advisor Section Advisory · Official Institutional Student Representation &amp; Absence Records · B.Tech AI &amp; DS
+            </p>
           </div>
         </div>
       </div>
 
-      {/* ── KPI Metric Cards ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Total Applications */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-xs flex items-center justify-between">
+      {/* ── Mode Banner / Class Jurisdiction ─────────────────────────────── */}
+      <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white rounded-2xl shadow-md p-3.5 px-5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold shrink-0">
+            <Sun className="w-4 h-4 text-white" />
+          </div>
           <div>
-            <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
+            <div className="flex items-center gap-2">
+              <span className="text-xs sm:text-sm font-black tracking-wide">
+                Class Advisor Review Desk
+              </span>
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-white/25 text-white">
+                Advisory Jurisdiction
+              </span>
+            </div>
+            <p className="text-[11px] text-amber-100 font-medium hidden sm:block">
+              Review event requisitions, parent telephone checks, and cumulative attendance before endorsing to HOD
+            </p>
+          </div>
+        </div>
+
+        {advisorClassInfo && (
+          <span className="text-xs font-bold bg-black/20 px-3.5 py-1 rounded-xl text-amber-100 border border-white/10 shrink-0">
+            Year {advisorClassInfo.year || 2} Section {advisorClassInfo.section || 'A'} (Sem 3)
+          </span>
+        )}
+      </div>
+
+      {/* ── Real-Time KPI Stats Summary ──────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Total Roster */}
+        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
               Total Applications
             </span>
-            <div className="mt-1 flex items-baseline gap-2">
+            <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-2xl sm:text-3xl font-black text-[#071A3D]">{metrics.total}</span>
-              <span className="text-[11px] text-gray-400 font-medium">On Record</span>
+              <span className="text-[11px] text-gray-400 font-medium">On File</span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center font-bold">
-            <FileText className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-2xl bg-blue-50 text-[#1455D9] flex items-center justify-center font-bold">
+            <FileText className="w-5 h-5" />
           </div>
         </div>
 
         {/* Pending Advisor Review */}
         <div
           className={cn(
-            'bg-white rounded-2xl p-4 sm:p-5 border shadow-xs flex items-center justify-between transition-all',
+            'p-4 rounded-2xl border shadow-xs flex items-center justify-between transition-all',
             metrics.pendingAdvisor > 0
-              ? 'border-amber-300 ring-2 ring-amber-400/20 bg-amber-50/20'
-              : 'border-gray-200'
+              ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-400/40'
+              : 'bg-white border-gray-200'
           )}
         >
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block">
-                Pending Advisor
-              </span>
-              {metrics.pendingAdvisor > 0 && (
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-              )}
-            </div>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-black text-amber-700">{metrics.pendingAdvisor}</span>
-              <span className="text-[11px] text-amber-600 font-semibold">Requires Review</span>
-            </div>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-            <Clock className="w-6 h-6" />
-          </div>
-        </div>
-
-        {/* Forwarded to HOD */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider block">
-              Awaiting HOD Sanction
+            <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">
+              Pending Advisor
             </span>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-black text-indigo-700">{metrics.awaitingHOD}</span>
-              <span className="text-[11px] text-indigo-600 font-medium">Endorsed by Advisor</span>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl sm:text-3xl font-black text-amber-700">{metrics.pendingAdvisor}</span>
+              <span className="text-[11px] text-amber-600 font-bold">Action Needed</span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
-            <Building className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+            <Clock className="w-5 h-5" />
           </div>
         </div>
 
-        {/* Officially Sanctioned */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-200 shadow-xs flex items-center justify-between bg-emerald-50/20">
+        {/* Awaiting HOD */}
+        <div className="bg-blue-50/70 p-4 rounded-2xl border border-blue-200 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-[#1455D9] uppercase tracking-wider block">
+              Forwarded to HOD
+            </span>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl sm:text-3xl font-black text-[#1455D9]">{metrics.awaitingHOD}</span>
+              <span className="text-[11px] text-blue-600 font-medium">Endorsed</span>
+            </div>
+          </div>
+          <div className="w-11 h-11 rounded-2xl bg-blue-100 text-[#1455D9] flex items-center justify-center font-bold">
+            <Building className="w-5 h-5" />
+          </div>
+        </div>
+
+        {/* Sanctioned by HOD */}
+        <div className="bg-emerald-50/70 p-4 rounded-2xl border border-emerald-200 shadow-xs flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
               Sanctioned &amp; Credited
             </span>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-2xl sm:text-3xl font-black text-emerald-700">{metrics.approved}</span>
-              <span className="text-[11px] text-emerald-600 font-medium">OD Granted</span>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl sm:text-3xl font-black text-emerald-600">{metrics.approved}</span>
+              <span className="text-[11px] text-emerald-700 font-medium">Attendance OK</span>
             </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-            <CheckCircle2 className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* ── Search, Filters & View Mode Controls ─────────────────────────── */}
-      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-200 shadow-sm space-y-4">
+      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-200 shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -481,7 +563,7 @@ export function ODApplicationsDashboardView({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by student name, register no, event title, or reason..."
+              placeholder="Search by student name, register number, or event title..."
               className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs sm:text-sm font-medium focus:bg-white focus:border-[#1455D9] focus:ring-2 focus:ring-[#1455D9]/20 outline-none transition-all"
             />
             {searchQuery && (
@@ -494,7 +576,7 @@ export function ODApplicationsDashboardView({
             )}
           </div>
 
-          {/* Type Filter */}
+          {/* Category Filter */}
           <div className="flex items-center gap-2">
             <select
               value={typeFilter}
@@ -502,7 +584,7 @@ export function ODApplicationsDashboardView({
               className="px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-700 focus:bg-white focus:border-[#1455D9] outline-none transition-all cursor-pointer"
             >
               <option value="ALL">All Categories</option>
-              <option value="Hackathon">Hackathon / Competition OD</option>
+              <option value="Hackathon">Technical Hackathon / Competition OD</option>
               <option value="Paper">Paper Presentation / Conference</option>
               <option value="Internship">Internship / Project Work</option>
               <option value="Medical">Medical Leave (ML)</option>
@@ -587,7 +669,7 @@ export function ODApplicationsDashboardView({
           <p className="text-xs text-gray-500 max-w-md">
             {searchQuery || statusFilter !== 'ALL' || typeFilter !== 'ALL'
               ? 'No applications match your active filters. Try clearing filters or search term.'
-              : 'There are currently no active OD or leave applications submitted by students in this section.'}
+              : 'There are currently no active OD or leave applications on record for this section.'}
           </p>
         </div>
       ) : viewMode === 'cards' ? (
@@ -598,50 +680,53 @@ export function ODApplicationsDashboardView({
             const isAdvisorPending = app.status === 'pending_advisor_approval'
             const isHODPending = app.status === 'endorsed_by_advisor'
             const isSanctioned = app.status === 'approved_by_hod' || app.status === 'approved'
+            const isRejected = app.status === 'rejected_by_advisor' || app.status === 'rejected_by_hod' || app.status === 'rejected'
+
+            const parsedScope = parseHackathonStages(app.reason)
+            const isExpanded = expandedCardId === app.id
 
             return (
               <div
                 key={app.id}
                 className={cn(
-                  'bg-white rounded-3xl border p-5 sm:p-6 transition-all shadow-xs hover:shadow-md space-y-4 relative overflow-hidden',
+                  'bg-white rounded-3xl border transition-all shadow-xs hover:shadow-md relative overflow-hidden',
                   isAdvisorPending
-                    ? 'border-amber-300 border-l-6 border-l-amber-500 bg-gradient-to-r from-amber-50/30 to-white'
+                    ? 'border-amber-300 border-l-6 border-l-amber-500'
                     : isHODPending
-                    ? 'border-indigo-300 border-l-6 border-l-indigo-600 bg-gradient-to-r from-indigo-50/25 to-white'
+                    ? 'border-indigo-300 border-l-6 border-l-indigo-600'
                     : isSanctioned
-                    ? 'border-emerald-300 border-l-6 border-l-emerald-600 bg-gradient-to-r from-emerald-50/25 to-white'
+                    ? 'border-emerald-300 border-l-6 border-l-emerald-600'
                     : 'border-rose-200 border-l-6 border-l-rose-500'
                 )}
               >
-                {/* 1. Student Particulars & Status Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-gray-100 pb-4">
-                  <div className="flex items-start gap-3.5">
+                {/* 1. Header Bar: Student Particulars + Live Status Badge */}
+                <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-gray-50/50 to-white">
+                  <div className="flex items-center gap-3.5 min-w-0">
                     {/* Student Avatar */}
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1455D9] to-[#0D2D6C] text-white flex items-center justify-center font-black text-base shadow-sm shrink-0">
+                    <div className="w-11 h-11 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0">
                       {app.studentName.charAt(0)}
                     </div>
 
-                    {/* Student Particulars */}
-                    <div>
+                    {/* Name, Roll & Badges */}
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-base font-black text-[#071A3D]">{app.studentName}</h3>
-                        <span className="px-2.5 py-0.5 rounded-lg bg-gray-100 text-gray-800 text-xs font-mono font-bold border border-gray-200">
+                        <span className="text-base font-black text-[#071A3D] leading-tight">
+                          {app.studentName}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-mono font-bold border border-gray-200">
                           {app.registerNumber}
                         </span>
-                        <span className="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-800 text-xs font-bold border border-blue-100">
-                          Year {app.year} · Sec {app.section} (Sem {app.semester})
+                        <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 text-xs font-bold border border-blue-100">
+                          Year {app.year} · Sec {app.section}
                         </span>
                       </div>
 
-                      <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 font-semibold flex-wrap">
+                      <div className="mt-1 flex items-center gap-2.5 text-xs text-gray-500 font-semibold flex-wrap">
                         <span>
-                          Residency:{' '}
-                          <strong className="text-gray-700">
-                            {app.residencyStatus || 'Day Scholar'}{' '}
-                            {app.busNo ? `(Bus Route ${app.busNo})` : ''}
-                          </strong>
+                          {app.residencyStatus || 'Day Scholar'}{' '}
+                          {app.busNo ? `(Bus Route ${app.busNo})` : ''}
                         </span>
-                        <span>·</span>
+                        <span>•</span>
                         <span className="flex items-center gap-1">
                           Attendance:
                           <strong
@@ -688,189 +773,347 @@ export function ODApplicationsDashboardView({
                   </div>
                 </div>
 
-                {/* 2. Application Particulars & Multi-Round Scope Details */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 bg-gray-50/70 p-4 rounded-2xl border border-gray-200/80">
-                  {/* Event & Category */}
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
-                      Permission Category &amp; Event
-                    </span>
-                    <div className="space-y-1">
+                <div className="p-4 sm:p-5 space-y-4">
+                  {/* 2. Structured Requisition Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Event & Category Card */}
+                    <div className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/80 space-y-1.5">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                        Permission Type &amp; Event
+                      </span>
                       <span
                         className={cn(
-                          'inline-block px-2.5 py-0.5 rounded-lg text-[11px] font-black border',
+                          'inline-block px-2.5 py-0.5 rounded-lg text-[10px] font-black border',
                           getBadgeColor(app.applicationType)
                         )}
                       >
                         {app.applicationType}
                       </span>
-                      <h4 className="text-sm font-black text-[#071A3D] flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5">
                         <Award className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>{app.eventName || 'Academic Representation'}</span>
-                      </h4>
-                    </div>
-                  </div>
-
-                  {/* Schedule & Duration */}
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
-                      Duration &amp; Inclusive Dates
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center shrink-0">
-                        <CalendarDays className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-black text-[#071A3D] block">
-                          {app.fromDate} &rarr; {app.toDate}
-                        </span>
-                        <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.2 rounded-md border border-blue-200 inline-block mt-0.5">
-                          Total {app.days}
-                        </span>
+                        <h4 className="text-sm font-black text-[#071A3D] truncate">
+                          {app.eventName || 'Academic Permission'}
+                        </h4>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Parent Verification & Contacts */}
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
-                      Parent Contact &amp; Verification
-                    </span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <a
-                        href={`tel:${app.parentPhone || '6381366088'}`}
-                        className="px-3 py-1.5 rounded-xl bg-white border border-gray-200 text-gray-800 text-xs font-bold hover:bg-gray-100 flex items-center gap-1.5 shadow-2xs transition-all"
-                      >
-                        <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>{app.parentPhone || '6381366088'}</span>
-                      </a>
-                      <a
-                        href={`https://wa.me/91${app.parentPhone?.replace(/\D/g, '') || '6381366088'}?text=${encodeURIComponent(
-                          `Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave application for "${app.eventName}".`
-                        )}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition-all"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>WhatsApp</span>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Multi-Stage Reason Breakdown */}
-                {app.reason && (
-                  <div className="bg-white p-3.5 rounded-2xl border border-gray-200 text-xs text-gray-700 space-y-1.5">
-                    <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider block flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-amber-500" />
-                      Student Representation Justification &amp; Event Stages
-                    </span>
-                    <div className="whitespace-pre-line leading-relaxed text-gray-800 bg-gray-50/60 p-3 rounded-xl border border-gray-100 font-mono text-[11px]">
-                      {app.reason}
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. Official Verification Dossier & Action Controls */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Verification Dossier Button */}
-                    <Link
-                      href={app.dossierUrl}
-                      target="_blank"
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-[#1455D9] text-white text-xs font-black flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all"
-                    >
-                      <ShieldCheck className="w-4 h-4 text-emerald-300" />
-                      <span>Official Verification Dossier</span>
-                      <ExternalLink className="w-3 h-3 opacity-80" />
-                    </Link>
-
-                    {/* Review In Modal */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSelectedODModal({
-                          id: app.id,
-                          title: `[OD Application] ${app.studentName} (${app.registerNumber})`,
-                          message: app.reason || app.eventName,
-                          registerNumber: app.registerNumber,
-                        })
-                      }
-                      className="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-gray-600" />
-                      <span>Audit &amp; Review Modal</span>
-                    </button>
-                  </div>
-
-                  {/* Role-Based Workflow Actions */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Class Advisor Action: Endorse & Forward */}
-                    {(viewRole === 'advisor' || viewRole === 'admin') && isAdvisorPending && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setDeclineTarget(app)}
-                          disabled={actionLoadingId === app.id}
-                          className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>Decline</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleAdvisorEndorse(app)}
-                          disabled={actionLoadingId === app.id}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          {actionLoadingId === app.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                          )}
-                          <span>Endorse &amp; Forward to HOD</span>
-                        </button>
-                      </>
-                    )}
-
-                    {/* HOD Action: Final Sanction */}
-                    {(viewRole === 'hod' || viewRole === 'admin') && isHODPending && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setDeclineTarget(app)}
-                          disabled={actionLoadingId === app.id}
-                          className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          <span>Decline</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleHODSanction(app)}
-                          disabled={actionLoadingId === app.id}
-                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          {actionLoadingId === app.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                          )}
-                          <span>Sanction &amp; Credit OD Attendance</span>
-                        </button>
-                      </>
-                    )}
-
-                    {/* Completed Badges */}
-                    {isSanctioned && (
-                      <span className="px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
-                        <Check className="w-4 h-4 text-emerald-600" />
-                        <span>Official Sanction Granted</span>
+                    {/* Inclusive Dates & Duration */}
+                    <div className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/80 space-y-1.5">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                        Inclusive Dates &amp; Days
                       </span>
-                    )}
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center shrink-0">
+                          <CalendarDays className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-[#071A3D] block">
+                            {app.fromDate} &rarr; {app.toDate}
+                          </span>
+                          <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.2 rounded-md border border-blue-200 inline-block">
+                            Duration: {app.days}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Parent Contact & Quick Verification */}
+                    <div className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/80 space-y-1.5">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                        Parent Contact &amp; Verification
+                      </span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a
+                          href={`tel:${app.parentPhone || '6381366088'}`}
+                          className="px-2.5 py-1.5 rounded-xl bg-white border border-gray-200 text-gray-800 text-xs font-bold hover:bg-gray-100 flex items-center gap-1.5 shadow-2xs transition-all"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{app.parentPhone || '6381366088'}</span>
+                        </a>
+                        <a
+                          href={`https://wa.me/91${app.parentPhone?.replace(/\D/g, '') || '6381366088'}?text=${encodeURIComponent(
+                            `Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave request for "${app.eventName}".`
+                          )}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition-all"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Event Representation Justification & Multi-Round Steps */}
+                  {parsedScope?.isMultiStage ? (
+                    /* Multi-Stage Hackathon Roadmap View */
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-blue-100 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Trophy className="w-4 h-4 text-amber-500" />
+                          <span className="text-xs font-black text-[#071A3D] uppercase tracking-wider">
+                            Hackathon Competition Stages &amp; Representation Scope
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedCardId(isExpanded ? null : app.id)}
+                          className="text-[11px] font-bold text-[#1455D9] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>{isExpanded ? 'Show Less' : 'Full Criteria & Details'}</span>
+                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+
+                      {/* 3 Stage Step Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {parsedScope.stages.map((stg) => (
+                          <div
+                            key={stg.num}
+                            className="bg-white rounded-xl p-3.5 border border-gray-200/80 shadow-2xs space-y-2 flex flex-col justify-between"
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between gap-1.5">
+                                <span className="text-sm font-black text-gray-900 flex items-center gap-1.5">
+                                  <span>{stg.icon}</span>
+                                  <span>{stg.title}</span>
+                                </span>
+                              </div>
+                              <span className={cn('inline-block px-2 py-0.5 rounded text-[10px] font-black border', stg.badgeColor)}>
+                                {stg.badge}
+                              </span>
+                              <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                                {stg.summary}
+                              </p>
+                            </div>
+
+                            {isExpanded && stg.raw && (
+                              <div className="pt-2 border-t border-gray-100 text-[11px] text-gray-700 whitespace-pre-line leading-normal bg-gray-50 p-2 rounded-lg font-mono">
+                                {stg.raw}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : app.reason ? (
+                    /* Clean Standard Reason Quote Card */
+                    <div className="bg-gray-50/70 p-3.5 rounded-2xl border border-gray-200/80 space-y-1">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                        Student Requisition Justification
+                      </span>
+                      <p className="text-xs text-gray-800 leading-relaxed font-medium">
+                        &ldquo;{parsedScope?.cleanedText || app.reason}&rdquo;
+                      </p>
+                    </div>
+                  ) : null}
+
+                  {/* 4. Official Lifecycle Stepper */}
+                  <div className="bg-white rounded-2xl p-3.5 border border-gray-200/80 space-y-2">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                      Application Lifecycle &amp; Authorization Pipeline
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      {/* Step 1 */}
+                      <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <div>
+                          <span className="font-bold text-emerald-950 block text-[11px]">1. Student Requisition</span>
+                          <span className="text-[10px] text-emerald-700">Submitted with proofs</span>
+                        </div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div
+                        className={cn(
+                          'p-2.5 rounded-xl border flex items-center gap-2',
+                          isAdvisorPending
+                            ? 'bg-amber-50 border-amber-300 ring-1 ring-amber-400/40'
+                            : isRejected && app.status === 'rejected_by_advisor'
+                            ? 'bg-rose-50 border-rose-200 text-rose-800'
+                            : 'bg-emerald-50 border-emerald-200'
+                        )}
+                      >
+                        {isAdvisorPending ? (
+                          <Clock className="w-4 h-4 text-amber-600 animate-pulse shrink-0" />
+                        ) : isRejected && app.status === 'rejected_by_advisor' ? (
+                          <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        )}
+                        <div>
+                          <span className="font-bold text-gray-900 block text-[11px]">2. Advisor Review</span>
+                          <span className="text-[10px] text-gray-600">
+                            {isAdvisorPending
+                              ? 'Pending Roll Call Review'
+                              : isRejected && app.status === 'rejected_by_advisor'
+                              ? 'Declined by Advisor'
+                              : 'Endorsed by Advisor'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div
+                        className={cn(
+                          'p-2.5 rounded-xl border flex items-center gap-2',
+                          isHODPending
+                            ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/40'
+                            : isSanctioned
+                            ? 'bg-emerald-50 border-emerald-200'
+                            : isRejected && app.status === 'rejected_by_hod'
+                            ? 'bg-rose-50 border-rose-200'
+                            : 'bg-gray-50 border-gray-200 opacity-60'
+                        )}
+                      >
+                        {isHODPending ? (
+                          <Building className="w-4 h-4 text-indigo-600 shrink-0" />
+                        ) : isSanctioned ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                        )}
+                        <div>
+                          <span className="font-bold text-gray-900 block text-[11px]">3. HOD Authorization</span>
+                          <span className="text-[10px] text-gray-600">
+                            {isSanctioned ? 'Sanction Granted' : isHODPending ? 'Awaiting Sanction' : 'Pending Advisor'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Step 4 */}
+                      <div
+                        className={cn(
+                          'p-2.5 rounded-xl border flex items-center gap-2',
+                          isSanctioned
+                            ? 'bg-emerald-50 border-emerald-200'
+                            : 'bg-gray-50 border-gray-200 opacity-60'
+                        )}
+                      >
+                        {isSanctioned ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                        )}
+                        <div>
+                          <span className="font-bold text-gray-900 block text-[11px]">4. Roll Call Sync</span>
+                          <span className="text-[10px] text-gray-600">
+                            {isSanctioned ? 'OD Attendance Credited' : 'Pending Sanction'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 5. Documents & Action Controls */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Official Verification Dossier */}
+                      <Link
+                        href={app.dossierUrl}
+                        target="_blank"
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-[#1455D9] text-white text-xs font-black flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-emerald-300" />
+                        <span>Official Verification Dossier</span>
+                        <ExternalLink className="w-3 h-3 opacity-80" />
+                      </Link>
+
+                      {/* Audit & Review Modal */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedODModal({
+                            id: app.id,
+                            title: `[OD Application] ${app.studentName} (${app.registerNumber})`,
+                            message: app.reason || app.eventName,
+                            registerNumber: app.registerNumber,
+                          })
+                        }
+                        className="px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-gray-600" />
+                        <span>Audit &amp; Review Modal</span>
+                      </button>
+                    </div>
+
+                    {/* Workflow Actions */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Advisor Controls */}
+                      {(viewRole === 'advisor' || viewRole === 'admin') && isAdvisorPending && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setDeclineTarget(app)}
+                            disabled={actionLoadingId === app.id}
+                            className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Decline</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAdvisorEndorse(app)}
+                            disabled={actionLoadingId === app.id}
+                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            {actionLoadingId === app.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                            )}
+                            <span>Endorse &amp; Forward to HOD</span>
+                          </button>
+                        </>
+                      )}
+
+                      {/* Already Endorsed Notice for Advisor */}
+                      {isHODPending && (
+                        <span className="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-bold flex items-center gap-1.5">
+                          <Check className="w-4 h-4 text-indigo-600" />
+                          <span>Endorsed by Advisor · Forwarded to HOD</span>
+                        </span>
+                      )}
+
+                      {/* HOD Controls */}
+                      {(viewRole === 'hod' || viewRole === 'admin') && isHODPending && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setDeclineTarget(app)}
+                            disabled={actionLoadingId === app.id}
+                            className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Decline</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleHODSanction(app)}
+                            disabled={actionLoadingId === app.id}
+                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            {actionLoadingId === app.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                            )}
+                            <span>Sanction &amp; Credit Attendance</span>
+                          </button>
+                        </>
+                      )}
+
+                      {/* Sanction Granted Notice */}
+                      {isSanctioned && (
+                        <span className="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          <span>Sanction Granted · Attendance Credited</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
