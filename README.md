@@ -168,6 +168,7 @@ The portal implements strict **Role-Based Access Control (RBAC)** across 4 user 
 ```
 /admin
 ├── /dashboard           -> Live database metrics, user counters, system health
+├── /od-proofs           -> Central OD & proofs tracking pipeline & document inspector
 ├── /students            -> Manual student registration, bulk CSV template download & upload
 ├── /faculty             -> Provision faculty accounts, assign designations, initial passwords
 ├── /hod                 -> Configure HOD profile, credentials, and department leadership
@@ -179,6 +180,11 @@ The portal implements strict **Role-Based Access Control (RBAC)** across 4 user 
 ```
 
 #### Key Admin Capabilities:
+- **Central OD & Proofs Tracking System (`/admin/od-proofs`)**:
+  - Full institutional lifecycle tracking across all 4 academic years (Years 1 to 4) and sections (A to D).
+  - **Visual Proof Inspector ("See the Proofs")**: High-resolution inspect modal and inline thumbnails for live geo-tagged venue photos (with GPS coords, reverse-geocoded address, capture timestamp, and Google Maps pin) and completion certificates (with achievement badges, zoom, and direct download).
+  - **Executive Jurisdiction Overrides**: Direct administrative sanctioning, attendance credit verification, clarification/resubmission directives, and record deletion.
+  - **Official Audit Exports**: One-click generation of the Master Institutional OD Audit Registry in PDF (with college watermark) and CSV.
 - **Bulk CSV Student Onboarding**:
   - Download standardized institutional CSV template.
   - Upload entire batches (Register Number, Name, Year, Semester, Section, Email, Phone).

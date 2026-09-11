@@ -14,7 +14,8 @@ export default async function AdminDashboardPage() {
   const [
     studentCount, facultyCount, hodCount, adminCount,
     subjectCount, resourceCount, questionPaperCount,
-    projectCount, eventCount, announcementCount, achievementCount
+    projectCount, eventCount, announcementCount, achievementCount,
+    odProofCount
   ] = await Promise.all([
     prisma.student.count().catch(() => 0),
     prisma.faculty.count().catch(() => 0),
@@ -27,6 +28,7 @@ export default async function AdminDashboardPage() {
     prisma.event.count().catch(() => 0),
     prisma.announcement.count().catch(() => 0),
     prisma.achievement.count().catch(() => 0),
+    prisma.oDProof.count().catch(() => 0),
   ])
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
@@ -47,6 +49,7 @@ export default async function AdminDashboardPage() {
     eventCount,
     announcementCount,
     achievementCount,
+    odProofCount,
   }
 
   return (

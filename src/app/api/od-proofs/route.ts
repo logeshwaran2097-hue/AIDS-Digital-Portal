@@ -445,9 +445,166 @@ export async function POST(request: Request) {
       })
     }
 
+    // 6. SUPER ADMIN: EXECUTIVE OVERRIDE / SANCTION
+    if (action === 'ADMIN_SANCTION' || action === 'ADMIN_APPROVE') {
+      if (session.role !== 'admin') {
+        return NextResponse.json({ success: false, message: 'Admin authorization required' }, { status: 403 })
+      }
+
+      const { id, remarks } = body
+      if (!id) {
+        return NextResponse.json({ success: false, message: 'Proof ID required' }, { status: 400 })
+      }
+
+      const existing = await prisma.oDProof.findUnique({ where: { id } })
+      if (!existing) {
+        return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
+      }
+
+      const defaultRemark = 'Admin Sanctioned: Proof verified under central system jurisdiction. OD attendance officially credited.'
+      const updated = await prisma.oDProof.update({
+        where: { id },
+        data: {
+          status: 'verified',
+          advisorRemarks: remarks ? remarks.trim() : (existing.advisorRemarks || defaultRemark),
+          verifiedByName: `${session.name || 'Super Admin'} (Admin Jurisdiction)`,
+          verifiedAt: new Date(),
+          attendanceCredited: true,
+        },
+      })
+
+      await prisma.notification.create({
+        data: {
+          title: `🛡️ [Admin Sanctioned] ${existing.eventName}`,
+          message: `Super Administrator has officially approved and sanctioned your On-Duty event request for "${existing.eventName}". Attendance credit verified.`,
+          target: 'student',
+          createdByName: session.name || 'System Administrator',
+          status: 'published',
+        },
+      }).catch(() => {})
+
+      await prisma.auditLog.create({
+        data: {
+          userName: session.name || 'System Administrator',
+          action: 'od_proof_admin_sanctioned',
+          module: 'admin_portal',
+          details: `Super Admin sanctioned OD for ${existing.studentName} (${existing.registerNumber}). Event: ${existing.eventName}.`,
+          status: 'success',
+        },
+      }).catch(() => {})
+
+      return NextResponse.json({
+        success: true,
+        message: `OD Attendance officially sanctioned by Super Admin for ${existing.studentName}!`,
+        proof: updated,
+      })
+    }
+
+    // 7. SUPER ADMIN: REJECT / REQUEST RESUBMISSION
+    if (action === 'ADMIN_REJECT') {
+      if (session.role !== 'admin') {
+        return NextResponse.json({ success: false, message: 'Admin authorization required' }, { status: 403 })
+      }
+
+      const { id, remarks } = body
+      if (!id || !remarks) {
+        return NextResponse.json({ success: false, message: 'Proof ID and explanation remarks required' }, { status: 400 })
+      }
+
+      const updated = await prisma.oDProof.update({
+        where: { id },
+        data: {
+          status: 'resubmit_requested',
+          advisorRemarks: `[Admin Directive] ${remarks.trim()}`,
+        },
+      })
+
+      await prisma.notification.create({
+        data: {
+          title: `⚠️ [Admin Notice: OD Proof Clarification] ${updated.eventName}`,
+          message: `System Administrator requested clarification/re-upload for "${updated.eventName}". Reason: "${remarks.trim()}". Please update your proof.`,
+          target: 'student',
+          createdByName: session.name || 'System Administrator',
+          status: 'published',
+        },
+      }).catch(() => {})
+
+      return NextResponse.json({
+        success: true,
+        message: 'Clarification request sent to student.',
+        proof: updated,
+      })
+    }
+
+    // 8. SUPER ADMIN: DELETE RECORD
+    if (action === 'ADMIN_DELETE') {
+      if (session.role !== 'admin') {
+        return NextResponse.json({ success: false, message: 'Admin authorization required' }, { status: 403 })
+      }
+
+      const { id } = body
+      if (!id) {
+        return NextResponse.json({ success: false, message: 'Proof ID required' }, { status: 400 })
+      }
+
+      const deleted = await prisma.oDProof.delete({ where: { id } })
+
+      await prisma.auditLog.create({
+        data: {
+          userName: session.name || 'System Administrator',
+          action: 'od_proof_deleted',
+          module: 'admin_portal',
+          details: `Deleted OD Proof record ${id} for ${deleted.studentName} (${deleted.registerNumber}).`,
+          status: 'success',
+        },
+      }).catch(() => {})
+
+      return NextResponse.json({
+        success: true,
+        message: 'OD Proof record successfully deleted by administrator.',
+      })
+    }
+
     return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 })
   } catch (error: any) {
     console.error('Error in POST /api/od-proofs:', error)
     return NextResponse.json({ success: false, message: error.message || 'Server error' }, { status: 500 })
   }
 }
+
+// DELETE: Delete an OD Proof (Admin Only)
+export async function DELETE(request: Request) {
+  try {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Admin access required' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Proof ID required' }, { status: 400 })
+    }
+
+    const deleted = await prisma.oDProof.delete({ where: { id } })
+
+    await prisma.auditLog.create({
+      data: {
+        userName: session.name || 'System Administrator',
+        action: 'od_proof_deleted',
+        module: 'admin_portal',
+        details: `Deleted OD Proof record ${id} for ${deleted.studentName} (${deleted.registerNumber}).`,
+        status: 'success',
+      },
+    }).catch(() => {})
+
+    return NextResponse.json({
+      success: true,
+      message: 'OD Proof record successfully removed.',
+    })
+  } catch (error: any) {
+    console.error('Error in DELETE /api/od-proofs:', error)
+    return NextResponse.json({ success: false, message: error.message || 'Server error' }, { status: 500 })
+  }
+}
+
