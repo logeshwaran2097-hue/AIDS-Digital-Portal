@@ -522,13 +522,13 @@ export function AdvisorODReviewModal({
               </div>
               <div className="flex items-center gap-2 print:hidden">
                 <a
-                  href={`tel:${effectiveParentPhone}`}
+                  href={`tel:+91${effectiveParentPhone.replace(/\D/g, '')}`}
                   className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold text-[11px] flex items-center gap-1 transition-colors"
                 >
                   <Phone className="w-3 h-3 text-emerald-600" /> Call Parent
                 </a>
                 <a
-                  href={`https://wa.me/91${effectiveParentPhone}?text=${encodeURIComponent(
+                  href={`https://wa.me/91${effectiveParentPhone.replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
                     `Dear Parent, regarding the OD/Leave application submitted by ${
                       studentDetails?.name || parsed.studentName
                     } (${studentDetails?.registerNumber || parsed.registerNumber}) for ${
@@ -537,6 +537,18 @@ export function AdvisorODReviewModal({
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    const num = effectiveParentPhone.replace(/\D/g, '').slice(-10)
+                    const msg = encodeURIComponent(
+                      `Dear Parent, regarding the OD/Leave application submitted by ${
+                        studentDetails?.name || parsed.studentName
+                      } (${studentDetails?.registerNumber || parsed.registerNumber}) for ${
+                        parsed.eventName
+                      } from ${parsed.fromDate} to ${parsed.toDate}. Please verify with Class Advisor.`
+                    )
+                    window.open(`https://wa.me/91${num}?text=${msg}`, '_blank')
+                  }}
                   className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-2xs transition-colors"
                 >
                   <MessageCircle className="w-3 h-3" /> WhatsApp

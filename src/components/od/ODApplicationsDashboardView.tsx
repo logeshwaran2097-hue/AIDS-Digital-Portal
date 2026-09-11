@@ -824,18 +824,24 @@ export function ODApplicationsDashboardView({
                       </span>
                       <div className="flex items-center gap-2 flex-wrap">
                         <a
-                          href={`tel:${app.parentPhone || '6381366088'}`}
+                          href={`tel:+91${(app.parentPhone || '6381366088').replace(/\D/g, '')}`}
                           className="px-2.5 py-1.5 rounded-xl bg-white border border-gray-200 text-gray-800 text-xs font-bold hover:bg-gray-100 flex items-center gap-1.5 shadow-2xs transition-all"
                         >
                           <Phone className="w-3.5 h-3.5 text-emerald-600" />
                           <span>{app.parentPhone || '6381366088'}</span>
                         </a>
                         <a
-                          href={`https://wa.me/91${app.parentPhone?.replace(/\D/g, '') || '6381366088'}?text=${encodeURIComponent(
+                          href={`https://wa.me/91${(app.parentPhone || '6381366088').replace(/\D/g, '').slice(-10)}?text=${encodeURIComponent(
                             `Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave request for "${app.eventName}".`
                           )}`}
                           target="_blank"
                           rel="noreferrer"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            const num = (app.parentPhone || '6381366088').replace(/\D/g, '').slice(-10)
+                            const msg = encodeURIComponent(`Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave request for "${app.eventName}".`)
+                            window.open(`https://wa.me/91${num}?text=${msg}`, '_blank')
+                          }}
                           className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition-all"
                         >
                           <MessageCircle className="w-3.5 h-3.5" />
