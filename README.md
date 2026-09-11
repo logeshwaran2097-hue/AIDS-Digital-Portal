@@ -5,33 +5,37 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 [![Prisma ORM](https://img.shields.io/badge/Prisma-5.17-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
-[![SQLite](https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite)](https://sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql)](https://supabase.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel)](https://app-two-plum-10.vercel.app)
+[![Render](https://img.shields.io/badge/Render-Live-46E3B7?style=for-the-badge&logo=render)](https://render.com)
 [![AI Powered](https://img.shields.io/badge/AI_Assistant-Gemini_NLP-8E75C4?style=for-the-badge&logo=google)](https://ai.google.dev/)
 
 ---
 
 ### Executive Overview
 
-The **V.S.B. AI & DS Digital Portal** is a production-grade, full-stack enterprise institutional management platform tailored for the Department of Artificial Intelligence & Data Science. Built with modern web engineering standards, the system unifies students, faculty, department leadership, and system administrators into an integrated, real-time reactive ecosystem.
+The **V.S.B. AI & DS Digital Portal** is a production-grade, full-stack enterprise institutional management platform tailored for the Department of Artificial Intelligence & Data Science at V.S.B. Engineering College. Built with modern web engineering standards, the system unifies students, faculty, department leadership (HOD), and system administrators into an integrated, real-time reactive ecosystem.
+
+🌐 **Production URL**: [https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)
 
 ---
 
-## 🏗️ Key Features & Architecture
+## 🏗️ Architecture & Ecosystem
 
 ```mermaid
 graph TD
-    A[Root System Administrator] -->|Full Jurisdiction| B[Centralized Directory]
+    A[Super Administrator] -->|Full System Governance| B[Centralized Enterprise Directory]
     B --> C[HOD Leadership]
-    B --> D[Faculty Directorate]
-    B --> E[Students Roster]
-    B --> F[Curriculum & Labs — 8 Semesters]
-    B --> G[Announcements & Circulars]
+    B --> D[Faculty Directorate & Class Advisors]
+    B --> E[Students Academic Hub]
+    B --> F[Curriculum & Practical Labs — 8 Semesters]
+    B --> G[Multi-Target Announcements & Circulars]
     B --> H[AI Assistant Knowledge Engine]
     
-    C -->|Department Governance| I[Staff & Timetables]
-    D -->|Academic Execution| J[Attendance & Practical Labs]
-    E -->|Student Life Cycle| K[Academics, Marks & Projects]
-    H -->|Real-Time SQLite Query| L[Instant Answers on Any Device]
+    C -->|Department Oversight & Approvals| I[Staff Workload, OD Proofs & Timetables]
+    D -->|Academic Execution & Mentorship| J[Period Attendance, Notes, QP & OD Verification]
+    E -->|Student Lifecycle| K[Academics, Marks, Projects & OD Submissions]
+    H -->|Real-Time PostgreSQL Database Queries| L[Deterministic Search & Instant Answers]
 ```
 
 ---
@@ -40,21 +44,21 @@ graph TD
 
 ### 1. 🛡️ Super Administrator Command Center (`/admin`)
 - **Centralized Administrative Directory**: 12 modular subsystems covering User Accounts, Curricula, Question Banks, Capstones, Audit Logs, and System Security.
-- **Live Database Counter Metrics**: Real-time SQLite statistics reflecting exact counts of enrolled students, faculty, HOD records, and active circulars.
-- **Automated Baseline Seeding & Cleansing**:
-  - **`Seed Baseline Data`**: Populates HOD, faculty across 8 semesters, sample students, and circulars.
-  - **`Clean Sample Data`**: Restores a pristine state while safely preserving admin accounts.
+- **Live Database Counter Metrics**: Real-time PostgreSQL statistics reflecting exact counts of enrolled students, faculty, HOD records, and active circulars.
+- **Strict Data Integrity**: Every dashboard metric and directory is linked directly to live verified database records with zero synthetic mock data.
 - **High-Fidelity PDF Vector Engine**: Institutional emblem-watermarked executive audit reports and data exports.
 
 ### 2. 👑 Head of Department (HOD) Leadership Portal (`/hod-dashboard`)
-- **Automated Faculty ID & Onboarding**: Auto-assigned identifiers such as `HOD001`, `HOD002`, optional email, and default temporary password set by admin.
-- **First-Time Login Profile Completion**: Prompts new HODs to customize credentials and complete bio upon initial sign-in.
-- **Academic Governance**: Department-wide oversight of Class Advisors, laboratory handlers, research publications, and end-semester practical schedules.
+- **Executive Oversight & Analytics**: Department-wide monitoring of student enrollment, faculty allocations, course coverage, and class attendance averages.
+- **Advisor OD Verification & Attendance Unlock Monitoring**: Real-time monitor of Class Advisor OD recommendations and attendance register unlock approvals.
+- **Academic Governance**: Oversight of Class Advisors, laboratory handlers, research publications, and semester practical schedules.
 
 ### 3. 👨‍🏫 Faculty Directorate & Class Advisors (`/faculty-dashboard`)
-- **8-Semester Faculty Matrix**: Direct assignment as **Class Advisors** across Semesters 1 to 8 (Sections A & B) and **Laboratory Handlers**.
+- **Dual Role Matrix**:
+  - **Class Advisor**: Manage student roster for assigned section, review absences, verify OD certificates/geo-tags, and approve OD submissions.
+  - **Subject Faculty**: Manage allocated subjects, record period-wise attendance, upload lecture materials, assignments, and question papers.
 - **Institutional 8-Period Bell Timings**: Built-in master timetable matrix for Theory and Practical Blocks (Forenoon: `09:15 AM - 12:30 PM` | Afternoon: `01:20 PM - 04:30 PM`).
-- **Attendance & Course Packs**: Daily period-wise attendance marking, lecture slide distribution, and IAT question paper uploads.
+- **Real-Time Attendance Registers**: Daily morning and period-wise attendance tracking with unlock-request protocols.
 
 ### 4. 🎓 Student Academic Portal (`/dashboard`)
 - **8-Semester Curriculum & Marks**: Semester-by-semester view of core theory and practical lab subjects.
@@ -72,126 +76,57 @@ graph TD
 ### 🎓 1. Student Workflow
 
 #### 🔑 Login (`/login`)
-- Authenticate using **Register Number** (e.g., `922522AD001`) and **Password**.
+- Authenticate using **Register Number** (e.g., `922525243126`) and **Password**.
 
 #### 🚀 Onboarding (First Login)
 Complete 2-step verification including:
 - Email OTP verification (6-digit verification code)
 - Permanent password setup
-- Profile validation
-- Student Mobile Number & Parent Mobile Number (with WhatsApp availability check)
-- Date of Birth
-- Blood Group
-- Residency Status (Hostel / Dayscholar with transport details: Bus No, Boarding Point)
-- Hostel Details (Boys / Girls Hostel Blocks 1, 2, or 3 and Room Number)
-- **Review Confirmation**: After completing OTP verification, a modal displays the entered details for confirmation. Review all information carefully and select **Next** to proceed to the dashboard. If any details are incorrect, raise a request for admin correction.
+- Profile validation (Student & Parent WhatsApp Numbers, DOB, Blood Group, Hostel/Dayscholar details)
+- **Review Confirmation**: Review details and proceed to dashboard.
 
-#### 📊 Dashboard (`/dashboard`)
-Central hub showing:
-- Current semester progress
-- Recent announcements & circulars
-- Quick access cards for academic tools
-
-#### 📚 Resources (`/dashboard/resources`)
-Access:
-- Course materials
-- PDFs & Lecture Notes
-- Lab manuals & Practical Guides
-- Slide decks uploaded by faculty
-
-#### 📅 Attendance (`/dashboard/attendance`)
-- View daily attendance percentage in the dashboard, including attendance recorded for each day and the overall attendance percentage across all 8 periods.
-
-#### 🌟 Additional Student Features
-- **Academics & Marks** (`/dashboard/study`): Internal marks, university grades, and academic standing.
-- **Projects & Capstone** (`/dashboard/projects`): Track mini-projects, milestone submissions, and guide feedback.
-- **Question Papers Bank** (`/dashboard/question-papers`): Previous year university and IAT question papers.
-- **Events & OD** (`/dashboard/events`): Submit On-Duty requests for symposiums, sports, and workshops with document attachments.
-- **Live AI Chat**: Floating AI chatbot powered by Google Gemini NLP with live database access. Students can ask natural-language questions about curriculum, timetables, attendance, faculty, announcements, and lab schedules.
+#### 📊 Dashboard & Tools
+- **Home (`/dashboard`)**: Current semester overview, attendance gauge, and announcements.
+- **Attendance (`/dashboard/attendance`)**: Day-wise and period-wise breakdown across all 8 periods.
+- **Study & Materials (`/dashboard/study`)**: Units, lecture notes, lab manuals, and syllabus.
+- **Question Papers (`/dashboard/question-papers`)**: Internal Assessment (IAT) and university papers.
+- **Projects (`/dashboard/projects`)**: Capstone milestones, abstract submission, and reviews.
+- **OD & Proofs (`/dashboard/od-proofs`)**: Apply for OD, upload certificates, and track Advisor & HOD sign-offs.
+- **Floating AI Assistant**: Natural-language inquiries grounded in live database data.
 
 ---
 
 ### 👨‍🏫 2. Faculty Workflow
 
-The faculty role is structured into two core responsibilities:
-
-#### A. Class Advisor Role
-- **Class Details**: View and manage the complete student list, section information, semester details, academic performance, and attendance status of the assigned class.
-- **Morning Attendance Responsibility**: Record mandatory morning attendance for all students in the assigned class.
-- **Attendance Monitoring**: Track daily attendance, identify students with attendance shortages (<75%), and monitor compliance.
-- **Student Support**: Review student profiles, follow up on absences, approve or recommend leave/OD applications, and communicate important announcements.
-- **Class Reports**: Generate and review class-wise attendance, academic, and student activity reports.
-
-#### B. Subject Faculty Role
-- **Assigned Subjects**: View subjects, classes, sections, and periods allocated by the department or HOD.
-- **Subject Period Display**: Dashboard displays subject name, class, section, date, and allocated periods.
-- **Period-Wise Attendance**: Record attendance for the corresponding class immediately after completing each subject period.
-- **Academic Resources**: Upload lecture notes, study materials, laboratory manuals, assignments, and IAT question papers.
-- **Student Performance**: View subject-wise attendance and internal marks.
-- **Communication**: Share subject-related announcements, instructions, and learning resources with students.
-
-#### 📌 Faculty Navigation Routes
-- **Login (`/login`)**: Use Faculty ID (e.g. `FAC001`) and assigned password.
-- **Dashboard (`/faculty-dashboard`)**: Faculty overview with schedule, assigned classes, and quick actions.
-- **Class Advisor Portal (`/faculty-dashboard/advisor` or `/faculty-dashboard/students`)**: Manage class attendance, student profiles, and OD approvals.
-- **Subject Portal (`/faculty-dashboard/subjects`)**: Manage subjects, periods, and study materials.
+- **Login (`/login`)**: Use Faculty ID (e.g., `FAC001`) and password.
+- **Dashboard (`/faculty-dashboard`)**: Faculty schedule, assigned classes, and quick actions.
+- **Class Advisor Portal (`/faculty-dashboard/students`)**: Manage class attendance, student profiles, and OD approvals.
+- **Subject Portal (`/faculty-dashboard/subjects`)**: Manage subjects, periods, syllabus, and study materials.
 - **Attendance Management (`/faculty-dashboard/attendance`)**: Record morning and period-wise attendance.
-- **Resources Management (`/faculty-dashboard/resources`)**: Upload and distribute materials.
-- **Announcements (`/faculty-dashboard/announcements`)**: Broadcast announcements to assigned classes or subjects.
+- **OD Verification (`/faculty-dashboard/od-proofs`)**: Review student proof documents, verify participation, and forward to HOD.
 
 ---
 
 ### 👑 3. Head of Department (HOD) Workflow
 
-#### 🔑 Login & Onboarding (`/login`)
-- Authenticate using **HOD ID** (e.g., `HOD001`) or official email and password.
-- Complete first-time profile verification and customize credentials.
-
-#### 📊 Dashboard (`/hod-dashboard`)
-Central department governance hub:
-- High-level department-wide statistics (Total Students, Active Faculty, Class Averages)
-- Year-wise absentee records posted by Class Advisors
-- Section-wise absentee filtering and real-time monitoring
-- Quick access to all department administration tools
-
-#### 📈 Attendance & Reporting (`/hod-dashboard/attendance` & `/hod-dashboard/reports`)
-- Real-time attendance monitoring across all 8 periods.
-- Filter absentee records year-wise and section-wise.
-- Mark and manage attendance for classes directly handled by the HOD.
-- Generate department-wise attendance and absenteeism reports with visual bar graphs and charts.
-- Download attendance reports in PDF, Excel, or CSV format with student-wise, year-wise, section-wise, and department-wise summaries.
-
-#### 👨‍🏫 Faculty & Academic Management (`/hod-dashboard/faculty` & `/hod-dashboard/academics`)
-- Assign subjects and map Class Advisors across Semesters 1 to 8 (Sections A & B).
-- Track faculty workload and curriculum coverage.
-- Review and approve academic calendars, event schedules, and resource distributions.
+- **Login & Onboarding (`/login`)**: Authenticate using HOD credentials with first-time onboarding wizard.
+- **Department Governance (`/hod-dashboard`)**: High-level department statistics, class averages, and executive actions.
+- **OD Approvals Monitor (`/hod-dashboard/od-proofs`)**: Review Advisor-verified OD applications and issue departmental approval.
+- **Attendance Register Approvals (`/hod-dashboard/attendance`)**: Process faculty attendance unlock requests.
+- **Reports (`/hod-dashboard/reports`)**: Generate department-wide attendance and academic reports in PDF, Excel, and CSV formats.
 
 ---
 
 ### 🛡️ 4. System Administrator Workflow
 
-#### 🔑 Login (`/login`)
-- Authenticate with Super Admin email (e.g., `lonelyboy44y@gmail.com`), OTP verification, and secure password.
-
-#### 📊 Dashboard (`/admin/dashboard`)
-- Live system health metrics, active user sessions, database statistics, and activity audit logs.
-
-#### 👥 User Provisioning
-- **Students (`/admin/students`)**: Add student records manually, set temporary passwords, update profiles, and manage enrollment status.
-- **Faculty (`/admin/faculty`)**: Provision faculty accounts, assign designations, and configure teaching allocations.
-- **HOD (`/admin/hod`)**: Manage department leadership credentials and permissions.
-
-#### ⚙️ System Settings (`/admin/settings`)
-- Configure academic year, current semester, portal name, maintenance mode, and institution parameters.
-
-#### 📁 Global Resources (`/admin/resources`)
-- Master directory to audit, manage, and remove uploaded files and resources across the entire portal.
+- **Login (`/login`)**: Super Admin authentication with email, OTP verification, and password.
+- **System Command (`/admin`)**: Metric tiles, user provisioning (Students, Faculty, HOD), and system maintenance.
+- **Student Roster (`/admin/students`)**: Manual enrollment, bulk CSV upload, and profile management.
+- **Curriculum & Labs (`/admin/academics`)**: Configure 8-semester subjects, practical labs, and timetable slots.
 
 ---
 
 ## 🔬 Complete 8-Semester Laboratory Curriculum
-
-> **Note**: Administrators can add, update, and manage semester courses, laboratories, and schedules dynamically via the Admin Portal.
 
 | Semester | Code | Practical Laboratory Course | Schedule / Session |
 | :--- | :--- | :--- | :--- |
@@ -227,8 +162,6 @@ Central department governance hub:
 
 ## ⏰ Institutional 8-Period Daily Bell Timings
 
-> **Note**: Bell timings for first-year students may differ from the standard institutional schedule.
-
 | Period / Slot | Time Window | Duration | Academic Description |
 | :--- | :--- | :--- | :--- |
 | **Period 1** | `09:15 AM - 10:00 AM` | 45 mins | Morning Theory / Core Lecture |
@@ -245,51 +178,22 @@ Central department governance hub:
 
 ---
 
-## 📢 Multi-Target Circulars & Announcements
+## 🤖 Dynamic Real-Time AI Chatbot Assistant
 
-The portal features an advanced official circular broadcast system with targeted dispatching:
+The floating AI assistant is integrated with the live PostgreSQL database and Google Gemini NLP:
 
-### Categorized Options
-- **Academics & Exams**: `ACADEMIC`, `TIMETABLE`, `CURRICULUM`
-- **Career & Placement**: `PLACEMENT`, `INTERNSHIP`, `APTITUDE`
-- **Symposia & Innovation**: `SYMPOSIUM`, `HACKATHON`, `WORKSHOP`
-- **Student Welfare**: `CLUB`, `SCHOLARSHIP`
-- **Logistics & Governance**: `FACULTY_NOTICE`, `LOGISTICS`, `GENERAL`
-
-### Target Filtering
-Broadcast specifically to:
-- Individual Semesters (Sem 1 to 8)
-- Academic Years (Years 1 to 4)
-- Class Advisors Only
-- Lab Instructors
-- General Campus Community
+- **Live Database Integration**: Real-time queries for faculty, curriculum, lab schedules, announcements, and attendance rules.
+- **Role-Aware Security**: Ensures students and faculty access authorized institutional context.
+- **Deterministic Search Fallback**: Automatically responds accurately with direct database facts even if an external AI key is absent.
 
 ---
 
-## 🤖 Real-Time Dynamic AI Chatbot Assistant
-
-The floating AI assistant is directly integrated with the live SQLite database and Google Gemini NLP service:
-
-- **Live Database Integration**: The assistant retrieves current information from students, faculty, HODs, courses, laboratories, timetables, announcements, attendance records, and academic resources through secure server-side database queries.
-- **Natural Language Understanding**: Users can ask natural language questions such as:
-  - *"Who is the Class Advisor for Semester 3?"*
-  - *"Show the labs for 2nd year."*
-  - *"What are today's bell timings?"*
-  - *"What is my current attendance percentage?"*
-  - *"Which faculty handles the DBMS laboratory?"*
-- **Role-Aware Security**: Enforces role-based access control — students receive authorized student context, while faculty/admin queries retrieve administrative data.
-- **Instant Student Lookup**: Authorized queries by register number return student credentials, year, section, and advisor.
-- **Universal Multi-Table Search**: Newly created records in the database are indexed and immediately queryable in real time.
-- **Gemini NLP Fallback**: Configure `GEMINI_API_KEY` in `.env` for generative answers; uses local deterministic DB search if the API key is not supplied.
-
----
-
-## 🚀 Installation & Local Setup
+## 🚀 Installation & Setup
 
 ### 1. Prerequisites
 - **Node.js** v18.17+ or v20+
 - **npm**, **yarn**, or **pnpm**
-- **Git**
+- **PostgreSQL Database** (Supabase or local PostgreSQL)
 
 ### 2. Clone Repository
 ```bash
@@ -305,17 +209,17 @@ npm install
 ### 4. Configure Environment Variables
 Create a `.env` file in the root directory:
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres:[PASSWORD]@[HOST]:[PORT]/postgres"
 JWT_SECRET="vsb-ai-ds-super-secret-jwt-key-2026"
-NEXT_PUBLIC_APP_URL="http://localhost:3001"
-GEMINI_API_KEY="" # Optional for Google Gemini Cloud NLP
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+GEMINI_API_KEY="" # Optional for Google Gemini NLP
 ```
 
 ### 5. Setup Database
 ```bash
 npx prisma generate
 npx prisma db push
-npm run db:seed
 ```
 
 ### 6. Run the Application
@@ -328,24 +232,7 @@ npm run build
 npm start
 ```
 
-Visit the application at: **[`http://localhost:3001`](http://localhost:3001)**
-
----
-
-## 🔑 Default Credentials & Onboarding
-
-| Role | Identifier / Email | Default Password | Notes |
-| :--- | :--- | :--- | :--- |
-| **Super Admin** | `lonelyboy44y@gmail.com` | Custom Admin Password | Tier-0 Full Access with OTP verification |
-| **HOD** | `HOD001` or assigned ID | Configured by Admin | Prompts profile completion on first login |
-| **Faculty** | `FAC001` or assigned ID | Configured by Admin | Prompts password change on first login |
-| **Student** | Register Number (e.g. `922522AD001`) | Configured by Admin | Prompts 2-step verification, OTP & permanent password |
-
----
-
-## 📱 Google Play Store & APK Deployment
-
-The portal is packaged with PWA manifest, service workers, and responsive viewport scaling ready for TWA (Trusted Web Activity) / Android packaging. Refer to [`PLAYSTORE_LAUNCH_GUIDE.md`](./PLAYSTORE_LAUNCH_GUIDE.md) for full deployment instructions.
+Visit the application at: **[`http://localhost:3000`](http://localhost:3000)**
 
 ---
 
