@@ -1786,8 +1786,8 @@ export default function LoginPage() {
                 {/* 2. Email Verification via OTP */}
                 <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-blue-200">
-                    <span className="font-black text-[#071A41] flex items-center gap-1.5 text-xs">
-                      <Mail className="w-4 h-4 text-[#1557C0]" />
+                    <span className="font-black text-[#071A41] flex items-center gap-2 text-xs">
+                      <img src="/email-otp-icon.png" alt="Email OTP" className="w-8 h-8 rounded-lg object-contain" />
                       Verify Student Email via OTP *
                     </span>
                     <span className="text-[10px] font-bold text-blue-700">Official Communication</span>
