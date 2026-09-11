@@ -93,10 +93,15 @@ export default function LoginPage() {
     registerNumber: '',
     phone: '',
     parentPhone: '',
+    parentWhatsApp: false,
     bloodGroup: '',
+    residency: '',
     address: '',
     busDetails: '',
     dateOfBirth: '',
+    dobDay: '',
+    dobMonth: '',
+    dobYear: '',
     department: '',
     year: '',
     semester: '',
@@ -111,6 +116,8 @@ export default function LoginPage() {
     emailOtp: '',
     otpChallenge: '',
   })
+  const [passportPhotoFile, setPassportPhotoFile] = React.useState<File | null>(null)
+  const [passportPhotoPreview, setPassportPhotoPreview] = React.useState<string | null>(null)
 
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
@@ -320,22 +327,21 @@ export default function LoginPage() {
   // STEP 1 ➔ STEP 2: Validate details review
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!onboardingForm.name.trim() || onboardingForm.name.startsWith('Student (')) {
-      toast.error('Please enter your official Full Name.')
+    if (!onboardingForm.phone.trim() || onboardingForm.phone.trim().length < 10) {
+      toast.error('Please enter a valid 10-digit student mobile number.')
       return
     }
-    if (!onboardingForm.detailsConfirmed) {
-      toast.error('Please check the confirmation box verifying that your details are reviewed.')
+    if (!onboardingForm.parentPhone.trim() || onboardingForm.parentPhone.trim().length < 10) {
+      toast.error('Please provide a valid parent/guardian contact number.')
       return
     }
-    if (!onboardingForm.phone.trim()) {
-      toast.error('Please provide your active mobile phone number.')
+    if (!onboardingForm.dobDay || !onboardingForm.dobMonth || !onboardingForm.dobYear) {
+      toast.error('Please select your complete Date of Birth (Day, Month, Year).')
       return
     }
-    if (!onboardingForm.parentPhone.trim()) {
-      toast.error('Please provide parent/guardian contact number for college alerts.')
-      return
-    }
+    // Build ISO dateOfBirth string from dropdowns
+    const isoDate = `${onboardingForm.dobYear}-${onboardingForm.dobMonth}-${String(onboardingForm.dobDay).padStart(2, '0')}`
+    setOnboardingForm(prev => ({ ...prev, dateOfBirth: isoDate }))
     setOnboardingStep(2)
   }
 
@@ -1413,194 +1419,303 @@ export default function LoginPage() {
             {/* ========================================================================= */}
             {onboardingStep === 1 && (
               <form onSubmit={handleProceedToSecurityStep} className="space-y-4 text-xs">
-                <p className="text-[11px] text-gray-500 font-medium">
-                  Please carefully verify your official enrollment records below. If any academic details are incorrect, you can request an instant admin correction.
-                </p>
 
-                {/* Academic Record Grid (Locked by Admin - Request Permission to Change) */}
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-3.5 shadow-xs">
-                  <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-200">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-lg bg-[#1557C0]/10 flex items-center justify-center text-[#1557C0]">
-                        <GraduationCap className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <span className="font-black text-[#071A41] text-xs block">Official Academic Record</span>
-                        <span className="text-[10px] font-bold text-slate-500">Verified &amp; Configured by Department Administrator</span>
-                      </div>
+                {/* Locked Academic Cards Grid */}
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Register Number */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Register Number</span>
+                      <span className="font-mono font-black text-xs text-[#071A41]">{onboardingForm.registerNumber}</span>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setShowCorrectionModal(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-300/80 text-amber-900 hover:bg-amber-100 text-[11px] font-black transition-all shadow-xs"
-                    >
-                      <Pencil className="w-3 h-3 text-amber-700" />
-                      <span>Request Admin Correction</span>
-                    </button>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      <Lock className="w-2.5 h-2.5" /> Verified
+                    </span>
                   </div>
 
-                  {/* Pending Correction Alert if submitted */}
-                  {correctionSubmitted && (
-                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2 text-emerald-900 text-xs">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="font-black block">Correction Request Pending Admin Review</span>
-                        <span className="text-[11px] text-emerald-700">
-                          Your request to modify academic details has been submitted. The Administrator will review and update official records.
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 6 High-Contrast Locked Cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {/* Register Number */}
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                      <div>
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Register Number</span>
-                        <span className="font-mono font-black text-xs text-[#071A41]">{onboardingForm.registerNumber}</span>
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                        <Lock className="w-2.5 h-2.5" /> Verified
+                  {/* Full Name */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Full Name</span>
+                      <span className={`font-bold text-xs ${onboardingForm.name ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
+                        {onboardingForm.name || '— Not Set'}
                       </span>
                     </div>
+                    <Lock className="w-3 h-3 text-slate-400" />
+                  </div>
 
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                      <div>
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Full Name</span>
-                        <span className={`font-bold text-xs ${onboardingForm.name ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
-                          {onboardingForm.name || '— Not Set by Admin'}
-                        </span>
-                      </div>
-                      <Lock className="w-3 h-3 text-slate-400" />
+                  {/* Program / Department */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Program / Department</span>
+                      <span className={`font-bold text-xs ${onboardingForm.department ? 'text-[#1557C0]' : 'text-slate-300 italic'}`}>
+                        {onboardingForm.department || '— Not Set'}
+                      </span>
                     </div>
+                    <Lock className="w-3 h-3 text-slate-400" />
+                  </div>
 
-                    {/* Class & Department */}
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                      <div>
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Program / Department</span>
-                        <span className={`font-bold text-xs ${onboardingForm.department ? 'text-[#1557C0]' : 'text-slate-300 italic'}`}>
-                          {onboardingForm.department || '— Not Set'}
-                        </span>
-                      </div>
-                      <Lock className="w-3 h-3 text-slate-400" />
+                  {/* Year & Semester */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Year &amp; Semester</span>
+                      <span className={`font-bold text-xs ${(onboardingForm.year || onboardingForm.semester) ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
+                        {onboardingForm.year && onboardingForm.semester
+                          ? `${onboardingForm.year} · ${onboardingForm.semester}`
+                          : onboardingForm.year || onboardingForm.semester || '— Not Set'}
+                      </span>
                     </div>
+                    <Lock className="w-3 h-3 text-slate-400" />
+                  </div>
 
-                    {/* Year & Semester */}
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                      <div>
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Year &amp; Semester</span>
-                        <span className={`font-bold text-xs ${(onboardingForm.year || onboardingForm.semester) ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
-                          {onboardingForm.year && onboardingForm.semester
-                            ? `${onboardingForm.year} · ${onboardingForm.semester}`
-                            : onboardingForm.year || onboardingForm.semester || '— Not Set'}
-                        </span>
-                      </div>
-                      <Lock className="w-3 h-3 text-slate-400" />
+                  {/* Assigned Section */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Assigned Section</span>
+                      <span className={`font-bold text-xs ${onboardingForm.section ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
+                        {onboardingForm.section || '— Not Set'}
+                      </span>
                     </div>
+                    <Lock className="w-3 h-3 text-slate-400" />
+                  </div>
 
-                    {/* Assigned Section */}
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                      <div>
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Assigned Section</span>
-                        <span className={`font-bold text-xs ${onboardingForm.section ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
-                          {onboardingForm.section || '— Not Set'}
-                        </span>
-                      </div>
-                      <Lock className="w-3 h-3 text-slate-400" />
+                  {/* Class Advisor */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+                    <div>
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Class Advisor / Mentor</span>
+                      <span className={`font-bold text-xs ${onboardingForm.advisorName ? 'text-[#1557C0]' : 'text-slate-300 italic'}`}>
+                        {onboardingForm.advisorName || '— Not Set'}
+                      </span>
                     </div>
+                    <Lock className="w-3 h-3 text-slate-400" />
+                  </div>
+                </div>
 
-                    {/* Class Advisor */}
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
-                      <div>
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Class Advisor / Mentor</span>
-                        <span className={`font-bold text-xs ${onboardingForm.advisorName ? 'text-[#1557C0]' : 'text-slate-300 italic'}`}>
-                          {onboardingForm.advisorName || '— Not Set'}
-                        </span>
+                {/* Correction submitted alert */}
+                {correctionSubmitted && (
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2 text-emerald-900 text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-black block">Correction Request Pending Admin Review</span>
+                      <span className="text-[11px] text-emerald-700">
+                        Your request to modify academic details has been submitted. The Administrator will review and update official records.
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Passport Photo */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-black text-[#071A41]">
+                      <div className="w-5 h-5 rounded-lg bg-[#1557C0]/10 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-[#1557C0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                       </div>
-                      <Lock className="w-3 h-3 text-slate-400" />
+                      Student Passport Photograph
+                      <span className="text-[10px] text-slate-400 font-medium">(Pre-filled on ID Card)</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">Embeds on ID Card</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {/* Preview box */}
+                    <div className="w-16 h-20 rounded-xl border-2 border-dashed border-slate-300 bg-white flex items-center justify-center shrink-0 overflow-hidden">
+                      {passportPhotoPreview ? (
+                        <img src={passportPhotoPreview} alt="Passport" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-1">
+                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                          </div>
+                          <span className="text-[9px] text-slate-400 font-medium">No Photo</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1557C0] text-white text-[11px] font-bold hover:bg-[#1142A0] transition-all">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        Upload Passport Photo
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              setPassportPhotoFile(file)
+                              setPassportPhotoPreview(URL.createObjectURL(file))
+                            }
+                          }}
+                        />
+                      </label>
+                      <p className="text-[10px] text-slate-500 leading-relaxed">
+                        Upload a clear frontal passport size photograph (JPG, PNG). This will appear on your Student Portal &amp; downloadable Digital ID Card.
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Personal & Contact Particulars (Editable) */}
-                <div className="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-3">
-                  <div className="flex items-center gap-1.5 pb-2 border-b border-blue-200/60 text-xs font-black text-[#071A41]">
+                {/* Contact & Personal Particulars */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-[#071A41]">
                     <Phone className="w-4 h-4 text-[#1557C0]" />
                     <span>Contact &amp; Personal Particulars (Editable)</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Student Mobile + Parent Mobile */}
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                        Student Mobile *
-                      </label>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Student Mobile *</label>
                       <input
                         type="text"
                         required
-                        placeholder="Enter your 10-digit mobile"
+                        maxLength={10}
+                        placeholder="Enter 10-digit mobile"
                         value={onboardingForm.phone}
                         onChange={(e) => setOnboardingForm({ ...onboardingForm, phone: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
                       />
                     </div>
-
                     <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                        Parent Mobile *
-                      </label>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Parent Mobile *</label>
                       <input
                         type="text"
                         required
+                        maxLength={10}
                         placeholder="Enter parent / guardian mobile"
                         value={onboardingForm.parentPhone}
                         onChange={(e) => setOnboardingForm({ ...onboardingForm, parentPhone: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
                       />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                        Date of Birth
+                      <label className="mt-1 flex items-center gap-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={onboardingForm.parentWhatsApp}
+                          onChange={(e) => setOnboardingForm({ ...onboardingForm, parentWhatsApp: e.target.checked })}
+                          className="w-3 h-3 rounded text-[#1557C0]"
+                        />
+                        <span className="text-[10px] text-slate-500 font-medium">Available on WhatsApp</span>
                       </label>
-                      <input
-                        type="date"
+                    </div>
+                  </div>
+
+                  {/* Date of Birth - Day / Month / Year dropdowns */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-gray-700 text-[11px]">Date of Birth (Day / Month / Year) *</label>
+                      {onboardingForm.dobDay && onboardingForm.dobMonth && onboardingForm.dobYear && (
+                        <span className="text-[10px] text-[#1557C0] font-bold">
+                          Selected: {String(onboardingForm.dobDay).padStart(2,'0')} {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][Number(onboardingForm.dobMonth)-1]} {onboardingForm.dobYear}
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {/* Day */}
+                      <select
                         required
-                        min="1960-01-01"
-                        max="2035-12-31"
-                        value={onboardingForm.dateOfBirth}
-                        onChange={(e) => setOnboardingForm({ ...onboardingForm, dateOfBirth: e.target.value })}
-                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
-                      />
+                        value={onboardingForm.dobDay}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, dobDay: e.target.value })}
+                        className="p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
+                      >
+                        <option value="">Day</option>
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                          <option key={d} value={String(d).padStart(2,'0')}>{String(d).padStart(2,'0')}</option>
+                        ))}
+                      </select>
+                      {/* Month */}
+                      <select
+                        required
+                        value={onboardingForm.dobMonth}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, dobMonth: e.target.value })}
+                        className="p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
+                      >
+                        <option value="">Month</option>
+                        {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+                          <option key={m} value={String(i+1).padStart(2,'0')}>{m}</option>
+                        ))}
+                      </select>
+                      {/* Year */}
+                      <select
+                        required
+                        value={onboardingForm.dobYear}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, dobYear: e.target.value })}
+                        className="p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
+                      >
+                        <option value="">Year</option>
+                        {Array.from({ length: 30 }, (_, i) => 2010 - i).map(y => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Blood Group + Residency */}
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Blood Group</label>
+                      <select
+                        value={onboardingForm.bloodGroup}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, bloodGroup: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
+                      >
+                        <option value="">Select Blood Group</option>
+                        {['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(g => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Residency &amp; Transport</label>
+                      <select
+                        value={onboardingForm.residency}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, residency: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
+                      >
+                        <option value="">Select Residency</option>
+                        <option value="Hostel">Hostel</option>
+                        <option value="Day Scholar - Bus">Day Scholar - Bus</option>
+                        <option value="Day Scholar - Own Transport">Day Scholar - Own Transport</option>
+                        <option value="Day Scholar - Walking">Day Scholar - Walking</option>
+                      </select>
                     </div>
                   </div>
                 </div>
 
+                {/* Request Admin Correction checkbox */}
+                <label className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={onboardingForm.hasCorrectionRequest}
+                    onChange={(e) => setOnboardingForm({ ...onboardingForm, hasCorrectionRequest: e.target.checked })}
+                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                  />
+                  <span className="text-[11px] font-bold text-amber-900 flex items-center gap-1.5">
+                    <Pencil className="w-3 h-3" />
+                    Any academic details wrong? Request Admin Correction
+                  </span>
+                </label>
 
-                {/* Details Confirmed Checkbox */}
-                <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
-                  <label className="flex items-start gap-2.5 cursor-pointer">
-                    <input
-                      type="checkbox"
+                {/* Correction remark box */}
+                {onboardingForm.hasCorrectionRequest && (
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1">Describe the correction needed *</label>
+                    <textarea
                       required
-                      checked={onboardingForm.detailsConfirmed}
-                      onChange={(e) => setOnboardingForm({ ...onboardingForm, detailsConfirmed: e.target.checked })}
-                      className="w-4 h-4 mt-0.5 rounded text-[#1557C0] focus:ring-[#1557C0]"
+                      rows={2}
+                      placeholder="e.g. My section is B not A, advisor name is incorrect..."
+                      value={onboardingForm.correctionRemarks}
+                      onChange={(e) => setOnboardingForm({ ...onboardingForm, correctionRemarks: e.target.value })}
+                      className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs resize-none"
                     />
-                    <span className="text-xs font-bold text-[#071A41]">
-                      I confirm that I have reviewed my student particulars, mobile numbers, and academic record.
-                    </span>
-                  </label>
-                </div>
+                  </div>
+                )}
 
-                {/* Next Button */}
-                <div className="pt-2 border-t border-gray-100 flex justify-end">
+                {/* Proceed Button */}
+                <div className="pt-2 border-t border-gray-100">
                   <Button
                     type="submit"
-                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] text-white shadow-md cursor-pointer hover:scale-[1.02] transition-all"
+                    className="w-full px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] text-white shadow-md cursor-pointer hover:scale-[1.01] transition-all"
                   >
-                    <span>Next: Set Password &amp; Verify Email</span>
+                    <span>Proceed to Password &amp; Email Setup</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
