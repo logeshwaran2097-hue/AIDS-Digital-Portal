@@ -4,15 +4,17 @@ services:
     env: node
     plan: free
     region: singapore
-    buildCommand: npm install --include=dev && npx prisma generate && npx next build
+    buildCommand: NODE_OPTIONS="--max_old_space_size=1536" npm install --include=dev && npx prisma generate && npx next build
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
         value: "20.14.0"
-      - key: NODE_OPTIONS
-        value: "--max_old_space_size=1024"
       - key: NODE_ENV
         value: production
+      - key: HOSTNAME
+        value: "0.0.0.0"
+      - key: PORT
+        value: "10000"
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_URL
