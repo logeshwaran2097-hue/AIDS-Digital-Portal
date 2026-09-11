@@ -1071,7 +1071,7 @@ export function StudentOnboardingModal({
           <form onSubmit={handleProceedToStep3} className="space-y-4 text-xs">
             
             {/* 1. Permanent Password Section */}
-            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
                 <span className="font-black text-amber-900 flex items-center gap-1.5 text-xs">
                   <ShieldCheck className="w-4 h-4 text-amber-600" />
@@ -1088,17 +1088,18 @@ export function StudentOnboardingModal({
                       type={showNewPassword ? 'text' : 'password'}
                       required
                       minLength={6}
+                      autoComplete="new-password"
                       placeholder="Create strong password"
                       value={form.newPassword}
                       onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
-                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
@@ -1110,17 +1111,18 @@ export function StudentOnboardingModal({
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
                       minLength={6}
+                      autoComplete="new-password"
                       placeholder="Repeat password"
                       value={form.confirmPassword}
                       onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
+                      className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-10"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
@@ -1128,7 +1130,7 @@ export function StudentOnboardingModal({
             </div>
 
             {/* 2. Email Verification via OTP */}
-            <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-blue-200">
                 <span className="font-black text-[#071A41] flex items-center gap-1.5 text-xs">
                   <Mail className="w-4 h-4 text-[#1557C0]" />
@@ -1141,22 +1143,24 @@ export function StudentOnboardingModal({
                 <label className="block font-bold text-gray-700 text-[11px] mb-1">
                   Email Address *
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="email"
                     required
-                    placeholder="e.g. yourname@gmail.com or student@vsb.edu.in"
+                    autoComplete="email"
+                    placeholder="Enter personal email (e.g. name@gmail.com)"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                    className="flex-1 w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={handleSendEmailOTP}
                     disabled={loading || emailOtpCooldown > 0}
-                    className="px-4 py-2.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs sm:text-sm shrink-0 cursor-pointer shadow-xs disabled:opacity-50 transition-all flex items-center justify-center gap-1.5"
                   >
-                    {emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send OTP'}
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send Code'}</span>
                   </button>
                 </div>
               </div>

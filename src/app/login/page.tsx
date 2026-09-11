@@ -282,7 +282,16 @@ export default function LoginPage() {
           }
         }
 
-        // Only use real DB values — never fall back to hardcoded defaults
+        const rawUserEmail = (data.user.email || '').trim()
+        const isMockEmail =
+          !rawUserEmail ||
+          rawUserEmail.endsWith('@student.vsb.edu.in') ||
+          rawUserEmail.endsWith('@vsb.ac.in') ||
+          rawUserEmail.endsWith('@vsb.edu.in') ||
+          rawUserEmail.toLowerCase().includes('mock') ||
+          rawUserEmail.toLowerCase().startsWith((data.user.registerNumber || registerNumber.trim()).toLowerCase())
+
+        // Only use real DB values — never fall back to hardcoded defaults or mock email
         setOnboardingForm((prev) => ({
           ...prev,
           name: data.user.name || '',
@@ -298,7 +307,7 @@ export default function LoginPage() {
           boardingPoint: data.user.boardingPoint || '',
           address: data.user.address || '',
           busDetails: data.user.busDetails || '',
-          email: data.user.email || '',
+          email: isMockEmail ? '' : rawUserEmail,
           dateOfBirth: data.user.dateOfBirth || '',
           dobDay: initialDobDay,
           dobMonth: initialDobMonth,
@@ -1460,25 +1469,25 @@ export default function LoginPage() {
       {/* 🚀 2-STEP STUDENT PROFILE VERIFICATION & EMAIL OTP ONBOARDING WIZARD */}
       {/* ========================================================================= */}
       {showOnboardingModal && onboardingUser && (
-        <div className="fixed inset-0 z-50 bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg sm:max-w-xl w-full p-4 sm:p-6 shadow-2xl space-y-4 border border-gray-100 max-h-[92vh] overflow-y-auto overscroll-contain">
 
             {/* Modal Header with Progress Step Indicator */}
             <div className="border-b border-gray-100 pb-3">
               <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1557C0] text-[10px] font-black uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1557C0] text-[9px] sm:text-[10px] font-black uppercase tracking-wider">
                   Initial Profile Verification &amp; Security Setup
                 </span>
-                <span className="text-[11px] font-mono font-bold text-slate-500">
+                <span className="text-[10px] sm:text-[11px] font-mono font-bold text-slate-500">
                   {onboardingForm.registerNumber}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg sm:text-xl font-black text-[#071A41]">
-                  {onboardingStep === 1 ? 'Step 1: Review Your Academic Details' : 'Step 2: Password & Email OTP Verification'}
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base sm:text-xl font-black text-[#071A41]">
+                  {onboardingStep === 1 ? 'Step 1: Review Academic Details' : 'Step 2: Password & Email OTP Verification'}
                 </h3>
-                <span className="text-xs font-black text-[#1557C0] bg-blue-50 px-2.5 py-1 rounded-xl">
+                <span className="text-[11px] sm:text-xs font-black text-[#1557C0] bg-blue-50 px-2 sm:px-2.5 py-1 rounded-xl shrink-0">
                   Step {onboardingStep} of 2
                 </span>
               </div>
@@ -2048,7 +2057,7 @@ export default function LoginPage() {
               <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
 
                 {/* 1. Permanent Password Section */}
-                <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
+                <div className="p-3 sm:p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
                     <span className="font-black text-amber-900 flex items-center gap-1.5 text-xs">
                       <ShieldCheck className="w-4 h-4 text-amber-600" />
@@ -2064,17 +2073,18 @@ export default function LoginPage() {
                         <input
                           type={showNewPassword ? 'text' : 'password'}
                           required
+                          autoComplete="new-password"
                           placeholder="Create strong password"
                           value={onboardingForm.newPassword}
                           onChange={(e) => setOnboardingForm({ ...onboardingForm, newPassword: e.target.value })}
-                          className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
+                          className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-10"
                         />
                         <button
                           type="button"
                           onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer"
                         >
-                          {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
@@ -2085,17 +2095,18 @@ export default function LoginPage() {
                         <input
                           type={showConfirmPassword ? 'text' : 'password'}
                           required
+                          autoComplete="new-password"
                           placeholder="Repeat password"
                           value={onboardingForm.confirmPassword}
                           onChange={(e) => setOnboardingForm({ ...onboardingForm, confirmPassword: e.target.value })}
-                          className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
+                          className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-10"
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer"
                         >
-                          {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
@@ -2103,10 +2114,10 @@ export default function LoginPage() {
                 </div>
 
                 {/* 2. Email Verification via OTP */}
-                <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
+                <div className="p-3 sm:p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-blue-200">
                     <span className="font-black text-[#071A41] flex items-center gap-2 text-xs">
-                      <img src="/email-otp-icon.png" alt="Email OTP" className="w-8 h-8 rounded-lg object-contain" />
+                      <img src="/email-otp-icon.png" alt="Email OTP" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
                       Verify Student Email via OTP *
                     </span>
                     <span className="text-[10px] font-bold text-blue-700">Official Communication</span>
@@ -2116,22 +2127,24 @@ export default function LoginPage() {
                     <label className="block font-bold text-gray-700 text-[11px] mb-1">
                       Email Address *
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="email"
                         required
-                        placeholder="e.g. yourname@gmail.com or student@vsb.edu.in"
+                        autoComplete="email"
+                        placeholder="Enter your personal email (e.g. name@gmail.com)"
                         value={onboardingForm.email}
                         onChange={(e) => setOnboardingForm({ ...onboardingForm, email: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                        className="flex-1 w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={handleSendEmailOTP}
                         disabled={onboardingLoading || emailOtpCooldown > 0}
-                        className="px-4 py-2.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
+                        className="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs sm:text-sm shrink-0 cursor-pointer shadow-xs disabled:opacity-50 transition-all flex items-center justify-center gap-1.5"
                       >
-                        {emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send OTP'}
+                        <Send className="w-3.5 h-3.5" />
+                        <span>{emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send Code'}</span>
                       </button>
                     </div>
                   </div>
@@ -2201,11 +2214,11 @@ export default function LoginPage() {
                 </div>
 
                 {/* Wizard Navigation Buttons */}
-                <div className="flex items-center justify-between pt-2 border-t border-gray-100 gap-2">
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between pt-3 border-t border-gray-100 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setOnboardingStep(1)}
-                    className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 flex items-center gap-1.5 cursor-pointer text-xs"
+                    className="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl border border-gray-200 text-gray-700 font-bold hover:bg-gray-50 flex items-center justify-center gap-1.5 cursor-pointer text-xs sm:text-sm transition-all"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>Back to Details</span>
@@ -2215,7 +2228,7 @@ export default function LoginPage() {
                     type="submit"
                     size="default"
                     loading={onboardingLoading}
-                    className="px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all"
+                    className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] text-white shadow-md text-xs sm:text-sm cursor-pointer transition-all hover:scale-[1.01]"
                   >
                     <span>Verify OTP &amp; Enter Portal</span>
                     <ArrowRight className="w-4 h-4" />

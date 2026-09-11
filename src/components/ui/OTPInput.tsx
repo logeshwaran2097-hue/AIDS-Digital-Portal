@@ -86,7 +86,7 @@ export function OTPInput({
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 sm:gap-2.5 my-2" role="group" aria-label="OTP input">
+    <div className="flex items-center justify-center gap-1.5 sm:gap-2.5 my-2 w-full max-w-sm mx-auto" role="group" aria-label="OTP input">
       {Array.from({ length }).map((_, index) => {
         const val = digits[index] || ''
         const isFilled = val !== ''
@@ -108,7 +108,7 @@ export function OTPInput({
             disabled={disabled}
             autoFocus={autoFocus && index === 0}
             className={cn(
-              'h-12 w-11 sm:w-12 text-center text-2xl font-black rounded-xl border-2 transition-all duration-200 shadow-xs outline-none',
+              'h-11 sm:h-13 flex-1 min-w-0 max-w-[48px] text-center text-xl sm:text-2xl font-black rounded-xl border-2 transition-all duration-200 shadow-xs outline-none',
               isFilled
                 ? 'border-[#1455D9] bg-blue-50/50 text-[#071A3D]'
                 : 'border-gray-300 bg-white text-[#071A3D] hover:border-gray-400',

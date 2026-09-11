@@ -1,0 +1,6 @@
+Contact: mailto:hod.aids@vsb.ac.in
+Expires: 2028-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://vsb-aids-portal.onrender.com/.well-known/security.txt
+Policy: https://vsb-aids-portal.onrender.com/privacy
+Acknowledgment: Department of Artificial Intelligence and Data Science, V.S.B. Engineering College, Karur, Tamil Nadu, India.
