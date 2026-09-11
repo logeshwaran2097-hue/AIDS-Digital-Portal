@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { clearAllDbCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,23 @@ export async function POST(request: Request) {
       clearedInfo.hodUsers = hodUsers.count
     }
 
+    if (target === 'all' || target === 'advisors') {
+      const ca = await prisma.classAdvisor.deleteMany({})
+      clearedInfo.classAdvisors = ca.count
+    }
+
+    if (target === 'all' || target === 'attendance') {
+      const ar = await prisma.attendanceRecord.deleteMany({})
+      const as = await prisma.attendanceSession.deleteMany({})
+      clearedInfo.attendanceRecords = ar.count
+      clearedInfo.attendanceSessions = as.count
+    }
+
+    if (target === 'all' || target === 'od') {
+      const odp = await prisma.oDProof.deleteMany({})
+      clearedInfo.odProofs = odp.count
+    }
+
     if (target === 'all' || target === 'announcements') {
       const annCount = await prisma.announcement.deleteMany({}).catch(() => ({ count: 0 }))
       clearedInfo.announcements = annCount.count
@@ -54,12 +72,18 @@ export async function POST(request: Request) {
 
     if (target === 'all' || target === 'resources') {
       const resCount = await prisma.resource.deleteMany({}).catch(() => ({ count: 0 }))
+      const noteCount = await prisma.note.deleteMany({}).catch(() => ({ count: 0 }))
+      const lmCount = await prisma.labManual.deleteMany({}).catch(() => ({ count: 0 }))
       clearedInfo.resources = resCount.count
+      clearedInfo.notes = noteCount.count
+      clearedInfo.labManuals = lmCount.count
     }
 
     if (target === 'all' || target === 'question-papers') {
       const qpCount = await prisma.questionPaper.deleteMany({}).catch(() => ({ count: 0 }))
+      const iqCount = await prisma.importantQuestion.deleteMany({}).catch(() => ({ count: 0 }))
       clearedInfo.questionPapers = qpCount.count
+      clearedInfo.importantQuestions = iqCount.count
     }
 
     if (target === 'all' || target === 'achievements') {
@@ -72,10 +96,8 @@ export async function POST(request: Request) {
       clearedInfo.notifications = notifCount.count
     }
 
-    if (target === 'all' || target === 'subjects') {
-      const subCount = await prisma.subject.deleteMany({}).catch(() => ({ count: 0 }))
-      clearedInfo.subjects = subCount.count
-    }
+    // Instantly wipe query cache so fresh data is loaded on the very next render
+    clearAllDbCache()
 
     return NextResponse.json({
       success: true,
