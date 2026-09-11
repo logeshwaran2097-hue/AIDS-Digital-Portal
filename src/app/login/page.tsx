@@ -392,6 +392,11 @@ export default function LoginPage() {
       }
     }
 
+    if (!onboardingForm.detailsConfirmed) {
+      toast.error('Please check the confirmation declaration box to verify all your details.')
+      return
+    }
+
     // Build ISO dateOfBirth string from dropdowns
     const isoDate = `${onboardingForm.dobYear}-${onboardingForm.dobMonth}-${String(onboardingForm.dobDay).padStart(2, '0')}`
     setOnboardingForm(prev => ({ ...prev, dateOfBirth: isoDate }))
@@ -1487,9 +1492,19 @@ export default function LoginPage() {
 
                 {/* Locked Academic Cards Grid */}
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs font-black text-[#071A41] mb-2">
-                    <span>🎓</span>
-                    <span>Official Academic Profile (Verified &amp; Locked)</span>
+                  <div className="flex items-center justify-between gap-2 pb-1.5 mb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-[#071A41]">
+                      <span>🎓</span>
+                      <span>Official Academic Profile (Locked)</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCorrectionModal(true)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 text-[10.5px] font-bold transition-all shadow-2xs cursor-pointer"
+                    >
+                      <Pencil className="w-3 h-3 text-amber-700" />
+                      <span>Request Admin Correction</span>
+                    </button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {/* Register Number */}
@@ -1959,42 +1974,59 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Request Admin Correction checkbox */}
-                <label className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={onboardingForm.hasCorrectionRequest}
-                    onChange={(e) => setOnboardingForm({ ...onboardingForm, hasCorrectionRequest: e.target.checked })}
-                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
-                  />
-                  <span className="text-[11px] font-bold text-amber-900 flex items-center gap-1.5">
-                    <span>✏️</span>
-                    Any academic details wrong? Request Admin Correction
-                  </span>
-                </label>
-
-                {/* Correction remark box */}
-                {onboardingForm.hasCorrectionRequest && (
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                      📝 Describe the correction needed *
-                    </label>
-                    <textarea
-                      required
-                      rows={2}
-                      placeholder="e.g. My section is B not A, advisor name is incorrect..."
-                      value={onboardingForm.correctionRemarks}
-                      onChange={(e) => setOnboardingForm({ ...onboardingForm, correctionRemarks: e.target.value })}
-                      className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs resize-none"
-                    />
-                  </div>
-                )}
+                {/* Professional Student Details Attestation & Verification Card */}
+                <div className={cn(
+                  "rounded-2xl border-2 p-3.5 transition-all duration-200",
+                  onboardingForm.detailsConfirmed
+                    ? "bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-emerald-50/30 border-blue-400/90 shadow-xs"
+                    : "bg-slate-50/90 border-slate-200 hover:border-slate-300"
+                )}>
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <div className="mt-0.5 flex items-center justify-center shrink-0">
+                      <input
+                        type="checkbox"
+                        required
+                        checked={onboardingForm.detailsConfirmed}
+                        onChange={(e) => setOnboardingForm({ ...onboardingForm, detailsConfirmed: e.target.checked })}
+                        className="w-4 h-4 rounded text-[#1557C0] border-slate-300 focus:ring-2 focus:ring-[#1557C0] cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <ShieldCheck className={cn("w-3.5 h-3.5", onboardingForm.detailsConfirmed ? "text-emerald-600" : "text-[#1557C0]")} />
+                          <span className="text-xs font-black text-[#071A41]">
+                            Institutional Student Declaration &amp; Attestation
+                          </span>
+                        </div>
+                        {onboardingForm.detailsConfirmed ? (
+                          <span className="inline-flex items-center gap-1 text-[9.5px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            Verified &amp; Confirmed
+                          </span>
+                        ) : (
+                          <span className="text-[9.5px] font-bold text-blue-700 bg-blue-100/70 px-2 py-0.5 rounded-full">
+                            Required Confirmation
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-slate-600 leading-relaxed font-medium">
+                        I solemnly declare and confirm that I have thoroughly verified all my academic particulars, contact numbers, date of birth, blood group, residency information, and photograph entered above.
+                      </p>
+                    </div>
+                  </label>
+                </div>
 
                 {/* Proceed Button */}
                 <div className="pt-2 border-t border-gray-100">
                   <Button
                     type="submit"
-                    className="w-full px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-[#071A41] via-[#1557C0] to-[#2F80ED] text-white shadow-md cursor-pointer hover:scale-[1.01] transition-all"
+                    className={cn(
+                      "w-full px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all text-xs sm:text-sm",
+                      onboardingForm.detailsConfirmed
+                        ? "bg-gradient-to-r from-[#071A41] via-[#0E387A] to-[#1557C0] hover:from-[#051330] hover:to-[#0d45b5] text-white shadow-blue-900/25 hover:scale-[1.01] cursor-pointer"
+                        : "bg-slate-200 text-slate-400 border border-slate-300 cursor-not-allowed shadow-none"
+                    )}
                   >
                     <span>Proceed to Password &amp; Email Setup</span>
                     <ArrowRight className="w-4 h-4" />
