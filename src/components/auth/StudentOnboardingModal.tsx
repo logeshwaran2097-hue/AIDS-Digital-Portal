@@ -529,7 +529,7 @@ export function StudentOnboardingModal({
                 {/* Register Number */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">REGISTER NUMBER</span>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">🆔 REGISTER NUMBER</span>
                     <span className="font-mono font-black text-xs text-[#071A41]">{initialData.registerNumber}</span>
                   </div>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
@@ -540,7 +540,7 @@ export function StudentOnboardingModal({
                 {/* Full Name */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">FULL NAME</span>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">👤 FULL NAME</span>
                     <span className="font-bold text-xs text-[#071A41]">{initialData.name}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
@@ -549,7 +549,7 @@ export function StudentOnboardingModal({
                 {/* Program / Department */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">PROGRAM / DEPARTMENT</span>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">🏛️ PROGRAM / DEPARTMENT</span>
                     <span className="font-bold text-xs text-[#1557C0]">{initialData.department || 'B.Tech Artificial Intelligence & Data Science'}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
@@ -558,7 +558,7 @@ export function StudentOnboardingModal({
                 {/* Year & Semester */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">YEAR &amp; SEMESTER</span>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">📅 YEAR &amp; SEMESTER</span>
                     <span className="font-bold text-xs text-[#071A41]">Year {initialData.year} · Semester {initialData.semester}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
@@ -567,7 +567,7 @@ export function StudentOnboardingModal({
                 {/* Assigned Section */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">ASSIGNED SECTION</span>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">🏷️ ASSIGNED SECTION</span>
                     <span className="font-bold text-xs text-[#071A41]">Section {initialData.section}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
@@ -576,7 +576,7 @@ export function StudentOnboardingModal({
                 {/* Class Advisor */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                   <div>
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">CLASS ADVISOR / MENTOR</span>
+                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">👨‍🏫 CLASS ADVISOR / MENTOR</span>
                     <span className="font-bold text-xs text-[#1557C0]">{initialData.advisorName || 'Assigned Faculty Mentor'}</span>
                   </div>
                   <Lock className="w-3 h-3 text-slate-400" />
@@ -650,7 +650,7 @@ export function StudentOnboardingModal({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <div>
                   <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Student Mobile *
+                    📱 Student Mobile *
                   </label>
                   <input
                     type="tel"
@@ -664,7 +664,7 @@ export function StudentOnboardingModal({
 
                 <div>
                   <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Parent Mobile *
+                    👨‍👩‍👧 Parent Mobile *
                   </label>
                   <input
                     type="tel"
@@ -681,13 +681,13 @@ export function StudentOnboardingModal({
                       onChange={(e) => setForm({ ...form, isParentWhatsapp: e.target.checked })}
                       className="rounded border-gray-300 text-[#16a34a] focus:ring-[#16a34a] w-3 h-3"
                     />
-                    <span className="text-[10px] font-semibold text-gray-600">Available on WhatsApp</span>
+                    <span className="text-[10px] font-semibold text-gray-600">💬 Available on WhatsApp</span>
                   </label>
                 </div>
 
                 <div className="sm:col-span-3 pt-1 border-t border-blue-200/50">
                   <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center justify-between">
-                    <span>Date of Birth (Day / Month / Year) *</span>
+                    <span>🎂 Date of Birth (Day / Month / Year) *</span>
                     {form.dateOfBirth && form.dateOfBirth.includes('-') && (
                       <span className="text-[10px] font-bold text-[#1557C0] bg-blue-100/70 px-2 py-0.5 rounded-md">
                         Selected: {form.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(form.dateOfBirth.split('-')[1], 10)] || form.dateOfBirth.split('-')[1]}-{form.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
@@ -707,7 +707,7 @@ export function StudentOnboardingModal({
                         }}
                         className="w-full p-2 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                       >
-                        <option value="">Day (DD)</option>
+                        <option value="">📅 Day (DD)</option>
                         {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
                           <option key={d} value={d}>
                             {d}
@@ -728,7 +728,7 @@ export function StudentOnboardingModal({
                         }}
                         className="w-full p-2 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                       >
-                        <option value="">Month (MM)</option>
+                        <option value="">🗓️ Month (MM)</option>
                         {[
                           { val: '01', label: '01 - January' },
                           { val: '02', label: '02 - February' },
@@ -762,7 +762,7 @@ export function StudentOnboardingModal({
                         }}
                         className="w-full p-2 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                       >
-                        <option value="">Year (YYYY)</option>
+                        <option value="">📆 Year (YYYY)</option>
                         {Array.from({ length: 30 }, (_, i) => String(2012 - i)).map((y) => (
                           <option key={y} value={y}>
                             {y}
