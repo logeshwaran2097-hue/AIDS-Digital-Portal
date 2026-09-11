@@ -777,117 +777,164 @@ export function StudentOnboardingModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2.5">
                 <div>
                   <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Blood Group
+                    🩸 Blood Group
                   </label>
                   <select
                     value={form.bloodGroup}
                     onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })}
-                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                    className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
                   >
                     <option value="">Select Blood Group</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
+                    <option value="A+">🅰️ A+ (Positive)</option>
+                    <option value="A-">🅰️ A- (Negative)</option>
+                    <option value="B+">🅱️ B+ (Positive)</option>
+                    <option value="B-">🅱️ B- (Negative)</option>
+                    <option value="AB+">🆎 AB+ (Positive)</option>
+                    <option value="AB-">🆎 AB- (Negative)</option>
+                    <option value="O+">🅾️ O+ (Positive)</option>
+                    <option value="O-">🅾️ O- (Negative)</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Residency &amp; Transport *
+                    🏠 Residency Details *
                   </label>
                   <select
                     required
                     value={form.residencyStatus}
                     onChange={(e) => setForm({ ...form, residencyStatus: e.target.value, busNo: '', boardingPoint: '', hostelBlock: '', roomNo: '' })}
-                    className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                    className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0] text-xs"
                   >
                     <option value="">Select Residency *</option>
-                    <option value="Day Scholar">Day Scholar (College Bus / Out Bus)</option>
-                    <option value="Hostel">Hostel (Campus Resident)</option>
+                    <option value="Day Scholar">🏡 Dayscholar</option>
+                    <option value="Hostel">🏢 Hostel (Campus Resident)</option>
                   </select>
                 </div>
               </div>
 
               {/* Day Scholar Sub-Options */}
               {form.residencyStatus === 'Day Scholar' && (
-                <div className="p-3 rounded-xl bg-blue-100/60 border border-blue-200 space-y-2.5 animate-in fade-in">
-                  <div className="flex items-center gap-4">
-                    <span className="text-[11px] font-bold text-gray-700">Transport Type:</span>
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-bold text-[#071A41]">
-                      <input
-                        type="radio"
-                        name="dayScholarType"
-                        checked={form.dayScholarType === 'College Bus'}
-                        onChange={() => setForm({ ...form, dayScholarType: 'College Bus' })}
-                        className="text-[#1557C0]"
-                      />
-                      🚌 College Bus User
-                    </label>
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-xs font-bold text-[#071A41]">
-                      <input
-                        type="radio"
-                        name="dayScholarType"
-                        checked={form.dayScholarType === 'Out Bus'}
-                        onChange={() => setForm({ ...form, dayScholarType: 'Out Bus' })}
-                        className="text-[#1557C0]"
-                      />
-                      🚗 Out Bus / Own Transport
-                    </label>
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/90 to-indigo-50/60 border border-blue-200 space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
+                      <span>🚌</span> Dayscholar Commute Options *
+                    </span>
+                    <span className="text-[10px] text-blue-700 font-bold bg-blue-100/80 px-2 py-0.5 rounded-md">
+                      Daily Transport
+                    </span>
                   </div>
 
-                  {form.dayScholarType === 'College Bus' ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[10px] mb-1.5">
+                      Select Mode of Transport *
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { id: 'College Bus', label: 'College Bus', icon: '🚌' },
+                        { id: 'Out Bus', label: 'Out Bus', icon: '🚐' },
+                        { id: 'Bike', label: 'Bike', icon: '🏍️' },
+                        { id: 'Self', label: 'Self / Walk', icon: '🚶' },
+                      ].map((mode) => (
+                        <button
+                          type="button"
+                          key={mode.id}
+                          onClick={() => setForm({ ...form, dayScholarType: mode.id as any })}
+                          className={cn(
+                            "p-2 rounded-xl border text-left flex items-center gap-1.5 transition-all cursor-pointer font-bold text-[11px]",
+                            form.dayScholarType === mode.id
+                              ? "bg-[#1557C0] text-white border-[#1557C0] shadow-sm"
+                              : "bg-white text-[#071A41] border-gray-200 hover:border-blue-300"
+                          )}
+                        >
+                          <span className="text-sm">{mode.icon}</span>
+                          <span>{mode.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 1. College Bus */}
+                  {form.dayScholarType === 'College Bus' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                       <div>
-                        <label className="block font-bold text-gray-700 text-[10px] mb-1">College Bus / Route No.</label>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">
+                          🚌 College Bus / Route No. *
+                        </label>
                         <input
                           type="text"
-                          placeholder="e.g. Bus No. 12 / Route 08"
+                          required
+                          placeholder="e.g. Bus 12 / Route 08"
                           value={form.busNo}
                           onChange={(e) => setForm({ ...form, busNo: e.target.value })}
-                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                         />
                       </div>
                       <div>
-                        <label className="block font-bold text-gray-700 text-[10px] mb-1">Boarding Point / Stop</label>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">
+                          📍 Boarding Point Details *
+                        </label>
                         <input
                           type="text"
+                          required
                           placeholder="e.g. Karur Central Bus Stand"
                           value={form.boardingPoint}
                           onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
-                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                         />
                       </div>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  )}
+
+                  {/* 2. Out Bus */}
+                  {form.dayScholarType === 'Out Bus' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
                       <div>
-                        <label className="block font-bold text-gray-700 text-[10px] mb-1">Travel Mode</label>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">
+                          📍 Boarding Point Details *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Town Hall Stop / Gandhigramam"
+                          value={form.boardingPoint}
+                          onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-700 text-[10px] mb-1">
+                          🏷️ Select Transport Services *
+                        </label>
                         <select
                           value={form.outBusMode}
                           onChange={(e) => setForm({ ...form, outBusMode: e.target.value })}
-                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
+                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                         >
-                          <option value="Public Bus (TNSTC)">Public Bus (TNSTC / Private)</option>
-                          <option value="Own Two-Wheeler / Bike">Own Two-Wheeler / Bike</option>
-                          <option value="Private Van / Auto">Private Van / Auto</option>
-                          <option value="Walking / Nearby">Walking / Nearby</option>
+                          <option value="TNSTC Public Bus">🚌 TNSTC Public Government Bus</option>
+                          <option value="Private Bus Service">🚐 Private Bus Service</option>
+                          <option value="Town Bus / Route Bus">🚏 Town Bus / City Transit</option>
+                          <option value="Share Auto / Van">🛺 Share Auto / Private Van</option>
+                          <option value="Other Transport Service">🚗 Other Transport Service</option>
                         </select>
                       </div>
-                      <div>
-                        <label className="block font-bold text-gray-700 text-[10px] mb-1">Starting Point / Location</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Thanthonimalai / Velliyanai"
-                          value={form.boardingPoint}
-                          onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
-                          className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
-                        />
-                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Bike or Self */}
+                  {(form.dayScholarType === ('Bike' as any) || form.dayScholarType === ('Self' as any)) && (
+                    <div className="pt-1">
+                      <label className="block font-bold text-gray-700 text-[10px] mb-1">
+                        📍 Starting Point / Location Details *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Thanthonimalai / Velliyanai / Near Campus"
+                        value={form.boardingPoint}
+                        onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
+                        className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
+                      />
                     </div>
                   )}
                 </div>
@@ -895,31 +942,52 @@ export function StudentOnboardingModal({
 
               {/* Hosteller Sub-Options */}
               {form.residencyStatus === 'Hostel' && (
-                <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 grid grid-cols-1 sm:grid-cols-2 gap-2 animate-in fade-in">
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[10px] mb-1">Hostel Block</label>
-                    <select
-                      value={form.hostelBlock}
-                      onChange={(e) => setForm({ ...form, hostelBlock: e.target.value })}
-                      className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
-                    >
-                      <option value="">Select Block</option>
-                      <option value="Boys Hostel Block A">Boys Hostel Block A</option>
-                      <option value="Boys Hostel Block B">Boys Hostel Block B</option>
-                      <option value="Boys Hostel Block C">Boys Hostel Block C</option>
-                      <option value="Girls Hostel Block A">Girls Hostel Block A</option>
-                      <option value="Girls Hostel Block B">Girls Hostel Block B</option>
-                    </select>
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-50/90 to-fuchsia-50/60 border border-purple-200 space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-black text-purple-950 flex items-center gap-1.5">
+                      <span>🏢</span> Campus Hostel Accommodation *
+                    </span>
+                    <span className="text-[10px] text-purple-700 font-bold bg-purple-100/80 px-2 py-0.5 rounded-md">
+                      Resident
+                    </span>
                   </div>
-                  <div>
-                    <label className="block font-bold text-gray-700 text-[10px] mb-1">Room No.</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Room 204"
-                      value={form.roomNo}
-                      onChange={(e) => setForm({ ...form, roomNo: e.target.value })}
-                      className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {/* 6 Hostel Options */}
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[10px] mb-1">
+                        🏢 Hostel Number / Block (6 Options) *
+                      </label>
+                      <select
+                        required
+                        value={form.hostelBlock}
+                        onChange={(e) => setForm({ ...form, hostelBlock: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      >
+                        <option value="">Select Hostel Block *</option>
+                        <option value="Boys Hostel I">👦 Boys Hostel I</option>
+                        <option value="Boys Hostel II">👦 Boys Hostel II</option>
+                        <option value="Boys Hostel III">👦 Boys Hostel III</option>
+                        <option value="Girls Hostel I">👧 Girls Hostel I</option>
+                        <option value="Girls Hostel II">👧 Girls Hostel II</option>
+                        <option value="Girls Hostel III">👧 Girls Hostel III</option>
+                      </select>
+                    </div>
+
+                    {/* Room Number */}
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[10px] mb-1">
+                        🚪 Room No. *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Room 204 / B-102"
+                        value={form.roomNo}
+                        onChange={(e) => setForm({ ...form, roomNo: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
