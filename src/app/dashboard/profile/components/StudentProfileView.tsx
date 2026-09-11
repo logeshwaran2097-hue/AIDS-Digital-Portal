@@ -60,6 +60,8 @@ interface StudentFullProfile {
   address?: string
   hostelBlock?: string
   roomNo?: string
+  parentPhone?: string
+  isParentWhatsapp?: boolean
   registerNumber: string
   department: string
   degreeProgram: string
@@ -109,6 +111,8 @@ export function StudentProfileView({
     dateOfBirth?: Date | string | null
     advisorName?: string | null
     batch?: string | null
+    parentPhone?: string | null
+    isParentWhatsapp?: boolean | null
   }
 }) {
   const regNo = initialStudent.registerNumber || initialUser.email?.split('@')[0].toUpperCase() || ''
@@ -118,6 +122,8 @@ export function StudentProfileView({
     name: initialUser.name || '',
     email: (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in')) ? initialUser.email : '',
     phone: initialUser.phone || '',
+    parentPhone: (initialStudent as any).parentPhone || '',
+    isParentWhatsapp: (initialStudent as any).isParentWhatsapp ?? false,
     dateOfBirth: initialStudent.dateOfBirth
       ? new Date(initialStudent.dateOfBirth).toISOString().split('T')[0]
       : '',
@@ -263,6 +269,8 @@ export function StudentProfileView({
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          parentPhone: formData.parentPhone,
+          isParentWhatsapp: formData.isParentWhatsapp,
           dateOfBirth: formData.dateOfBirth || undefined,
           bloodGroup: formData.bloodGroup,
           residencyStatus: formData.residencyStatus,
@@ -501,8 +509,20 @@ export function StudentProfileView({
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
-                <span className="font-bold text-gray-500">Contact Number:</span>
-                <span className="font-bold text-[#071A3D]">{profile.phone}</span>
+                <span className="font-bold text-gray-500">Student Mobile:</span>
+                <span className="font-bold text-[#071A3D]">{profile.phone || 'Not Provided'}</span>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
+                <span className="font-bold text-gray-500">Parent Mobile:</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold font-mono text-[#071A3D]">{profile.parentPhone || '6381366088'}</span>
+                  {profile.isParentWhatsapp && (
+                    <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                      WhatsApp
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
@@ -709,7 +729,7 @@ export function StudentProfileView({
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Contact Phone Number</label>
+                      <label className="block font-bold text-[#071A3D] mb-1">Student Contact Number</label>
                       <input
                         type="text"
                         value={formData.phone}
@@ -717,6 +737,26 @@ export function StudentProfileView({
                         className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                         placeholder="+91 98765 43210"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Parent / Guardian Mobile</label>
+                      <input
+                        type="text"
+                        value={formData.parentPhone || ''}
+                        onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono"
+                        placeholder="e.g. 6381366088"
+                      />
+                      <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.isParentWhatsapp)}
+                          onChange={(e) => setFormData({ ...formData, isParentWhatsapp: e.target.checked })}
+                          className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="text-[11px] font-bold text-gray-600">Available on WhatsApp</span>
+                      </label>
                     </div>
                   </div>
 
