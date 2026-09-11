@@ -244,6 +244,18 @@ export function StudentOnboardingModal({
       toast.error('Please enter parent/guardian mobile number.')
       return
     }
+    if (!form.residencyStatus || !form.residencyStatus.trim()) {
+      toast.error('Please select your Residency Status (Day Scholar or Hostel).')
+      return
+    }
+    if (form.residencyStatus === 'Day Scholar' && form.dayScholarType === 'College Bus' && !form.busNo.trim()) {
+      toast.error('Please enter your College Bus / Route Number.')
+      return
+    }
+    if (form.residencyStatus === 'Hostel' && (!form.hostelBlock.trim() || !form.roomNo.trim())) {
+      toast.error('Please enter your Hostel Block and Room Number.')
+      return
+    }
     if (!form.detailsConfirmed) {
       toast.error('Please check the verification attestation box to confirm your details.')
       return
@@ -445,16 +457,6 @@ export function StudentOnboardingModal({
               <span className="text-[11px] font-mono font-bold text-slate-500">
                 {initialData.registerNumber}
               </span>
-              {onClose && (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                  aria-label="Close"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
             </div>
           </div>
           
@@ -796,14 +798,15 @@ export function StudentOnboardingModal({
 
                 <div>
                   <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                    Residency &amp; Transport
+                    Residency &amp; Transport *
                   </label>
                   <select
+                    required
                     value={form.residencyStatus}
                     onChange={(e) => setForm({ ...form, residencyStatus: e.target.value, busNo: '', boardingPoint: '', hostelBlock: '', roomNo: '' })}
                     className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                   >
-                    <option value="">Select Residency</option>
+                    <option value="">Select Residency *</option>
                     <option value="Day Scholar">Day Scholar (College Bus / Out Bus)</option>
                     <option value="Hostel">Hostel (Campus Resident)</option>
                   </select>
@@ -918,47 +921,6 @@ export function StudentOnboardingModal({
                       className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41]"
                     />
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* Academic Discrepancy Reporting (Executive Accordion Card) */}
-            <div className="rounded-2xl border border-amber-200/90 bg-gradient-to-r from-amber-50/70 via-amber-50/40 to-orange-50/30 p-3.5 transition-all">
-              <label className="flex items-center justify-between gap-3 cursor-pointer select-none">
-                <div className="flex items-center gap-2.5">
-                  <input
-                    type="checkbox"
-                    checked={form.hasCorrectionRequest}
-                    onChange={(e) => setForm({ ...form, hasCorrectionRequest: e.target.checked })}
-                    className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-                  />
-                  <div>
-                    <span className="font-black text-amber-950 text-xs flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      Notice an error in your academic particulars?
-                    </span>
-                    <span className="text-[10px] text-amber-800 font-medium block">
-                      Click to submit a formal correction request directly to the Academic Office
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full border border-amber-200 shrink-0">
-                  Optional
-                </span>
-              </label>
-
-              {form.hasCorrectionRequest && (
-                <div className="mt-3 pt-3 border-t border-amber-200/70 space-y-2 animate-in fade-in duration-200">
-                  <p className="text-[11px] text-amber-900 font-medium leading-relaxed">
-                    Specify the exact corrections needed (e.g. Spelling correction in Student Name, change in Section, or Mentor update). This request will be routed to the Department HOD &amp; Admin Office without blocking your account setup.
-                  </p>
-                  <textarea
-                    rows={2}
-                    placeholder="Enter precise correction details here..."
-                    value={form.correctionRemarks}
-                    onChange={(e) => setForm({ ...form, correctionRemarks: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-semibold text-[#071A41] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-inner"
-                  />
                 </div>
               )}
             </div>

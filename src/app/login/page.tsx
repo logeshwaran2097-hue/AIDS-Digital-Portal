@@ -1533,33 +1533,6 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Option: Request Admin Correction */}
-                <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-2">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={onboardingForm.hasCorrectionRequest}
-                      onChange={(e) => setOnboardingForm({ ...onboardingForm, hasCorrectionRequest: e.target.checked })}
-                      className="w-4 h-4 rounded text-[#1557C0] focus:ring-[#1557C0]"
-                    />
-                    <span className="font-bold text-amber-900 text-xs flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      Any academic details wrong? Request Admin Correction
-                    </span>
-                  </label>
-
-                  {onboardingForm.hasCorrectionRequest && (
-                    <div className="pt-1 animate-in fade-in">
-                      <textarea
-                        rows={2}
-                        placeholder="Describe the correction needed (e.g. My section should be B, or correction in name spelling...)"
-                        value={onboardingForm.correctionRemarks}
-                        onChange={(e) => setOnboardingForm({ ...onboardingForm, correctionRemarks: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-amber-300 bg-white text-xs font-medium text-[#071A41] focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                    </div>
-                  )}
-                </div>
 
                 {/* Details Confirmed Checkbox */}
                 <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200">
