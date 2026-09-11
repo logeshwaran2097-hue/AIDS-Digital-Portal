@@ -3,9 +3,12 @@ import { authenticateStudent } from '@/lib/auth'
 import { z } from 'zod'
 
 const loginSchema = z.object({
-  registerNumber: z.string().min(1, 'Register Number is required'),
+  registerNumber: z.string().optional(),
+  email: z.string().optional(),
   password: z.string().optional(),
   dateOfBirth: z.string().optional(),
+}).refine((data) => data.registerNumber || data.email, {
+  message: 'Register Number or Email ID is required',
 })
 
 export const dynamic = 'force-dynamic'
@@ -15,10 +18,11 @@ export const fetchCache = 'force-no-store'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { registerNumber, password, dateOfBirth } = loginSchema.parse(body)
+    const { registerNumber, email, password, dateOfBirth } = loginSchema.parse(body)
+    const identifier = (registerNumber || email || '').trim()
     const passwordOrDob = password || dateOfBirth || ''
 
-    const result = await authenticateStudent(registerNumber, passwordOrDob)
+    const result = await authenticateStudent(identifier, passwordOrDob)
 
     if (!result.success || !result.user || !result.token) {
       return NextResponse.json(

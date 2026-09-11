@@ -3,9 +3,13 @@ import { authenticateFaculty } from '@/lib/auth'
 import { z } from 'zod'
 
 const loginSchema = z.object({
-  facultyId: z.string().min(1, 'Faculty ID is required'),
+  facultyId: z.string().optional(),
+  email: z.string().optional(),
+  name: z.string().optional(),
   password: z.string().optional(),
   dateOfBirth: z.string().optional(),
+}).refine((data) => data.facultyId || data.email || data.name, {
+  message: 'Faculty Email ID, Name, or Faculty ID is required',
 })
 
 export const dynamic = 'force-dynamic'
@@ -13,10 +17,11 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { facultyId, password, dateOfBirth } = loginSchema.parse(body)
+    const { facultyId, email, name, password, dateOfBirth } = loginSchema.parse(body)
+    const identifier = (facultyId || email || name || '').trim()
     const passwordOrDob = password || dateOfBirth || ''
 
-    const result = await authenticateFaculty(facultyId, passwordOrDob)
+    const result = await authenticateFaculty(identifier, passwordOrDob)
 
     if (!result.success || !result.user || !result.token) {
       return NextResponse.json(

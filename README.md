@@ -63,10 +63,10 @@ The portal implements strict **Role-Based Access Control (RBAC)** across 4 user 
 
 | Role | Default Route | Authentication Method | Primary Responsibilities |
 | :--- | :--- | :--- | :--- |
-| **Student** | `/dashboard` | Register No. + Password + 2-Step OTP | Academics, period attendance tracking, study notes, project capstones, OD proof submissions. |
-| **Faculty** | `/faculty-dashboard` | Faculty ID + Password | Period-wise attendance, lecture slides, syllabus tracking, class advisor student monitoring & OD checks. |
-| **HOD** | `/hod-dashboard` | HOD ID / Email + Password | Department analytics, advisor OD review & final sign-offs, attendance register unlock approvals, workload mapping. |
-| **Admin** | `/admin` | Admin Email + OTP + Password | User provisioning (students/faculty/HOD), bulk CSV onboarding, curriculum setup, security audit logs. |
+| **Student** | `/dashboard` | Register No. or Email ID + Password + 2-Step OTP | Academics, period attendance tracking, study notes, project capstones, OD proof submissions. |
+| **Faculty & Class Advisor** | `/faculty-dashboard` | Faculty Email ID or Name + Password | Period-wise attendance, lecture slides, syllabus tracking, class advisor student monitoring & OD checks. |
+| **HOD** | `/hod-dashboard` | HOD Email ID or Name + Password | Department analytics, advisor OD review & final sign-offs, attendance register unlock approvals, workload mapping. |
+| **Admin** | `/admin` | Admin Email ID + Login OTP | User provisioning (students/faculty/HOD), bulk CSV onboarding, curriculum setup, security audit logs. |
 
 ---
 

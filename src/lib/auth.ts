@@ -131,49 +131,83 @@ function normalizeDate(d: string | Date): string {
 
 import bcrypt from 'bcryptjs'
 
-export async function authenticateStudent(registerNumber: string, passwordInput: string) {
-  const normalizedReg = registerNumber.trim().toUpperCase()
+export async function authenticateStudent(registerNumberOrEmail: string, passwordInput: string) {
+  const rawInput = registerNumberOrEmail.trim()
+  const normalizedReg = rawInput.toUpperCase()
   const trimmedPassword = passwordInput.trim()
   let isValid = false
   let passwordChangeRequired = false
 
-  // 1. Look for existing student record — ONLY admin-added records can log in
-  const student = await prisma.student.findFirst({
-    where: {
-      OR: [
-        { registerNumber: normalizedReg },
-        { registerNumber: registerNumber.trim() },
-        { registerNumber: normalizedReg.toLowerCase() },
-      ],
-    },
-  }).catch(() => null)
+  let student: any = null
+  let user: any = null
 
-  if (!student) {
-    return { success: false, message: 'No record found in database. Please contact your department administrator.' }
-  }
-
-  // 2. Find the linked User record
-  let user: any = await prisma.user.findUnique({
-    where: { id: student.userId },
-  }).catch(() => null)
-
-  if (!user) {
-    // Fallback: search by email in case userId link is stale
+  // 1. If input looks like an email address, search by user email first
+  if (rawInput.includes('@')) {
     user = await prisma.user.findFirst({
-      where: { email: `${normalizedReg.toLowerCase()}@student.vsb.edu.in` },
+      where: {
+        role: 'student',
+        email: { equals: rawInput.toLowerCase(), mode: 'insensitive' },
+      },
     }).catch(() => null)
+
+    if (user) {
+      student = await prisma.student.findFirst({
+        where: { userId: user.id },
+      }).catch(() => null)
+    }
   }
 
-  if (!user) {
-    return { success: false, message: 'Student account not configured. Please contact your department administrator.' }
+  // 2. If not found by email, search by student register number
+  if (!student) {
+    student = await prisma.student.findFirst({
+      where: {
+        OR: [
+          { registerNumber: normalizedReg },
+          { registerNumber: rawInput },
+          { registerNumber: normalizedReg.toLowerCase() },
+        ],
+      },
+    }).catch(() => null)
+
+    if (student) {
+      user = await prisma.user.findUnique({
+        where: { id: student.userId },
+      }).catch(() => null)
+
+      if (!user) {
+        user = await prisma.user.findFirst({
+          where: { email: `${student.registerNumber.toLowerCase()}@student.vsb.edu.in` },
+        }).catch(() => null)
+      }
+    }
   }
 
-  // 3. Check account status
+  // 3. Fallback: search User by email even without explicit @ domain match
+  if (!user && !student) {
+    user = await prisma.user.findFirst({
+      where: {
+        role: 'student',
+        email: { contains: rawInput.toLowerCase(), mode: 'insensitive' },
+      },
+    }).catch(() => null)
+
+    if (user) {
+      student = await prisma.student.findFirst({
+        where: { userId: user.id },
+      }).catch(() => null)
+    }
+  }
+
+  if (!student || !user) {
+    return { success: false, message: 'No student record found for this Register Number or Email. Please contact your department administrator.' }
+  }
+
+  // 4. Check account status
   if (user.status && user.status.toLowerCase() !== 'active') {
     return { success: false, message: 'Student account is suspended or inactive. Please contact your administrator.' }
   }
 
-  // 4. Verify Password against admin-set bcrypt hash ONLY
+  // 5. Verify Password against admin-set bcrypt hash ONLY
   if (!user.passwordHash) {
     return { success: false, message: 'Account password not configured. Please contact your department administrator.' }
   }
@@ -183,7 +217,7 @@ export async function authenticateStudent(registerNumber: string, passwordInput:
   } catch {}
 
   if (!isValid) {
-    return { success: false, message: 'Invalid Register Number or Password.' }
+    return { success: false, message: 'Invalid Register Number, Email, or Password.' }
   }
 
   // 5. Handle mustChangePassword (temp password flow set by admin)
@@ -223,25 +257,34 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
       where: { id: faculty.userId },
     }).catch(() => null)
   } else {
-    // 2. Try finding by email
+    // 2. Try finding by email (case-insensitive)
     user = await prisma.user.findFirst({
       where: {
         role: 'faculty',
-        email: rawInput.toLowerCase(),
+        email: { equals: rawInput.toLowerCase(), mode: 'insensitive' },
       },
     }).catch(() => null)
+
     if (!user) {
-      // 3. Try finding by Faculty Name (case-insensitive)
+      // 3. Try finding by Faculty Name (case-insensitive exact)
       user = await prisma.user.findFirst({
         where: {
           role: 'faculty',
-          name: {
-            equals: rawInput,
-            mode: 'insensitive',
-          },
+          name: { equals: rawInput, mode: 'insensitive' },
         },
       }).catch(() => null)
     }
+
+    if (!user) {
+      // 4. Try finding by Faculty Name (case-insensitive contains)
+      user = await prisma.user.findFirst({
+        where: {
+          role: 'faculty',
+          name: { contains: rawInput, mode: 'insensitive' },
+        },
+      }).catch(() => null)
+    }
+
     if (user) {
       faculty = await prisma.faculty.findFirst({
         where: { userId: user.id },
@@ -251,7 +294,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
 
   // No record in DB — reject with clear message (no auto-creation)
   if (!faculty || !user) {
-    return { success: false, message: 'No record found in database. Please contact your department administrator.' }
+    return { success: false, message: 'No faculty record found for this Email or Name. Please contact your department administrator.' }
   }
 
   if (user.status !== 'active') {
@@ -271,7 +314,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
   } catch {}
 
   if (!isValid) {
-    return { success: false, message: 'Invalid Faculty ID or Password.' }
+    return { success: false, message: 'Invalid Faculty Email, Name, or Password.' }
   }
 
   await prisma.user.update({
@@ -356,7 +399,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
 
   // No record in DB — reject with clear message (no auto-creation)
   if (!hod || !user) {
-    return { success: false, message: 'No record found in database. Please contact your department administrator.' }
+    return { success: false, message: 'No HOD record found for this Email or Name. Please contact your department administrator.' }
   }
 
   if (user.status !== 'active') {
@@ -384,7 +427,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
   }
 
   if (!isValid) {
-    return { success: false, message: 'Invalid HOD ID or Password.' }
+    return { success: false, message: 'Invalid HOD Email, Name, or Password.' }
   }
 
   await prisma.user.update({

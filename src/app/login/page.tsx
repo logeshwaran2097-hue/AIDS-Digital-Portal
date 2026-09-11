@@ -227,13 +227,13 @@ export default function LoginPage() {
 
       if (selectedRole === 'student') {
         endpoint = '/api/auth/student'
-        payload = { registerNumber: registerNumber.trim(), password }
+        payload = { registerNumber: registerNumber.trim(), email: registerNumber.trim(), password }
       } else if (selectedRole === 'faculty' || selectedRole === 'advisor') {
         endpoint = '/api/auth/faculty'
-        payload = { facultyId: facultyId.trim(), password }
+        payload = { facultyId: facultyId.trim(), email: facultyId.trim(), name: facultyId.trim(), password }
       } else if (selectedRole === 'hod') {
         endpoint = '/api/auth/hod'
-        payload = { facultyId: facultyId.trim(), password }
+        payload = { facultyId: facultyId.trim(), email: facultyId.trim(), name: facultyId.trim(), password }
       }
 
       const res = await fetch(endpoint, {
@@ -922,9 +922,9 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>Register Number</span>
+                      <span>Register Number or Email ID</span>
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400">Anna Univ. Format</span>
+                    <span className="text-[9px] font-bold text-slate-400">Reg No. / Email</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
@@ -932,7 +932,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. 922525243103"
+                      placeholder="e.g. 922525243126 or monisha@student.vsb.edu.in"
                       value={registerNumber}
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
@@ -994,9 +994,9 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>Faculty Name</span>
+                      <span>Faculty Email ID or Name</span>
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400">Staff Portal</span>
+                    <span className="text-[9px] font-bold text-slate-400">Email / Name</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
@@ -1004,7 +1004,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. Dr. S. Karthik or karthik@vsb.edu.in"
+                      placeholder="e.g. karthik@vsb.edu.in or Dr. S. Karthik"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
@@ -1066,10 +1066,10 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>Class Advisor Name</span>
+                      <span>Class Advisor Email ID or Name</span>
                     </span>
                     <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                      Batch Mentor
+                      Email / Name
                     </span>
                   </label>
                   <div className="relative group">
@@ -1078,7 +1078,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. Dr. S. Karthik or karthik@vsb.edu.in"
+                      placeholder="e.g. karthik@vsb.edu.in or Dr. S. Karthik"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
@@ -1140,9 +1140,9 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <UserIcon className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>HOD Name, ID or Email</span>
+                      <span>HOD Email ID or Name</span>
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400">Head of Department</span>
+                    <span className="text-[9px] font-bold text-slate-400">Email / Name</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
@@ -1150,7 +1150,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. hello, HOD001, or hod.hello@vsb.edu.in"
+                      placeholder="e.g. hod.aids@vsb.edu.in or Dr. Head of Department"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
@@ -1212,9 +1212,9 @@ export default function LoginPage() {
                   <label className="block text-[11px] font-black text-[#071A41] flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-[#1557C0]" />
-                      <span>Administrator Email</span>
+                      <span>Administrator Email ID</span>
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400">Admin Clearance</span>
+                    <span className="text-[9px] font-bold text-slate-400">Login via OTP</span>
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1557C0] group-focus-within:scale-110 transition-all">
@@ -1222,7 +1222,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="email"
-                      placeholder="admin@vsb.ac.in"
+                      placeholder="e.g. admin@vsb.edu.in"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -1241,7 +1241,7 @@ export default function LoginPage() {
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full duration-1000 transition-transform" />
                     <Send className="w-4 h-4 text-[#E7B93E] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                    <span>{loading ? 'Sending OTP...' : 'Send Verification OTP'}</span>
+                    <span>{loading ? 'Sending OTP...' : 'Send Login OTP'}</span>
                   </button>
                 ) : (
                   <div className="space-y-2.5 animate-fade-in">
