@@ -2,51 +2,7 @@ import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { prisma } from '@/lib/prisma'
 
-export const ALL_SEMESTERS_LABS = {
-  1: [
-    { code: 'GE2111', name: 'Problem Solving and Python Programming Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 1, sem: 1 },
-    { code: 'BS2112', name: 'Physics and Chemistry Laboratory', session: 'FN (09:15 AM - 12:30 PM)', year: 1, sem: 1 },
-    { code: 'GE2113', name: 'Engineering Graphics & CAD Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 1, sem: 1 },
-  ],
-  2: [
-    { code: 'CS2211', name: 'C Programming and Data Structures Laboratory', session: 'FN (09:15 AM - 12:30 PM)', year: 1, sem: 2 },
-    { code: 'EE2212', name: 'Basic Electrical & Electronics Engineering Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 1, sem: 2 },
-    { code: 'GE2213', name: 'Workshop Practice Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 1, sem: 2 },
-  ],
-  3: [
-    { code: 'AD2311', name: 'Object Oriented Programming Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 2, sem: 3 },
-    { code: 'AD2312', name: 'Database Management Systems Laboratory', session: 'FN (09:15 AM - 12:30 PM)', year: 2, sem: 3 },
-    { code: 'AD2313', name: 'Data Structures and Algorithms Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 2, sem: 3 },
-  ],
-  4: [
-    { code: 'AD2411', name: 'Machine Learning Laboratory', session: 'FN (09:15 AM - 12:30 PM)', year: 2, sem: 4 },
-    { code: 'AD2412', name: 'Operating Systems Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 2, sem: 4 },
-    { code: 'AD2413', name: 'Java & Web Technologies Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 2, sem: 4 },
-  ],
-  5: [
-    { code: 'AD2511', name: 'Cloud Services & Management Laboratory', session: 'FN (09:15 AM - 12:30 PM)', year: 3, sem: 5 },
-    { code: 'AD2512', name: 'Big Data Analytics Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 3, sem: 5 },
-    { code: 'AD2513', name: 'Deep Learning Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 3, sem: 5 },
-    { code: 'AD2514', name: 'Business Analytics Laboratory', session: 'FN (09:15 AM - 12:30 PM)', year: 3, sem: 5 },
-    { code: 'AD2515', name: 'Communication Training', session: 'Period 7 & 8 (03:05 PM - 04:30 PM)', year: 3, sem: 5 },
-    { code: 'AD2516', name: 'Aptitude & Soft Skills Training', session: 'Period 7 & 8 (03:05 PM - 04:30 PM)', year: 3, sem: 5 },
-    { code: 'AD2517', name: 'Web Development Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 3, sem: 5 },
-  ],
-  6: [
-    { code: 'AD2611', name: 'Natural Language Processing Laboratory', session: 'FN (09:15 AM - 12:30 PM)', year: 3, sem: 6 },
-    { code: 'AD2612', name: 'Computer Vision & Image Processing Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 3, sem: 6 },
-    { code: 'AD2613', name: 'Mobile Application Development Laboratory', session: 'AN (01:20 PM - 04:30 PM)', year: 3, sem: 6 },
-    { code: 'AD2614', name: 'Mini Project & Product Development', session: 'FN & AN Full Day Block', year: 3, sem: 6 },
-  ],
-  7: [
-    { code: 'AD2711', name: 'Project Work Phase I (Capstone Research)', session: 'Full Day Lab Block', year: 4, sem: 7 },
-    { code: 'AD2712', name: 'Placement and Training (Corporate Readiness)', session: 'AN (01:20 PM - 04:30 PM)', year: 4, sem: 7 },
-  ],
-  8: [
-    { code: 'AD2811', name: 'Project Work Phase II (Capstone Final Implementation)', session: 'Dedicated Project Block', year: 4, sem: 8 },
-    { code: 'AD2812', name: 'Industrial Internship & Comprehensive Viva', session: 'Industry / Autonomous Evaluation', year: 4, sem: 8 },
-  ],
-}
+// Universal Real-Time Database Query Engine (Strictly Database Grounded)
 
 // Universal Real-Time Database Query Engine
 async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string; suggestions: string[] }> {
@@ -312,101 +268,28 @@ async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string;
     }
 
     // -------------------------------------------------------------------------
-    // 9. SPECIFIC LABS / PRACTICALS (2nd Year, 3rd Year, 4th Year, 1st Year, All Semesters)
+    // 9. SPECIFIC LABS / PRACTICALS (Strictly queried from database)
     // -------------------------------------------------------------------------
     const isLabQuery = q.includes('lab') || q.includes('practical') || q.includes('workshop') || q.includes('training')
 
     if (isLabQuery) {
-      // 2nd Year / Sem 3 & 4
-      if (q.includes('2nd') || q.includes('2') || q.includes('second') || q.includes('sophomore') || q.includes('sem 3') || q.includes('sem 4') || q.includes('semester 3') || q.includes('semester 4')) {
+      const dbSubjects = await prisma.subject.findMany({
+        orderBy: { code: 'asc' },
+      })
+
+      if (dbSubjects.length > 0) {
+        const list = dbSubjects.map(
+          (s) => `• **${s.code}** - ${s.name} (${s.credits} Credits)`
+        )
         return {
-          answer: `🔬 **Official Laboratories for 2nd Year (AI & DS):**
-
-**Semester 3 (Odd Semester):**
-• **AD2311** - Object Oriented Programming Laboratory (OOP Lab) · *Session: AN (01:20 PM - 04:30 PM)*
-• **AD2312** - Database Management Systems Laboratory (DBMS Lab) · *Session: FN (09:15 AM - 12:30 PM)*
-• **AD2313** - Data Structures and Algorithms Laboratory (DSA Lab) · *Session: AN (01:20 PM - 04:30 PM)*
-
-**Semester 4 (Even Semester):**
-• **AD2411** - Machine Learning Laboratory · *Session: FN (09:15 AM - 12:30 PM)*
-• **AD2412** - Operating Systems Laboratory · *Session: AN (01:20 PM - 04:30 PM)*
-• **AD2413** - Java & Web Technologies Laboratory · *Session: AN (01:20 PM - 04:30 PM)*
-
-💡 *Each laboratory session runs as a dedicated multi-period block (FN: 09:15 AM - 12:30 PM | AN: 01:20 PM - 04:30 PM).*`,
-          suggestions: ['Labs for 3rd year?', 'Labs for 4th year?', 'Official timetable timings?'],
+          answer: `🔬 **Department of AI & DS — Registered Laboratories & Courses (${dbSubjects.length} courses):**\n\n${list.join('\n')}\n\n💡 *All courses are registered and maintained directly by the System Administrator in the database.*`,
+          suggestions: ['Faculty directorate?', 'Daily bell timings?', 'Study resources?'],
         }
-      }
-
-      // 3rd Year / Sem 5 & 6
-      if (q.includes('3rd') || q.includes('3') || q.includes('third') || q.includes('junior') || q.includes('sem 5') || q.includes('sem 6') || q.includes('semester 5') || q.includes('semester 6')) {
+      } else {
         return {
-          answer: `🔬 **Official Laboratories for 3rd Year (AI & DS):**
-
-**Semester 5 (Odd Semester):**
-• **AD2511** - Cloud Services & Management Laboratory
-• **AD2512** - Big Data Analytics Laboratory
-• **AD2513** - Deep Learning Laboratory
-• **AD2514** - Business Analytics Laboratory
-• **AD2515** - Communication Training (Period 7 & 8 · 03:05 PM - 04:30 PM)
-• **AD2516** - Aptitude & Soft Skills Training (Period 7 & 8 · 03:05 PM - 04:30 PM)
-• **AD2517** - Web Development Laboratory
-
-**Semester 6 (Even Semester):**
-• **AD2611** - Natural Language Processing Laboratory
-• **AD2612** - Computer Vision & Image Processing Laboratory
-• **AD2613** - Mobile Application Development Laboratory
-• **AD2614** - Mini Project & Product Development
-
-💡 *Afternoon practical blocks are scheduled from 01:20 PM to 04:30 PM.*`,
-          suggestions: ['Labs for 2nd year?', 'Labs for 4th year?', 'Timetable schedule?'],
+          answer: `🔬 **Department of AI & DS — Laboratory Courses:**\n\nNo laboratory or practical courses have been registered yet by the Administrator in the database.\n\nOnce the Administrator adds curricular courses via the **Admin Academics Command Center**, they will be automatically queried and displayed here in real time.`,
+          suggestions: ['Daily bell timings?', 'Class Advisor lookup?', 'Student directory?'],
         }
-      }
-
-      // 4th Year / Sem 7 & 8
-      if (q.includes('4th') || q.includes('4') || q.includes('fourth') || q.includes('senior') || q.includes('final') || q.includes('sem 7') || q.includes('sem 8') || q.includes('semester 7') || q.includes('semester 8')) {
-        return {
-          answer: `🔬 **Official Laboratories & Project Work for 4th Year (AI & DS):**
-
-**Semester 7 (Odd Semester):**
-• **AD2711** - Project Work Phase I (Capstone Research)
-• **AD2712** - Placement and Training (Corporate Readiness · 01:20 PM - 04:30 PM)
-
-**Semester 8 (Even Semester):**
-• **AD2811** - Project Work Phase II (Capstone Final Implementation)
-• **AD2812** - Industrial Internship & Comprehensive Viva Voce`,
-          suggestions: ['Labs for 3rd year?', 'Labs for 2nd year?', 'Faculty directorate?'],
-        }
-      }
-
-      // 1st Year / Sem 1 & 2
-      if (q.includes('1st') || q.includes('1') || q.includes('first') || q.includes('freshman') || q.includes('sem 1') || q.includes('sem 2') || q.includes('semester 1') || q.includes('semester 2')) {
-        return {
-          answer: `🔬 **Official Laboratories for 1st Year (AI & DS):**
-
-**Semester 1 (Odd Semester):**
-• **GE2111** - Problem Solving & Python Programming Laboratory
-• **BS2112** - Physics & Chemistry Laboratory
-• **GE2113** - Engineering Graphics & CAD Laboratory
-
-**Semester 2 (Even Semester):**
-• **CS2211** - C Programming & Data Structures Laboratory
-• **EE2212** - Basic Electrical & Electronics Engineering Laboratory
-• **GE2213** - Workshop Practice Laboratory`,
-          suggestions: ['Labs for 2nd year?', 'Labs for 3rd year?', 'Daily bell timings?'],
-        }
-      }
-
-      // All 8 Semesters Overview
-      return {
-        answer: `🔬 **Department of AI & DS — All 8 Semesters Practical Laboratories Overview:**
-
-• **Year 1 (Sem 1 & 2):** Python Programming Lab, Physics/Chem Lab, CAD Graphics Lab, C Programming & Data Structures Lab, BEE Lab, Workshop Lab.
-• **Year 2 (Sem 3 & 4):** OOP Lab, DBMS Lab, DSA Lab, Machine Learning Lab, Operating Systems Lab, Java & Web Lab.
-• **Year 3 (Sem 5 & 6):** Cloud Services Lab, Big Data Lab, Deep Learning Lab, Business Analytics Lab, Communication Training, Aptitude, Web Dev Lab, NLP Lab, Computer Vision Lab, Mobile App Lab, Mini Project.
-• **Year 4 (Sem 7 & 8):** Project Work Phase I, Placement & Training, Project Work Phase II, Industrial Internship.
-
-💡 *Timing: Forenoon Lab (09:15 AM - 12:30 PM) · Afternoon Lab (01:20 PM - 04:30 PM).*`,
-        suggestions: ['Labs for 2nd year?', 'Labs for 3rd year?', 'Daily bell timings?'],
       }
     }
 
