@@ -146,10 +146,10 @@ The platform enforces strict role-based access control (RBAC) with tailored prim
 | Role | Portal Route | Primary Login Identifier | Secondary Login Identifier | Credentials / 2FA |
 | :--- | :--- | :--- | :--- | :--- |
 | **Student** | `/dashboard` | Register Number (e.g., `922525243103`) | or email id | Password + 2-Step OTP on first login |
-| **Faculty** | `/faculty-dashboard` | Official Email ID (e.g., `karthik@vsb.edu.in`) | Faculty Name (e.g., `Karthik S`) | Password |
-| **Class Advisor** | `/faculty-dashboard` | Official Email ID (e.g., `karthik@vsb.edu.in`) | Advisor Name (e.g., `Karthik S`) | Password |
-| **HOD** | `/hod-dashboard` | Official Email ID (e.g., `hod.aids@vsb.edu.in`) | HOD Name (e.g., `karthikk S`) | Password |
-| **Super Admin** | `/admin` | Administrator Email ID (e.g., `admin@aids`) | — | Secure Login OTP (Passwordless 2FA via Email) |
+| **Faculty** | `/faculty-dashboard` | Official Email ID (e.g., `karthik@gmail.com`) | Faculty Name (e.g., `Karthik S`) | Password |
+| **Class Advisor** | `/faculty-dashboard` | Official Email ID (e.g., `karthik@gmail.com`) | Advisor Name (e.g., `Karthik S`) | Password |
+| **HOD** | `/hod-dashboard` | Official Email ID (e.g., `hod.aids@gmail.com`) | HOD Name (e.g., `karthik S`) | Password |
+| **Super Admin** | `/admin` | Administrator Email ID (e.g., `admin.aids@gamil.com`) | — | Secure Login OTP (Passwordless 2FA via Email) |
 
 ---
 
