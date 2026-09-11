@@ -87,7 +87,6 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
           heading: '1. FACULTY BIOGRAPHICAL & CONTACT PARTICULARS',
           body: [
             `Full Name: ${data.name}`,
-            `Institutional Faculty ID: ${data.facultyId}`,
             `Academic Designation: ${data.designation}`,
             `Role: ${isAdvisor ? 'Official Class Advisor & Faculty' : 'Faculty Member'}`,
             `Highest Qualification: ${data.qualification}`,
@@ -209,7 +208,6 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
               <span className="px-2.5 py-0.5 rounded-full bg-[#22C7E8]/20 border border-[#22C7E8]/40 text-[#22C7E8] text-[10px] font-bold">
                 {data.designation}
               </span>
-              <span className="text-xs text-gray-300 font-mono">ID: {data.facultyId}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black">{data.name}</h1>
             <p className="text-xs sm:text-sm text-gray-300">
@@ -681,7 +679,6 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
                 <h3 className="text-lg font-black text-[#071A3D]">
                   {isAdvisor ? 'Edit Class Advisor Profile' : 'Edit Faculty Profile'}
                 </h3>
-                <p className="text-xs text-[#1455D9] font-mono font-bold">Faculty ID: {data.facultyId}</p>
               </div>
               <button
                 onClick={() => setIsEditOpen(false)}

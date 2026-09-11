@@ -361,7 +361,6 @@ export function FacultyStudentsView({
         body: [
           'Department: Artificial Intelligence & Data Science (AI & DS)',
           `Faculty Member: ${advisorDetails?.facultyName || 'Faculty'}`,
-          `Faculty ID: ${advisorDetails?.facultyId || 'N/A'}`,
           `Assigned Class Scope: ${advisorDetails?.advisorBatch || 'Assigned Cohort'}`,
           `Filtered View: ${activeScope}`,
           `Total Students on Roll: ${filteredStudents.length} Students`,

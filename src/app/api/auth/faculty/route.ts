@@ -9,7 +9,7 @@ const loginSchema = z.object({
   password: z.string().optional(),
   dateOfBirth: z.string().optional(),
 }).refine((data) => data.facultyId || data.email || data.name, {
-  message: 'Faculty Email ID, Name, or Faculty ID is required',
+  message: 'Faculty Email ID or Name is required',
 })
 
 export const dynamic = 'force-dynamic'

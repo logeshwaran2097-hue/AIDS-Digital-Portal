@@ -1001,12 +1001,11 @@ export async function sendStudentVerificationEmail(
     emailTitle = 'Student Account Verification'
     emailSubject = `V.S.B. AI & DS Portal — Student Verification OTP [${otp}]`
     
-    // Class display
+    // Class display - Year and Section ONLY (no semester)
     const classParts: string[] = []
     if (payload.year) classParts.push(`Year ${payload.year}`)
     if (payload.section) classParts.push(`Section ${payload.section}`)
-    if (payload.semester) classParts.push(`Sem ${payload.semester}`)
-    const classDisplay = classParts.length > 0 ? classParts.join(' · ') : ''
+    const classDisplay = classParts.length > 0 ? classParts.join(' - ') : ''
 
     detailsTableRows = `
       <tr>
@@ -1042,23 +1041,19 @@ export async function sendStudentVerificationEmail(
     emailTitle = 'Class Advisor Portal Verification'
     emailSubject = `V.S.B. AI & DS Portal — Advisor Verification OTP [${otp}]`
 
+    // Show Year and Section ONLY (never show semester in email)
     const advParts: string[] = []
     if (payload.advisorYear) advParts.push(`Year ${payload.advisorYear}`)
     if (payload.advisorSec) advParts.push(`Section ${payload.advisorSec}`)
-    if (payload.advisorSem) advParts.push(`Sem ${payload.advisorSem}`)
-    if (payload.advisorBatch) advParts.push(`(${payload.advisorBatch})`)
-    const advClassDisplay = advParts.length > 0 ? advParts.join(' · ') : 'Assigned Class'
+    const advClassDisplay = advParts.length > 0
+      ? advParts.join(' - ')
+      : (payload.advisorBatch ? payload.advisorBatch.replace(/\s*-\s*Sem\s*\d+/i, '').replace(/[\(\)]/g, '').trim() : 'Year 2 - Section A')
 
     detailsTableRows = `
       <tr>
         <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Faculty Name:</td>
         <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
       </tr>
-      ${facultyId ? `
-      <tr>
-        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
-        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
-      </tr>` : ''}
       <tr>
         <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
         <td style="padding: 5px 0; color: #059669; font-weight: 700;">Class Advisor</td>
@@ -1081,11 +1076,6 @@ export async function sendStudentVerificationEmail(
         <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Faculty Name:</td>
         <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
       </tr>
-      ${facultyId ? `
-      <tr>
-        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
-        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
-      </tr>` : ''}
       <tr>
         <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
         <td style="padding: 5px 0; color: #0284c7; font-weight: 700;">Subject Handler</td>
@@ -1107,18 +1097,15 @@ export async function sendStudentVerificationEmail(
     const advParts: string[] = []
     if (payload.advisorYear) advParts.push(`Year ${payload.advisorYear}`)
     if (payload.advisorSec) advParts.push(`Section ${payload.advisorSec}`)
-    const advClassDisplay = advParts.length > 0 ? advParts.join(' · ') : 'Assigned Class'
+    const advClassDisplay = advParts.length > 0
+      ? advParts.join(' - ')
+      : (payload.advisorBatch ? payload.advisorBatch.replace(/\s*-\s*Sem\s*\d+/i, '').replace(/[\(\)]/g, '').trim() : 'Year 2 - Section A')
 
     detailsTableRows = `
       <tr>
         <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Faculty Name:</td>
         <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
       </tr>
-      ${facultyId ? `
-      <tr>
-        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
-        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
-      </tr>` : ''}
       <tr>
         <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
         <td style="padding: 5px 0; color: #059669; font-weight: 700;">Class Advisor &amp; Subject Handler</td>
@@ -1146,11 +1133,6 @@ export async function sendStudentVerificationEmail(
         <td style="padding: 5px 0; color: #64748b; font-weight: 600; width: 145px;">👤 Head of Dept:</td>
         <td style="padding: 5px 0; color: #071A3D; font-weight: 700;">${name}</td>
       </tr>
-      ${facultyId ? `
-      <tr>
-        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
-        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
-      </tr>` : ''}
       <tr>
         <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎖️ Assigned Role:</td>
         <td style="padding: 5px 0; color: #7c3aed; font-weight: 700;">Head of Department (HOD)</td>
@@ -1171,11 +1153,6 @@ export async function sendStudentVerificationEmail(
       <tr>
         <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🎓 Register Number:</td>
         <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${registerNumber}</td>
-      </tr>` : ''}
-      ${facultyId ? `
-      <tr>
-        <td style="padding: 5px 0; color: #64748b; font-weight: 600;">🆔 Faculty ID:</td>
-        <td style="padding: 5px 0; color: #1455D9; font-weight: 700; font-family: monospace;">${facultyId}</td>
       </tr>` : ''}
       ${resolvedSubjectName ? `
       <tr>

@@ -400,7 +400,6 @@ export function FacultySettingsView({
           heading: '1. FACULTY CREDENTIALS & APPOINTMENT PARTICULARS',
           body: [
             `Faculty Name: ${userName}`,
-            `Faculty ID: ${facultyId}`,
             `Designation: ${designation}`,
             `Faculty Type: ${facultyType === 'advisor' ? 'Class Advisor & Faculty' : facultyType}`,
             `Department: Department of Artificial Intelligence & Data Science`,

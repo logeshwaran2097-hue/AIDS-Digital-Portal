@@ -2133,7 +2133,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                               {faculty.name}
                             </span>
                             <span className="text-[11px] text-gray-500 font-medium block">
-                              {faculty.facultyId} · {faculty.designation}
+                              {faculty.designation}
                             </span>
                           </div>
                         </div>
