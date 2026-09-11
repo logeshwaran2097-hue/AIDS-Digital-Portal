@@ -97,11 +97,11 @@ export default function LoginPage() {
     address: '',
     busDetails: '',
     dateOfBirth: '',
-    department: 'B.Tech Artificial Intelligence & Data Science',
-    year: 'Year 2 (Sophomore)',
-    semester: 'Semester 4',
-    section: 'Section A',
-    advisorName: 'Dr. S. Karthik (Professor)',
+    department: '',
+    year: '',
+    semester: '',
+    section: '',
+    advisorName: '',
     hasCorrectionRequest: false,
     correctionRemarks: '',
     detailsConfirmed: false,
@@ -256,22 +256,32 @@ export default function LoginPage() {
       // Check if student or faculty requires first-time profile completion / onboarding
       if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty')) {
         setOnboardingUser(data.user)
+        // Only use real DB values — never fall back to hardcoded defaults
         setOnboardingForm((prev) => ({
           ...prev,
           name: data.user.name || '',
           registerNumber: data.user.registerNumber || registerNumber.trim(),
           phone: data.user.phone || '',
           parentPhone: data.user.parentPhone || '',
+          bloodGroup: data.user.bloodGroup || '',
+          address: data.user.address || '',
+          busDetails: data.user.busDetails || '',
           email: data.user.email || '',
           dateOfBirth: data.user.dateOfBirth || '',
-          department: data.user.department || prev.department,
-          year: data.user.year || prev.year,
-          semester: data.user.semester || prev.semester,
-          section: data.user.section || prev.section,
-          advisorName: data.user.advisorName || prev.advisorName,
+          department: data.user.department || '',
+          year: data.user.year || '',
+          semester: data.user.semester || '',
+          section: data.user.section || '',
+          advisorName: data.user.advisorName || '',
         }))
-        setShowOnboardingModal(true)
-        setOnboardingStep(1)
+        // Show luxury success animation first, then open onboarding
+        setAuthStatus('success')
+        setAuthMessage('Identity Verified · Completing First-Time Setup...')
+        setTimeout(() => {
+          setAuthStatus('idle')
+          setShowOnboardingModal(true)
+          setOnboardingStep(1)
+        }, 1100)
         toast.success('Welcome! Please review your details and set up your permanent password.')
         return
       }
@@ -1456,11 +1466,12 @@ export default function LoginPage() {
                       </span>
                     </div>
 
-                    {/* Official Full Name */}
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                       <div>
                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Full Name</span>
-                        <span className="font-bold text-xs text-[#071A41]">{onboardingForm.name || 'Set by Admin'}</span>
+                        <span className={`font-bold text-xs ${onboardingForm.name ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
+                          {onboardingForm.name || '— Not Set by Admin'}
+                        </span>
                       </div>
                       <Lock className="w-3 h-3 text-slate-400" />
                     </div>
@@ -1469,7 +1480,9 @@ export default function LoginPage() {
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                       <div>
                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Program / Department</span>
-                        <span className="font-bold text-xs text-[#1557C0]">{onboardingForm.department}</span>
+                        <span className={`font-bold text-xs ${onboardingForm.department ? 'text-[#1557C0]' : 'text-slate-300 italic'}`}>
+                          {onboardingForm.department || '— Not Set'}
+                        </span>
                       </div>
                       <Lock className="w-3 h-3 text-slate-400" />
                     </div>
@@ -1478,7 +1491,11 @@ export default function LoginPage() {
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                       <div>
                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Year &amp; Semester</span>
-                        <span className="font-bold text-xs text-[#071A41]">{onboardingForm.year} · {onboardingForm.semester}</span>
+                        <span className={`font-bold text-xs ${(onboardingForm.year || onboardingForm.semester) ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
+                          {onboardingForm.year && onboardingForm.semester
+                            ? `${onboardingForm.year} · ${onboardingForm.semester}`
+                            : onboardingForm.year || onboardingForm.semester || '— Not Set'}
+                        </span>
                       </div>
                       <Lock className="w-3 h-3 text-slate-400" />
                     </div>
@@ -1487,7 +1504,9 @@ export default function LoginPage() {
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                       <div>
                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Assigned Section</span>
-                        <span className="font-bold text-xs text-[#071A41]">{onboardingForm.section}</span>
+                        <span className={`font-bold text-xs ${onboardingForm.section ? 'text-[#071A41]' : 'text-slate-300 italic'}`}>
+                          {onboardingForm.section || '— Not Set'}
+                        </span>
                       </div>
                       <Lock className="w-3 h-3 text-slate-400" />
                     </div>
@@ -1496,7 +1515,9 @@ export default function LoginPage() {
                     <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
                       <div>
                         <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Class Advisor / Mentor</span>
-                        <span className="font-bold text-xs text-[#1557C0]">{onboardingForm.advisorName}</span>
+                        <span className={`font-bold text-xs ${onboardingForm.advisorName ? 'text-[#1557C0]' : 'text-slate-300 italic'}`}>
+                          {onboardingForm.advisorName || '— Not Set'}
+                        </span>
                       </div>
                       <Lock className="w-3 h-3 text-slate-400" />
                     </div>
