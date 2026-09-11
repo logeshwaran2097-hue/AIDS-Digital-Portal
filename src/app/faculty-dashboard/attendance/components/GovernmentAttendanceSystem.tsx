@@ -1237,44 +1237,7 @@ export function GovernmentAttendanceSystem({
           </span>
         </div>
 
-        {/* Applied OD Notification Banner for Class Advisor */}
-        {!loading && students.some((s) => s.appliedOD) && (
-          <div className="mx-4 mt-3 p-3 sm:p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shrink-0 shadow-xs">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="text-xs sm:text-sm font-black text-amber-950">
-                    Student OD / Leave Requests on File
-                  </h4>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-black">
-                    {students.filter((s) => s.appliedOD).length} Active Application(s)
-                  </span>
-                </div>
-                <p className="text-[11px] text-amber-800 font-medium">
-                  Review student leave particulars, parent contacts, and attendance before sanctioning.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {students
-                .filter((s) => s.appliedOD)
-                .map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setSelectedODModal({ ...s.appliedOD, registerNumber: s.registerNumber })}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-amber-600" />
-                    <span>{s.name} ({s.appliedOD.applicationType})</span>
-                  </button>
-                ))}
-            </div>
-          </div>
-        )}
+
 
         {/* Loading State */}
         {loading && (
@@ -1335,36 +1298,11 @@ export function GovernmentAttendanceSystem({
                           <span className="font-bold text-[#071A3D] text-sm leading-tight truncate">
                             {s.name}
                           </span>
-                          {s.appliedOD && (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedODModal({ ...s.appliedOD, registerNumber: s.registerNumber })}
-                              className={cn(
-                                'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs hover:scale-105',
-                                s.appliedOD.isCoveringDate
-                                  ? 'bg-amber-100 text-amber-900 border border-amber-300 ring-1 ring-amber-400/40 animate-pulse'
-                                  : 'bg-blue-100 text-blue-900 border border-blue-200'
-                              )}
-                              title="Click to review complete student OD / Leave dossier"
-                            >
-                              <FileText className="w-3 h-3 text-amber-700" />
-                              <span>{s.appliedOD.isCoveringDate ? 'OD Applied (Today)' : 'OD / Leave Applied'}</span>
-                              <Eye className="w-2.5 h-2.5 opacity-70" />
-                            </button>
-                          )}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 text-[11px] text-gray-500 font-mono flex-wrap">
                           <span className="font-bold text-gray-700">{s.registerNumber}</span>
                           <span>•</span>
                           <span>Sec {s.section || 'A'}</span>
-                          {s.appliedOD && (
-                            <>
-                              <span>•</span>
-                              <span className="text-amber-800 font-sans font-semibold truncate max-w-[200px]">
-                                {s.appliedOD.applicationType} ({s.appliedOD.fromDate} → {s.appliedOD.toDate})
-                              </span>
-                            </>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -1575,34 +1513,9 @@ export function GovernmentAttendanceSystem({
                           <div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-[#071A3D] text-xs leading-tight">{s.name}</span>
-                              {s.appliedOD && (
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedODModal({ ...s.appliedOD, registerNumber: s.registerNumber })}
-                                  className={cn(
-                                    'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer shadow-2xs hover:scale-105',
-                                    s.appliedOD.isCoveringDate
-                                      ? 'bg-amber-100 text-amber-900 border border-amber-300 ring-1 ring-amber-400/40 animate-pulse'
-                                      : 'bg-blue-100 text-blue-900 border border-blue-200'
-                                  )}
-                                  title="Click to review complete student OD / Leave dossier"
-                                >
-                                  <FileText className="w-2.5 h-2.5 text-amber-700" />
-                                  <span>{s.appliedOD.isCoveringDate ? 'OD Applied (Today)' : 'OD / Leave'}</span>
-                                  <Eye className="w-2.5 h-2.5 opacity-70" />
-                                </button>
-                              )}
                             </div>
                             <div className="text-[10px] text-gray-400 flex items-center gap-1 mt-0.5">
                               <span>B.Tech AI &amp; DS</span>
-                              {s.appliedOD && (
-                                <>
-                                  <span>•</span>
-                                  <span className="text-amber-800 font-semibold truncate max-w-[150px]">
-                                    {s.appliedOD.applicationType} ({s.appliedOD.fromDate} → {s.appliedOD.toDate})
-                                  </span>
-                                </>
-                              )}
                             </div>
                           </div>
                         </div>
