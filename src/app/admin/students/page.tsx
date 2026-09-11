@@ -41,6 +41,12 @@ export default async function AdminStudentsPage() {
       status: user?.status || 'active',
       bloodGroup: (s as any).bloodGroup || null,
       residencyStatus: (s as any).residencyStatus || null,
+      busNo: s.busNo || null,
+      boardingPoint: s.boardingPoint || null,
+      busDetails: s.busDetails || null,
+      hostelBlock: s.hostelBlock || null,
+      roomNo: s.roomNo || null,
+      address: s.address || null,
       cgpa: (s as any).cgpa ? String((s as any).cgpa) : null,
       attendance: (s as any).attendance ? String((s as any).attendance) : null,
     }

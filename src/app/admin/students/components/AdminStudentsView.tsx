@@ -30,6 +30,8 @@ import {
   Send,
   UploadCloud,
   FileSpreadsheet,
+  Bus,
+  Building,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { playNotificationChime } from '@/lib/notificationEngine'
@@ -46,6 +48,12 @@ export interface StudentRecord {
   dateOfBirth?: string | null
   bloodGroup?: string | null
   residencyStatus?: string | null
+  busNo?: string | null
+  boardingPoint?: string | null
+  busDetails?: string | null
+  hostelBlock?: string | null
+  roomNo?: string | null
+  address?: string | null
   year: number
   semester: number
   section: string
@@ -181,6 +189,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     dateOfBirth: '',
     bloodGroup: '',
     residencyStatus: '',
+    busNo: '',
+    boardingPoint: '',
+    busDetails: '',
+    hostelBlock: '',
+    roomNo: '',
     year: 1,
     semester: 1,
     batch: '',
@@ -298,6 +311,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           status: 'active',
           bloodGroup: '',
           residencyStatus: '',
+          busNo: '',
+          boardingPoint: '',
+          busDetails: '',
+          hostelBlock: '',
+          roomNo: '',
           cgpa: '',
           attendance: '',
         })
@@ -440,6 +458,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 dateOfBirth: '',
                 bloodGroup: '',
                 residencyStatus: '',
+                busNo: '',
+                boardingPoint: '',
+                busDetails: '',
+                hostelBlock: '',
+                roomNo: '',
                 year: 1,
                 semester: 1,
                 batch: '',
@@ -817,7 +840,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                             <span className="text-gray-500 font-mono text-[10px]">🅑 {s.bloodGroup}</span>
                           )}
                           {s.residencyStatus && (
-                            <span className="text-gray-400 font-mono text-[10px]">🏠 {s.residencyStatus}</span>
+                            <span className="text-gray-500 font-medium text-[10px] flex items-center gap-1">
+                              {s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock ? (
+                                <>🏢 {s.hostelBlock ? `Block ${s.hostelBlock}${s.roomNo ? ` · Rm ${s.roomNo}` : ''}` : s.residencyStatus}</>
+                              ) : (
+                                <>🚌 {s.busNo ? `Bus #${s.busNo}${s.boardingPoint ? ` (${s.boardingPoint})` : ''}` : (s.boardingPoint || s.residencyStatus)}</>
+                              )}
+                            </span>
                           )}
                         </div>
                       </td>
@@ -832,8 +861,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                             </span>
                           ) : null}
                           {s.residencyStatus && (
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
-                              {s.residencyStatus}
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border whitespace-nowrap flex items-center gap-1 ${
+                              s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock
+                                ? 'text-amber-800 bg-amber-50 border-amber-200'
+                                : 'text-blue-700 bg-blue-50 border-blue-200'
+                            }`}>
+                              {s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock ? (
+                                <>🏢 {s.hostelBlock ? `Block ${s.hostelBlock}` : 'Hosteller'}</>
+                              ) : (
+                                <>🚌 {s.busNo ? `Bus #${s.busNo}` : 'Day Scholar'}</>
+                              )}
                             </span>
                           )}
                         </div>
@@ -874,6 +911,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 dateOfBirth: s.dateOfBirth || '',
                                 bloodGroup: s.bloodGroup || '',
                                 residencyStatus: s.residencyStatus || '',
+                                busNo: s.busNo || '',
+                                boardingPoint: s.boardingPoint || '',
+                                busDetails: s.busDetails || '',
+                                hostelBlock: s.hostelBlock || '',
+                                roomNo: s.roomNo || '',
                                 year: s.year || 1,
                                 semester: s.semester || 1,
                                 batch: s.batch || '',
@@ -1531,6 +1573,80 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 </div>
               </div>
 
+              {/* Day Scholar: Bus Transit Fields */}
+              {formData.residencyStatus === 'Day Scholar' && (
+                <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-1.5 font-bold text-[#1455D9] text-xs">
+                    <Bus className="w-4 h-4 text-[#1455D9]" />
+                    <span>College Transit &amp; Bus Allocation</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Bus Number / Route</label>
+                      <input
+                        type="text"
+                        value={formData.busNo}
+                        onChange={(e) => setFormData({ ...formData, busNo: e.target.value })}
+                        placeholder="e.g. 44, Route 12"
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-[#1455D9]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Boarding Point</label>
+                      <input
+                        type="text"
+                        value={formData.boardingPoint}
+                        onChange={(e) => setFormData({ ...formData, boardingPoint: e.target.value })}
+                        placeholder="e.g. olappalayam, Karur Stand"
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-[#1455D9]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-700 text-[11px] mb-1">Transit Details / Stop Summary</label>
+                    <input
+                      type="text"
+                      value={formData.busDetails}
+                      onChange={(e) => setFormData({ ...formData, busDetails: e.target.value })}
+                      placeholder="e.g. College Bus · Bus 44 · olappalayam"
+                      className="w-full p-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-[#1455D9]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Hosteller: Hostel Accommodation Fields */}
+              {formData.residencyStatus === 'Hosteller' && (
+                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
+                    <Building className="w-4 h-4 text-amber-700" />
+                    <span>Campus Hostel Accommodation</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Hostel Block</label>
+                      <input
+                        type="text"
+                        value={formData.hostelBlock}
+                        onChange={(e) => setFormData({ ...formData, hostelBlock: e.target.value })}
+                        placeholder="e.g. Block A, Emerald Hall"
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-[#1455D9]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-gray-700 text-[11px] mb-1">Room Number</label>
+                      <input
+                        type="text"
+                        value={formData.roomNo}
+                        onChange={(e) => setFormData({ ...formData, roomNo: e.target.value })}
+                        placeholder="e.g. 204"
+                        className="w-full p-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:border-[#1455D9]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">CGPA</label>
@@ -1736,8 +1852,72 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 )}
                 {selectedStudent.residencyStatus && (
                   <div className="flex items-center gap-2 text-gray-600">
-                    <div className="w-3 h-3 rounded-full bg-blue-300 text-blue-300 flex items-center justify-center text-[1px]" />
-                    <span className="font-semibold text-gray-600">{selectedStudent.residencyStatus}</span>
+                    <div className="w-3 h-3 rounded-full bg-blue-400 text-blue-400 flex items-center justify-center text-[1px]" />
+                    <span className="font-semibold text-gray-700">{selectedStudent.residencyStatus}</span>
+                  </div>
+                )}
+
+                {/* College Transit / Bus Route Details */}
+                {(selectedStudent.busNo || selectedStudent.boardingPoint || selectedStudent.busDetails || (selectedStudent.residencyStatus && selectedStudent.residencyStatus.toLowerCase().includes('day scholar'))) && (
+                  <div className="p-3 bg-gradient-to-br from-blue-50/90 to-indigo-50/70 border border-blue-200/80 rounded-2xl space-y-2 text-xs shadow-xs">
+                    <div className="flex items-center justify-between border-b border-blue-100/80 pb-1.5">
+                      <div className="flex items-center gap-1.5 font-black text-[#1455D9]">
+                        <Bus className="w-4 h-4 text-[#1455D9]" />
+                        <span className="text-[12px] tracking-tight">College Transit &amp; Bus Details</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                        Day Scholar
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-0.5 text-gray-700">
+                      <div>
+                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus Route / No.</span>
+                        <span className="font-black text-[#071A3D] text-[13px]">
+                          {selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit Bus'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Boarding Point</span>
+                        <span className="font-black text-[#071A3D] text-[13px]">
+                          {selectedStudent.boardingPoint || 'Main Bus Stop'}
+                        </span>
+                      </div>
+                    </div>
+                    {selectedStudent.busDetails && (
+                      <div className="pt-1.5 border-t border-blue-100/70 text-gray-600 text-[11px]">
+                        <span className="text-gray-400 text-[10px] block font-medium">Transit Route Summary</span>
+                        <span className="font-semibold text-[#071A3D]">{selectedStudent.busDetails}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Hostel Accommodation Details */}
+                {(selectedStudent.hostelBlock || selectedStudent.roomNo || (selectedStudent.residencyStatus && selectedStudent.residencyStatus.toLowerCase().includes('hostel'))) && (
+                  <div className="p-3 bg-gradient-to-br from-amber-50/90 to-orange-50/70 border border-amber-200/80 rounded-2xl space-y-2 text-xs shadow-xs">
+                    <div className="flex items-center justify-between border-b border-amber-100/80 pb-1.5">
+                      <div className="flex items-center gap-1.5 font-black text-amber-900">
+                        <Building className="w-4 h-4 text-amber-700" />
+                        <span className="text-[12px] tracking-tight">Campus Hostel Accommodation</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                        Hosteller
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 pt-0.5 text-gray-700">
+                      <div>
+                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Hostel Block</span>
+                        <span className="font-black text-[#071A3D] text-[13px]">
+                          {selectedStudent.hostelBlock ? `Block ${selectedStudent.hostelBlock}` : 'Campus Hostel'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Room Number</span>
+                        <span className="font-black text-[#071A3D] text-[13px] font-mono">
+                          {selectedStudent.roomNo ? `Room ${selectedStudent.roomNo}` : 'Assigned Room'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
                 {selectedStudent.cgpa && (
