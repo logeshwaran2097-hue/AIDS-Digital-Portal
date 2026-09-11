@@ -734,13 +734,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             if (isAdvisors) {
               return `${idx + 1}. ${f.name} — ${f.designation} | Assigned Batch: ${f.advisorBatch || 'Year II (Sec A)'} | Contact: ${f.email}`
             } else if (isLabs) {
-              const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2311'
+              const subjs = getSubjectsList(f.subjects).join(', ') || '—'
               const sName = f.subjectName?.includes(' | ') ? f.subjectName.split(' | ')[1] : f.subjectName || 'Laboratory Practical'
-              return `${idx + 1}. ${f.name} — Lab: ${sName} [${subjs}] | Timetable: ${f.classDay || 'Tue'} (${f.classPeriod || 'Lab Session'}) | ${f.designation}`
+              return `${idx + 1}. ${f.name} — Lab: ${sName} [${subjs}] | Timetable: ${f.classDay || '—'} (${f.classPeriod || 'Lab Session'}) | ${f.designation}`
             } else {
-              const subjs = getSubjectsList(f.subjects).join(', ') || 'AD2301'
+              const subjs = getSubjectsList(f.subjects).join(', ') || '—'
               const sName = f.subjectName || 'Course / Practical'
-              const sDay = f.classDay || 'Mon, Wed, Fri'
+              const sDay = f.classDay || '—'
               const sPeriod = f.classPeriod || 'Regular Period'
               const sTime = f.classTime || 'Class Hours'
               return `${idx + 1}. ${f.name} — ${sName} [${subjs}] | Days: ${sDay} | Periods: ${sPeriod} (${sTime}) | ${f.designation}`
@@ -1873,8 +1873,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     const nameParts = faculty.subjectName!.split(' | ')
                     theoryName = nameParts[0] || 'Theory Course'
                     labName = nameParts[1] || 'Laboratory Practical'
-                    theoryCode = subjs[0] || 'AD2301'
-                    labCode = subjs.length >= 2 ? subjs[1] : 'AD2311'
+                    theoryCode = subjs[0] || ''
+                    labCode = subjs.length >= 2 ? subjs[1] : (subjs[0] || '')
 
                     theoryDay = faculty.classDay?.includes(' | ') ? faculty.classDay.split(' | ')[0] : faculty.classDay || 'Mon, Wed, Fri'
                     labDay = faculty.classDay?.includes(' | ') ? faculty.classDay.split(' | ')[1] : 'Tue'

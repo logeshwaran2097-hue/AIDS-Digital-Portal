@@ -90,7 +90,17 @@ export async function DELETE(request: Request) {
   try {
     const session = await requireRoleSession(['admin', 'hod'])
     const { searchParams } = new URL(request.url)
+    const clearAll = searchParams.get('all') === 'true'
     const id = searchParams.get('id')
+    if (clearAll) {
+      await prisma.unit.deleteMany({}).catch(() => {})
+      await prisma.syllabus.deleteMany({}).catch(() => {})
+      const del = await prisma.subject.deleteMany({}).catch(() => ({ count: 0 }))
+      return NextResponse.json({
+        success: true,
+        message: `All ${del.count} courses cleared successfully from database`,
+      })
+    }
 
     if (!id) {
       return NextResponse.json(

@@ -180,6 +180,23 @@ export function AdminAcademicsView({
     }
   }
 
+  const handleClearAll = async () => {
+    if (!confirm('Are you sure you want to remove ALL courses from the database?')) {
+      return
+    }
+    try {
+      const res = await fetch('/api/admin/academics?all=true', { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        setSubjects([])
+      } else {
+        alert(data.message || 'Failed to clear courses')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to clear courses')
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
@@ -189,14 +206,23 @@ export function AdminAcademicsView({
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Curriculum &amp; Syllabus Administration
             </span>
-            <span className="text-xs text-gray-300 font-medium">· 8-Semester Scheme</span>
+            <span className="text-xs text-blue-200">· Autonomous Regulation 2021</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Academic Curriculum &amp; Courses</h1>
-          <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Official 8-semester syllabus, 5-unit lesson blueprints &amp; credit distribution
+          <h1 className="text-2xl sm:text-3xl font-black">Department Academics &amp; Courses</h1>
+          <p className="text-xs sm:text-sm text-blue-100/80 mt-1 max-w-xl">
+            Official curriculum scheme, syllabus units, course allocation &amp; academic blueprint
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+
+        <div className="flex items-center flex-wrap gap-2.5">
+          {subjects.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className="px-3.5 py-2.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white text-xs font-bold flex items-center gap-1.5 border border-red-500/30 cursor-pointer transition-all"
+            >
+              <Trash2 className="w-4 h-4 text-red-400" /> Clear All Courses
+            </button>
+          )}
           <button
             onClick={handleExportPDF}
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 border border-white/20 cursor-pointer"

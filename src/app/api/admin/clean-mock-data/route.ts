@@ -96,6 +96,15 @@ export async function POST(request: Request) {
       clearedInfo.notifications = notifCount.count
     }
 
+    if (target === 'all' || target === 'subjects' || target === 'academics') {
+      const unitCount = await prisma.unit.deleteMany({}).catch(() => ({ count: 0 }))
+      const sylCount = await prisma.syllabus.deleteMany({}).catch(() => ({ count: 0 }))
+      const subCount = await prisma.subject.deleteMany({}).catch(() => ({ count: 0 }))
+      clearedInfo.units = unitCount.count
+      clearedInfo.syllabi = sylCount.count
+      clearedInfo.subjects = subCount.count
+    }
+
     // Instantly wipe query cache so fresh data is loaded on the very next render
     clearAllDbCache()
 
