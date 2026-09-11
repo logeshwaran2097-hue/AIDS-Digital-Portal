@@ -319,7 +319,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     phone: '',
     password: '',
     dateOfBirth: '',
-    designation: 'Assistant Professor',
+    designation: '',
     qualification: '',
     experience: '' as any,
     specialization: '',
@@ -330,23 +330,23 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     advisorSem: 3,
     advisorSec: 'A',
     // Theory Course Allocation
-    hasTheory: true,
+    hasTheory: false,
     teachingYear: 2,
     teachingSem: 3,
     subjects: '',
     subjectName: '',
-    classDay: 'Mon, Wed, Fri',
-    classPeriod: 'Period 1',
-    classTime: '09:15 AM - 10:00 AM',
+    classDay: '',
+    classPeriod: '',
+    classTime: '',
     // Lab Practical Allocation
     hasLab: false,
     labSubjectName: '',
     labSubjectCode: '',
     labYear: 2,
     labSem: 3,
-    labDay: 'Tue',
-    labPeriod: 'Lab Session (AN)',
-    labTime: '01:20 PM - 04:30 PM',
+    labDay: '',
+    labPeriod: '',
+    labTime: '',
     // Legacy / Type compatibility
     allocationType: 'theory' as 'theory' | 'lab' | 'both',
     facultyType: 'both',
@@ -790,16 +790,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
       if (formData.hasTheory && formData.hasLab) {
         finalSubjects = [formData.subjects.trim(), formData.labSubjectCode.trim()].filter(Boolean)
-        finalSubjectName = `${formData.subjectName.trim() || 'Theory Course'} | ${formData.labSubjectName.trim() || 'Laboratory Practical'}`
-        finalClassPeriod = `${formData.classPeriod || 'Period 1'} | ${formData.labPeriod || 'Lab Session (AN)'}`
-        finalClassDay = `${formData.classDay || 'Mon, Wed, Fri'} | ${formData.labDay || 'Tue'}`
-        finalClassTime = `${formData.classTime || '09:15 AM - 10:00 AM'} | ${formData.labTime || '01:20 PM - 04:30 PM'}`
+        finalSubjectName = [formData.subjectName.trim(), formData.labSubjectName.trim()].filter(Boolean).join(' | ')
+        finalClassPeriod = [formData.classPeriod.trim(), formData.labPeriod.trim()].filter(Boolean).join(' | ')
+        finalClassDay = [formData.classDay.trim(), formData.labDay.trim()].filter(Boolean).join(' | ')
+        finalClassTime = [formData.classTime.trim(), formData.labTime.trim()].filter(Boolean).join(' | ')
       } else if (formData.hasLab) {
         finalSubjects = formData.labSubjectCode ? [formData.labSubjectCode.trim()] : []
-        finalSubjectName = formData.labSubjectName.trim() || 'Laboratory Practical'
-        finalClassPeriod = formData.labPeriod || 'Lab Session (AN)'
-        finalClassDay = formData.labDay || 'Tue'
-        finalClassTime = formData.labTime || '01:20 PM - 04:30 PM'
+        finalSubjectName = formData.labSubjectName.trim()
+        finalClassPeriod = formData.labPeriod.trim()
+        finalClassDay = formData.labDay.trim()
+        finalClassTime = formData.labTime.trim()
       } else if (formData.hasTheory) {
         if (formData.subjects.trim()) {
           try {
@@ -808,10 +808,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             finalSubjects = formData.subjects.split(',').map((s) => s.trim()).filter(Boolean)
           }
         }
-        finalSubjectName = formData.subjectName.trim() || 'Theory Course'
-        finalClassPeriod = formData.classPeriod || 'Period 1'
-        finalClassDay = formData.classDay || 'Mon, Wed, Fri'
-        finalClassTime = formData.classTime || '09:15 AM - 10:00 AM'
+        finalSubjectName = formData.subjectName.trim()
+        finalClassPeriod = formData.classPeriod.trim()
+        finalClassDay = formData.classDay.trim()
+        finalClassTime = formData.classTime.trim()
       }
 
       const isAdvisorRole = Boolean(formData.isClassAdvisor)
@@ -887,16 +887,16 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
       if (formData.hasTheory && formData.hasLab) {
         finalSubjects = [formData.subjects.trim(), formData.labSubjectCode.trim()].filter(Boolean)
-        finalSubjectName = `${formData.subjectName.trim() || 'Theory Course'} | ${formData.labSubjectName.trim() || 'Laboratory Practical'}`
-        finalClassPeriod = `${formData.classPeriod || 'Period 1'} | ${formData.labPeriod || 'Lab Session (AN)'}`
-        finalClassDay = `${formData.classDay || 'Mon, Wed, Fri'} | ${formData.labDay || 'Tue'}`
-        finalClassTime = `${formData.classTime || '09:15 AM - 10:00 AM'} | ${formData.labTime || '01:20 PM - 04:30 PM'}`
+        finalSubjectName = [formData.subjectName.trim(), formData.labSubjectName.trim()].filter(Boolean).join(' | ')
+        finalClassPeriod = [formData.classPeriod.trim(), formData.labPeriod.trim()].filter(Boolean).join(' | ')
+        finalClassDay = [formData.classDay.trim(), formData.labDay.trim()].filter(Boolean).join(' | ')
+        finalClassTime = [formData.classTime.trim(), formData.labTime.trim()].filter(Boolean).join(' | ')
       } else if (formData.hasLab) {
         finalSubjects = formData.labSubjectCode ? [formData.labSubjectCode.trim()] : []
-        finalSubjectName = formData.labSubjectName.trim() || 'Laboratory Practical'
-        finalClassPeriod = formData.labPeriod || 'Lab Session (AN)'
-        finalClassDay = formData.labDay || 'Tue'
-        finalClassTime = formData.labTime || '01:20 PM - 04:30 PM'
+        finalSubjectName = formData.labSubjectName.trim()
+        finalClassPeriod = formData.labPeriod.trim()
+        finalClassDay = formData.labDay.trim()
+        finalClassTime = formData.labTime.trim()
       } else if (formData.hasTheory) {
         if (formData.subjects.trim()) {
           try {
@@ -905,10 +905,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             finalSubjects = formData.subjects.split(',').map((s) => s.trim()).filter(Boolean)
           }
         }
-        finalSubjectName = formData.subjectName.trim() || 'Theory Course'
-        finalClassPeriod = formData.classPeriod || 'Period 1'
-        finalClassDay = formData.classDay || 'Mon, Wed, Fri'
-        finalClassTime = formData.classTime || '09:15 AM - 10:00 AM'
+        finalSubjectName = formData.subjectName.trim()
+        finalClassPeriod = formData.classPeriod.trim()
+        finalClassDay = formData.classDay.trim()
+        finalClassTime = formData.classTime.trim()
       }
 
       const isAdvisorRole = Boolean(formData.isClassAdvisor)
@@ -998,31 +998,31 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       phone: '',
       password: '',
       dateOfBirth: '',
-      designation: 'Assistant Professor',
+      designation: '',
       qualification: '',
       experience: '' as any,
       specialization: '',
       isClassAdvisor: activeTab === 'advisors',
-      advisorBatch: activeTab === 'advisors' ? 'Year 2 - Sem 3 - Sec A' : '',
+      advisorBatch: '',
       advisorYear: 2,
       advisorSem: 3,
       advisorSec: 'A',
-      hasTheory: activeTab !== 'labs',
+      hasTheory: false,
       teachingYear: 2,
       teachingSem: 3,
       subjects: '',
       subjectName: '',
-      classDay: 'Mon, Wed, Fri',
-      classPeriod: 'Period 1',
-      classTime: '09:15 AM - 10:00 AM',
-      hasLab: activeTab === 'labs',
+      classDay: '',
+      classPeriod: '',
+      classTime: '',
+      hasLab: false,
       labSubjectName: '',
       labSubjectCode: '',
       labYear: 2,
       labSem: 3,
-      labDay: 'Tue',
-      labPeriod: 'Lab Session (AN)',
-      labTime: '01:20 PM - 04:30 PM',
+      labDay: '',
+      labPeriod: '',
+      labTime: '',
       allocationType: activeTab === 'labs' ? 'lab' : 'theory',
       facultyType: activeTab === 'advisors' ? 'advisor' : activeTab === 'labs' ? 'lab_faculty' : 'both',
     })
@@ -1043,12 +1043,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     let theoryCode = ''
     let labName = ''
     let labCode = ''
-    let theoryDay = 'Mon, Wed, Fri'
-    let theoryPeriod = 'Period 1'
-    let theoryTime = '09:15 AM - 10:00 AM'
-    let labDay = 'Tue'
-    let labPeriod = 'Lab Session (AN)'
-    let labTime = '01:20 PM - 04:30 PM'
+    let theoryDay = ''
+    let theoryPeriod = ''
+    let theoryTime = ''
+    let labDay = ''
+    let labPeriod = ''
+    let labTime = ''
 
     if (hasPipe) {
       hasTheory = true
@@ -1066,52 +1066,55 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
       if (faculty.classPeriod?.includes(' | ')) {
         const pParts = faculty.classPeriod.split(' | ')
-        theoryPeriod = pParts[0] || theoryPeriod
-        labPeriod = pParts[1] || labPeriod
+        theoryPeriod = pParts[0] || ''
+        labPeriod = pParts[1] || ''
       }
       if (faculty.classDay?.includes(' | ')) {
         const dParts = faculty.classDay.split(' | ')
-        theoryDay = dParts[0] || theoryDay
-        labDay = dParts[1] || labDay
+        theoryDay = dParts[0] || ''
+        labDay = dParts[1] || ''
       }
       if (faculty.classTime?.includes(' | ')) {
         const tParts = faculty.classTime.split(' | ')
-        theoryTime = tParts[0] || theoryTime
-        labTime = tParts[1] || labTime
+        theoryTime = tParts[0] || ''
+        labTime = tParts[1] || ''
       }
     } else if (isLabOnly) {
       hasLab = true
       hasTheory = false
       labName = faculty.subjectName || ''
       labCode = subjs.join(', ')
-      labDay = faculty.classDay || 'Tue'
-      labPeriod = faculty.classPeriod || 'Lab Session (AN)'
-      labTime = faculty.classTime || '01:20 PM - 04:30 PM'
+      labDay = faculty.classDay || ''
+      labPeriod = faculty.classPeriod || ''
+      labTime = faculty.classTime || ''
     } else {
       hasTheory = faculty.facultyType !== 'advisor' || Boolean(faculty.subjectName)
       hasLab = false
       theoryName = faculty.subjectName || ''
       theoryCode = subjs.join(', ')
-      theoryDay = faculty.classDay || 'Mon, Wed, Fri'
-      theoryPeriod = faculty.classPeriod || 'Period 1'
-      theoryTime = faculty.classTime || '09:15 AM - 10:00 AM'
+      theoryDay = faculty.classDay || ''
+      theoryPeriod = faculty.classPeriod || ''
+      theoryTime = faculty.classTime || ''
     }
 
     const fYear = getFacultyYear(faculty)
 
+    const rawEmail = faculty.email || ''
+    const cleanEmail = (rawEmail.toLowerCase().startsWith('fac') && rawEmail.endsWith('@vsb.edu.in')) ? '' : rawEmail
+
     setFormData({
       facultyId: faculty.facultyId,
       name: faculty.name,
-      email: faculty.email,
+      email: cleanEmail,
       phone: faculty.phone || '',
       password: '',
       dateOfBirth: faculty.dateOfBirth || '',
-      designation: faculty.designation,
+      designation: faculty.designation || '',
       qualification: faculty.qualification || '',
-      experience: faculty.experience || '',
+      experience: faculty.experience && faculty.experience > 0 ? faculty.experience : '',
       specialization: faculty.specialization || '',
       isClassAdvisor: isAdvisor,
-      advisorBatch: faculty.advisorBatch || `Year ${faculty.advisorYear || 2} - Sem ${faculty.advisorSem || 3} - Sec ${faculty.advisorSec || 'A'}`,
+      advisorBatch: faculty.advisorBatch || '',
       advisorYear: faculty.advisorYear || 2,
       advisorSem: faculty.advisorSem || 3,
       advisorSec: faculty.advisorSec || 'A',
@@ -2604,6 +2607,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
                   >
+                    <option value="">Select Designation (Optional)</option>
                     <option value="Professor & Head">Professor &amp; Head</option>
                     <option value="Professor">Professor</option>
                     <option value="Associate Professor">Associate Professor</option>
@@ -3320,6 +3324,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
                   >
+                    <option value="">Select Designation (Optional)</option>
                     <option value="Professor & Head">Professor &amp; Head</option>
                     <option value="Professor">Professor</option>
                     <option value="Associate Professor">Associate Professor</option>

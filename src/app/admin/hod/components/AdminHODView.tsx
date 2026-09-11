@@ -67,11 +67,11 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
     phone: '',
     password: '',
     dateOfBirth: '',
-    designation: 'Professor & Head',
-    qualification: 'Ph.D. (AI & Data Science)',
-    experience: '15' as any,
-    specialization: 'Artificial Intelligence, Deep Learning & Autonomous Systems',
-    department: 'Artificial Intelligence & Data Science',
+    designation: '',
+    qualification: '',
+    experience: '',
+    specialization: '',
+    department: '',
     status: 'active',
   })
 
@@ -131,11 +131,11 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
           phone: '',
           password: '',
           dateOfBirth: '',
-          designation: 'Professor & Head',
-          qualification: 'Ph.D. (AI & Data Science)',
-          experience: '15',
-          specialization: 'Artificial Intelligence, Deep Learning & Autonomous Systems',
-          department: 'Artificial Intelligence & Data Science',
+          designation: '',
+          qualification: '',
+          experience: '',
+          specialization: '',
+          department: '',
           status: 'active',
         })
         toast.success('HOD successfully registered in database!')
@@ -459,16 +459,16 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                             onClick={() => {
                               setSelectedHOD(hod)
                               setFormData({
-                                name: hod.name,
-                                email: hod.email,
+                                name: hod.name || '',
+                                email: (hod.email && !hod.email.startsWith('hod.') && !hod.email.endsWith('@vsb.edu.in')) ? hod.email : (hod.email?.startsWith('hod.' + (hod.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')) ? '' : (hod.email || '')),
                                 phone: hod.phone || '',
                                 password: '',
                                 dateOfBirth: hod.dateOfBirth || '',
-                                designation: hod.designation || 'Professor & Head',
-                                qualification: hod.qualification || 'Ph.D. (AI & Data Science)',
-                                experience: hod.experience || '15',
-                                specialization: hod.specialization || 'Artificial Intelligence, Deep Learning & Autonomous Systems',
-                                department: hod.department,
+                                designation: hod.designation || '',
+                                qualification: hod.qualification || '',
+                                experience: hod.experience !== null && hod.experience !== undefined ? String(hod.experience) : '',
+                                specialization: hod.specialization || '',
+                                department: hod.department || '',
                                 status: hod.status || 'active',
                               })
                               setIsEditModalOpen(true)
@@ -540,16 +540,16 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                         onClick={() => {
                           setSelectedHOD(hod)
                           setFormData({
-                            name: hod.name,
-                            email: hod.email,
+                            name: hod.name || '',
+                            email: (hod.email && !hod.email.startsWith('hod.') && !hod.email.endsWith('@vsb.edu.in')) ? hod.email : (hod.email?.startsWith('hod.' + (hod.name || '').toLowerCase().replace(/[^a-z0-9]/g, '')) ? '' : (hod.email || '')),
                             phone: hod.phone || '',
                             password: '',
                             dateOfBirth: hod.dateOfBirth || '',
-                            designation: hod.designation || 'Professor & Head',
-                            qualification: hod.qualification || 'Ph.D. (AI & Data Science)',
-                            experience: hod.experience || '15',
-                            specialization: hod.specialization || 'Artificial Intelligence, Deep Learning & Autonomous Systems',
-                            department: hod.department,
+                            designation: hod.designation || '',
+                            qualification: hod.qualification || '',
+                            experience: hod.experience !== null && hod.experience !== undefined ? String(hod.experience) : '',
+                            specialization: hod.specialization || '',
+                            department: hod.department || '',
                             status: hod.status || 'active',
                           })
                           setIsEditModalOpen(true)
@@ -717,6 +717,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all cursor-pointer"
                   >
+                    <option value="">Select Designation (Optional)</option>
                     <option value="Professor & Head">Professor &amp; Head</option>
                     <option value="Professor">Professor</option>
                     <option value="Associate Professor">Associate Professor</option>
@@ -903,6 +904,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all cursor-pointer"
                   >
+                    <option value="">Select Designation (Optional)</option>
                     <option value="Professor & Head">Professor &amp; Head</option>
                     <option value="Professor">Professor</option>
                     <option value="Associate Professor">Associate Professor</option>

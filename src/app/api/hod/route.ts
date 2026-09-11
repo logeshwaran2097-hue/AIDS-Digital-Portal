@@ -16,18 +16,22 @@ export async function GET() {
 
     const result = hodRecords.map((h) => {
       const u = userMap.get(h.userId)
+      const rawEmail = u?.email || ''
+      const isInternalFallback = rawEmail === `${h.facultyId.toLowerCase()}@vsb.edu.in` || rawEmail.startsWith('hod.' + (u?.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''))
+      const cleanEmail = isInternalFallback ? '' : rawEmail
+
       return {
         id: h.id,
         userId: h.userId,
         facultyId: h.facultyId,
-        name: u?.name || 'Head of Department',
-        email: u?.email || `${h.facultyId.toLowerCase()}@vsb.edu.in`,
+        name: u?.name || '',
+        email: cleanEmail,
         phone: u?.phone || '',
         dateOfBirth: h.dateOfBirth ? h.dateOfBirth.toISOString().split('T')[0] : null,
-        department: h.department,
-        designation: h.designation,
-        qualification: h.qualification,
-        experience: h.experience,
+        department: h.department || '',
+        designation: h.designation || '',
+        qualification: h.qualification || '',
+        experience: h.experience !== null && h.experience !== undefined ? h.experience : null,
         status: u?.status || 'active',
       }
     })
@@ -51,12 +55,12 @@ export async function POST(request: Request) {
       email,
       phone,
       password,
-      department = 'Artificial Intelligence & Data Science',
-      designation = 'Professor & Head',
-      qualification = 'Ph.D. (AI & Data Science)',
-      experience = 15,
+      department = '',
+      designation = '',
+      qualification = '',
+      experience = null,
       dateOfBirth,
-      specialization = 'Artificial Intelligence, Deep Learning & Autonomous Systems',
+      specialization = '',
       status = 'active',
     } = data
 
@@ -82,11 +86,10 @@ export async function POST(request: Request) {
       fid = existingCount === 0 ? 'HOD001' : `HOD${(existingCount + 1).toString().padStart(3, '0')}`
     }
 
-    // Auto-generate email if not provided
+    // Keep provided email or clean institutional fallback
     let finalEmail = email?.trim().toLowerCase()
     if (!finalEmail) {
-      const sanitized = name.toLowerCase().replace(/[^a-z0-9]/g, '')
-      finalEmail = `hod.${sanitized || fid.toLowerCase()}@vsb.edu.in`
+      finalEmail = `${fid.toLowerCase()}@vsb.edu.in`
     }
 
     // Hash temporary password if provided
@@ -153,24 +156,27 @@ export async function POST(request: Request) {
       })
     }
 
-    // Upsert HOD
+    const parsedExp = (experience !== null && experience !== undefined && experience !== '') ? (Number(experience) || 0) : 0
+    const parsedHodDob = parseSafeDateOfBirth(dateOfBirth)
+
+    // Upsert HOD without forced fake defaults
     const hod = await prisma.hOD.upsert({
       where: { facultyId: fid },
       update: {
         userId: user.id,
-        department,
-        designation,
-        qualification,
-        experience: Number(experience) || 15,
-        dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('1980-01-01')),
+        department: department || '',
+        designation: designation || '',
+        qualification: qualification || '',
+        experience: parsedExp,
+        ...(parsedHodDob ? { dateOfBirth: parsedHodDob } : {}),
       },
       create: {
         userId: user.id,
         facultyId: fid,
-        department,
-        designation,
-        qualification,
-        experience: Number(experience) || 15,
+        department: department || '',
+        designation: designation || '',
+        qualification: qualification || '',
+        experience: parsedExp,
         dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('1980-01-01')),
       },
     })

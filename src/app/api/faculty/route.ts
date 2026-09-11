@@ -32,12 +32,15 @@ export async function GET(request: Request) {
             subjectsArr = []
           }
 
+          const rawEmail = u?.email || ''
+          const displayEmail = (rawEmail.toLowerCase().startsWith('fac') && rawEmail.endsWith('@vsb.edu.in')) ? '' : rawEmail
+
           return {
             id: f.id,
             userId: f.userId,
             facultyId: f.facultyId,
             name: u?.name || 'Faculty Member',
-            email: u?.email || `${f.facultyId.toLowerCase()}@vsb.edu.in`,
+            email: displayEmail,
             phone: u?.phone || '',
             designation: f.designation,
             qualification: f.qualification,
@@ -84,10 +87,10 @@ export async function POST(request: Request) {
       phone,
       password,
       dateOfBirth,
-      designation = 'Assistant Professor',
-      qualification = 'M.E., Ph.D.',
-      experience = 1,
-      specialization = 'Artificial Intelligence',
+      designation = '',
+      qualification = '',
+      experience = 0,
+      specialization = '',
       subjects = [],
       subjectName,
       classDay,
@@ -177,16 +180,18 @@ export async function POST(request: Request) {
 
     const parsedFacultyDob = parseSafeDateOfBirth(dateOfBirth)
 
+    const parsedExp = (experience !== undefined && experience !== null && experience !== '') ? (Number(experience) || 0) : 0
+
     // Upsert Faculty
     const faculty = await prisma.faculty.upsert({
       where: { facultyId: fid },
       update: {
         userId: user.id,
         ...(parsedFacultyDob ? { dateOfBirth: parsedFacultyDob } : {}),
-        designation,
-        qualification,
-        experience: Number(experience) || 1,
-        specialization,
+        designation: designation || '',
+        qualification: qualification || '',
+        experience: parsedExp,
+        specialization: specialization || '',
         subjects: subjectsStr,
         subjectName: subjectName || null,
         classDay: classDay || null,
@@ -202,10 +207,10 @@ export async function POST(request: Request) {
         userId: user.id,
         facultyId: fid,
         dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('1990-01-01')),
-        designation,
-        qualification,
-        experience: Number(experience) || 1,
-        specialization,
+        designation: designation || '',
+        qualification: qualification || '',
+        experience: parsedExp,
+        specialization: specialization || '',
         subjects: subjectsStr,
         subjectName: subjectName || null,
         classDay: classDay || null,
