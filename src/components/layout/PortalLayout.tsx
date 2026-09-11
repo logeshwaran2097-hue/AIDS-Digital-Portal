@@ -178,6 +178,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
           // Initial population
           fetchedList.forEach((n: any) => knownNotificationIds.current.add(n.id))
 
+          const notifLink = role === 'admin' ? '/admin/notifications' : role === 'hod' ? '/hod-dashboard/notifications' : role === 'faculty' ? '/faculty-dashboard/notifications' : '/dashboard/notifications'
+
           const formatted: NotificationItem[] = fetchedList.map((n: any) => ({
             id: n.id,
             title: n.title,
@@ -185,7 +187,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
             time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
             unread: true,
             type: 'info',
-            link: role === 'admin' ? '/admin/notifications' : role === 'hod' ? '/hod-dashboard/notifications' : '/dashboard/notifications',
+            link: notifLink,
           }))
           setNotifications(formatted)
           isInitialSyncDone.current = true
@@ -193,6 +195,8 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
           // Detect brand new real-time notifications
           const newItems = fetchedList.filter((n: any) => !knownNotificationIds.current.has(n.id))
           if (newItems.length > 0) {
+            const notifLink = role === 'admin' ? '/admin/notifications' : role === 'hod' ? '/hod-dashboard/notifications' : role === 'faculty' ? '/faculty-dashboard/notifications' : '/dashboard/notifications'
+
             newItems.forEach((n: any) => {
               knownNotificationIds.current.add(n.id)
               // Trigger audio chime, vibration & mobile push notification
@@ -201,7 +205,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
                 title: n.title,
                 message: n.message,
                 createdByName: n.createdByName,
-                link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+                link: notifLink,
               })
               // Show in-app live toast
               setRealtimeToast({
@@ -209,7 +213,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
                 title: n.title,
                 message: n.message,
                 createdByName: n.createdByName,
-                link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+                link: notifLink,
               })
             })
 
@@ -220,7 +224,7 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
               time: 'Just now',
               unread: true,
               type: 'info',
-              link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+              link: notifLink,
             }))
 
             setNotifications((prev) => [...formattedNew, ...prev])

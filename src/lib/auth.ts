@@ -22,6 +22,8 @@ export interface JWTPayload {
   name: string
   registerNumber?: string
   facultyId?: string
+  isAdvisor?: boolean
+  facultyType?: string
 }
 
 export async function createToken(payload: JWTPayload): Promise<string> {
@@ -72,14 +74,23 @@ export async function requireRoleSession(allowedRoles: string[]): Promise<JWTPay
     return session
   }
 
-  // HOD can view HOD, faculty, and student portals
-  if (session.role === 'hod' && (allowedRoles.includes('hod') || allowedRoles.includes('faculty') || allowedRoles.includes('student'))) {
-    return session
+  // HOD can view HOD and faculty portals
+  if (session.role === 'hod') {
+    if (allowedRoles.includes('hod') || allowedRoles.includes('faculty')) {
+      return session
+    }
+    redirect('/hod-dashboard')
   }
 
-  // Faculty can view faculty and student portals
-  if (session.role === 'faculty' && (allowedRoles.includes('faculty') || allowedRoles.includes('student'))) {
-    return session
+  // Faculty can strictly ONLY view faculty portal (NEVER student portal)
+  if (session.role === 'faculty') {
+    if (allowedRoles.includes('faculty')) {
+      return session
+    }
+    if (session.isAdvisor || session.facultyType === 'advisor') {
+      redirect('/faculty-dashboard/attendance?mode=morning&role=advisor')
+    }
+    redirect('/faculty-dashboard')
   }
 
   // Check if role is directly permitted
@@ -89,7 +100,12 @@ export async function requireRoleSession(allowedRoles: string[]): Promise<JWTPay
 
   // Gracefully redirect to the user's own home dashboard instead of kicking them to login
   if (session.role === 'hod') redirect('/hod-dashboard')
-  if (session.role === 'faculty') redirect('/faculty-dashboard')
+  if (session.role === 'faculty') {
+    if (session.isAdvisor || session.facultyType === 'advisor') {
+      redirect('/faculty-dashboard/attendance?mode=morning&role=advisor')
+    }
+    redirect('/faculty-dashboard')
+  }
   if (session.role === 'admin' || session.role === 'super_admin') redirect('/admin/dashboard')
   redirect('/dashboard')
 }
@@ -366,12 +382,19 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
     },
   }).catch(() => {})
 
+  const isAdvisor =
+    faculty.facultyType === 'advisor' ||
+    faculty.facultyType === 'both' ||
+    Boolean(faculty.advisorBatch || (faculty.advisorYear && faculty.advisorSec))
+
   const token = await createToken({
     userId: faculty.userId,
     email: user.email,
     role: 'faculty',
     name: user.name,
     facultyId: faculty.facultyId,
+    isAdvisor,
+    facultyType: faculty.facultyType,
   })
 
   return { success: true, token, user, faculty, mustChangePassword: Boolean(user.mustChangePassword) }

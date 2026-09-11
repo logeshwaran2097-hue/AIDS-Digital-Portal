@@ -28,11 +28,10 @@ export default async function AttendancePage({ searchParams }: AttendancePagePro
     faculty?.facultyType === 'both' ||
     Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
 
-  // If user explicitly logged in as Advisor and is an advisor, effective role is advisor
-  // If user logged in as Faculty, effective role is faculty!
-  const effectiveRole = (rawLoginRole === 'advisor' && isAdvisor) ? 'advisor' : 'faculty'
+  // If user explicitly logged in as Advisor or faculty is configured as advisor, effective role is advisor
+  const effectiveRole = (rawLoginRole === 'advisor' || faculty?.facultyType === 'advisor' || isAdvisor) ? 'advisor' : 'faculty'
 
-  const roleBadgeLabel = effectiveRole === 'advisor'
+  const roleBadgeLabel = (effectiveRole === 'advisor' || isAdvisor)
     ? 'Class Advisor'
     : faculty?.facultyType === 'lab_faculty'
     ? 'Lab Handler'

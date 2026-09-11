@@ -30,6 +30,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const isAdvisor =
+      result.faculty?.facultyType === 'advisor' ||
+      result.faculty?.facultyType === 'both' ||
+      Boolean(result.faculty?.advisorBatch || (result.faculty?.advisorYear && result.faculty?.advisorSec))
+
     const response = NextResponse.json({
       success: true,
       user: {
@@ -38,6 +43,7 @@ export async function POST(request: NextRequest) {
         email: result.user.email,
         phone: result.user.phone || '',
         role: 'faculty',
+        isAdvisor,
         facultyId: result.faculty?.facultyId,
         designation: result.faculty?.designation,
         qualification: result.faculty?.qualification,
@@ -49,7 +55,7 @@ export async function POST(request: NextRequest) {
         advisorSec: result.faculty?.advisorSec || null,
         subjects: result.faculty?.subjects || '[]',
         subjectName: result.faculty?.subjectName || null,
-        facultyType: result.faculty?.facultyType || 'both',
+        facultyType: result.faculty?.facultyType || (isAdvisor ? 'advisor' : 'both'),
         dateOfBirth: result.faculty?.dateOfBirth ? result.faculty.dateOfBirth.toISOString().split('T')[0] : null,
         mustChangePassword: result.user.mustChangePassword ?? false,
       },
@@ -62,6 +68,16 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
+
+    if (isAdvisor) {
+      response.cookies.set('portal_login_role', 'advisor', {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      })
+    }
 
     return response
   } catch (error) {

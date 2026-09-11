@@ -21,9 +21,9 @@ export default async function FacultyDashboardPage() {
     faculty?.facultyType === 'both' ||
     Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
 
-  const effectiveRole = (rawLoginRole === 'advisor' && isAdvisor) ? 'advisor' : 'faculty'
+  const effectiveRole = (rawLoginRole === 'advisor' || faculty?.facultyType === 'advisor' || isAdvisor) ? 'advisor' : 'faculty'
 
-  const roleBadgeLabel = effectiveRole === 'advisor'
+  const roleBadgeLabel = (effectiveRole === 'advisor' || isAdvisor)
     ? 'Class Advisor'
     : faculty?.facultyType === 'lab_faculty'
     ? 'Lab Handler'

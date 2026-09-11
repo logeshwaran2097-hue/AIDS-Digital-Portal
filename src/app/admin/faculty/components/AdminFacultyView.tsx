@@ -599,6 +599,23 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const facultyMembersList = useMemo(() => {
     return facultyList.filter((f) => {
       const subjs = getSubjectsList(f.subjects)
+      const hasTheoryCourses = Boolean(f.subjectName && !f.subjectName.toLowerCase().includes('lab')) || (Array.isArray(subjs) && subjs.some(s => !s.toLowerCase().includes('lab') && !s.includes('11') && !s.includes('12')))
+
+      // Exclude pure class advisors who do not teach theory courses
+      if (f.facultyType === 'advisor' && !hasTheoryCourses) {
+        return false
+      }
+
+      // Exclude pure lab handlers with no theory
+      if (f.facultyType === 'lab_faculty' && !hasTheoryCourses) {
+        return false
+      }
+
+      // If advisor batch is assigned without any theory subjects, treat as pure advisor
+      const isAdvisor = Boolean(f.advisorBatch || (f.advisorYear && f.advisorSec)) || f.facultyType === 'advisor'
+      if (isAdvisor && !hasTheoryCourses) {
+        return false
+      }
 
       const matchesSearch =
         !searchQuery ||
@@ -1356,7 +1373,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 )}
               >
                 <span className="text-xs font-black">All Faculty (Years 1 - 4)</span>
-                <span className="text-[9px] font-mono opacity-80">{facultyList.length} Total</span>
+                <span className="text-[9px] font-mono opacity-80">{facultyMembersList.length} Total</span>
               </button>
 
               {[
@@ -1366,7 +1383,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 { yr: 4, label: 'Year IV (Senior)', sems: 'Sem 7 & 8' },
               ].map((item) => {
                 const isSelected = facultyYearFilter === String(item.yr)
-                const count = facultyList.filter((f) => getFacultyYear(f) === item.yr).length
+                const count = facultyMembersList.filter((f) => getFacultyYear(f) === item.yr).length
 
                 return (
                   <button
@@ -1653,7 +1670,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 : activeTab === 'labs'
                 ? labHandlersList.length
                 : facultyMembersList.length
-            } of {facultyList.length}
+            } of {
+              activeTab === 'advisors'
+                ? advisorsList.length
+                : activeTab === 'labs'
+                ? labHandlersList.length
+                : facultyMembersList.length
+            }
           </span>
         </div>
       </div>

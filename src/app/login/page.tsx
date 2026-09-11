@@ -266,8 +266,8 @@ export default function LoginPage() {
         return
       }
 
-      // Check if student or faculty requires first-time profile completion / onboarding
-      if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty')) {
+      // Check if student requires first-time profile completion / onboarding
+      if (data.user?.mustChangePassword && selectedRole === 'student') {
         setOnboardingUser(data.user)
         
         let initialDobDay = ''
@@ -331,9 +331,12 @@ export default function LoginPage() {
       }
 
       // Success Luxury Animation & Immediate Navigation
+      const isAdvisor = Boolean(data.user?.isAdvisor || data.user?.facultyType === 'advisor' || selectedRole === 'advisor')
+      const effectiveLoginRole = (selectedRole === 'advisor' || isAdvisor) ? 'advisor' : selectedRole
+
       if (typeof window !== 'undefined') {
-        localStorage.setItem('portal_login_role', selectedRole)
-        document.cookie = `portal_login_role=${selectedRole}; path=/; max-age=604800; SameSite=Lax`
+        localStorage.setItem('portal_login_role', effectiveLoginRole)
+        document.cookie = `portal_login_role=${effectiveLoginRole}; path=/; max-age=604800; SameSite=Lax`
       }
 
       const dashboardMap: Record<string, string> = {
@@ -342,10 +345,13 @@ export default function LoginPage() {
         advisor: '/faculty-dashboard/attendance?mode=morning&role=advisor',
         hod: '/hod-dashboard',
       }
-      const targetUrl = dashboardMap[selectedRole] || '/dashboard'
+      const targetUrl = (isAdvisor && selectedRole !== 'student')
+        ? '/faculty-dashboard/attendance?mode=morning&role=advisor'
+        : dashboardMap[selectedRole] || '/dashboard'
+
       setSuccessDestination(targetUrl)
       setAuthStatus('success')
-      setAuthMessage(`Identity Verified · Entering ${selectedRole.toUpperCase()} Digital Portal...`)
+      setAuthMessage(`Identity Verified · Entering ${(isAdvisor && selectedRole !== 'student' ? 'CLASS ADVISOR' : selectedRole).toUpperCase()} Digital Portal...`)
       toast.success('Login verified! Entering portal...')
 
       // Luxury transition animation timing
@@ -570,10 +576,11 @@ export default function LoginPage() {
         const dashboardMap: Record<string, string> = {
           student: '/dashboard',
           faculty: '/faculty-dashboard',
+          advisor: '/faculty-dashboard/attendance?mode=morning&role=advisor',
           hod: '/hod-dashboard',
         }
         setTimeout(() => {
-          window.location.href = dashboardMap[selectedRole]
+          window.location.href = dashboardMap[selectedRole] || '/dashboard'
         }, 300)
       } else {
         toast.error(data.message || 'Failed to complete setup.')
