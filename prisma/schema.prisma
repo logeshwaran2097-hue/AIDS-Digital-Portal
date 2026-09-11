@@ -27,6 +27,7 @@ model User {
   @@index([email])
   @@index([role])
   @@index([status])
+  @@index([role, status])
 }
 
 model Student {
@@ -58,6 +59,7 @@ model Student {
   @@index([year])
   @@index([semester])
   @@index([section])
+  @@index([year, section])
   @@index([year, section, semester])
   @@index([department, year, semester, section])
 }
@@ -207,6 +209,8 @@ model Resource {
   @@index([subjectId])
   @@index([uploadedById])
   @@index([status])
+  @@index([resourceType])
+  @@index([subjectId, status])
 }
 
 model Note {
@@ -389,6 +393,7 @@ model Notification {
   @@index([status])
   @@index([createdAt])
   @@index([status, createdAt])
+  @@index([target, status])
 }
 
 model Achievement {
@@ -437,6 +442,9 @@ model AuditLog {
   @@index([action])
   @@index([module])
   @@index([createdAt])
+  @@index([userName])
+  @@index([status])
+  @@index([userName, action])
 }
 
 model FileRecord {
@@ -544,6 +552,7 @@ model AttendanceRecord {
   @@index([registerNumber])
   @@index([status])
   @@index([studentId, status])
+  @@index([registerNumber, status])
 }
 
 model ProfileChangeRequest {
@@ -606,4 +615,6 @@ model ODProof {
   @@index([year, section])
   @@index([status])
   @@index([createdAt])
+  @@index([registerNumber, status])
+  @@index([odRequestId])
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -23,10 +24,17 @@ export async function GET(request: Request) {
       where.semester = Number(semester)
     }
 
-    const resources = await prisma.resource.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    })
+    const cacheKey = `resources_${resourceType || 'ALL'}_${subjectId || 'ALL'}_${semester || 'ALL'}`
+    const resources = await cachedDbQuery(
+      cacheKey,
+      () =>
+        prisma.resource.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+        }),
+      8000,
+      ['resources']
+    )
 
     return NextResponse.json({ success: true, resources })
   } catch (error) {
@@ -130,6 +138,9 @@ export async function POST(request: Request) {
       },
     }).catch(() => {})
 
+    invalidateCache('resources')
+    invalidateCache('student_data')
+
     return NextResponse.json({
       success: true,
       resource,
@@ -209,6 +220,9 @@ export async function PUT(request: Request) {
       },
     })
 
+    invalidateCache('resources')
+    invalidateCache('student_data')
+
     return NextResponse.json({
       success: true,
       resource: updated,
@@ -244,6 +258,9 @@ export async function DELETE(request: Request) {
     await prisma.resource.delete({
       where: { id },
     })
+
+    invalidateCache('resources')
+    invalidateCache('student_data')
 
     return NextResponse.json({
       success: true,

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { syncSanctionedODsForStudent } from '@/lib/odSync'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,27 +34,37 @@ export async function GET(request: Request) {
         return NextResponse.json({ success: true, proofs: [], count: 0 })
       }
 
-      // Auto-sync any sanctioned OD applications from Attendance/HOD approval into Event Proofs
-      await syncSanctionedODsForStudent(activeRegNo, student)
+      const cacheKey = `student_proofs_${activeRegNo}_${filterStatus || 'ALL'}`
+      const cachedData = await cachedDbQuery(
+        cacheKey,
+        async () => {
+          // Auto-sync any sanctioned OD applications from Attendance/HOD approval into Event Proofs
+          await syncSanctionedODsForStudent(activeRegNo, student)
 
-      let proofs = await prisma.oDProof.findMany({
-        where: {
-          registerNumber: activeRegNo,
-          ...(filterStatus && filterStatus !== 'ALL' ? { status: filterStatus } : {}),
+          const proofs = await prisma.oDProof.findMany({
+            where: {
+              registerNumber: activeRegNo,
+              ...(filterStatus && filterStatus !== 'ALL' ? { status: filterStatus } : {}),
+            },
+            orderBy: { createdAt: 'desc' },
+          })
+
+          const sanctionedProofs = proofs.filter(
+            (p) => p.status === 'verified' || p.attendanceCredited || (p.advisorRemarks && p.advisorRemarks.toLowerCase().includes('sanction'))
+          )
+
+          return { proofs, sanctionedProofs }
         },
-        orderBy: { createdAt: 'desc' },
-      })
-
-      const sanctionedProofs = proofs.filter(
-        (p) => p.status === 'verified' || p.attendanceCredited || (p.advisorRemarks && p.advisorRemarks.toLowerCase().includes('sanction'))
+        4000,
+        ['od_proofs', 'attendance']
       )
 
       return NextResponse.json({
         success: true,
-        proofs,
-        count: proofs.length,
-        sanctionedCount: sanctionedProofs.length,
-        sanctionedProofs,
+        proofs: cachedData.proofs,
+        count: cachedData.proofs.length,
+        sanctionedCount: cachedData.sanctionedProofs.length,
+        sanctionedProofs: cachedData.sanctionedProofs,
         student: {
           name: session.name,
           registerNumber: activeRegNo,
@@ -75,25 +86,37 @@ export async function GET(request: Request) {
         ...(filterStatus && filterStatus !== 'ALL' ? { status: filterStatus } : {}),
       }
 
-      const proofs = await prisma.oDProof.findMany({
-        where: whereClause,
-        orderBy: { createdAt: 'desc' },
-      })
+      const cacheKey = `hod_proofs_${qYear || 'ALL'}_${qSec || 'ALL'}_${filterStatus || 'ALL'}`
+      const hodData = await cachedDbQuery(
+        cacheKey,
+        async () => {
+          const [proofs, allProofs] = await Promise.all([
+            prisma.oDProof.findMany({
+              where: whereClause,
+              orderBy: { createdAt: 'desc' },
+            }),
+            prisma.oDProof.findMany(),
+          ])
 
-      const allProofs = await prisma.oDProof.findMany()
-      const stats = {
-        total: allProofs.length,
-        pendingGeoTag: allProofs.filter((p) => !p.geoPhotoUrl).length,
-        pendingCertificate: allProofs.filter((p) => !p.certificateUrl).length,
-        readyForReview: allProofs.filter((p) => p.geoPhotoUrl && p.certificateUrl && p.status !== 'verified').length,
-        verified: allProofs.filter((p) => p.status === 'verified').length,
-      }
+          const stats = {
+            total: allProofs.length,
+            pendingGeoTag: allProofs.filter((p) => !p.geoPhotoUrl).length,
+            pendingCertificate: allProofs.filter((p) => !p.certificateUrl).length,
+            readyForReview: allProofs.filter((p) => p.geoPhotoUrl && p.certificateUrl && p.status !== 'verified').length,
+            verified: allProofs.filter((p) => p.status === 'verified').length,
+          }
+
+          return { proofs, stats }
+        },
+        4000,
+        ['od_proofs']
+      )
 
       return NextResponse.json({
         success: true,
-        proofs,
-        count: proofs.length,
-        stats,
+        proofs: hodData.proofs,
+        count: hodData.proofs.length,
+        stats: hodData.stats,
         advisorJurisdiction: {
           year: 'ALL',
           section: 'ALL',
@@ -118,30 +141,39 @@ export async function GET(request: Request) {
         ...(filterStatus && filterStatus !== 'ALL' ? { status: filterStatus } : {}),
       }
 
-      let proofs = await prisma.oDProof.findMany({
-        where: whereClause,
-        orderBy: { createdAt: 'desc' },
-      })
+      const cacheKey = `faculty_proofs_${advisorYear}_${advisorSec}_${filterStatus || 'ALL'}`
+      const facultyData = await cachedDbQuery(
+        cacheKey,
+        async () => {
+          const [proofs, allClassProofs] = await Promise.all([
+            prisma.oDProof.findMany({
+              where: whereClause,
+              orderBy: { createdAt: 'desc' },
+            }),
+            prisma.oDProof.findMany({
+              where: { year: advisorYear, section: advisorSec },
+            }),
+          ])
 
+          const stats = {
+            total: allClassProofs.length,
+            pendingGeoTag: allClassProofs.filter((p) => !p.geoPhotoUrl).length,
+            pendingCertificate: allClassProofs.filter((p) => !p.certificateUrl).length,
+            readyForSignoff: allClassProofs.filter((p) => p.geoPhotoUrl && p.certificateUrl && p.status !== 'verified').length,
+            verified: allClassProofs.filter((p) => p.status === 'verified').length,
+          }
 
-
-      // Stats calculation for advisor
-      const allClassProofs = await prisma.oDProof.findMany({
-        where: { year: advisorYear, section: advisorSec },
-      })
-
-      const stats = {
-        total: allClassProofs.length,
-        pendingGeoTag: allClassProofs.filter((p) => !p.geoPhotoUrl).length,
-        pendingCertificate: allClassProofs.filter((p) => !p.certificateUrl).length,
-        readyForSignoff: allClassProofs.filter((p) => p.geoPhotoUrl && p.certificateUrl && p.status !== 'verified').length,
-        verified: allClassProofs.filter((p) => p.status === 'verified').length,
-      }
+          return { proofs, stats }
+        },
+        4000,
+        ['od_proofs']
+      )
 
       return NextResponse.json({
         success: true,
-        proofs,
-        stats,
+        proofs: facultyData.proofs,
+        count: facultyData.proofs.length,
+        stats: facultyData.stats,
         advisorJurisdiction: {
           year: advisorYear,
           section: advisorSec,
@@ -167,6 +199,11 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const { action } = body
+
+    // Instantly invalidate caches on any mutation so next reads reflect state immediately
+    invalidateCache('od_proofs')
+    invalidateCache('attendance')
+    invalidateCache('student_data')
 
     // 1. REGISTER NEW OD / HACKATHON
     if (action === 'REGISTER_OD') {
@@ -605,6 +642,10 @@ export async function DELETE(request: Request) {
         status: 'success',
       },
     }).catch(() => {})
+
+    invalidateCache('od_proofs')
+    invalidateCache('attendance')
+    invalidateCache('student_data')
 
     return NextResponse.json({
       success: true,

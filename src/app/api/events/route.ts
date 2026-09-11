@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -15,10 +16,17 @@ export async function GET(request: Request) {
       where.category = category
     }
 
-    const events = await prisma.event.findMany({
-      where,
-      orderBy: { date: 'asc' },
-    })
+    const cacheKey = `events_${category || 'ALL'}`
+    const events = await cachedDbQuery(
+      cacheKey,
+      () =>
+        prisma.event.findMany({
+          where,
+          orderBy: { date: 'asc' },
+        }),
+      5000,
+      ['events']
+    )
 
     return NextResponse.json({ success: true, events })
   } catch (error) {
@@ -59,6 +67,9 @@ export async function POST(request: Request) {
       },
     }).catch(() => {})
 
+    invalidateCache('events')
+    invalidateCache('notifications')
+
     return NextResponse.json({ success: true, event }, { status: 201 })
   } catch (error) {
     console.error('Events API error:', error)
@@ -74,6 +85,7 @@ export async function DELETE(request: Request) {
 
     if (clearAll === 'true') {
       await prisma.event.deleteMany({})
+      invalidateCache('events')
       return NextResponse.json({ success: true, message: 'All events cleared' })
     }
 
@@ -82,6 +94,7 @@ export async function DELETE(request: Request) {
     }
 
     await prisma.event.delete({ where: { id } })
+    invalidateCache('events')
     return NextResponse.json({ success: true, message: 'Event deleted successfully' })
   } catch (error) {
     console.error('Delete event error:', error)

@@ -1,9 +1,26 @@
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 
 export async function getStudentData(userId: string) {
+  return cachedDbQuery(
+    `student_portal_data_${userId}`,
+    async () => {
+      return fetchStudentDataDirect(userId)
+    },
+    4000,
+    ['student_data', 'attendance', 'students', 'announcements', 'events']
+  )
+}
+
+async function fetchStudentDataDirect(userId: string) {
   try {
-    let user: any = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null)
-    let student: any = await prisma.student.findUnique({ where: { userId } }).catch(() => null)
+    const [initialUser, initialStudent] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId } }).catch(() => null),
+      prisma.student.findUnique({ where: { userId } }).catch(() => null),
+    ])
+
+    let user: any = initialUser
+    let student: any = initialStudent
 
     if (!student && user) {
       // Try resolving by email prefix or name if userId wasn't directly linked
@@ -78,8 +95,12 @@ export async function getStudentData(userId: string) {
       }
     }
 
-    const [announcements, events, resources, achievements, questionPapers, projects, faculty, notifications] =
-      await Promise.all([
+    const [
+      [announcements, events, resources, achievements, questionPapers, projects, faculty, notifications],
+      semesters,
+      attendanceRecords,
+    ] = await Promise.all([
+      Promise.all([
         prisma.announcement.findMany({ where: { isPublished: true }, orderBy: { createdAt: 'desc' }, take: 5 }).catch(() => []),
         prisma.event.findMany({ where: { isPublished: true }, orderBy: { date: 'asc' }, take: 5 }).catch(() => []),
         prisma.resource.findMany({ orderBy: { createdAt: 'desc' }, take: 6 }).catch(() => []),
@@ -88,32 +109,31 @@ export async function getStudentData(userId: string) {
         prisma.project.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }).catch(() => []),
         prisma.user.findMany({ where: { role: 'faculty' }, select: { id: true, name: true, email: true, profileImage: true } }).catch(() => []),
         prisma.notification.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }).catch(() => []),
-      ])
+      ]),
+      prisma.semester.findMany({
+        where: { number: student.semester },
+        select: { id: true },
+      }).catch(() => []),
+      prisma.attendanceRecord.findMany({
+        where: {
+          OR: [
+            { studentId: student.id },
+            { registerNumber: student.registerNumber },
+          ],
+        },
+        include: {
+          session: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []),
+    ])
 
-    const semesters = await prisma.semester.findMany({
-      where: { number: student.semester },
-      select: { id: true },
-    }).catch(() => [])
     const semesterIds = semesters.map((s) => s.id)
 
     let mySubjects = await prisma.subject.findMany({
       where: semesterIds.length > 0 ? { semesterId: { in: semesterIds } } : undefined,
       take: 10,
       orderBy: { code: 'asc' },
-    }).catch(() => [])
-
-    // Real-time attendance calculation directly from database
-    const attendanceRecords = await prisma.attendanceRecord.findMany({
-      where: {
-        OR: [
-          { studentId: student.id },
-          { registerNumber: student.registerNumber },
-        ],
-      },
-      include: {
-        session: true,
-      },
-      orderBy: { createdAt: 'desc' },
     }).catch(() => [])
 
     const totalSessions = attendanceRecords.length

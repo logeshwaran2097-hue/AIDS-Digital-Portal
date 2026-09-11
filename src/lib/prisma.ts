@@ -21,19 +21,20 @@ function getOptimizedDatabaseUrl(): string {
   // Ensure high-concurrency pool limits and connection timeouts are tuned
   try {
     const parsed = new URL(url)
-    // In serverless, each container handles 1 request at a time.
-    // Setting connection_limit to 1 avoids overloading Render's free tier RAM limit.
+    // Connection limit of 10 allows parallel queries (e.g. Promise.all) within requests
+    // to execute concurrently without queuing behind a single connection bottleneck
     if (!parsed.searchParams.has('connection_limit')) {
-      parsed.searchParams.set('connection_limit', process.env.VERCEL ? '1' : '5')
+      parsed.searchParams.set('connection_limit', '10')
     }
     if (!parsed.searchParams.has('pool_timeout')) {
-      parsed.searchParams.set('pool_timeout', '20')
+      parsed.searchParams.set('pool_timeout', '15')
     }
     if (!parsed.searchParams.has('connect_timeout')) {
-      parsed.searchParams.set('connect_timeout', '20')
+      parsed.searchParams.set('connect_timeout', '10')
     }
+    // Cache up to 100 prepared SQL statements to eliminate query planning overhead on PostgreSQL
     if (!parsed.searchParams.has('statement_cache_size')) {
-      parsed.searchParams.set('statement_cache_size', '50')
+      parsed.searchParams.set('statement_cache_size', '100')
     }
     return parsed.toString()
   } catch {

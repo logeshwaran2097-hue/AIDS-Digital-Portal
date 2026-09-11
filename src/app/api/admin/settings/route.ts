@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
@@ -84,16 +85,24 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const saved = await prisma.systemSettings.findUnique({
-      where: { key: 'portal_config' },
-    }).catch(() => null)
+    const config = await cachedDbQuery(
+      'admin_portal_settings',
+      async () => {
+        const saved = await prisma.systemSettings.findUnique({
+          where: { key: 'portal_config' },
+        }).catch(() => null)
 
-    let config = DEFAULT_SETTINGS
-    if (saved?.value) {
-      try {
-        config = { ...DEFAULT_SETTINGS, ...JSON.parse(saved.value) }
-      } catch {}
-    }
+        let cfg = DEFAULT_SETTINGS
+        if (saved?.value) {
+          try {
+            cfg = { ...DEFAULT_SETTINGS, ...JSON.parse(saved.value) }
+          } catch {}
+        }
+        return cfg
+      },
+      15000,
+      ['settings']
+    )
 
     return NextResponse.json({ success: true, settings: config })
   } catch (error) {
@@ -171,6 +180,8 @@ export async function POST(request: NextRequest) {
         status: 'SUCCESS',
       },
     }).catch(() => {})
+
+    invalidateCache('settings')
 
     return NextResponse.json({
       success: true,

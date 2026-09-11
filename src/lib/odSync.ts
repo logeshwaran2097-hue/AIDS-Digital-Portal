@@ -1,10 +1,19 @@
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 
 export async function syncSanctionedODsForStudent(regNo: string, studentInfo?: any) {
   if (!regNo) return []
-
   const activeReg = regNo.trim().toUpperCase()
 
+  return cachedDbQuery(
+    `sync_sanctioned_ods_${activeReg}`,
+    async () => syncSanctionedODsDirect(activeReg, studentInfo),
+    4000,
+    ['od_proofs', 'attendance']
+  )
+}
+
+async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
   // 1. Fetch student info if not provided
   let student = studentInfo
   if (!student) {
@@ -21,44 +30,42 @@ export async function syncSanctionedODsForStudent(regNo: string, studentInfo?: a
     } catch {}
   }
 
-  // 2. Fetch all audit logs for this student relating to OD applications / sanctions
-  const auditLogs = await prisma.auditLog.findMany({
-    where: {
-      OR: [
-        { userName: { contains: activeReg } },
-        { details: { contains: activeReg } },
-      ],
-      AND: [
-        {
-          OR: [
-            { action: 'od_application_submitted' },
-            { action: { contains: 'od' } },
-            { details: { contains: 'OD' } },
-            { details: { contains: 'On-Duty' } },
-            { details: { contains: 'sanction' } },
-          ],
-        },
-      ],
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 30,
-  }).catch(() => [])
-
-  // 3. Fetch attendance records marked as 'OD'
-  const odAttendance = await prisma.attendanceRecord.findMany({
-    where: {
-      registerNumber: activeReg,
-      status: 'OD',
-    },
-    take: 30,
-    orderBy: { createdAt: 'desc' },
-  }).catch(() => [])
-
-  // 4. Existing proofs
-  const existingProofs: any[] = await prisma.oDProof.findMany({
-    where: { registerNumber: activeReg },
-    orderBy: { createdAt: 'desc' },
-  }).catch(() => [] as any[])
+  // 2, 3, 4. Fetch auditLogs, attendance records, and existing proofs in parallel!
+  const [auditLogs, odAttendance, existingProofs] = await Promise.all([
+    prisma.auditLog.findMany({
+      where: {
+        OR: [
+          { userName: { contains: activeReg } },
+          { details: { contains: activeReg } },
+        ],
+        AND: [
+          {
+            OR: [
+              { action: 'od_application_submitted' },
+              { action: { contains: 'od' } },
+              { details: { contains: 'OD' } },
+              { details: { contains: 'On-Duty' } },
+              { details: { contains: 'sanction' } },
+            ],
+          },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    }).catch(() => []),
+    prisma.attendanceRecord.findMany({
+      where: {
+        registerNumber: activeReg,
+        status: 'OD',
+      },
+      take: 30,
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => []),
+    prisma.oDProof.findMany({
+      where: { registerNumber: activeReg },
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => [] as any[]),
+  ])
 
   // 5. Parse and sync each audit log
   for (const log of auditLogs) {
