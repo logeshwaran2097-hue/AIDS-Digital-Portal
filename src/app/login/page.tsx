@@ -66,9 +66,9 @@ export default function LoginPage() {
   const handleDirectInstall = () => {
     if (typeof window !== 'undefined') {
       if ((window as any).__triggerPwaInstall) {
-        ;(window as any).__triggerPwaInstall()
+        ; (window as any).__triggerPwaInstall()
       } else if ((window as any).__openAppDownloader) {
-        ;(window as any).__openAppDownloader()
+        ; (window as any).__openAppDownloader()
       } else {
         setShowDownloader(true)
       }
@@ -86,7 +86,7 @@ export default function LoginPage() {
   const [showOnboardingModal, setShowOnboardingModal] = React.useState(false)
   const [onboardingStep, setOnboardingStep] = React.useState<1 | 2 | 3>(1) // 1: Details, 2: Password & Email OTP, 3: Final Review Popup
   const [onboardingUser, setOnboardingUser] = React.useState<any>(null)
-  
+
   // Form State for Details Review & Password Setup
   const [onboardingForm, setOnboardingForm] = React.useState({
     name: '',
@@ -250,6 +250,29 @@ export default function LoginPage() {
         setTimeout(() => {
           setAuthStatus('idle')
         }, 4000)
+        return
+      }
+
+      // Check if student or faculty requires first-time profile completion / onboarding
+      if (data.user?.mustChangePassword && (selectedRole === 'student' || selectedRole === 'faculty')) {
+        setOnboardingUser(data.user)
+        setOnboardingForm((prev) => ({
+          ...prev,
+          name: data.user.name || '',
+          registerNumber: data.user.registerNumber || registerNumber.trim(),
+          phone: data.user.phone || '',
+          parentPhone: data.user.parentPhone || '',
+          email: data.user.email || '',
+          dateOfBirth: data.user.dateOfBirth || '',
+          department: data.user.department || prev.department,
+          year: data.user.year || prev.year,
+          semester: data.user.semester || prev.semester,
+          section: data.user.section || prev.section,
+          advisorName: data.user.advisorName || prev.advisorName,
+        }))
+        setShowOnboardingModal(true)
+        setOnboardingStep(1)
+        toast.success('Welcome! Please review your details and set up your permanent password.')
         return
       }
 
@@ -539,11 +562,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex flex-col justify-between items-center relative overflow-x-hidden anim-bg-intro bg-[#F5F8FC] px-4 py-4 sm:py-8 select-none max-w-full pb-safe"
       style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
     >
-      
+
       {/* Background Soft Blue Light Wave Sweep */}
       <div className="absolute inset-0 pointer-events-none z-[1] overflow-hidden">
         <div className="absolute top-0 bottom-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-blue-400/15 to-transparent anim-light-wave" />
@@ -601,7 +624,7 @@ export default function LoginPage() {
 
       {/* TOP HEADER: Centered Ultra-Luxury Branding */}
       <div className="w-full max-w-lg text-center space-y-1.5 sm:space-y-2.5 relative z-10 pt-1 pb-1">
-        
+
         {/* Stage 1: Accreditation Top Badge & Laptop Install App Button */}
         <div className="flex items-center justify-center gap-2.5 flex-wrap">
           <div className={cn(
@@ -628,7 +651,7 @@ export default function LoginPage() {
             </button>
           )}
         </div>
-        
+
         {/* Stage 2: INSTAGRAM-STYLE MODERN SQUIRCLE EMBLEM */}
         <div className={cn(
           "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-700 ease-out transform",
@@ -671,7 +694,7 @@ export default function LoginPage() {
             "transition-all duration-700 ease-out transform",
             animStage >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
-            <h1 
+            <h1
               className="text-base sm:text-2xl font-black tracking-tight uppercase py-0.5"
               style={{ letterSpacing: '0.02em', fontWeight: 900 }}
             >
@@ -723,7 +746,7 @@ export default function LoginPage() {
       {/* FULL-SCREEN QUANTUM ULTRA-LUXURY SUCCESS PORTAL MODAL */}
       {authStatus === 'success' && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-[#030B1C]/90 backdrop-blur-3xl text-white select-none animate-fade-in overflow-hidden">
-          
+
           {/* Ambient Celestial Light Halos */}
           <div className="absolute w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-[#1455D9]/30 via-[#22C7E8]/20 to-[#F4C430]/25 blur-[120px] anim-lux-floating pointer-events-none" />
           <div className="absolute -bottom-20 -right-20 w-96 h-96 rounded-full bg-emerald-500/20 blur-[100px] pointer-events-none" />
@@ -734,7 +757,7 @@ export default function LoginPage() {
 
           {/* Master Luxury Glass Container */}
           <div className="relative z-10 w-full max-w-lg mx-auto flex flex-col items-center text-center space-y-6 p-7 sm:p-10 rounded-[2.75rem] bg-gradient-to-b from-white/[0.14] via-[#0A1A3A]/80 to-[#051126]/95 backdrop-blur-3xl border border-amber-400/30 shadow-[0_25px_100px_rgba(0,0,0,0.8),0_0_60px_rgba(244,196,48,0.25)_inset] anim-lux-card overflow-hidden">
-            
+
             {/* Top Light Ray Beam */}
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-[#F4C430] to-transparent shadow-[0_0_20px_#F4C430]" />
 
@@ -748,7 +771,7 @@ export default function LoginPage() {
 
               {/* Middle Cyan Electric Ring */}
               <div className="absolute w-36 h-36 rounded-full border-2 border-dashed border-[#22C7E8]/60 anim-lux-orbit-ccw" />
-              
+
               {/* Inner Diamond Hologram Hexagon Ring */}
               <div className="absolute w-28 h-28 rounded-full border border-emerald-400/50 anim-lux-orbit-fast" />
 
@@ -756,7 +779,7 @@ export default function LoginPage() {
               <div className="relative w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#071A3D] via-[#0F3577] to-[#1455D9] p-1 shadow-[0_0_50px_rgba(34,199,232,0.6)] flex items-center justify-center border border-amber-400/50 anim-lux-pulse">
                 {/* Laser Scanning Line */}
                 <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-[#22C7E8] to-transparent shadow-[0_0_10px_#22C7E8] anim-lux-scanner pointer-events-none" />
-                
+
                 <div className="w-full h-full rounded-[1.35rem] bg-[#051126]/90 flex items-center justify-center relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/20 via-transparent to-amber-400/20" />
                   <CheckCircle2 className="w-12 h-12 text-[#22C7E8] drop-shadow-[0_0_16px_rgba(34,199,232,0.9)] animate-pulse" />
@@ -818,7 +841,7 @@ export default function LoginPage() {
       )}
 
       {/* ULTRA-LUXURY LOGIN CARD (STAGE 8) */}
-      <div 
+      <div
         className={cn(
           "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-700 ease-out transform",
           animStage >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none",
@@ -826,7 +849,7 @@ export default function LoginPage() {
           authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
         )}
       >
-        
+
         {/* ROLE SELECTION */}
         <div>
           <div className="flex items-center justify-between mb-2 px-1">
@@ -897,7 +920,7 @@ export default function LoginPage() {
 
         {/* INNER FORM CONTAINER */}
         <div className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white/90 to-[#F8FAFD]/90 backdrop-blur-md p-4 sm:p-5 space-y-3.5 anim-form-reveal shadow-sm">
-          
+
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#1557C0] to-[#22C7E8] text-white flex items-center justify-center shadow-md shrink-0">
               <UserIcon className="w-4 h-4" />
@@ -914,7 +937,7 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3 pt-1">
-            
+
             {/* Student */}
             {selectedRole === 'student' && (
               <>
@@ -932,7 +955,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. 922525243126 or monisha@student.vsb.edu.in"
+                      placeholder="e.g. 922525243103"
                       value={registerNumber}
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
@@ -956,7 +979,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter temporary or permanent password"
+                      placeholder="Enter password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -1004,7 +1027,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. karthik@vsb.edu.in or Dr. S. Karthik"
+                      placeholder="e.g. karthik@vsb.edu.in or Karthik S"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
@@ -1078,7 +1101,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. karthik@vsb.edu.in or Dr. S. Karthik"
+                      placeholder="e.g. Karthik S"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
@@ -1150,7 +1173,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="text"
-                      placeholder="e.g. hod.aids@vsb.edu.in or Dr. Head of Department"
+                      placeholder="e.g.  Karthik S"
                       value={facultyId}
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
@@ -1222,7 +1245,7 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="email"
-                      placeholder="e.g. admin@vsb.edu.in"
+                      placeholder="e.g. admin@gmail.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -1303,8 +1326,8 @@ export default function LoginPage() {
       )}>
         <div className="flex items-center justify-center gap-2">
           <div className="w-10 sm:w-16 h-px bg-gradient-to-r from-transparent via-[#E7B93E] to-slate-300" />
-          <p 
-            className="text-base sm:text-xl font-bold tracking-wider italic text-[#071A41]" 
+          <p
+            className="text-base sm:text-xl font-bold tracking-wider italic text-[#071A41]"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
             &ldquo;a place for placement&rdquo;
@@ -1347,7 +1370,7 @@ export default function LoginPage() {
       {showOnboardingModal && onboardingUser && (
         <div className="fixed inset-0 z-50 bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto">
-            
+
             {/* Modal Header with Progress Step Indicator */}
             <div className="border-b border-gray-100 pb-3">
               <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -1358,7 +1381,7 @@ export default function LoginPage() {
                   {onboardingForm.registerNumber}
                 </span>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <h3 className="text-lg sm:text-xl font-black text-[#071A41]">
                   {onboardingStep === 1 ? 'Step 1: Review Your Academic Details' : 'Step 2: Password & Email OTP Verification'}
@@ -1568,7 +1591,7 @@ export default function LoginPage() {
             {/* ========================================================================= */}
             {onboardingStep === 2 && (
               <form onSubmit={handleCompleteOnboarding} className="space-y-4 text-xs">
-                
+
                 {/* 1. Permanent Password Section */}
                 <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-amber-200/60">
@@ -1756,7 +1779,7 @@ export default function LoginPage() {
       {showCorrectionModal && (
         <div className="fixed inset-0 z-60 bg-[#071A41]/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-amber-200 animate-in zoom-in-95 duration-200">
-            
+
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
