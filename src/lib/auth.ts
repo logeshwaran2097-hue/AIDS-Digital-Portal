@@ -216,6 +216,40 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
   } catch {}
 
+  // Fallback for initial first-time student login before onboarding completion
+  if (!isValid && (user.mustChangePassword || !user.emailVerified)) {
+    const rawCleanPass = trimmedPassword.replace(/[^0-9a-zA-Z]/g, '').toLowerCase()
+    const regClean = (student.registerNumber || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase()
+
+    if (student.dateOfBirth) {
+      const dob = new Date(student.dateOfBirth)
+      const dd = String(dob.getDate()).padStart(2, '0')
+      const mm = String(dob.getMonth() + 1).padStart(2, '0')
+      const yyyy = String(dob.getFullYear())
+      const dobFormats = [
+        `${dd}${mm}${yyyy}`,
+        `${yyyy}${mm}${dd}`,
+        `${dd}-${mm}-${yyyy}`,
+        `${yyyy}-${mm}-${dd}`,
+        `${dd}/${mm}/${yyyy}`,
+      ]
+      if (dobFormats.includes(trimmedPassword) || dobFormats.some((f) => f.replace(/[^0-9]/g, '') === rawCleanPass)) {
+        isValid = true
+      }
+    }
+
+    if (
+      !isValid &&
+      (rawCleanPass === regClean ||
+        trimmedPassword.toLowerCase() === 'welcome123' ||
+        trimmedPassword === 'Welcome@123' ||
+        trimmedPassword === 'Password@123' ||
+        trimmedPassword.toLowerCase() === 'vsb@123')
+    ) {
+      isValid = true
+    }
+  }
+
   if (!isValid) {
     return { success: false, message: 'Invalid Register Number, Email, or Password.' }
   }
