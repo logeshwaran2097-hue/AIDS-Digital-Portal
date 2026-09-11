@@ -350,17 +350,27 @@ export async function GET(request: Request) {
         const studentName = nameMatch ? nameMatch[1].trim() : notif.createdByName || 'Student'
         const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&from=${fromDate}&to=${toDate}&status=pending`
 
+        // Look up student for real parentPhone from DB
+        let fallbackStudent: any = studentCache[deducedReg]
+        if (fallbackStudent === undefined) {
+          fallbackStudent = await prisma.student.findFirst({
+            where: { registerNumber: deducedReg },
+          }).catch(() => null)
+          studentCache[deducedReg] = fallbackStudent
+        }
+        const realParentPhone = fallbackStudent?.parentPhone || '6381366088'
+
         trackedApplications.push({
           id: notif.id,
           studentName,
           registerNumber: deducedReg,
-          year: 2,
-          semester: 3,
-          section: 'A',
-          batch: '2025-2029',
-          residencyStatus: 'Day Scholar',
-          busNo: null,
-          parentPhone: '6381366088',
+          year: fallbackStudent?.year || 2,
+          semester: fallbackStudent?.semester || 3,
+          section: fallbackStudent?.section || 'A',
+          batch: fallbackStudent?.batch || '2025-2029',
+          residencyStatus: fallbackStudent?.residencyStatus || 'Day Scholar',
+          busNo: fallbackStudent?.busNo || null,
+          parentPhone: realParentPhone,
           attendanceRate: 100.0,
           applicationType: appType,
           fromDate,
