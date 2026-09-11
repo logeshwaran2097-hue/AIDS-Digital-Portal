@@ -351,58 +351,8 @@ The platform enforces strict role-based access control (RBAC) with tailored prim
 
 ---
 
-## 🛠️ 8. Local Installation & Development
 
-### 1. Prerequisites
-- **Node.js** v18.17+ or v20+
-- **npm** or **pnpm**
-- **PostgreSQL Database** (e.g., Supabase or local instance)
-
-### 2. Clone the Repository
-```bash
-git clone https://github.com/logeshwaran2097-hue/AIDS-Digital-Portal.git
-cd AIDS-Digital-Portal
-```
-
-### 3. Install Dependencies
-```bash
-npm install
-```
-
-### 4. Configure Environment Variables
-Create a `.env` file in the root directory:
-```env
-# PostgreSQL Database URL with pooling (e.g., Supabase PgBouncer)
-DATABASE_URL="postgresql://postgres:[PASSWORD]@[HOST]:6543/postgres?pgbouncer=true"
-
-# Direct PostgreSQL connection for migrations
-DIRECT_URL="postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres"
-
-# JWT Secret Key
-JWT_SECRET="vsb-ai-ds-super-secret-jwt-key-2026"
-
-# Public Application URL
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# Google Gemini API Key (Optional)
-GEMINI_API_KEY="your-gemini-api-key"
-```
-
-### 5. Push Database Schema
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-### 6. Run the Local Development Server
-```bash
-npm run dev
-```
-Open **[http://localhost:3000](http://localhost:3000)** to view the application.
-
----
-
-## 🚢 9. Continuous Deployment Pipelines
+## 🚢 8. Continuous Deployment Pipelines
 
 The application is configured for multi-cloud continuous delivery:
 - **GitHub Version Control**: All commits to `main` undergo automated validation.
@@ -411,7 +361,7 @@ The application is configured for multi-cloud continuous delivery:
 
 ---
 
-## 🏛️ 10. Institutional Identity & Accreditation
+## 🏛️ 9. Institutional Identity & Accreditation
 
 <div align="center">
 
