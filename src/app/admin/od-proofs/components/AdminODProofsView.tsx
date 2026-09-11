@@ -87,7 +87,9 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
   const [activeTab, setActiveTab] = useState<'ALL' | 'ADVISOR_APPROVED' | 'UNDER_REVIEW' | 'SANCTIONED' | 'RESUBMIT' | 'INCOMPLETE'>('ALL')
   const [yearFilter, setYearFilter] = useState<'ALL' | '1' | '2' | '3' | '4'>('ALL')
   const [sectionFilter, setSectionFilter] = useState<'ALL' | 'A' | 'B' | 'C' | 'D'>('ALL')
+  const [advisorFilter, setAdvisorFilter] = useState<string>('ALL')
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
+  const [proofStatusFilter, setProofStatusFilter] = useState<'ALL' | 'WITH_GEOTAG' | 'WITH_CERT' | 'COMPLETE' | 'MISSING_GEO' | 'MISSING_CERT'>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProof, setSelectedProof] = useState<AdminODProofItem | null>(null)
   const [adminRemarks, setAdminRemarks] = useState('')
@@ -117,6 +119,38 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
     }
   }, [proofs])
 
+  // Distinct list of advisors across all batches
+  const distinctAdvisors = useMemo(() => {
+    const names = new Set<string>()
+    proofs.forEach((p) => {
+      if (p.assignedAdvisor && p.assignedAdvisor !== 'Unassigned') names.add(p.assignedAdvisor)
+      if (p.verifiedByName && !p.verifiedByName.includes('&')) names.add(p.verifiedByName)
+    })
+    return Array.from(names)
+  }, [proofs])
+
+  // Distinct list of event categories
+  const distinctCategories = useMemo(() => {
+    const defaultCategories = [
+      'Hackathon',
+      'Symposium',
+      'Workshop',
+      'Paper Presentation',
+      'Project Contest',
+      'Sports',
+      'Internship',
+      'Industrial Visit',
+      'General OD',
+    ]
+    const set = new Set<string>(defaultCategories)
+    proofs.forEach((p) => {
+      if (p.category && p.category.trim()) {
+        set.add(p.category.trim())
+      }
+    })
+    return Array.from(set)
+  }, [proofs])
+
   // Filtered dataset
   const filteredProofs = useMemo(() => {
     return proofs.filter((p) => {
@@ -133,8 +167,23 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
       // Section filter
       if (sectionFilter !== 'ALL' && (p.section || 'A').toUpperCase() !== sectionFilter) return false
 
+      // Advisor filter
+      if (advisorFilter !== 'ALL') {
+        const matchesAdvisor =
+          p.assignedAdvisor?.toLowerCase() === advisorFilter.toLowerCase() ||
+          p.verifiedByName?.toLowerCase().includes(advisorFilter.toLowerCase())
+        if (!matchesAdvisor) return false
+      }
+
       // Category filter
-      if (categoryFilter !== 'ALL' && p.category.toLowerCase() !== categoryFilter.toLowerCase()) return false
+      if (categoryFilter !== 'ALL' && (p.category || '').toLowerCase() !== categoryFilter.toLowerCase()) return false
+
+      // Proof Status filter
+      if (proofStatusFilter === 'WITH_GEOTAG' && !p.geoPhotoUrl) return false
+      if (proofStatusFilter === 'WITH_CERT' && !p.certificateUrl) return false
+      if (proofStatusFilter === 'COMPLETE' && (!p.geoPhotoUrl || !p.certificateUrl)) return false
+      if (proofStatusFilter === 'MISSING_GEO' && Boolean(p.geoPhotoUrl)) return false
+      if (proofStatusFilter === 'MISSING_CERT' && Boolean(p.certificateUrl)) return false
 
       // Search Query
       if (searchQuery.trim()) {
@@ -144,14 +193,15 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
         const matchesEvent = (p.eventName || '').toLowerCase().includes(q)
         const matchesCollege = (p.venueCollege || '').toLowerCase().includes(q)
         const matchesAdvisor = (p.assignedAdvisor || '').toLowerCase().includes(q)
-        if (!matchesName && !matchesReg && !matchesEvent && !matchesCollege && !matchesAdvisor) {
+        const matchesCategory = (p.category || '').toLowerCase().includes(q)
+        if (!matchesName && !matchesReg && !matchesEvent && !matchesCollege && !matchesAdvisor && !matchesCategory) {
           return false
         }
       }
 
       return true
     })
-  }, [proofs, activeTab, yearFilter, sectionFilter, categoryFilter, searchQuery])
+  }, [proofs, activeTab, yearFilter, sectionFilter, advisorFilter, categoryFilter, proofStatusFilter, searchQuery])
 
   // Super Admin: Sanction OD & Credit Attendance
   const handleAdminSanction = async (proof: AdminODProofItem) => {
@@ -489,9 +539,9 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
         </div>
 
         {/* Secondary Filter Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
           {/* Search Input */}
-          <div className="relative md:col-span-2">
+          <div className="relative sm:col-span-2 md:col-span-3 lg:col-span-2">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -532,7 +582,7 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
               onChange={(e) => setSectionFilter(e.target.value as any)}
               className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1455D9] bg-white cursor-pointer"
             >
-              <option value="ALL">All Sections (A/B/C/D)</option>
+              <option value="ALL">All Sections (A-D)</option>
               <option value="A">Section A</option>
               <option value="B">Section B</option>
               <option value="C">Section C</option>
@@ -540,7 +590,7 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
             </select>
           </div>
 
-          {/* Category Filter */}
+          {/* Event Category Filter */}
           <div>
             <select
               value={categoryFilter}
@@ -548,15 +598,77 @@ export function AdminODProofsView({ initialProofs, adminName }: Props) {
               className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1455D9] bg-white cursor-pointer"
             >
               <option value="ALL">All Event Categories</option>
-              <option value="hackathon">Hackathon</option>
-              <option value="symposium">Symposium</option>
-              <option value="workshop">Workshop</option>
-              <option value="paper presentation">Paper Presentation</option>
-              <option value="sports">Sports</option>
-              <option value="internship">Internship</option>
+              {distinctCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  Category: {cat}
+                </option>
+              ))}
             </select>
           </div>
+
+          {/* Proof Status / Assets Filter */}
+          <div>
+            <select
+              value={proofStatusFilter}
+              onChange={(e) => setProofStatusFilter(e.target.value as any)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1455D9] bg-white cursor-pointer"
+            >
+              <option value="ALL">All Proof Statuses</option>
+              <option value="WITH_GEOTAG">With Geotagged Photo</option>
+              <option value="WITH_CERT">With Certificate Document</option>
+              <option value="COMPLETE">Complete Dossier (Both)</option>
+              <option value="MISSING_GEO">Missing Geotag Photo</option>
+              <option value="MISSING_CERT">Missing Certificate Document</option>
+            </select>
+          </div>
+
+          {/* Class Advisor Filter */}
+          {distinctAdvisors.length > 0 && (
+            <div>
+              <select
+                value={advisorFilter}
+                onChange={(e) => setAdvisorFilter(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#1455D9] bg-white cursor-pointer"
+              >
+                <option value="ALL">All Class Advisors</option>
+                {distinctAdvisors.map((adv) => (
+                  <option key={adv} value={adv}>
+                    Advisor: {adv}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
+
+        {/* Active Filter Indicators & Reset Button */}
+        {(yearFilter !== 'ALL' ||
+          sectionFilter !== 'ALL' ||
+          advisorFilter !== 'ALL' ||
+          categoryFilter !== 'ALL' ||
+          proofStatusFilter !== 'ALL' ||
+          searchQuery) && (
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+            <span className="text-slate-400 font-medium text-[11px] flex items-center gap-1.5">
+              <Filter className="w-3 h-3 text-[#1455D9]" />
+              Filters applied — Showing {filteredProofs.length} of {proofs.length} records
+            </span>
+            <button
+              onClick={() => {
+                setYearFilter('ALL')
+                setSectionFilter('ALL')
+                setAdvisorFilter('ALL')
+                setCategoryFilter('ALL')
+                setProofStatusFilter('ALL')
+                setSearchQuery('')
+              }}
+              className="text-xs text-rose-600 font-bold hover:underline cursor-pointer flex items-center gap-1"
+            >
+              <X className="w-3.5 h-3.5" />
+              Reset All Filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Content Area: Tracking Cards */}

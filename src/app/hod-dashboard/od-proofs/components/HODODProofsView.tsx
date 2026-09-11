@@ -80,10 +80,12 @@ interface Props {
 
 export function HODODProofsView({ initialProofs, hodName }: Props) {
   const [proofs, setProofs] = useState<ODProofItem[]>(initialProofs)
-  const [activeTab, setActiveTab] = useState<'ALL' | 'ADVISOR_APPROVED' | 'AWAITING_ADVISOR' | 'SANCTIONED' | 'INCOMPLETE'>('ALL')
-  const [yearFilter, setYearFilter] = useState<'ALL' | '2' | '3' | '4'>('ALL')
+  const [activeTab, setActiveTab] = useState<'ALL' | 'ADVISOR_APPROVED' | 'AWAITING_ADVISOR' | 'SANCTIONED' | 'RESUBMIT' | 'INCOMPLETE'>('ALL')
+  const [yearFilter, setYearFilter] = useState<'ALL' | '1' | '2' | '3' | '4'>('ALL')
   const [sectionFilter, setSectionFilter] = useState<'ALL' | 'A' | 'B' | 'C' | 'D'>('ALL')
   const [advisorFilter, setAdvisorFilter] = useState<string>('ALL')
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL')
+  const [proofStatusFilter, setProofStatusFilter] = useState<'ALL' | 'WITH_GEOTAG' | 'WITH_CERT' | 'COMPLETE' | 'MISSING_GEO' | 'MISSING_CERT'>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedProof, setSelectedProof] = useState<ODProofItem | null>(null)
   const [hodRemarks, setHodRemarks] = useState('')
@@ -96,8 +98,20 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
     const advisorApproved = proofs.filter((p) => p.status === 'advisor_approved').length
     const awaitingAdvisor = proofs.filter((p) => p.status === 'under_review' && p.geoPhotoUrl && p.certificateUrl).length
     const sanctioned = proofs.filter((p) => p.status === 'verified').length
+    const resubmitRequested = proofs.filter((p) => p.status === 'resubmit_requested').length
     const incomplete = proofs.filter((p) => !p.geoPhotoUrl || !p.certificateUrl).length
-    return { total, advisorApproved, awaitingAdvisor, sanctioned, incomplete }
+    const withGeotag = proofs.filter((p) => Boolean(p.geoPhotoUrl)).length
+    const withCertificate = proofs.filter((p) => Boolean(p.certificateUrl)).length
+    return {
+      total,
+      advisorApproved,
+      awaitingAdvisor,
+      sanctioned,
+      resubmitRequested,
+      incomplete,
+      withGeotag,
+      withCertificate,
+    }
   }, [proofs])
 
   // Distinct list of advisors for filtering
@@ -110,6 +124,28 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
     return Array.from(names)
   }, [proofs])
 
+  // Distinct list of event categories
+  const distinctCategories = useMemo(() => {
+    const defaultCategories = [
+      'Hackathon',
+      'Symposium',
+      'Workshop',
+      'Paper Presentation',
+      'Project Contest',
+      'Sports',
+      'Internship',
+      'Industrial Visit',
+      'General OD',
+    ]
+    const set = new Set<string>(defaultCategories)
+    proofs.forEach((p) => {
+      if (p.category && p.category.trim()) {
+        set.add(p.category.trim())
+      }
+    })
+    return Array.from(set)
+  }, [proofs])
+
   // Filtered proofs list
   const filteredProofs = useMemo(() => {
     return proofs.filter((p) => {
@@ -120,15 +156,27 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
         if (p.status !== 'under_review' || !p.geoPhotoUrl || !p.certificateUrl) return false
       } else if (activeTab === 'SANCTIONED') {
         if (p.status !== 'verified') return false
+      } else if (activeTab === 'RESUBMIT') {
+        if (p.status !== 'resubmit_requested') return false
       } else if (activeTab === 'INCOMPLETE') {
         if (p.geoPhotoUrl && p.certificateUrl) return false
       }
 
       // Year filter
-      if (yearFilter !== 'ALL' && p.year !== Number(yearFilter)) return false
+      if (yearFilter !== 'ALL' && String(p.year) !== yearFilter) return false
 
       // Section filter
-      if (sectionFilter !== 'ALL' && p.section.toUpperCase() !== sectionFilter) return false
+      if (sectionFilter !== 'ALL' && (p.section || '').toUpperCase() !== sectionFilter) return false
+
+      // Category filter
+      if (categoryFilter !== 'ALL' && (p.category || '').toLowerCase() !== categoryFilter.toLowerCase()) return false
+
+      // Proof Status filter
+      if (proofStatusFilter === 'WITH_GEOTAG' && !p.geoPhotoUrl) return false
+      if (proofStatusFilter === 'WITH_CERT' && !p.certificateUrl) return false
+      if (proofStatusFilter === 'COMPLETE' && (!p.geoPhotoUrl || !p.certificateUrl)) return false
+      if (proofStatusFilter === 'MISSING_GEO' && Boolean(p.geoPhotoUrl)) return false
+      if (proofStatusFilter === 'MISSING_CERT' && Boolean(p.certificateUrl)) return false
 
       // Advisor filter
       if (advisorFilter !== 'ALL') {
@@ -141,17 +189,18 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
       // Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchName = p.studentName.toLowerCase().includes(q)
-        const matchReg = p.registerNumber.toLowerCase().includes(q)
-        const matchEvent = p.eventName.toLowerCase().includes(q)
-        const matchCollege = p.venueCollege?.toLowerCase().includes(q) || false
-        const matchAdvisor = p.assignedAdvisor?.toLowerCase().includes(q) || false
-        if (!matchName && !matchReg && !matchEvent && !matchCollege && !matchAdvisor) return false
+        const matchName = (p.studentName || '').toLowerCase().includes(q)
+        const matchReg = (p.registerNumber || '').toLowerCase().includes(q)
+        const matchEvent = (p.eventName || '').toLowerCase().includes(q)
+        const matchCollege = (p.venueCollege || '').toLowerCase().includes(q)
+        const matchAdvisor = (p.assignedAdvisor || '').toLowerCase().includes(q)
+        const matchCategory = (p.category || '').toLowerCase().includes(q)
+        if (!matchName && !matchReg && !matchEvent && !matchCollege && !matchAdvisor && !matchCategory) return false
       }
 
       return true
     })
-  }, [proofs, activeTab, yearFilter, sectionFilter, advisorFilter, searchQuery])
+  }, [proofs, activeTab, yearFilter, sectionFilter, categoryFilter, proofStatusFilter, advisorFilter, searchQuery])
 
   // Open Full Details & Inspection Modal
   const openInspectModal = (p: ODProofItem) => {
@@ -380,10 +429,10 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
       </div>
 
       {/* Control Bar: Filters & Search */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-3">
+      <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs space-y-3.5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Status Tabs */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
+          <div className="flex flex-wrap items-center gap-1.5 bg-gray-100 p-1 rounded-xl overflow-x-auto">
             <button
               onClick={() => setActiveTab('ALL')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
@@ -426,6 +475,17 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
               Officially Credited ({metrics.sanctioned})
             </button>
             <button
+              onClick={() => setActiveTab('RESUBMIT')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1 ${
+                activeTab === 'RESUBMIT'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'text-rose-700 hover:bg-rose-50'
+              }`}
+            >
+              <AlertTriangle className="w-3 h-3" />
+              Clarification ({metrics.resubmitRequested})
+            </button>
+            <button
               onClick={() => setActiveTab('INCOMPLETE')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                 activeTab === 'INCOMPLETE' ? 'bg-gray-800 text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
@@ -445,30 +505,41 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
               placeholder="Search student, reg no, event, advisor..."
               className="w-full pl-9 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Dropdown Filters Strip */}
-        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-gray-100 text-xs">
-          <span className="text-gray-400 font-bold flex items-center gap-1 text-[11px]">
-            <Filter className="w-3 h-3" /> Filters:
+        {/* Dropdown Filters Grid */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-2.5 border-t border-gray-100 text-xs">
+          <span className="text-gray-400 font-bold flex items-center gap-1 text-[11px] mr-1">
+            <Filter className="w-3.5 h-3.5 text-[#1455D9]" /> Filters:
           </span>
 
+          {/* Year Filter */}
           <select
             value={yearFilter}
             onChange={(e: any) => setYearFilter(e.target.value)}
-            className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg font-bold text-gray-700 text-xs cursor-pointer focus:outline-none"
+            className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-semibold text-gray-700 text-xs cursor-pointer focus:outline-none focus:border-[#1455D9]"
           >
             <option value="ALL">All Academic Years</option>
-            <option value="2">II Year (2024-2028)</option>
-            <option value="3">III Year (2023-2027)</option>
-            <option value="4">IV Year (2022-2026)</option>
+            <option value="1">I Year (Batch 2025)</option>
+            <option value="2">II Year (Batch 2024)</option>
+            <option value="3">III Year (Batch 2023)</option>
+            <option value="4">IV Year (Batch 2022)</option>
           </select>
 
+          {/* Section Filter */}
           <select
             value={sectionFilter}
             onChange={(e: any) => setSectionFilter(e.target.value)}
-            className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg font-bold text-gray-700 text-xs cursor-pointer focus:outline-none"
+            className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-semibold text-gray-700 text-xs cursor-pointer focus:outline-none focus:border-[#1455D9]"
           >
             <option value="ALL">All Sections (A-D)</option>
             <option value="A">Section A</option>
@@ -477,11 +548,40 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
             <option value="D">Section D</option>
           </select>
 
+          {/* Event Category Filter */}
+          <select
+            value={categoryFilter}
+            onChange={(e: any) => setCategoryFilter(e.target.value)}
+            className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-semibold text-gray-700 text-xs cursor-pointer focus:outline-none focus:border-[#1455D9]"
+          >
+            <option value="ALL">All Event Categories</option>
+            {distinctCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                Category: {cat}
+              </option>
+            ))}
+          </select>
+
+          {/* Proof Status / Assets Filter */}
+          <select
+            value={proofStatusFilter}
+            onChange={(e: any) => setProofStatusFilter(e.target.value)}
+            className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-semibold text-gray-700 text-xs cursor-pointer focus:outline-none focus:border-[#1455D9]"
+          >
+            <option value="ALL">All Proof Statuses</option>
+            <option value="WITH_GEOTAG">With Geotagged Photo</option>
+            <option value="WITH_CERT">With Certificate Document</option>
+            <option value="COMPLETE">Complete Dossier (Both Geo &amp; Cert)</option>
+            <option value="MISSING_GEO">Missing Geotag Photo</option>
+            <option value="MISSING_CERT">Missing Certificate Document</option>
+          </select>
+
+          {/* Advisor Filter */}
           {distinctAdvisors.length > 0 && (
             <select
               value={advisorFilter}
               onChange={(e: any) => setAdvisorFilter(e.target.value)}
-              className="px-2.5 py-1 bg-gray-50 border border-gray-200 rounded-lg font-bold text-gray-700 text-xs cursor-pointer focus:outline-none"
+              className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg font-semibold text-gray-700 text-xs cursor-pointer focus:outline-none focus:border-[#1455D9]"
             >
               <option value="ALL">All Class Advisors</option>
               {distinctAdvisors.map((adv) => (
@@ -492,17 +592,26 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
             </select>
           )}
 
-          {(yearFilter !== 'ALL' || sectionFilter !== 'ALL' || advisorFilter !== 'ALL' || searchQuery) && (
+          {/* Clear / Reset Filter Button */}
+          {(yearFilter !== 'ALL' ||
+            sectionFilter !== 'ALL' ||
+            advisorFilter !== 'ALL' ||
+            categoryFilter !== 'ALL' ||
+            proofStatusFilter !== 'ALL' ||
+            searchQuery) && (
             <button
               onClick={() => {
                 setYearFilter('ALL')
                 setSectionFilter('ALL')
                 setAdvisorFilter('ALL')
+                setCategoryFilter('ALL')
+                setProofStatusFilter('ALL')
                 setSearchQuery('')
               }}
-              className="text-xs text-rose-600 font-bold hover:underline cursor-pointer ml-auto"
+              className="text-xs text-rose-600 font-bold hover:underline cursor-pointer ml-auto flex items-center gap-1"
             >
-              Reset Filters
+              <X className="w-3 h-3" />
+              Reset All Filters
             </button>
           )}
         </div>

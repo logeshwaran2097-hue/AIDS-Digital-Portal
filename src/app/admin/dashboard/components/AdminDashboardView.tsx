@@ -128,7 +128,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
     { title: 'Digital Resources', count: stats.resourceCount, href: '/admin/resources', icon: <Database className="w-5 h-5" />, color: 'bg-emerald-600', desc: 'E-books, standard textbooks & lecture packs' },
     { title: 'Question Papers Bank', count: stats.questionPaperCount, href: '/admin/question-papers', icon: <FileQuestion className="w-5 h-5" />, color: 'bg-cyan-600', desc: 'IAT-1, IAT-2 & Anna University past papers' },
     { title: 'Capstone Projects', count: stats.projectCount, href: '/admin/projects', icon: <FolderOpen className="w-5 h-5" />, color: 'bg-blue-600', desc: 'Capstone research teams & prototypes' },
-    { title: 'OD & Proofs Tracking', count: stats.odProofCount ?? 0, href: '/admin/od-proofs', icon: <ShieldCheck className="w-5 h-5" />, color: 'bg-emerald-600', desc: 'Inspect geotags, certificates & credit OD' },
+    { title: 'OD & Event Proofs', count: stats.odProofCount ?? 0, href: '/admin/od-proofs', icon: <ShieldCheck className="w-5 h-5" />, color: 'bg-emerald-600', desc: 'Inspect geotags, certificates & credit OD' },
     { title: 'Events & Symposiums', count: stats.eventCount, href: '/admin/events', icon: <CalendarDays className="w-5 h-5" />, color: 'bg-fuchsia-600', desc: 'National Hackathons & technical workshops' },
     { title: 'Circulars & Notices', count: stats.announcementCount, href: '/admin/announcements', icon: <Megaphone className="w-5 h-5" />, color: 'bg-orange-600', desc: 'Broadcast notices to students & staff' },
     { title: 'System Activity Logs', count: 'Audit Log', href: '/admin/activity-logs', icon: <Activity className="w-5 h-5" />, color: 'bg-slate-700', desc: 'Real-time security logins & CRUD events' },

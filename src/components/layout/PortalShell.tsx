@@ -62,7 +62,7 @@ const adminNav = [
   { name: 'Study Resources', href: '/admin/resources' },
   { name: 'Question Papers', href: '/admin/question-papers' },
   { name: 'Projects', href: '/admin/projects' },
-  { name: 'OD & Proofs Tracking', href: '/admin/od-proofs' },
+  { name: 'OD & Event Proofs', href: '/admin/od-proofs' },
   { name: 'Events', href: '/admin/events' },
   { name: 'Announcements', href: '/admin/announcements' },
   { name: 'Achievements', href: '/admin/achievements' },
