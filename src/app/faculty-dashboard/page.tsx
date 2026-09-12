@@ -122,6 +122,7 @@ export default async function FacultyDashboardPage() {
       name: user.name || session.name || 'Faculty Member',
       email: user.email || session.email || 'faculty@vsb.edu.in',
       phone: user.phone || '',
+      profileImage: (user as any)?.profileImage || null,
       mustChangePassword: Boolean((user as any)?.mustChangePassword),
     },
     faculty: faculty
@@ -132,11 +133,14 @@ export default async function FacultyDashboardPage() {
           experience: faculty.experience ?? 0,
           specialization: faculty.specialization || '',
           subjects: faculty.subjects || '[]',
+          subjectName: faculty.subjectName || null,
           advisorBatch: faculty.advisorBatch || null,
           advisorYear: faculty.advisorYear || null,
           advisorSem: faculty.advisorSem || null,
           advisorSec: faculty.advisorSec || null,
           facultyType: faculty.facultyType || 'teaching',
+          dateOfBirth: faculty.dateOfBirth ? faculty.dateOfBirth.toISOString() : null,
+          classPeriod: faculty.classPeriod || null,
         }
       : null,
     totalStudents,

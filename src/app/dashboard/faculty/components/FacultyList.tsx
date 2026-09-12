@@ -13,8 +13,9 @@ import {
   UserCheck,
   BookMarked,
   ShieldCheck,
+  Users,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, normalizeIndianPhone } from '@/lib/utils'
 
 interface FacultyDetail {
   id: string
@@ -86,10 +87,11 @@ export default function FacultyList({
   // Two distinct views: 'advisors' (Class Advisors) and 'handlers' (Subject Handlers)
   const [activeTab, setActiveTab] = useState<'advisors' | 'handlers'>('advisors')
   const [searchQuery, setSearchQuery] = useState('')
+  const [showAllAdvisors, setShowAllAdvisors] = useState(false)
 
   const detailByUser = new Map(details.map((d) => [d.userId, d]))
 
-  // Separate list of Class Advisors: Strictly show ONLY the student's assigned class advisor(s)
+  // Separate list of Class Advisors
   const advisorUsers = useMemo(() => {
     return users.filter((u) => {
       const d = detailByUser.get(u.id)
@@ -97,59 +99,68 @@ export default function FacultyList({
 
       let isAdvisorForStudent = false
 
-      // 1. Exact Year and Section match in Faculty record
-      if (student?.year && student?.section) {
-        if (
-          d.advisorYear === student.year &&
-          d.advisorSec?.trim().toUpperCase() === student.section.trim().toUpperCase()
-        ) {
+      if (showAllAdvisors) {
+        if (d.advisorYear || d.advisorBatch || ['advisor', 'both'].includes(d.facultyType || '')) {
           isAdvisorForStudent = true
         }
-      }
-
-      // 2. Advisor Batch text contains the student's year and section
-      if (!isAdvisorForStudent && d.advisorBatch && student?.year && student?.section) {
-        const batch = d.advisorBatch.toLowerCase()
-        const matchYear =
-          batch.includes(`year ${student.year}`) ||
-          batch.includes(`y${student.year}`) ||
-          batch.includes(`yr ${student.year}`)
-        const matchSec =
-          batch.includes(`sec ${student.section.toLowerCase()}`) ||
-          batch.includes(`section ${student.section.toLowerCase()}`) ||
-          batch.includes(`- ${student.section.toLowerCase()}`) ||
-          batch.includes(` ${student.section.toLowerCase()}`)
-        if (matchYear && matchSec) {
-          isAdvisorForStudent = true
+      } else {
+        // 1. Exact Year and Section match in Faculty record
+        if (student?.year && student?.section) {
+          if (
+            d.advisorYear === student.year &&
+            d.advisorSec?.trim().toUpperCase() === student.section.trim().toUpperCase()
+          ) {
+            isAdvisorForStudent = true
+          }
         }
-      }
 
-      // 3. Match against the student's recorded advisorName
-      if (!isAdvisorForStudent && student?.advisorName && student.advisorName.trim()) {
-        const assignedName = student.advisorName.toLowerCase().trim()
-        const facultyName = u.name.toLowerCase().trim()
-        if (facultyName.includes(assignedName) || assignedName.includes(facultyName)) {
-          isAdvisorForStudent = true
+        // 2. Advisor Batch text contains the student's year and section
+        if (!isAdvisorForStudent && d.advisorBatch && student?.year && student?.section) {
+          const batch = d.advisorBatch.toLowerCase()
+          const romanYear = ['', 'i', 'ii', 'iii', 'iv'][student.year] || ''
+          const matchYear =
+            batch.includes(`year ${student.year}`) ||
+            batch.includes(`y${student.year}`) ||
+            batch.includes(`yr ${student.year}`) ||
+            (romanYear && (batch.includes(`year ${romanYear}`) || batch.includes(`${romanYear} year`) || batch.startsWith(`${romanYear} `) || batch.startsWith(`${romanYear}-`)))
+          const matchSec =
+            batch.includes(`sec ${student.section.toLowerCase()}`) ||
+            batch.includes(`section ${student.section.toLowerCase()}`) ||
+            batch.includes(`- ${student.section.toLowerCase()}`) ||
+            batch.includes(`-${student.section.toLowerCase()}`) ||
+            batch.includes(` ${student.section.toLowerCase()}`)
+          if (matchYear && matchSec) {
+            isAdvisorForStudent = true
+          }
         }
-      }
 
-      // 4. Match against ClassAdvisor allocation table
-      if (!isAdvisorForStudent && classAdvisors && classAdvisors.length > 0) {
-        const matchCA = classAdvisors.find((ca) => {
-          const facultyMatch =
-            ca.facultyId === d.facultyId || ca.facultyName.toLowerCase() === u.name.toLowerCase()
-          const classMatch =
-            (!student?.year || ca.year === student.year) &&
-            (!student?.section || ca.section.toUpperCase() === student.section.toUpperCase())
-          return facultyMatch && classMatch
-        })
-        if (matchCA) isAdvisorForStudent = true
-      }
+        // 3. Match against the student's recorded advisorName
+        if (!isAdvisorForStudent && student?.advisorName && student.advisorName.trim()) {
+          const assignedName = student.advisorName.toLowerCase().trim()
+          const facultyName = u.name.toLowerCase().trim()
+          if (facultyName.includes(assignedName) || assignedName.includes(facultyName)) {
+            isAdvisorForStudent = true
+          }
+        }
 
-      // Fallback only if student has no year/section configured: show faculty with explicit advisor status
-      if (!student?.year && !student?.section) {
-        if (d.advisorYear || d.advisorBatch || d.facultyType === 'advisor') {
-          isAdvisorForStudent = true
+        // 4. Match against ClassAdvisor allocation table
+        if (!isAdvisorForStudent && classAdvisors && classAdvisors.length > 0) {
+          const matchCA = classAdvisors.find((ca) => {
+            const facultyMatch =
+              ca.facultyId === d.facultyId || ca.facultyName.toLowerCase() === u.name.toLowerCase()
+            const classMatch =
+              (!student?.year || ca.year === student.year) &&
+              (!student?.section || ca.section.toUpperCase() === student.section.toUpperCase())
+            return facultyMatch && classMatch
+          })
+          if (matchCA) isAdvisorForStudent = true
+        }
+
+        // Fallback only if student has no year/section configured: show faculty with explicit advisor status
+        if (!student?.year && !student?.section) {
+          if (d.advisorYear || d.advisorBatch || ['advisor', 'both'].includes(d.facultyType || '')) {
+            isAdvisorForStudent = true
+          }
         }
       }
 
@@ -162,7 +173,7 @@ export default function FacultyList({
 
       return matchesSearch
     })
-  }, [users, details, student, classAdvisors, searchQuery])
+  }, [users, details, student, classAdvisors, searchQuery, showAllAdvisors])
 
   // Separate list of Subject Handlers: Show course and laboratory subject handlers
   const handlerUsers = useMemo(() => {
@@ -293,15 +304,31 @@ export default function FacultyList({
 
       {/* Faculty Cards Grid */}
       {displayedUsers.length === 0 ? (
-        <EmptyState
-          title={`No ${activeTab === 'advisors' ? 'Class Advisors' : 'Subject Handlers'} found`}
-          description={
-            activeTab === 'advisors'
-              ? 'No assigned class advisor matches your current enrolled class / section.'
-              : 'Try adjusting your search query or check back once department allocations are finalized.'
-          }
-          icon="👨‍🏫"
-        />
+        <div className="space-y-4">
+          <EmptyState
+            title={`No ${activeTab === 'advisors' ? 'Class Advisors' : 'Subject Handlers'} found`}
+            description={
+              activeTab === 'advisors'
+                ? (showAllAdvisors
+                    ? 'No faculty members currently match your search query.'
+                    : `No assigned class advisor matches your current enrolled class / section (Year ${student?.year || 2} · Sec ${student?.section || 'B'}).`)
+                : 'Try adjusting your search query or check back once department allocations are finalized.'
+            }
+            icon="👨‍🏫"
+          />
+          {activeTab === 'advisors' && !showAllAdvisors && (
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={() => setShowAllAdvisors(true)}
+                className="px-5 py-2.5 rounded-2xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black shadow-md transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                <Users className="w-4 h-4" />
+                <span>View All Department Class Advisors</span>
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
           {displayedUsers.map((u, idx) => {
@@ -461,14 +488,14 @@ export default function FacultyList({
                           {activeTab === 'advisors' ? 'Advisor WhatsApp' : 'Faculty WhatsApp'}
                         </span>
                         <span className="font-mono font-black text-xs text-[#071A3D] truncate block">
-                          {u.phone ? `+91 ${u.phone}` : '+91 94432 46001'}
+                          +91 {normalizeIndianPhone(u.phone)}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center shrink-0">
                       <a
-                        href={`https://wa.me/91${(u.phone || '9443246001').replace(/\D/g, '')}?text=Hello%20Prof.%20${encodeURIComponent(
+                        href={`https://wa.me/91${normalizeIndianPhone(u.phone)}?text=Hello%20Prof.%20${encodeURIComponent(
                           u.name
                         )},%20I%20am%20${encodeURIComponent(
                           student?.registerNumber || 'Student'

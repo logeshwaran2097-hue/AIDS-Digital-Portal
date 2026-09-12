@@ -346,7 +346,7 @@ export default function LoginPage() {
         hod: '/hod-dashboard',
       }
       const targetUrl = (isAdvisor && selectedRole !== 'student')
-        ? '/faculty-dashboard/attendance?mode=morning&role=advisor'
+        ? (data.user?.mustChangePassword ? '/faculty-dashboard' : '/faculty-dashboard/attendance?mode=morning&role=advisor')
         : dashboardMap[selectedRole] || '/dashboard'
 
       setSuccessDestination(targetUrl)

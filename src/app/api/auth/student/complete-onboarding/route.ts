@@ -175,6 +175,41 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
 
+    // Check if new email is already in use by another user
+    if (normalizedEmail && session.email && normalizedEmail !== session.email.toLowerCase()) {
+      const existingUserWithEmail = await prisma.user.findUnique({ where: { email: normalizedEmail } }).catch(() => null)
+      if (existingUserWithEmail && existingUserWithEmail.id !== session.userId) {
+        const [linkedStudent, linkedFaculty, linkedHod, linkedAdmin] = await Promise.all([
+          prisma.student.findUnique({ where: { userId: existingUserWithEmail.id } }).catch(() => null),
+          prisma.faculty.findUnique({ where: { userId: existingUserWithEmail.id } }).catch(() => null),
+          prisma.hOD.findUnique({ where: { userId: existingUserWithEmail.id } }).catch(() => null),
+          prisma.admin.findUnique({ where: { userId: existingUserWithEmail.id } }).catch(() => null),
+        ])
+
+        const isSameStudent = Boolean(linkedStudent && session.registerNumber && linkedStudent.registerNumber.toUpperCase() === session.registerNumber.toUpperCase())
+        const isOrphan = !linkedStudent && !linkedFaculty && !linkedHod && !linkedAdmin
+
+        if (isSameStudent || isOrphan) {
+          try {
+            await prisma.user.update({
+              where: { id: existingUserWithEmail.id },
+              data: { email: `released_${Date.now()}_${existingUserWithEmail.email}` }
+            })
+            if (isOrphan) {
+              await prisma.user.delete({ where: { id: existingUserWithEmail.id } }).catch(() => {})
+            }
+          } catch (cleanErr) {
+            console.warn('Could not release duplicate student email record:', cleanErr)
+          }
+        } else {
+          return NextResponse.json(
+            { success: false, message: `The email address ${normalizedEmail} is already registered to another user account. Please use your unique personal or official email.` },
+            { status: 400 }
+          )
+        }
+      }
+    }
+
     const userUpdateData: any = {
       name: name ? name.trim() : session.name,
       email: normalizedEmail,
@@ -191,10 +226,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Update User
-    let updatedUser = await prisma.user.update({
-      where: { id: session.userId },
-      data: userUpdateData,
-    }).catch(() => null)
+    let updatedUser
+    try {
+      updatedUser = await prisma.user.update({
+        where: { id: session.userId },
+        data: userUpdateData,
+      })
+    } catch {
+      // If collided on email, release colliding unlinked user if possible and retry
+      try {
+        const collider = await prisma.user.findUnique({ where: { email: normalizedEmail } }).catch(() => null)
+        if (collider && collider.id !== session.userId) {
+          await prisma.user.update({
+            where: { id: collider.id },
+            data: { email: `conflicted_${Date.now()}_${collider.email}` }
+          }).catch(() => {})
+        }
+        updatedUser = await prisma.user.update({
+          where: { id: session.userId },
+          data: userUpdateData,
+        })
+      } catch {
+        // Fallback without email change if still restricted
+        const { email: _, ...restData } = userUpdateData
+        updatedUser = await prisma.user.update({
+          where: { id: session.userId },
+          data: restData,
+        }).catch(() => null)
+      }
+    }
 
     if (!updatedUser && session.registerNumber) {
       const studentRec = await prisma.student.findFirst({

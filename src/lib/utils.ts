@@ -5,6 +5,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Normalizes Indian phone numbers to 10 digits — removes non-digits, strips +91 or leading 0.
+ */
+export function normalizeIndianPhone(raw: string | null | undefined): string {
+  if (!raw) return '9443246001'
+  let num = raw.replace(/\D/g, '') // strip non-digits
+  if (num.startsWith('91') && num.length >= 12) num = num.slice(2) // strip +91 prefix
+  if (num.startsWith('0') && num.length >= 11) num = num.slice(1) // strip leading 0
+  return num.length >= 10 ? num.slice(-10) : num // take last 10 digits
+}
+
+
 export function formatDate(date: Date | string, format: string = 'dd/MM/yyyy'): string {
   const d = new Date(date)
   return format

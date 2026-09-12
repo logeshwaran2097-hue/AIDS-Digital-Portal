@@ -65,18 +65,43 @@ export function StaffOnboardingModal({
   const [loading, setLoading] = useState(false)
   const [step3Confirmed, setStep3Confirmed] = useState(false)
 
-  // Form State: Only prefilled if explicitly set by admin; otherwise completely empty!
+  let initDay = ''
+  let initMonth = ''
+  let initYear = ''
+  if (initialData.dateOfBirth && !initialData.dateOfBirth.startsWith('1990-01-01')) {
+    const parts = initialData.dateOfBirth.split('T')[0].split('-')
+    if (parts.length === 3) {
+      initYear = parts[0]
+      initMonth = parts[1]
+      initDay = parts[2]
+    }
+  }
+
+  const [dobDay, setDobDay] = useState(initDay)
+  const [dobMonth, setDobMonth] = useState(initMonth)
+  const [dobYear, setDobYear] = useState(initYear)
+
+  const initialEmail =
+    initialData.email &&
+    !initialData.email.toLowerCase().endsWith('@vsb.edu.in') &&
+    !initialData.email.toLowerCase().includes('mock')
+      ? initialData.email.trim()
+      : initialData.email && initialData.email.includes('@') && !initialData.email.toLowerCase().includes('mock')
+      ? initialData.email.trim()
+      : ''
+
+  // Form State
   const [form, setForm] = useState({
     name: initialData.name || '',
     phone: initialData.phone || '',
-    dateOfBirth: (initialData.dateOfBirth && !initialData.dateOfBirth.startsWith('1990-01-01')) ? initialData.dateOfBirth.split('T')[0] : '',
+    dateOfBirth: initYear && initMonth && initDay ? `${initYear}-${initMonth}-${initDay}` : '',
     cabin: '',
     specialization: initialData.specialization || '',
     qualification: initialData.qualification || '',
     experience: initialData.experience ? String(initialData.experience) : '',
     detailsConfirmed: true,
     profileImage: initialData.profileImage || '',
-    email: '', // REMOVE FIELD DATA: Never prefill email so user types their own email
+    email: initialEmail,
     newPassword: '',
     confirmPassword: '',
     emailOtp: '',
@@ -100,19 +125,48 @@ export function StaffOnboardingModal({
   const [correctionSubmitting, setCorrectionSubmitting] = useState(false)
   const [correctionSubmitted, setCorrectionSubmitted] = useState(false)
 
-  // Sync initialData changes (only update if admin fields are populated)
+  // Sync initialData changes
   useEffect(() => {
+    let day = ''
+    let month = ''
+    let year = ''
+    if (initialData.dateOfBirth && !initialData.dateOfBirth.startsWith('1990-01-01')) {
+      const parts = initialData.dateOfBirth.split('T')[0].split('-')
+      if (parts.length === 3) {
+        year = parts[0]
+        month = parts[1]
+        day = parts[2]
+        setDobDay(day)
+        setDobMonth(month)
+        setDobYear(year)
+      }
+    }
     setForm((prev) => ({
       ...prev,
+      name: initialData.name || prev.name,
       phone: initialData.phone || prev.phone,
-      dateOfBirth: initialData.dateOfBirth && !initialData.dateOfBirth.startsWith('1990-01-01') ? initialData.dateOfBirth.split('T')[0] : prev.dateOfBirth,
+      dateOfBirth: year && month && day ? `${year}-${month}-${day}` : prev.dateOfBirth,
       specialization: initialData.specialization || prev.specialization,
       qualification: initialData.qualification || prev.qualification,
       experience: initialData.experience ? String(initialData.experience) : prev.experience,
       profileImage: initialData.profileImage || prev.profileImage,
-      // Note: email is NEVER overwritten with initialData.email so it remains empty for fresh user entry!
+      email: prev.email || (initialData.email && !initialData.email.toLowerCase().includes('mock') ? initialData.email.trim() : ''),
     }))
   }, [initialData])
+
+  const handleDobChange = (newDay: string, newMonth: string, newYear: string) => {
+    setDobDay(newDay)
+    setDobMonth(newMonth)
+    setDobYear(newYear)
+    if (newDay && newMonth && newYear) {
+      setForm((prev) => ({
+        ...prev,
+        dateOfBirth: `${newYear}-${newMonth.padStart(2, '0')}-${newDay.padStart(2, '0')}`,
+      }))
+    } else {
+      setForm((prev) => ({ ...prev, dateOfBirth: '' }))
+    }
+  }
 
   // Cooldown countdown timer
   useEffect(() => {
@@ -233,34 +287,49 @@ export function StaffOnboardingModal({
   if (!isOpen) return null
 
   // Determine mentorship / course allocation string
-  let allocationLabel = 'Department Allocation'
-  let allocationValue = 'Artificial Intelligence & Data Science'
-  if (role === 'advisor') {
-    allocationLabel = 'ASSIGNED MENTORSHIP BATCH'
-    allocationValue =
-      initialData.advisorBatch ||
-      (initialData.advisorYear && initialData.advisorSec
-        ? `Year ${initialData.advisorYear} · Sem ${initialData.advisorSem || 3} · Sec ${initialData.advisorSec}`
-        : 'Year II · Sem 3 · Sec A')
-  } else if (role === 'hod') {
-    allocationLabel = 'DEPARTMENT HEADSHIP'
-    allocationValue = 'Head of Department · AI & DS'
-  } else {
-    allocationLabel = 'ALLOCATED COURSES / LABS'
+  const isAdvisorRole = role === 'advisor' || Boolean(initialData.advisorBatch || (initialData.advisorYear && initialData.advisorSec))
+  const advisorBatchText =
+    initialData.advisorBatch ||
+    (initialData.advisorYear && initialData.advisorSec
+      ? `Year ${initialData.advisorYear} · Sem ${initialData.advisorSem || 3} · Sec ${initialData.advisorSec}`
+      : isAdvisorRole ? 'Year II · Sem 3 · Sec B' : null)
+
+  let parsedSubjectsText = ''
+  if (initialData.subjects && initialData.subjects !== '[]' && initialData.subjects !== '""') {
     try {
-      const subs = JSON.parse(initialData.subjects || '[]')
-      allocationValue = subs.length > 0 ? subs.join(', ') : 'Assigned Departmental Courses'
+      const subs = JSON.parse(initialData.subjects)
+      parsedSubjectsText = Array.isArray(subs) && subs.length > 0 ? subs.join(', ') : initialData.subjects
     } catch {
-      allocationValue = initialData.subjects || 'Assigned Departmental Courses'
+      parsedSubjectsText = initialData.subjects
     }
   }
 
+  let allocationLabel = 'DEPARTMENT ALLOCATION'
+  let allocationValue = 'Artificial Intelligence & Data Science'
+  if (role === 'hod') {
+    allocationLabel = 'DEPARTMENT HEADSHIP'
+    allocationValue = 'Head of Department · AI & DS'
+  } else if (isAdvisorRole && parsedSubjectsText) {
+    allocationLabel = 'MENTORSHIP BATCH & ALLOCATED COURSES'
+    allocationValue = `${advisorBatchText || 'Class Advisor'} · ${parsedSubjectsText}`
+  } else if (isAdvisorRole) {
+    allocationLabel = 'ASSIGNED MENTORSHIP BATCH'
+    allocationValue = advisorBatchText || 'Class Advisor · AI & DS'
+  } else {
+    allocationLabel = 'ALLOCATED COURSES / LABS'
+    allocationValue = parsedSubjectsText || 'Assigned Departmental Courses'
+  }
 
   // STEP 1 -> STEP 2: Proceed to Security Step
   const handleProceedToSecurityStep = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.phone.trim()) {
-      toast.error('Please enter your direct mobile / WhatsApp number.')
+    const cleanPhone = form.phone.replace(/\D/g, '')
+    if (!cleanPhone || cleanPhone.length < 10) {
+      toast.error('Please enter a valid 10-digit direct mobile / WhatsApp number.')
+      return
+    }
+    if (!dobDay || !dobMonth || !dobYear) {
+      toast.error('Please select your complete Date of Birth (Day, Month, Year).')
       return
     }
     if (!form.detailsConfirmed) {
@@ -287,7 +356,7 @@ export function StaffOnboardingModal({
           name: form.name || initialData.name,
           facultyId: initialData.facultyId,
           role,
-          subjectName: initialData.subjects || '',
+          subjectName: parsedSubjectsText || initialData.subjects || '',
           department: initialData.department || 'B.Tech Artificial Intelligence & Data Science',
           advisorYear: initialData.advisorYear,
           advisorSem: initialData.advisorSem,
@@ -344,7 +413,11 @@ export function StaffOnboardingModal({
       return
     }
     if (otpError) {
-      toast.error('Please enter a valid OTP code.')
+      toast.error(otpError || 'Please enter a valid OTP code.')
+      return
+    }
+    if (!otpVerified) {
+      toast.error('Please verify the 6-digit email OTP before proceeding.')
       return
     }
 
@@ -372,6 +445,10 @@ export function StaffOnboardingModal({
         specialization: form.specialization || '',
         experience: Number(form.experience) || initialData.experience || 0,
         classPeriod: form.cabin || '',
+        advisorBatch: initialData.advisorBatch || undefined,
+        advisorYear: initialData.advisorYear || undefined,
+        advisorSem: initialData.advisorSem || undefined,
+        advisorSec: initialData.advisorSec || undefined,
         role,
         newPassword: form.newPassword.trim(),
         emailOtp: form.emailOtp.trim(),
@@ -394,7 +471,7 @@ export function StaffOnboardingModal({
         }
         toast.success('Account fully verified & Password saved! Welcome to the portal.')
         setTimeout(() => {
-          onComplete(data.user || {})
+          onComplete(data.user || payload)
         }, 600)
       } else {
         toast.error(data.message || 'Invalid or expired OTP. Please try again.')
@@ -465,6 +542,16 @@ export function StaffOnboardingModal({
                 ? 'CLASS ADVISOR VERIFICATION & SECURITY SETUP'
                 : 'FACULTY APPOINTMENT VERIFICATION & SECURITY SETUP'}
             </span>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                title="Dismiss modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
@@ -568,13 +655,32 @@ export function StaffOnboardingModal({
                 </div>
 
                 {/* Assigned Batch / Allocated Subjects */}
-                <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between sm:col-span-2">
-                  <div className="min-w-0 flex-1 pr-2">
-                    <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">{allocationLabel}</span>
-                    <span className="font-bold text-xs text-[#1557C0] truncate block">{allocationValue}</span>
+                {isAdvisorRole && advisorBatchText && parsedSubjectsText ? (
+                  <>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">ASSIGNED MENTORSHIP BATCH</span>
+                        <span className="font-bold text-xs text-[#1557C0] truncate block">{advisorBatchText}</span>
+                      </div>
+                      <Lock className="w-3 h-3 text-slate-400 shrink-0" />
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">ALLOCATED COURSES / LABS</span>
+                        <span className="font-bold text-xs text-[#1557C0] truncate block">{parsedSubjectsText}</span>
+                      </div>
+                      <Lock className="w-3 h-3 text-slate-400 shrink-0" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between sm:col-span-2">
+                    <div className="min-w-0 flex-1 pr-2">
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">{allocationLabel}</span>
+                      <span className="font-bold text-xs text-[#1557C0] truncate block">{allocationValue}</span>
+                    </div>
+                    <Lock className="w-3 h-3 text-slate-400 shrink-0" />
                   </div>
-                  <Lock className="w-3 h-3 text-slate-400 shrink-0" />
-                </div>
+                )}
 
                 {/* Qualifications & Experience */}
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/80 flex items-center justify-between sm:col-span-2">
@@ -683,9 +789,9 @@ export function StaffOnboardingModal({
                 <div className="sm:col-span-2 pt-1 border-t border-blue-200/50">
                   <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center justify-between">
                     <span>Date of Birth (Day / Month / Year) *</span>
-                    {form.dateOfBirth && form.dateOfBirth.includes('-') && (
+                    {dobDay && dobMonth && dobYear && (
                       <span className="text-[10px] font-bold text-[#1557C0] bg-blue-100/70 px-2 py-0.5 rounded-md">
-                        Selected: {form.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(form.dateOfBirth.split('-')[1], 10)] || form.dateOfBirth.split('-')[1]}-{form.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
+                        Selected: {dobDay}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(dobMonth, 10)] || dobMonth}-{dobYear} (DD-MM-YYYY)
                       </span>
                     )}
                   </label>
@@ -693,13 +799,8 @@ export function StaffOnboardingModal({
                     {/* Day Selector */}
                     <div>
                       <select
-                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[2] || '') : ''}
-                        onChange={(e) => {
-                          const parts = (form.dateOfBirth || '1990-01-01').split('-')
-                          const y = parts[0] || '1990'
-                          const m = parts[1] || '01'
-                          setForm({ ...form, dateOfBirth: `${y}-${m}-${e.target.value.padStart(2, '0')}` })
-                        }}
+                        value={dobDay}
+                        onChange={(e) => handleDobChange(e.target.value, dobMonth, dobYear)}
                         className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                       >
                         <option value="">Day (DD)</option>
@@ -714,13 +815,8 @@ export function StaffOnboardingModal({
                     {/* Month Selector */}
                     <div>
                       <select
-                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[1] || '') : ''}
-                        onChange={(e) => {
-                          const parts = (form.dateOfBirth || '1990-01-01').split('-')
-                          const y = parts[0] || '1990'
-                          const d = parts[2] || '01'
-                          setForm({ ...form, dateOfBirth: `${y}-${e.target.value.padStart(2, '0')}-${d}` })
-                        }}
+                        value={dobMonth}
+                        onChange={(e) => handleDobChange(dobDay, e.target.value, dobYear)}
                         className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                       >
                         <option value="">Month (MM)</option>
@@ -748,13 +844,8 @@ export function StaffOnboardingModal({
                     {/* Year Selector */}
                     <div>
                       <select
-                        value={form.dateOfBirth ? (form.dateOfBirth.split('-')[0] || '') : ''}
-                        onChange={(e) => {
-                          const parts = (form.dateOfBirth || '1990-01-01').split('-')
-                          const m = parts[1] || '01'
-                          const d = parts[2] || '01'
-                          setForm({ ...form, dateOfBirth: `${e.target.value}-${m}-${d}` })
-                        }}
+                        value={dobYear}
+                        onChange={(e) => handleDobChange(dobDay, dobMonth, e.target.value)}
                         className="w-full p-2.5 rounded-xl border border-gray-300 font-medium text-xs text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
                       >
                         <option value="">Year (YYYY)</option>
@@ -1179,7 +1270,11 @@ export function StaffOnboardingModal({
 
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/90">
                   <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">DATE OF BIRTH</span>
-                  <span className="font-bold text-[#071A41]">{form.dateOfBirth || 'Not provided'}</span>
+                  <span className="font-bold text-[#071A41]">
+                    {form.dateOfBirth && form.dateOfBirth.includes('-')
+                      ? `${form.dateOfBirth.split('-')[2]}-${form.dateOfBirth.split('-')[1]}-${form.dateOfBirth.split('-')[0]}`
+                      : form.dateOfBirth || 'Not provided'}
+                  </span>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 sm:col-span-2">

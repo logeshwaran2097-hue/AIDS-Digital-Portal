@@ -51,7 +51,7 @@ export interface TimetableSlotItem {
 }
 
 interface FacultyData {
-  user: { name: string; email: string; phone?: string | null; mustChangePassword?: boolean }
+  user: { name: string; email: string; phone?: string | null; profileImage?: string | null; mustChangePassword?: boolean }
   faculty: {
     facultyId: string
     designation: string
@@ -65,6 +65,8 @@ interface FacultyData {
     advisorSem?: number | null
     advisorSec?: string | null
     facultyType?: string
+    dateOfBirth?: string | null
+    classPeriod?: string | null
   } | null
   totalStudents: number
   totalSubjects: number
@@ -82,7 +84,8 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
 
   const isClassAdvisor =
     data.faculty?.facultyType === 'advisor' ||
-    data.faculty?.facultyType === 'both'
+    data.faculty?.facultyType === 'both' ||
+    Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec))
 
   const quickNav = useMemo(() => [
     { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
@@ -147,8 +150,11 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           advisorBatch: data.faculty?.advisorBatch || null,
           advisorYear: data.faculty?.advisorYear || null,
           advisorSem: data.faculty?.advisorSem || null,
+          advisorSec: data.faculty?.advisorSec || null,
           subjects: data.faculty?.subjectName || (data.assignedSubjects && data.assignedSubjects.length > 0 ? data.assignedSubjects.map(s => s.name).join(', ') : (data.faculty?.subjects && data.faculty.subjects !== '[]' ? data.faculty.subjects : 'Artificial Intelligence & Data Science')),
           department: 'B.Tech Artificial Intelligence & Data Science',
+          dateOfBirth: data.faculty?.dateOfBirth || '',
+          profileImage: data.user?.profileImage || '',
         }}
         onComplete={(updated) => {
           setIsOnboardingOpen(false)
@@ -158,6 +164,12 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           }
           if (updated?.name) {
             data.user.name = updated.name
+          }
+          if (updated?.email) {
+            data.user.email = updated.email
+          }
+          if (updated?.phone) {
+            data.user.phone = updated.phone
           }
         }}
       />
