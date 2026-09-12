@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils'
 import { AdvisorODReviewModal } from '@/components/od/AdvisorODReviewModal'
 import { DossierPopupModal } from '@/components/od/DossierPopupModal'
 import { ApplyODPermissionModal } from '@/app/dashboard/attendance/components/ApplyODPermissionModal'
+import { ParentWhatsAppButton } from '@/components/od/ParentWhatsAppButton'
 
 export interface TrackedApplication {
   id: string
@@ -894,33 +895,15 @@ export function ODApplicationsDashboardView({
                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
                         Parent Contact &amp; Verification
                       </span>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {/* Call button */}
-                        <a
-                          href={`tel:+91${normalizeIndianPhone(app.parentPhone)}`}
-                          className="px-2.5 py-1.5 rounded-xl bg-white border border-gray-200 text-gray-800 text-xs font-bold hover:bg-gray-100 flex items-center gap-1.5 shadow-2xs transition-all"
-                        >
-                          <Phone className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{normalizeIndianPhone(app.parentPhone)}</span>
-                        </a>
-                        {/* WhatsApp button */}
-                        <a
-                          href={`https://wa.me/91${normalizeIndianPhone(app.parentPhone)}?text=${encodeURIComponent(
-                            `Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave request for "${app.eventName}".`
-                          )}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            const num = normalizeIndianPhone(app.parentPhone)
-                            const msg = encodeURIComponent(`Dear Parent, This is from V.S.B. Engineering College regarding your ward ${app.studentName}'s OD/Leave request for "${app.eventName}".`)
-                            window.open(`https://wa.me/91${num}?text=${msg}`, '_blank')
-                          }}
-                          className="px-2.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition-all"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>WhatsApp</span>
-                        </a>
+                      <div>
+                        <ParentWhatsAppButton
+                          parentPhone={app.parentPhone}
+                          studentName={app.studentName}
+                          registerNumber={app.registerNumber}
+                          eventName={app.eventName}
+                          size="sm"
+                          allowEdit={true}
+                        />
                       </div>
                     </div>
                   </div>

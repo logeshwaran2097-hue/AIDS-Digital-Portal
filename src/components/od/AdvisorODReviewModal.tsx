@@ -43,6 +43,7 @@ import {
 import { toast } from '@/components/ui/Toast'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
+import { ParentWhatsAppButton } from '@/components/od/ParentWhatsAppButton'
 
 export interface ODNotificationData {
   id: string
@@ -523,45 +524,22 @@ export function AdvisorODReviewModal({
             </div>
 
             {/* Quick Parent Contact Bar */}
-            <div className="mt-4 pt-3 border-t border-gray-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="mt-4 pt-3 border-t border-gray-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2 text-gray-700">
                 <Phone className="w-3.5 h-3.5 text-[#1455D9]" />
-                <span className="font-semibold">Parent Contact:</span>
-                <span className="font-mono font-bold text-[#071A3D]">{normalizeIndianPhone(effectiveParentPhone)}</span>
+                <span className="font-semibold">Parent Contact &amp; WhatsApp:</span>
               </div>
-              <div className="flex items-center gap-2 print:hidden">
-                <a
-                  href={`tel:+91${normalizeIndianPhone(effectiveParentPhone)}`}
-                  className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold text-[11px] flex items-center gap-1 transition-colors"
-                >
-                  <Phone className="w-3 h-3 text-emerald-600" /> Call Parent
-                </a>
-                <a
-                  href={`https://wa.me/91${normalizeIndianPhone(effectiveParentPhone)}?text=${encodeURIComponent(
-                    `Dear Parent, regarding the OD/Leave application submitted by ${
-                      studentDetails?.name || parsed.studentName
-                    } (${studentDetails?.registerNumber || parsed.registerNumber}) for ${
-                      parsed.eventName
-                    } from ${parsed.fromDate} to ${parsed.toDate}. Please verify with Class Advisor.`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    const num = normalizeIndianPhone(effectiveParentPhone)
-                    const msg = encodeURIComponent(
-                      `Dear Parent, regarding the OD/Leave application submitted by ${
-                        studentDetails?.name || parsed.studentName
-                      } (${studentDetails?.registerNumber || parsed.registerNumber}) for ${
-                        parsed.eventName
-                      } from ${parsed.fromDate} to ${parsed.toDate}. Please verify with Class Advisor.`
-                    )
-                    window.open(`https://wa.me/91${num}?text=${msg}`, '_blank')
-                  }}
-                  className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-2xs transition-colors"
-                >
-                  <MessageCircle className="w-3 h-3" /> WhatsApp
-                </a>
+              <div className="print:hidden">
+                <ParentWhatsAppButton
+                  parentPhone={effectiveParentPhone}
+                  studentName={studentDetails?.name || parsed.studentName}
+                  registerNumber={studentDetails?.registerNumber || parsed.registerNumber}
+                  eventName={parsed.eventName}
+                  fromDate={parsed.fromDate}
+                  toDate={parsed.toDate}
+                  size="sm"
+                  allowEdit={true}
+                />
               </div>
             </div>
           </div>
