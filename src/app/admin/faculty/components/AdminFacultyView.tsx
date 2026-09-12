@@ -57,7 +57,9 @@ import {
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
-import { cn } from '@/lib/utils'
+import { cn, formatNameWithDegree, toggleDegreeInString } from '@/lib/utils'
+
+const COMMON_DEGREES = ['Ph.D.', 'M.E.', 'M.Tech.', 'M.S.', 'B.E.', 'B.Tech.', 'M.Sc.', 'MCA', 'MBA', 'Post-Doc']
 
 export interface LabItem {
   id: string
@@ -845,11 +847,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         computedFacultyType = 'subject_handler'
       }
 
+      const formattedName = formatNameWithDegree(formData.name.trim(), formData.qualification)
+
       const res = await fetch('/api/faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          name: formattedName,
           password: formData.password.trim(),
           experience: Number(formData.experience) || 1,
           subjects: finalSubjects,
@@ -942,11 +947,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         computedFacultyType = 'subject_handler'
       }
 
+      const formattedName = formatNameWithDegree(formData.name.trim(), formData.qualification)
+
       const res = await fetch('/api/faculty', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          name: formattedName,
           password: formData.password?.trim() || undefined,
           facultyId: selectedFaculty.facultyId,
           experience: Number(formData.experience) || 1,
@@ -972,7 +980,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             f.facultyId === selectedFaculty.facultyId
               ? {
                   ...f,
-                  name: formData.name,
+                  name: formattedName,
                   email: formData.email,
                   phone: formData.phone,
                   designation: formData.designation,
@@ -1719,7 +1727,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         </div>
                         <div>
                           <span className="font-bold text-[#071A3D] text-sm block">
-                            {advisor.name}
+                            {formatNameWithDegree(advisor.name, advisor.qualification)}
                           </span>
                           <span className="text-[11px] text-gray-500 font-medium">
                             {advisor.designation}
@@ -1915,7 +1923,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           </div>
                           <div>
                             <span className="font-bold text-[#071A3D] text-sm block">
-                              {faculty.name}
+                              {formatNameWithDegree(faculty.name, faculty.qualification)}
                             </span>
                             <span className="text-[11px] text-gray-500 font-medium block">
                               {faculty.designation}
@@ -2130,7 +2138,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           </div>
                           <div>
                             <span className="font-bold text-[#071A3D] text-sm block">
-                              {faculty.name}
+                              {formatNameWithDegree(faculty.name, faculty.qualification)}
                             </span>
                             <span className="text-[11px] text-gray-500 font-medium block">
                               {faculty.designation}
@@ -2251,7 +2259,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-gray-200">
                     <span className="flex items-center gap-1.5 font-bold text-white">
                       <UserCheck className="w-4 h-4 text-[#22C7E8]" />
-                      Advisor: {selectedAdvisorDossier.name}
+                      Advisor: {formatNameWithDegree(selectedAdvisorDossier.name, selectedAdvisorDossier.qualification)}
                     </span>
                     <span className="flex items-center gap-1.5">
                       <Mail className="w-3.5 h-3.5 text-[#22C7E8]" />
@@ -2584,6 +2592,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
                 />
+                {formData.name.trim() && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#1455D9]" />
+                      Formatted Name (Degree will show at back):
+                    </span>
+                    <span className="font-bold text-[#071A3D] font-mono">
+                      {formatNameWithDegree(formData.name, formData.qualification)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -2622,7 +2641,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Designation</label>
                   <select
@@ -2638,16 +2657,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Qualification</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. M.E., Ph.D."
-                    value={formData.qualification}
-                    onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
-                  />
-                </div>
-                <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Experience (Yrs)</label>
                   <input
                     type="number"
@@ -2657,6 +2666,52 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
+              </div>
+
+              {/* Individual Degree Entry Section */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/50 to-slate-50 border border-blue-100/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D]">
+                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Degree(s) / Qualification</span>
+                  </label>
+                  <span className="text-[11px] text-gray-500 font-medium">Click to toggle or type any degree</span>
+                </div>
+
+                {/* Common Degree Pills */}
+                <div className="flex flex-wrap gap-1.5">
+                  {COMMON_DEGREES.map((deg) => {
+                    const currentList = (formData.qualification || '').split(',').map((d) => d.trim().toLowerCase())
+                    const isSelected = currentList.includes(deg.toLowerCase())
+                    return (
+                      <button
+                        key={deg}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, qualification: toggleDegreeInString(formData.qualification, deg) })}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
+                          isSelected
+                            ? "bg-[#1455D9] text-white border-[#1455D9] shadow-xs"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                        )}
+                      >
+                        {isSelected ? `✓ ${deg}` : `+ ${deg}`}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Individual / Custom Degree Input */}
+                <input
+                  type="text"
+                  placeholder="Enter any degree individually (e.g. Ph.D., M.E., M.Tech. or any custom degree)"
+                  value={formData.qualification}
+                  onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all text-xs"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Any degree entered here will automatically be attached to the back of their name across the portal.
+                </p>
               </div>
 
               <div>
@@ -3272,7 +3327,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
 
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
+                <label className="block font-bold text-[#071A3D] mb-1">Full Name with Title *</label>
                 <input
                   type="text"
                   required
@@ -3281,6 +3336,17 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#071A3D]"
                 />
+                {formData.name.trim() && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#1455D9]" />
+                      Formatted Name (Degree will show at back):
+                    </span>
+                    <span className="font-bold text-[#071A3D] font-mono">
+                      {formatNameWithDegree(formData.name, formData.qualification)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -3339,7 +3405,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Designation</label>
                   <select
@@ -3355,16 +3421,6 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Qualification</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. M.E., Ph.D."
-                    value={formData.qualification}
-                    onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200"
-                  />
-                </div>
-                <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Experience (Yrs)</label>
                   <input
                     type="number"
@@ -3374,6 +3430,52 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     className="w-full p-2.5 rounded-xl border border-gray-200"
                   />
                 </div>
+              </div>
+
+              {/* Individual Degree Entry Section */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/50 to-slate-50 border border-blue-100/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D]">
+                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Degree(s) / Qualification</span>
+                  </label>
+                  <span className="text-[11px] text-gray-500 font-medium">Click to toggle or type any degree</span>
+                </div>
+
+                {/* Common Degree Pills */}
+                <div className="flex flex-wrap gap-1.5">
+                  {COMMON_DEGREES.map((deg) => {
+                    const currentList = (formData.qualification || '').split(',').map((d) => d.trim().toLowerCase())
+                    const isSelected = currentList.includes(deg.toLowerCase())
+                    return (
+                      <button
+                        key={deg}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, qualification: toggleDegreeInString(formData.qualification, deg) })}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
+                          isSelected
+                            ? "bg-[#1455D9] text-white border-[#1455D9] shadow-xs"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                        )}
+                      >
+                        {isSelected ? `✓ ${deg}` : `+ ${deg}`}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Individual / Custom Degree Input */}
+                <input
+                  type="text"
+                  placeholder="Enter any degree individually (e.g. Ph.D., M.E., M.Tech. or any custom degree)"
+                  value={formData.qualification}
+                  onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all text-xs"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Any degree entered here will automatically be attached to the back of their name across the portal.
+                </p>
               </div>
 
               <div>

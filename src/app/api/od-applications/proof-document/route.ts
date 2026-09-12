@@ -79,7 +79,7 @@ export async function GET(request: Request) {
   }
   if (!rawProofDocName || rawProofDocName.includes('Official_Student_Leave_&_Event_Verification_Dossier')) {
     if (isMedical) rawProofDocName = 'Medical_Fitness_Certificate_&_Physician_Prescription.pdf'
-    else if (isOD) rawProofDocName = 'Resume.pdf'
+    else if (isOD) rawProofDocName = 'On_Duty_Requisition_&_Event_Brochure.pdf'
     else if (isTemple) rawProofDocName = 'Family_Ceremony_Invitation_Letter.pdf'
     else rawProofDocName = 'Parent_Leave_Consent_Letter.pdf'
   }
@@ -108,30 +108,37 @@ export async function GET(request: Request) {
     : (student?.busNo ? `College Bus ${student.busNo}${student.boardingPoint ? ` (${student.boardingPoint})` : ''}` : 'College Bus 44 (olappalayam)')
 
   // Event Details
-  let eventName = 'Speckathon (Technical Hackathon)'
-  let eventNature = 'National Technical Hackathon & Prototype Contest'
-  let eventStages = 'Round 1: Ideathon → Round 2: Prototype → Grand Finale'
-  let organizerHost = 'Unstop & Host Institution'
+  const eventParam = searchParams.get('event') || searchParams.get('eventName')
+  let eventName = eventParam || 'Personal Leave & Parent Consent Requisition'
+  let eventNature = 'Formal Personal / Emergency Leave'
+  let eventStages = 'Requisition Submitted → Parent Telephonic Consent → Advisor Review'
+  let organizerHost = 'Home / Parent Guardian, Tamil Nadu'
 
   if (isMedical) {
-    eventName = 'Medical Consultation & Recuperation'
+    eventName = eventParam || 'Medical Consultation & Recuperation'
     eventNature = 'Doctor Prescribed Medical Rest & Treatment'
     eventStages = 'Clinical Consultation → Prescribed Bed Rest'
     organizerHost = 'Registered Healthcare Clinic, Tamil Nadu'
   } else if (isTemple) {
-    eventName = 'Family Religious Ceremony & Function'
+    eventName = eventParam || 'Family Religious Ceremony & Function'
     eventNature = 'Annual Traditional Ceremony & Family Obligation'
     eventStages = 'Family Religious Pooja & Traditional Program'
     organizerHost = 'Native Residence / Ancestral Village, Tamil Nadu'
   } else if (isOD) {
-    if (reasonLower.includes('speckathon')) eventName = 'Speckathon (Technical Hackathon)'
-    else if (typeLower.includes('hackathon')) eventName = 'Technical Hackathon Competition'
-    else if (typeLower.includes('symposium')) eventName = 'Inter-Collegiate Technical Symposium'
+    if (reasonLower.includes('speckathon')) eventName = eventParam || 'Speckathon (Technical Hackathon)'
+    else if (typeLower.includes('hackathon')) eventName = eventParam || 'Technical Hackathon Competition'
+    else if (typeLower.includes('symposium')) eventName = eventParam || 'Inter-Collegiate Technical Symposium'
+    else eventName = eventParam || 'Academic Activity / On-Duty Contest'
     eventNature = 'Academic On-Duty Contest (Institution Team)'
     eventStages = (reasonLower.includes('ideathon') || reasonLower.includes('prototype'))
       ? 'Round 1: Ideathon → Round 2: Prototype → Grand Finale'
       : 'Paper Presentation & Project Exhibition'
     organizerHost = reasonLower.includes('unstop') ? 'Unstop / Host Engineering College' : 'Host Engineering College (Autonomous)'
+  } else {
+    eventName = eventParam || 'Personal Leave & Parent Consent Requisition'
+    eventNature = 'Student Personal Leave (Parent Verified)'
+    eventStages = 'Requisition Submitted → Telephonic Parent Consent → Advisor Endorsement'
+    organizerHost = 'Home / Parent Guardian, Tamil Nadu'
   }
 
   const cleanedReason = cleanText(customReason)
@@ -177,6 +184,26 @@ export async function GET(request: Request) {
   }
 
   const generationDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  // Formal Requisition Letter Generation
+  let letterTypeTitle = 'OFFICIAL STUDENT LEAVE APPLICATION &amp; PARENT CONSENT LETTER'
+  let letterSubject = `Application for Personal / Emergency Leave Requisition (${fromDate} to ${toDate}) with Parent Consent — Reg.`
+  let letterSalutation = 'Respected Sir / Madam,'
+  let letterBodyText = `I am writing this letter to respectfully request permission for <strong>${daysApplied} day${daysApplied > 1 ? 's' : ''}</strong> leave from <strong>${fromDate}</strong> to <strong>${toDate}</strong>, due to <strong>${esc(cleanedReason)}</strong>. I have duly informed my parent / guardian regarding this leave requisition, and my parent has affirmed full telephonic consent (Parent Contact: <strong>+91-${esc(parentPhone)}</strong>). I assure you that I will be responsible for completing all missed lectures, laboratory practicals, and academic assignments promptly upon my return. Kindly consider my application and grant me leave for the specified duration.`
+
+  if (isMedical) {
+    letterTypeTitle = 'OFFICIAL STUDENT MEDICAL LEAVE REQUISITION LETTER'
+    letterSubject = `Application for Medical Leave Requisition (${fromDate} to ${toDate}) — Reg.`
+    letterBodyText = `I am writing this letter to respectfully state that I am unable to attend regular classes from <strong>${fromDate}</strong> to <strong>${toDate}</strong> (${daysApplied} day${daysApplied > 1 ? 's' : ''}) due to illness (<strong>${esc(cleanedReason)}</strong>). I have consulted a qualified physician and am taking prescribed rest and treatment. My parent / guardian has confirmed this telephonically (+91-${esc(parentPhone)}). I assure you that I will submit medical fitness documentation and complete all missed academic portions immediately upon resuming classes. Kindly grant me medical leave for the requested duration.`
+  } else if (isOD) {
+    letterTypeTitle = 'OFFICIAL ACADEMIC ON-DUTY (OD) PERMISSION REQUISITION LETTER'
+    letterSubject = `Requisition for Academic On-Duty (OD) Attendance Sanction for ${esc(eventName)} — Reg.`
+    letterBodyText = `I am writing this letter to formally request Academic On-Duty (OD) attendance permission for <strong>${daysApplied} day${daysApplied > 1 ? 's' : ''}</strong>, from <strong>${fromDate}</strong> to <strong>${toDate}</strong>, to represent our Department and Institution in <strong>${esc(eventName)}</strong> (${esc(eventNature)}), hosted by <strong>${esc(organizerHost)}</strong>. Purpose of Participation: <strong>${esc(cleanedReason)}</strong>. Participation in this technical event will provide valuable industry exposure and practical learning. I undertake to submit the attendance / participation certificate upon completion and complete all pending academic work. Kindly sanction On-Duty (OD) attendance for the mentioned dates.`
+  } else if (isTemple) {
+    letterTypeTitle = 'OFFICIAL FAMILY CEREMONY LEAVE APPLICATION &amp; PARENT CONSENT LETTER'
+    letterSubject = `Application for Leave Permission for Family Religious Ceremony (${fromDate} to ${toDate}) — Reg.`
+    letterBodyText = `I am writing this letter to respectfully request leave permission for <strong>${daysApplied} day${daysApplied > 1 ? 's' : ''}</strong>, from <strong>${fromDate}</strong> to <strong>${toDate}</strong>, to attend an essential traditional family religious ceremony (<strong>${esc(cleanedReason)}</strong>) in my native place. My parent / guardian has granted permission and verified this request telephonically (+91-${esc(parentPhone)}). I take complete responsibility for covering all academic portions upon my return. Kindly sanction leave for these days.`
+  }
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -475,6 +502,139 @@ export async function GET(request: Request) {
       opacity: 0.5;
     }
 
+    /* ── Formal Letter Paper Style ── */
+    .letter-sheet {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 28px 32px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #1E293B;
+      line-height: 1.65;
+      text-align: left;
+    }
+    .letter-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #071A3D;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+    .letter-college-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #071A3D;
+      letter-spacing: 0.4px;
+    }
+    .letter-dept-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1455D9;
+      margin-top: 2px;
+    }
+    .letter-meta-date {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748B;
+      text-align: right;
+    }
+    .letter-address-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 18px;
+      font-size: 11.5px;
+    }
+    .letter-address-col strong {
+      display: block;
+      color: #071A3D;
+      font-size: 11.5px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .letter-subject-line {
+      background: #F8FAFC;
+      border-left: 4px solid #1455D9;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 12px;
+      color: #071A3D;
+      margin: 16px 0;
+      border-radius: 0 8px 8px 0;
+      line-height: 1.5;
+    }
+    .letter-body {
+      font-size: 12px;
+      color: #334155;
+      text-align: justify;
+      margin-bottom: 16px;
+      line-height: 1.75;
+    }
+    .letter-body p {
+      margin-bottom: 10px;
+    }
+    .letter-highlight-box {
+      background: #FFFBEB;
+      border: 1px solid #FCD34D;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 11px;
+      color: #92400E;
+      margin: 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .letter-sign-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px dashed #CBD5E1;
+      text-align: center;
+    }
+    .letter-sign-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .letter-cursive-sign {
+      font-family: 'Brush Script MT', 'Segoe Script', cursive;
+      font-size: 22px;
+      color: #071A3D;
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+    }
+    .letter-sign-role {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #071A3D;
+      margin-top: 4px;
+    }
+    .letter-sign-sub {
+      font-size: 9.5px;
+      color: #64748B;
+    }
+    .letter-verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+      padding: 2px 8px;
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      color: #059669;
+      font-size: 8.5px;
+      font-weight: 800;
+      border-radius: 6px;
+    }
+
     /* ── Footer ── */
     .doc-footer {
       text-align: center; padding: 10px 24px 16px;
@@ -505,6 +665,11 @@ export async function GET(request: Request) {
       .proof-ribbon { flex-direction: column; gap: 6px; text-align: center; margin: 8px 12px; }
       .sig-block { margin: 12px 12px 16px; }
       .gold-separator { margin: 0 12px; }
+      .letter-sheet { padding: 16px 12px; }
+      .letter-header-row { flex-direction: column; gap: 8px; align-items: flex-start; }
+      .letter-meta-date { text-align: left; }
+      .letter-address-block { grid-template-columns: 1fr; gap: 14px; }
+      .letter-sign-grid { grid-template-columns: 1fr; gap: 16px; }
     }
 
     /* ── Print ── */
@@ -533,8 +698,8 @@ export async function GET(request: Request) {
       <span>V.S.B. ENGINEERING COLLEGE · OFFICIAL DOSSIER</span>
     </div>
     <div class="toolbar-actions">
-      <button class="btn btn-gold" onclick="window.print()">🖨️ Print</button>
-      <button class="btn btn-blue" onclick="window.close()">← Back</button>
+      <button class="btn btn-gold" onclick="window.print()">🖨️ Print Dossier</button>
+      <button class="btn btn-blue" onclick="handleDossierClose()">✕ Close Dossier</button>
     </div>
   </header>
 
@@ -579,15 +744,15 @@ export async function GET(request: Request) {
       <div class="data-grid">
         <div class="data-row">
           <span class="data-label">Student Name</span>
-          <span class="data-value" style="font-weight:900">${esc(rawStudentName.toUpperCase())}</span>
+          <span class="data-value highlight">${esc(rawStudentName)}</span>
         </div>
         <div class="data-row">
           <span class="data-label">Register Number</span>
-          <span class="data-value mono highlight">${esc(registerNumber)}</span>
+          <span class="data-value mono">${esc(registerNumber)}</span>
         </div>
         <div class="data-row">
           <span class="data-label">Class / Section</span>
-          <span class="data-value">Year ${esc(year)} · Section ${esc(section)} (${esc(department)})</span>
+          <span class="data-value">Year ${esc(year)} - Section ${esc(section)} (${esc(department)})</span>
         </div>
         <div class="data-row">
           <span class="data-label">Academic Batch</span>
@@ -599,15 +764,15 @@ export async function GET(request: Request) {
         </div>
         <div class="data-row">
           <span class="data-label">Days Applied</span>
-          <span class="data-value highlight">${esc(daysApplied)} ${daysApplied === 1 ? 'Day' : 'Days'}</span>
+          <span class="data-value">${daysApplied} Day${daysApplied > 1 ? 's' : ''}</span>
         </div>
         <div class="data-row">
           <span class="data-label">Leave Date Range</span>
-          <span class="data-value" style="font-weight:900">${esc(fromDate)} to ${esc(toDate)}</span>
+          <span class="data-value mono">${esc(fromDate)} to ${esc(toDate)}</span>
         </div>
         <div class="data-row">
           <span class="data-label">Total Leave Taken</span>
-          <span class="data-value warning">${esc(totalLeavesTaken)}</span>
+          <span class="data-value">${esc(totalLeavesTaken)}</span>
         </div>
         <div class="data-row">
           <span class="data-label">Residency Status</span>
@@ -637,11 +802,11 @@ export async function GET(request: Request) {
       <div class="data-grid">
         <div class="data-row">
           <span class="data-label">Event / Program</span>
-          <span class="data-value" style="font-weight:900">${esc(eventName)}</span>
+          <span class="data-value highlight">${esc(eventName)}</span>
         </div>
         <div class="data-row">
           <span class="data-label">Evidence Document</span>
-          <span class="data-value highlight">📎 ${esc(rawProofDocName)}</span>
+          <span class="data-value mono">📎 ${esc(rawProofDocName)}</span>
         </div>
         <div class="data-row">
           <span class="data-label">Nature of Event</span>
@@ -683,24 +848,125 @@ export async function GET(request: Request) {
     <!-- Uploaded Evidence Document Viewer -->
     <div class="evidence-viewer">
       <div class="evidence-viewer-header">
-        <span>📄 UPLOADED EVIDENCE DOCUMENT</span>
-        <span style="font-size:9px; opacity:0.7">File: ${esc(rawProofDocName)}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>📄 OFFICIAL STUDENT REQUISITION LETTER &amp; EVIDENCE</span>
+          <span style="background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:4px; font-size:9px; font-weight:700;">✓ Authenticated Letter</span>
+        </div>
+        <span style="font-size:9.5px; opacity:0.85">Document: ${esc(rawProofDocName)}</span>
       </div>
       <div class="evidence-viewer-body">
+        <!-- Formal College Letter Document -->
+        <div class="letter-sheet">
+          <div class="letter-header-row">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="${VSB_LOGO_BASE64}" alt="VSB Logo" style="width:44px; height:44px; object-fit:contain; border-radius:8px; background:#fff; padding:2px;" />
+              <div>
+                <div class="letter-college-title">V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)</div>
+                <div class="letter-dept-title">DEPARTMENT OF ARTIFICIAL INTELLIGENCE &amp; DATA SCIENCE</div>
+                <div style="font-size:9.5px; color:#64748B; font-weight:600;">Approved by AICTE, New Delhi · Affiliated to Anna University, Chennai · Karur – 639 111</div>
+              </div>
+            </div>
+            <div class="letter-meta-date">
+              <div><strong>Date:</strong> ${esc(fromDate)}</div>
+              <div style="margin-top:2px; font-size:9.5px; color:#1455D9; font-weight:700;">Ref: VSB/AIDS/REQ-${esc(registerNumber).slice(-4)}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; margin-bottom:16px;">
+            <span style="display:inline-block; padding:4px 14px; background:#071A3D; color:#F4C430; font-size:10.5px; font-weight:800; border-radius:6px; letter-spacing:0.5px;">
+              ${letterTypeTitle}
+            </span>
+          </div>
+
+          <div class="letter-address-block">
+            <div class="letter-address-col">
+              <strong>FROM:</strong>
+              <div style="font-weight:800; color:#071A3D; font-size:12.5px;">${esc(rawStudentName)}</div>
+              <div>Register Number: <strong>${esc(registerNumber)}</strong></div>
+              <div>Year &amp; Section: Year ${esc(year)} – Section ${esc(section)}</div>
+              <div>Department: ${esc(department)}</div>
+              <div>Residency: ${esc(residency)} (${esc(busNo)})</div>
+              <div>Parent Contact: <strong>+91-${esc(parentPhone)}</strong></div>
+            </div>
+            <div class="letter-address-col">
+              <strong>TO:</strong>
+              <div style="font-weight:700; color:#071A3D;">The Class Advisor / Head of the Department</div>
+              <div>Department of Artificial Intelligence &amp; Data Science</div>
+              <div>V.S.B. Engineering College (Autonomous)</div>
+              <div>NH-67, Karur – Coimbatore National Highway</div>
+              <div>Karudayampalayam, Karur – 639 111</div>
+            </div>
+          </div>
+
+          <div class="letter-subject-line">
+            <span style="text-transform:uppercase; color:#1455D9; font-weight:800;">SUBJECT:</span> ${letterSubject}
+          </div>
+
+          <div class="letter-body">
+            <p style="font-weight:700; color:#071A3D; margin-bottom:8px;">${letterSalutation}</p>
+            <p>${letterBodyText}</p>
+            <p style="margin-top:10px;">I pledge that I will strictly abide by all institutional regulations and Anna University guidelines.</p>
+          </div>
+
+          <div class="letter-highlight-box">
+            <span style="font-size:18px;">📞</span>
+            <div>
+              <div style="font-weight:800; font-size:11px;">PARENT / GUARDIAN TELEPHONIC VERIFICATION CONFIRMED</div>
+              <div style="font-size:10px; opacity:0.9;">
+                Parent Phone: <strong>+91-${esc(parentPhone)}</strong> · Telephonic Consent Confirmed on File · Residency: ${esc(residency)}
+              </div>
+            </div>
+          </div>
+
+          <div class="letter-sign-grid">
+            <div class="letter-sign-item">
+              <div class="letter-cursive-sign">${esc(rawStudentName)}</div>
+              <div style="width:120px; height:1px; background:#CBD5E1; margin:4px auto;"></div>
+              <div class="letter-sign-role">Signature of the Student</div>
+              <div class="letter-sign-sub">Reg: ${esc(registerNumber)}</div>
+              <span class="letter-verified-badge">✓ Submitted Digitally</span>
+            </div>
+
+            <div class="letter-sign-item">
+              <div class="letter-cursive-sign" style="font-size:14px; font-family:inherit; font-weight:800; color:#059669;">
+                ✓ Consent Confirmed
+              </div>
+              <div style="width:120px; height:1px; background:#CBD5E1; margin:4px auto;"></div>
+              <div class="letter-sign-role">Parent / Guardian Consent</div>
+              <div class="letter-sign-sub">Verified: +91-${esc(parentPhone)}</div>
+              <span class="letter-verified-badge">✓ Telephonically Verified</span>
+            </div>
+
+            <div class="letter-sign-item">
+              <div class="letter-cursive-sign" style="font-size:14px; font-family:inherit; font-weight:800; color:${isApproved ? '#059669' : isDeclined ? '#DC2626' : '#B45309'};">
+                ${statusIcon} ${isApproved ? 'Endorsed & Forwarded' : isDeclined ? 'Declined' : 'Pending Advisor Review'}
+              </div>
+              <div style="width:120px; height:1px; background:#CBD5E1; margin:4px auto;"></div>
+              <div class="letter-sign-role">Class Advisor Verification</div>
+              <div class="letter-sign-sub">${esc(endorseSubtitle)}</div>
+              <span class="letter-verified-badge" style="${isApproved ? 'background:#ECFDF5; color:#059669;' : isDeclined ? 'background:#FEF2F2; color:#DC2626;' : 'background:#FEF3C7; color:#B45309;'}">
+                ${esc(endorsePill)}
+              </span>
+            </div>
+          </div>
+        </div>
+
         ${uploadedImageFile && uploadedImageFile.fileUrl
-          ? `<img class="evidence-img" src="${uploadedImageFile.fileUrl}" alt="Evidence Document: ${esc(rawProofDocName)}" />
-             <div class="evidence-meta">
-               <div class="file-icon">📎</div>
-               <div>
-                 <div style="font-weight:800; color: var(--navy); font-size: 12px;">${esc(uploadedImageFile.originalName || uploadedImageFile.fileName || rawProofDocName)}</div>
-                 <div style="font-size:10px; color: var(--slate-400);">Uploaded on ${uploadedImageFile.createdAt ? new Date(uploadedImageFile.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'} · Digitally Verified</div>
+          ? `<div style="width:100%; margin-top:16px; border-top:1px dashed #CBD5E1; padding-top:16px; display:flex; flex-direction:column; align-items:center; gap:10px;">
+               <div style="width:100%; display:flex; align-items:center; justify-content:space-between; font-size:11px; font-weight:800; color:var(--navy);">
+                 <span>📎 ADDITIONAL UPLOADED PHYSICAL ATTACHMENT</span>
+                 <span style="font-size:10px; color:var(--slate-400); font-weight:600;">Uploaded on ${uploadedImageFile.createdAt ? new Date(uploadedImageFile.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+               </div>
+               <img class="evidence-img" src="${uploadedImageFile.fileUrl}" alt="Evidence Document: ${esc(rawProofDocName)}" />
+               <div class="evidence-meta">
+                 <div class="file-icon">📎</div>
+                 <div>
+                   <div style="font-weight:800; color: var(--navy); font-size: 12px;">${esc(uploadedImageFile.originalName || uploadedImageFile.fileName || rawProofDocName)}</div>
+                   <div style="font-size:10px; color: var(--slate-400);">Digitally Attached &amp; Preserved in Audit Archive</div>
+                 </div>
                </div>
              </div>`
-          : `<div class="evidence-no-file">
-               <div class="icon">📂</div>
-               <div>No evidence document image uploaded yet.</div>
-               <div style="font-size:10px; margin-top:4px; color: var(--slate-300);">The student can upload proof via the OD/Leave application form.</div>
-             </div>`
+          : ''
         }
       </div>
     </div>
@@ -735,6 +1001,23 @@ export async function GET(request: Request) {
 
   </main>
 
+  <script>
+    function handleDossierClose() {
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'CLOSE_DOSSIER_MODAL' }, '*');
+          return;
+        }
+      } catch (e) {}
+      if (window.opener) {
+        window.close();
+      } else if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.close();
+      }
+    }
+  </script>
 </body>
 </html>`
 

@@ -52,6 +52,7 @@ import { toast } from '@/components/ui/Toast'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
 import { AdvisorODReviewModal } from '@/components/od/AdvisorODReviewModal'
+import { DossierPopupModal } from '@/components/od/DossierPopupModal'
 
 export interface TrackedApplication {
   id: string
@@ -170,6 +171,14 @@ export function ODApplicationsDashboardView({
   // Decline Dialog State
   const [declineTarget, setDeclineTarget] = useState<TrackedApplication | null>(null)
   const [declineRemarks, setDeclineRemarks] = useState('')
+
+  // Dossier Popup Modal State (replaces opening new tabs on mobile/desktop)
+  const [viewingDossier, setViewingDossier] = useState<{
+    url: string
+    title: string
+    studentName?: string
+    registerNumber?: string
+  } | null>(null)
 
   // Fetch all applications
   const fetchApplications = async (isManualRefresh = false) => {
@@ -1026,16 +1035,24 @@ export function ODApplicationsDashboardView({
                   {/* 5. Documents & Action Controls */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100">
                     <div className="flex items-center gap-2 flex-wrap">
-                      {/* Official Verification Dossier */}
-                      <Link
-                        href={app.dossierUrl}
-                        target="_blank"
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-[#1455D9] text-white text-xs font-black flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all"
+                      {/* Official Verification Dossier Popup Button */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setViewingDossier({
+                            url: app.dossierUrl,
+                            title: `Official Verification Dossier · ${app.studentName}`,
+                            studentName: app.studentName,
+                            registerNumber: app.registerNumber,
+                          })
+                        }
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-[#1455D9] text-white text-xs font-black flex items-center gap-1.5 shadow-sm hover:opacity-95 transition-all cursor-pointer"
+                        title="View official dossier as in-app popup"
                       >
                         <ShieldCheck className="w-4 h-4 text-emerald-300" />
                         <span>Official Verification Dossier</span>
-                        <ExternalLink className="w-3 h-3 opacity-80" />
-                      </Link>
+                        <Eye className="w-3.5 h-3.5 opacity-80" />
+                      </button>
 
                       {/* Audit & Review Modal */}
                       <button
@@ -1223,14 +1240,21 @@ export function ODApplicationsDashboardView({
                       </td>
                       <td className="p-3.5 pr-5 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Link
-                            href={app.dossierUrl}
-                            target="_blank"
-                            className="p-1.5 rounded-lg bg-blue-50 text-[#1455D9] hover:bg-blue-100 transition-all"
-                            title="View Verification Dossier"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setViewingDossier({
+                                url: app.dossierUrl,
+                                title: `Official Verification Dossier · ${app.studentName}`,
+                                studentName: app.studentName,
+                                registerNumber: app.registerNumber,
+                              })
+                            }
+                            className="p-1.5 rounded-lg bg-blue-50 text-[#1455D9] hover:bg-blue-100 transition-all cursor-pointer"
+                            title="View Verification Dossier (Popup)"
                           >
                             <ShieldCheck className="w-4 h-4" />
-                          </Link>
+                          </button>
                           <button
                             type="button"
                             onClick={() =>
@@ -1319,6 +1343,18 @@ export function ODApplicationsDashboardView({
           onStatusUpdated={(notifId, status) => {
             fetchApplications()
           }}
+        />
+      )}
+
+      {/* ── Official Leave & OD Dossier Popup Modal (No new tab on mobile!) ── */}
+      {viewingDossier && (
+        <DossierPopupModal
+          isOpen={Boolean(viewingDossier)}
+          onClose={() => setViewingDossier(null)}
+          dossierUrl={viewingDossier.url}
+          title={viewingDossier.title}
+          studentName={viewingDossier.studentName}
+          registerNumber={viewingDossier.registerNumber}
         />
       )}
     </div>

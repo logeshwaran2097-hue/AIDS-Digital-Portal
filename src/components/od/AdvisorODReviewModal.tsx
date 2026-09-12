@@ -726,12 +726,16 @@ export function AdvisorODReviewModal({
                   }
                   className="relative rounded-xl border border-blue-100 overflow-hidden bg-white cursor-pointer group hover:border-[#1455D9] transition-all"
                 >
-                  <div className="h-24 w-full overflow-hidden flex items-center justify-center bg-slate-50 relative">
-                    <img
-                      src={buildDossierUrl()}
-                      alt="Official Leave Dossier Preview"
-                      className="w-full object-cover object-top opacity-90 group-hover:opacity-100 transition-opacity"
-                    />
+                  <div className="h-24 w-full overflow-hidden flex items-center justify-center bg-gradient-to-r from-[#071A3D] via-[#1455D9] to-[#071A3D] relative">
+                    <div className="flex items-center gap-3 text-white px-4">
+                      <div className="w-10 h-10 rounded-xl bg-[#F4C430] text-[#071A3D] flex items-center justify-center font-black shrink-0 shadow-sm">
+                        <ShieldCheck className="w-5 h-5 text-[#071A3D]" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-black text-xs text-white">Official Student Leave Requisition Dossier</div>
+                        <div className="text-[10px] text-blue-200">Anna Univ R2021 Compliant · Digitally Signed Letter &amp; Evidence</div>
+                      </div>
+                    </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-between p-2.5">
                       <span className="text-white text-[11px] font-bold flex items-center gap-1 drop-shadow-sm">
                         <ZoomIn className="w-3.5 h-3.5 text-[#F4C430]" /> Click to inspect high-resolution verification dossier
@@ -988,10 +992,13 @@ export function AdvisorODReviewModal({
             <div className="flex-1 overflow-auto p-3 sm:p-5 bg-slate-100/90 flex items-center justify-center min-h-[380px]">
               <div className="max-w-full max-h-full bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-300 p-2 sm:p-4 flex items-center justify-center">
                 {selectedPreviewFile.url.endsWith('.pdf') ||
-                selectedPreviewFile.url.startsWith('data:application/pdf') ? (
+                selectedPreviewFile.url.startsWith('data:application/pdf') ||
+                selectedPreviewFile.url.includes('proof-document') ||
+                selectedPreviewFile.url.includes('/api/od-applications') ||
+                selectedPreviewFile.type?.includes('html') ? (
                   <iframe
                     src={selectedPreviewFile.url}
-                    className="w-full h-[76vh] min-w-[300px] sm:min-w-[650px] rounded-xl border-0 shadow-xs bg-white"
+                    className="w-full h-[76vh] min-w-[300px] sm:min-w-[750px] rounded-xl border-0 shadow-xs bg-white"
                     title={selectedPreviewFile.title}
                   />
                 ) : (

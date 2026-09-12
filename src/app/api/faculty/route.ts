@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
-import { parseSafeDateOfBirth } from '@/lib/utils'
+import { parseSafeDateOfBirth, formatNameWithDegree } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
             id: f.id,
             userId: f.userId,
             facultyId: f.facultyId,
-            name: u?.name || 'Faculty Member',
+            name: formatNameWithDegree(u?.name || 'Faculty Member', f.qualification),
             email: displayEmail,
             phone: u?.phone || '',
             designation: f.designation,
@@ -141,9 +141,11 @@ export async function POST(request: Request) {
       newPasswordHash = await bcrypt.hash('TempPass@2026', 10)
     }
 
+    const finalName = formatNameWithDegree(name.trim(), qualification)
+
     // User update data
     const userUpdateData: any = {
-      name: name.trim(),
+      name: finalName,
       phone: phone || null,
       role: 'faculty',
       status: status || 'active',
@@ -159,7 +161,7 @@ export async function POST(request: Request) {
       update: userUpdateData,
       create: {
         email: institutionalEmail,
-        name: name.trim(),
+        name: finalName,
         phone: phone || null,
         role: 'faculty',
         status: status || 'active',

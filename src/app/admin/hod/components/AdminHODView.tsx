@@ -29,7 +29,9 @@ import {
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
-import { cn } from '@/lib/utils'
+import { cn, formatNameWithDegree, toggleDegreeInString } from '@/lib/utils'
+
+export const COMMON_DEGREES = ['Ph.D.', 'M.E.', 'M.Tech.', 'M.S.', 'B.E.', 'B.Tech.', 'M.Sc.', 'MCA', 'MBA', 'Post-Doc']
 
 export interface HODRecord {
   id: string
@@ -94,7 +96,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
         {
           heading: '2. APPOINTED HEAD OF DEPARTMENT PARTICULARS',
           body: hodList.map((h, idx) => 
-            `${idx + 1}. ${h.name} — ${h.designation || 'Professor & Head'} | Email: ${h.email} | Phone: ${h.phone || 'N/A'} | Qualification: ${h.qualification || 'N/A'} | Experience: ${h.experience ?? 'N/A'} Yrs | Department: ${h.department}`
+            `${idx + 1}. ${formatNameWithDegree(h.name, h.qualification)} — ${h.designation || 'Professor & Head'} | Email: ${h.email} | Phone: ${h.phone || 'N/A'} | Qualification: ${h.qualification || 'N/A'} | Experience: ${h.experience ?? 'N/A'} Yrs | Department: ${h.department}`
           ),
         },
       ],
@@ -112,11 +114,13 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
 
     setIsLoading(true)
     try {
+      const formattedName = formatNameWithDegree(formData.name.trim(), formData.qualification)
       const res = await fetch('/api/hod', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          name: formattedName,
           department: formData.department || 'Artificial Intelligence & Data Science',
           experience: formData.experience !== '' ? (Number(formData.experience) || 0) : null,
         }),
@@ -159,11 +163,13 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
     setIsLoading(true)
     try {
       const parsedExp = formData.experience !== '' ? (Number(formData.experience) || 0) : null
+      const formattedName = formatNameWithDegree(formData.name.trim(), formData.qualification)
       const res = await fetch('/api/hod', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          name: formattedName,
           facultyId: selectedHOD.facultyId,
           department: formData.department || selectedHOD.department || 'Artificial Intelligence & Data Science',
           experience: parsedExp,
@@ -177,7 +183,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
             h.id === selectedHOD.id
               ? {
                   ...h,
-                  name: formData.name,
+                  name: formattedName,
                   email: formData.email || h.email,
                   phone: formData.phone,
                   designation: formData.designation,
@@ -394,7 +400,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                           </div>
                           <div>
                             <span className="font-bold text-[#071A3D] text-sm block">
-                              {hod.name}
+                              {formatNameWithDegree(hod.name, hod.qualification)}
                             </span>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <span className="px-1.5 py-0.2 rounded-md bg-blue-50 text-[#1455D9] border border-blue-200 text-[9px] font-black font-mono">
@@ -526,7 +532,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-black text-base text-[#071A3D]">{hod.name}</h3>
+                          <h3 className="font-black text-base text-[#071A3D]">{formatNameWithDegree(hod.name, hod.qualification)}</h3>
                           <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black font-mono">
                             {hod.facultyId}
                           </span>
@@ -638,16 +644,27 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
               <div>
                 <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
                   <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                  <span>Full Name with Academic Title *</span>
+                  <span>Full Name / Academic Title *</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Prof. Dr. V. Sundar, M.E., Ph.D."
+                  placeholder="e.g. Prof. Dr. V. Sundar"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-sm text-[#071A3D] transition-all"
                 />
+                {formData.name.trim() && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#1455D9]" />
+                      Formatted Name (Degree will show at back):
+                    </span>
+                    <span className="font-bold text-[#071A3D] font-mono">
+                      {formatNameWithDegree(formData.name, formData.qualification)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -735,19 +752,6 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
-                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
-                    <span>Academic Qualification</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Ph.D."
-                    value={formData.qualification}
-                    onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
                     <Award className="w-4 h-4 text-[#1455D9]" />
                     <span>Total Experience (Years)</span>
                   </label>
@@ -761,6 +765,52 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all"
                   />
                 </div>
+              </div>
+
+              {/* Individual Degree Entry Section */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/50 to-slate-50 border border-blue-100/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D]">
+                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Degree(s) / Qualification</span>
+                  </label>
+                  <span className="text-[11px] text-gray-500 font-medium">Click to toggle or type any degree</span>
+                </div>
+
+                {/* Common Degree Pills */}
+                <div className="flex flex-wrap gap-1.5">
+                  {COMMON_DEGREES.map((deg) => {
+                    const currentList = (formData.qualification || '').split(',').map((d) => d.trim().toLowerCase())
+                    const isSelected = currentList.includes(deg.toLowerCase())
+                    return (
+                      <button
+                        key={deg}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, qualification: toggleDegreeInString(formData.qualification, deg) })}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
+                          isSelected
+                            ? "bg-[#1455D9] text-white border-[#1455D9] shadow-xs"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                        )}
+                      >
+                        {isSelected ? `✓ ${deg}` : `+ ${deg}`}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Individual / Custom Degree Input */}
+                <input
+                  type="text"
+                  placeholder="Enter any degree individually (e.g. Ph.D., M.E., M.Tech. or any custom degree)"
+                  value={formData.qualification}
+                  onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all text-xs"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Any degree entered here will automatically be attached to the back of their name across the portal.
+                </p>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
@@ -828,7 +878,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
               <div>
                 <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
                   <UserCheck className="w-4 h-4 text-[#1455D9]" />
-                  <span>Full Name &amp; Academic Title *</span>
+                  <span>Full Name / Academic Title *</span>
                 </label>
                 <input
                   type="text"
@@ -838,6 +888,17 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-sm text-[#071A3D] transition-all"
                 />
+                {formData.name.trim() && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#1455D9]" />
+                      Formatted Name (Degree will show at back):
+                    </span>
+                    <span className="font-bold text-[#071A3D] font-mono">
+                      {formatNameWithDegree(formData.name, formData.qualification)}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Contact Information Row (2 Columns) */}
@@ -870,7 +931,7 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                 </div>
               </div>
 
-              {/* Designation & Qualification Row (2 Columns with ample breathing room!) */}
+              {/* Designation & Experience Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
                   <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
@@ -890,23 +951,6 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     <option value="Director & HOD">Director &amp; HOD</option>
                   </select>
                 </div>
-              </div>
-
-              {/* Qualification & Experience Row (2 Columns) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
-                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
-                    <span>Academic Qualification</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Ph.D."
-                    value={formData.qualification}
-                    onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all"
-                  />
-                </div>
                 <div>
                   <label className="flex items-center gap-1.5 font-bold text-[#071A3D] mb-1.5">
                     <Award className="w-4 h-4 text-[#1455D9]" />
@@ -922,6 +966,52 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-bold text-[#071A3D] transition-all"
                   />
                 </div>
+              </div>
+
+              {/* Individual Degree Entry Section */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/50 to-slate-50 border border-blue-100/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-1.5 font-bold text-[#071A3D]">
+                    <GraduationCap className="w-4 h-4 text-[#1455D9]" />
+                    <span>Academic Degree(s) / Qualification</span>
+                  </label>
+                  <span className="text-[11px] text-gray-500 font-medium">Click to toggle or type any degree</span>
+                </div>
+
+                {/* Common Degree Pills */}
+                <div className="flex flex-wrap gap-1.5">
+                  {COMMON_DEGREES.map((deg) => {
+                    const currentList = (formData.qualification || '').split(',').map((d) => d.trim().toLowerCase())
+                    const isSelected = currentList.includes(deg.toLowerCase())
+                    return (
+                      <button
+                        key={deg}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, qualification: toggleDegreeInString(formData.qualification, deg) })}
+                        className={cn(
+                          "px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all cursor-pointer",
+                          isSelected
+                            ? "bg-[#1455D9] text-white border-[#1455D9] shadow-xs"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50"
+                        )}
+                      >
+                        {isSelected ? `✓ ${deg}` : `+ ${deg}`}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Individual / Custom Degree Input */}
+                <input
+                  type="text"
+                  placeholder="Enter any degree individually (e.g. Ph.D., M.E., M.Tech. or any custom degree)"
+                  value={formData.qualification}
+                  onChange={(e) => setFormData({ ...formData, qualification: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-100 font-medium text-slate-800 transition-all text-xs"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Any degree entered here will automatically be attached to the back of their name across the portal.
+                </p>
               </div>
 
               {/* Password Reset Section (Sleek Box with Show/Hide Toggle) */}

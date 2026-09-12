@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { parseSafeDateOfBirth } from '@/lib/utils'
+import { parseSafeDateOfBirth, formatNameWithDegree } from '@/lib/utils'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
@@ -24,7 +24,7 @@ export async function GET() {
         id: h.id,
         userId: h.userId,
         facultyId: h.facultyId,
-        name: u?.name || '',
+        name: formatNameWithDegree(u?.name || '', h.qualification),
         email: cleanEmail,
         phone: u?.phone || '',
         dateOfBirth: h.dateOfBirth ? h.dateOfBirth.toISOString().split('T')[0] : null,
@@ -98,6 +98,8 @@ export async function POST(request: Request) {
       passwordHash = await bcrypt.hash(password.trim(), 10)
     }
 
+    const finalName = formatNameWithDegree(name.trim(), qualification)
+
     // Check if HOD already exists
     const existingHOD = await prisma.hOD.findUnique({ where: { facultyId: fid } }).catch(() => null)
 
@@ -105,7 +107,7 @@ export async function POST(request: Request) {
     if (existingHOD) {
       // Direct update of the existing linked user
       const userUpdate: any = {
-        name: name.trim(),
+        name: finalName,
         email: finalEmail,
         phone: phone?.trim() || null,
         role: 'hod',
@@ -129,7 +131,7 @@ export async function POST(request: Request) {
     } else {
       // Upsert User for new appointment
       const userUpdate: any = {
-        name: name.trim(),
+        name: finalName,
         phone: phone?.trim() || null,
         role: 'hod',
         status: status || 'active',
@@ -141,7 +143,7 @@ export async function POST(request: Request) {
 
       const userCreate: any = {
         email: finalEmail,
-        name: name.trim(),
+        name: finalName,
         phone: phone?.trim() || null,
         role: 'hod',
         status: status || 'active',

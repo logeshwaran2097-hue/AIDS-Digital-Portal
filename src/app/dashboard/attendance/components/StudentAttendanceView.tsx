@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { ApplyODPermissionModal } from './ApplyODPermissionModal'
+import { DossierPopupModal } from '@/components/od/DossierPopupModal'
 
 export interface SubjectAttendanceItem {
   code: string
@@ -87,6 +88,12 @@ export function StudentAttendanceView({
   const [odSubmitted, setOdSubmitted] = useState(false)
   const [trackedApplications, setTrackedApplications] = useState<TrackedODApplication[]>([])
   const [loadingTracked, setLoadingTracked] = useState(false)
+  const [viewingDossier, setViewingDossier] = useState<{
+    url: string
+    title: string
+    studentName?: string
+    registerNumber?: string
+  } | null>(null)
 
   const fetchTrackedApplications = useCallback(async () => {
     if (!student.registerNumber) return
@@ -319,16 +326,22 @@ export function StudentAttendanceView({
                           <span>{app.statusLabel}</span>
                         </span>
 
-                        <a
-                          href={app.dossierUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-2.5 py-1 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 shadow-2xs transition-colors"
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setViewingDossier({
+                              url: app.dossierUrl,
+                              title: `Official Verification Slip · ${user.name}`,
+                              studentName: user.name,
+                              registerNumber: student.registerNumber,
+                            })
+                          }
+                          className="px-2.5 py-1 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                          title="View verification slip in popup"
                         >
                           <Eye className="w-3.5 h-3.5 text-[#1455D9]" />
                           <span>Verification Slip</span>
-                          <ExternalLink className="w-3 h-3 text-gray-400" />
-                        </a>
+                        </button>
                       </div>
                     </div>
 
@@ -563,6 +576,18 @@ export function StudentAttendanceView({
         student={student}
         userName={user.name}
       />
+
+      {/* Official Leave & OD Verification Slip Popup Modal (No new tab on mobile!) */}
+      {viewingDossier && (
+        <DossierPopupModal
+          isOpen={Boolean(viewingDossier)}
+          onClose={() => setViewingDossier(null)}
+          dossierUrl={viewingDossier.url}
+          title={viewingDossier.title}
+          studentName={viewingDossier.studentName}
+          registerNumber={viewingDossier.registerNumber}
+        />
+      )}
     </div>
   )
 }

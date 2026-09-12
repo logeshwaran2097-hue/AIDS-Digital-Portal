@@ -233,3 +233,44 @@ export function parseSafeDateOfBirth(input: any, defaultFallback: Date | null = 
 
   return defaultFallback
 }
+
+/**
+ * Automatically format a faculty/advisor/HOD name with their degree/qualification at the back of their name.
+ * e.g., formatNameWithDegree("Prof. Dr. V. Sundar", "M.E., Ph.D.") => "Prof. Dr. V. Sundar, M.E., Ph.D."
+ * Prevents duplicating if the name already contains or ends with the qualification.
+ */
+export function formatNameWithDegree(name: string | null | undefined, qualification?: string | null | undefined): string {
+  if (!name) return ''
+  const cleanName = name.trim()
+  if (!qualification || !qualification.trim()) return cleanName
+
+  const cleanQual = qualification.trim()
+
+  // If the cleanName already contains the qualification, don't duplicate
+  if (cleanName.toLowerCase().includes(cleanQual.toLowerCase())) {
+    return cleanName
+  }
+
+  // Remove any trailing comma, period, or dashes from name
+  const strippedName = cleanName.replace(/[,.\-\s]+$/, '')
+  return `${strippedName}, ${cleanQual}`
+}
+
+/**
+ * Toggle an individual degree in a comma-separated qualification string.
+ */
+export function toggleDegreeInString(currentQualifications: string, degree: string): string {
+  const currentList = currentQualifications
+    ? currentQualifications
+        .split(',')
+        .map((d) => d.trim())
+        .filter(Boolean)
+    : []
+
+  const exists = currentList.some((d) => d.toLowerCase() === degree.toLowerCase())
+  if (exists) {
+    return currentList.filter((d) => d.toLowerCase() !== degree.toLowerCase()).join(', ')
+  } else {
+    return [...currentList, degree].join(', ')
+  }
+}
