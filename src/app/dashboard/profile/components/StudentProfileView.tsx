@@ -208,7 +208,11 @@ export function StudentProfileView({
           const base64 = canvas.toDataURL('image/jpeg', 0.85)
           setProfile((prev) => {
             const upd = { ...prev, profileImage: base64 }
-            if (typeof window !== 'undefined') localStorage.setItem(storageKey, JSON.stringify(upd))
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(storageKey, JSON.stringify(upd))
+              localStorage.setItem('user_profile_image', base64)
+              window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: base64 }))
+            }
             return upd
           })
           setFormData((prev) => ({ ...prev, profileImage: base64 }))

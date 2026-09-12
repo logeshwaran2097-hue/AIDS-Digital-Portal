@@ -47,6 +47,8 @@ interface PortalLayoutProps {
   role: 'student' | 'faculty' | 'hod' | 'admin'
   userName: string
   userEmail?: string
+  userImage?: string | null
+  profileImage?: string | null
   navItems?: NavItem[]
   roleBadgeLabel?: string
   isAdvisor?: boolean
@@ -79,7 +81,19 @@ interface NotificationItem {
 
 const DEFAULT_NOTIFICATIONS: Record<string, NotificationItem[]> = {}
 
-export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLabel, isAdvisor, children }: PortalLayoutProps) {
+export function PortalLayout({
+  role,
+  userName,
+  userEmail,
+  userImage,
+  profileImage,
+  navItems,
+  roleBadgeLabel,
+  isAdvisor,
+  children,
+}: PortalLayoutProps) {
+  const [avatarImage, setAvatarImage] = useState<string | null>(userImage || profileImage || null)
+  const [avatarError, setAvatarError] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
@@ -164,6 +178,82 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
       }
     }
   }, [])
+
+  // Sync profile image from props, localStorage, and /api/auth/me
+  useEffect(() => {
+    if (userImage || profileImage) {
+      setAvatarImage(userImage || profileImage || null)
+      setAvatarError(false)
+      if (typeof window !== 'undefined' && (userImage || profileImage)) {
+        localStorage.setItem('user_profile_image', (userImage || profileImage) as string)
+      }
+    }
+  }, [userImage, profileImage])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // 1. Initial check in localStorage if avatarImage is still empty
+    if (!avatarImage) {
+      const cached = localStorage.getItem('user_profile_image')
+      if (cached) {
+        setAvatarImage(cached)
+      } else {
+        try {
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key && (key.startsWith('vsb_student_profile_') || key.startsWith('portal_profile_'))) {
+              const item = localStorage.getItem(key)
+              if (item) {
+                const parsed = JSON.parse(item)
+                if (parsed?.profileImage) {
+                  setAvatarImage(parsed.profileImage)
+                  localStorage.setItem('user_profile_image', parsed.profileImage)
+                  break
+                }
+              }
+            }
+          }
+        } catch {}
+      }
+    }
+
+    // 2. Fetch fresh user info from /api/auth/me
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.success && data?.user?.profileImage) {
+          setAvatarImage(data.user.profileImage)
+          setAvatarError(false)
+          localStorage.setItem('user_profile_image', data.user.profileImage)
+        }
+      })
+      .catch(() => {})
+
+    // 3. Listen to realtime profile image update events across the portal
+    const handleProfileUpdate = (e: any) => {
+      const newImg = e.detail || localStorage.getItem('user_profile_image')
+      if (newImg) {
+        setAvatarImage(newImg)
+        setAvatarError(false)
+      }
+    }
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'user_profile_image' && e.newValue) {
+        setAvatarImage(e.newValue)
+        setAvatarError(false)
+      }
+    }
+
+    window.addEventListener('portal-profile-image-updated', handleProfileUpdate)
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('portal-profile-image-updated', handleProfileUpdate)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [avatarImage])
 
   // Sync real-time notifications from API
   const syncNotifications = async () => {
@@ -521,8 +611,17 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
               : 'bg-white/[0.06] border-white/10 hover:bg-white/[0.12] hover:border-white/20'
           )}
         >
-          <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0 ring-2 ring-white/20">
-            {userName.charAt(0) || 'U'}
+          <div className="w-11 h-11 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0 ring-2 ring-white/20">
+            {avatarImage && !avatarError ? (
+              <img
+                src={avatarImage}
+                alt={userName}
+                className="w-full h-full object-cover"
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              userName.charAt(0) || 'U'
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-bold text-white truncate leading-tight">{userName}</h4>
@@ -834,8 +933,17 @@ export function PortalLayout({ role, userName, userEmail, navItems, roleBadgeLab
               href={profileHref}
               className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-full hover:bg-slate-100/90 transition-all border border-slate-200/80 bg-white/80 backdrop-blur-xs shadow-2xs hover:shadow-xs group"
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-white">
-                {userName.charAt(0) || 'U'}
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-[#1455D9]/25 shrink-0">
+                {avatarImage && !avatarError ? (
+                  <img
+                    src={avatarImage}
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  userName.charAt(0) || 'U'
+                )}
               </div>
               <div className="hidden sm:flex flex-col text-left leading-none">
                 <span className="text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">

@@ -526,6 +526,10 @@ export function StaffOnboardingModal({
         if (typeof window !== 'undefined') {
           localStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
           sessionStorage.setItem(`vsb_staff_onboarding_done_${staffKey}`, 'true')
+          if (form.profileImage) {
+            localStorage.setItem('user_profile_image', form.profileImage)
+            window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: form.profileImage }))
+          }
         }
         toast.success('Account fully verified & Password saved! Welcome to the portal.')
         setTimeout(() => {

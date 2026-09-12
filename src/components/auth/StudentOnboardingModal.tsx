@@ -447,6 +447,10 @@ export function StudentOnboardingModal({
         if (typeof window !== 'undefined') {
           localStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
           sessionStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
+          if (form.profileImage) {
+            localStorage.setItem('user_profile_image', form.profileImage)
+            window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: form.profileImage }))
+          }
         }
         toast.success('Account fully verified & Password saved!')
         setTimeout(() => {

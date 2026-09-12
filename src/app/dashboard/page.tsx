@@ -12,7 +12,12 @@ export default async function StudentDashboardPage() {
   const data = await getStudentData(session.userId)
 
   return (
-    <PortalLayout role="student" userName={data?.user?.name || session.name || 'Student'}>
+    <PortalLayout
+      role="student"
+      userName={data?.user?.name || session.name || 'Student'}
+      userEmail={data?.user?.email || session.email}
+      profileImage={data?.user?.profileImage}
+    >
       <StudentDashboard data={data as any} />
     </PortalLayout>
   )

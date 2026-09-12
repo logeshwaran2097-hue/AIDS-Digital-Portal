@@ -56,7 +56,12 @@ export default async function StudentProfilePage() {
   }
 
   return (
-    <PortalLayout role="student" userName={finalUser.name || session.name || 'Student'}>
+    <PortalLayout
+      role="student"
+      userName={finalUser.name || session.name || 'Student'}
+      userEmail={finalUser.email || session.email}
+      profileImage={(finalUser as any)?.profileImage}
+    >
       <div className="py-2 animate-fade-in">
         <StudentProfileView
           user={finalUser as any}
