@@ -14,7 +14,13 @@ import {
   BookMarked,
   ShieldCheck,
   Users,
+  Copy,
+  Check,
+  Zap,
+  ExternalLink,
+  ChevronDown,
 } from 'lucide-react'
+import { toast } from '@/components/ui/Toast'
 import { cn, normalizeIndianPhone } from '@/lib/utils'
 
 interface FacultyDetail {
@@ -88,6 +94,54 @@ export default function FacultyList({
   const [activeTab, setActiveTab] = useState<'advisors' | 'handlers'>('advisors')
   const [searchQuery, setSearchQuery] = useState('')
   const [showAllAdvisors, setShowAllAdvisors] = useState(false)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [activeSpeedMenuId, setActiveSpeedMenuId] = useState<string | null>(null)
+
+  const handleCopyPhone = (phone: string | null | undefined, name: string, id: string) => {
+    const cleanPhone = normalizeIndianPhone(phone)
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(`+91 ${cleanPhone}`)
+      setCopiedId(id)
+      toast.success(`Copied +91 ${cleanPhone} (${name}) to clipboard!`)
+      setTimeout(() => setCopiedId(null), 2500)
+    }
+  }
+
+  const handleOpenWhatsAppFast = (
+    phone: string | null | undefined,
+    name: string,
+    mode: 'auto' | 'app' | 'web' = 'auto'
+  ) => {
+    const cleanPhone = normalizeIndianPhone(phone)
+    const text = `Hello Prof. ${name}, I am ${student?.registerNumber || 'Student'} from Year ${student?.year || 2} Sec ${student?.section || 'B'}`
+    const encoded = encodeURIComponent(text)
+
+    const nativeUrl = `whatsapp://send?phone=91${cleanPhone}&text=${encoded}`
+    const webUrl = `https://web.whatsapp.com/send?phone=91${cleanPhone}&text=${encoded}`
+
+    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+    if (mode === 'app' || isMobile) {
+      // Direct instant protocol - 0s loading, no web spinner!
+      window.location.href = nativeUrl
+      return
+    }
+
+    if (mode === 'web') {
+      // Direct WhatsApp Web (skips intermediate wa.me redirect)
+      window.open(webUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+
+    // Auto mode:
+    // 1. Try launching native desktop/phone app first (opens in 0.1s without web download)
+    window.location.href = nativeUrl
+
+    // 2. Open direct web WhatsApp in tab as instant fallback
+    setTimeout(() => {
+      window.open(webUrl, '_blank', 'noopener,noreferrer')
+    }, 450)
+  }
 
   const detailByUser = new Map(details.map((d) => [d.userId, d]))
 
@@ -493,21 +547,106 @@ export default function FacultyList({
                       </div>
                     </div>
 
-                    <div className="flex items-center shrink-0">
-                      <a
-                        href={`https://wa.me/91${normalizeIndianPhone(u.phone)}?text=Hello%20Prof.%20${encodeURIComponent(
-                          u.name
-                        )},%20I%20am%20${encodeURIComponent(
-                          student?.registerNumber || 'Student'
-                        )}%20from%20Year%20${student?.year || 2}%20Sec%20${student?.section || 'B'}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-black flex items-center gap-1.5 shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                        title={`Message ${u.name} on WhatsApp`}
+                    <div className="flex items-center gap-1.5 shrink-0 relative">
+                      {/* 1-Click Copy Phone Number Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyPhone(u.phone, u.name, u.id)}
+                        className="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer border border-slate-200/80 shadow-2xs"
+                        title="Copy phone number directly"
                       >
-                        <MessageCircle className="w-4 h-4" />
-                        <span>WhatsApp</span>
-                      </a>
+                        {copiedId === u.id ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-[11px] font-bold text-emerald-700">Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-slate-500" />
+                            <span className="text-[11px] hidden sm:inline">Copy</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Main Fast WhatsApp Button Group */}
+                      <div className="relative flex items-center">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenWhatsAppFast(u.phone, u.name, 'auto')}
+                          className="px-3.5 py-2 rounded-l-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-black flex items-center gap-1.5 shadow-md transition-all active:scale-98 cursor-pointer"
+                          title={`Fast message ${u.name} on WhatsApp`}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          <span>WhatsApp</span>
+                        </button>
+
+                        {/* Dropdown Toggle for Quick Launch Modes */}
+                        <button
+                          type="button"
+                          onClick={() => setActiveSpeedMenuId(activeSpeedMenuId === u.id ? null : u.id)}
+                          className="px-1.5 py-2 rounded-r-xl bg-[#1eb855] hover:bg-[#1a9e49] text-white text-xs font-bold border-l border-white/20 transition-all cursor-pointer"
+                          title="WhatsApp speed launch options"
+                        >
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Quick Launch Options Popover */}
+                        {activeSpeedMenuId === u.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setActiveSpeedMenuId(null)}
+                            />
+                            <div className="absolute right-0 bottom-full mb-2 z-50 w-56 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 space-y-1 animate-in fade-in zoom-in-95">
+                              <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                                WhatsApp Fast Launcher
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveSpeedMenuId(null)
+                                  handleOpenWhatsAppFast(u.phone, u.name, 'app')
+                                }}
+                                className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 flex items-center gap-2 transition-colors cursor-pointer"
+                              >
+                                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                                <div>
+                                  <div className="leading-tight">WhatsApp App (Instant)</div>
+                                  <div className="text-[10px] font-normal text-slate-400">0s load · Windows / Phone App</div>
+                                </div>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveSpeedMenuId(null)
+                                  handleOpenWhatsAppFast(u.phone, u.name, 'web')
+                                }}
+                                className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-blue-50 hover:text-blue-800 flex items-center gap-2 transition-colors cursor-pointer"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5 text-blue-500" />
+                                <div>
+                                  <div className="leading-tight">WhatsApp Web</div>
+                                  <div className="text-[10px] font-normal text-slate-400">Direct link (skips redirects)</div>
+                                </div>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveSpeedMenuId(null)
+                                  handleCopyPhone(u.phone, u.name, u.id)
+                                }}
+                                className="w-full text-left px-2.5 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer"
+                              >
+                                <Copy className="w-3.5 h-3.5 text-slate-500" />
+                                <div>
+                                  <div className="leading-tight">Copy +91 {normalizeIndianPhone(u.phone)}</div>
+                                  <div className="text-[10px] font-normal text-slate-400">Paste in any messenger</div>
+                                </div>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
