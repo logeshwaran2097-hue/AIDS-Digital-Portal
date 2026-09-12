@@ -54,6 +54,7 @@ interface FacultyUser {
 interface StudentInfo {
   id?: string
   userId?: string
+  name?: string
   registerNumber?: string
   department?: string
   year?: number
@@ -113,34 +114,61 @@ export default function FacultyList({
     mode: 'auto' | 'app' | 'web' = 'auto'
   ) => {
     const cleanPhone = normalizeIndianPhone(phone)
-    const text = `Hello Prof. ${name}, I am ${student?.registerNumber || 'Student'} from Year ${student?.year || 2} Sec ${student?.section || 'B'}`
-    const encoded = encodeURIComponent(text)
+    if (!cleanPhone || cleanPhone === '0000000000') {
+      toast.error(`WhatsApp contact number for ${name} is unavailable.`)
+      return
+    }
 
+    const facultySalutation =
+      name.trim().startsWith('Dr.') || name.trim().startsWith('Prof.')
+        ? name.trim()
+        : `Prof. ${name.trim()}`
+
+    const studentName = student?.name?.trim() || 'Student'
+    const regNoPart = student?.registerNumber ? ` (Reg No: ${student.registerNumber})` : ''
+    const deptPart = student?.department || 'B.Tech AI & DS'
+    const yearPart = student?.year ? `Year ${student.year}` : 'Year 2'
+    const secPart = student?.section ? `Sec ${student.section}` : 'Sec B'
+    const semPart = student?.semester ? ` (Sem ${student.semester})` : ''
+
+    const text = `Respected ${facultySalutation},
+
+Greetings! I am ${studentName}${regNoPart} from ${deptPart}, ${yearPart} - ${secPart}${semPart}.
+
+I am reaching out regarding academic guidance and department portal inquiry.
+
+Thank you!`
+
+    const encoded = encodeURIComponent(text)
     const nativeUrl = `whatsapp://send?phone=91${cleanPhone}&text=${encoded}`
     const webUrl = `https://web.whatsapp.com/send?phone=91${cleanPhone}&text=${encoded}`
+    const mobileApiUrl = `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${encoded}`
 
-    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    const isMobile =
+      typeof navigator !== 'undefined' &&
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
-    if (mode === 'app' || isMobile) {
-      // Direct instant protocol - 0s loading, no web spinner!
+    if (mode === 'app') {
+      // User explicitly clicked "WhatsApp App (Instant)"
       window.location.href = nativeUrl
       return
     }
 
     if (mode === 'web') {
-      // Direct WhatsApp Web (skips intermediate wa.me redirect)
+      // User explicitly clicked "WhatsApp Web"
       window.open(webUrl, '_blank', 'noopener,noreferrer')
       return
     }
 
-    // Auto mode:
-    // 1. Try launching native desktop/phone app first (opens in 0.1s without web download)
-    window.location.href = nativeUrl
-
-    // 2. Open direct web WhatsApp in tab as instant fallback
-    setTimeout(() => {
+    // Default 'auto' mode:
+    // Mobile devices open the WhatsApp application seamlessly via api.whatsapp.com
+    // Desktop devices open WhatsApp Web in a clean new tab without intermediate wa.me landing pages
+    // (We do NOT trigger both nativeUrl and webUrl simultaneously to avoid duplicate message insertion)
+    if (isMobile) {
+      window.location.href = mobileApiUrl
+    } else {
       window.open(webUrl, '_blank', 'noopener,noreferrer')
-    }, 450)
+    }
   }
 
   const detailByUser = new Map(details.map((d) => [d.userId, d]))

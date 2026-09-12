@@ -22,12 +22,33 @@ export default async function FacultyPage() {
   const classAdvisors = await prisma.classAdvisor.findMany({}).catch(() => [])
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
+  const studentData = student
+    ? {
+        ...student,
+        name: user?.name || session.name || 'Student',
+      }
+    : {
+        id: session.userId,
+        userId: session.userId,
+        name: user?.name || session.name || 'Student',
+        registerNumber: userReg || '',
+        department: 'B.Tech AI & DS',
+        year: 2,
+        semester: 4,
+        section: 'B',
+      }
+
   return (
-    <PortalLayout role="student" userName={user?.name || session.name || 'Student'} >
+    <PortalLayout 
+      role="student" 
+      userName={user?.name || session.name || 'Student'} 
+      userEmail={user?.email || session.email}
+      profileImage={(user as any)?.profileImage}
+    >
       <FacultyList 
         users={facultyRows} 
         details={facultyDetails} 
-        student={student}
+        student={studentData}
         classAdvisors={classAdvisors}
       />
     </PortalLayout>
