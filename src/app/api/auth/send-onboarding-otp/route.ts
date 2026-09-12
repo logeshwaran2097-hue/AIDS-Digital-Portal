@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateOTP, hashOTP } from '@/lib/utils'
 import { prisma } from '@/lib/prisma'
-import { sendStudentVerificationEmail, generateOTPChallenge } from '@/lib/auth'
+import { sendStudentVerificationEmail, generateOTPChallenge, checkEmailAvailability } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const {
       email,
       name,
+      userId,
       registerNumber,
       facultyId,
       role,
@@ -33,9 +34,30 @@ export async function POST(request: NextRequest) {
     }
 
     const trimmedEmail = email.trim().toLowerCase()
+
+    // Validate email uniqueness across active accounts before generating/sending OTP
+    const availability = await checkEmailAvailability(trimmedEmail, {
+      userId,
+      registerNumber,
+      facultyId,
+    })
+
+    if (!availability.available) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            availability.message ||
+            `The email address ${trimmedEmail} is already linked to another account. Please use your unique personal or official email.`,
+        },
+        { status: 400 }
+      )
+    }
+
     const otp = generateOTP()
     const codeHash = hashOTP(otp)
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
 
     // 1. Save OTP to Database
     try {

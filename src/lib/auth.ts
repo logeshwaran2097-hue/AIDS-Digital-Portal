@@ -1269,3 +1269,66 @@ export function requireAuth(allowedRoles?: string[]) {
     return { authorized: true, session }
   }
 }
+
+export async function checkEmailAvailability(
+  email: string,
+  options?: {
+    userId?: string
+    registerNumber?: string
+    facultyId?: string
+  }
+): Promise<{ available: boolean; message?: string }> {
+  if (!email || typeof email !== 'string' || !email.includes('@')) {
+    return { available: false, message: 'Please enter a valid email address.' }
+  }
+
+  const normalizedEmail = email.trim().toLowerCase()
+  if (!normalizedEmail || !normalizedEmail.includes('@')) {
+    return { available: false, message: 'Please enter a valid email address.' }
+  }
+
+  try {
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: { equals: normalizedEmail, mode: 'insensitive' },
+      },
+    })
+
+    if (!existingUser) {
+      return { available: true }
+    }
+
+    // If it's the exact same user ID
+    if (options?.userId && existingUser.id === options.userId) {
+      return { available: true }
+    }
+
+    // Check linked profiles to determine if it's the same person or an orphan
+    const [linkedStudent, linkedFaculty, linkedHod, linkedAdmin] = await Promise.all([
+      prisma.student.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
+      prisma.faculty.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
+      prisma.hOD.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
+      prisma.admin.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
+    ])
+
+    const targetReg = options?.registerNumber?.trim().toUpperCase()
+    const isSameStudent = Boolean(linkedStudent && targetReg && linkedStudent.registerNumber.toUpperCase() === targetReg)
+
+    const targetFacId = options?.facultyId?.trim().toUpperCase()
+    const isSameFaculty = Boolean(linkedFaculty && targetFacId && linkedFaculty.facultyId.toUpperCase() === targetFacId)
+
+    const isOrphan = !linkedStudent && !linkedFaculty && !linkedHod && !linkedAdmin
+
+    if (isSameStudent || isSameFaculty || isOrphan) {
+      return { available: true }
+    }
+
+    return {
+      available: false,
+      message: `The email address ${normalizedEmail} is already linked to another account. Please use your unique personal or official email.`,
+    }
+  } catch (error) {
+    console.error('Error checking email availability:', error)
+    return { available: true }
+  }
+}

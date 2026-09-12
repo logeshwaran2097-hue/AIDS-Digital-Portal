@@ -31,6 +31,7 @@ import { StudentOnboardingModal } from '@/components/auth/StudentOnboardingModal
 
 interface DashboardData {
   user: {
+    id?: string
     name: string
     email: string
     phone?: string | null
@@ -39,6 +40,8 @@ interface DashboardData {
     profileImage?: string | null
   }
   student: {
+    id?: string
+    userId?: string
     registerNumber: string
     department: string
     year: number
@@ -130,12 +133,18 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
   }, [])
 
   const studentKey = data.student?.registerNumber || currentUser.email || 'student'
+  const regNo = (data.student?.registerNumber || '').trim().toUpperCase()
+  const userEmail = (currentUser.email || '').trim().toLowerCase()
+  const userId = currentUser.id || ''
   const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     const isCompletedLocally =
+      (regNo && (localStorage.getItem(`vsb_student_onboarding_done_${regNo}`) === 'true' || sessionStorage.getItem(`vsb_student_onboarding_done_${regNo}`) === 'true')) ||
+      (userEmail && (localStorage.getItem(`vsb_student_onboarding_done_${userEmail}`) === 'true' || sessionStorage.getItem(`vsb_student_onboarding_done_${userEmail}`) === 'true')) ||
+      (userId && (localStorage.getItem(`vsb_student_onboarding_done_${userId}`) === 'true' || sessionStorage.getItem(`vsb_student_onboarding_done_${userId}`) === 'true')) ||
       localStorage.getItem(`vsb_student_onboarding_done_${studentKey}`) === 'true' ||
       sessionStorage.getItem(`vsb_student_onboarding_done_${studentKey}`) === 'true'
 
@@ -143,12 +152,31 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       setIsOnboardingOpen(true)
     } else {
       setIsOnboardingOpen(false)
+      // Once completed or mustChangePassword is false, mark it locally so it never appears again
+      if (typeof window !== 'undefined') {
+        if (regNo) localStorage.setItem(`vsb_student_onboarding_done_${regNo}`, 'true')
+        if (userEmail) localStorage.setItem(`vsb_student_onboarding_done_${userEmail}`, 'true')
+        if (userId) localStorage.setItem(`vsb_student_onboarding_done_${userId}`, 'true')
+        localStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
+      }
     }
-  }, [studentKey, isInitialNeedsOnboarding])
+  }, [studentKey, isInitialNeedsOnboarding, regNo, userEmail, userId])
 
   const handleOnboardingComplete = (updatedUser: any) => {
     setIsOnboardingOpen(false)
     if (typeof window !== 'undefined') {
+      if (regNo) {
+        localStorage.setItem(`vsb_student_onboarding_done_${regNo}`, 'true')
+        sessionStorage.setItem(`vsb_student_onboarding_done_${regNo}`, 'true')
+      }
+      if (userEmail) {
+        localStorage.setItem(`vsb_student_onboarding_done_${userEmail}`, 'true')
+        sessionStorage.setItem(`vsb_student_onboarding_done_${userEmail}`, 'true')
+      }
+      if (userId) {
+        localStorage.setItem(`vsb_student_onboarding_done_${userId}`, 'true')
+        sessionStorage.setItem(`vsb_student_onboarding_done_${userId}`, 'true')
+      }
       localStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
       sessionStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
     }
@@ -160,6 +188,18 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
   const handleOnboardingClose = () => {
     setIsOnboardingOpen(false)
     if (typeof window !== 'undefined') {
+      if (regNo) {
+        localStorage.setItem(`vsb_student_onboarding_done_${regNo}`, 'true')
+        sessionStorage.setItem(`vsb_student_onboarding_done_${regNo}`, 'true')
+      }
+      if (userEmail) {
+        localStorage.setItem(`vsb_student_onboarding_done_${userEmail}`, 'true')
+        sessionStorage.setItem(`vsb_student_onboarding_done_${userEmail}`, 'true')
+      }
+      if (userId) {
+        localStorage.setItem(`vsb_student_onboarding_done_${userId}`, 'true')
+        sessionStorage.setItem(`vsb_student_onboarding_done_${userId}`, 'true')
+      }
       localStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
       sessionStorage.setItem(`vsb_student_onboarding_done_${studentKey}`, 'true')
     }

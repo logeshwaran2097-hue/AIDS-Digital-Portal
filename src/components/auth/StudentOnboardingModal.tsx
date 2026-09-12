@@ -94,6 +94,14 @@ export function StudentOnboardingModal({
   const [otpError, setOtpError] = useState<string | null>(null)
   const [otpChallenge, setOtpChallenge] = useState<string | null>(null)
 
+  // Email Uniqueness & Availability Check State
+  const [emailCheckStatus, setEmailCheckStatus] = useState<{
+    checking: boolean
+    available: boolean | null
+    message: string | null
+  }>({ checking: false, available: null, message: null })
+
+
   // Sync state whenever initialData changes
   React.useEffect(() => {
     setForm((prev) => ({
@@ -263,10 +271,52 @@ export function StudentOnboardingModal({
     setOnboardingStep(2)
   }
 
+  // Real-time debounced email availability check
+  React.useEffect(() => {
+    const rawEmail = form.email?.trim().toLowerCase()
+    if (!rawEmail || !rawEmail.includes('@') || !rawEmail.includes('.')) {
+      setEmailCheckStatus({ checking: false, available: null, message: null })
+      return
+    }
+
+    setEmailCheckStatus((prev) => ({ ...prev, checking: true }))
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: rawEmail,
+            registerNumber: initialData.registerNumber,
+          }),
+        })
+        const data = await res.json()
+        setEmailCheckStatus({
+          checking: false,
+          available: Boolean(data.available),
+          message: data.message || (data.available ? null : `The email address ${rawEmail} is already linked to another account.`),
+        })
+      } catch {
+        setEmailCheckStatus({ checking: false, available: true, message: null })
+      }
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [form.email, initialData.registerNumber])
+
   // Send Email OTP
   const handleSendEmailOTP = async () => {
     if (!form.email.trim() || !form.email.includes('@')) {
       toast.error('Please enter a valid personal email address.')
+      return
+    }
+
+    if (emailCheckStatus.available === false) {
+      toast.error(
+        emailCheckStatus.message ||
+        'This email address is already linked to another account. Please use a unique personal email.'
+      )
       return
     }
 
@@ -301,10 +351,19 @@ export function StudentOnboardingModal({
         }
         toast.success(`Verification OTP sent to ${form.email.trim()}`)
       } else {
-        toast.error(data.message || 'Failed to send OTP')
+        const errorMsg = data.message || 'Failed to send OTP'
+        toast.error(errorMsg)
+        if (errorMsg.includes('already linked') || errorMsg.includes('already registered')) {
+          setEmailCheckStatus({
+            checking: false,
+            available: false,
+            message: errorMsg,
+          })
+        }
       }
     } catch {
       toast.error('Network error sending OTP. Please try again.')
+
     } finally {
       setLoading(false)
     }
@@ -1150,20 +1209,88 @@ export function StudentOnboardingModal({
                     autoComplete="email"
                     placeholder="Enter personal email (e.g. name@gmail.com)"
                     value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="flex-1 w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm((prev) => ({
+                        ...prev,
+                        email: val,
+                        ...(emailOtpSent || otpVerified ? { emailOtp: '' } : {}),
+                      }))
+                      if (emailOtpSent || otpVerified) {
+                        setEmailOtpSent(false)
+                        setOtpVerified(false)
+                        setOtpError(null)
+                      }
+                    }}
+                    className={cn(
+                      "flex-1 w-full p-2.5 sm:p-3 rounded-xl border bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:outline-none transition-all",
+                      emailCheckStatus.available === false
+                        ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20"
+                        : emailCheckStatus.available === true
+                        ? "border-emerald-400 focus:ring-emerald-500 bg-emerald-50/15"
+                        : "border-gray-300 focus:ring-[#1557C0]"
+                    )}
                   />
                   <button
                     type="button"
                     onClick={handleSendEmailOTP}
-                    disabled={loading || emailOtpCooldown > 0}
-                    className="w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs sm:text-sm shrink-0 cursor-pointer shadow-xs disabled:opacity-50 transition-all flex items-center justify-center gap-1.5"
+                    disabled={
+                      loading ||
+                      emailOtpCooldown > 0 ||
+                      emailCheckStatus.available === false ||
+                      emailCheckStatus.checking
+                    }
+                    className={cn(
+                      "w-full sm:w-auto px-4 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm shrink-0 cursor-pointer shadow-xs disabled:opacity-50 transition-all flex items-center justify-center gap-1.5",
+                      emailCheckStatus.available === false
+                        ? "bg-slate-300 text-slate-500 cursor-not-allowed border border-slate-300"
+                        : "bg-[#1557C0] hover:bg-[#0e44b5] text-white"
+                    )}
                   >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send Code'}</span>
+                    {emailCheckStatus.checking ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {emailOtpCooldown > 0
+                        ? `Resend (${emailOtpCooldown}s)`
+                        : emailOtpSent
+                        ? 'Resend OTP'
+                        : 'Send Code'}
+                    </span>
                   </button>
                 </div>
+
+                {/* Email Check Feedback Status Indicator */}
+                {emailCheckStatus.checking && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-[#1557C0] font-medium animate-pulse">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Checking email availability...</span>
+                  </div>
+                )}
+
+                {emailCheckStatus.available === false && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-2 text-xs font-semibold shadow-2xs animate-in fade-in">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-black text-rose-900 text-xs">Email Already Linked to Another Account</p>
+                      <p className="text-[11px] text-rose-700 font-medium leading-snug mt-0.5">
+                        {emailCheckStatus.message ||
+                          `The email address ${form.email} is already linked to another account. Please use your unique personal or official email.`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {emailCheckStatus.available === true && form.email && form.email.includes('@') && !emailOtpSent && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 animate-in fade-in">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Email is unique & ready. Click &quot;Send Code&quot; to receive your verification OTP.</span>
+                  </div>
+                )}
               </div>
+
 
               {/* Demo OTP Helper if generated */}
               {demoOtp && (

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getSession, createToken, verifyOTPChallenge } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
@@ -282,6 +283,7 @@ export async function POST(request: NextRequest) {
         await prisma.student.update({
           where: { id: studentRec.id },
           data: {
+            userId: targetUserId,
             ...(studentDob ? { dateOfBirth: studentDob } : {}),
             department: department || studentRec.department || 'Artificial Intelligence & Data Science',
             year: parsedYear,
@@ -300,6 +302,13 @@ export async function POST(request: NextRequest) {
             ...(advisorName !== undefined && advisorName !== '' ? { advisorName: advisorName.trim() } : {}),
           } as any,
         }).catch((err) => console.warn('Student update warning:', err))
+
+        if (studentRec.userId !== targetUserId) {
+          await prisma.user.update({
+            where: { id: studentRec.userId },
+            data: { mustChangePassword: false },
+          }).catch(() => {})
+        }
       } else if (targetRegNumber) {
         await prisma.student.create({
           data: {
@@ -453,6 +462,15 @@ export async function POST(request: NextRequest) {
       path: '/',
       maxAge: 7 * 24 * 60 * 60,
     })
+
+    // Invalidate dashboard caches to ensure updated profile loads fresh without onboarding popups
+    try {
+      revalidatePath('/dashboard')
+      revalidatePath('/dashboard/profile')
+      revalidatePath('/faculty-dashboard')
+      revalidatePath('/hod-dashboard')
+      revalidatePath('/admin/students')
+    } catch {}
 
     return response
   } catch (error) {

@@ -117,6 +117,14 @@ export function StaffOnboardingModal({
   const [otpError, setOtpError] = useState<string | null>(null)
   const [otpChallenge, setOtpChallenge] = useState<string | null>(null)
 
+  // Email Uniqueness & Availability Check State
+  const [emailCheckStatus, setEmailCheckStatus] = useState<{
+    checking: boolean
+    available: boolean | null
+    message: string | null
+  }>({ checking: false, available: null, message: null })
+
+
   // Correction Modal State
   const [showCorrectionModal, setShowCorrectionModal] = useState(false)
   const [correctionCategory, setCorrectionCategory] = useState('designation')
@@ -339,10 +347,52 @@ export function StaffOnboardingModal({
     setOnboardingStep(2)
   }
 
+  // Real-time debounced email availability check
+  useEffect(() => {
+    const rawEmail = form.email?.trim().toLowerCase()
+    if (!rawEmail || !rawEmail.includes('@') || !rawEmail.includes('.')) {
+      setEmailCheckStatus({ checking: false, available: null, message: null })
+      return
+    }
+
+    setEmailCheckStatus((prev) => ({ ...prev, checking: true }))
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: rawEmail,
+            facultyId: initialData.facultyId,
+          }),
+        })
+        const data = await res.json()
+        setEmailCheckStatus({
+          checking: false,
+          available: Boolean(data.available),
+          message: data.message || (data.available ? null : `The email address ${rawEmail} is already linked to another account.`),
+        })
+      } catch {
+        setEmailCheckStatus({ checking: false, available: true, message: null })
+      }
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [form.email, initialData.facultyId])
+
   // Send Email OTP
   const handleSendEmailOTP = async () => {
     if (!form.email.trim() || !form.email.includes('@')) {
       toast.error('Please enter a valid official/personal email address.')
+      return
+    }
+
+    if (emailCheckStatus.available === false) {
+      toast.error(
+        emailCheckStatus.message ||
+        'This email address is already linked to another account. Please use a unique official email.'
+      )
       return
     }
 
@@ -379,7 +429,15 @@ export function StaffOnboardingModal({
         }
         toast.success(`Verification OTP sent to ${form.email.trim()}`)
       } else {
-        toast.error(data.message || 'Failed to send OTP')
+        const errorMsg = data.message || 'Failed to send OTP'
+        toast.error(errorMsg)
+        if (errorMsg.includes('already linked') || errorMsg.includes('already registered')) {
+          setEmailCheckStatus({
+            checking: false,
+            available: false,
+            message: errorMsg,
+          })
+        }
       }
     } catch {
       toast.error('Network error sending OTP. Please try again.')
@@ -1061,25 +1119,93 @@ export function StaffOnboardingModal({
                 <label className="block font-bold text-gray-700 text-[11px] mb-1">
                   Email Address *
                 </label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="email"
                     required
                     placeholder="Enter your personal or official email address"
                     value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setForm((prev) => ({
+                        ...prev,
+                        email: val,
+                        ...(emailOtpSent || otpVerified ? { emailOtp: '' } : {}),
+                      }))
+                      if (emailOtpSent || otpVerified) {
+                        setEmailOtpSent(false)
+                        setOtpVerified(false)
+                        setOtpError(null)
+                      }
+                    }}
+                    className={cn(
+                      "flex-1 w-full p-2.5 rounded-xl border bg-white font-medium text-[#071A41] focus:ring-2 focus:outline-none transition-all",
+                      emailCheckStatus.available === false
+                        ? "border-rose-400 focus:ring-rose-500 bg-rose-50/20"
+                        : emailCheckStatus.available === true
+                        ? "border-emerald-400 focus:ring-emerald-500 bg-emerald-50/15"
+                        : "border-gray-300 focus:ring-[#1557C0]"
+                    )}
                   />
                   <button
                     type="button"
                     onClick={handleSendEmailOTP}
-                    disabled={loading || emailOtpCooldown > 0 || !form.email.trim()}
-                    className="px-4 py-2.5 rounded-xl bg-[#1557C0] hover:bg-[#0e44b5] text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50"
+                    disabled={
+                      loading ||
+                      emailOtpCooldown > 0 ||
+                      !form.email.trim() ||
+                      emailCheckStatus.available === false ||
+                      emailCheckStatus.checking
+                    }
+                    className={cn(
+                      "px-4 py-2.5 rounded-xl font-bold text-xs shrink-0 cursor-pointer shadow-xs disabled:opacity-50 transition-all flex items-center justify-center gap-1.5",
+                      emailCheckStatus.available === false
+                        ? "bg-slate-300 text-slate-500 cursor-not-allowed border border-slate-300"
+                        : "bg-[#1557C0] hover:bg-[#0e44b5] text-white"
+                    )}
                   >
-                    {emailOtpCooldown > 0 ? `Resend (${emailOtpCooldown}s)` : emailOtpSent ? 'Resend OTP' : 'Send OTP'}
+                    {emailCheckStatus.checking ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : null}
+                    <span>
+                      {emailOtpCooldown > 0
+                        ? `Resend (${emailOtpCooldown}s)`
+                        : emailOtpSent
+                        ? 'Resend OTP'
+                        : 'Send OTP'}
+                    </span>
                   </button>
                 </div>
+
+                {/* Email Check Feedback Status Indicator */}
+                {emailCheckStatus.checking && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-[#1557C0] font-medium animate-pulse">
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>Checking email availability...</span>
+                  </div>
+                )}
+
+                {emailCheckStatus.available === false && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-2 text-xs font-semibold shadow-2xs animate-in fade-in">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-black text-rose-900 text-xs">Email Already Linked to Another Account</p>
+                      <p className="text-[11px] text-rose-700 font-medium leading-snug mt-0.5">
+                        {emailCheckStatus.message ||
+                          `The email address ${form.email} is already linked to another account. Please use your unique personal or official email.`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {emailCheckStatus.available === true && form.email && form.email.includes('@') && !emailOtpSent && (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 animate-in fade-in">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Email is unique & ready. Click &quot;Send OTP&quot; to receive your verification code.</span>
+                  </div>
+                )}
               </div>
+
 
               {/* Demo OTP Helper if generated */}
               {demoOtp && (

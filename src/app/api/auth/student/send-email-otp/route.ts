@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession, sendStudentVerificationEmail } from '@/lib/auth'
+import { getSession, sendStudentVerificationEmail, checkEmailAvailability } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateOTP, hashOTP } from '@/lib/utils'
 
@@ -19,20 +19,24 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase()
 
-    // Check if email is already taken by another active user
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        email: normalizedEmail,
-        id: { not: session.userId },
-      },
+    // Check if email is already linked to another active account
+    const availability = await checkEmailAvailability(normalizedEmail, {
+      userId: session.userId,
+      registerNumber: session.registerNumber,
     })
 
-    if (existingUser) {
+    if (!availability.available) {
       return NextResponse.json(
-        { success: false, message: 'This email is already registered to another account.' },
+        {
+          success: false,
+          message:
+            availability.message ||
+            `The email address ${normalizedEmail} is already linked to another account. Please use your unique personal or official email.`,
+        },
         { status: 400 }
       )
     }
+
 
     // Generate 6-digit OTP
     const otp = generateOTP()
