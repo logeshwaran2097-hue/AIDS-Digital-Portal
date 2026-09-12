@@ -47,12 +47,14 @@ import {
   Trophy,
   ArrowRight,
   Info,
+  Plus,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
 import { AdvisorODReviewModal } from '@/components/od/AdvisorODReviewModal'
 import { DossierPopupModal } from '@/components/od/DossierPopupModal'
+import { ApplyODPermissionModal } from '@/app/dashboard/attendance/components/ApplyODPermissionModal'
 
 export interface TrackedApplication {
   id: string
@@ -89,6 +91,8 @@ interface ODApplicationsDashboardViewProps {
     section?: string
     batch?: string
   } | null
+  studentData?: any
+  userName?: string
 }
 
 /**
@@ -156,10 +160,13 @@ function parseHackathonStages(rawReason: string) {
 export function ODApplicationsDashboardView({
   viewRole,
   advisorClassInfo,
+  studentData,
+  userName,
 }: ODApplicationsDashboardViewProps) {
   const [applications, setApplications] = useState<TrackedApplication[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
@@ -436,7 +443,17 @@ export function ODApplicationsDashboardView({
               </span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {viewRole === 'student' && studentData && (
+                <button
+                  type="button"
+                  onClick={() => setIsApplyModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#E7B93E] to-[#B8860B] hover:brightness-110 active:scale-95 text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 text-[#071A3D]" />
+                  <span>+ Apply OD / Leave</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => fetchApplications(true)}
@@ -460,39 +477,60 @@ export function ODApplicationsDashboardView({
           {/* Main Title & Subtitle */}
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Student OD &amp; Leave Applications Register
+              {viewRole === 'student' ? 'My OD & Leave Applications Register' : 'Student OD & Leave Applications Register'}
             </h1>
             <p className="text-xs sm:text-sm text-blue-200/90 font-medium mt-1">
-              Class Advisor Section Advisory · Official Institutional Student Representation &amp; Absence Records · B.Tech AI &amp; DS
+              {viewRole === 'student'
+                ? 'Student On-Duty & Leave Requisitions · Live Endorsement Clearance & Attendance Sync · B.Tech AI & DS'
+                : 'Class Advisor Section Advisory · Official Institutional Student Representation & Absence Records · B.Tech AI & DS'}
             </p>
           </div>
         </div>
       </div>
 
       {/* ── Mode Banner / Class Jurisdiction ─────────────────────────────── */}
-      <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white rounded-2xl shadow-md p-3.5 px-5 flex items-center justify-between gap-3">
+      <div
+        className={cn(
+          'text-white rounded-2xl shadow-md p-3.5 px-5 flex items-center justify-between gap-3',
+          viewRole === 'student'
+            ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 border border-blue-400/30'
+            : 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700'
+        )}
+      >
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold shrink-0">
-            <Sun className="w-4 h-4 text-white" />
+            {viewRole === 'student' ? <Sparkles className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-white" />}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs sm:text-sm font-black tracking-wide">
-                Class Advisor Review Desk
+                {viewRole === 'student' ? 'Student Application Status Desk' : 'Class Advisor Review Desk'}
               </span>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-white/25 text-white">
-                Advisory Jurisdiction
+              <span
+                className={cn(
+                  'text-[10px] px-2.5 py-0.5 rounded-full font-bold',
+                  viewRole === 'student' ? 'bg-blue-400/30 text-blue-100 border border-blue-300/30' : 'bg-white/25 text-white'
+                )}
+              >
+                {viewRole === 'student' ? 'Personal Submissions' : 'Advisory Jurisdiction'}
               </span>
             </div>
-            <p className="text-[11px] text-amber-100 font-medium hidden sm:block">
-              Review event requisitions, parent telephone checks, and cumulative attendance before endorsing to HOD
+            <p
+              className={cn(
+                'text-[11px] font-medium hidden sm:block',
+                viewRole === 'student' ? 'text-blue-100' : 'text-amber-100'
+              )}
+            >
+              {viewRole === 'student'
+                ? 'Track your submitted requisitions, Class Advisor verification, and HOD approvals in real time'
+                : 'Review event requisitions, parent telephone checks, and cumulative attendance before endorsing to HOD'}
             </p>
           </div>
         </div>
 
         {advisorClassInfo && (
-          <span className="text-xs font-bold bg-black/20 px-3.5 py-1 rounded-xl text-amber-100 border border-white/10 shrink-0">
-            Year {advisorClassInfo.year || 2} Section {advisorClassInfo.section || 'A'} (Sem 3)
+          <span className="text-xs font-bold bg-black/25 px-3.5 py-1 rounded-xl text-blue-100 border border-white/10 shrink-0">
+            Year {advisorClassInfo.year || 2} Section {advisorClassInfo.section || 'A'}
           </span>
         )}
       </div>
@@ -681,14 +719,30 @@ export function ODApplicationsDashboardView({
           <p className="text-xs text-gray-500 font-bold">Retrieving official OD &amp; Leave applications...</p>
         </div>
       ) : filteredApplications.length === 0 ? (
-        <div className="bg-white rounded-3xl p-16 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-3 text-center">
-          <FileText className="w-12 h-12 text-gray-300" />
-          <h3 className="text-base font-bold text-gray-800">No OD &amp; Leave Applications Found</h3>
+        <div className="bg-white rounded-3xl p-12 sm:p-16 border border-gray-200 shadow-xs flex flex-col items-center justify-center gap-3.5 text-center">
+          <div className="w-16 h-16 rounded-3xl bg-blue-50 text-[#1455D9] flex items-center justify-center">
+            <FileText className="w-8 h-8 text-blue-600" />
+          </div>
+          <h3 className="text-base font-bold text-gray-800">
+            {viewRole === 'student' ? 'No OD & Leave Applications on Record' : 'No OD & Leave Applications Found'}
+          </h3>
           <p className="text-xs text-gray-500 max-w-md">
             {searchQuery || statusFilter !== 'ALL' || typeFilter !== 'ALL'
               ? 'No applications match your active filters. Try clearing filters or search term.'
+              : viewRole === 'student'
+              ? 'You have not submitted any On-Duty or leave applications yet. Click below to apply with proofs.'
               : 'There are currently no active OD or leave applications on record for this section.'}
           </p>
+          {viewRole === 'student' && studentData && (
+            <button
+              type="button"
+              onClick={() => setIsApplyModalOpen(true)}
+              className="mt-2 px-5 py-2.5 bg-gradient-to-r from-[#1455D9] to-[#0E44B8] text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Apply for On-Duty (OD) / Leave</span>
+            </button>
+          )}
         </div>
       ) : viewMode === 'cards' ? (
         /* ── Detailed Cards View ────────────────────────────────────────── */
@@ -1355,6 +1409,19 @@ export function ODApplicationsDashboardView({
           title={viewingDossier.title}
           studentName={viewingDossier.studentName}
           registerNumber={viewingDossier.registerNumber}
+        />
+      )}
+
+      {/* ── Apply OD / Leave Modal for Students ── */}
+      {viewRole === 'student' && studentData && (
+        <ApplyODPermissionModal
+          isOpen={isApplyModalOpen}
+          onClose={() => setIsApplyModalOpen(false)}
+          student={studentData}
+          userName={userName || studentData.name || 'Student'}
+          onApplicationSuccess={() => {
+            fetchApplications(true)
+          }}
         />
       )}
     </div>
