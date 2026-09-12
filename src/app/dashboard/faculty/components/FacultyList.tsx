@@ -128,12 +128,10 @@ export default function FacultyList({
     const regNoPart = student?.registerNumber ? ` (Reg No: ${student.registerNumber})` : ''
     const deptPart = student?.department || 'B.Tech AI & DS'
     const yearPart = student?.year ? `Year ${student.year}` : 'Year 2'
-    const secPart = student?.section ? `Sec ${student.section}` : 'Sec B'
-    const semPart = student?.semester ? ` (Sem ${student.semester})` : ''
 
     const text = `Respected ${facultySalutation},
 
-Greetings! I am ${studentName}${regNoPart} from ${deptPart}, ${yearPart} - ${secPart}${semPart}.
+Greetings! I am ${studentName}${regNoPart} from ${deptPart}, ${yearPart}.
 
 I am reaching out regarding academic guidance and department portal inquiry.
 
