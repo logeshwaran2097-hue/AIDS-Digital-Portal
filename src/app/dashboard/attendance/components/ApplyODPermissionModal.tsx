@@ -7,6 +7,7 @@ import {
   Upload,
   Calendar,
   Users,
+  User,
   Building,
   FileText,
   CheckCircle2,
@@ -51,6 +52,166 @@ interface TeamMember {
   name: string
   registerNumber: string
 }
+
+interface ParticipationSectionProps {
+  isTeam: boolean
+  setIsTeam: (val: boolean) => void
+  teamName: string
+  setTeamName: (val: string) => void
+  teamMembers: TeamMember[]
+  addTeamMember: () => void
+  removeTeamMember: (index: number) => void
+  updateTeamMember: (index: number, field: keyof TeamMember, value: string) => void
+  theme: 'blue' | 'purple' | 'emerald'
+  soloTitle: string
+  teamTitle: string
+  teamNameLabel: string
+  teamNamePlaceholder: string
+  membersHeader: string
+}
+
+function ParticipationSection({
+  isTeam,
+  setIsTeam,
+  teamName,
+  setTeamName,
+  teamMembers,
+  addTeamMember,
+  removeTeamMember,
+  updateTeamMember,
+  theme,
+  soloTitle,
+  teamTitle,
+  teamNameLabel,
+  teamNamePlaceholder,
+  membersHeader,
+}: ParticipationSectionProps) {
+  const themeStyles = {
+    blue: {
+      activeBtn: 'bg-[#1455D9] text-white shadow-xs',
+      border: 'border-blue-100',
+      focusBorder: 'focus:border-[#1455D9]',
+      textAccent: 'text-[#1455D9]',
+    },
+    purple: {
+      activeBtn: 'bg-purple-700 text-white shadow-xs',
+      border: 'border-purple-100',
+      focusBorder: 'focus:border-purple-600',
+      textAccent: 'text-purple-700',
+    },
+    emerald: {
+      activeBtn: 'bg-emerald-700 text-white shadow-xs',
+      border: 'border-emerald-100',
+      focusBorder: 'focus:border-emerald-600',
+      textAccent: 'text-emerald-700',
+    },
+  }[theme]
+
+  return (
+    <div className="space-y-3 pt-2">
+      <div className="flex items-center justify-between pt-1">
+        <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+          {isTeam ? <Users className="w-3.5 h-3.5 text-gray-500" /> : <User className="w-3.5 h-3.5 text-gray-500" />}
+          <span>Participation Mode</span>
+        </span>
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
+          <button
+            type="button"
+            onClick={() => setIsTeam(false)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+              !isTeam ? themeStyles.activeBtn : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <User className="w-3 h-3" />
+            <span>{soloTitle}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsTeam(true)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+              isTeam ? themeStyles.activeBtn : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Users className="w-3 h-3" />
+            <span>{teamTitle} ({teamMembers.length})</span>
+          </button>
+        </div>
+      </div>
+
+      {isTeam && (
+        <div className={`space-y-2.5 pt-2.5 border-t ${themeStyles.border} animate-in fade-in duration-200`}>
+          <div>
+            <label className="block text-[11px] font-bold text-gray-700 mb-1">
+              {teamNameLabel}
+            </label>
+            <input
+              type="text"
+              value={teamName}
+              onChange={(e) => setTeamName(e.target.value)}
+              placeholder={teamNamePlaceholder}
+              className={`w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium bg-white focus:outline-none ${themeStyles.focusBorder}`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-gray-600 flex items-center gap-1">
+                <Users className="w-3 h-3 text-gray-400" />
+                <span>{membersHeader}</span>
+              </span>
+              <button
+                type="button"
+                onClick={addTeamMember}
+                className={`text-[11px] font-extrabold ${themeStyles.textAccent} hover:underline flex items-center gap-1 cursor-pointer`}
+              >
+                <Plus className="w-3 h-3" /> Add Member
+              </button>
+            </div>
+
+            {teamMembers.map((member, idx) => (
+              <div key={idx} className="flex gap-2 items-center">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    required
+                    placeholder={idx === 0 ? 'Your Name (Lead / Applicant)' : `Member #${idx + 1} Name`}
+                    value={member.name}
+                    onChange={(e) => updateTeamMember(idx, 'name', e.target.value)}
+                    className={`w-full px-3 py-1.5 rounded-lg border border-gray-300 text-xs bg-white focus:outline-none ${themeStyles.focusBorder} pr-12`}
+                  />
+                  {idx === 0 && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded pointer-events-none">
+                      Lead
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Register No"
+                  value={member.registerNumber}
+                  onChange={(e) => updateTeamMember(idx, 'registerNumber', e.target.value)}
+                  className={`w-36 px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-mono uppercase bg-white focus:outline-none ${themeStyles.focusBorder}`}
+                />
+                {teamMembers.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeTeamMember(idx)}
+                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
+                    title="Remove Member"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 export function ApplyODPermissionModal({
   isOpen,
@@ -102,6 +263,12 @@ export function ApplyODPermissionModal({
   const [abstractOrLetterName, setAbstractOrLetterName] = useState('')
 
   if (!isOpen) return null
+
+  const isTeamEligible =
+    appType === 'Technical Hackathon / Competition OD' ||
+    appType === 'Paper Presentation / Conference OD' ||
+    appType === 'Industry Internship / Project Work OD'
+
 
   // Calculate Total Days
   const calculateDays = () => {
@@ -188,6 +355,20 @@ export function ApplyODPermissionModal({
       }
     }
 
+    const isTeamEligible =
+      appType === 'Technical Hackathon / Competition OD' ||
+      appType === 'Paper Presentation / Conference OD' ||
+      appType === 'Industry Internship / Project Work OD'
+
+    if (isTeam && isTeamEligible) {
+      for (let i = 0; i < teamMembers.length; i++) {
+        if (!teamMembers[i].name.trim() || !teamMembers[i].registerNumber.trim()) {
+          toast.error(`Please enter both Name and Register Number for Member #${i + 1}.`)
+          return
+        }
+      }
+    }
+
     setLoading(true)
     try {
       const payload = {
@@ -203,8 +384,9 @@ export function ApplyODPermissionModal({
         eventName: eventName.trim(),
         organizer: organizer.trim(),
         eventMode,
-        teamName: isTeam ? teamName.trim() : '',
-        teamMembers: isTeam ? teamMembers : [],
+        teamName: isTeam && isTeamEligible ? teamName.trim() : '',
+        teamMembers: isTeam && isTeamEligible ? teamMembers : [],
+
         projectTitle: projectTitle.trim(),
         domain,
         companyGuide: companyGuide.trim(),
@@ -326,6 +508,20 @@ export function ApplyODPermissionModal({
                   <span className="text-gray-500">Event / Organization:</span>
                   <span className="font-bold text-gray-900">{eventName || organizer || projectTitle || 'Academic'}</span>
                 </div>
+                {isTeamEligible && (
+                  <div className="flex justify-between py-1.5">
+                    <span className="text-gray-500">Participation:</span>
+                    <span className="font-bold">
+                      {isTeam ? (
+                        <span className="text-blue-700">
+                          Team ({teamMembers.length} Member{teamMembers.length > 1 ? 's' : ''}){teamName ? ` · ${teamName}` : ''}
+                        </span>
+                      ) : (
+                        <span className="text-gray-700">Solo (Individual)</span>
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between py-1.5">
                   <span className="text-gray-500">Attached Proofs:</span>
                   <span className="font-bold text-emerald-700">
@@ -482,87 +678,22 @@ export function ApplyODPermissionModal({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs font-bold text-gray-700">Participation Type</span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setIsTeam(false)}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          !isTeam ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        Solo
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsTeam(true)}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          isTeam ? 'bg-[#1455D9] text-white' : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        Team ({teamMembers.length})
-                      </button>
-                    </div>
-                  </div>
-
-                  {isTeam && (
-                    <div className="space-y-2.5 pt-2 border-t border-blue-100">
-                      <div>
-                        <label className="block text-[11px] font-bold text-gray-700 mb-1">Team Name</label>
-                        <input
-                          type="text"
-                          value={teamName}
-                          onChange={(e) => setTeamName(e.target.value)}
-                          placeholder="e.g. Team Neural Hackers"
-                          className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-medium bg-white focus:outline-none focus:border-[#1455D9]"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-gray-600">Team Members</span>
-                          <button
-                            type="button"
-                            onClick={addTeamMember}
-                            className="text-[11px] font-extrabold text-[#1455D9] hover:underline flex items-center gap-1"
-                          >
-                            <Plus className="w-3 h-3" /> Add Member
-                          </button>
-                        </div>
-
-                        {teamMembers.map((member, idx) => (
-                          <div key={idx} className="flex gap-2 items-center">
-                            <input
-                              type="text"
-                              required
-                              placeholder="Member Name"
-                              value={member.name}
-                              onChange={(e) => updateTeamMember(idx, 'name', e.target.value)}
-                              className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-xs bg-white focus:outline-none focus:border-[#1455D9]"
-                            />
-                            <input
-                              type="text"
-                              required
-                              placeholder="Register No"
-                              value={member.registerNumber}
-                              onChange={(e) => updateTeamMember(idx, 'registerNumber', e.target.value)}
-                              className="w-36 px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-mono uppercase bg-white focus:outline-none focus:border-[#1455D9]"
-                            />
-                            {teamMembers.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeTeamMember(idx)}
-                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <ParticipationSection
+                    isTeam={isTeam}
+                    setIsTeam={setIsTeam}
+                    teamName={teamName}
+                    setTeamName={setTeamName}
+                    teamMembers={teamMembers}
+                    addTeamMember={addTeamMember}
+                    removeTeamMember={removeTeamMember}
+                    updateTeamMember={updateTeamMember}
+                    theme="blue"
+                    soloTitle="Solo"
+                    teamTitle="Team"
+                    teamNameLabel="Team Name"
+                    teamNamePlaceholder="e.g. Team Neural Hackers"
+                    membersHeader="Team Members"
+                  />
                 </div>
               )}
 
@@ -616,6 +747,23 @@ export function ApplyODPermissionModal({
                       />
                     </div>
                   </div>
+
+                  <ParticipationSection
+                    isTeam={isTeam}
+                    setIsTeam={setIsTeam}
+                    teamName={teamName}
+                    setTeamName={setTeamName}
+                    teamMembers={teamMembers}
+                    addTeamMember={addTeamMember}
+                    removeTeamMember={removeTeamMember}
+                    updateTeamMember={updateTeamMember}
+                    theme="purple"
+                    soloTitle="Solo Author"
+                    teamTitle="Team / Co-Authors"
+                    teamNameLabel="Author Group / Research Team Name (Optional)"
+                    teamNamePlaceholder="e.g. AI Vision Research Group"
+                    membersHeader="Co-Authors & Presenting Team Members"
+                  />
                 </div>
               )}
 
@@ -668,6 +816,23 @@ export function ApplyODPermissionModal({
                       className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs bg-white focus:outline-none focus:border-emerald-600"
                     />
                   </div>
+
+                  <ParticipationSection
+                    isTeam={isTeam}
+                    setIsTeam={setIsTeam}
+                    teamName={teamName}
+                    setTeamName={setTeamName}
+                    teamMembers={teamMembers}
+                    addTeamMember={addTeamMember}
+                    removeTeamMember={removeTeamMember}
+                    updateTeamMember={updateTeamMember}
+                    theme="emerald"
+                    soloTitle="Solo Intern"
+                    teamTitle="Team Project"
+                    teamNameLabel="Project Team / Cohort Name (Optional)"
+                    teamNamePlaceholder="e.g. Capstone Team Alpha"
+                    membersHeader="Project Team Members / Co-Interns"
+                  />
                 </div>
               )}
 
