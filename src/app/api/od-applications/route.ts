@@ -607,7 +607,12 @@ export async function POST(request: Request) {
 
     const teamInfoStr =
       teamMembers && teamMembers.length > 0
-        ? ` | Team: ${teamName || 'Yes'} (${teamMembers.length} members: ${teamMembers.map((m: any) => `${m.name} [${m.registerNumber}]`).join(', ')})`
+        ? ` | Team: ${teamName || 'Yes'} (${teamMembers.length} members: ${teamMembers
+            .map(
+              (m: any) =>
+                `${m.name} [${m.registerNumber}${m.year ? `, Yr ${m.year}` : ''}${m.section ? ` Sec ${m.section}` : ''}]`
+            )
+            .join(', ')})`
         : ''
 
     // 1. DISPATCH TO SYSTEM ADMIN
@@ -625,7 +630,7 @@ export async function POST(request: Request) {
     await prisma.notification.create({
       data: {
         title: `🏛️ [HOD Approval Needed] ${applicationType}: ${name} (${regUpper})`,
-        message: `Department permission application received for ${name} (${regUpper}, Yr ${year || 2}/Sec ${section || 'A'}). Dates: ${fromDate} to ${toDate} (${days} days) for "${eventSummary}". Attached Proofs: ${attachedProofsList}.`,
+        message: `Department permission application received for ${name} (${regUpper}, Yr ${year || 2}/Sec ${section || 'A'}). Dates: ${fromDate} to ${toDate} (${days} days) for "${eventSummary}"${teamInfoStr}. Attached Proofs: ${attachedProofsList}.`,
         target: 'hod',
         createdByName: `${name} (${regUpper})`,
         status: 'published',
@@ -636,7 +641,7 @@ export async function POST(request: Request) {
     await prisma.notification.create({
       data: {
         title: `👨‍🏫 [Class Advisor Review] ${applicationType}: ${name} (${regUpper})`,
-        message: `Your class student ${name} (Yr ${year || 2} - Sec ${section || 'A'}) requested ${applicationType} from ${fromDate} to ${toDate}. Event: ${eventSummary}. Please review student proofs and attendance percentage before endorsement.`,
+        message: `Your class student ${name} (Yr ${year || 2} - Sec ${section || 'A'}) requested ${applicationType} from ${fromDate} to ${toDate}. Event: ${eventSummary}${teamInfoStr}. Please review student proofs and attendance percentage before endorsement.`,
         target: 'faculty',
         createdByName: `${name} (${regUpper})`,
         status: 'published',
@@ -660,7 +665,7 @@ export async function POST(request: Request) {
         userName: `${name} (${regUpper})`,
         action: 'od_application_submitted',
         module: 'attendance_portal',
-        details: `OD Type: ${applicationType} | Duration: ${fromDate} to ${toDate} (${days} days) | Event: ${eventSummary} | Proofs: ${attachedProofsList} | Reason: ${reason || 'N/A'}`,
+        details: `OD Type: ${applicationType} | Duration: ${fromDate} to ${toDate} (${days} days) | Event: ${eventSummary}${teamInfoStr} | Proofs: ${attachedProofsList} | Reason: ${reason || 'N/A'}`,
         status: 'pending_advisor_approval',
       },
     }).catch(() => {})

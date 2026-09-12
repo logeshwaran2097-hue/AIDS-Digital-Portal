@@ -51,6 +51,8 @@ interface ApplyODPermissionModalProps {
 interface TeamMember {
   name: string
   registerNumber: string
+  year?: string
+  section?: string
 }
 
 interface ParticipationSectionProps {
@@ -139,7 +141,7 @@ function ParticipationSection({
       </div>
 
       {isTeam && (
-        <div className={`space-y-2.5 pt-2.5 border-t ${themeStyles.border} animate-in fade-in duration-200`}>
+        <div className={`space-y-3 pt-2.5 border-t ${themeStyles.border} animate-in fade-in duration-200`}>
           <div>
             <label className="block text-[11px] font-bold text-gray-700 mb-1">
               {teamNameLabel}
@@ -153,56 +155,123 @@ function ParticipationSection({
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-gray-600 flex items-center gap-1">
-                <Users className="w-3 h-3 text-gray-400" />
-                <span>{membersHeader}</span>
-              </span>
+              <div>
+                <span className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+                  <Users className="w-3 h-3 text-gray-400" />
+                  <span>{membersHeader}</span>
+                </span>
+                <span className="text-[10px] text-gray-400 block">
+                  Select Year (Seniors/Juniors) &amp; Class/Section for each member
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={addTeamMember}
-                className={`text-[11px] font-extrabold ${themeStyles.textAccent} hover:underline flex items-center gap-1 cursor-pointer`}
+                className={`text-[11px] font-extrabold ${themeStyles.textAccent} hover:underline flex items-center gap-1 cursor-pointer shrink-0`}
               >
                 <Plus className="w-3 h-3" /> Add Member
               </button>
             </div>
 
             {teamMembers.map((member, idx) => (
-              <div key={idx} className="flex gap-2 items-center">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    required
-                    placeholder={idx === 0 ? 'Your Name (Lead / Applicant)' : `Member #${idx + 1} Name`}
-                    value={member.name}
-                    onChange={(e) => updateTeamMember(idx, 'name', e.target.value)}
-                    className={`w-full px-3 py-1.5 rounded-lg border border-gray-300 text-xs bg-white focus:outline-none ${themeStyles.focusBorder} pr-12`}
-                  />
-                  {idx === 0 && (
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded pointer-events-none">
-                      Lead
+              <div
+                key={idx}
+                className="p-3 bg-white rounded-xl border border-gray-200/90 shadow-2xs space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+                      {idx === 0 ? 'Team Lead (Applicant)' : `Member #${idx + 1}`}
                     </span>
+                    {idx === 0 ? (
+                      <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                        Lead
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-bold text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded">
+                        Co-Participant
+                      </span>
+                    )}
+                  </div>
+                  {idx > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeTeamMember(idx)}
+                      className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Remove Member"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span className="text-[10px]">Remove</span>
+                    </button>
                   )}
                 </div>
-                <input
-                  type="text"
-                  required
-                  placeholder="Register No"
-                  value={member.registerNumber}
-                  onChange={(e) => updateTeamMember(idx, 'registerNumber', e.target.value)}
-                  className={`w-36 px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-mono uppercase bg-white focus:outline-none ${themeStyles.focusBorder}`}
-                />
-                {teamMembers.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeTeamMember(idx)}
-                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-colors"
-                    title="Remove Member"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                  {/* Full Name */}
+                  <div className="sm:col-span-4">
+                    <label className="block text-[10px] font-bold text-gray-500 mb-0.5">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={idx === 0 ? 'Your Full Name' : 'Full Name'}
+                      value={member.name}
+                      onChange={(e) => updateTeamMember(idx, 'name', e.target.value)}
+                      className={`w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs bg-white focus:outline-none ${themeStyles.focusBorder}`}
+                    />
+                  </div>
+
+                  {/* Register Number */}
+                  <div className="sm:col-span-3">
+                    <label className="block text-[10px] font-bold text-gray-500 mb-0.5">
+                      Register No *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Register No"
+                      value={member.registerNumber}
+                      onChange={(e) => updateTeamMember(idx, 'registerNumber', e.target.value)}
+                      className={`w-full px-2.5 py-1.5 rounded-lg border border-gray-300 text-xs font-mono uppercase bg-white focus:outline-none ${themeStyles.focusBorder}`}
+                    />
+                  </div>
+
+                  {/* Academic Year (Senior / Junior) */}
+                  <div className="sm:col-span-3">
+                    <label className="block text-[10px] font-bold text-gray-500 mb-0.5">
+                      Year (Senior/Junior) *
+                    </label>
+                    <select
+                      value={member.year || '2'}
+                      onChange={(e) => updateTeamMember(idx, 'year', e.target.value)}
+                      className={`w-full px-2 py-1.5 rounded-lg border border-gray-300 text-xs bg-white font-semibold text-gray-800 focus:outline-none ${themeStyles.focusBorder} cursor-pointer`}
+                    >
+                      <option value="1">Year 1 (Junior)</option>
+                      <option value="2">Year 2</option>
+                      <option value="3">Year 3</option>
+                      <option value="4">Year 4 (Senior)</option>
+                    </select>
+                  </div>
+
+                  {/* Class / Section */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-gray-500 mb-0.5">
+                      Class / Sec *
+                    </label>
+                    <select
+                      value={member.section || 'A'}
+                      onChange={(e) => updateTeamMember(idx, 'section', e.target.value)}
+                      className={`w-full px-2 py-1.5 rounded-lg border border-gray-300 text-xs bg-white font-semibold text-gray-800 focus:outline-none ${themeStyles.focusBorder} cursor-pointer`}
+                    >
+                      <option value="A">Sec A</option>
+                      <option value="B">Sec B</option>
+                      <option value="C">Sec C</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -240,7 +309,12 @@ export function ApplyODPermissionModal({
   const [isTeam, setIsTeam] = useState(true)
   const [teamName, setTeamName] = useState('')
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    { name: userName, registerNumber: student.registerNumber },
+    {
+      name: userName,
+      registerNumber: student.registerNumber,
+      year: String(student.year || '2'),
+      section: student.section || 'A',
+    },
   ])
 
   // Project / Internship Details
@@ -309,7 +383,7 @@ export function ApplyODPermissionModal({
       toast.error('Maximum 6 members per team.')
       return
     }
-    setTeamMembers([...teamMembers, { name: '', registerNumber: '' }])
+    setTeamMembers([...teamMembers, { name: '', registerNumber: '', year: '2', section: 'A' }])
   }
 
   const removeTeamMember = (index: number) => {
@@ -509,17 +583,33 @@ export function ApplyODPermissionModal({
                   <span className="font-bold text-gray-900">{eventName || organizer || projectTitle || 'Academic'}</span>
                 </div>
                 {isTeamEligible && (
-                  <div className="flex justify-between py-1.5">
-                    <span className="text-gray-500">Participation:</span>
-                    <span className="font-bold">
-                      {isTeam ? (
-                        <span className="text-blue-700">
-                          Team ({teamMembers.length} Member{teamMembers.length > 1 ? 's' : ''}){teamName ? ` · ${teamName}` : ''}
-                        </span>
-                      ) : (
-                        <span className="text-gray-700">Solo (Individual)</span>
-                      )}
-                    </span>
+                  <div className="py-1.5 space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Participation:</span>
+                      <span className="font-bold">
+                        {isTeam ? (
+                          <span className="text-blue-700">
+                            Team ({teamMembers.length} Member{teamMembers.length > 1 ? 's' : ''}){teamName ? ` · ${teamName}` : ''}
+                          </span>
+                        ) : (
+                          <span className="text-gray-700">Solo (Individual)</span>
+                        )}
+                      </span>
+                    </div>
+                    {isTeam && (
+                      <div className="pl-2 border-l-2 border-blue-200 space-y-1 text-[11px]">
+                        {teamMembers.map((m, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-gray-700">
+                            <span className="font-medium truncate max-w-[200px]">
+                              {idx + 1}. {m.name || 'Member'} <span className="font-mono text-gray-400">({m.registerNumber || 'N/A'})</span>
+                            </span>
+                            <span className="text-[10px] font-bold text-blue-800 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded shrink-0">
+                              Yr {m.year || '2'} · Sec {m.section || 'A'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between py-1.5">
