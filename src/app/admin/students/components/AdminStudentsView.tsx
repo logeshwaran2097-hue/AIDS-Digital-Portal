@@ -186,6 +186,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     email: '',
     password: '',
     phone: '',
+    parentPhone: '',
     dateOfBirth: '',
     bloodGroup: '',
     residencyStatus: '',
@@ -302,6 +303,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           email: '',
           password: '',
           phone: '',
+          parentPhone: '',
           dateOfBirth: '',
           year: 1,
           semester: 1,
@@ -365,6 +367,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          parentPhone: formData.parentPhone,
           dateOfBirth: formData.dateOfBirth,
           year: Number(formData.year),
           semester: Number(formData.semester),
@@ -455,6 +458,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 email: '',
                 password: '',
                 phone: '',
+                parentPhone: '',
                 dateOfBirth: '',
                 bloodGroup: '',
                 residencyStatus: '',
@@ -908,6 +912,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 name: s.name || '',
                                 email: cleanEmail,
                                 phone: s.phone || '',
+                                parentPhone: s.parentPhone || '',
                                 dateOfBirth: s.dateOfBirth || '',
                                 bloodGroup: s.bloodGroup || '',
                                 residencyStatus: s.residencyStatus || '',
@@ -1515,16 +1520,37 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Phone</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Student Phone</label>
                   <input
                     type="text"
                     autoComplete="off"
                     name="student_phone_edit"
+                    placeholder="e.g. 9876543210"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1 flex items-center justify-between">
+                    <span>Parent Phone</span>
+                    <span className="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      WhatsApp / Fast2SMS
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    name="student_parent_phone_edit"
+                    placeholder="e.g. 9876543210"
+                    value={formData.parentPhone}
+                    onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Date of Birth</label>
                   <input
@@ -1537,9 +1563,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Blood Group</label>
                   <select
@@ -1558,19 +1581,20 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="AB -ve">AB -ve</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Residency Status</label>
-                  <select
-                    value={formData.residencyStatus}
-                    onChange={(e) => setFormData({ ...formData, residencyStatus: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  >
-                    <option value="">Select Residency Status</option>
-                    <option value="Day Scholar">Day Scholar</option>
-                    <option value="Hosteller">Hosteller</option>
-                    <option value="Foreign Student">Foreign Student</option>
-                  </select>
-                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Residency Status</label>
+                <select
+                  value={formData.residencyStatus}
+                  onChange={(e) => setFormData({ ...formData, residencyStatus: e.target.value })}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                >
+                  <option value="">Select Residency Status</option>
+                  <option value="Day Scholar">Day Scholar</option>
+                  <option value="Hosteller">Hosteller</option>
+                  <option value="Foreign Student">Foreign Student</option>
+                </select>
               </div>
 
               {/* Day Scholar: Bus Transit Fields */}
