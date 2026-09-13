@@ -74,8 +74,32 @@ export interface LabPreset {
   tools: string
 }
 
-
-
+export const COMMUNICATION_LAB_ACTIVITIES = [
+  {
+    name: 'Listening & Phonetics',
+    topics: 'Accent neutralisation, phonetic symbol drills, and comprehension audio tests.',
+  },
+  {
+    name: 'JAM (Just-A-Minute)',
+    topics: '1-minute impromptu speaking drills for spontaneity and fluency.',
+  },
+  {
+    name: 'Oral & Technical Presentations',
+    topics: 'Formal PPT presentations with visual aids and peer Q&A.',
+  },
+  {
+    name: 'Group Discussions (GD)',
+    topics: 'Formal GD rounds on contemporary tech and social issues.',
+  },
+  {
+    name: 'Formal Writing & Etiquette',
+    topics: 'Professional resumes, cover letters, and corporate email correspondence.',
+  },
+  {
+    name: 'Mock Interviews & Viva',
+    topics: 'One-on-one HR and technical interview simulations with behavioral scoring.',
+  },
+]
 
 interface Props {
   initialDetails: LabDetails
