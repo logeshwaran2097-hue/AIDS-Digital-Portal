@@ -5,10 +5,13 @@ import Image from 'next/image'
 import { Sparkles, GraduationCap, ShieldCheck, Cpu, ArrowRight } from 'lucide-react'
 
 export function MobileAppSplashScreen() {
-  const [isVisible, setIsVisible] = useState(true)
+  const [isVisible, setIsVisible] = useState(false)
   const [isFadingOut, setIsFadingOut] = useState(false)
 
   useEffect(() => {
+    // Show splash only on client side to prevent hydration mismatch
+    setIsVisible(true)
+
     // 4.2-second ultra-luxury cinematic presentation, then smooth dissolve
     const fadeTimer = setTimeout(() => {
       setIsFadingOut(true)

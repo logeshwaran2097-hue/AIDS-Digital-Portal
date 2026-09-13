@@ -14,17 +14,6 @@
   "dir": "ltr",
   "prefer_related_applications": false,
   "categories": ["education", "productivity"],
-  "scope_extensions": [
-    {
-      "origin": "https://vsb-aids-portal.vercel.app"
-    },
-    {
-      "origin": "https://vsb-aids-portal.onrender.com"
-    },
-    {
-      "origin": "https://vsb.edu.in"
-    }
-  ],
   "icons": [
     {
       "src": "/icon-192.png",
