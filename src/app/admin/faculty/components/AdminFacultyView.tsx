@@ -54,6 +54,7 @@ import {
   BriefcaseBusiness,
   Printer,
   RotateCcw,
+  Copy,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -354,9 +355,13 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     facultyType: 'both',
   })
 
-  // Quick Presets Modal Tab for Labs & Theory Courses (Semesters 1 - 8)
+  // Quick Presets Modal Tab for Labs (Semesters 1 - 8)
   const [quickLabTab, setQuickLabTab] = useState<string>('sem3')
   const [quickTheoryTab, setQuickTheoryTab] = useState<string>('sem3')
+
+  // Per-day Theory Schedule state
+  const [activeTheoryDay, setActiveTheoryDay] = useState<string>('Mon')
+  const [theoryDayPeriods, setTheoryDayPeriods] = useState<Record<string, string[]>>({})
 
   // Dynamic Editable Labs State (Persistent across browser reloads, without mock data)
   const [semestersLabs, setSemestersLabs] = useState<Record<string, SemesterLabGroup>>(ALL_SEMESTERS_LABS)
@@ -436,6 +441,179 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       return subjects ? [subjects] : []
     }
     return []
+  }
+
+  // Calculate combined formatted timings string for an array of periods
+  const calculateTimesForPeriods = (periods: string[]): string => {
+    const times = periods.map((p) => {
+      const found = PERIOD_LIST.find((item) => item.name === p)
+      return found ? found.time : ''
+    }).filter(Boolean)
+    return times.join(', ')
+  }
+
+  // Serialize theory schedule into classDay, classPeriod, classTime
+  const serializeTheorySchedule = (dayPeriods: Record<string, string[]>) => {
+    const activeDays = DAYS_OF_WEEK.map((d) => d.code).filter(
+      (code) => dayPeriods[code] && dayPeriods[code].length > 0
+    )
+
+    if (activeDays.length === 0) {
+      return {
+        classDay: '',
+        classPeriod: '',
+        classTime: '',
+      }
+    }
+
+    const firstDayPeriods = (dayPeriods[activeDays[0]] || []).slice().sort().join(',')
+    const allSame = activeDays.every(
+      (d) => (dayPeriods[d] || []).slice().sort().join(',') === firstDayPeriods
+    )
+
+    if (allSame) {
+      const periods = dayPeriods[activeDays[0]] || []
+      return {
+        classDay: activeDays.join(', '),
+        classPeriod: periods.join(', '),
+        classTime: calculateTimesForPeriods(periods),
+      }
+    }
+
+    const periodParts: string[] = []
+    const timeParts: string[] = []
+
+    activeDays.forEach((day) => {
+      const periods = dayPeriods[day] || []
+      periodParts.push(`${day}: ${periods.join(', ')}`)
+      const t = calculateTimesForPeriods(periods)
+      if (t) timeParts.push(`${day}: ${t}`)
+    })
+
+    return {
+      classDay: activeDays.join(', '),
+      classPeriod: periodParts.join('; '),
+      classTime: timeParts.join('; '),
+    }
+  }
+
+  // Parse existing classDay and classPeriod back into dayPeriods dictionary
+  const parseScheduleToDayPeriods = (classDay?: string | null, classPeriod?: string | null): Record<string, string[]> => {
+    const result: Record<string, string[]> = {}
+    if (!classPeriod && !classDay) return result
+
+    const rawDayStr = classDay || ''
+    const rawPeriodStr = classPeriod || ''
+
+    if (rawPeriodStr.includes(':')) {
+      const segments = rawPeriodStr.split(/[;|]/).map((s) => s.trim()).filter(Boolean)
+      let parsedAny = false
+      for (const seg of segments) {
+        const match = seg.match(/^([A-Za-z]{3})\s*:\s*(.*)$/)
+        if (match) {
+          const day = match[1]
+          const periods = match[2].split(',').map((p) => p.trim()).filter(Boolean)
+          result[day] = periods
+          parsedAny = true
+        }
+      }
+      if (parsedAny) return result
+    }
+
+    const flatPeriods = rawPeriodStr
+      ? rawPeriodStr.split(',').map((p) => p.trim()).filter((p) => !p.includes('Lab') && Boolean(p))
+      : []
+
+    const days = rawDayStr
+      ? rawDayStr.split(',').map((d) => d.trim()).filter(Boolean)
+      : []
+
+    if (days.length > 0) {
+      days.forEach((d) => {
+        result[d] = [...flatPeriods]
+      })
+    } else if (flatPeriods.length > 0) {
+      result['Mon'] = [...flatPeriods]
+    }
+
+    return result
+  }
+
+  // Day selection/switching for theory
+  const handleSelectDay = (dayCode: string) => {
+    setActiveTheoryDay(dayCode)
+    if (!theoryDayPeriods[dayCode]) {
+      setTheoryDayPeriods((prev) => ({
+        ...prev,
+        [dayCode]: [],
+      }))
+    }
+  }
+
+  // Toggle theory period for current active day
+  const toggleTheoryPeriodForActiveDay = (periodName: string) => {
+    const currentPeriods = theoryDayPeriods[activeTheoryDay] || []
+    const nextPeriods = currentPeriods.includes(periodName)
+      ? currentPeriods.filter((p) => p !== periodName)
+      : [...currentPeriods, periodName]
+
+    nextPeriods.sort((a, b) => {
+      const idxA = PERIOD_LIST.findIndex((p) => p.name === a)
+      const idxB = PERIOD_LIST.findIndex((p) => p.name === b)
+      return idxA - idxB
+    })
+
+    const updated = {
+      ...theoryDayPeriods,
+      [activeTheoryDay]: nextPeriods,
+    }
+    setTheoryDayPeriods(updated)
+
+    const serialized = serializeTheorySchedule(updated)
+    setFormData((prev) => ({
+      ...prev,
+      ...serialized,
+    }))
+  }
+
+  // Clear/disable a specific day
+  const handleToggleDayOff = (dayCode: string) => {
+    const updated = { ...theoryDayPeriods }
+    delete updated[dayCode]
+    setTheoryDayPeriods(updated)
+    const remaining = Object.keys(updated)
+    if (activeTheoryDay === dayCode) {
+      setActiveTheoryDay(remaining[0] || 'Mon')
+    }
+    const serialized = serializeTheorySchedule(updated)
+    setFormData((prev) => ({
+      ...prev,
+      ...serialized,
+    }))
+  }
+
+  // Copy active day periods to all other active days (or Mon-Fri)
+  const copyActivePeriodsToAllDays = () => {
+    const currentPeriods = theoryDayPeriods[activeTheoryDay] || []
+    if (currentPeriods.length === 0) {
+      toast.error(`No periods selected for ${activeTheoryDay} to copy`)
+      return
+    }
+
+    const updated: Record<string, string[]> = { ...theoryDayPeriods }
+    const targetDays = Object.keys(updated).filter((d) => d !== activeTheoryDay && (updated[d] || []).length > 0)
+
+    const destDays = targetDays.length > 0 ? targetDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    destDays.forEach((d) => {
+      updated[d] = [...currentPeriods]
+    })
+    setTheoryDayPeriods(updated)
+    const serialized = serializeTheorySchedule(updated)
+    setFormData((prev) => ({
+      ...prev,
+      ...serialized,
+    }))
+    toast.success(`Copied ${activeTheoryDay} schedule to ${destDays.join(', ')}`)
   }
 
   // Toggle Multiple Theory Days
@@ -810,6 +988,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       let finalClassDay = ''
       let finalClassTime = ''
 
+      if (formData.hasTheory) {
+        const sched = serializeTheorySchedule(theoryDayPeriods)
+        if (sched.classDay) {
+          formData.classDay = sched.classDay
+          formData.classPeriod = sched.classPeriod
+          formData.classTime = sched.classTime
+        }
+      }
+
       if (formData.hasTheory && formData.hasLab) {
         finalSubjects = [formData.subjects.trim(), formData.labSubjectCode.trim()].filter(Boolean)
         finalSubjectName = [formData.subjectName.trim(), formData.labSubjectName.trim()].filter(Boolean).join(' | ')
@@ -909,6 +1096,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       let finalClassPeriod = ''
       let finalClassDay = ''
       let finalClassTime = ''
+
+      if (formData.hasTheory) {
+        const sched = serializeTheorySchedule(theoryDayPeriods)
+        if (sched.classDay) {
+          formData.classDay = sched.classDay
+          formData.classPeriod = sched.classPeriod
+          formData.classTime = sched.classTime
+        }
+      }
 
       if (formData.hasTheory && formData.hasLab) {
         finalSubjects = [formData.subjects.trim(), formData.labSubjectCode.trim()].filter(Boolean)
@@ -1019,6 +1215,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
 
   // Reset Add Form
   const resetForm = () => {
+    setActiveTheoryDay('Mon')
+    setTheoryDayPeriods({})
     setFormData({
       facultyId: '',
       name: '',
@@ -1165,6 +1363,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       allocationType: hasLab && !hasTheory ? 'lab' : 'theory',
       facultyType: faculty.facultyType || (isAdvisor ? 'both' : hasLab ? 'lab_faculty' : 'subject_handler'),
     })
+
+    const parsedDaysMap = parseScheduleToDayPeriods(theoryDay, theoryPeriod)
+    setTheoryDayPeriods(parsedDaysMap)
+    const activeDays = Object.keys(parsedDaysMap)
+    setActiveTheoryDay(activeDays[0] || 'Mon')
+
     setShowEditPassword(false)
     setIsEditModalOpen(true)
   }
@@ -1208,6 +1412,152 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const parsedLabPeriods = useMemo(() => {
     return formData.labPeriod ? formData.labPeriod.split(',').map((p) => p.trim()).filter(Boolean) : []
   }, [formData.labPeriod])
+
+  // Render Theory Schedule with Day Switching and Per-Day Period Customization
+  const renderTheoryScheduleSection = () => (
+    <div className="space-y-3">
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="block font-bold text-gray-700 text-[11px]">
+            Theory Class Days (Click a day to choose its periods below):
+          </label>
+          <span className="text-[10px] text-indigo-600 font-bold">
+            {Object.keys(theoryDayPeriods).filter((d) => (theoryDayPeriods[d] || []).length > 0).length} of 6 days scheduled
+          </span>
+        </div>
+
+        {/* Day Pills Selector */}
+        <div className="grid grid-cols-6 gap-1.5">
+          {DAYS_OF_WEEK.map((d) => {
+            const periods = theoryDayPeriods[d.code] || []
+            const hasPeriods = periods.length > 0
+            const isCurrentActive = activeTheoryDay === d.code
+
+            return (
+              <button
+                key={d.code}
+                type="button"
+                onClick={() => handleSelectDay(d.code)}
+                className={cn(
+                  'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5 relative',
+                  isCurrentActive
+                    ? 'bg-indigo-700 text-white border-indigo-700 shadow-md ring-2 ring-indigo-400'
+                    : hasPeriods
+                    ? 'bg-indigo-50 text-indigo-900 border-indigo-300 hover:bg-indigo-100'
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                )}
+              >
+                <span className="flex items-center gap-1 font-extrabold">
+                  {d.code}
+                  {hasPeriods && !isCurrentActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    'text-[9px]',
+                    isCurrentActive
+                      ? 'text-indigo-200 font-semibold'
+                      : hasPeriods
+                      ? 'text-indigo-600 font-bold'
+                      : 'text-gray-400 font-normal'
+                  )}
+                >
+                  {hasPeriods ? `${periods.length} ${periods.length === 1 ? 'period' : 'periods'}` : d.label.slice(0, 3)}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Active Day Periods Customizer Box */}
+      <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2.5">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-lg bg-indigo-700 text-white text-[11px] font-black tracking-wider uppercase shadow-xs">
+              {DAYS_OF_WEEK.find((d) => d.code === activeTheoryDay)?.label || activeTheoryDay}
+            </span>
+            <span className="text-[11px] font-bold text-[#071A3D]">
+              Periods for {DAYS_OF_WEEK.find((d) => d.code === activeTheoryDay)?.label || activeTheoryDay}:
+            </span>
+            <span className="text-[10px] text-indigo-700 font-bold">
+              {(theoryDayPeriods[activeTheoryDay] || []).length} selected
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {(theoryDayPeriods[activeTheoryDay] || []).length > 0 && (
+              <button
+                type="button"
+                onClick={copyActivePeriodsToAllDays}
+                className="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                title={`Copy ${activeTheoryDay} periods to other active days`}
+              >
+                <Copy className="w-3 h-3 text-indigo-600" />
+                Copy to other days
+              </button>
+            )}
+            {(theoryDayPeriods[activeTheoryDay] || []).length > 0 && (
+              <button
+                type="button"
+                onClick={() => handleToggleDayOff(activeTheoryDay)}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Clear {activeTheoryDay}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 8 Regular Theory Periods for Active Day */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {PERIOD_LIST.filter((p) => !p.isLab).map((p) => {
+            const activePeriods = theoryDayPeriods[activeTheoryDay] || []
+            const isSelected = activePeriods.includes(p.name)
+
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => toggleTheoryPeriodForActiveDay(p.name)}
+                className={cn(
+                  'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
+                  isSelected
+                    ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
+                    : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
+                )}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-extrabold">{p.name}</span>
+                  {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
+                </div>
+                <span
+                  className={cn(
+                    'text-[9px] font-mono mt-0.5',
+                    isSelected ? 'text-indigo-200' : 'text-gray-500'
+                  )}
+                >
+                  {p.time}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Schedule Summary Banner */}
+        {formData.classPeriod && (
+          <div className="pt-2 border-t border-indigo-100/80 flex items-center justify-between text-[10px]">
+            <span className="text-gray-500 font-medium">Selected Schedule:</span>
+            <span className="text-indigo-900 font-mono font-bold truncate max-w-[320px]" title={formData.classPeriod}>
+              {formData.classPeriod}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
@@ -2938,116 +3288,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </div>
                     </div>
 
-                    {/* Quick-Fill Theory Subject Presets */}
-                    <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
-                          <Zap className="w-3.5 h-3.5 text-amber-500" />
-                          Quick-Fill Theory Subject:
-                        </span>
-                        <div className="flex items-center gap-1.5 overflow-x-auto">
-                          {[3, 5, 7].map((s) => (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => setQuickTheoryTab(`sem${s}`)}
-                              className={cn(
-                                'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                                quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              )}
-                            >
-                              Sem {s}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {ALL_SEMESTERS_THEORY_SUBJECTS[quickTheoryTab as keyof typeof ALL_SEMESTERS_THEORY_SUBJECTS]?.subjects.map((s) => (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => applyTheoryPreset(s)}
-                            className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
-                            title={`Click to auto-fill ${s.name} (${s.code})`}
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>{s.shortName}</span>
-                            <span className="font-mono text-[9px] opacity-75">[{s.code}]</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Multiple Choice Theory Days Selector */}
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
-                        Theory Class Days (Select all days that apply):
-                      </label>
-                      <div className="grid grid-cols-6 gap-1.5">
-                        {DAYS_OF_WEEK.map((d) => {
-                          const isSelected = parsedSelectedDays.includes(d.code)
-                          return (
-                            <button
-                              key={d.code}
-                              type="button"
-                              onClick={() => toggleDaySelection(d.code)}
-                              className={cn(
-                                'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
-                                isSelected
-                                  ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
-                              )}
-                            >
-                              <span>{d.code}</span>
-                              <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {/* 8 Regular Theory Periods */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="block font-bold text-gray-700 text-[11px]">
-                          Regular Theory Periods (Periods 1 through 8):
-                        </label>
-                        <span className="text-[10px] text-gray-500 font-semibold">
-                          {parsedSelectedPeriods.filter(p => !p.includes('Lab')).length} selected
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                        {PERIOD_LIST.filter(p => !p.isLab).map((p) => {
-                          const isSelected = parsedSelectedPeriods.includes(p.name)
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => togglePeriodSelection(p.name)}
-                              className={cn(
-                                'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
-                                isSelected
-                                  ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
-                              )}
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="font-extrabold">{p.name}</span>
-                                {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
-                              </div>
-                              <span className={cn(
-                                'text-[9px] font-mono mt-0.5',
-                                isSelected ? 'text-indigo-200' : 'text-gray-500'
-                              )}>
-                                {p.time}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
+                    {renderTheoryScheduleSection()}
                   </div>
                 )}
               </div>
@@ -3702,116 +3943,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </div>
                     </div>
 
-                    {/* Quick-Fill Theory Subject Presets */}
-                    <div className="p-3 rounded-2xl bg-white border border-indigo-200/90 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-extrabold text-[#071A3D] flex items-center gap-1">
-                          <Zap className="w-3.5 h-3.5 text-amber-500" />
-                          Quick-Fill Theory Subject:
-                        </span>
-                        <div className="flex items-center gap-1.5 overflow-x-auto">
-                          {[3, 5, 7].map((s) => (
-                            <button
-                              key={s}
-                              type="button"
-                              onClick={() => setQuickTheoryTab(`sem${s}`)}
-                              className={cn(
-                                'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap',
-                                quickTheoryTab === `sem${s}` ? 'bg-indigo-700 text-white shadow-xs' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              )}
-                            >
-                              Sem {s}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {ALL_SEMESTERS_THEORY_SUBJECTS[quickTheoryTab as keyof typeof ALL_SEMESTERS_THEORY_SUBJECTS]?.subjects.map((s) => (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => applyTheoryPreset(s)}
-                            className="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs hover:scale-105"
-                            title={`Click to auto-fill ${s.name} (${s.code})`}
-                          >
-                            <Plus className="w-3 h-3" />
-                            <span>{s.shortName}</span>
-                            <span className="font-mono text-[9px] opacity-75">[{s.code}]</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Multiple Choice Theory Days Selector */}
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
-                        Theory Class Days (Select all days that apply):
-                      </label>
-                      <div className="grid grid-cols-6 gap-1.5">
-                        {DAYS_OF_WEEK.map((d) => {
-                          const isSelected = parsedSelectedDays.includes(d.code)
-                          return (
-                            <button
-                              key={d.code}
-                              type="button"
-                              onClick={() => toggleDaySelection(d.code)}
-                              className={cn(
-                                'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
-                                isSelected
-                                  ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
-                              )}
-                            >
-                              <span>{d.code}</span>
-                              <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {/* 8 Regular Theory Periods */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="block font-bold text-gray-700 text-[11px]">
-                          Regular Theory Periods (Periods 1 through 8):
-                        </label>
-                        <span className="text-[10px] text-gray-500 font-semibold">
-                          {parsedSelectedPeriods.filter(p => !p.includes('Lab')).length} selected
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                        {PERIOD_LIST.filter(p => !p.isLab).map((p) => {
-                          const isSelected = parsedSelectedPeriods.includes(p.name)
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => togglePeriodSelection(p.name)}
-                              className={cn(
-                                'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
-                                isSelected
-                                  ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:bg-indigo-50/50'
-                              )}
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="font-extrabold">{p.name}</span>
-                                {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
-                              </div>
-                              <span className={cn(
-                                'text-[9px] font-mono mt-0.5',
-                                isSelected ? 'text-indigo-200' : 'text-gray-500'
-                              )}>
-                                {p.time}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
+                    {renderTheoryScheduleSection()}
                   </div>
                 )}
               </div>

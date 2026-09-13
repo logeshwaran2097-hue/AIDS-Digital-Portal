@@ -21,10 +21,23 @@ const INSTITUTIONAL_PERIODS = [
 function parsePeriods(classPeriod: string | null | undefined, classTime: string | null | undefined): string[] {
   if (!classPeriod || !classPeriod.trim()) return []
 
-  const rawPeriods = classPeriod.split(',').map((p) => p.trim()).filter(Boolean)
-  const times = classTime ? classTime.split(',').map((t) => t.trim()).filter(Boolean) : []
+  // Split by semicolon, pipe, or comma to extract all period entries
+  const rawParts = classPeriod.split(/[,;|]/).map((p) => p.trim()).filter(Boolean)
+  const cleanedPeriods: string[] = []
 
-  return rawPeriods.map((rawP, idx) => {
+  for (const part of rawParts) {
+    // Strip day prefix like "Mon: " or "Tue: "
+    const clean = part.replace(/^[A-Za-z]{3}\s*:\s*/, '').trim()
+    if (clean && !cleanedPeriods.includes(clean) && !clean.toLowerCase().includes('lab')) {
+      cleanedPeriods.push(clean)
+    }
+  }
+
+  const times = classTime
+    ? classTime.split(/[,;|]/).map((t) => t.trim().replace(/^[A-Za-z]{3}\s*:\s*/, '')).filter(Boolean)
+    : []
+
+  return cleanedPeriods.map((rawP, idx) => {
     if (rawP.includes('(') && rawP.includes(')')) {
       return rawP
     }
