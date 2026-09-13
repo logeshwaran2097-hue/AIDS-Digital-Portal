@@ -683,15 +683,15 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
         <section className="space-y-8 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shadow-xs">
                 <Target className="w-6 h-6 text-amber-600" />
               </div>
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-[#071A3D] tracking-tight">
-                  Vision, Mission &amp; Academic Outcomes
+                  Vision, Mission &amp; Academic Framework
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  Official Institutional &amp; Departmental Standards · NBA &amp; NAAC Criteria
+                  National Board of Accreditation (NBA) Tier-1 &amp; NAAC Autonomous Institutional Criteria
                 </p>
               </div>
             </div>
@@ -702,7 +702,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
           </div>
 
           {/* Department Vision Statement */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-white border-2 border-blue-200 shadow-md relative overflow-hidden">
+          <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-white border-2 border-blue-200 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-56 h-56 bg-blue-400/15 rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10 space-y-4">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-wider shadow-xs">
@@ -712,7 +712,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
               <p className="text-base sm:text-xl text-[#071A3D] font-black leading-relaxed italic">
                 &ldquo;To emerge as a premier centre of excellence in Artificial Intelligence and Data Science by creating globally competent professionals, advancing impactful research, fostering innovation and entrepreneurship, and developing ethical, intelligent technologies for a sustainable and inclusive society.&rdquo;
               </p>
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 pt-1">
                 <span className="text-royal font-black">Department of Artificial Intelligence &amp; Data Science</span>
                 <span>•</span>
                 <span>V.S.B. Engineering College (Autonomous)</span>
@@ -725,234 +725,391 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-[#071A3D] flex items-center gap-2">
                 <span>Mission of the Department</span>
-                <span className="text-xs font-bold text-slate-500 px-2 py-0.5 rounded-md bg-slate-100">4 Core Directives</span>
+                <span className="text-xs font-bold text-royal px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200">
+                  4 Core Directives (M1 – M4)
+                </span>
               </h3>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-royal flex items-center justify-center font-black text-base mb-3 shadow-xs">
-                    M1
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-3 py-1 rounded-xl bg-blue-100 text-royal font-black text-xs shadow-2xs">
+                      Mission M1
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Pedagogy</span>
                   </div>
                   <h4 className="text-sm font-black text-[#071A3D] mb-2">World-Class Pedagogy</h4>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Provide world-class education through innovative pedagogy, outcome-based learning, and industry-aligned curricula in Artificial Intelligence and Data Science.
                   </p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-bold text-royal">
-                  Outcome-Based Learning
+                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] font-bold text-royal">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Outcome-Based Learning</span>
                 </div>
               </div>
 
               <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-emerald-300 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-base mb-3 shadow-xs">
-                    M2
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-700 font-black text-xs shadow-2xs">
+                      Mission M2
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Research</span>
                   </div>
                   <h4 className="text-sm font-black text-[#071A3D] mb-2">Interdisciplinary Research</h4>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Promote interdisciplinary research, innovation, and lifelong learning to address global challenges through intelligent and data-driven solutions.
                   </p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-bold text-emerald-700">
-                  Data-Driven Innovation
+                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Data-Driven Solutions</span>
                 </div>
               </div>
 
               <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-purple-300 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black text-base mb-3 shadow-xs">
-                    M3
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-3 py-1 rounded-xl bg-purple-100 text-purple-700 font-black text-xs shadow-2xs">
+                      Mission M3
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Industry</span>
                   </div>
                   <h4 className="text-sm font-black text-[#071A3D] mb-2">Industry Partnerships</h4>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Collaborate with industries, research institutions, and professional bodies to enhance experiential learning, technology development, and employability.
                   </p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-bold text-purple-700">
-                  Technology Development
+                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] font-bold text-purple-700">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Experiential Development</span>
                 </div>
               </div>
 
               <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-amber-300 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between">
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-base mb-3 shadow-xs">
-                    M4
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="px-3 py-1 rounded-xl bg-amber-100 text-amber-800 font-black text-xs shadow-2xs">
+                      Mission M4
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-400">Leadership</span>
                   </div>
                   <h4 className="text-sm font-black text-[#071A3D] mb-2">Ethical Leadership</h4>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                     Cultivate ethical leadership, entrepreneurial mindset, social responsibility, and professional excellence for sustainable technological advancement.
                   </p>
                 </div>
-                <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] font-bold text-amber-800">
-                  Social Responsibility
+                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center gap-1.5 text-[11px] font-bold text-amber-800">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Social Responsibility</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Institutional Vision & Mission (College Level) */}
+          {/* Institutional Vision & Mission (College Level) - Clean Cohesive Light Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-slate-900 to-[#071A3D] text-white shadow-xl space-y-3 relative overflow-hidden">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-black uppercase tracking-wider">
-                <Building2 className="w-3.5 h-3.5" />
-                <span>Vision of the Institute</span>
+            <div className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-black uppercase tracking-wider">
+                  <Building2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Vision of the Institute</span>
+                </div>
+                <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 uppercase tracking-wide">
+                  Autonomous · Est. 2002
+                </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed italic">
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed italic font-medium">
                 &ldquo;We endeavor to impart futuristic technical education of the highest quality to the student community and to inculcate discipline in them to face the world with self-confidence and thus we prepare them for life as responsible citizens to uphold human values and to be of service at large. We strive to bring up the Institution as an Institution of academic excellence of international standard.&rdquo;
               </p>
-              <div className="text-[11px] font-bold text-amber-300">
+              <div className="text-[11px] font-bold text-royal pt-1">
                 V.S.B. Engineering College (Autonomous), Karur
               </div>
             </div>
 
-            <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-slate-900 to-[#0A295C] text-white shadow-xl space-y-3 relative overflow-hidden">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 text-xs font-black uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Mission of the Institute</span>
+            <div className="p-6 sm:p-7 rounded-3xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow space-y-3 relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-cyan-50 text-cyan-900 border border-cyan-200 text-xs font-black uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+                  <span>Mission of the Institute</span>
+                </div>
+                <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500 uppercase tracking-wide">
+                  Institutional Practice
+                </span>
               </div>
-              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed italic">
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed italic font-medium">
                 &ldquo;We transform persons in to personalities by the state-of-the-art infrastructure, time consciousness, quick response and the best academic practices through assessment and advice.&rdquo;
               </p>
-              <div className="text-[11px] font-bold text-cyan-300">
+              <div className="text-[11px] font-bold text-cyan-700 pt-1">
                 Holistic Student Personality Development
               </div>
             </div>
           </div>
 
-          {/* Program Educational Objectives (PEOs) */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 text-royal font-black text-sm uppercase tracking-wide">
-              <Award className="w-5 h-5" />
-              <span>Programme Educational Objectives (PEOs)</span>
+          {/* Program Educational Objectives (PEOs) - Polished, Balanced Cards with Proper Badges */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-royal font-black text-sm uppercase tracking-wide">
+                <Award className="w-5 h-5 text-royal" />
+                <span>Programme Educational Objectives (PEOs)</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-500">Graduation &amp; Career Objectives</span>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="p-5 rounded-2xl bg-blue-50/70 border border-blue-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-royal text-white font-black text-xs flex items-center justify-center">PEO 1</span>
-                  <h4 className="text-xs font-black uppercase tracking-wide text-royal">Professional Competence</h4>
+              <div className="p-6 rounded-2xl bg-blue-50/50 border border-blue-200/80 hover:border-blue-300 transition-all flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-blue-200/60 pb-3 mb-3">
+                    <span className="px-3 py-1 rounded-full bg-royal text-white font-black text-xs shadow-xs tracking-wider">
+                      PEO 1
+                    </span>
+                    <span className="text-xs font-black uppercase tracking-wider text-royal">
+                      Professional Competence
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    Graduates will excel as competent professionals by applying Artificial Intelligence, Data Science, and computational intelligence to develop innovative solutions for complex engineering, industrial, and societal problems.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Graduates will excel as competent professionals by applying Artificial Intelligence, Data Science, and computational intelligence to develop innovative solutions for complex engineering, industrial, and societal problems.
-                </p>
+                <div className="mt-4 pt-2 text-[11px] font-bold text-royal flex items-center gap-1">
+                  <span>Industry &amp; Enterprise Solutions</span>
+                </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center">PEO 2</span>
-                  <h4 className="text-xs font-black uppercase tracking-wide text-indigo-700">Lifelong Learning &amp; Research</h4>
+              <div className="p-6 rounded-2xl bg-indigo-50/50 border border-indigo-200/80 hover:border-indigo-300 transition-all flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-indigo-200/60 pb-3 mb-3">
+                    <span className="px-3 py-1 rounded-full bg-indigo-600 text-white font-black text-xs shadow-xs tracking-wider">
+                      PEO 2
+                    </span>
+                    <span className="text-xs font-black uppercase tracking-wider text-indigo-700">
+                      Lifelong Learning
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    Graduates will engage in lifelong learning, research, higher education, and technological innovation by adopting emerging AI technologies and contributing to knowledge creation and sustainable development.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Graduates will engage in lifelong learning, research, higher education, and technological innovation by adopting emerging AI technologies and contributing to knowledge creation and sustainable development.
-                </p>
+                <div className="mt-4 pt-2 text-[11px] font-bold text-indigo-700 flex items-center gap-1">
+                  <span>Higher Education &amp; Research</span>
+                </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-amber-600 text-white font-black text-xs flex items-center justify-center">PEO 3</span>
-                  <h4 className="text-xs font-black uppercase tracking-wide text-amber-800">Ethical Leadership</h4>
+              <div className="p-6 rounded-2xl bg-amber-50/50 border border-amber-200/80 hover:border-amber-300 transition-all flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-amber-200/60 pb-3 mb-3">
+                    <span className="px-3 py-1 rounded-full bg-amber-600 text-white font-black text-xs shadow-xs tracking-wider">
+                      PEO 3
+                    </span>
+                    <span className="text-xs font-black uppercase tracking-wider text-amber-800">
+                      Ethical Leadership
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    Graduates will exhibit ethical values, leadership, entrepreneurial mindset, and effective communication while contributing to multidisciplinary teams and creating technology solutions with global impact.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Graduates will exhibit ethical values, leadership, entrepreneurial mindset, and effective communication while contributing to multidisciplinary teams and creating technology solutions with global impact.
-                </p>
+                <div className="mt-4 pt-2 text-[11px] font-bold text-amber-800 flex items-center gap-1">
+                  <span>Global Tech Impact</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Program Specific Outcomes (PSOs) */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 text-emerald-700 font-black text-sm uppercase tracking-wide">
-              <CheckCircle2 className="w-5 h-5" />
-              <span>Program Specific Outcomes (PSOs)</span>
+          {/* Program Specific Outcomes (PSOs) - Clean, Roomy Badges and Typography */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-emerald-700 font-black text-sm uppercase tracking-wide">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                <span>Program Specific Outcomes (PSOs)</span>
+              </div>
+              <span className="text-xs font-semibold text-slate-500">Department Competency Criteria</span>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center">PSO 1</span>
-                  <h4 className="text-xs font-black uppercase tracking-wide text-emerald-800">AI &amp; Data Science</h4>
+              <div className="p-6 rounded-2xl bg-emerald-50/50 border border-emerald-200/80 hover:border-emerald-300 transition-all flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-emerald-200/60 pb-3 mb-3">
+                    <span className="px-3 py-1 rounded-full bg-emerald-600 text-white font-black text-xs shadow-xs tracking-wider">
+                      PSO 1
+                    </span>
+                    <span className="text-xs font-black uppercase tracking-wider text-emerald-800">
+                      AI &amp; Data Science
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    Design, implement, and optimize intelligent systems using Artificial Intelligence, Machine Learning, Deep Learning, Natural Language Processing, and Computer Vision techniques to solve domain-specific challenges.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Design, implement, and optimize intelligent systems using Artificial Intelligence, Machine Learning, Deep Learning, Natural Language Processing, and Computer Vision techniques to solve domain-specific challenges.
-                </p>
+                <div className="mt-4 pt-2 text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                  <span>Cognitive Intelligence</span>
+                </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-cyan-50/70 border border-cyan-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-cyan-600 text-white font-black text-xs flex items-center justify-center">PSO 2</span>
-                  <h4 className="text-xs font-black uppercase tracking-wide text-cyan-800">Data Analytics</h4>
+              <div className="p-6 rounded-2xl bg-cyan-50/50 border border-cyan-200/80 hover:border-cyan-300 transition-all flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-cyan-200/60 pb-3 mb-3">
+                    <span className="px-3 py-1 rounded-full bg-cyan-600 text-white font-black text-xs shadow-xs tracking-wider">
+                      PSO 2
+                    </span>
+                    <span className="text-xs font-black uppercase tracking-wider text-cyan-800">
+                      Data Analytics
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    Apply advanced data engineering, analytics, visualization, and predictive modeling techniques using state-of-the-art industrial tools and AI frameworks to transform data into actionable intelligence for strategic decision-making.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Apply advanced data engineering, analytics, visualization, and predictive modeling techniques using state-of-the-art industrial tools and AI frameworks to transform data into actionable intelligence for strategic decision-making.
-                </p>
+                <div className="mt-4 pt-2 text-[11px] font-bold text-cyan-800 flex items-center gap-1">
+                  <span>Actionable Intelligence</span>
+                </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center">PSO 3</span>
-                  <h4 className="text-xs font-black uppercase tracking-wide text-purple-800">Intelligent Systems</h4>
+              <div className="p-6 rounded-2xl bg-purple-50/50 border border-purple-200/80 hover:border-purple-300 transition-all flex flex-col justify-between shadow-2xs">
+                <div>
+                  <div className="flex items-center justify-between gap-2 border-b border-purple-200/60 pb-3 mb-3">
+                    <span className="px-3 py-1 rounded-full bg-purple-600 text-white font-black text-xs shadow-xs tracking-wider">
+                      PSO 3
+                    </span>
+                    <span className="text-xs font-black uppercase tracking-wider text-purple-800">
+                      Intelligent Systems
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                    Engineer scalable, reliable, secure, and ethical AI-enabled solutions by integrating cloud computing, edge intelligence, Generative AI, IoT, and MLOps while effectively managing multidisciplinary projects and adhering to professional and societal responsibilities.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed">
-                  Engineer scalable, reliable, secure, and ethical AI-enabled solutions by integrating cloud computing, edge intelligence, Generative AI, IoT, and MLOps while effectively managing multidisciplinary projects and adhering to professional and societal responsibilities.
-                </p>
+                <div className="mt-4 pt-2 text-[11px] font-bold text-purple-800 flex items-center gap-1">
+                  <span>MLOps &amp; Edge Systems</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Program Outcomes (POs - PO1 through PO11) */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
+          {/* Program Outcomes (POs - PO1 through PO11) - Structured Matrix */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-[#071A3D] font-black text-sm uppercase tracking-wide">
                 <BookOpen className="w-5 h-5 text-royal" />
                 <span>Program Outcomes (POs: PO1 – PO11)</span>
               </div>
-              <span className="text-xs font-bold text-slate-500">
-                Washington Accord Graduate Attributes
+              <span className="text-xs font-semibold text-slate-500">
+                Washington Accord Graduate Attributes (WK1 – WK9)
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs text-slate-600">
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO1: Engineering Knowledge</span>
-                <span>Apply mathematics, science, and computing to solve complex engineering problems.</span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO1: Engineering Knowledge</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK1-WK4</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Apply knowledge of mathematics, natural science, computing, engineering fundamentals and an engineering specialization to solve complex engineering problems.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO2: Problem Analysis</span>
-                <span>Formulate and analyze complex problems reaching substantiated conclusions for sustainable development.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO2: Problem Analysis</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK1-WK4</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Identify, formulate, review research literature and analyze complex engineering problems reaching substantiated conclusions with consideration for sustainable development.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO3: Design/Development of Solutions</span>
-                <span>Design creative solutions meeting public health, safety, net zero carbon, culture, and environmental needs.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO3: Design / Development</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK5</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Design creative solutions for complex engineering problems and design systems/processes meeting needs with consideration for public health, safety, net zero carbon, culture, and environment.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO4: Conduct Investigations</span>
-                <span>Use research-based knowledge, modeling, and data interpretation to provide valid conclusions.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO4: Conduct Investigations</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK8</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Conduct investigations of complex problems using research-based knowledge including design of experiments, modeling, analysis and interpretation of data to provide valid conclusions.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO5: Engineering Tool Usage</span>
-                <span>Create and apply modern IT tools, prediction, and modeling recognizing their limitations.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO5: Engineering Tool Usage</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK2, WK6</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Create, select and apply appropriate techniques, resources and modern engineering and IT tools, including prediction and modeling recognizing their limitations to solve complex engineering problems.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO6: The Engineer &amp; The World</span>
-                <span>Analyze societal and environmental impacts for sustainability across health, legal, and economic domains.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO6: The Engineer &amp; The World</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK1, 5, 7</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Analyze and evaluate societal and environmental aspects while solving complex engineering problems for its impact on sustainability with reference to economy, health, safety, and legal framework.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO7: Ethics &amp; Human Values</span>
-                <span>Apply professional ethics, diversity, inclusion, and national/international legal frameworks.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO7: Professional Ethics</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK9</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Apply ethical principles and commit to professional ethics, human values, diversity and inclusion; adhere to national and international laws and engineering practice standards.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO8: Collaborative Teamwork</span>
-                <span>Function effectively as an individual, member, or leader in diverse multi-disciplinary teams.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO8: Collaborative Teamwork</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">Team Dynamics</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Function effectively as an individual, and as a member or leader in diverse and multi-disciplinary engineering and research teams.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO9: Communication</span>
-                <span>Communicate inclusively with effective reports, designs, presentations, and technical documentation.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO9: Effective Communication</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">Inclusion</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Communicate effectively and inclusively within the engineering community and society at large, through comprehensive reports, design documentation, and technical presentations.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
-                <span className="font-black text-royal block text-[11px] mb-1">PO10: Project Management &amp; Finance</span>
-                <span>Apply engineering management principles and economic decision-making in team environments.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO10: Project Management</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">Finance &amp; Mgmt</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Apply knowledge and understanding of engineering management principles and economic decision-making to manage multidisciplinary engineering projects.
+                </p>
               </div>
-              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors sm:col-span-2 lg:col-span-2">
-                <span className="font-black text-royal block text-[11px] mb-1">PO11: Life-Long Learning</span>
-                <span>Adapt to new emerging technologies, critical thinking, and independent lifelong learning.</span>
+
+              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all sm:col-span-2 lg:col-span-2">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="font-black text-royal text-xs">PO11: Life-Long Learning</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK8</span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Recognize the need for, and have the preparation and ability for independent and lifelong learning, adaptability to new and emerging technologies, and critical thinking in the broadest context of technological change.
+                </p>
               </div>
             </div>
           </div>
