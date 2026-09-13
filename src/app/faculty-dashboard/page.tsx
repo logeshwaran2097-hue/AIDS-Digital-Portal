@@ -16,14 +16,18 @@ export default async function FacultyDashboardPage() {
   const faculty = (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
     (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
 
-  const isAdvisor =
+  const hasAdvisorPrivileges = Boolean(
     faculty?.facultyType === 'advisor' ||
     faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+    faculty?.advisorBatch ||
+    (faculty?.advisorYear && faculty?.advisorSec)
+  )
 
-  const effectiveRole = (rawLoginRole === 'advisor' || faculty?.facultyType === 'advisor' || isAdvisor) ? 'advisor' : 'faculty'
+  // Only act as Class Advisor if logged in as advisor; otherwise act as standard course faculty
+  const isAdvisor = rawLoginRole === 'advisor' && hasAdvisorPrivileges
+  const effectiveRole = isAdvisor ? 'advisor' : 'faculty'
 
-  const roleBadgeLabel = (effectiveRole === 'advisor' || isAdvisor)
+  const roleBadgeLabel = isAdvisor
     ? 'Class Advisor'
     : faculty?.facultyType === 'lab_faculty'
     ? 'Lab Handler'

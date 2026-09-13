@@ -23,15 +23,18 @@ export default async function AttendancePage({ searchParams }: AttendancePagePro
   const faculty = (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
     (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
 
-  const isAdvisor =
+  const hasAdvisorBatch = Boolean(
     faculty?.facultyType === 'advisor' ||
     faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+    faculty?.advisorBatch ||
+    (faculty?.advisorYear && faculty?.advisorSec)
+  )
 
-  // If user explicitly logged in as Advisor or faculty is configured as advisor, effective role is advisor
-  const effectiveRole = (rawLoginRole === 'advisor' || faculty?.facultyType === 'advisor' || isAdvisor) ? 'advisor' : 'faculty'
+  // If user explicitly logged in as Advisor and has advisor privileges, act as advisor; else act as faculty
+  const isAdvisor = rawLoginRole === 'advisor' && hasAdvisorBatch
+  const effectiveRole = isAdvisor ? 'advisor' : 'faculty'
 
-  const roleBadgeLabel = (effectiveRole === 'advisor' || isAdvisor)
+  const roleBadgeLabel = isAdvisor
     ? 'Class Advisor'
     : faculty?.facultyType === 'lab_faculty'
     ? 'Lab Handler'

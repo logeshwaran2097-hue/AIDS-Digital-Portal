@@ -292,7 +292,7 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
   return { success: true, token, user, student, mustChangePassword: passwordChangeRequired }
 }
 
-export async function authenticateFaculty(facultyIdOrName: string, passwordInput: string) {
+export async function authenticateFaculty(facultyIdOrName: string, passwordInput: string, targetRole?: 'faculty' | 'advisor') {
   const rawInput = facultyIdOrName.trim()
   const normalizedId = rawInput.toUpperCase()
 
@@ -307,38 +307,54 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
       where: { id: faculty.userId },
     }).catch(() => null)
   } else {
-    // 2. Try finding by email (case-insensitive)
-    user = await prisma.user.findFirst({
+    // 2. Try finding by email or name (handling same name for advisor vs faculty)
+    const candidateUsers = await prisma.user.findMany({
       where: {
         role: 'faculty',
-        email: { equals: rawInput.toLowerCase(), mode: 'insensitive' },
+        OR: [
+          { email: { equals: rawInput.toLowerCase(), mode: 'insensitive' } },
+          { name: { equals: rawInput, mode: 'insensitive' } },
+          { name: { contains: rawInput, mode: 'insensitive' } },
+        ],
       },
-    }).catch(() => null)
+    }).catch(() => [])
 
-    if (!user) {
-      // 3. Try finding by Faculty Name (case-insensitive exact)
-      user = await prisma.user.findFirst({
-        where: {
-          role: 'faculty',
-          name: { equals: rawInput, mode: 'insensitive' },
-        },
-      }).catch(() => null)
-    }
-
-    if (!user) {
-      // 4. Try finding by Faculty Name (case-insensitive contains)
-      user = await prisma.user.findFirst({
-        where: {
-          role: 'faculty',
-          name: { contains: rawInput, mode: 'insensitive' },
-        },
-      }).catch(() => null)
-    }
-
-    if (user) {
+    if (candidateUsers.length === 1) {
+      user = candidateUsers[0]
       faculty = await prisma.faculty.findFirst({
         where: { userId: user.id },
       }).catch(() => null)
+    } else if (candidateUsers.length > 1) {
+      // Multiple candidates with same name/email — match by requested targetRole
+      for (const cand of candidateUsers) {
+        const f = await prisma.faculty.findFirst({
+          where: { userId: cand.id },
+        }).catch(() => null)
+        if (!f) continue
+
+        const isAdvisorRecord =
+          f.facultyType === 'advisor' ||
+          f.facultyType === 'both' ||
+          Boolean(f.advisorBatch || (f.advisorYear && f.advisorSec))
+
+        if (targetRole === 'advisor' && isAdvisorRecord) {
+          user = cand
+          faculty = f
+          break
+        } else if (targetRole === 'faculty' && !isAdvisorRecord) {
+          user = cand
+          faculty = f
+          break
+        }
+      }
+
+      // If no strict type match, default to first candidate
+      if (!user && candidateUsers.length > 0) {
+        user = candidateUsers[0]
+        faculty = await prisma.faculty.findFirst({
+          where: { userId: user.id },
+        }).catch(() => null)
+      }
     }
   }
 

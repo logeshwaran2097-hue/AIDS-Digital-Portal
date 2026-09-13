@@ -8,6 +8,8 @@ const loginSchema = z.object({
   name: z.string().optional(),
   password: z.string().optional(),
   dateOfBirth: z.string().optional(),
+  role: z.string().optional(),
+  loginAsRole: z.string().optional(),
 }).refine((data) => data.facultyId || data.email || data.name, {
   message: 'Faculty Email ID or Name is required',
 })
@@ -17,11 +19,12 @@ export const dynamic = 'force-dynamic'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { facultyId, email, name, password, dateOfBirth } = loginSchema.parse(body)
+    const { facultyId, email, name, password, dateOfBirth, role, loginAsRole } = loginSchema.parse(body)
     const identifier = (facultyId || email || name || '').trim()
     const passwordOrDob = password || dateOfBirth || ''
+    const targetRole = (loginAsRole || role || 'faculty') === 'advisor' ? 'advisor' : 'faculty'
 
-    const result = await authenticateFaculty(identifier, passwordOrDob)
+    const result = await authenticateFaculty(identifier, passwordOrDob, targetRole)
 
     if (!result.success || !result.user || !result.token) {
       return NextResponse.json(
@@ -30,10 +33,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const isAdvisor =
+    const hasAdvisorBatch = Boolean(
       result.faculty?.facultyType === 'advisor' ||
       result.faculty?.facultyType === 'both' ||
-      Boolean(result.faculty?.advisorBatch || (result.faculty?.advisorYear && result.faculty?.advisorSec))
+      result.faculty?.advisorBatch ||
+      (result.faculty?.advisorYear && result.faculty?.advisorSec)
+    )
+
+    // Only set advisor mode if explicitly logging in as advisor and has advisor privileges
+    const effectiveRole = (targetRole === 'advisor' && hasAdvisorBatch) ? 'advisor' : 'faculty'
+    const isAdvisor = effectiveRole === 'advisor'
 
     const response = NextResponse.json({
       success: true,
@@ -43,6 +52,7 @@ export async function POST(request: NextRequest) {
         email: result.user.email,
         phone: result.user.phone || '',
         role: 'faculty',
+        effectiveRole,
         isAdvisor,
         facultyId: result.faculty?.facultyId,
         designation: result.faculty?.designation,
@@ -55,7 +65,7 @@ export async function POST(request: NextRequest) {
         advisorSec: result.faculty?.advisorSec || null,
         subjects: result.faculty?.subjects || '[]',
         subjectName: result.faculty?.subjectName || null,
-        facultyType: result.faculty?.facultyType || (isAdvisor ? 'advisor' : 'both'),
+        facultyType: result.faculty?.facultyType || (hasAdvisorBatch ? 'advisor' : 'subject_handler'),
         dateOfBirth: result.faculty?.dateOfBirth ? result.faculty.dateOfBirth.toISOString().split('T')[0] : null,
         mustChangePassword: result.user.mustChangePassword ?? false,
       },
@@ -69,15 +79,13 @@ export async function POST(request: NextRequest) {
       path: '/',
     })
 
-    if (isAdvisor) {
-      response.cookies.set('portal_login_role', 'advisor', {
-        httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/',
-      })
-    }
+    response.cookies.set('portal_login_role', effectiveRole, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    })
 
     return response
   } catch (error) {
