@@ -111,15 +111,52 @@ export default async function FacultyDashboardPage() {
     attendanceAvg: attendanceAvg !== '0.0%' ? attendanceAvg : '—',
   }))
 
-  const timetableSlots = (faculty?.classDay && faculty?.classTime && effectiveSubjects.length > 0) ? [
-    {
-      time: faculty.classTime,
-      subject: faculty?.subjectName || (effectiveSubjects[0]?.name) || effectiveSubjects[0]?.code,
-      room: faculty?.classPeriod ? `${faculty.classPeriod}` : 'AI & DS Lab',
-      type: faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Session' : 'Lecture Session',
-      status: 'Upcoming',
+  const timetableSlots: Array<{
+    time: string
+    subject: string
+    room: string
+    type: string
+    status: string
+  }> = []
+
+  if (faculty?.classDay && faculty?.classTime && effectiveSubjects.length > 0) {
+    if (faculty.subjectName?.includes(' | ')) {
+      const sNames = faculty.subjectName.split(' | ')
+      const times = faculty.classTime.split(' | ')
+      const periods = (faculty.classPeriod || '').split(' | ')
+      const days = (faculty.classDay || '').split(' | ')
+
+      // Theory Lecture Slot
+      if (sNames[0]) {
+        timetableSlots.push({
+          time: times[0] || '09:15 AM - 10:00 AM',
+          subject: sNames[0],
+          room: periods[0] ? `${periods[0]} (${days[0] || 'Theory'})` : 'Lecture Hall',
+          type: 'Lecture Session',
+          status: 'Upcoming',
+        })
+      }
+
+      // Practical Lab Slot
+      if (sNames[1]) {
+        timetableSlots.push({
+          time: times[1] || '01:20 PM - 04:30 PM',
+          subject: sNames[1],
+          room: periods[1] ? `${periods[1]} (${days[1] || 'Lab'})` : 'AI & DS Lab',
+          type: 'Practical Lab Session',
+          status: 'Upcoming',
+        })
+      }
+    } else {
+      timetableSlots.push({
+        time: faculty.classTime,
+        subject: faculty?.subjectName || (effectiveSubjects[0]?.name) || effectiveSubjects[0]?.code,
+        room: faculty?.classPeriod ? `${faculty.classPeriod} (${faculty.classDay || 'Weekly'})` : 'AI & DS Lab',
+        type: faculty?.facultyType === 'lab_faculty' || faculty?.subjectName?.toLowerCase().includes('lab') ? 'Practical Lab Session' : 'Lecture Session',
+        status: 'Upcoming',
+      })
     }
-  ] : []
+  }
 
   const facultyData = {
     user: {
