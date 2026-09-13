@@ -26,9 +26,9 @@ export default async function AdminHODPage() {
       phone: user?.phone || '',
       dateOfBirth: h.dateOfBirth ? h.dateOfBirth.toISOString().split('T')[0] : null,
       department: h.department || 'Artificial Intelligence & Data Science',
-      designation: h.designation || 'Professor & Head',
-      qualification: h.qualification || 'Ph.D. (AI & DS)',
-      experience: h.experience ?? 15,
+      designation: h.designation || 'Head of Department',
+      qualification: h.qualification || '',
+      experience: h.experience !== undefined && h.experience !== null ? h.experience : null,
       status: user?.status || 'active',
     }
   })

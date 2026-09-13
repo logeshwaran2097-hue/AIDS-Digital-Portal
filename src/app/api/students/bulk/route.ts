@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { parseSafeDateOfBirth } from '@/lib/utils'
+import { getSession } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +30,14 @@ interface BulkStudentInput {
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Only administrators can perform bulk student import.' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { students, defaultPassword = 'Student@123' } = body
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseSafeDateOfBirth, formatNameWithDegree } from '@/lib/utils'
+import { getSession } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
@@ -48,6 +49,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Only administrators can appoint or modify HOD records.' },
+        { status: 403 }
+      )
+    }
+
     const data = await request.json()
     const {
       facultyId,
@@ -212,6 +221,14 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Only administrators can delete HOD records.' },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const clearAll = searchParams.get('clearAll')

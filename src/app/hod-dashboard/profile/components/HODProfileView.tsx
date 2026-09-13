@@ -72,11 +72,9 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
     designation: profile.designation,
     qualification: profile.qualification,
     experience: profile.experience,
-    officeLocation: profile.officeLocation || 'Main Administrative Complex · Cabin HOD-101',
-    officeHours: profile.officeHours || '09:00 AM - 05:00 PM (Mon - Sat)',
-    bio:
-      profile.bio ||
-      'Leading the Department of Artificial Intelligence & Data Science with focus on research excellence, industry collaboration, and autonomous academic standards.',
+    officeLocation: profile.officeLocation || '',
+    officeHours: profile.officeHours || '',
+    bio: profile.bio || '',
   })
 
   // Handle Save
@@ -162,13 +160,7 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
     })
   }
 
-  const specializations = profile.specializations || [
-    'Deep Learning & Neural Networks',
-    'Computer Vision & Edge AI',
-    'Natural Language Processing',
-    'Autonomous Systems & Robotics',
-    'Big Data Analytics & Cloud MLOps',
-  ]
+  const specializations = profile.specializations || []
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-fade-in">
@@ -284,17 +276,17 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
                 <span className="text-gray-500 font-medium">Faculty / Employee ID:</span>
-                <span className="font-bold text-[#1455D9] font-mono">{profile.facultyId}</span>
+                <span className="font-bold text-[#1455D9] font-mono">{profile.facultyId || 'Not Assigned'}</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
                 <span className="text-gray-500 font-medium">Executive Office / Cabin:</span>
-                <span className="font-bold text-gray-800">{profile.officeLocation || 'Cabin HOD-101'}</span>
+                <span className="font-bold text-gray-800">{profile.officeLocation || 'Not Provided'}</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
                 <span className="text-gray-500 font-medium">Consultation Hours:</span>
-                <span className="font-bold text-gray-800">{profile.officeHours || '09:00 AM - 05:00 PM'}</span>
+                <span className="font-bold text-gray-800">{profile.officeHours || 'Not Provided'}</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
@@ -323,18 +315,18 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
             <div className="space-y-3 text-xs">
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
                 <span className="text-gray-500 font-medium">Designation:</span>
-                <span className="font-bold text-[#071A3D]">{profile.designation}</span>
+                <span className="font-bold text-[#071A3D]">{profile.designation || 'Head of Department'}</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
                 <span className="text-gray-500 font-medium">Highest Qualification:</span>
-                <span className="font-bold text-[#1455D9]">{profile.qualification}</span>
+                <span className="font-bold text-[#1455D9]">{profile.qualification || 'Not Specified'}</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
                 <span className="text-gray-500 font-medium">Total Experience:</span>
                 <span className="font-bold text-purple-700">
-                  {profile.experience} Years Teaching &amp; Research
+                  {profile.experience ? `${profile.experience} Years Teaching & Research` : 'Not Specified'}
                 </span>
               </div>
 
@@ -368,20 +360,24 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
             </h3>
 
             <div className="flex flex-wrap gap-2">
-              {specializations.map((spec, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] font-bold text-xs"
-                >
-                  {spec}
-                </span>
-              ))}
+              {specializations.length > 0 ? (
+                specializations.map((spec, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] font-bold text-xs"
+                  >
+                    {spec}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-400 font-medium italic text-xs">No specializations recorded.</span>
+              )}
             </div>
 
             <div className="pt-2">
               <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Executive Leadership Statement</p>
               <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-3.5 rounded-2xl border border-gray-100 italic">
-                &ldquo;{profile.bio || 'Leading the Department of AI & DS with focus on research excellence, industry collaboration, and autonomous academic standards.'}&rdquo;
+                &ldquo;{profile.bio || 'No executive biography recorded.'}&rdquo;
               </p>
             </div>
           </CardContent>

@@ -11,8 +11,8 @@ export default async function HODProfilePage() {
   const [user, hodRecord, facultyCount, studentCount, settings, recentLogs] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
     prisma.hOD.findUnique({ where: { userId: session.userId } }).catch(() => null),
-    prisma.faculty.count().catch(() => 12),
-    prisma.student.count().catch(() => 4),
+    prisma.faculty.count().catch(() => 0),
+    prisma.student.count().catch(() => 0),
     prisma.systemSettings.findUnique({ where: { key: 'hod_profile_settings' } }).catch(() => null),
     prisma.auditLog.findMany({
       take: 5,
@@ -30,25 +30,17 @@ export default async function HODProfilePage() {
   const profileData: HODProfileData = {
     id: session.userId,
     name: user?.name || session.name || 'Head of Department',
-    email: user?.email || session.email || 'hod.aids@vsb.edu.in',
+    email: user?.email || session.email || '',
     phone: user?.phone || null,
-    facultyId: hodRecord?.facultyId || 'HOD001',
-    designation: hodRecord?.designation || 'Professor & Head',
-    qualification: hodRecord?.qualification || 'Ph.D. (AI & Data Science)',
-    experience: hodRecord?.experience !== undefined && hodRecord?.experience !== null ? hodRecord.experience : 15,
-    department: 'Department of Artificial Intelligence & Data Science',
-    officeLocation: extraData.officeLocation || 'Main Administrative Complex · Cabin HOD-101',
-    officeHours: extraData.officeHours || '09:00 AM - 05:00 PM (Mon - Sat)',
-    specializations: extraData.specializations || [
-      'Deep Learning & Neural Networks',
-      'Computer Vision & Edge AI',
-      'Natural Language Processing',
-      'Autonomous Systems & Robotics',
-      'Big Data Analytics & Cloud MLOps',
-    ],
-    bio:
-      extraData.bio ||
-      'Leading the Department of Artificial Intelligence & Data Science with focus on research excellence, industry collaboration, and autonomous academic standards.',
+    facultyId: hodRecord?.facultyId || '',
+    designation: hodRecord?.designation || 'Head of Department',
+    qualification: hodRecord?.qualification || '',
+    experience: hodRecord?.experience !== undefined && hodRecord?.experience !== null ? hodRecord.experience : 0,
+    department: hodRecord?.department || 'Department of Artificial Intelligence & Data Science',
+    officeLocation: extraData.officeLocation || '',
+    officeHours: extraData.officeHours || '',
+    specializations: extraData.specializations || [],
+    bio: extraData.bio || '',
     facultyCount,
     studentCount,
     recentLogs: recentLogs.map((l: any) => ({

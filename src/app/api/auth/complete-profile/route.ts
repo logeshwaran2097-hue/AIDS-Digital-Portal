@@ -96,20 +96,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If user record still does not exist, provision a new user record
+    // If user record still does not exist, reject - only admin can register users
     if (!user) {
-      const defaultEmail = normalizedEmail || `${(targetRegNumber || targetFacultyId || 'user').toLowerCase()}@vsb.edu.in`
-      user = await prisma.user.create({
-        data: {
-          name: name && name.trim() ? name.trim() : (targetRegNumber || targetFacultyId || 'Staff User'),
-          email: defaultEmail,
-          phone: phone ? phone.trim() : null,
-          role: targetRole,
-          status: 'active',
-          mustChangePassword: false,
-        },
-      })
-      targetUserId = user.id
+      return NextResponse.json(
+        { success: false, message: 'Account not found. Students, Advisors, Faculty, and HOD can only be registered by an Administrator.' },
+        { status: 404 }
+      )
     }
 
     // Check if new email is already in use by another user
@@ -309,29 +301,11 @@ export async function POST(request: NextRequest) {
             data: { mustChangePassword: false },
           }).catch(() => {})
         }
-      } else if (targetRegNumber) {
-        await prisma.student.create({
-          data: {
-            userId: targetUserId,
-            registerNumber: targetRegNumber,
-            dateOfBirth: studentDob || new Date('2004-01-01'),
-            department: department || 'Artificial Intelligence & Data Science',
-            year: parsedYear,
-            semester: parsedSem,
-            section: parsedSection,
-            ...(parentPhone !== undefined && parentPhone ? { parentPhone: parentPhone.trim() } : {}),
-            ...(isParentWhatsapp !== undefined ? { isParentWhatsapp: Boolean(isParentWhatsapp) } : {}),
-            ...(bloodGroup !== undefined && bloodGroup !== '' ? { bloodGroup } : {}),
-            ...(residencyStatus !== undefined && residencyStatus !== '' ? { residencyStatus } : {}),
-            ...(hostelBlock !== undefined ? { hostelBlock } : {}),
-            ...(roomNo !== undefined ? { roomNo } : {}),
-            ...(busNo !== undefined ? { busNo } : {}),
-            ...(boardingPoint !== undefined ? { boardingPoint } : {}),
-            ...(address !== undefined && address !== '' ? { address: address.trim() } : {}),
-            ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
-            ...(advisorName !== undefined && advisorName !== '' ? { advisorName: advisorName.trim() } : {}),
-          } as any,
-        }).catch((err) => console.warn('Student create warning:', err))
+      } else {
+        return NextResponse.json(
+          { success: false, message: 'Student profile not found. Students can only be added by an Administrator.' },
+          { status: 404 }
+        )
       }
     } else if (targetRole === 'faculty' || targetRole === 'advisor') {
       const facultyRec = await prisma.faculty.findFirst({
@@ -357,24 +331,10 @@ export async function POST(request: NextRequest) {
           },
         }).catch((err) => console.warn('Faculty update warning:', err))
       } else {
-        const fallbackFacultyId = userEnteredStaffId || targetFacultyId || `FAC${Date.now().toString().slice(-4)}`
-        await prisma.faculty.create({
-          data: {
-            userId: targetUserId,
-            facultyId: fallbackFacultyId,
-            dateOfBirth: parsedDob || new Date('1988-01-01'),
-            designation: body.designation || (targetRole === 'advisor' ? 'Assistant Professor & Class Advisor' : 'Assistant Professor'),
-            qualification: qualification ? qualification.trim() : 'M.Tech',
-            experience: Number(experience) || 5,
-            specialization: specialization ? specialization.trim() : 'Artificial Intelligence & Data Science',
-            advisorBatch: body.advisorBatch || null,
-            advisorYear: body.advisorYear ? Number(body.advisorYear) : null,
-            advisorSem: body.advisorSem ? Number(body.advisorSem) : null,
-            advisorSec: body.advisorSec || null,
-            classPeriod: body.classPeriod || null,
-            facultyType: targetRole === 'advisor' ? 'advisor' : 'both',
-          },
-        }).catch((err) => console.warn('Faculty create warning:', err))
+        return NextResponse.json(
+          { success: false, message: 'Faculty profile not found. Faculty and Advisors can only be added by an Administrator.' },
+          { status: 404 }
+        )
       }
     } else if (targetRole === 'hod') {
       const hodRec = await prisma.hOD.findFirst({
@@ -395,18 +355,10 @@ export async function POST(request: NextRequest) {
           },
         }).catch((err) => console.warn('HOD update warning:', err))
       } else {
-        const fallbackFacultyId = userEnteredStaffId || targetFacultyId || `HOD${Date.now().toString().slice(-4)}`
-        await prisma.hOD.create({
-          data: {
-            userId: targetUserId,
-            facultyId: fallbackFacultyId,
-            dateOfBirth: parsedDob || new Date('1980-01-01'),
-            department: department ? department.trim() : 'B.Tech Artificial Intelligence & Data Science',
-            designation: 'Professor & Head of Department',
-            qualification: qualification ? qualification.trim() : 'Ph.D., M.Tech',
-            experience: Number(experience) || 15,
-          },
-        }).catch((err) => console.warn('HOD create warning:', err))
+        return NextResponse.json(
+          { success: false, message: 'HOD profile not found. Head of Department can only be appointed by an Administrator.' },
+          { status: 404 }
+        )
       }
     }
 

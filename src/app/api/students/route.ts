@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { parseSafeDateOfBirth } from '@/lib/utils'
+import { getSession } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -77,6 +78,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Only administrators can create student records.' },
+        { status: 403 }
+      )
+    }
+
     const data = await request.json()
     const {
       registerNumber,
@@ -568,6 +577,14 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Only administrators can delete student records.' },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const clearAll = searchParams.get('clearAll')

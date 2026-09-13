@@ -69,43 +69,30 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // 2. Update or Create HOD record
-    let updatedHod = null
+    // 2. Update HOD record (Must be pre-appointed by Admin)
     const existingHod = await prisma.hOD.findUnique({ where: { userId: session.userId } })
-    if (existingHod) {
-      updatedHod = await prisma.hOD.update({
-        where: { userId: session.userId },
-        data: {
-          designation: designation || undefined,
-          qualification: qualification || undefined,
-          experience: experience !== undefined ? Number(experience) : undefined,
-        },
-      })
-    } else {
-      updatedHod = await prisma.hOD.create({
-        data: {
-          userId: session.userId,
-          facultyId: 'HOD001',
-          dateOfBirth: new Date('1985-05-15'),
-          department: 'AI & Data Science',
-          designation: designation || 'Professor & Head',
-          qualification: qualification || 'Ph.D. (AI & Data Science)',
-          experience: experience !== undefined ? Number(experience) : 15,
-        },
-      })
+    if (!existingHod) {
+      return NextResponse.json(
+        { success: false, message: 'HOD profile record not found. Head of Department must be appointed by an Administrator.' },
+        { status: 404 }
+      )
     }
+
+    const updatedHod = await prisma.hOD.update({
+      where: { userId: session.userId },
+      data: {
+        designation: designation || undefined,
+        qualification: qualification || undefined,
+        experience: experience !== undefined && experience !== '' ? Number(experience) : undefined,
+      },
+    })
 
     // 3. Save extended profile details in systemSettings
     const extraData = {
-      officeLocation: officeLocation || 'Main Administrative Complex · Cabin HOD-101',
-      officeHours: officeHours || '09:00 AM - 05:00 PM (Mon - Sat)',
-      specializations: specializations || [
-        'Deep Learning & Neural Networks',
-        'Computer Vision & Edge AI',
-        'Natural Language Processing',
-        'Autonomous Systems & Robotics',
-      ],
-      bio: bio || 'Leading the Department of AI & DS with focus on research excellence, industry collaboration, and autonomous academic standards.',
+      officeLocation: officeLocation || '',
+      officeHours: officeHours || '',
+      specializations: Array.isArray(specializations) ? specializations : [],
+      bio: bio || '',
       updatedAt: new Date().toISOString(),
     }
 
