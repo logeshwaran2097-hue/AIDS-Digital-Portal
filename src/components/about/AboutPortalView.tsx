@@ -1926,7 +1926,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
             <div className="absolute -right-16 -top-16 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -left-16 -bottom-16 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 pb-8 border-b border-slate-100">
+            <div className="relative z-10 pb-8 border-b border-slate-100">
               {/* Profile Avatar & Details */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                 {/* Official Monogram Avatar with Emerald Radar Beacon */}
@@ -1960,35 +1960,6 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
                     <span>•</span>
                     <span className="text-royal font-bold">V.S.B. Engineering College (Autonomous)</span>
                   </div>
-                </div>
-              </div>
-
-              {/* Status / Governance Badge */}
-              <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 w-full lg:w-auto shrink-0">
-                <div className="px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Engineering Responsibility</p>
-                  <p className="text-sm font-black text-[#071A3D] mt-0.5">End-to-End System Architect</p>
-                  <p className="text-xs font-bold text-royal mt-0.5">Full-Stack · DevOps · Cloud DB · API Gateways</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href="https://github.com/logeshwaran2097-hue/AIDS-Digital-Portal"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all hover:scale-102"
-                  >
-                    <Code2 className="w-4 h-4" />
-                    <span>GitHub Repository</span>
-                  </a>
-                  <a
-                    href="https://app-two-plum-10.vercel.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-royal hover:bg-royal-dark text-white font-bold text-xs transition-all hover:scale-102 shadow-md hover:shadow-lg"
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span>Live Portal</span>
-                  </a>
                 </div>
               </div>
             </div>
