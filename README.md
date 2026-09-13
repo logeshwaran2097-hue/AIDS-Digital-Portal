@@ -1,54 +1,64 @@
 # 🎓 V.S.B. Engineering College (Autonomous)
 ## 🚀 Department of Artificial Intelligence & Data Science (AI & DS)
-### Enterprise Digital Campus Portal · High-Availability Cloud Architecture
+### Enterprise Digital Campus Portal · High-Availability Cloud Ecosystem
 
 <div align="center">
 
-<!-- HERO ANIMATED WAVING BANNER -->
-![VSB AI&DS Header](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,11,33,100&height=240&section=header&text=V.S.B.%20AI%20%26%20DS%20ENTERPRISE%20PORTAL&fontSize=32&fontColor=ffffff&animation=fadeIn&fontAlignY=36&desc=Official%20Autonomous%20Academic%20Governance%20%26%20Multi-Role%20Cloud%20Ecosystem&descSize=14&descAlignY=58&descAlign=50)
+<!-- ========================================== -->
+<!-- HERO ANIMATED WAVING GRADIENT BANNER       -->
+<!-- ========================================== -->
+![VSB AI&DS Header Banner](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,11,33,100&height=250&section=header&text=V.S.B.%20AI%20%26%20DS%20ENTERPRISE%20PORTAL&fontSize=32&fontColor=ffffff&animation=fadeIn&fontAlignY=36&desc=Official%20Autonomous%20Academic%20Governance%20%26%20Multi-Role%20Cloud%20Ecosystem&descSize=14&descAlignY=58&descAlign=50)
 
-<!-- DYNAMIC TYPING SVG SLOGAN -->
+<!-- HERO EMBLEM & PORTAL BRANDING -->
+<p align="center">
+  <img src="./public/college-emblem.png" alt="V.S.B. College Emblem" width="100" />
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="./public/logo.png" alt="Department of AI & DS Logo" width="100" />
+</p>
+
+<!-- DYNAMIC TYPING SVG SLOGAN (CONTINUOUS ANIMATION) -->
 <p align="center">
   <a href="https://app-two-plum-10.vercel.app">
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=20&duration=2600&pause=1000&color=38BDF8&center=true&vCenter=true&multiline=false&width=780&lines=⚡+Autonomous+Multi-Role+Academic+Governance;📊+Real-Time+8-Period+Attendance+Matrix+with+Bell+Sync;📍+Geotagged+On-Duty+(OD)+Verification+Engine;🤖+PostgreSQL-Grounded+AI+Assistant;🔐+Strict+JWT+%26+Role-Based+Access+Control+(RBAC);🛡️+Zero-Mock+Data+Guarantee+·+100%25+Live+PostgreSQL;📱+Mobile-Ready+Experience+·+PWA+%2B+Android+APK" alt="Typing Banner" />
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=20&duration=2600&pause=1000&color=38BDF8&center=true&vCenter=true&multiline=false&width=780&lines=⚡+Autonomous+Multi-Role+Academic+Governance;📊+Real-Time+8-Period+Attendance+Matrix+with+Bell+Sync;📍+Geotagged+On-Duty+(OD)+Verification+Engine;🤖+PostgreSQL-Grounded+AI+Assistant;🔐+Strict+JWT+%26+Role-Based+Access+Control+(RBAC);🛡️+Zero-Mock+Data+Guarantee+·+100%25+Live+PostgreSQL;📱+Mobile-Ready+Experience+·+PWA+%2B+Android+APK" alt="Animated Typing Header" />
   </a>
 </p>
 
-<!-- LIVE QUICK ACTION PILLS -->
+<!-- LIVE QUICK-ACTION PILLS -->
 <p align="center">
   <a href="https://app-two-plum-10.vercel.app" target="_blank">
-    <img src="https://img.shields.io/badge/🌐_LIVE_PRODUCTION_PORTAL-app--two--plum--10.vercel.app-0284C7?style=for-the-badge&logo=vercel&logoColor=white" alt="Live App" />
+    <img src="https://img.shields.io/badge/🌐_LIVE_PRODUCTION_PORTAL-app--two--plum--10.vercel.app-0284C7?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Portal Link" />
   </a>
   <a href="https://github.com/logeshwaran2097-hue/AIDS-Digital-Portal" target="_blank">
-    <img src="https://img.shields.io/badge/⭐_GITHUB_REPO-AIDS--Digital--Portal-0B132B?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repo" />
+    <img src="https://img.shields.io/badge/⭐_GITHUB_REPO-AIDS--Digital--Portal-0B132B?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository" />
   </a>
   <a href="#-3-unified-authentication--role-matrix">
-    <img src="https://img.shields.io/badge/🔑_CREDENTIALS-Role_Login_Matrix-4F46E5?style=for-the-badge&logo=keycdn&logoColor=white" alt="Credentials" />
+    <img src="https://img.shields.io/badge/🔑_CREDENTIALS-Role_Login_Matrix-4F46E5?style=for-the-badge&logo=keycdn&logoColor=white" alt="Credentials Matrix" />
   </a>
   <a href="#-8-android-mobile-application--apk-download">
-    <img src="https://img.shields.io/badge/📱_ANDROID_APK-Download_v1.0.0-10B981?style=for-the-badge&logo=android&logoColor=white" alt="Android APK" />
+    <img src="https://img.shields.io/badge/📱_ANDROID_APK-Download_v1.0.0-10B981?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
   </a>
 </p>
 
 <!-- TECH STACK ANIMATED BADGES -->
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-14.2.5-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
-  <img src="https://img.shields.io/badge/React-18.3.1-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Next.js-14.2.5-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 14" />
+  <img src="https://img.shields.io/badge/React-18.3.1-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 18" />
   <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/Prisma_ORM-5.17-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma" />
-  <img src="https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="Postgres" />
-  <img src="https://img.shields.io/badge/Render-Live_Worker-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render" />
-  <img src="https://img.shields.io/badge/AI_Engine-Gemini_NLP-8E75C4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
-  <img src="https://img.shields.io/badge/PWA-Mobile_Ready-FF5722?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Prisma_ORM-5.17-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma ORM" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL Supabase" />
+  <img src="https://img.shields.io/badge/Render-Live_Worker-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render Cloud" />
+  <img src="https://img.shields.io/badge/AI_Engine-Gemini_NLP-8E75C4?style=for-the-badge&logo=google&logoColor=white" alt="Google Gemini" />
+  <img src="https://img.shields.io/badge/PWA-Mobile_Ready-FF5722?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA Ready" />
 </p>
 
-<!-- REAL-TIME STATUS TICKER -->
+<!-- REAL-TIME CLOUD STATUS INDICATORS -->
 <p align="center">
-  <img src="https://img.shields.io/badge/Build-Passing-brightgreen?style=flat-square&logo=github-actions&logoColor=white" alt="Build Status" />
-  <img src="https://img.shields.io/badge/Data_Integrity-Zero_Mock_Enforced-blue?style=flat-square&logo=checkmarx&logoColor=white" alt="Pure Data" />
+  <img src="https://img.shields.io/badge/Vercel_Edge-●_ONLINE-16a34a?style=flat-square&logo=vercel&logoColor=white" alt="Vercel Edge" />
+  <img src="https://img.shields.io/badge/Render_Worker-●_ONLINE-0ea5e9?style=flat-square&logo=render&logoColor=white" alt="Render Worker" />
+  <img src="https://img.shields.io/badge/Supabase_DB-●_CONNECTED-336791?style=flat-square&logo=postgresql&logoColor=white" alt="Supabase DB" />
+  <img src="https://img.shields.io/badge/Data_Integrity-100%25_PURE_DATA-blue?style=flat-square&logo=checkmarx&logoColor=white" alt="Pure Data" />
   <img src="https://img.shields.io/badge/Security-2FA_OTP_%2B_JWT-purple?style=flat-square&logo=auth0&logoColor=white" alt="Security" />
-  <img src="https://img.shields.io/badge/Uptime-99.98%25_Vercel_%2B_Render-emerald?style=flat-square&logo=cloudflare&logoColor=white" alt="Uptime" />
 </p>
 
 </div>
@@ -59,9 +69,9 @@
 ```
 📁 V.S.B. AI & DS Portal
 ├── 🌐 1. System Overview & Live Deployment Details
-├── 🏛️ 2. Architectural System Topology (Live Animated Flow)
+├── 🏛️ 2. Architectural System Topology (Live Animated Data Streams)
 ├── 🔐 3. Unified Authentication & Role Matrix
-├── 👥 4. Multi-Tier Functional Portals & UI Walkthrough
+├── 👥 4. Multi-Tier Functional Portals & Official UI Walkthrough
 │   ├── 🎓 A. Student Academic Portal (/dashboard)
 │   ├── 👨‍🏫 B. Faculty Directorate & Class Advisor Portal (/faculty-dashboard)
 │   ├── 👑 C. Head of Department (HOD) Governance Portal (/hod-dashboard)
@@ -71,7 +81,7 @@
 ├── 💻 7. Full-Stack Engineering Specifications
 ├── 📱 8. Android Mobile Application & APK Download
 ├── 🛠️ 9. Local Installation & Rapid Development
-├── 🚢 10. Continuous Deployment Pipelines
+├── 🚢 10. Continuous Deployment Pipelines (GitHub · Vercel · Render)
 └── 🏛️ 11. Institutional Identity & Developer Accreditation
 ```
 
@@ -80,14 +90,14 @@
 ## 🌐 1. System Overview & Live Deployment Details
 
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2400&pause=1000&color=10B981&center=true&vCenter=true&width=600&lines=🏢+V.S.B.+Autonomous+Academic+Ecosystem;🚀+Zero+Mock+Data+·+Live+PostgreSQL+Synchronized;⚡+Real-Time+Attendance+·+Geotagged+OD+Verification" alt="Overview Typing" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2400&pause=1000&color=10B981&center=true&vCenter=true&width=620&lines=🏢+V.S.B.+Autonomous+Academic+Ecosystem;🚀+Zero+Mock+Data+·+Live+PostgreSQL+Synchronized;⚡+Real-Time+Attendance+·+Geotagged+OD+Verification" alt="Section 1 Animated Typing" />
 </div>
 
-The **V.S.B. AI & DS Enterprise Digital Portal** is a production-grade institutional ecosystem engineered specifically for the **Department of Artificial Intelligence & Data Science** at **V.S.B. Engineering College (Autonomous), Karur**.
+The **V.S.B. AI & DS Enterprise Digital Portal** is an autonomous institutional ecosystem engineered specifically for the **Department of Artificial Intelligence & Data Science** at **V.S.B. Engineering College (Autonomous), Karur**.
 
 The portal unifies students, faculty members, class advisors, department leadership (HOD), and system administrators into a synchronized, role-based cloud workspace. It digitizes daily academic administration, attendance monitoring, On-Duty (OD) verification, student lifecycle tracking, project milestones, and administrative auditing.
 
-### 🔗 Production Service Endpoints
+### 🔗 Live Cloud Service Endpoints
 | Service / Channel | Operational State | Target URL / Connection String |
 | :--- | :---: | :--- |
 | **Primary Production URL** | ![Active](https://img.shields.io/badge/Status-Active_Online-16a34a?style=flat-square) | **[https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)** |
@@ -121,14 +131,14 @@ The portal unifies students, faculty members, class advisors, department leaders
 <div align="center">
 
 <!-- DYNAMIC ANIMATION TYPING HEADER -->
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=19&duration=2400&pause=900&color=38BDF8&center=true&vCenter=true&width=750&lines=⚡+Live+Synchronized+Architecture+Topology;📡+Multi-Role+Clients+➔+Edge+Gateway+➔+Micro-Engines+➔+Cloud+DB;🔄+Real-Time+Continuous+Data+Streams+·+High+Availability" alt="Architecture Typing Header" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=19&duration=2400&pause=900&color=38BDF8&center=true&vCenter=true&width=750&lines=⚡+Live+Synchronized+Architecture+Topology;📡+Multi-Role+Clients+➔+Edge+Gateway+➔+Micro-Engines+➔+Cloud+DB;🔄+Real-Time+Continuous+Data+Streams+·+High+Availability" alt="Section 2 Architecture Typing Header" />
 
 ### 💫 High-Availability Cloud Architecture (Live Animated Flow)
 *Watch the live animated data streams, pulsing micro-engines, and Supabase connection pool below:*
 
 <br/>
 
-<!-- EMBEDDED HIGH-FIDELITY ANIMATED SVG DIAGRAM -->
+<!-- EMBEDDED HIGH-FIDELITY ANIMATED SVG DIAGRAM (ONLY PROJECT ASSETS) -->
 <a href="#-2-architectural-system-topology">
   <img src="./public/architecture_animated.svg" alt="V.S.B. AI & DS Portal Animated Cloud Architecture Topology" width="100%" />
 </a>
@@ -219,7 +229,20 @@ sequenceDiagram
 ## 🔐 3. Unified Authentication & Role Matrix
 
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=818CF8&center=true&vCenter=true&width=620&lines=🔐+Strict+Role-Based+Access+Control+(RBAC);🛡️+Passwordless+Admin+2FA+·+2-Step+Student+OTP;🔑+Verified+Credentials+for+Autonomous+Governance" alt="Auth Typing" />
+
+<!-- DYNAMIC ANIMATION TYPING HEADER -->
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=818CF8&center=true&vCenter=true&width=650&lines=🔐+Strict+Role-Based+Access+Control+(RBAC);🛡️+Passwordless+Admin+2FA+·+2-Step+Student+OTP;🔑+Verified+Credentials+for+Autonomous+Governance" alt="Section 3 Auth Typing" />
+
+<br/>
+
+<!-- REAL WEBSITE IMAGE: UNIFIED LOGIN HUB -->
+<p align="center">
+  <img src="./public/screenshot-login-form.png" alt="Unified Role-Based Login Hub" width="80%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.25);" />
+</p>
+<p align="center">
+  <sub><b>Figure 3.1:</b> Real production screenshot of the Unified Authentication Hub featuring tabbed role switching (Student, Faculty, Advisor, HOD, Admin) and TLS 1.3 encryption.</sub>
+</p>
+
 </div>
 
 The platform enforces strict role-based access control (RBAC) with tailored primary identifiers, secondary identifiers, and multi-factor authentication methods:
@@ -232,13 +255,32 @@ The platform enforces strict role-based access control (RBAC) with tailored prim
 | **HOD** | `/hod-dashboard` | Official Email ID (e.g., `hod.aids@gmail.com`) | HOD Name (e.g., `karthik S`) | Department-Wide Governance, Approvals & Unlocks |
 | **Super Admin** | `/admin` | Administrator Email ID (e.g., `admin.aids@gamil.com`) | Master System Console | Secure Login OTP (Passwordless 2FA via Email) |
 
----
-
-## 👥 4. Multi-Tier Functional Portals & UI Walkthrough
+<br/>
 
 <div align="center">
-  <img src="./public/screenshot-desktop.png" alt="Desktop Dashboard Preview" width="85%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);" />
-  <p align="center"><sub><b>Figure 4.1:</b> High-Resolution Desktop Command Center Interface</sub></p>
+  <img src="./public/email-otp-icon.png" alt="2-Step Email OTP Engine" width="90" />
+  <p><sub><b>Security Engine:</b> 2-Step Cryptographic Email OTP Verification with SHA-256 state tracking and non-dismissible onboarding.</sub></p>
+</div>
+
+---
+
+## 👥 4. Multi-Tier Functional Portals & Official UI Walkthrough
+
+<div align="center">
+
+<!-- DYNAMIC ANIMATION TYPING HEADER -->
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2400&pause=1000&color=38BDF8&center=true&vCenter=true&width=650&lines=🖥️+Full+Command+Center+Dashboard;📊+Live+Attendance+Metrics+·+Timetables+·+Announcements;📱+Native+PWA+Responsive+Experience" alt="Portals Typing" />
+
+<br/>
+
+<!-- REAL WEBSITE IMAGE: DESKTOP COMMAND CENTER -->
+<p align="center">
+  <img src="./public/screenshot-desktop.png" alt="Desktop Dashboard View" width="85%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);" />
+</p>
+<p align="center">
+  <sub><b>Figure 4.1:</b> Real production screenshot of the AI & DS Desktop Command Center featuring live counters, attendance percentage gauge, weekly timetable, and campus announcements.</sub>
+</p>
+
 </div>
 
 <details open>
@@ -368,7 +410,7 @@ The platform enforces strict role-based access control (RBAC) with tailored prim
 ## ⏰ 5. Institutional Master 8-Period Bell Timings
 
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=F59E0B&center=true&vCenter=true&width=620&lines=⏰+Synchronized+Master+8-Period+Bell+Schedule;🔔+45-Min+Lecture+Slots+·+Lab+Blocks+·+Intervals" alt="Bell Timings Typing" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=F59E0B&center=true&vCenter=true&width=650&lines=⏰+Synchronized+Master+8-Period+Bell+Schedule;🔔+45-Min+Lecture+Slots+·+Lab+Blocks+·+Intervals" alt="Section 5 Timings Typing" />
 </div>
 
 The portal's attendance calculations and lecture tracking are synchronized with V.S.B. Engineering College's autonomous daily schedule:
@@ -390,6 +432,10 @@ The portal's attendance calculations and lecture tracking are synchronized with 
 ---
 
 ## 🗄️ 6. Database Architecture & Pure Data Guarantees
+
+<div align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2400&pause=1000&color=336791&center=true&vCenter=true&width=650&lines=🗄️+Zero+Mock+Data+·+100%25+Live+PostgreSQL;🔒+Prisma+ORM+Contracts+·+PgBouncer+Pooled;⚡+ACID+Guarantees+·+Supabase+Persistence" alt="Database Typing" />
+</div>
 
 ```
 ┌──────────────────┐         ┌────────────────────┐         ┌───────────────────┐
@@ -429,6 +475,10 @@ The portal's attendance calculations and lecture tracking are synchronized with 
 
 ## 💻 7. Full-Stack Engineering Specifications
 
+<div align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=A855F7&center=true&vCenter=true&width=650&lines=⚡+Next.js+14+Edge+·+TypeScript+5.0+·+Tailwind+CSS;🛡️+Jose+JWT+Auth+·+Prisma+ORM+·+Supabase+DB;🤖+Google+Gemini+API+·+Capacitor+Native+Android" alt="Engineering Typing" />
+</div>
+
 | Layer | Technologies & Libraries | Architectural Highlights |
 | :--- | :--- | :--- |
 | **Frontend Framework** | **Next.js 14** (App Router), **React 18** | Edge rendering, React Server Components, zero-flash routing |
@@ -447,12 +497,27 @@ The portal's attendance calculations and lecture tracking are synchronized with 
 ## 📱 8. Android Mobile Application & APK Download
 
 <div align="center">
-  <img src="./public/screenshot-mobile.png" alt="Mobile Experience Preview" width="340px" style="border-radius: 18px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);" />
-  <p align="center"><sub><b>Figure 8.1:</b> Native Mobile Experience on Android Devices</sub></p>
 
+<!-- DYNAMIC ANIMATION TYPING HEADER -->
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=10B981&center=true&vCenter=true&width=650&lines=📱+Native+Mobile+Experience+on+Android;🚀+Instant+Attendance+Gauge+·+OD+Camera+Uploads;⚡+PWA+Offline+Caching+·+Android+APK+Package" alt="Mobile Typing" />
+
+<br/>
+
+<!-- REAL WEBSITE IMAGE: MOBILE INTERFACE -->
+<p align="center">
+  <img src="./public/screenshot-mobile.png" alt="Real Mobile App Interface" width="340px" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);" />
+</p>
+<p align="center">
+  <sub><b>Figure 8.1:</b> Real production screenshot of the native mobile portal on Android featuring real-time 94.2% attendance gauge, quick actions, and campus feed.</sub>
+</p>
+
+<!-- APK DIRECT DOWNLOAD BADGE -->
+<p align="center">
   <a href="./VSB-AI-DS-Portal-v1.0.0.apk">
-    <img src="https://img.shields.io/badge/📲_DOWNLOAD_APK_V1.0.0-VSB--AI--DS--Portal.apk-10B981?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
+    <img src="https://img.shields.io/badge/📲_DOWNLOAD_APK_V1.0.0-VSB--AI--DS--Portal.apk-10B981?style=for-the-badge&logo=android&logoColor=white" alt="Direct APK Download" />
   </a>
+</p>
+
 </div>
 
 The V.S.B. AI & DS Portal is fully optimized for mobile devices and available as a standalone Android application:
@@ -460,11 +525,15 @@ The V.S.B. AI & DS Portal is fully optimized for mobile devices and available as
 - **Application Version**: `v1.0.0`
 - **File Size**: `3.9 MB`
 - **Direct Download**: [VSB-AI-DS-Portal-v1.0.0.apk](./VSB-AI-DS-Portal-v1.0.0.apk) (or from `public/downloads/Digital-Portal-of-AI-and-DS.apk`)
-- **Features**: Push notifications, full offline shell caching, instant camera attachment for OD photo proof uploads, and biometric login compatibility.
+- **Native Features**: Push notifications, full offline shell caching, instant camera attachment for OD photo proof uploads, and biometric login compatibility.
 
 ---
 
 ## 🛠️ 9. Local Installation & Rapid Development
+
+<div align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=38BDF8&center=true&vCenter=true&width=650&lines=🛠️+Rapid+Local+Setup+Guide;⚡+Node.js+LTS+·+Prisma+DB+Push+·+Next.js+Dev" alt="Local Setup Typing" />
+</div>
 
 ### Prerequisites:
 - **Node.js**: `v18.x` or `v20.x` LTS
@@ -516,19 +585,23 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 🚢 10. Continuous Deployment Pipelines
 
 <div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=38BDF8&center=true&vCenter=true&width=600&lines=🚀+Automated+CI%2FCD+Pipelines;⚡+Push-to-Deploy+via+GitHub+➔+Vercel+Edge" alt="Deployment Typing" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=10B981&center=true&vCenter=true&width=650&lines=🚀+Automated+CI%2FCD+Pipelines;⚡+Push-to-Deploy+via+GitHub+➔+Vercel+Edge;🔄+Render+Worker+High-Availability+Service" alt="Pipeline Typing" />
 </div>
 
 The application uses an automated continuous deployment lifecycle:
 - **GitHub Version Control**: Every push to `main` triggers automated linting, type-checking, and build validation.
 - **Vercel Edge Platform**: Automatic production deployments to **[https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)** with instant SSL certification and global CDN caching.
-- **Render Worker Service**: High-availability worker running continuously under service ID `srv-dad5vm2jnfac73ejaf4g`.
+- **Render Worker Service**: High-availability worker running continuously under service ID `srv-dad5vm2jnfac73ejaf4g` at **[https://vsb-aids-portal.onrender.com](https://vsb-aids-portal.onrender.com)**.
 
 ---
 
 ## 🏛️ 11. Institutional Identity & Developer Accreditation
 
 <div align="center">
+
+<p align="center">
+  <img src="./public/college-emblem.png" alt="V.S.B. Seal" width="110" />
+</p>
 
 ### V.S.B. Engineering College (Autonomous)
 *Approved by AICTE, New Delhi · Affiliated to Anna University, Chennai*  
@@ -544,7 +617,9 @@ Developed with ❤️ by **Logeshwaran G**
 
 <br/>
 
-<!-- ANIMATED WAVING FOOTER BANNER -->
-![VSB AI&DS Footer](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,11,33,100&height=140&section=footer)
+<!-- ========================================== -->
+<!-- ANIMATED WAVING FOOTER BANNER              -->
+<!-- ========================================== -->
+![VSB AI&DS Footer Banner](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,11,33,100&height=140&section=footer)
 
 </div>
