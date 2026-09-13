@@ -38,6 +38,7 @@ import {
   dispatchNativeNotification,
 } from '@/lib/notificationEngine'
 import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationClassifier'
+import { NotificationDetailModal, NotificationDetailData } from '@/components/notifications/NotificationDetailModal'
 
 export interface NavItem {
   label: string
@@ -103,6 +104,7 @@ export function PortalLayout({
   const [activePath, setActivePath] = useState('')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [realtimeToast, setRealtimeToast] = useState<RealtimeToastData | null>(null)
+  const [activeDetailNotification, setActiveDetailNotification] = useState<NotificationDetailData | null>(null)
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
   const [isTestingPush, setIsTestingPush] = useState(false)
   const knownNotificationIds = useRef<Set<string>>(new Set())
@@ -671,6 +673,19 @@ export function PortalLayout({
     window.dispatchEvent(new CustomEvent('portal-notifications-marked-read', { detail: { id } }))
   }
 
+  const handleTouchNotification = (item: NotificationItem) => {
+    markOneAsRead(item.id)
+    setActiveDetailNotification({
+      id: item.id,
+      title: item.title,
+      message: item.description,
+      time: item.time,
+      link: item.link,
+      type: item.type,
+    })
+    setIsNotificationOpen(false)
+  }
+
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
     setApiMenuCounts({})
@@ -1178,7 +1193,7 @@ export function PortalLayout({
                         notifications.map((item) => (
                           <div
                             key={item.id}
-                            onClick={() => markOneAsRead(item.id)}
+                            onClick={() => handleTouchNotification(item)}
                             className={cn(
                               'p-3.5 sm:p-4 hover:bg-slate-50 transition-colors cursor-pointer flex items-start gap-3',
                               item.unread ? 'bg-blue-50/50' : 'bg-white'
@@ -1398,6 +1413,26 @@ export function PortalLayout({
       <RealtimeNotificationToast
         toast={realtimeToast}
         onDismiss={() => setRealtimeToast(null)}
+        onOpenDetail={(toast) => {
+          markOneAsRead(toast.id)
+          setActiveDetailNotification({
+            id: toast.id,
+            title: toast.title,
+            message: toast.message,
+            createdByName: toast.createdByName,
+            link: toast.link,
+          })
+        }}
+      />
+
+      {/* Touch-to-Open Notification Detail Modal */}
+      <NotificationDetailModal
+        notification={activeDetailNotification}
+        onClose={() => setActiveDetailNotification(null)}
+        onActionClick={(dest) => {
+          handleNavClick(dest)
+          router.push(dest)
+        }}
       />
 
       {/* Floating AI Chatbot Bottom-Right Icon */}

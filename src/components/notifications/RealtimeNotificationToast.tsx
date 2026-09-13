@@ -17,9 +17,11 @@ export interface RealtimeToastData {
 export function RealtimeNotificationToast({
   toast,
   onDismiss,
+  onOpenDetail,
 }: {
   toast: RealtimeToastData | null
   onDismiss: () => void
+  onOpenDetail?: (toast: RealtimeToastData) => void
 }) {
   const [visible, setVisible] = useState(false)
 
@@ -38,13 +40,27 @@ export function RealtimeNotificationToast({
 
   if (!toast || !visible) return null
 
+  const handleTouch = () => {
+    if (onOpenDetail && toast) {
+      onOpenDetail(toast)
+      setVisible(false)
+      onDismiss()
+    }
+  }
+
   return (
     <div className="fixed top-4 right-4 sm:right-6 z-50 max-w-md w-[calc(100vw-2rem)] sm:w-96 transition-all duration-300 transform animate-in slide-in-from-top-4 fade-in">
-      <div className="rounded-3xl bg-[#071A3D] text-white p-4 shadow-2xl border border-[#22C7E8]/40 backdrop-blur-xl relative overflow-hidden flex items-start gap-3.5">
+      <div
+        onClick={handleTouch}
+        className={cn(
+          'rounded-3xl bg-[#071A3D] text-white p-4 shadow-2xl border border-[#22C7E8]/40 backdrop-blur-xl relative overflow-hidden flex items-start gap-3.5 group',
+          onOpenDetail ? 'cursor-pointer hover:border-[#F4C430]/70 transition-all' : ''
+        )}
+      >
         {/* Glowing top line accent */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430] animate-pulse" />
 
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shrink-0 shadow-md mt-0.5">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shrink-0 shadow-md mt-0.5 group-hover:scale-105 transition-transform">
           <Bell className="w-5 h-5 animate-bounce" />
         </div>
 
@@ -56,7 +72,7 @@ export function RealtimeNotificationToast({
             <span className="text-[10px] text-gray-300 font-medium">Just now</span>
           </div>
 
-          <h4 className="text-xs sm:text-sm font-bold text-white leading-snug line-clamp-1">{toast.title}</h4>
+          <h4 className="text-xs sm:text-sm font-bold text-white leading-snug line-clamp-1 group-hover:text-[#F4C430] transition-colors">{toast.title}</h4>
           <p className="text-xs text-gray-300 line-clamp-2 leading-relaxed">{toast.message}</p>
 
           <div className="flex items-center justify-between pt-1">
@@ -64,24 +80,16 @@ export function RealtimeNotificationToast({
               {toast.createdByName ? `From: ${toast.createdByName}` : 'AI & DS Dept'}
             </span>
 
-            {toast.link && (
-              <Link
-                href={toast.link}
-                onClick={() => {
-                  setVisible(false)
-                  onDismiss()
-                }}
-                className="text-[11px] font-bold text-[#F4C430] hover:underline flex items-center gap-1 shrink-0"
-              >
-                <span>View Alert</span>
-                <ExternalLink className="w-3 h-3" />
-              </Link>
-            )}
+            <span className="text-[11px] font-bold text-[#F4C430] group-hover:underline flex items-center gap-1 shrink-0">
+              <span>Read Details</span>
+              <ExternalLink className="w-3 h-3" />
+            </span>
           </div>
         </div>
 
         <button
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation()
             setVisible(false)
             setTimeout(onDismiss, 200)
           }}

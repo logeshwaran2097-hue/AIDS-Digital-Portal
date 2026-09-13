@@ -24,6 +24,7 @@ import {
 import { cn } from '@/lib/utils'
 import { NotificationSettingsUI } from '@/components/notifications/NotificationSettingsUI'
 import { AdvisorODReviewModal } from '@/components/od/AdvisorODReviewModal'
+import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal'
 
 interface NotificationItem {
   id: string
@@ -42,6 +43,7 @@ export function FacultyNotificationsView({
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const [selectedODNotification, setSelectedODNotification] = useState<NotificationItem | null>(null)
+  const [selectedDetailNotification, setSelectedDetailNotification] = useState<NotificationItem | null>(null)
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
@@ -69,6 +71,13 @@ export function FacultyNotificationsView({
       })
     } catch {}
     window.dispatchEvent(new CustomEvent('portal-notifications-marked-read', { detail: { id } }))
+  }
+
+  const handleCardTouch = (item: NotificationItem) => {
+    if (!item.isRead) {
+      toggleRead(item.id)
+    }
+    setSelectedDetailNotification(item)
   }
 
   const clearNotification = (id: string) => {
@@ -156,8 +165,9 @@ export function FacultyNotificationsView({
             return (
               <Card
                 key={n.id}
+                onClick={() => handleCardTouch(n)}
                 className={cn(
-                  'rounded-3xl border transition-all duration-200 overflow-hidden',
+                  'rounded-3xl border transition-all duration-200 overflow-hidden cursor-pointer group hover:shadow-md',
                   isUnread
                     ? 'bg-blue-50/40 border-blue-200 shadow-xs'
                     : 'bg-white border-gray-200 opacity-80 hover:opacity-100'
@@ -205,7 +215,7 @@ export function FacultyNotificationsView({
                       )}
 
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-sm text-[#071A3D] leading-snug">{n.title}</h3>
+                        <h3 className="font-bold text-sm text-[#071A3D] group-hover:text-[#1455D9] transition-colors leading-snug">{n.title}</h3>
                         {isUnread && (
                           <span className="w-2 h-2 rounded-full bg-[#1455D9] shrink-0" />
                         )}
@@ -221,7 +231,10 @@ export function FacultyNotificationsView({
                           n.message.toLowerCase().includes('od application') ||
                           n.message.toLowerCase().includes('requested personal')) && (
                           <button
-                            onClick={() => setSelectedODNotification(n)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedODNotification(n)
+                            }}
                             className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] hover:from-[#0F42A8] hover:to-[#071A3D] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer group"
                           >
                             <Eye className="w-3.5 h-3.5 text-[#F4C430]" />
@@ -235,14 +248,20 @@ export function FacultyNotificationsView({
 
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
-                      onClick={() => toggleRead(n.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleRead(n.id)
+                      }}
                       className="p-1.5 rounded-lg text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors"
                       title={isUnread ? 'Mark as Read' : 'Mark as Unread'}
                     >
                       <Check className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => clearNotification(n.id)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        clearNotification(n.id)
+                      }}
                       className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                       title="Delete"
                     >
@@ -255,6 +274,12 @@ export function FacultyNotificationsView({
           })
         )}
       </div>
+
+      {/* Touch-to-Open Notification Detail Modal */}
+      <NotificationDetailModal
+        notification={selectedDetailNotification}
+        onClose={() => setSelectedDetailNotification(null)}
+      />
 
       {/* Advisor OD Review Dossier Modal */}
       <AdvisorODReviewModal

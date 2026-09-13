@@ -7,6 +7,7 @@ import { formatDate } from '@/lib/utils'
 import { Bell, Calendar, User, CheckCircle2, Filter, Sparkles, CheckCheck, Smartphone, Volume2, ShieldCheck, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NotificationSettingsUI } from '@/components/notifications/NotificationSettingsUI'
+import { NotificationDetailModal } from '@/components/notifications/NotificationDetailModal'
 
 interface NotificationItem {
   id: string
@@ -20,6 +21,7 @@ interface NotificationItem {
 export function StudentNotificationsView({ notifications: initialNotifications }: { notifications: NotificationItem[] }) {
   const [items, setItems] = useState<NotificationItem[]>(initialNotifications)
   const [filter, setFilter] = useState('ALL')
+  const [selectedDetailNotification, setSelectedDetailNotification] = useState<NotificationItem | null>(null)
   const [readIds, setReadIds] = useState<Set<string>>(() => {
     return new Set(initialNotifications.filter((n) => n.isRead).map((n) => n.id))
   })
@@ -78,6 +80,21 @@ export function StudentNotificationsView({ notifications: initialNotifications }
       })
     } catch {}
     window.dispatchEvent(new CustomEvent('portal-notifications-marked-read'))
+  }
+
+  const handleCardTouch = async (item: NotificationItem) => {
+    if (!readIds.has(item.id)) {
+      setReadIds((prev) => new Set(prev).add(item.id))
+      try {
+        await fetch('/api/notifications', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notificationId: item.id }),
+        })
+      } catch {}
+      window.dispatchEvent(new CustomEvent('portal-notifications-marked-read', { detail: { id: item.id } }))
+    }
+    setSelectedDetailNotification(item)
   }
 
   const handleToggleRead = async (id: string) => {
@@ -153,7 +170,7 @@ export function StudentNotificationsView({ notifications: initialNotifications }
             return (
               <Card
                 key={item.id}
-                onClick={() => handleToggleRead(item.id)}
+                onClick={() => handleCardTouch(item)}
                 className={cn(
                   'rounded-3xl border-gray-200 hover:shadow-md transition-all cursor-pointer group',
                   !isRead ? 'bg-white border-l-4 border-l-[#1455D9]' : 'bg-gray-50/70 opacity-80'
@@ -199,6 +216,12 @@ export function StudentNotificationsView({ notifications: initialNotifications }
           })}
         </div>
       )}
+
+      {/* Touch-to-Open Notification Detail Modal */}
+      <NotificationDetailModal
+        notification={selectedDetailNotification}
+        onClose={() => setSelectedDetailNotification(null)}
+      />
     </div>
   )
 }
