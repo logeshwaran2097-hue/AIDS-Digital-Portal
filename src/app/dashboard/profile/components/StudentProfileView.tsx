@@ -137,13 +137,11 @@ export function StudentProfileView({
 }) {
   const regNo = initialStudent.registerNumber || initialUser.email?.split('@')[0].toUpperCase() || ''
   const storageKey = `vsb_student_profile_v2_${regNo}`
-  const instEmail = `${regNo.toLowerCase()}@student.vsb.edu.in`
   const verifiedPersonal = (initialUser as any).personalEmail || (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in') ? initialUser.email : '')
 
   const defaultProfile: StudentFullProfile = {
     name: initialUser.name || '',
-    email: instEmail,
-    institutionalEmail: instEmail,
+    email: verifiedPersonal,
     personalEmail: verifiedPersonal,
     emailVerified: Boolean((initialUser as any).emailVerified || verifiedPersonal),
     phone: initialUser.phone || (initialStudent as any).phone || '',
@@ -152,8 +150,8 @@ export function StudentProfileView({
     dateOfBirth: initialStudent.dateOfBirth
       ? new Date(initialStudent.dateOfBirth).toISOString().split('T')[0]
       : '',
-    bloodGroup: (initialStudent as any).bloodGroup || 'O+ve',
-    residencyStatus: (initialStudent as any).residencyStatus || 'Day Scholar',
+    bloodGroup: (initialStudent as any).bloodGroup || '',
+    residencyStatus: (initialStudent as any).residencyStatus || '',
     busNo: (initialStudent as any).busNo || '',
     boardingPoint: (initialStudent as any).boardingPoint || '',
     hostelBlock: (initialStudent as any).hostelBlock || '',
@@ -162,7 +160,7 @@ export function StudentProfileView({
     department: initialStudent.department || 'Artificial Intelligence & Data Science',
     degreeProgram: 'B.Tech Artificial Intelligence & Data Science',
     regulation: 'R-2021 (Autonomous System)',
-    batch: initialStudent.batch || '2025 - 2029',
+    batch: initialStudent.batch || '',
     year: initialStudent.year || 1,
     semester: initialStudent.semester || 1,
     section: initialStudent.section || 'A',
@@ -193,27 +191,42 @@ export function StudentProfileView({
         const saved = localStorage.getItem(storageKey)
         if (saved) {
           const parsed = JSON.parse(saved)
-          if (!parsed.email || parsed.email.trim() === '') {
-            parsed.email = initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : '')
+          if (parsed.email && parsed.email.endsWith('@student.vsb.edu.in')) {
+            parsed.email = (parsed.personalEmail && !parsed.personalEmail.endsWith('@student.vsb.edu.in')) ? parsed.personalEmail : verifiedPersonal || ''
+          }
+          if (parsed.personalEmail && parsed.personalEmail.endsWith('@student.vsb.edu.in')) {
+            parsed.personalEmail = verifiedPersonal || ''
+          }
+          delete parsed.institutionalEmail
+          if (parsed.parentPhone === '6381366088' && !(initialStudent as any).parentPhone) {
+            parsed.parentPhone = ''
           }
           setProfile((prev) => ({ ...prev, ...parsed }))
           setFormData((prev) => ({ ...prev, ...parsed }))
         }
       } catch {}
     }
-  }, [regNo, storageKey, initialUser.email])
+  }, [regNo, storageKey, verifiedPersonal])
 
   // Real-time synchronization when Onboarding is completed or updated
   useEffect(() => {
     const handleProfileUpdated = (e: any) => {
       if (e.detail) {
-        setProfile((prev) => ({ ...prev, ...e.detail }))
-        setFormData((prev) => ({ ...prev, ...e.detail }))
+        const d = { ...e.detail }
+        if (d.email && d.email.endsWith('@student.vsb.edu.in')) {
+          d.email = (d.personalEmail && !d.personalEmail.endsWith('@student.vsb.edu.in')) ? d.personalEmail : verifiedPersonal || ''
+        }
+        if (d.personalEmail && d.personalEmail.endsWith('@student.vsb.edu.in')) {
+          d.personalEmail = verifiedPersonal || ''
+        }
+        delete d.institutionalEmail
+        setProfile((prev) => ({ ...prev, ...d }))
+        setFormData((prev) => ({ ...prev, ...d }))
       }
     }
     window.addEventListener('portal-student-profile-updated', handleProfileUpdated)
     return () => window.removeEventListener('portal-student-profile-updated', handleProfileUpdated)
-  }, [])
+  }, [verifiedPersonal])
 
   const handleOpenEdit = (tab: 'personal' | 'academic' | 'kpis' = 'personal') => {
     setActiveTab(tab)
@@ -303,7 +316,17 @@ export function StudentProfileView({
     setLoading(true)
 
     try {
-      const updatedProfile = { ...formData }
+      const cleanPersonalEmail = (formData.personalEmail && !formData.personalEmail.endsWith('@student.vsb.edu.in'))
+        ? formData.personalEmail
+        : (formData.email && !formData.email.endsWith('@student.vsb.edu.in'))
+          ? formData.email
+          : ''
+      const updatedProfile = {
+        ...formData,
+        email: cleanPersonalEmail,
+        personalEmail: cleanPersonalEmail,
+        institutionalEmail: '',
+      }
       setProfile(updatedProfile)
       if (typeof window !== 'undefined') {
         localStorage.setItem(storageKey, JSON.stringify(updatedProfile))
@@ -316,7 +339,7 @@ export function StudentProfileView({
         body: JSON.stringify({
           registerNumber: formData.registerNumber,
           name: formData.name,
-          email: formData.email,
+          email: cleanPersonalEmail,
           phone: formData.phone,
           parentPhone: formData.parentPhone,
           isParentWhatsapp: formData.isParentWhatsapp,
@@ -571,48 +594,43 @@ export function StudentProfileView({
 
             <div className="space-y-3 text-xs">
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="font-bold text-gray-500">Institutional College Email:</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono font-bold text-[#1455D9]">
-                    {profile.institutionalEmail || `${regNo.toLowerCase()}@student.vsb.edu.in`}
-                  </span>
-                  <span className="text-[10px] font-black text-blue-800 bg-blue-100/90 px-2 py-0.5 rounded-full border border-blue-200">
-                    Campus ID
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="font-bold text-gray-500">Verified Personal Email:</span>
+                <span className="font-bold text-gray-500">Personal Email:</span>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono font-bold text-[#071A3D]">
-                    {profile.personalEmail || (profile.email && !profile.email.endsWith('@student.vsb.edu.in') ? profile.email : '') || 'Not Provided (Verify in Onboarding)'}
-                  </span>
-                  {(profile.emailVerified || profile.personalEmail) ? (
-                    <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-0.5 shadow-2xs">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> OTP Verified
-                    </span>
+                  {((profile.personalEmail && !profile.personalEmail.endsWith('@student.vsb.edu.in')) ? profile.personalEmail : (profile.email && !profile.email.endsWith('@student.vsb.edu.in')) ? profile.email : '') ? (
+                    <>
+                      <span className="font-mono font-bold text-[#071A3D]">
+                        {(profile.personalEmail && !profile.personalEmail.endsWith('@student.vsb.edu.in')) ? profile.personalEmail : profile.email}
+                      </span>
+                      <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-0.5 shadow-2xs">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified
+                      </span>
+                    </>
                   ) : (
-                    <button
-                      onClick={() => setIsOnboardingOpen(true)}
-                      className="text-[10px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200 hover:bg-amber-200 cursor-pointer"
-                    >
-                      Verify via Onboarding
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 font-medium italic">Not Provided</span>
+                      <button
+                        onClick={() => setIsOnboardingOpen(true)}
+                        className="text-[10px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200 hover:bg-amber-200 cursor-pointer"
+                      >
+                        Add &amp; Verify Email
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
                 <span className="font-bold text-gray-500">Student Mobile:</span>
-                <span className="font-bold text-[#071A3D]">{profile.phone || 'Not Provided'}</span>
+                <span className="font-bold text-[#071A3D]">{profile.phone || initialUser.phone || 'Not Provided'}</span>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
                 <span className="font-bold text-gray-500">Parent Mobile:</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold font-mono text-[#071A3D]">{profile.parentPhone || '6381366088'}</span>
-                  {profile.isParentWhatsapp && (
+                  <span className="font-bold font-mono text-[#071A3D]">
+                    {(profile.parentPhone && profile.parentPhone !== '6381366088') ? profile.parentPhone : (initialStudent as any).parentPhone || 'Not Provided'}
+                  </span>
+                  {profile.isParentWhatsapp && profile.parentPhone && (
                     <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
                       WhatsApp
                     </span>
@@ -622,25 +640,31 @@ export function StudentProfileView({
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
                 <span className="font-bold text-gray-500">Date of Birth:</span>
-                <span className="font-bold text-[#071A3D]">{formatDate(profile.dateOfBirth)}</span>
+                <span className="font-bold text-[#071A3D]">{profile.dateOfBirth ? formatDate(profile.dateOfBirth) : 'Not Provided'}</span>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
                 <span className="font-bold text-gray-500">Blood Group:</span>
-                <span className="font-bold text-red-600 font-mono">{profile.bloodGroup}</span>
+                <span className="font-bold text-red-600 font-mono">{profile.bloodGroup || 'Not Provided'}</span>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <span className="font-bold text-gray-500">Residency &amp; Transport:</span>
                 <span className="font-bold text-[#071A3D] text-left sm:text-right flex items-center gap-1.5">
-                  {profile.residencyStatus?.toLowerCase().includes('hostel') ? (
-                    <Building className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                  ) : profile.residencyStatus?.toLowerCase().includes('out bus') ? (
-                    <Car className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  {profile.residencyStatus ? (
+                    <>
+                      {profile.residencyStatus?.toLowerCase().includes('hostel') ? (
+                        <Building className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                      ) : profile.residencyStatus?.toLowerCase().includes('out bus') ? (
+                        <Car className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      ) : (
+                        <Bus className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                      )}
+                      {profile.residencyStatus}
+                    </>
                   ) : (
-                    <Bus className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                    <span className="text-gray-400 font-medium italic">Not Provided</span>
                   )}
-                  {profile.residencyStatus || 'Not Specified (Click Edit)'}
                 </span>
               </div>
             </div>
@@ -813,21 +837,14 @@ export function StudentProfileView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Institutional College Email</label>
+                      <label className="block font-bold text-[#071A3D] mb-1">Personal Email Address</label>
                       <input
                         type="email"
-                        readOnly
-                        value={formData.institutionalEmail || `${formData.registerNumber.toLowerCase()}@student.vsb.edu.in`}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 font-mono text-gray-500 cursor-not-allowed text-xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Personal Contact Email</label>
-                      <input
-                        type="email"
-                        value={formData.personalEmail || ''}
-                        onChange={(e) => setFormData({ ...formData, personalEmail: e.target.value })}
+                        value={formData.personalEmail || (formData.email && !formData.email.endsWith('@student.vsb.edu.in') ? formData.email : '')}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setFormData({ ...formData, personalEmail: val, email: val })
+                        }}
                         className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono text-[#071A3D] text-xs"
                         placeholder="e.g. name@gmail.com"
                       />
@@ -844,14 +861,14 @@ export function StudentProfileView({
                       />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="block font-bold text-[#071A3D] mb-1">Parent / Guardian Mobile</label>
                       <input
                         type="text"
                         value={formData.parentPhone || ''}
                         onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
                         className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono"
-                        placeholder="e.g. 6381366088"
+                        placeholder="e.g. 9876543210"
                       />
                       <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
                         <input
@@ -1534,7 +1551,7 @@ export function StudentProfileView({
         }}
         initialData={{
           name: profile.name || initialUser.name,
-          email: profile.email || initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : ''),
+          email: (profile.personalEmail && !profile.personalEmail.endsWith('@student.vsb.edu.in')) ? profile.personalEmail : (profile.email && !profile.email.endsWith('@student.vsb.edu.in')) ? profile.email : (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in')) ? initialUser.email : '',
           phone: profile.phone || initialUser.phone || '',
           registerNumber: regNo,
           department: profile.department,

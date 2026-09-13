@@ -792,7 +792,9 @@ export function PortalLayout({
           </div>
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-bold text-white truncate leading-tight">{userName}</h4>
-            <p className="text-[11px] text-gray-300 truncate mt-0.5">{userEmail || 'AI & DS Dept'}</p>
+            <p className="text-[11px] text-gray-300 truncate mt-0.5">
+              {(userEmail && !userEmail.endsWith('@student.vsb.edu.in')) ? userEmail : 'AI & DS Dept'}
+            </p>
             <span
               className={cn(
                 'inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1.5',

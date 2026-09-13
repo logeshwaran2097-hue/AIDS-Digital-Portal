@@ -451,18 +451,18 @@ export function StudentOnboardingModal({
             sessionStorage.setItem(`vsb_student_onboarding_done_${reg}`, 'true')
 
             // Persist full onboarding defaults directly into the student profile storage
+            const personalEmailClean = form.email.trim().toLowerCase()
             const updatedProfileData = {
               name: initialData.name,
-              email: `${reg.toLowerCase()}@student.vsb.edu.in`,
-              institutionalEmail: `${reg.toLowerCase()}@student.vsb.edu.in`,
-              personalEmail: form.email.trim().toLowerCase(),
+              email: personalEmailClean,
+              personalEmail: personalEmailClean,
               emailVerified: true,
               phone: form.phone.trim(),
               parentPhone: form.parentPhone.trim(),
               isParentWhatsapp: form.isParentWhatsapp,
               dateOfBirth: form.dateOfBirth,
-              bloodGroup: form.bloodGroup || 'O+ve',
-              residencyStatus: finalResidency || form.residencyStatus,
+              bloodGroup: form.bloodGroup || '',
+              residencyStatus: finalResidency || form.residencyStatus || '',
               busNo: form.busNo.trim(),
               boardingPoint: form.boardingPoint.trim(),
               hostelBlock: form.hostelBlock.trim(),

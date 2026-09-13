@@ -35,10 +35,6 @@ export default async function StudentProfilePage() {
     }).catch(() => {})
   }
 
-  const studentEmail = (student?.registerNumber || session.registerNumber || '').toLowerCase()
-    ? `${(student?.registerNumber || session.registerNumber || '').toLowerCase()}@student.vsb.edu.in`
-    : 'student@vsb.edu.in'
-
   const verifiedPersonalEmail =
     user?.email && !user.email.endsWith('@student.vsb.edu.in')
       ? user.email
@@ -48,8 +44,8 @@ export default async function StudentProfilePage() {
     ...(user || {}),
     id: user?.id || session.userId,
     name: user?.name || session.name || (student ? `Student (${student.registerNumber})` : 'Student'),
-    email: studentEmail,
-    personalEmail: verifiedPersonalEmail,
+    email: verifiedPersonalEmail || '',
+    personalEmail: verifiedPersonalEmail || '',
     emailVerified: Boolean(user?.emailVerified || verifiedPersonalEmail),
     phone: user?.phone || '',
     role: user?.role || 'student',
@@ -71,7 +67,7 @@ export default async function StudentProfilePage() {
     <PortalLayout
       role="student"
       userName={finalUser.name || session.name || 'Student'}
-      userEmail={finalUser.email || session.email || studentEmail}
+      userEmail={verifiedPersonalEmail || undefined}
       profileImage={(finalUser as any)?.profileImage}
     >
       <div className="py-2 animate-fade-in">
