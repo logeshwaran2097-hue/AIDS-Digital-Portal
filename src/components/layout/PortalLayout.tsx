@@ -25,6 +25,7 @@ import {
   Smartphone,
   ShieldCheck,
   ChevronDown,
+  Target,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
@@ -39,6 +40,7 @@ import {
 } from '@/lib/notificationEngine'
 import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationClassifier'
 import { NotificationDetailModal, NotificationDetailData } from '@/components/notifications/NotificationDetailModal'
+import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 
 export interface NavItem {
   label: string
@@ -100,6 +102,7 @@ export function PortalLayout({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
+  const [showVisionModal, setShowVisionModal] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
   const [activePath, setActivePath] = useState('')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -1261,6 +1264,17 @@ export function PortalLayout({
               )}
             </div>
 
+            {/* Vision & Mission Quick Access */}
+            <button
+              type="button"
+              onClick={() => setShowVisionModal(true)}
+              title="View Department Vision & Mission"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-300/80 bg-amber-50/80 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer hover:scale-102"
+            >
+              <Target className="w-3.5 h-3.5 text-amber-600" />
+              <span>Vision &amp; Mission</span>
+            </button>
+
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
@@ -1439,6 +1453,12 @@ export function PortalLayout({
 
       {/* Floating AI Chatbot Bottom-Right Icon */}
       <FloatingChatbot />
+
+      {/* Vision & Mission Modal */}
+      <VisionMissionModal
+        isOpen={showVisionModal}
+        onClose={() => setShowVisionModal(false)}
+      />
 
       {/* Real-Time App Downloader Modal */}
       <RealtimeAppDownloader

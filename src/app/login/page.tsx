@@ -36,12 +36,15 @@ import {
   Download,
   Smartphone,
   Loader2,
+  Target,
 } from 'lucide-react'
 import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
+import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'advisor' | 'hod' | 'admin'>('student')
   const [showDownloader, setShowDownloader] = React.useState(false)
+  const [showVisionModal, setShowVisionModal] = React.useState(false)
   const [isAppInstalled, setIsAppInstalled] = React.useState(false)
   const [registerNumber, setRegisterNumber] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -1559,6 +1562,19 @@ export default function LoginPage() {
           </div>
 
         </div>
+
+        {/* Vision & Mission Fast Access Button */}
+        <div className="flex justify-center pt-1.5 pb-1">
+          <button
+            type="button"
+            onClick={() => setShowVisionModal(true)}
+            className="group inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/80 hover:bg-white border border-blue-200 text-[#1557C0] text-xs font-black shadow-xs hover:shadow-md transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+          >
+            <Target className="w-4 h-4 text-amber-500 group-hover:rotate-45 transition-transform" />
+            <span>Department Vision &amp; Mission (PEOs · PSOs · POs)</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
       </div>
 
       {/* QUOTE (STAGE 9) */}
@@ -2761,6 +2777,12 @@ export default function LoginPage() {
       <RealtimeAppDownloader
         isOpen={showDownloader}
         onClose={() => setShowDownloader(false)}
+      />
+
+      {/* Department Vision & Mission Modal */}
+      <VisionMissionModal
+        isOpen={showVisionModal}
+        onClose={() => setShowVisionModal(false)}
       />
     </div>
   )

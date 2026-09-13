@@ -50,6 +50,7 @@ import {
   FileSpreadsheet,
   CheckCheck
 } from 'lucide-react'
+import { ACADEMIC_FRAMEWORK } from '@/lib/visionMission'
 
 interface AboutPortalViewProps {
   role?: 'admin' | 'faculty' | 'hod' | 'student' | 'public'
@@ -1002,115 +1003,24 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO1: Engineering Knowledge</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK1-WK4</span>
+              {ACADEMIC_FRAMEWORK.department.pos.map((po) => (
+                <div
+                  key={po.id}
+                  className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <span className="font-black text-royal text-xs">
+                        {po.code}: {po.name}
+                      </span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">
+                        {po.attribute}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">{po.statement}</p>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Apply knowledge of mathematics, natural science, computing, engineering fundamentals and an engineering specialization to solve complex engineering problems.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO2: Problem Analysis</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK1-WK4</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Identify, formulate, review research literature and analyze complex engineering problems reaching substantiated conclusions with consideration for sustainable development.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO3: Design / Development</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK5</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Design creative solutions for complex engineering problems and design systems/processes meeting needs with consideration for public health, safety, net zero carbon, culture, and environment.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO4: Conduct Investigations</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK8</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Conduct investigations of complex problems using research-based knowledge including design of experiments, modeling, analysis and interpretation of data to provide valid conclusions.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO5: Engineering Tool Usage</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK2, WK6</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Create, select and apply appropriate techniques, resources and modern engineering and IT tools, including prediction and modeling recognizing their limitations to solve complex engineering problems.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO6: The Engineer &amp; The World</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK1, 5, 7</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Analyze and evaluate societal and environmental aspects while solving complex engineering problems for its impact on sustainability with reference to economy, health, safety, and legal framework.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO7: Professional Ethics</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK9</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Apply ethical principles and commit to professional ethics, human values, diversity and inclusion; adhere to national and international laws and engineering practice standards.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO8: Collaborative Teamwork</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">Team Dynamics</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Function effectively as an individual, and as a member or leader in diverse and multi-disciplinary engineering and research teams.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO9: Effective Communication</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">Inclusion</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Communicate effectively and inclusively within the engineering community and society at large, through comprehensive reports, design documentation, and technical presentations.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO10: Project Management</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">Finance &amp; Mgmt</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Apply knowledge and understanding of engineering management principles and economic decision-making to manage multidisciplinary engineering projects.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-blue-50/40 border border-slate-200/80 transition-all sm:col-span-2 lg:col-span-2">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-black text-royal text-xs">PO11: Life-Long Learning</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-royal">WK8</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Recognize the need for, and have the preparation and ability for independent and lifelong learning, adaptability to new and emerging technologies, and critical thinking in the broadest context of technological change.
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         </section>
