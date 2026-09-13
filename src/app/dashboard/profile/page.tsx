@@ -35,13 +35,18 @@ export default async function StudentProfilePage() {
     }).catch(() => {})
   }
 
-  const finalUser = user || {
-    id: session.userId,
-    name: session.name || (student ? `Student (${student.registerNumber})` : 'Student'),
-    email: session.email || (student ? `${student.registerNumber.toLowerCase()}@student.vsb.edu.in` : 'student@vsb.edu.in'),
-    phone: '',
-    role: 'student',
-    status: 'active',
+  const studentEmail = (student?.registerNumber || session.registerNumber || '').toLowerCase()
+    ? `${(student?.registerNumber || session.registerNumber || '').toLowerCase()}@student.vsb.edu.in`
+    : 'student@vsb.edu.in'
+
+  const finalUser = {
+    ...(user || {}),
+    id: user?.id || session.userId,
+    name: user?.name || session.name || (student ? `Student (${student.registerNumber})` : 'Student'),
+    email: user?.email || session.email || studentEmail,
+    phone: user?.phone || '',
+    role: user?.role || 'student',
+    status: user?.status || 'active',
   }
 
   const finalStudent = student || {
@@ -59,7 +64,7 @@ export default async function StudentProfilePage() {
     <PortalLayout
       role="student"
       userName={finalUser.name || session.name || 'Student'}
-      userEmail={finalUser.email || session.email}
+      userEmail={finalUser.email || session.email || studentEmail}
       profileImage={(finalUser as any)?.profileImage}
     >
       <div className="py-2 animate-fade-in">
@@ -69,6 +74,15 @@ export default async function StudentProfilePage() {
             ...finalStudent,
             advisorName: (finalStudent as any).advisorName || null,
             batch: (finalStudent as any).batch || null,
+            parentPhone: (finalStudent as any).parentPhone || null,
+            isParentWhatsapp: (finalStudent as any).isParentWhatsapp ?? false,
+            bloodGroup: (finalStudent as any).bloodGroup || null,
+            residencyStatus: (finalStudent as any).residencyStatus || null,
+            hostelBlock: (finalStudent as any).hostelBlock || null,
+            roomNo: (finalStudent as any).roomNo || null,
+            busNo: (finalStudent as any).busNo || null,
+            boardingPoint: (finalStudent as any).boardingPoint || null,
+            phone: finalUser.phone || null,
           } as any}
         />
       </div>

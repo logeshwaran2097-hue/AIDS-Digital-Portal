@@ -44,6 +44,7 @@ import { downloadStudentCardPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
 import { playNotificationChime } from '@/lib/notificationEngine'
+import { StudentOnboardingModal } from '@/components/auth/StudentOnboardingModal'
 
 interface StudentFullProfile {
   name: string
@@ -113,6 +114,15 @@ export function StudentProfileView({
     batch?: string | null
     parentPhone?: string | null
     isParentWhatsapp?: boolean | null
+    bloodGroup?: string | null
+    residencyStatus?: string | null
+    hostelBlock?: string | null
+    roomNo?: string | null
+    busNo?: string | null
+    boardingPoint?: string | null
+    phone?: string | null
+    cgpa?: number | string | null
+    attendance?: string | null
   }
 }) {
   const regNo = initialStudent.registerNumber || initialUser.email?.split('@')[0].toUpperCase() || ''
@@ -120,15 +130,19 @@ export function StudentProfileView({
 
   const defaultProfile: StudentFullProfile = {
     name: initialUser.name || '',
-    email: (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in')) ? initialUser.email : '',
-    phone: initialUser.phone || '',
+    email: initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : ''),
+    phone: initialUser.phone || (initialStudent as any).phone || '',
     parentPhone: (initialStudent as any).parentPhone || '',
     isParentWhatsapp: (initialStudent as any).isParentWhatsapp ?? false,
     dateOfBirth: initialStudent.dateOfBirth
       ? new Date(initialStudent.dateOfBirth).toISOString().split('T')[0]
       : '',
-    bloodGroup: 'O+ve',
-    residencyStatus: 'Day Scholar',
+    bloodGroup: (initialStudent as any).bloodGroup || 'O+ve',
+    residencyStatus: (initialStudent as any).residencyStatus || 'Day Scholar',
+    busNo: (initialStudent as any).busNo || '',
+    boardingPoint: (initialStudent as any).boardingPoint || '',
+    hostelBlock: (initialStudent as any).hostelBlock || '',
+    roomNo: (initialStudent as any).roomNo || '',
     registerNumber: regNo,
     department: initialStudent.department || 'Artificial Intelligence & Data Science',
     degreeProgram: 'B.Tech Artificial Intelligence & Data Science',
@@ -138,9 +152,9 @@ export function StudentProfileView({
     semester: initialStudent.semester || 1,
     section: initialStudent.section || 'A',
     advisor: initialStudent.advisorName || '',
-    cgpa: '',
+    cgpa: (initialStudent as any).cgpa != null ? String((initialStudent as any).cgpa) : '',
     cgpaClass: '',
-    attendance: '',
+    attendance: (initialStudent as any).attendance || '',
     attendanceRemark: '',
     rank: '',
     rankRemark: '',
@@ -152,6 +166,7 @@ export function StudentProfileView({
 
   const [profile, setProfile] = useState<StudentFullProfile>(defaultProfile)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'personal' | 'academic' | 'kpis'>('personal')
   const [formData, setFormData] = useState<StudentFullProfile>(defaultProfile)
   const [loading, setLoading] = useState(false)
@@ -163,12 +178,27 @@ export function StudentProfileView({
         const saved = localStorage.getItem(storageKey)
         if (saved) {
           const parsed = JSON.parse(saved)
+          if (!parsed.email || parsed.email.trim() === '') {
+            parsed.email = initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : '')
+          }
           setProfile((prev) => ({ ...prev, ...parsed }))
           setFormData((prev) => ({ ...prev, ...parsed }))
         }
       } catch {}
     }
-  }, [regNo, storageKey])
+  }, [regNo, storageKey, initialUser.email])
+
+  // Real-time synchronization when Onboarding is completed or updated
+  useEffect(() => {
+    const handleProfileUpdated = (e: any) => {
+      if (e.detail) {
+        setProfile((prev) => ({ ...prev, ...e.detail }))
+        setFormData((prev) => ({ ...prev, ...e.detail }))
+      }
+    }
+    window.addEventListener('portal-student-profile-updated', handleProfileUpdated)
+    return () => window.removeEventListener('portal-student-profile-updated', handleProfileUpdated)
+  }, [])
 
   const handleOpenEdit = (tab: 'personal' | 'academic' | 'kpis' = 'personal') => {
     setActiveTab(tab)
@@ -361,6 +391,15 @@ export function StudentProfileView({
 
           <div className="flex items-center flex-wrap gap-2 self-stretch md:self-auto justify-end">
             <button
+              onClick={() => setIsOnboardingOpen(true)}
+              type="button"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#071A41] text-xs font-black flex items-center gap-1.5 transition-all shadow-md shrink-0 cursor-pointer hover:scale-102"
+              title="Review & Update Onboarding Records"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#071A41]" />
+              <span>Onboarding Details</span>
+            </button>
+            <button
               onClick={() => handleOpenEdit('personal')}
               type="button"
               className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 shadow-xs cursor-pointer hover:scale-102"
@@ -497,19 +536,30 @@ export function StudentProfileView({
                   <p className="text-[11px] text-gray-400">Official student registry contact details</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleOpenEdit('personal')}
-                className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Edit Contact Details"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsOnboardingOpen(true)}
+                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-850 bg-amber-100/90 hover:bg-amber-200 transition-colors flex items-center gap-1 cursor-pointer border border-amber-200"
+                  title="Verify or Edit Onboarding Details"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-700" /> Onboarding
+                </button>
+                <button
+                  onClick={() => handleOpenEdit('personal')}
+                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Edit Contact Details"
+                >
+                  <Edit3 className="w-3.5 h-3.5" /> Edit
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
                 <span className="font-bold text-gray-500">Institutional Email:</span>
-                <span className="font-mono font-bold text-[#1455D9]">{profile.email}</span>
+                <span className="font-mono font-bold text-[#1455D9]">
+                  {profile.email || initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : '')}
+                </span>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
@@ -1412,6 +1462,41 @@ export function StudentProfileView({
           </div>
         </div>
       )}
+
+      {/* Student Onboarding & Identity Verification Modal */}
+      <StudentOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
+        onComplete={(updatedUser) => {
+          setIsOnboardingOpen(false)
+          if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem(storageKey)
+            if (saved) {
+              try {
+                const parsed = JSON.parse(saved)
+                setProfile((prev) => ({ ...prev, ...parsed, ...updatedUser }))
+                setFormData((prev) => ({ ...prev, ...parsed, ...updatedUser }))
+              } catch {}
+            }
+          }
+          toast.success('Onboarding records synchronized to your profile!')
+        }}
+        initialData={{
+          name: profile.name || initialUser.name,
+          email: profile.email || initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : ''),
+          phone: profile.phone || initialUser.phone || '',
+          registerNumber: regNo,
+          department: profile.department,
+          year: profile.year,
+          semester: profile.semester,
+          section: profile.section,
+          dateOfBirth: profile.dateOfBirth,
+          advisorName: profile.advisor,
+          batch: profile.batch,
+          parentPhone: profile.parentPhone,
+          profileImage: profile.profileImage || initialUser.profileImage || undefined,
+        }}
+      />
     </div>
   )
 }

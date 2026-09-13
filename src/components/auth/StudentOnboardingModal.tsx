@@ -445,8 +445,36 @@ export function StudentOnboardingModal({
       const data = await res.json()
       if (res.ok && data.success) {
         if (typeof window !== 'undefined') {
-          localStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
-          sessionStorage.setItem(`vsb_student_onboarding_done_${initialData.registerNumber}`, 'true')
+          const reg = initialData.registerNumber || ''
+          if (reg) {
+            localStorage.setItem(`vsb_student_onboarding_done_${reg}`, 'true')
+            sessionStorage.setItem(`vsb_student_onboarding_done_${reg}`, 'true')
+
+            // Persist full onboarding defaults directly into the student profile storage
+            const updatedProfileData = {
+              name: initialData.name,
+              email: form.email.trim().toLowerCase() || initialData.email || `${reg.toLowerCase()}@student.vsb.edu.in`,
+              phone: form.phone.trim(),
+              parentPhone: form.parentPhone.trim(),
+              isParentWhatsapp: form.isParentWhatsapp,
+              dateOfBirth: form.dateOfBirth,
+              bloodGroup: form.bloodGroup || 'O+ve',
+              residencyStatus: finalResidency || form.residencyStatus,
+              busNo: form.busNo.trim(),
+              boardingPoint: form.boardingPoint.trim(),
+              hostelBlock: form.hostelBlock.trim(),
+              roomNo: form.roomNo.trim(),
+              profileImage: form.profileImage || undefined,
+            }
+            try {
+              const existing = localStorage.getItem(`vsb_student_profile_v2_${reg}`)
+              const merged = existing ? { ...JSON.parse(existing), ...updatedProfileData } : updatedProfileData
+              localStorage.setItem(`vsb_student_profile_v2_${reg}`, JSON.stringify(merged))
+            } catch {
+              localStorage.setItem(`vsb_student_profile_v2_${reg}`, JSON.stringify(updatedProfileData))
+            }
+            window.dispatchEvent(new CustomEvent('portal-student-profile-updated', { detail: updatedProfileData }))
+          }
           if (form.profileImage) {
             localStorage.setItem('user_profile_image', form.profileImage)
             window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: form.profileImage }))
