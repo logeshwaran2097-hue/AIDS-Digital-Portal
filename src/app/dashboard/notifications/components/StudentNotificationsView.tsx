@@ -14,16 +14,17 @@ interface NotificationItem {
   message: string
   createdByName?: string | null
   createdAt: Date
+  isRead?: boolean
 }
-
-
 
 export function StudentNotificationsView({ notifications: initialNotifications }: { notifications: NotificationItem[] }) {
   const [items, setItems] = useState<NotificationItem[]>(initialNotifications)
   const [filter, setFilter] = useState('ALL')
-  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    return new Set(initialNotifications.filter((n) => n.isRead).map((n) => n.id))
+  })
 
-  // High-performance real-time synchronization (1.5s active sync, immediate on tab focus)
+  // Real-time synchronization
   useEffect(() => {
     let isMounted = true
     const fetchLive = async () => {
@@ -39,8 +40,16 @@ export function StudentNotificationsView({ notifications: initialNotifications }
               message: n.message,
               createdByName: n.createdByName,
               createdAt: new Date(n.createdAt),
+              isRead: n.isRead,
             }))
           )
+          setReadIds((prev) => {
+            const next = new Set(prev)
+            data.notifications.forEach((n: any) => {
+              if (n.isRead) next.add(n.id)
+            })
+            return next
+          })
         }
       } catch {}
     }
@@ -59,17 +68,33 @@ export function StudentNotificationsView({ notifications: initialNotifications }
     }
   }, [])
 
-  const handleMarkAllRead = () => {
+  const handleMarkAllRead = async () => {
     setReadIds(new Set(items.map((n) => n.id)))
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true }),
+      })
+    } catch {}
+    window.dispatchEvent(new CustomEvent('portal-notifications-marked-read'))
   }
 
-  const handleToggleRead = (id: string) => {
+  const handleToggleRead = async (id: string) => {
     setReadIds((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
       return next
     })
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId: id }),
+      })
+    } catch {}
+    window.dispatchEvent(new CustomEvent('portal-notifications-marked-read', { detail: { id } }))
   }
 
   const unreadCount = items.filter((n) => !readIds.has(n.id)).length

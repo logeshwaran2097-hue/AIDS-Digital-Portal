@@ -37,6 +37,7 @@ import {
   getNotificationPermissionStatus,
   dispatchNativeNotification,
 } from '@/lib/notificationEngine'
+import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationClassifier'
 
 export interface NavItem {
   label: string
@@ -379,6 +380,55 @@ export function PortalLayout({
     return () => window.removeEventListener('portal-config-updated', handleConfigChange)
   }, [])
 
+  // Listen to cross-component mark-read events across portal
+  useEffect(() => {
+    const handleMarkedRead = (e: any) => {
+      const specificId = e?.detail?.id
+      if (specificId) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === specificId ? { ...n, unread: false } : n))
+        )
+      } else {
+        setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
+        setApiMenuCounts({})
+      }
+      syncNotifications()
+    }
+
+    window.addEventListener('portal-notifications-marked-read', handleMarkedRead)
+    return () => window.removeEventListener('portal-notifications-marked-read', handleMarkedRead)
+  }, [])
+
+  // Auto-mark domain notifications as read when user navigates into that specific section
+  useEffect(() => {
+    if (!pathname) return
+    const matchingKey = getMenuCategoryKey(pathname, '')
+    if (matchingKey && matchingKey !== 'notifications') {
+      const unreadForDomain = notifications.filter(
+        (n) => n.unread && categorizeNotification(n.title, n.description) === matchingKey
+      )
+      if (unreadForDomain.length > 0) {
+        unreadForDomain.forEach((n) => {
+          fetch('/api/notifications', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notificationId: n.id }),
+          }).catch(() => {})
+        })
+        setNotifications((prev) =>
+          prev.map((n) =>
+            unreadForDomain.some((u) => u.id === n.id) ? { ...n, unread: false } : n
+          )
+        )
+        setApiMenuCounts((prev) => {
+          const next = { ...prev }
+          delete next[matchingKey]
+          return next
+        })
+      }
+    }
+  }, [pathname, notifications])
+
   // Cache and determine advisor status for faculty role
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -487,122 +537,40 @@ export function PortalLayout({
   // Calculate notification counts per menu item
   const getMenuNotificationCount = useCallback(
     (href: string, label: string): number => {
+      // 1. Root dashboards NEVER show notification badges
+      const isRootDashboard =
+        href === '/dashboard' ||
+        href === '/faculty-dashboard' ||
+        href === '/hod-dashboard' ||
+        href === '/admin' ||
+        href === '/admin/dashboard'
+      if (isRootDashboard) return 0
+
       const lowerHref = href.toLowerCase()
       const lowerLabel = label.toLowerCase()
 
-      // For the main Notifications menu item, return total unread count
-      if (lowerHref.includes('notification') || lowerLabel.includes('notification')) {
+      // 2. Main Notifications menu item returns total unread count
+      if (lowerHref.includes('/notifications') || lowerLabel === 'notifications') {
         return unreadCount > 0 ? unreadCount : (apiMenuCounts['notifications'] || 0)
       }
 
-      // Check pre-aggregated API counts
-      let count = 0
-      if (lowerHref.includes('od-proofs') || lowerLabel.includes('proof')) {
-        count += apiMenuCounts['od-proofs'] || 0
-      } else if (
-        lowerHref.includes('od-applications') ||
-        lowerLabel.includes('od') ||
-        lowerLabel.includes('leave')
-      ) {
-        count += apiMenuCounts['od-applications'] || 0
-      } else if (lowerHref.includes('attendance') || lowerLabel.includes('attendance')) {
-        count += apiMenuCounts['attendance'] || 0
-      } else if (lowerHref.includes('announcement') || lowerLabel.includes('announcement')) {
-        count += apiMenuCounts['announcements'] || 0
-      } else if (lowerHref.includes('event') || lowerLabel.includes('event')) {
-        count += apiMenuCounts['events'] || 0
-      } else if (lowerHref.includes('project') || lowerLabel.includes('project')) {
-        count += apiMenuCounts['projects'] || 0
-      } else if (lowerHref.includes('question') || lowerLabel.includes('question')) {
-        count += apiMenuCounts['question-papers'] || apiMenuCounts['questions'] || 0
-      } else if (lowerHref.includes('achievement') || lowerLabel.includes('achievement')) {
-        count += apiMenuCounts['achievements'] || 0
-      } else if (lowerHref.includes('resource') || lowerHref.includes('study') || lowerLabel.includes('resource') || lowerLabel.includes('study')) {
-        count += apiMenuCounts['resources'] || apiMenuCounts['study'] || 0
-      } else if (lowerHref.includes('subject') || lowerHref.includes('academic') || lowerLabel.includes('subject') || lowerLabel.includes('academic')) {
-        count += apiMenuCounts['subjects'] || apiMenuCounts['academics'] || 0
-      } else if (lowerHref.includes('student') || lowerLabel.includes('student')) {
-        count += apiMenuCounts['students'] || 0
-      } else if (lowerHref.includes('faculty') || lowerLabel.includes('faculty')) {
-        count += apiMenuCounts['faculty'] || 0
-      } else if (lowerHref.includes('report') || lowerLabel.includes('report')) {
-        count += apiMenuCounts['reports'] || 0
+      // 3. Resolve canonical domain key for this menu
+      const menuKey = getMenuCategoryKey(href, label)
+      if (!menuKey) return 0
+
+      // 4. API pre-aggregated counts
+      let count = apiMenuCounts[menuKey] || 0
+      if (menuKey === 'subjects') {
+        count = Math.max(count, apiMenuCounts['academics'] || 0)
+      } else if (menuKey === 'resources') {
+        count = Math.max(count, apiMenuCounts['study'] || 0)
       }
 
-      // Also dynamically match unread notifications by link or title/description keywords
+      // 5. In-memory unread notification objects matching this domain
       const unreadMatches = notifications.filter((n) => {
         if (!n.unread) return false
-        if (n.link && (n.link === href || n.link.startsWith(href + '/'))) return true
-
-        const combined = `${n.title || ''} ${n.description || ''}`.toLowerCase()
-        if (lowerHref.includes('od-proofs') || lowerLabel.includes('proof')) {
-          return (
-            combined.includes('proof') ||
-            combined.includes('certificate') ||
-            combined.includes('geo-photo')
-          )
-        }
-        if (lowerHref.includes('od') || lowerLabel.includes('od') || lowerLabel.includes('leave')) {
-          return (
-            combined.includes('od') ||
-            combined.includes('on-duty') ||
-            combined.includes('leave') ||
-            combined.includes('permission') ||
-            combined.includes('sanction')
-          )
-        }
-        if (lowerHref.includes('attendance') || lowerLabel.includes('attendance')) {
-          return (
-            combined.includes('attendance') ||
-            combined.includes('roll call') ||
-            combined.includes('absent') ||
-            combined.includes('unlock')
-          )
-        }
-        if (lowerHref.includes('announcement') || lowerLabel.includes('announcement')) {
-          return (
-            combined.includes('announcement') ||
-            combined.includes('circular') ||
-            combined.includes('notice')
-          )
-        }
-        if (lowerHref.includes('event') || lowerLabel.includes('event')) {
-          return (
-            combined.includes('event') ||
-            combined.includes('symposium') ||
-            combined.includes('hackathon') ||
-            combined.includes('workshop')
-          )
-        }
-        if (lowerHref.includes('project') || lowerLabel.includes('project')) {
-          return (
-            combined.includes('project') ||
-            combined.includes('milestone') ||
-            combined.includes('capstone')
-          )
-        }
-        if (lowerHref.includes('question') || lowerLabel.includes('question')) {
-          return combined.includes('question') || combined.includes('iat') || combined.includes('exam') || combined.includes('test paper')
-        }
-        if (lowerHref.includes('achievement') || lowerLabel.includes('achievement')) {
-          return combined.includes('achievement') || combined.includes('winner') || combined.includes('award') || combined.includes('trophy') || combined.includes('prize')
-        }
-        if (lowerHref.includes('resource') || lowerHref.includes('study') || lowerLabel.includes('resource') || lowerLabel.includes('study')) {
-          return combined.includes('resource') || combined.includes('study material') || combined.includes('notes') || combined.includes('manual')
-        }
-        if (lowerHref.includes('subject') || lowerHref.includes('academic') || lowerLabel.includes('subject') || lowerLabel.includes('academic')) {
-          return combined.includes('subject') || combined.includes('syllabus') || combined.includes('course') || combined.includes('curriculum')
-        }
-        if (lowerHref.includes('student') || lowerLabel.includes('student')) {
-          return combined.includes('student') || combined.includes('enroll') || combined.includes('admission')
-        }
-        if (lowerHref.includes('faculty') || lowerLabel.includes('faculty')) {
-          return combined.includes('faculty') || combined.includes('staff') || combined.includes('advisor')
-        }
-        if (lowerHref.includes('report') || lowerLabel.includes('report')) {
-          return combined.includes('report') || combined.includes('analytics') || combined.includes('audit')
-        }
-        return false
+        const domain = categorizeNotification(n.title, n.description)
+        return domain === menuKey
       }).length
 
       return Math.max(count, unreadMatches)
@@ -617,6 +585,15 @@ export function PortalLayout({
         if (item.href.includes('/notifications') || item.label.toLowerCase() === 'notifications') {
           return false
         }
+        // Exclude root dashboards from menu breakdown
+        const isRootDashboard =
+          item.href === '/dashboard' ||
+          item.href === '/faculty-dashboard' ||
+          item.href === '/hod-dashboard' ||
+          item.href === '/admin' ||
+          item.href === '/admin/dashboard'
+        if (isRootDashboard) return false
+
         return getMenuNotificationCount(item.href, item.label) > 0
       })
       .map((item) => ({
@@ -682,8 +659,27 @@ export function PortalLayout({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const markOneAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
+    )
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notificationId: id }),
+    }).catch(() => {})
+    window.dispatchEvent(new CustomEvent('portal-notifications-marked-read', { detail: { id } }))
+  }
+
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
+    setApiMenuCounts({})
+    fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ markAllRead: true }),
+    }).catch(() => {})
+    window.dispatchEvent(new CustomEvent('portal-notifications-marked-read'))
   }
 
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -1182,11 +1178,7 @@ export function PortalLayout({
                         notifications.map((item) => (
                           <div
                             key={item.id}
-                            onClick={() => {
-                              setNotifications((prev) =>
-                                prev.map((n) => (n.id === item.id ? { ...n, unread: false } : n))
-                              )
-                            }}
+                            onClick={() => markOneAsRead(item.id)}
                             className={cn(
                               'p-3.5 sm:p-4 hover:bg-slate-50 transition-colors cursor-pointer flex items-start gap-3',
                               item.unread ? 'bg-blue-50/50' : 'bg-white'

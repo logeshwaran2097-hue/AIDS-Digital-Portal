@@ -45,14 +45,30 @@ export function FacultyNotificationsView({
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true }),
+      })
+    } catch {}
+    window.dispatchEvent(new CustomEvent('portal-notifications-marked-read'))
   }
 
-  const toggleRead = (id: string) => {
+  const toggleRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: !n.isRead } : n))
     )
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId: id }),
+      })
+    } catch {}
+    window.dispatchEvent(new CustomEvent('portal-notifications-marked-read', { detail: { id } }))
   }
 
   const clearNotification = (id: string) => {

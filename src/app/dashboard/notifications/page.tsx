@@ -51,12 +51,31 @@ export default async function NotificationsPage() {
     orderBy: { createdAt: 'desc' },
   })
 
+  const identifiers = [session.userId, studentReg, session.email].filter(Boolean) as string[]
+  const formattedNotifications = notifications.map((n) => {
+    let readArray: string[] = []
+    try {
+      readArray = JSON.parse(n.readBy || '[]')
+    } catch {
+      readArray = []
+    }
+    const isRead = identifiers.some((id) => readArray.includes(id))
+    return {
+      id: n.id,
+      title: n.title,
+      message: n.message,
+      createdByName: n.createdByName,
+      createdAt: n.createdAt,
+      isRead,
+    }
+  })
+
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
   return (
     <PortalLayout role="student" userName={user?.name || session.name || 'Student'}>
       <div className="py-2 animate-fade-in">
-        <StudentNotificationsView notifications={notifications} />
+        <StudentNotificationsView notifications={formattedNotifications} />
       </div>
     </PortalLayout>
   )

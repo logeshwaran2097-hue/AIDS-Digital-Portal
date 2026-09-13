@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { categorizeNotification } from '@/lib/notificationClassifier'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -17,12 +18,14 @@ export async function GET(request: Request) {
     const session = await getSession()
     const userRole = role || session?.role || 'student'
     const userId = session?.userId
+    const userReg = session?.registerNumber || (session?.email ? session.email.split('@')[0].toUpperCase() : '')
+    const userEmail = session?.email || ''
+    const identifiers = [userId, userReg, userEmail].filter(Boolean) as string[]
 
     const where: any = {}
 
     // Target audience filtering
     if (userRole === 'student') {
-      const userReg = session?.registerNumber || (session?.email ? session.email.split('@')[0].toUpperCase() : '')
       const student = (userId ? await prisma.student.findUnique({ where: { userId } }).catch(() => null) : null) ||
         (userReg ? await prisma.student.findUnique({ where: { registerNumber: userReg } }).catch(() => null) : null)
 
@@ -103,7 +106,7 @@ export async function GET(request: Request) {
       } catch {
         readArray = []
       }
-      const isRead = userId ? readArray.includes(userId) : false
+      const isRead = identifiers.length > 0 && identifiers.some((id) => readArray.includes(id))
       return {
         ...n,
         isRead,
@@ -113,7 +116,7 @@ export async function GET(request: Request) {
 
     const unreadNotifications = notificationsWithReadStatus.filter((n) => !n.isRead)
 
-    // Aggregate menu-specific notification counts (focused on unread items)
+    // Aggregate menu-specific notification counts strictly for genuine unread items
     const menuCounts: Record<string, number> = {
       notifications: unreadNotifications.length,
     }
@@ -178,50 +181,11 @@ export async function GET(request: Request) {
       }
     } catch {}
 
-    // Categorize unread notifications across all portal menu domains
+    // Categorize unread notifications exclusively across portal menu domains
     unreadNotifications.forEach((n) => {
-      const combined = `${n.title || ''} ${n.message || ''}`.toLowerCase()
-      if (combined.includes('announcement') || combined.includes('circular') || combined.includes('notice')) {
-        menuCounts['announcements'] = (menuCounts['announcements'] || 0) + 1
-      }
-      if (combined.includes('event') || combined.includes('symposium') || combined.includes('hackathon') || combined.includes('workshop')) {
-        menuCounts['events'] = (menuCounts['events'] || 0) + 1
-      }
-      if (combined.includes('project') || combined.includes('capstone') || combined.includes('milestone')) {
-        menuCounts['projects'] = (menuCounts['projects'] || 0) + 1
-      }
-      if (combined.includes('question') || combined.includes('iat') || combined.includes('exam') || combined.includes('test paper')) {
-        menuCounts['questions'] = (menuCounts['questions'] || 0) + 1
-        menuCounts['question-papers'] = (menuCounts['question-papers'] || 0) + 1
-      }
-      if (combined.includes('achievement') || combined.includes('winner') || combined.includes('award') || combined.includes('trophy') || combined.includes('prize')) {
-        menuCounts['achievements'] = (menuCounts['achievements'] || 0) + 1
-      }
-      if (combined.includes('attendance') || combined.includes('roll call') || combined.includes('condonation') || combined.includes('absent') || combined.includes('unlock')) {
-        menuCounts['attendance'] = (menuCounts['attendance'] || 0) + 1
-      }
-      if (combined.includes('proof') || combined.includes('certificate') || combined.includes('geo-photo')) {
-        menuCounts['od-proofs'] = (menuCounts['od-proofs'] || 0) + 1
-      }
-      if (combined.includes('od') || combined.includes('on-duty') || combined.includes('leave') || combined.includes('permission') || combined.includes('sanction')) {
-        menuCounts['od-applications'] = (menuCounts['od-applications'] || 0) + 1
-      }
-      if (combined.includes('resource') || combined.includes('study material') || combined.includes('notes') || combined.includes('lab manual') || combined.includes('manual')) {
-        menuCounts['resources'] = (menuCounts['resources'] || 0) + 1
-        menuCounts['study'] = (menuCounts['study'] || 0) + 1
-      }
-      if (combined.includes('subject') || combined.includes('syllabus') || combined.includes('curriculum') || combined.includes('academic')) {
-        menuCounts['subjects'] = (menuCounts['subjects'] || 0) + 1
-        menuCounts['academics'] = (menuCounts['academics'] || 0) + 1
-      }
-      if (combined.includes('student') || combined.includes('enroll') || combined.includes('admission') || combined.includes('profile change')) {
-        menuCounts['students'] = (menuCounts['students'] || 0) + 1
-      }
-      if (combined.includes('faculty') || combined.includes('staff') || combined.includes('advisor')) {
-        menuCounts['faculty'] = (menuCounts['faculty'] || 0) + 1
-      }
-      if (combined.includes('report') || combined.includes('analytics') || combined.includes('audit')) {
-        menuCounts['reports'] = (menuCounts['reports'] || 0) + 1
+      const category = categorizeNotification(n.title, n.message)
+      if (category) {
+        menuCounts[category] = (menuCounts[category] || 0) + 1
       }
     })
 
@@ -293,6 +257,88 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Notifications POST API error:', error)
     return NextResponse.json({ success: false, message: 'Failed to create notification' }, { status: 400 })
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const session = await getSession()
+    const userId = session?.userId
+    const userReg = session?.registerNumber || (session?.email ? session.email.split('@')[0].toUpperCase() : '')
+    const userEmail = session?.email || ''
+    const identifiers = [userId, userReg, userEmail].filter(Boolean) as string[]
+
+    if (identifiers.length === 0) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json().catch(() => ({}))
+    const { notificationId, markAllRead } = body
+
+    if (markAllRead) {
+      const allNotifs = await prisma.notification.findMany({
+        where: { status: 'published' },
+        select: { id: true, readBy: true },
+      })
+
+      for (const n of allNotifs) {
+        let readArr: string[] = []
+        try {
+          readArr = JSON.parse(n.readBy || '[]')
+        } catch {
+          readArr = []
+        }
+        let updated = false
+        for (const id of identifiers) {
+          if (!readArr.includes(id)) {
+            readArr.push(id)
+            updated = true
+          }
+        }
+        if (updated) {
+          await prisma.notification.update({
+            where: { id: n.id },
+            data: { readBy: JSON.stringify(readArr) },
+          })
+        }
+      }
+
+      invalidateCache('notifications')
+      return NextResponse.json({ success: true, message: 'All notifications marked as read' })
+    } else if (notificationId) {
+      const n = await prisma.notification.findUnique({
+        where: { id: notificationId },
+        select: { id: true, readBy: true },
+      })
+      if (n) {
+        let readArr: string[] = []
+        try {
+          readArr = JSON.parse(n.readBy || '[]')
+        } catch {
+          readArr = []
+        }
+        let updated = false
+        for (const id of identifiers) {
+          if (!readArr.includes(id)) {
+            readArr.push(id)
+            updated = true
+          }
+        }
+        if (updated) {
+          await prisma.notification.update({
+            where: { id: notificationId },
+            data: { readBy: JSON.stringify(readArr) },
+          })
+        }
+      }
+      invalidateCache('notifications')
+      return NextResponse.json({ success: true, message: 'Notification marked as read' })
+    }
+
+    return NextResponse.json({ success: false, message: 'Invalid request' }, { status: 400 })
+  } catch (error) {
+    console.error('Error updating notification read status:', error)
+    return NextResponse.json({ success: false, message: 'Failed to update read status' }, { status: 500 })
   }
 }
 
