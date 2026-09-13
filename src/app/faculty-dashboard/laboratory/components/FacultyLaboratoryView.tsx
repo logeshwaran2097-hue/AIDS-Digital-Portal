@@ -18,7 +18,6 @@ import {
   Trash2,
   ChevronRight,
   ExternalLink,
-  Zap,
   Tag,
   Code2,
   Check,
@@ -110,7 +109,7 @@ export function FacultyLaboratoryView({
     topicsCovered: '',
     activityType: 'Lab Experiment',
     labTrainer: initialDetails.labTrainer || '',
-    toolsUsed: 'Python 3.11, VS Code, Jupyter Notebook',
+    toolsUsed: '',
     status: 'completed',
     attendanceCount: '58',
     remarks: '',
@@ -140,7 +139,7 @@ export function FacultyLaboratoryView({
       topicsCovered: '',
       activityType: 'Lab Experiment',
       labTrainer: details.labTrainer || '',
-      toolsUsed: 'Python 3.11, VS Code, Jupyter Notebook',
+      toolsUsed: '',
       status: 'completed',
       attendanceCount: '58',
       remarks: '',
@@ -166,18 +165,6 @@ export function FacultyLaboratoryView({
       remarks: act.remarks || '',
     })
     setIsModalOpen(true)
-  }
-
-  // Quick Preset Selection
-  const handleSelectPreset = (preset: LabPreset) => {
-    setFormData((prev) => ({
-      ...prev,
-      experimentNo: String(preset.experimentNo),
-      experimentName: preset.name,
-      topicsCovered: preset.topics,
-      activityType: preset.activityType,
-      toolsUsed: preset.tools,
-    }))
   }
 
   // Save Activity Form
@@ -605,30 +592,6 @@ export function FacultyLaboratoryView({
             </div>
 
             <form onSubmit={handleSave} className="p-5 sm:p-6 space-y-4">
-              {/* Quick Fill Preset Banner */}
-              {!editingActivity && presets.length > 0 && (
-                <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200/60 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-[#071A3D] flex items-center gap-1.5">
-                      <Zap className="w-4 h-4 text-amber-500" />
-                      Quick Pre-Fill Standard AI&amp;DS Syllabus Experiment:
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pt-1">
-                    {presets.map((p) => (
-                      <button
-                        key={p.experimentNo}
-                        type="button"
-                        onClick={() => handleSelectPreset(p)}
-                        className="px-2.5 py-1 rounded-xl bg-white border border-blue-200 hover:border-[#1455D9] text-[11px] font-bold text-gray-700 hover:text-[#1455D9] transition-all cursor-pointer shadow-2xs text-left"
-                      >
-                        Ex. {p.experimentNo}: {p.name.split(':')[0]}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Date, Day, Period */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
@@ -714,81 +677,18 @@ export function FacultyLaboratoryView({
                 />
               </div>
 
-              {/* Activity Type, Trainer & Status */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Activity Type
-                  </label>
-                  <select
-                    value={formData.activityType}
-                    onChange={(e) => setFormData({ ...formData, activityType: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none cursor-pointer"
-                  >
-                    <option value="Lab Experiment">Lab Experiment</option>
-                    <option value="Hands-on Activity">Hands-on Activity</option>
-                    <option value="Model Practical">Model Practical</option>
-                    <option value="Viva Voce">Viva Voce &amp; Code Review</option>
-                    <option value="Project Review">Project Review</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Laboratory Trainer Present
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.labTrainer}
-                    onChange={(e) => setFormData({ ...formData, labTrainer: e.target.value })}
-                    placeholder="e.g. Dr. K. Saravanan (Trainer)"
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none cursor-pointer"
-                  >
-                    <option value="completed">Completed</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="scheduled">Scheduled</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Tools Used, Attendance & Remarks */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Software &amp; Tools Used
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.toolsUsed}
-                    onChange={(e) => setFormData({ ...formData, toolsUsed: e.target.value })}
-                    placeholder="e.g. Python 3.11, Jupyter Lab, Scikit-Learn"
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Students Present / Attendance Count
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.attendanceCount}
-                    onChange={(e) => setFormData({ ...formData, attendanceCount: e.target.value })}
-                    placeholder="e.g. 58"
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                  />
-                </div>
+              {/* Attendance Count */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  Students Present / Attendance Count
+                </label>
+                <input
+                  type="number"
+                  value={formData.attendanceCount}
+                  onChange={(e) => setFormData({ ...formData, attendanceCount: e.target.value })}
+                  placeholder="e.g. 58"
+                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                />
               </div>
 
               {/* Actions */}
