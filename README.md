@@ -2,98 +2,44 @@
 ## 🚀 Department of Artificial Intelligence & Data Science (AI & DS)
 ### Enterprise Digital Campus Portal · High-Availability Cloud Ecosystem
 
-<div align="center">
+---
 
-<!-- ========================================== -->
-<!-- HERO ANIMATED WAVING GRADIENT BANNER       -->
-<!-- ========================================== -->
-![VSB AI&DS Header Banner](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,11,33,100&height=250&section=header&text=V.S.B.%20AI%20%26%20DS%20ENTERPRISE%20PORTAL&fontSize=32&fontColor=ffffff&animation=fadeIn&fontAlignY=36&desc=Official%20Autonomous%20Academic%20Governance%20%26%20Multi-Role%20Cloud%20Ecosystem&descSize=14&descAlignY=58&descAlign=50)
-
-<!-- HERO EMBLEM & PORTAL BRANDING -->
-<p align="center">
-  <img src="./public/college-emblem.png" alt="V.S.B. College Emblem" width="105" />
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="./public/logo.png" alt="Department of AI & DS Logo" width="105" />
-</p>
-
-<!-- DYNAMIC TYPING SVG SLOGAN (CONTINUOUS ANIMATION) -->
-<p align="center">
-  <a href="https://app-two-plum-10.vercel.app">
-    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=20&duration=2600&pause=1000&color=38BDF8&center=true&vCenter=true&multiline=false&width=820&lines=⚡+Autonomous+Multi-Role+Academic+Governance;📊+Real-Time+8-Period+Attendance+Matrix+with+Bell+Sync;📍+Geotagged+On-Duty+(OD)+Verification+Engine;🔔+Menu-Specific+Real-Time+Notification+Badges;🔐+Strict+JWT+%26+Role-Based+Access+Control+(RBAC);🛡️+Zero-Mock+Data+Guarantee+·+100%25+Live+PostgreSQL;📱+Mobile-Ready+Experience+·+PWA+%2B+Android+APK" alt="Animated Typing Header" />
-  </a>
-</p>
-
-<!-- LIVE PRODUCTION BADGES -->
-<p align="center">
-  <a href="https://app-two-plum-10.vercel.app" target="_blank">
-    <img src="https://img.shields.io/badge/🌐_LIVE_PRODUCTION_PORTAL-app--two--plum--10.vercel.app-0284C7?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Portal Link" />
-  </a>
-  <a href="#-4-multi-tier-functional-portals--module-architecture">
-    <img src="https://img.shields.io/badge/🏛️_MULTI--ROLE_PORTALS-4_Tiers-4F46E5?style=for-the-badge&logo=auth0&logoColor=white" alt="Multi-Role Portals" />
-  </a>
-  <a href="#-8-android-mobile-application--apk-package">
-    <img src="https://img.shields.io/badge/📱_ANDROID_APK-Download_v1.0.0-10B981?style=for-the-badge&logo=android&logoColor=white" alt="Download APK" />
-  </a>
-</p>
-
-<!-- TECH STACK ANIMATED BADGES -->
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-14.2.5-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 14" />
-  <img src="https://img.shields.io/badge/React-18.3.1-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 18" />
-  <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Prisma_ORM-5.17-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma ORM" />
-  <img src="https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL Supabase" />
-  <img src="https://img.shields.io/badge/Render-Live_Worker-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Render Cloud" />
-  <img src="https://img.shields.io/badge/PWA-Mobile_Ready-FF5722?style=for-the-badge&logo=pwa&logoColor=white" alt="PWA Ready" />
-</p>
-
-<!-- REAL-TIME CLOUD STATUS INDICATORS -->
-<p align="center">
-  <img src="https://img.shields.io/badge/Vercel_Edge-●_ONLINE-16a34a?style=flat-square&logo=vercel&logoColor=white" alt="Vercel Edge" />
-  <img src="https://img.shields.io/badge/Render_Worker-●_ONLINE-0ea5e9?style=flat-square&logo=render&logoColor=white" alt="Render Worker" />
-  <img src="https://img.shields.io/badge/Supabase_DB-●_CONNECTED-336791?style=flat-square&logo=postgresql&logoColor=white" alt="Supabase DB" />
-  <img src="https://img.shields.io/badge/Data_Integrity-100%25_LIVE_POSTGRESQL-blue?style=flat-square&logo=checkmarx&logoColor=white" alt="Live Data" />
-  <img src="https://img.shields.io/badge/Security-2FA_OTP_%2B_JWT-purple?style=flat-square&logo=auth0&logoColor=white" alt="Security" />
-</p>
-
-</div>
+### 🌐 Quick Production Links & Live Status
+- **Primary Production Portal**: [https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)
+- **Secondary Domain Alias**: [https://app-4t01s1pjl-logeshwaran.vercel.app](https://app-4t01s1pjl-logeshwaran.vercel.app)
+- **Render Worker Engine**: [https://vsb-aids-portal.onrender.com](https://vsb-aids-portal.onrender.com) (`srv-dad5vm2jnfac73ejaf4g`)
+- **Cloud Database**: Supabase PostgreSQL 15 (PgBouncer Connection Pooling on Port 6543)
+- **Android Mobile Package**: [Download APK v1.0.0 (3.9 MB)](./VSB-AI-DS-Portal-v1.0.0.apk)
+- **Core Technology**: Next.js 14 (App Router) · React 18 · TypeScript 5 · Tailwind CSS · Prisma ORM 5.17 · Jose JWT
 
 ---
 
-## 📑 Interactive Navigation Index
-```
-📁 V.S.B. AI & DS Portal
-├── 🌐 1. System Overview & Autonomous Purpose
-├── 📡 2. Live Cloud Deployment Endpoints
-├── 🏛️ 3. Architectural System Topology (Live Animated Data Streams)
-├── 👥 4. Multi-Tier Functional Portals & Module Architecture
-│   ├── 🎓 A. Student Academic Portal (/dashboard)
-│   ├── 👨‍🏫 B. Faculty Directorate & Class Advisor Portal (/faculty-dashboard)
-│   ├── 👑 C. Head of Department (HOD) Governance Portal (/hod-dashboard)
-│   └── 🛡️ D. System Administrator Command Center (/admin)
-├── ⚙️ 5. Specialized Engineering Modules
-│   ├── 📊 5.1. 8-Period Master Attendance Matrix & Timetable Sync
-│   ├── 📍 5.2. Geotagged On-Duty (OD) & Leave Verification Engine
-│   ├── 🔔 5.3. Menu-Specific Real-Time Notification Counters
-│   ├── 🚀 5.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)
-│   └── 🔐 5.5. Mandatory Non-Dismissible Security Onboarding & 2FA
-├── ⏰ 6. Institutional Master 8-Period Bell Timings
-├── 🗄️ 7. Database Entity Architecture & Data Integrity Guarantees
-├── 💻 8. Full-Stack Engineering Specifications
-├── 📱 9. Android Mobile Application & APK Package
-└── 🏛️ 10. Institutional Identity & Developer Accreditation
-```
+## 📑 Table of Contents
+1. [System Overview & Autonomous Purpose](#-1-system-overview--autonomous-purpose)
+2. [Live Cloud Deployment Endpoints](#-2-live-cloud-deployment-endpoints)
+3. [System Architecture & Data Flow Topology](#-3-system-architecture--data-flow-topology)
+4. [Multi-Tier Functional Portals & Capabilities](#-4-multi-tier-functional-portals--capabilities)
+   - [A. Student Academic Portal (/dashboard)](#-a-student-academic-portal-dashboard)
+   - [B. Faculty Directorate & Class Advisor Portal (/faculty-dashboard)](#-b-faculty-directorate--class-advisor-portal-faculty-dashboard)
+   - [C. Head of Department (HOD) Governance Portal (/hod-dashboard)](#-c-head-of-department-hod-governance-portal-hod-dashboard)
+   - [D. System Administrator Command Center (/admin)](#-d-system-administrator-command-center-admin)
+5. [Specialized Engineering Modules](#-5-specialized-engineering-modules)
+   - [5.1. 8-Period Master Attendance Matrix & Timetable Sync](#51-8-period-master-attendance-matrix--timetable-sync)
+   - [5.2. Geotagged On-Duty (OD) & Leave Verification Engine](#52-geotagged-on-duty-od--leave-verification-engine)
+   - [5.3. Menu-Specific Real-Time Notification Counters](#53-menu-specific-real-time-notification-counters)
+   - [5.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)](#54-capstone-projects-lifecycle-hub-ad2614--ad2711--ad2811)
+   - [5.5. Mandatory Non-Dismissible Security Onboarding & 2FA](#55-mandatory-non-dismissible-security-onboarding--2fa)
+6. [Institutional Master 8-Period Bell Timings](#-6-institutional-master-8-period-bell-timings)
+7. [Database Architecture & Data Integrity Guarantees](#-7-database-architecture--data-integrity-guarantees)
+8. [Full-Stack Engineering Specifications](#-8-full-stack-engineering-specifications)
+9. [Android Mobile Application & APK Package](#-9-android-mobile-application--apk-package)
+10. [Institutional Identity & Accreditation](#-10-institutional-identity--accreditation)
 
 ---
 
 ## 🌐 1. System Overview & Autonomous Purpose
 
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2400&pause=1000&color=10B981&center=true&vCenter=true&width=680&lines=🏢+V.S.B.+Autonomous+Academic+Ecosystem;🚀+Zero+Mock+Data+·+100%25+Live+PostgreSQL+Synchronized;⚡+Deterministic+Multi-Tier+Governance+·+Real-Time+Audit" alt="System Overview Typing" />
-</div>
-
-The **V.S.B. AI & DS Enterprise Digital Portal** is a production-grade institutional ecosystem engineered specifically for the **Department of Artificial Intelligence & Data Science** at **V.S.B. Engineering College (Autonomous), Karur**.
+The **V.S.B. AI & DS Enterprise Digital Portal** is an autonomous institutional ecosystem engineered specifically for the **Department of Artificial Intelligence & Data Science** at **V.S.B. Engineering College (Autonomous), Karur**.
 
 The portal unifies students, faculty members, class advisors, department leadership (HOD), and system administrators into a synchronized, role-based cloud workspace. It digitizes daily academic administration, attendance monitoring, On-Duty (OD) verification, student lifecycle tracking, capstone project milestones, and institutional audits.
 
@@ -117,40 +63,18 @@ The portal unifies students, faculty members, class advisors, department leaders
 ## 📡 2. Live Cloud Deployment Endpoints
 
 | Service / Channel | Operational State | Target URL / Connection Specification |
-| :--- | :---: | :--- |
-| **Primary Production URL** | ![Active](https://img.shields.io/badge/Status-Active_Online-16a34a?style=flat-square) | **[https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)** |
-| **Secondary Domain Alias** | ![Active](https://img.shields.io/badge/Status-Active_Online-16a34a?style=flat-square) | **[https://app-4t01s1pjl-logeshwaran.vercel.app](https://app-4t01s1pjl-logeshwaran.vercel.app)** |
-| **Render API & Worker Engine** | ![Live](https://img.shields.io/badge/Status-Live_Service-0ea5e9?style=flat-square) | Service ID: `srv-dad5vm2jnfac73ejaf4g` (`vsb-aids-portal`) |
-| **Enterprise Cloud Database** | ![Connected](https://img.shields.io/badge/Status-PostgreSQL_Pooled-336791?style=flat-square) | Supabase Cloud PostgreSQL (PgBouncer Pooling on Port 6543) |
-| **Android APK Package** | ![Available](https://img.shields.io/badge/Status-APK_v1.0.0-10B981?style=flat-square) | **[Download APK (3.9 MB)](./VSB-AI-DS-Portal-v1.0.0.apk)** |
+| :--- | :--- | :--- |
+| **Primary Production URL** | `ONLINE (Production)` | **[https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)** |
+| **Secondary Domain Alias** | `ONLINE (Backup Alias)` | **[https://app-4t01s1pjl-logeshwaran.vercel.app](https://app-4t01s1pjl-logeshwaran.vercel.app)** |
+| **Render API & Worker Engine** | `LIVE (High Availability)` | Service ID: `srv-dad5vm2jnfac73ejaf4g` (`vsb-aids-portal`) |
+| **Enterprise Cloud Database** | `CONNECTED (PostgreSQL 15)` | Supabase Cloud PostgreSQL (PgBouncer Pooling on Port 6543) |
+| **Android APK Package** | `AVAILABLE (v1.0.0)` | **[Download APK (3.9 MB)](./VSB-AI-DS-Portal-v1.0.0.apk)** |
 
 ---
 
-## 🏛️ 3. Architectural System Topology
+## 🏛️ 3. System Architecture & Data Flow Topology
 
-<div align="center">
-
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=700&size=19&duration=2400&pause=900&color=38BDF8&center=true&vCenter=true&width=750&lines=⚡+Live+Synchronized+Architecture+Topology;📡+Multi-Role+Clients+➔+Edge+Gateway+➔+Micro-Engines+➔+Cloud+DB;🔄+Real-Time+Continuous+Data+Streams+·+High+Availability" alt="Architecture Typing" />
-
-### 💫 High-Availability Cloud Architecture (Live Animated Flow)
-*Real-time animated data streams, pulsing micro-engines, and Supabase connection pool:*
-
-<br/>
-
-<!-- EMBEDDED HIGH-FIDELITY ANIMATED SVG DIAGRAM -->
-<a href="#-3-architectural-system-topology">
-  <img src="./public/architecture_animated.svg" alt="V.S.B. AI & DS Portal Animated Cloud Architecture Topology" width="100%" />
-</a>
-
-<p align="center">
-  <sub><b>Figure 3.1:</b> Real-time animated system topology featuring Next.js 14 App Router, JWT RBAC Edge Gateway, 5 Micro-Engines, and Supabase PostgreSQL with PgBouncer Connection Pooling.</sub>
-</p>
-
-</div>
-
----
-
-### 🌊 Layer-By-Layer Pipeline Breakdown
+### 🌊 Layer-By-Layer Architectural Breakdown
 
 ```
 ┌────────────────────────┐      ┌─────────────────────────┐      ┌─────────────────────────┐      ┌────────────────────────┐
@@ -162,25 +86,25 @@ The portal unifies students, faculty members, class advisors, department leaders
 └────────────────────────┘      └─────────────────────────┘      └─────────────────────────┘      └────────────────────────┘
 ```
 
-#### 🚀 Layer 1: Presentation & Multi-Role Client Ingestion
+#### Layer 1: Presentation & Multi-Role Client Ingestion
 - **Edge Routing (Next.js 14 App Router)**: Server-side rendering (SSR) and React Server Components (RSC) for instantaneous page loads.
 - **PWA & Native Shell**: Service worker caching for offline shell delivery, paired with Capacitor native Android packaging.
 - **Role Isolation**: Strict route boundaries preventing privilege escalation across `/dashboard`, `/faculty-dashboard`, `/hod-dashboard`, and `/admin`.
 
-#### 🔐 Layer 2: Security & Identity Gateway
+#### Layer 2: Security & Identity Gateway
 - **Edge JWT Interceptor**: Cryptographically signed `jose` tokens stored in `HttpOnly`, `SameSite=Lax` cookies.
 - **Non-Dismissible Security Onboarding**: Intercepts unverified accounts on first login—prevents dashboard access until permanent password configuration, email OTP verification, and compulsory hostel/bus residency selection are completed.
 - **2-Step Email OTP Engine**: 6-digit cryptographic hash generated and dispatched via SMTP with strict 10-minute expiry windows.
 - **Security Audit Logger**: Real-time IP, user-agent, and action timestamps recorded into PostgreSQL.
 
-#### ⚙️ Layer 3: Core Service & Workflow Engines
+#### Layer 3: Core Service & Workflow Engines
 - **8-Period Master Attendance Matrix**: Calculates daily, weekly, and cumulative attendance across all 8 periods in accordance with V.S.B. autonomous regulations. Automatic visual alerts trigger when attendance dips below 75%.
 - **Geotagged On-Duty (OD) Proof Inspector**: Extracts EXIF metadata directly from submitted event images to verify latitude, longitude, reverse-geocoded venue, and photo timestamp before routing to Class Advisor and HOD.
 - **Menu-Specific Notification Aggregator**: Real-time aggregation of unread notifications, pending OD approvals, proof reviews, and register unlock requests per menu item.
 - **Capstone Projects Pipeline**: Lifecycle management for **AD2614 (Mini-Project)**, **AD2711 (Project Phase I)**, and **AD2811 (Project Phase II)** with milestones, supervisor assignments, GitHub repository links, and abstract validation.
 - **Official Institutional PDF Engine**: Client and server-side vector generation of attendance registers, student dossiers, and OD approvals stamped with college watermarks.
 
-#### 🗄️ Layer 4: Cloud Persistence & High Availability
+#### Layer 4: Cloud Persistence & High Availability
 - **Cloud PostgreSQL (Supabase)**: Managed relational database running PostgreSQL 15 with ACID guarantees.
 - **PgBouncer Connection Pooling**: Dual-mode connection pooling (Port 6543 for serverless edge handlers and Port 5432 for schema migrations).
 - **Prisma ORM 5.17**: Strict schema contracts, transactional integrity, and automated database migrations.
@@ -188,7 +112,7 @@ The portal unifies students, faculty members, class advisors, department leaders
 
 ---
 
-### 🔄 Interactive Mermaid Architectural Flow
+### 🔄 Multi-Tier Request Execution Sequence
 
 ```mermaid
 sequenceDiagram
@@ -224,18 +148,7 @@ sequenceDiagram
 
 ---
 
-## 👥 4. Multi-Tier Functional Portals & Module Architecture
-
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2400&pause=1000&color=38BDF8&center=true&vCenter=true&width=680&lines=🖥️+Full+Command+Center+Dashboard;📊+Live+Attendance+Metrics+·+Timetables+·+Announcements;📱+Native+PWA+Responsive+Experience" alt="Portals Typing" />
-</div>
-
-<p align="center">
-  <img src="./public/screenshot-desktop.png" alt="Desktop Dashboard View" width="85%" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);" />
-</p>
-<p align="center">
-  <sub><b>Figure 4.1:</b> Real production screenshot of the AI & DS Desktop Command Center featuring live counters, attendance percentage gauge, weekly timetable, and campus announcements.</sub>
-</p>
+## 👥 4. Multi-Tier Functional Portals & Capabilities
 
 ### Role Hierarchy & Route Allocation
 | Role | Portal Route | Primary Identity | Access Scope |
@@ -248,8 +161,7 @@ sequenceDiagram
 
 ---
 
-<details open>
-<summary><b>🎓 A. Student Academic Portal (<code>/dashboard</code>)</b> [Click to Expand/Collapse]</summary>
+### 🎓 A. Student Academic Portal (`/dashboard`)
 
 ```
 /dashboard
@@ -279,12 +191,10 @@ sequenceDiagram
 - **Capstone Project Hub**:
   - Dedicated modules for **AD2614 (Mini-Project)**, **AD2711 (Project Phase I)**, and **AD2811 (Project Phase II)**.
   - Submission of project title, domain, abstract, team members, supervisor selection, and GitHub repositories.
-</details>
 
 ---
 
-<details open>
-<summary><b>👨‍🏫 B. Faculty Directorate & Class Advisor Portal (<code>/faculty-dashboard</code>)</b> [Click to Expand/Collapse]</summary>
+### 👨‍🏫 B. Faculty Directorate & Class Advisor Portal (`/faculty-dashboard`)
 
 ```
 /faculty-dashboard
@@ -308,12 +218,10 @@ sequenceDiagram
    - **Period-Wise Attendance**: Mark attendance immediately following each lecture period.
    - **Course Material Uploads**: Distribute unit-wise notes, presentations, question banks, and lab instructions.
    - **Register Unlock Protocol**: In case of retrospective attendance modifications, submit an unlock request to the HOD stating the justification.
-</details>
 
 ---
 
-<details open>
-<summary><b>👑 C. Head of Department (HOD) Governance Portal (<code>/hod-dashboard</code>)</b> [Click to Expand/Collapse]</summary>
+### 👑 C. Head of Department (HOD) Governance Portal (`/hod-dashboard`)
 
 ```
 /hod-dashboard
@@ -333,12 +241,10 @@ sequenceDiagram
 - **Advisor OD Verification & Approvals Monitor**: Tracks all student OD applications verified by Class Advisors. Single-click **Approve** (or **Reject**) with automated student notification.
 - **Attendance Register Unlock System**: Review faculty requests to unlock past attendance registers with clear audit reasoning.
 - **Institutional PDF Report Engine**: Export department attendance summaries, absentee rosters, and academic performance sheets with official college letterhead.
-</details>
 
 ---
 
-<details open>
-<summary><b>🛡️ D. System Administrator Command Center (<code>/admin</code>)</b> [Click to Expand/Collapse]</summary>
+### 🛡️ D. System Administrator Command Center (`/admin`)
 
 ```
 /admin
@@ -357,42 +263,41 @@ sequenceDiagram
 #### Key Admin Capabilities:
 - **Central OD & Proofs Tracking System (`/admin/od-proofs`)**:
   - Full institutional lifecycle tracking across all 4 academic years (Years 1 to 4) and sections (A to D).
-  - **Visual Proof Inspector**: High-resolution inspect modal and inline thumbnails for live geo-tagged venue photos (GPS coordinates, reverse-geocoded address, capture timestamp, and Google Maps pin) and completion certificates.
+  - **Visual Proof Inspector**: Inspect modal for live geo-tagged venue photos (GPS coordinates, reverse-geocoded address, capture timestamp, and Google Maps pin) and completion certificates.
   - **Executive Jurisdiction Overrides**: Direct administrative approval, attendance credit certification, clarification directives, and record purging.
   - **Official Audit Exports**: Generation of master OD registries in PDF and CSV.
 - **Dynamic Curriculum Administration**:
   - Full CRUD management of departmental subjects and laboratory practicals with semester allocations.
 - **Bulk CSV Student Onboarding**:
   - Institutional CSV template upload for rapid, error-free onboarding of student cohorts.
-</details>
 
 ---
 
 ## ⚙️ 5. Specialized Engineering Modules
 
-### 📊 5.1. 8-Period Master Attendance Matrix & Timetable Sync
+### 5.1. 8-Period Master Attendance Matrix & Timetable Sync
 - Synchronized with the official autonomous bell schedule across 8 daily lecture/lab periods.
 - Distinguishes between **Morning Session** (Periods 1-4) and **Afternoon Session** (Periods 5-8).
 - Real-time compliance engine automatically flags any student falling below 75% attendance with color-coded condonation warnings.
 
-### 📍 5.2. Geotagged On-Duty (OD) & Leave Verification Engine
+### 5.2. Geotagged On-Duty (OD) & Leave Verification Engine
 - Client-side and server-side EXIF metadata parser extracting latitude, longitude, and creation timestamp directly from event venue photos.
 - Reverse-geocodes coordinates into verifiable campus addresses and generates interactive Google Maps pins.
 - Two-tier digital sign-off pipeline: `Student Submission` ➔ `Class Advisor Verification` ➔ `HOD Final Sanction`.
 
-### 🔔 5.3. Menu-Specific Real-Time Notification Counters
+### 5.3. Menu-Specific Real-Time Notification Counters
 - Dedicated background polling and event subscription aggregating pending alerts per menu section.
 - **Top Menu Bar**:
-  - **Quick Menu Chips**: Prominent pills displayed directly in the header bar showing active menus with unread counts (e.g. `[ 📢 Announcements (3) ]`, `[ 📝 OD & Leave (2) ]`) for 1-click navigation.
-  - **Interactive Menu Updates Dropdown (`[ 🔔 X Menus (Y updates) ▾ ]`)**: Floating card listing each menu with its icon, notification count, and direct link.
+  - **Quick Menu Chips**: Prominent pills displayed directly in the header bar showing active menus with unread counts (e.g. `[ Announcements (3) ]`, `[ OD & Leave (2) ]`) for 1-click navigation.
+  - **Interactive Menu Updates Dropdown**: Floating card listing each menu with its icon, notification count, and direct link.
 - **Sidebar Navigation**:
   - Glowing, animated badges with live counters displayed alongside each navigation link.
 
-### 🚀 5.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)
+### 5.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)
 - Structured milestone management for 3rd and 4th-year engineering capstone tracks.
 - Enforces supervisor guide assignment, team formation, domain categorization, abstract validation, and GitHub repository verification.
 
-### 🔐 5.5. Mandatory Non-Dismissible Security Onboarding & 2FA
+### 5.5. Mandatory Non-Dismissible Security Onboarding & 2FA
 - Automatically intercepts any student or staff account that has not completed primary verification.
 - Enforces permanent password configuration, 2-step email OTP verification, and mandatory residency / transport declaration (Day Scholar Bus Route or Hostel Room).
 
@@ -400,55 +305,74 @@ sequenceDiagram
 
 ## ⏰ 6. Institutional Master 8-Period Bell Timings
 
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=F59E0B&center=true&vCenter=true&width=650&lines=⏰+Synchronized+Master+8-Period+Bell+Schedule;🔔+45-Min+Lecture+Slots+·+Lab+Blocks+·+Intervals" alt="Bell Schedule Typing" />
-</div>
-
 The portal's attendance calculations and lecture tracking are synchronized with V.S.B. Engineering College's autonomous daily schedule:
 
 | Period / Slot | Time Window | Duration | Academic Classification | Status |
-| :--- | :--- | :--- | :--- | :---: |
-| **Period 1** | `09:15 AM - 10:00 AM` | 45 mins | Morning Theory / Core Lecture Slot 1 | 🟢 Morning Session |
-| **Period 2** | `10:00 AM - 10:45 AM` | 45 mins | Morning Theory / Core Lecture Slot 2 | 🟢 Morning Session |
-| ☕ **Morning Break** | `10:45 AM - 11:00 AM` | 15 mins | Morning Refreshment Interval | 🟡 Recess |
-| **Period 3** | `11:00 AM - 11:45 AM` | 45 mins | Mid-Morning Core / Advanced Theory Slot 3 | 🟢 Morning Session |
-| **Period 4** | `11:45 AM - 12:30 PM` | 45 mins | Mid-Morning Core / Advanced Theory Slot 4 | 🟢 Morning Session |
-| 🍱 **Lunch Break** | `12:30 PM - 01:20 PM` | 50 mins | Midday Dining & Campus Interval | 🟡 Dining |
-| **Period 5** | `01:20 PM - 02:05 PM` | 45 mins | Afternoon Theory / Practical Lab Block Slot 5 | 🔵 Afternoon Session |
-| **Period 6** | `02:05 PM - 02:50 PM` | 45 mins | Afternoon Theory / Practical Lab Block Slot 6 | 🔵 Afternoon Session |
-| 🍵 **Tea Break** | `02:50 PM - 03:05 PM` | 15 mins | Evening Tea & Refreshment Interval | 🟡 Recess |
-| **Period 7** | `03:05 PM - 03:50 PM` | 45 mins | Practical Lab Block / Communication Skills | 🔵 Afternoon Session |
-| **Period 8** | `03:50 PM - 04:40 PM` | 50 mins | Practical Lab Block / Aptitude & Mentorship | 🔵 Afternoon Session |
+| :--- | :--- | :--- | :--- | :--- |
+| **Period 1** | `09:15 AM - 10:00 AM` | 45 mins | Morning Theory / Core Lecture Slot 1 | Morning Session |
+| **Period 2** | `10:00 AM - 10:45 AM` | 45 mins | Morning Theory / Core Lecture Slot 2 | Morning Session |
+| **Morning Break** | `10:45 AM - 11:00 AM` | 15 mins | Morning Refreshment Interval | Recess |
+| **Period 3** | `11:00 AM - 11:45 AM` | 45 mins | Mid-Morning Core / Advanced Theory Slot 3 | Morning Session |
+| **Period 4** | `11:45 AM - 12:30 PM` | 45 mins | Mid-Morning Core / Advanced Theory Slot 4 | Morning Session |
+| **Lunch Break** | `12:30 PM - 01:20 PM` | 50 mins | Midday Dining & Campus Interval | Dining |
+| **Period 5** | `01:20 PM - 02:05 PM` | 45 mins | Afternoon Theory / Practical Lab Block Slot 5 | Afternoon Session |
+| **Period 6** | `02:05 PM - 02:50 PM` | 45 mins | Afternoon Theory / Practical Lab Block Slot 6 | Afternoon Session |
+| **Tea Break** | `02:50 PM - 03:05 PM` | 15 mins | Evening Tea & Refreshment Interval | Recess |
+| **Period 7** | `03:05 PM - 03:50 PM` | 45 mins | Practical Lab Block / Communication Skills | Afternoon Session |
+| **Period 8** | `03:50 PM - 04:40 PM` | 50 mins | Practical Lab Block / Aptitude & Mentorship | Afternoon Session |
 
 ---
 
-## 🗄️ 7. Database Entity Architecture & Data Integrity Guarantees
+## 🗄️ 7. Database Architecture & Data Integrity Guarantees
 
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2400&pause=1000&color=336791&center=true&vCenter=true&width=650&lines=🗄️+Zero+Mock+Data+·+100%25+Live+PostgreSQL;🔒+Prisma+ORM+Contracts+·+PgBouncer+Pooled;⚡+ACID+Guarantees+·+Supabase+Persistence" alt="Database Typing" />
-</div>
+```mermaid
+erDiagram
+    User ||--o| Student : "has profile"
+    User ||--o| Faculty : "has profile"
+    User ||--o| HOD : "has profile"
+    Student ||--o{ AttendanceRecord : "logs"
+    Student ||--o{ ODProof : "submits"
+    Student ||--o{ Project : "builds"
+    Faculty ||--o{ Subject : "teaches"
+    Faculty ||--o{ ODProof : "verifies"
+    HOD ||--o{ ODProof : "approves"
+    Subject ||--o{ AttendanceRecord : "contains"
+    Subject ||--o{ Resource : "provides"
 
-```
-┌──────────────────┐         ┌────────────────────┐         ┌───────────────────┐
-│      User        │ ◄─────► │      Student       │ ◄─────► │  AttendanceRecord │
-│ (Auth, Role, JWT)│         │ (RegNo, Year, Sec) │         │ (Date, Period, P) │
-└──────────────────┘         └────────────────────┘         └───────────────────┘
-         ▲                             │                              │
-         │                             ▼                              ▼
-         │                   ┌────────────────────┐         ┌───────────────────┐
-         │                   │      ODProof       │         │      Subject      │
-         │                   │ (Proof, Geo, Status│         │ (Code, Name, Sem) │
-         │                   └────────────────────┘         └───────────────────┘
-         ▼                             ▲                              ▲
-┌──────────────────┐                   │                              │
-│     Faculty      │ ──────────────────┴──────────────────────────────┘
-│ (FacID, Desig)   │
-└──────────────────┘
-         ▲
-         │
-┌──────────────────┐
-│       HOD        │ ────► [ Final Approvals, Workload, Governance ]
-└──────────────────┘
+    User {
+        string id PK
+        string email UK
+        string role
+        string status
+    }
+    Student {
+        string id PK
+        string registerNumber UK
+        string studentName
+        int year
+        string section
+    }
+    Faculty {
+        string id PK
+        string facultyName
+        string facultyType
+        string department
+    }
+    ODProof {
+        string id PK
+        string registerNumber
+        string eventName
+        string status
+        float latitude
+        float longitude
+    }
+    AttendanceRecord {
+        string id PK
+        string studentId
+        string date
+        int period
+        string status
+    }
 ```
 
 ### Core Relational Schema Models:
@@ -467,10 +391,6 @@ The portal's attendance calculations and lecture tracking are synchronized with 
 
 ## 💻 8. Full-Stack Engineering Specifications
 
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=A855F7&center=true&vCenter=true&width=650&lines=⚡+Next.js+14+Edge+·+TypeScript+5.0+·+Tailwind+CSS;🛡️+Jose+JWT+Auth+·+Prisma+ORM+·+Supabase+DB;📱+Capacitor+Native+Android+·+PWA+Engine" alt="Engineering Typing" />
-</div>
-
 | Layer | Technologies & Libraries | Architectural Highlights |
 | :--- | :--- | :--- |
 | **Frontend Framework** | **Next.js 14** (App Router), **React 18** | Edge rendering, React Server Components, zero-flash routing |
@@ -487,62 +407,26 @@ The portal's attendance calculations and lecture tracking are synchronized with 
 
 ## 📱 9. Android Mobile Application & APK Package
 
-<div align="center">
-
-<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=16&duration=2200&pause=1000&color=10B981&center=true&vCenter=true&width=650&lines=📱+Native+Mobile+Experience+on+Android;🚀+Instant+Attendance+Gauge+·+OD+Camera+Uploads;⚡+PWA+Offline+Caching+·+Android+APK+Package" alt="Mobile Typing" />
-
-<br/>
-
-<p align="center">
-  <img src="./public/screenshot-mobile.png" alt="Real Mobile App Interface" width="340px" style="border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.4);" />
-</p>
-<p align="center">
-  <sub><b>Figure 9.1:</b> Real production screenshot of the native mobile portal on Android featuring real-time 94.2% attendance gauge, quick actions, and campus feed.</sub>
-</p>
-
-<!-- APK DIRECT DOWNLOAD BADGE -->
-<p align="center">
-  <a href="./VSB-AI-DS-Portal-v1.0.0.apk">
-    <img src="https://img.shields.io/badge/📲_DOWNLOAD_APK_V1.0.0-VSB--AI--DS--Portal.apk-10B981?style=for-the-badge&logo=android&logoColor=white" alt="Direct APK Download" />
-  </a>
-</p>
-
-</div>
-
 The V.S.B. AI & DS Portal is fully optimized for mobile devices and available as a standalone Android application:
 - **Package Name**: `com.vsb.aidsportal`
 - **Application Version**: `v1.0.0`
 - **File Size**: `3.9 MB`
-- **Direct Download**: [VSB-AI-DS-Portal-v1.0.0.apk](./VSB-AI-DS-Portal-v1.0.0.apk) (or from `public/downloads/Digital-Portal-of-AI-and-DS.apk`)
+- **Direct Download Link**: [Download APK v1.0.0 (3.9 MB)](./VSB-AI-DS-Portal-v1.0.0.apk) (also accessible at `public/downloads/Digital-Portal-of-AI-and-DS.apk`)
 - **Native Capabilities**: Push notifications, full offline shell caching, instant camera attachment for OD photo proof uploads, and biometric login compatibility.
 
 ---
 
-## 🏛️ 10. Institutional Identity & Developer Accreditation
-
-<div align="center">
-
-<p align="center">
-  <img src="./public/college-emblem.png" alt="V.S.B. Seal" width="110" />
-</p>
+## 🏛️ 10. Institutional Identity & Accreditation
 
 ### V.S.B. Engineering College (Autonomous)
-*Approved by AICTE, New Delhi · Affiliated to Anna University, Chennai*  
-*Accredited with 'A' Grade by NAAC · NBA Tier-1 Accredited*  
-**Department of Artificial Intelligence & Data Science**  
-NH-67, Covai Road, Karur - 639 111, Tamil Nadu, India
+- **Approvals**: Approved by AICTE, New Delhi
+- **Affiliation**: Affiliated to Anna University, Chennai
+- **Accreditation**: Accredited with 'A' Grade by NAAC · NBA Tier-1 Accredited
+- **Department**: Department of Artificial Intelligence & Data Science
+- **Campus Address**: NH-67, Covai Road, Karur - 639 111, Tamil Nadu, India
 
 ---
 
-Developed with ❤️ by **Logeshwaran G**  
+Developed by **Logeshwaran G**  
 *Department of Artificial Intelligence & Data Science*  
 *All Rights Reserved. © 2026 V.S.B. AI & DS Enterprise Digital Portal.*
-
-<br/>
-
-<!-- ========================================== -->
-<!-- ANIMATED WAVING FOOTER BANNER              -->
-<!-- ========================================== -->
-![VSB AI&DS Footer Banner](https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=0,11,33,100&height=140&section=footer)
-
-</div>
