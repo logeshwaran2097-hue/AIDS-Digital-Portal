@@ -4,36 +4,25 @@
 
 ---
 
-### 🌐 Quick Production Links & Live Status
-- **Primary Production Portal**: [https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)
-- **Secondary Domain Alias**: [https://app-4t01s1pjl-logeshwaran.vercel.app](https://app-4t01s1pjl-logeshwaran.vercel.app)
-- **Render Worker Engine**: [https://vsb-aids-portal.onrender.com](https://vsb-aids-portal.onrender.com) (`srv-dad5vm2jnfac73ejaf4g`)
-- **Cloud Database**: Supabase PostgreSQL 15 (PgBouncer Connection Pooling on Port 6543)
-- **Android Mobile Package**: [Download APK v1.0.0 (3.9 MB)](./VSB-AI-DS-Portal-v1.0.0.apk)
-- **Core Technology**: Next.js 14 (App Router) · React 18 · TypeScript 5 · Tailwind CSS · Prisma ORM 5.17 · Jose JWT
-
----
-
 ## 📑 Table of Contents
 1. [System Overview & Autonomous Purpose](#-1-system-overview--autonomous-purpose)
-2. [Live Cloud Deployment Endpoints](#-2-live-cloud-deployment-endpoints)
-3. [System Architecture & Data Flow Topology](#-3-system-architecture--data-flow-topology)
-4. [Multi-Tier Functional Portals & Capabilities](#-4-multi-tier-functional-portals--capabilities)
+2. [System Architecture & Data Flow Topology](#-2-system-architecture--data-flow-topology)
+3. [Multi-Tier Functional Portals & Capabilities](#-3-multi-tier-functional-portals--capabilities)
    - [A. Student Academic Portal (/dashboard)](#-a-student-academic-portal-dashboard)
    - [B. Faculty Directorate & Class Advisor Portal (/faculty-dashboard)](#-b-faculty-directorate--class-advisor-portal-faculty-dashboard)
    - [C. Head of Department (HOD) Governance Portal (/hod-dashboard)](#-c-head-of-department-hod-governance-portal-hod-dashboard)
    - [D. System Administrator Command Center (/admin)](#-d-system-administrator-command-center-admin)
-5. [Specialized Engineering Modules](#-5-specialized-engineering-modules)
-   - [5.1. 8-Period Master Attendance Matrix & Timetable Sync](#51-8-period-master-attendance-matrix--timetable-sync)
-   - [5.2. Geotagged On-Duty (OD) & Leave Verification Engine](#52-geotagged-on-duty-od--leave-verification-engine)
-   - [5.3. Menu-Specific Real-Time Notification Counters](#53-menu-specific-real-time-notification-counters)
-   - [5.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)](#54-capstone-projects-lifecycle-hub-ad2614--ad2711--ad2811)
-   - [5.5. Mandatory Non-Dismissible Security Onboarding & 2FA](#55-mandatory-non-dismissible-security-onboarding--2fa)
-6. [Institutional Master 8-Period Bell Timings](#-6-institutional-master-8-period-bell-timings)
-7. [Database Architecture & Data Integrity Guarantees](#-7-database-architecture--data-integrity-guarantees)
-8. [Full-Stack Engineering Specifications](#-8-full-stack-engineering-specifications)
-9. [Android Mobile Application & APK Package](#-9-android-mobile-application--apk-package)
-10. [Institutional Identity & Accreditation](#-10-institutional-identity--accreditation)
+4. [Specialized Engineering Modules](#-4-specialized-engineering-modules)
+   - [4.1. 8-Period Master Attendance Matrix & Timetable Sync](#41-8-period-master-attendance-matrix--timetable-sync)
+   - [4.2. Geotagged On-Duty (OD) & Leave Verification Engine](#42-geotagged-on-duty-od--leave-verification-engine)
+   - [4.3. Menu-Specific Real-Time Notification Counters](#43-menu-specific-real-time-notification-counters)
+   - [4.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)](#44-capstone-projects-lifecycle-hub-ad2614--ad2711--ad2811)
+   - [4.5. Mandatory Non-Dismissible Security Onboarding & 2FA](#45-mandatory-non-dismissible-security-onboarding--2fa)
+5. [Institutional Master 8-Period Bell Timings](#-5-institutional-master-8-period-bell-timings)
+6. [Database Architecture & Data Integrity Guarantees](#-6-database-architecture--data-integrity-guarantees)
+7. [Full-Stack Engineering Specifications](#-7-full-stack-engineering-specifications)
+8. [Android Mobile Application & APK Package](#-8-android-mobile-application--apk-package)
+9. [Institutional Identity & Accreditation](#-9-institutional-identity--accreditation)
 
 ---
 
@@ -60,19 +49,7 @@ The portal unifies students, faculty members, class advisors, department leaders
 
 ---
 
-## 📡 2. Live Cloud Deployment Endpoints
-
-| Service / Channel | Operational State | Target URL / Connection Specification |
-| :--- | :--- | :--- |
-| **Primary Production URL** | `ONLINE (Production)` | **[https://app-two-plum-10.vercel.app](https://app-two-plum-10.vercel.app)** |
-| **Secondary Domain Alias** | `ONLINE (Backup Alias)` | **[https://app-4t01s1pjl-logeshwaran.vercel.app](https://app-4t01s1pjl-logeshwaran.vercel.app)** |
-| **Render API & Worker Engine** | `LIVE (High Availability)` | Service ID: `srv-dad5vm2jnfac73ejaf4g` (`vsb-aids-portal`) |
-| **Enterprise Cloud Database** | `CONNECTED (PostgreSQL 15)` | Supabase Cloud PostgreSQL (PgBouncer Pooling on Port 6543) |
-| **Android APK Package** | `AVAILABLE (v1.0.0)` | **[Download APK (3.9 MB)](./VSB-AI-DS-Portal-v1.0.0.apk)** |
-
----
-
-## 🏛️ 3. System Architecture & Data Flow Topology
+## 🏛️ 2. System Architecture & Data Flow Topology
 
 ### 🌊 Layer-By-Layer Architectural Breakdown
 
@@ -148,7 +125,7 @@ sequenceDiagram
 
 ---
 
-## 👥 4. Multi-Tier Functional Portals & Capabilities
+## 👥 3. Multi-Tier Functional Portals & Capabilities
 
 ### Role Hierarchy & Route Allocation
 | Role | Portal Route | Primary Identity | Access Scope |
@@ -273,19 +250,19 @@ sequenceDiagram
 
 ---
 
-## ⚙️ 5. Specialized Engineering Modules
+## ⚙️ 4. Specialized Engineering Modules
 
-### 5.1. 8-Period Master Attendance Matrix & Timetable Sync
+### 4.1. 8-Period Master Attendance Matrix & Timetable Sync
 - Synchronized with the official autonomous bell schedule across 8 daily lecture/lab periods.
 - Distinguishes between **Morning Session** (Periods 1-4) and **Afternoon Session** (Periods 5-8).
 - Real-time compliance engine automatically flags any student falling below 75% attendance with color-coded condonation warnings.
 
-### 5.2. Geotagged On-Duty (OD) & Leave Verification Engine
+### 4.2. Geotagged On-Duty (OD) & Leave Verification Engine
 - Client-side and server-side EXIF metadata parser extracting latitude, longitude, and creation timestamp directly from event venue photos.
 - Reverse-geocodes coordinates into verifiable campus addresses and generates interactive Google Maps pins.
 - Two-tier digital sign-off pipeline: `Student Submission` ➔ `Class Advisor Verification` ➔ `HOD Final Sanction`.
 
-### 5.3. Menu-Specific Real-Time Notification Counters
+### 4.3. Menu-Specific Real-Time Notification Counters
 - Dedicated background polling and event subscription aggregating pending alerts per menu section.
 - **Top Menu Bar**:
   - **Quick Menu Chips**: Prominent pills displayed directly in the header bar showing active menus with unread counts (e.g. `[ Announcements (3) ]`, `[ OD & Leave (2) ]`) for 1-click navigation.
@@ -293,17 +270,17 @@ sequenceDiagram
 - **Sidebar Navigation**:
   - Glowing, animated badges with live counters displayed alongside each navigation link.
 
-### 5.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)
+### 4.4. Capstone Projects Lifecycle Hub (AD2614 · AD2711 · AD2811)
 - Structured milestone management for 3rd and 4th-year engineering capstone tracks.
 - Enforces supervisor guide assignment, team formation, domain categorization, abstract validation, and GitHub repository verification.
 
-### 5.5. Mandatory Non-Dismissible Security Onboarding & 2FA
+### 4.5. Mandatory Non-Dismissible Security Onboarding & 2FA
 - Automatically intercepts any student or staff account that has not completed primary verification.
 - Enforces permanent password configuration, 2-step email OTP verification, and mandatory residency / transport declaration (Day Scholar Bus Route or Hostel Room).
 
 ---
 
-## ⏰ 6. Institutional Master 8-Period Bell Timings
+## ⏰ 5. Institutional Master 8-Period Bell Timings
 
 The portal's attendance calculations and lecture tracking are synchronized with V.S.B. Engineering College's autonomous daily schedule:
 
@@ -323,7 +300,7 @@ The portal's attendance calculations and lecture tracking are synchronized with 
 
 ---
 
-## 🗄️ 7. Database Architecture & Data Integrity Guarantees
+## 🗄️ 6. Database Architecture & Data Integrity Guarantees
 
 ```mermaid
 erDiagram
@@ -389,7 +366,7 @@ erDiagram
 
 ---
 
-## 💻 8. Full-Stack Engineering Specifications
+## 💻 7. Full-Stack Engineering Specifications
 
 | Layer | Technologies & Libraries | Architectural Highlights |
 | :--- | :--- | :--- |
@@ -401,22 +378,21 @@ erDiagram
 | **Security & Auth** | `bcryptjs`, `jose` JWT, 2-Step Email OTP | HttpOnly session tokens, SHA-256 OTP hashing, zero-trust RBAC |
 | **Document Generation** | `jspdf`, `jspdf-autotable` | Official college letterhead, vector watermarks, and verification QR |
 | **Mobile & PWA** | Capacitor 6, Service Workers | Offline shell caching, manifest.json, and native Android APK packaging |
-| **Cloud Hosting** | **Vercel Edge** & **Render** | Global edge network with continuous deployment pipelines |
 
 ---
 
-## 📱 9. Android Mobile Application & APK Package
+## 📱 8. Android Mobile Application & APK Package
 
 The V.S.B. AI & DS Portal is fully optimized for mobile devices and available as a standalone Android application:
 - **Package Name**: `com.vsb.aidsportal`
 - **Application Version**: `v1.0.0`
 - **File Size**: `3.9 MB`
-- **Direct Download Link**: [Download APK v1.0.0 (3.9 MB)](./VSB-AI-DS-Portal-v1.0.0.apk) (also accessible at `public/downloads/Digital-Portal-of-AI-and-DS.apk`)
+- **Package Location**: `public/downloads/Digital-Portal-of-AI-and-DS.apk`
 - **Native Capabilities**: Push notifications, full offline shell caching, instant camera attachment for OD photo proof uploads, and biometric login compatibility.
 
 ---
 
-## 🏛️ 10. Institutional Identity & Accreditation
+## 🏛️ 9. Institutional Identity & Accreditation
 
 ### V.S.B. Engineering College (Autonomous)
 - **Approvals**: Approved by AICTE, New Delhi
