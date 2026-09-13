@@ -57,6 +57,7 @@ export async function GET(request: Request) {
             advisorSem: f.advisorSem || null,
             advisorSec: f.advisorSec || null,
             facultyType: f.facultyType || 'both',
+            labTrainer: f.labTrainer || null,
             status: u?.status || 'active',
           }
         })
@@ -111,6 +112,7 @@ export async function POST(request: Request) {
       advisorSec,
       facultyType = 'both',
       status = 'active',
+      labTrainer,
     } = data
 
     if (!name?.trim()) {
@@ -213,6 +215,7 @@ export async function POST(request: Request) {
         advisorSem: cleanAdvisorSem,
         advisorSec: cleanAdvisorSec,
         facultyType: facultyType || 'both',
+        labTrainer: labTrainer ? String(labTrainer).trim() : null,
       },
       create: {
         userId: user.id,
@@ -232,6 +235,7 @@ export async function POST(request: Request) {
         advisorSem: cleanAdvisorSem,
         advisorSec: cleanAdvisorSec,
         facultyType: facultyType || 'both',
+        labTrainer: labTrainer ? String(labTrainer).trim() : null,
       },
     })
 
@@ -289,6 +293,7 @@ export async function POST(request: Request) {
         advisorSem: faculty.advisorSem,
         advisorSec: faculty.advisorSec,
         facultyType: faculty.facultyType,
+        labTrainer: faculty.labTrainer,
         status: user.status,
       },
       message: 'Faculty registered successfully in database',

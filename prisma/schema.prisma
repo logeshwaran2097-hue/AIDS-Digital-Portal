@@ -83,6 +83,7 @@ model Faculty {
   advisorSem     Int?
   advisorSec     String?
   facultyType    String   @default("both")
+  labTrainer     String?
 
   @@index([facultyId])
   @@index([designation])
