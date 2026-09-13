@@ -23,7 +23,18 @@ export default async function AdminFacultyPage() {
 
   const facultyList: FacultyRecord[] = dbFaculty.map((f: any) => {
     const user = userMap.get(f.userId)
-    const dobString = f.dateOfBirth ? (typeof f.dateOfBirth === 'string' ? f.dateOfBirth : f.dateOfBirth.toISOString().split('T')[0]) : null
+    let dobString: string | null = null
+    if (f.dateOfBirth) {
+      if (typeof f.dateOfBirth === 'string') {
+        dobString = f.dateOfBirth
+      } else if (f.dateOfBirth instanceof Date && !isNaN(f.dateOfBirth.getTime())) {
+        try {
+          dobString = f.dateOfBirth.toISOString().split('T')[0]
+        } catch {
+          dobString = null
+        }
+      }
+    }
     return {
       id: f.id,
       facultyId: f.facultyId,
