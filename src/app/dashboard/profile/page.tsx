@@ -39,11 +39,18 @@ export default async function StudentProfilePage() {
     ? `${(student?.registerNumber || session.registerNumber || '').toLowerCase()}@student.vsb.edu.in`
     : 'student@vsb.edu.in'
 
+  const verifiedPersonalEmail =
+    user?.email && !user.email.endsWith('@student.vsb.edu.in')
+      ? user.email
+      : (session.email && !session.email.endsWith('@student.vsb.edu.in') ? session.email : null)
+
   const finalUser = {
     ...(user || {}),
     id: user?.id || session.userId,
     name: user?.name || session.name || (student ? `Student (${student.registerNumber})` : 'Student'),
-    email: user?.email || session.email || studentEmail,
+    email: studentEmail,
+    personalEmail: verifiedPersonalEmail,
+    emailVerified: Boolean(user?.emailVerified || verifiedPersonalEmail),
     phone: user?.phone || '',
     role: user?.role || 'student',
     status: user?.status || 'active',

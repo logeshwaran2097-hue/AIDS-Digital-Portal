@@ -453,7 +453,10 @@ export function StudentOnboardingModal({
             // Persist full onboarding defaults directly into the student profile storage
             const updatedProfileData = {
               name: initialData.name,
-              email: form.email.trim().toLowerCase() || initialData.email || `${reg.toLowerCase()}@student.vsb.edu.in`,
+              email: `${reg.toLowerCase()}@student.vsb.edu.in`,
+              institutionalEmail: `${reg.toLowerCase()}@student.vsb.edu.in`,
+              personalEmail: form.email.trim().toLowerCase(),
+              emailVerified: true,
               phone: form.phone.trim(),
               parentPhone: form.parentPhone.trim(),
               isParentWhatsapp: form.isParentWhatsapp,

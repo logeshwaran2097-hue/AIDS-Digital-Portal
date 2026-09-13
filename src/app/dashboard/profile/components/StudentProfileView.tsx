@@ -49,6 +49,9 @@ import { StudentOnboardingModal } from '@/components/auth/StudentOnboardingModal
 interface StudentFullProfile {
   name: string
   email: string
+  institutionalEmail?: string
+  personalEmail?: string
+  emailVerified?: boolean
   phone: string
   dateOfBirth: string
   bloodGroup: string
@@ -102,7 +105,14 @@ export function StudentProfileView({
   user: initialUser,
   student: initialStudent,
 }: {
-  user: { name: string; email: string; phone?: string | null; profileImage?: string | null }
+  user: {
+    name: string
+    email: string
+    personalEmail?: string | null
+    emailVerified?: boolean
+    phone?: string | null
+    profileImage?: string | null
+  }
   student: {
     registerNumber: string
     department: string
@@ -127,10 +137,15 @@ export function StudentProfileView({
 }) {
   const regNo = initialStudent.registerNumber || initialUser.email?.split('@')[0].toUpperCase() || ''
   const storageKey = `vsb_student_profile_v2_${regNo}`
+  const instEmail = `${regNo.toLowerCase()}@student.vsb.edu.in`
+  const verifiedPersonal = (initialUser as any).personalEmail || (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in') ? initialUser.email : '')
 
   const defaultProfile: StudentFullProfile = {
     name: initialUser.name || '',
-    email: initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : ''),
+    email: instEmail,
+    institutionalEmail: instEmail,
+    personalEmail: verifiedPersonal,
+    emailVerified: Boolean((initialUser as any).emailVerified || verifiedPersonal),
     phone: initialUser.phone || (initialStudent as any).phone || '',
     parentPhone: (initialStudent as any).parentPhone || '',
     isParentWhatsapp: (initialStudent as any).isParentWhatsapp ?? false,
@@ -555,11 +570,37 @@ export function StudentProfileView({
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
-                <span className="font-bold text-gray-500">Institutional Email:</span>
-                <span className="font-mono font-bold text-[#1455D9]">
-                  {profile.email || initialUser.email || (regNo ? `${regNo.toLowerCase()}@student.vsb.edu.in` : '')}
-                </span>
+              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span className="font-bold text-gray-500">Institutional College Email:</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono font-bold text-[#1455D9]">
+                    {profile.institutionalEmail || `${regNo.toLowerCase()}@student.vsb.edu.in`}
+                  </span>
+                  <span className="text-[10px] font-black text-blue-800 bg-blue-100/90 px-2 py-0.5 rounded-full border border-blue-200">
+                    Campus ID
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span className="font-bold text-gray-500">Verified Personal Email:</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-bold text-[#071A3D]">
+                    {profile.personalEmail || (profile.email && !profile.email.endsWith('@student.vsb.edu.in') ? profile.email : '') || 'Not Provided (Verify in Onboarding)'}
+                  </span>
+                  {(profile.emailVerified || profile.personalEmail) ? (
+                    <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-0.5 shadow-2xs">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> OTP Verified
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setIsOnboardingOpen(true)}
+                      className="text-[10px] font-black text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200 hover:bg-amber-200 cursor-pointer"
+                    >
+                      Verify via Onboarding
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between">
@@ -772,13 +813,23 @@ export function StudentProfileView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Institutional Email</label>
+                      <label className="block font-bold text-[#071A3D] mb-1">Institutional College Email</label>
                       <input
                         type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono text-[#071A3D]"
+                        readOnly
+                        value={formData.institutionalEmail || `${formData.registerNumber.toLowerCase()}@student.vsb.edu.in`}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 font-mono text-gray-500 cursor-not-allowed text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Personal Contact Email</label>
+                      <input
+                        type="email"
+                        value={formData.personalEmail || ''}
+                        onChange={(e) => setFormData({ ...formData, personalEmail: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono text-[#071A3D] text-xs"
+                        placeholder="e.g. name@gmail.com"
                       />
                     </div>
 
