@@ -89,6 +89,7 @@ export function FacultyLaboratoryView({
 }: Props) {
   const [details, setDetails] = useState<LabDetails>(initialDetails)
   const [activities, setActivities] = useState<LabActivityRecord[]>(initialActivities)
+  const [activeLabTab, setActiveLabTab] = useState<'aids' | 'communication'>('aids')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
@@ -111,7 +112,7 @@ export function FacultyLaboratoryView({
     labTrainer: initialDetails.labTrainer || '',
     toolsUsed: '',
     status: 'completed',
-    attendanceCount: '58',
+    attendanceCount: '',
     remarks: '',
   })
 
@@ -130,18 +131,23 @@ export function FacultyLaboratoryView({
   // Open Create Modal
   const handleOpenCreate = () => {
     setEditingActivity(null)
+    const isComm = activeLabTab === 'communication'
+    const aidsCount = activities.filter(
+      (a) => !a.labName?.toLowerCase().includes('communication') && a.labCode !== 'GE3271'
+    ).length
+
     setFormData({
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
       period: details.labPeriod || 'Period 5 - 8 (01:20 PM - 04:30 PM)',
-      experimentNo: String((activities.length + 1) || 1),
+      experimentNo: isComm ? '' : String(aidsCount + 1 || 1),
       experimentName: '',
       topicsCovered: '',
-      activityType: 'Lab Experiment',
+      activityType: isComm ? 'Communication Activity' : 'Lab Experiment',
       labTrainer: details.labTrainer || '',
       toolsUsed: '',
       status: 'completed',
-      attendanceCount: '58',
+      attendanceCount: isComm ? '' : '58',
       remarks: '',
     })
     setIsModalOpen(true)
@@ -150,6 +156,8 @@ export function FacultyLaboratoryView({
   // Open Edit Modal
   const handleOpenEdit = (act: LabActivityRecord) => {
     setEditingActivity(act)
+    const isCommAct = act.labName?.toLowerCase().includes('communication') || act.labCode === 'GE3271'
+    setActiveLabTab(isCommAct ? 'communication' : 'aids')
     setFormData({
       date: act.date,
       day: act.day,
@@ -157,7 +165,7 @@ export function FacultyLaboratoryView({
       experimentNo: act.experimentNo ? String(act.experimentNo) : '',
       experimentName: act.experimentName,
       topicsCovered: act.topicsCovered,
-      activityType: act.activityType || 'Lab Experiment',
+      activityType: act.activityType || (isCommAct ? 'Communication Activity' : 'Lab Experiment'),
       labTrainer: act.labTrainer || details.labTrainer || '',
       toolsUsed: act.toolsUsed || '',
       status: act.status || 'completed',
@@ -171,11 +179,21 @@ export function FacultyLaboratoryView({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.experimentName.trim() || !formData.topicsCovered.trim()) {
-      setAlertMessage({ type: 'error', text: 'Experiment/Activity Name and Topics Covered are required.' })
+      setAlertMessage({
+        type: 'error',
+        text: activeLabTab === 'communication'
+          ? 'Activity Name and Today\'s Topics are required.'
+          : 'Experiment Title and Topics Covered are required.'
+      })
       return
     }
 
     setSaving(true)
+    const currentLabName = activeLabTab === 'communication'
+      ? 'Communication Skills Laboratory'
+      : (details.labName || 'Artificial Intelligence & Data Science Laboratory')
+    const currentLabCode = activeLabTab === 'communication' ? 'GE3271' : (details.labCode || 'AD2311')
+
     try {
       if (editingActivity) {
         // PUT update
@@ -184,6 +202,8 @@ export function FacultyLaboratoryView({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: editingActivity.id,
+            labName: currentLabName,
+            labCode: currentLabCode,
             ...formData,
             experimentNo: formData.experimentNo ? Number(formData.experimentNo) : null,
             attendanceCount: formData.attendanceCount ? Number(formData.attendanceCount) : null,
@@ -202,8 +222,8 @@ export function FacultyLaboratoryView({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            labName: details.labName,
-            labCode: details.labCode,
+            labName: currentLabName,
+            labCode: currentLabCode,
             year: details.year,
             semester: details.semester,
             section: details.section,
@@ -248,6 +268,10 @@ export function FacultyLaboratoryView({
   // Filtered List
   const filteredActivities = useMemo(() => {
     return activities.filter((act) => {
+      const isCommAct = act.labName?.toLowerCase().includes('communication') || act.labCode === 'GE3271'
+      if (activeLabTab === 'communication' && !isCommAct) return false
+      if (activeLabTab === 'aids' && isCommAct) return false
+
       const q = searchQuery.toLowerCase()
       const matchQuery =
         !q ||
@@ -256,14 +280,15 @@ export function FacultyLaboratoryView({
         act.date.includes(q) ||
         act.day.toLowerCase().includes(q) ||
         (act.labTrainer && act.labTrainer.toLowerCase().includes(q)) ||
-        (act.toolsUsed && act.toolsUsed.toLowerCase().includes(q))
+        (act.toolsUsed && act.toolsUsed.toLowerCase().includes(q)) ||
+        (act.remarks && act.remarks.toLowerCase().includes(q))
 
       const matchCat = selectedCategory === 'all' || act.activityType === selectedCategory
       const matchStatus = selectedStatus === 'all' || act.status === selectedStatus
 
       return matchQuery && matchCat && matchStatus
     })
-  }, [activities, searchQuery, selectedCategory, selectedStatus])
+  }, [activities, searchQuery, selectedCategory, selectedStatus, activeLabTab])
 
   // Print Register
   const handlePrint = () => {
@@ -296,29 +321,110 @@ export function FacultyLaboratoryView({
         </div>
       )}
 
+      {/* Laboratory Switcher Tabs */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-gray-200 shadow-xs">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveLabTab('aids')
+              setDetails((prev) => ({
+                ...prev,
+                labName: 'Artificial Intelligence & Data Science Laboratory',
+                labCode: 'AD2311',
+              }))
+            }}
+            className={cn(
+              'px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2',
+              activeLabTab === 'aids'
+                ? 'bg-[#1455D9] text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            )}
+          >
+            <FlaskConical className="w-4 h-4" />
+            <span>AI &amp; DS Laboratory (AD2311)</span>
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
+                activeLabTab === 'aids' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+              )}
+            >
+              {activities.filter((a) => !a.labName?.toLowerCase().includes('communication') && a.labCode !== 'GE3271').length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveLabTab('communication')
+              setDetails((prev) => ({
+                ...prev,
+                labName: 'Communication Skills Laboratory',
+                labCode: 'GE3271',
+              }))
+            }}
+            className={cn(
+              'px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2',
+              activeLabTab === 'communication'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            )}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Communication Skills Laboratory (GE3271)</span>
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-[10px] font-mono font-bold',
+                activeLabTab === 'communication' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+              )}
+            >
+              {activities.filter((a) => a.labName?.toLowerCase().includes('communication') || a.labCode === 'GE3271').length}
+            </span>
+          </button>
+        </div>
+
+        <div className="text-[11px] text-gray-500 font-medium px-2">
+          Active Lab: <strong className="text-[#071A3D]">{activeLabTab === 'communication' ? 'Communication Skills' : 'AI & DS Practical'}</strong>
+        </div>
+      </div>
+
       {/* Hero Banner with Lab Identity */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
-        <div className="absolute right-0 top-0 w-96 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
+      <div className={cn(
+        "relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-white/10 transition-all",
+        activeLabTab === 'communication'
+          ? "bg-gradient-to-r from-[#1e1b4b] via-[#31104b] to-[#7c3aed]"
+          : "bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9]"
+      )}>
+        <div className="absolute right-0 top-0 w-96 h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/15 via-transparent to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#22C7E8] to-[#1455D9] text-white flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0 ring-4 ring-white/10">
-              <FlaskConical className="w-8 h-8 text-white" />
+            <div className={cn(
+              "w-16 h-16 rounded-2xl text-white flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0 ring-4 ring-white/10",
+              activeLabTab === 'communication'
+                ? "bg-gradient-to-tr from-[#9333EA] to-[#6366F1]"
+                : "bg-gradient-to-tr from-[#22C7E8] to-[#1455D9]"
+            )}>
+              {activeLabTab === 'communication' ? (
+                <Sparkles className="w-8 h-8 text-white" />
+              ) : (
+                <FlaskConical className="w-8 h-8 text-white" />
+              )}
             </div>
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/30 text-[10px] font-black uppercase tracking-wider">
-                  {details.labCode || 'LAB PRACTICAL'}
+                  {activeLabTab === 'communication' ? 'GE3271' : (details.labCode || 'AD2311')}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-bold">
                   {details.batch}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {activeLabTab === 'communication' ? 'Language & Communication Lab' : 'Department of AI & DS'}
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                {details.labName}
+                {activeLabTab === 'communication' ? 'Communication Skills Laboratory' : details.labName}
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 font-mono flex flex-wrap items-center gap-2 pt-0.5">
                 <span>Faculty: <strong>{facultyName}</strong></span>
@@ -333,9 +439,14 @@ export function FacultyLaboratoryView({
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               onClick={handleOpenCreate}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#22C7E8] to-[#0EA5E9] hover:brightness-105 text-[#071A3D] text-xs font-black flex items-center gap-2 transition-all shadow-[0_4px_16px_rgba(34,199,232,0.35)] cursor-pointer hover:scale-102"
+              className={cn(
+                "px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer hover:scale-102",
+                activeLabTab === 'communication'
+                  ? "bg-white text-purple-900 hover:bg-purple-50 shadow-[0_4px_16px_rgba(168,85,247,0.35)]"
+                  : "bg-gradient-to-r from-[#22C7E8] to-[#0EA5E9] hover:brightness-105 text-[#071A3D] shadow-[0_4px_16px_rgba(34,199,232,0.35)]"
+              )}
             >
-              <Plus className="w-4 h-4" /> Log Day&apos;s Lab Activity
+              <Plus className="w-4 h-4" /> {activeLabTab === 'communication' ? "Log Communication Activity" : "Log Day's Lab Activity"}
             </button>
             <button
               onClick={handlePrint}
@@ -352,23 +463,31 @@ export function FacultyLaboratoryView({
           <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
             <p className="text-[10px] text-slate-300 uppercase font-bold">Sessions Logged</p>
             <p className="text-xl font-black text-[#F4C430] mt-0.5">
-              {activities.length} Days
+              {filteredActivities.length} Days
             </p>
-            <p className="text-[10px] text-slate-300">Conducted Practicals</p>
+            <p className="text-[10px] text-slate-300">Conducted Sessions</p>
           </div>
 
           <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
-            <p className="text-[10px] text-slate-300 uppercase font-bold">Syllabus Experiments</p>
+            <p className="text-[10px] text-slate-300 uppercase font-bold">
+              {activeLabTab === 'communication' ? 'Lab Course Code' : 'Syllabus Experiments'}
+            </p>
             <p className="text-xl font-black text-emerald-300 mt-0.5">
-              {activities.filter((a) => a.activityType === 'Lab Experiment').length} / {presets.length}
+              {activeLabTab === 'communication'
+                ? 'GE3271'
+                : `${filteredActivities.filter((a) => a.activityType === 'Lab Experiment' || a.experimentNo).length} / ${presets.length}`}
             </p>
-            <p className="text-[10px] text-slate-300">Prescribed AU Syllabus</p>
+            <p className="text-[10px] text-slate-300">
+              {activeLabTab === 'communication' ? 'Anna University Syllabus' : 'Prescribed AU Syllabus'}
+            </p>
           </div>
 
           <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
-            <p className="text-[10px] text-slate-300 uppercase font-bold">Lab Trainer / Co-Incharge</p>
+            <p className="text-[10px] text-slate-300 uppercase font-bold">
+              {activeLabTab === 'communication' ? 'Trainer / In-charge' : 'Lab Trainer / Co-Incharge'}
+            </p>
             <p className="text-sm font-black text-cyan-300 mt-1 truncate">
-              {details.labTrainer || 'Designated Trainer'}
+              {details.labTrainer || (activeLabTab === 'communication' ? 'Language Trainer' : 'Designated Trainer')}
             </p>
             <p className="text-[10px] text-cyan-200">Practical Assistance</p>
           </div>
@@ -428,139 +547,155 @@ export function FacultyLaboratoryView({
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
             <Calendar className="w-5 h-5 text-[#1455D9]" />
-            <span>Day-wise Laboratory Topics &amp; Activities Conducted ({filteredActivities.length})</span>
+            <span>
+              {activeLabTab === 'communication'
+                ? `Day-wise Communication Activities Conducted (${filteredActivities.length})`
+                : `Day-wise Laboratory Topics & Activities Conducted (${filteredActivities.length})`}
+            </span>
           </h2>
           <span className="text-xs text-gray-500 font-mono">
-            {details.batch} · AI &amp; DS Laboratory
+            {details.batch} · {activeLabTab === 'communication' ? 'Communication Skills Lab' : 'AI & DS Laboratory'}
           </span>
         </div>
 
         {filteredActivities.length === 0 ? (
           <Card className="rounded-3xl border-gray-200 bg-white shadow-xs">
             <CardContent className="p-8 sm:p-12 text-center space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center mx-auto shadow-inner">
-                <FlaskConical className="w-8 h-8" />
+              <div
+                className={cn(
+                  'w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-inner',
+                  activeLabTab === 'communication' ? 'bg-purple-50 text-purple-600' : 'bg-cyan-50 text-cyan-600'
+                )}
+              >
+                {activeLabTab === 'communication' ? <Sparkles className="w-8 h-8" /> : <FlaskConical className="w-8 h-8" />}
               </div>
               <div className="max-w-md mx-auto space-y-1.5">
-                <h3 className="font-black text-lg text-[#071A3D]">No Laboratory Day Activities Logged Yet</h3>
+                <h3 className="font-black text-lg text-[#071A3D]">
+                  No {activeLabTab === 'communication' ? 'Communication Lab' : 'Laboratory Day'} Activities Logged Yet
+                </h3>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  Record each day&apos;s practical session topics, experiments conducted, trainer participation, and hands-on exercises for departmental compliance.
+                  {activeLabTab === 'communication'
+                    ? "Record each day's language practical session, communication exercises, student completions, and pending tasks."
+                    : "Record each day's practical session topics, experiments conducted, trainer participation, and hands-on exercises for departmental compliance."}
                 </p>
               </div>
               <div className="pt-2 flex justify-center gap-3">
                 <button
                   onClick={handleOpenCreate}
-                  className="px-5 py-2.5 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition-all shadow-xs inline-flex items-center gap-2 cursor-pointer"
+                  className={cn(
+                    'px-5 py-2.5 text-white rounded-xl text-xs font-bold transition-all shadow-xs inline-flex items-center gap-2 cursor-pointer',
+                    activeLabTab === 'communication' ? 'bg-purple-600 hover:bg-purple-700' : 'bg-[#1455D9] hover:bg-[#0e44b5]'
+                  )}
                 >
-                  <Plus className="w-4 h-4" /> Log Today&apos;s Session
+                  <Plus className="w-4 h-4" />{' '}
+                  {activeLabTab === 'communication' ? "Log Today's Communication Session" : "Log Today's Session"}
                 </button>
               </div>
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-4">
-            {filteredActivities.map((act) => (
-              <Card
-                key={act.id}
-                className="rounded-3xl border-gray-200 hover:shadow-md transition-all bg-white overflow-hidden group hover:border-[#1455D9]/40"
-              >
-                <CardContent className="p-5 sm:p-6 space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      {act.experimentNo && (
-                        <span className="px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] font-mono text-xs font-black">
-                          Ex. {act.experimentNo}
-                        </span>
-                      )}
-                      <span className="px-2.5 py-1 rounded-xl bg-gray-100 text-gray-700 font-bold text-xs flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                        {act.day}, {act.date}
-                      </span>
-                      {act.period && (
-                        <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-medium text-xs flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-purple-500" />
-                          {act.period}
-                        </span>
-                      )}
-                      <span
-                        className={cn(
-                          'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
-                          act.activityType === 'Lab Experiment' && 'bg-blue-100 text-blue-800',
-                          act.activityType === 'Hands-on Activity' && 'bg-emerald-100 text-emerald-800',
-                          act.activityType === 'Model Practical' && 'bg-purple-100 text-purple-800',
-                          act.activityType === 'Viva Voce' && 'bg-amber-100 text-amber-800',
-                          act.activityType === 'Project Review' && 'bg-rose-100 text-rose-800'
+            {filteredActivities.map((act) => {
+              const isCommAct = act.labName?.toLowerCase().includes('communication') || act.labCode === 'GE3271'
+              return (
+                <Card
+                  key={act.id}
+                  className="rounded-3xl border-gray-200 hover:shadow-md transition-all bg-white overflow-hidden group hover:border-[#1455D9]/40"
+                >
+                  <CardContent className="p-5 sm:p-6 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        {act.experimentNo && !isCommAct && (
+                          <span className="px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] font-mono text-xs font-black">
+                            Ex. {act.experimentNo}
+                          </span>
                         )}
-                      >
-                        {act.activityType}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
-                          act.status === 'completed' && 'bg-emerald-500/15 text-emerald-700 border border-emerald-300',
-                          act.status === 'in_progress' && 'bg-blue-500/15 text-blue-700 border border-blue-300 animate-pulse',
-                          act.status === 'scheduled' && 'bg-amber-500/15 text-amber-700 border border-amber-300'
+                        <span className="px-2.5 py-1 rounded-xl bg-gray-100 text-gray-700 font-bold text-xs flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                          {act.day}, {act.date}
+                        </span>
+                        {act.period && (
+                          <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-medium text-xs flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-purple-500" />
+                            {act.period}
+                          </span>
                         )}
-                      >
-                        {act.status}
-                      </span>
-                      <button
-                        onClick={() => handleOpenEdit(act)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
-                        title="Edit Activity"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(act.id, act.experimentName)}
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                        title="Delete Log"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+                        <span
+                          className={cn(
+                            'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
+                            isCommAct
+                              ? 'bg-purple-100 text-purple-800'
+                              : 'bg-blue-100 text-blue-800'
+                          )}
+                        >
+                          {isCommAct ? 'Communication' : act.activityType}
+                        </span>
+                      </div>
 
-                  {/* Title & Covered Topics */}
-                  <div className="space-y-2">
-                    <h3 className="text-base sm:text-lg font-black text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
-                      {act.experimentName}
-                    </h3>
-                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-gray-100">
-                      <p className="text-[11px] font-bold text-gray-500 uppercase mb-1">Topics &amp; Practical Activity Held on the Day:</p>
-                      <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
-                        {act.topicsCovered}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenEdit(act)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                          title="Edit Activity"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(act.id, act.experimentName)}
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Delete Log"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Footer Meta: Tools, Trainer, Remarks */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 text-xs">
-                    {act.toolsUsed && (
-                      <div className="flex items-center gap-1.5 text-gray-600">
-                        <Code2 className="w-4 h-4 text-purple-600 shrink-0" />
-                        <span className="truncate"><strong>Tools:</strong> {act.toolsUsed}</span>
+                    {/* Title & Covered Topics */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base sm:text-lg font-black text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
+                          {act.experimentName}
+                        </h3>
                       </div>
-                    )}
-                    {act.labTrainer && (
-                      <div className="flex items-center gap-1.5 text-gray-600">
-                        <UserCheck className="w-4 h-4 text-cyan-600 shrink-0" />
-                        <span className="truncate"><strong>Trainer:</strong> {act.labTrainer}</span>
+                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-gray-100">
+                        <p className="text-[11px] font-bold text-gray-500 uppercase mb-1">
+                          {isCommAct ? "Today's Topics:" : "Topics & Practical Activity Held on the Day:"}
+                        </p>
+                        <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
+                          {act.topicsCovered}
+                        </p>
                       </div>
-                    )}
-                    {act.attendanceCount && (
-                      <div className="flex items-center gap-1.5 text-gray-600">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span><strong>Attendance:</strong> {act.attendanceCount} Students Present</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+
+                    {/* Activity Meta / Progress */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
+                      {act.attendanceCount !== null && act.attendanceCount !== undefined && (
+                        <div className="flex items-center gap-1.5 text-gray-600">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>
+                            <strong>
+                              {isCommAct ? 'Completed Activity:' : 'Students Present / Attendance:'}
+                            </strong>{' '}
+                            {act.attendanceCount} Students
+                          </span>
+                        </div>
+                      )}
+                      {act.remarks && (
+                        <div className="flex items-center gap-1.5 text-gray-600">
+                          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>
+                            <strong>
+                              {isCommAct ? 'Others Working On That:' : 'Remarks / Other Work:'}
+                            </strong>{' '}
+                            {act.remarks}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         )}
       </div>
@@ -571,15 +706,30 @@ export function FacultyLaboratoryView({
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
             <div className="p-5 sm:p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shadow-md">
-                  <FlaskConical className="w-5 h-5" />
+                <div
+                  className={cn(
+                    'w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-md',
+                    activeLabTab === 'communication'
+                      ? 'bg-gradient-to-tr from-purple-600 to-indigo-500'
+                      : 'bg-gradient-to-tr from-[#1455D9] to-[#22C7E8]'
+                  )}
+                >
+                  {activeLabTab === 'communication' ? <Sparkles className="w-5 h-5" /> : <FlaskConical className="w-5 h-5" />}
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-[#071A3D]">
-                    {editingActivity ? 'Edit Lab Day Activity' : 'Log Day\'s Laboratory Practical & Topics'}
+                    {editingActivity
+                      ? activeLabTab === 'communication'
+                        ? 'Edit Communication Lab Activity'
+                        : 'Edit Lab Day Activity'
+                      : activeLabTab === 'communication'
+                      ? 'Log Communication Lab Activity'
+                      : "Log Day's Laboratory Practical & Topics"}
                   </h2>
                   <p className="text-xs text-gray-400 font-mono">
-                    {details.labName} ({details.batch})
+                    {activeLabTab === 'communication'
+                      ? 'Communication Skills Laboratory (GE3271)'
+                      : `${details.labName} (${details.labCode})`}
                   </p>
                 </div>
               </div>
@@ -632,64 +782,130 @@ export function FacultyLaboratoryView({
                 </div>
               </div>
 
-              {/* Experiment Number and Title */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Experiment #
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.experimentNo}
-                    onChange={(e) => setFormData({ ...formData, experimentNo: e.target.value })}
-                    placeholder="e.g. 1"
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                  />
-                </div>
-                <div className="sm:col-span-3">
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Experiment / Practical Activity Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.experimentName}
-                    onChange={(e) => setFormData({ ...formData, experimentName: e.target.value })}
-                    placeholder="e.g. Implementation of A* Heuristic Search Algorithm"
-                    className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                  />
-                </div>
-              </div>
+              {/* Specific fields for Communication Lab vs AI & DS Lab */}
+              {activeLabTab === 'communication' ? (
+                <>
+                  {/* Today's Topics */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Today&apos;s Topics *
+                    </label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={formData.topicsCovered}
+                      onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
+                      placeholder="e.g. Group discussion etiquette, body language, phonetics pronunciation drills..."
+                      className="w-full p-3 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none leading-relaxed"
+                    />
+                  </div>
 
-              {/* Topics & Activities Conducted On the Day (Required) */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
-                  <span>Topics &amp; Practical Activity Held on the Day *</span>
-                  <span className="text-[10px] text-gray-400 font-normal">Mention practical coverage &amp; code tasks</span>
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={formData.topicsCovered}
-                  onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
-                  placeholder="Describe the exact syllabus topics taught, programming exercises implemented by students, problems solved, and viva questions covered during this session..."
-                  className="w-full p-3 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none leading-relaxed"
-                />
-              </div>
+                  {/* Activity Name */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Activity Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.experimentName}
+                      onChange={(e) => setFormData({ ...formData, experimentName: e.target.value })}
+                      placeholder="e.g. Mock Interview Simulation / JAM (Just-A-Minute) Session"
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                    />
+                  </div>
 
-              {/* Attendance Count */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Students Present / Attendance Count
-                </label>
-                <input
-                  type="number"
-                  value={formData.attendanceCount}
-                  onChange={(e) => setFormData({ ...formData, attendanceCount: e.target.value })}
-                  placeholder="e.g. 58"
-                  className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
-                />
-              </div>
+                  {/* How Many Completed Activity & Others Working On That */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        How Many Completed Activity
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.attendanceCount}
+                        onChange={(e) => setFormData({ ...formData, attendanceCount: e.target.value })}
+                        placeholder="e.g. 52"
+                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        Others Working on That
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.remarks}
+                        onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                        placeholder="e.g. 6 students preparing presentation slides"
+                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Experiment Number and Title */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        Experiment #
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.experimentNo}
+                        onChange={(e) => setFormData({ ...formData, experimentNo: e.target.value })}
+                        placeholder="e.g. 1"
+                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <label className="block text-xs font-bold text-gray-700 mb-1">
+                        Experiment / Practical Activity Title *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.experimentName}
+                        onChange={(e) => setFormData({ ...formData, experimentName: e.target.value })}
+                        placeholder="e.g. Implementation of A* Heuristic Search Algorithm"
+                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Topics & Practical Activity Held on the Day */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
+                      <span>Topics &amp; Practical Activity Held on the Day *</span>
+                      <span className="text-[10px] text-gray-400 font-normal">Mention practical coverage &amp; code tasks</span>
+                    </label>
+                    <textarea
+                      required
+                      rows={4}
+                      value={formData.topicsCovered}
+                      onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
+                      placeholder="Describe the exact syllabus topics taught, programming exercises implemented by students, problems solved, and viva questions covered during this session..."
+                      className="w-full p-3 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Students Present / Attendance Count */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      Students Present / Attendance Count
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.attendanceCount}
+                      onChange={(e) => setFormData({ ...formData, attendanceCount: e.target.value })}
+                      placeholder="e.g. 58"
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Actions */}
               <div className="pt-4 flex items-center justify-end gap-2.5 border-t border-gray-100">
@@ -705,7 +921,7 @@ export function FacultyLaboratoryView({
                   disabled={saving}
                   className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {saving ? 'Saving Log...' : editingActivity ? 'Update Activity' : 'Save Day\'s Activity'}
+                  {saving ? 'Saving Log...' : editingActivity ? 'Update Activity' : "Save Day's Activity"}
                 </button>
               </div>
             </form>
