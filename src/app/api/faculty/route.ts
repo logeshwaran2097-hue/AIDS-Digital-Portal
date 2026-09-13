@@ -57,7 +57,7 @@ export async function GET(request: Request) {
             advisorSem: f.advisorSem || null,
             advisorSec: f.advisorSec || null,
             facultyType: f.facultyType || 'both',
-            labTrainer: f.labTrainer || null,
+            labTrainer: (f as any).labTrainer || null,
             status: u?.status || 'active',
           }
         })
@@ -215,8 +215,8 @@ export async function POST(request: Request) {
         advisorSem: cleanAdvisorSem,
         advisorSec: cleanAdvisorSec,
         facultyType: facultyType || 'both',
-        labTrainer: labTrainer ? String(labTrainer).trim() : null,
-      },
+        ...(labTrainer !== undefined ? { labTrainer: labTrainer ? String(labTrainer).trim() : null } : {}),
+      } as any,
       create: {
         userId: user.id,
         facultyId: fid,
@@ -235,8 +235,8 @@ export async function POST(request: Request) {
         advisorSem: cleanAdvisorSem,
         advisorSec: cleanAdvisorSec,
         facultyType: facultyType || 'both',
-        labTrainer: labTrainer ? String(labTrainer).trim() : null,
-      },
+        ...(labTrainer !== undefined ? { labTrainer: labTrainer ? String(labTrainer).trim() : null } : {}),
+      } as any,
     })
 
     let subjectsArr: string[] = []
@@ -293,7 +293,7 @@ export async function POST(request: Request) {
         advisorSem: faculty.advisorSem,
         advisorSec: faculty.advisorSec,
         facultyType: faculty.facultyType,
-        labTrainer: faculty.labTrainer,
+        labTrainer: (faculty as any).labTrainer || null,
         status: user.status,
       },
       message: 'Faculty registered successfully in database',
