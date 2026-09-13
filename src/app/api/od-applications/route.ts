@@ -409,7 +409,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const session = await getSession()
-    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin')) {
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 

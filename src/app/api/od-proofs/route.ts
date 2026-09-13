@@ -492,7 +492,7 @@ export async function POST(request: Request) {
 
     // 6. SUPER ADMIN: EXECUTIVE OVERRIDE / SANCTION
     if (action === 'ADMIN_SANCTION' || action === 'ADMIN_APPROVE') {
-      if (session.role !== 'admin') {
+      if (session.role !== 'admin' && session.role !== 'super_admin') {
         return NextResponse.json({ success: false, message: 'Admin authorization required' }, { status: 403 })
       }
 
@@ -547,7 +547,7 @@ export async function POST(request: Request) {
 
     // 7. SUPER ADMIN: REJECT / REQUEST RESUBMISSION
     if (action === 'ADMIN_REJECT') {
-      if (session.role !== 'admin') {
+      if (session.role !== 'admin' && session.role !== 'super_admin') {
         return NextResponse.json({ success: false, message: 'Admin authorization required' }, { status: 403 })
       }
 
@@ -583,7 +583,7 @@ export async function POST(request: Request) {
 
     // 8. SUPER ADMIN: DELETE RECORD
     if (action === 'ADMIN_DELETE') {
-      if (session.role !== 'admin') {
+      if (session.role !== 'admin' && session.role !== 'super_admin') {
         return NextResponse.json({ success: false, message: 'Admin authorization required' }, { status: 403 })
       }
 
@@ -621,7 +621,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
       return NextResponse.json({ success: false, message: 'Admin access required' }, { status: 403 })
     }
 

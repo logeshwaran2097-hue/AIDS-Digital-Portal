@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
       return NextResponse.json({ error: 'Unauthorized. Admin privileges required.' }, { status: 401 })
     }
 
@@ -37,7 +37,7 @@ export async function DELETE(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
       return NextResponse.json({ error: 'Unauthorized. Admin privileges required.' }, { status: 401 })
     }
 

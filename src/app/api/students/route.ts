@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized. Only administrators can create student records.' },
         { status: 403 }
@@ -578,7 +578,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const session = await getSession()
-    if (!session || session.role !== 'admin') {
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized. Only administrators can delete student records.' },
         { status: 403 }

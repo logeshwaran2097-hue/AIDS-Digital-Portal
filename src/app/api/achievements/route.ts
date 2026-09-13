@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'hod')) {
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
