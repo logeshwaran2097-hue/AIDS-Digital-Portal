@@ -1,0 +1,447 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070B19" />
+      <stop offset="50%" stop-color="#0B132B" />
+      <stop offset="100%" stop-color="#050814" />
+    </linearGradient>
+
+    <linearGradient id="cardGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#0F172A" stop-opacity="0.9" />
+    </linearGradient>
+
+    <!-- Glowing Line Gradients -->
+    <linearGradient id="flowCyan" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.2" />
+      <stop offset="50%" stop-color="#38BDF8" stop-opacity="1" />
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.3" />
+    </linearGradient>
+
+    <linearGradient id="flowPurple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#818CF8" />
+      <stop offset="100%" stop-color="#C084FC" />
+    </linearGradient>
+
+    <linearGradient id="accentBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+
+    <linearGradient id="accentEmerald" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#10B981" />
+    </linearGradient>
+
+    <linearGradient id="accentPurple" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7C3AED" />
+      <stop offset="100%" stop-color="#A855F7" />
+    </linearGradient>
+
+    <linearGradient id="accentAmber" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#D97706" />
+      <stop offset="100%" stop-color="#FBBF24" />
+    </linearGradient>
+
+    <linearGradient id="accentRose" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E11D48" />
+      <stop offset="100%" stop-color="#F43F5E" />
+    </linearGradient>
+
+    <!-- Filters for Neon Glow -->
+    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glowPurple" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="7" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glowGreen" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Grid Pattern -->
+    <pattern id="cyberGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1E293B" stroke-width="0.75" stroke-opacity="0.4" />
+      <circle cx="40" cy="40" r="1" fill="#38BDF8" fill-opacity="0.2" />
+    </pattern>
+
+    <style><![CDATA[]]></style>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1100" height="700" rx="16" fill="url(#bgGrad)" stroke="#1E293B" stroke-width="2" />
+  <rect width="1100" height="700" fill="url(#cyberGrid)" />
+
+  <!-- Outer Neon Border Ambient Glow -->
+  <rect x="6" y="6" width="1088" height="688" rx="14" fill="none" stroke="#38BDF8" stroke-opacity="0.15" stroke-width="1.5" />
+
+  <!-- HEADER BAR -->
+  <g id="HeaderBar">
+    <rect x="25" y="20" width="1050" height="52" rx="10" fill="#0F172A" fill-opacity="0.85" stroke="#334155" stroke-width="1" />
+    
+    <!-- Status Indicator -->
+    <circle cx="50" cy="46" r="6" fill="#10B981" />
+    <circle cx="50" cy="46" r="10" fill="none" stroke="#10B981" stroke-width="1.5" opacity="0.6">
+      <animate attributeName="r" values="6;14" dur="2s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.8;0" dur="2s" repeatCount="indefinite" />
+    </circle>
+    
+    <text x="70" y="51" fill="#FFFFFF" font-size="16" font-weight="700" letter-spacing="0.5">V.S.B. AI &amp; DS · ENTERPRISE HIGH-AVAILABILITY CLOUD ARCHITECTURE</text>
+    <text x="805" y="50" fill="#38BDF8" font-size="12" font-weight="600" class="mono">LIVE CLOUD SYNCHRONIZED</text>
+    <rect x="980" y="34" width="80" height="24" rx="12" fill="#0369A1" fill-opacity="0.4" stroke="#0284C7" stroke-width="1" />
+    <text x="1020" y="50" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle" class="mono">ACTIVE</text>
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- LAYER 1: CLIENT PRESENTATION (LEFT: X=40 to 220)    -->
+  <!-- ==================================================== -->
+  <g id="Layer1_Clients">
+    <rect x="35" y="90" width="200" height="540" rx="12" fill="#0B1329" fill-opacity="0.75" stroke="#1E293B" stroke-dasharray="4,4" stroke-width="1.5" />
+    <text x="135" y="118" fill="#94A3B8" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="1">1. MULTI-ROLE CLIENTS</text>
+    <text x="135" y="134" fill="#64748B" font-size="10" text-anchor="middle">Next.js 14 App Router · PWA · APK</text>
+
+    <!-- Student Card -->
+    <g transform="translate(48, 150)">
+      <rect width="174" height="96" rx="8" fill="url(#cardGrad1)" stroke="#38BDF8" stroke-width="1.5" class="pulse-glow" />
+      <rect x="8" y="10" width="30" height="30" rx="6" fill="#0284C7" fill-opacity="0.3" />
+      <text x="23" y="30" fill="#38BDF8" font-size="16" text-anchor="middle">🎓</text>
+      <text x="46" y="26" fill="#FFFFFF" font-size="13" font-weight="700">Student Portal</text>
+      <text x="46" y="40" fill="#38BDF8" font-size="10" class="mono">/dashboard</text>
+      <text x="12" y="65" fill="#94A3B8" font-size="9.5">· 8-Period Attendance Gauge</text>
+      <text x="12" y="80" fill="#94A3B8" font-size="9.5">· Geotagged OD Submission</text>
+    </g>
+
+    <!-- Faculty Card -->
+    <g transform="translate(48, 265)">
+      <rect width="174" height="96" rx="8" fill="url(#cardGrad1)" stroke="#10B981" stroke-width="1.5" class="pulse-glow-green" />
+      <rect x="8" y="10" width="30" height="30" rx="6" fill="#059669" fill-opacity="0.3" />
+      <text x="23" y="30" fill="#10B981" font-size="16" text-anchor="middle">👨‍🏫</text>
+      <text x="46" y="26" fill="#FFFFFF" font-size="13" font-weight="700">Faculty &amp; Advisor</text>
+      <text x="46" y="40" fill="#10B981" font-size="10" class="mono">/faculty-dashboard</text>
+      <text x="12" y="65" fill="#94A3B8" font-size="9.5">· Period Roll Call Register</text>
+      <text x="12" y="80" fill="#94A3B8" font-size="9.5">· OD Verification Desk</text>
+    </g>
+
+    <!-- HOD Card -->
+    <g transform="translate(48, 380)">
+      <rect width="174" height="96" rx="8" fill="url(#cardGrad1)" stroke="#A855F7" stroke-width="1.5" class="pulse-glow-purple" />
+      <rect x="8" y="10" width="30" height="30" rx="6" fill="#7C3AED" fill-opacity="0.3" />
+      <text x="23" y="30" fill="#A855F7" font-size="16" text-anchor="middle">👑</text>
+      <text x="46" y="26" fill="#FFFFFF" font-size="13" font-weight="700">HOD Governance</text>
+      <text x="46" y="40" fill="#C084FC" font-size="10" class="mono">/hod-dashboard</text>
+      <text x="12" y="65" fill="#94A3B8" font-size="9.5">· Department Analytics Hub</text>
+      <text x="12" y="80" fill="#94A3B8" font-size="9.5">· Final Sign-Off &amp; Approvals</text>
+    </g>
+
+    <!-- Admin Card -->
+    <g transform="translate(48, 495)">
+      <rect width="174" height="96" rx="8" fill="url(#cardGrad1)" stroke="#F59E0B" stroke-width="1.5" />
+      <rect x="8" y="10" width="30" height="30" rx="6" fill="#D97706" fill-opacity="0.3" />
+      <text x="23" y="30" fill="#FBBF24" font-size="16" text-anchor="middle">🛡️</text>
+      <text x="46" y="26" fill="#FFFFFF" font-size="13" font-weight="700">Admin Console</text>
+      <text x="46" y="40" fill="#FBBF24" font-size="10" class="mono">/admin</text>
+      <text x="12" y="65" fill="#94A3B8" font-size="9.5">· Master Proofs Inspector</text>
+      <text x="12" y="80" fill="#94A3B8" font-size="9.5">· Pure Data Guarantee Engine</text>
+    </g>
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- CONNECTORS: LAYER 1 -> LAYER 2                       -->
+  <!-- ==================================================== -->
+  <g id="Connectors_L1_L2">
+    <!-- Student Stream -->
+    <path d="M 222 198 L 290 198 L 290 320 L 320 320" fill="none" stroke="#0284C7" stroke-width="2" opacity="0.4" />
+    <path d="M 222 198 L 290 198 L 290 320 L 320 320" fill="none" stroke="#38BDF8" stroke-width="2.5" class="stream-line" />
+    
+    <!-- Faculty Stream -->
+    <path d="M 222 313 L 320 320" fill="none" stroke="#059669" stroke-width="2" opacity="0.4" />
+    <path d="M 222 313 L 320 320" fill="none" stroke="#10B981" stroke-width="2.5" class="stream-fast" />
+
+    <!-- HOD Stream -->
+    <path d="M 222 428 L 290 428 L 290 360 L 320 360" fill="none" stroke="#7C3AED" stroke-width="2" opacity="0.4" />
+    <path d="M 222 428 L 290 428 L 290 360 L 320 360" fill="none" stroke="#A855F7" stroke-width="2.5" class="stream-line" />
+
+    <!-- Admin Stream -->
+    <path d="M 222 543 L 305 543 L 305 380 L 320 380" fill="none" stroke="#D97706" stroke-width="2" opacity="0.4" />
+    <path d="M 222 543 L 305 543 L 305 380 L 320 380" fill="none" stroke="#FBBF24" stroke-width="2.5" class="stream-line-reverse" />
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- LAYER 2: SECURITY and GATEWAY (CENTER-LEFT: X=320)     -->
+  <!-- ==================================================== -->
+  <g id="Layer2_Gateway">
+    <rect x="320" y="115" width="205" height="490" rx="14" fill="#0C152E" fill-opacity="0.9" stroke="#6366F1" stroke-width="2" class="pulse-glow-purple" />
+    
+    <!-- Gateway Header -->
+    <rect x="328" y="125" width="189" height="36" rx="8" fill="#4338CA" fill-opacity="0.4" />
+    <text x="422" y="142" fill="#FFFFFF" font-size="12" font-weight="700" text-anchor="middle">2. SECURITY GATEWAY</text>
+    <text x="422" y="154" fill="#A5B4FC" font-size="9" text-anchor="middle" class="mono">Next.js Edge Middleware</text>
+
+    <!-- Token Guardian -->
+    <g transform="translate(332, 175)">
+      <rect width="181" height="85" rx="8" fill="#1E1B4B" fill-opacity="0.8" stroke="#818CF8" stroke-width="1" />
+      <text x="14" y="24" fill="#C7D2FE" font-size="11" font-weight="700">🔐 JWT &amp; Jose RBAC Guard</text>
+      <text x="14" y="44" fill="#94A3B8" font-size="9.5">· HttpOnly Signed Session</text>
+      <text x="14" y="59" fill="#94A3B8" font-size="9.5">· Multi-Role Path Isolation</text>
+      <text x="14" y="74" fill="#10B981" font-size="9" class="mono">✔ 100% Request Interception</text>
+    </g>
+
+    <!-- Onboarding Enforcer -->
+    <g transform="translate(332, 275)">
+      <rect width="181" height="98" rx="8" fill="#1E1B4B" fill-opacity="0.8" stroke="#F43F5E" stroke-width="1" />
+      <text x="14" y="24" fill="#FECDD3" font-size="11" font-weight="700">⚡ Mandatory Onboarding</text>
+      <text x="14" y="42" fill="#94A3B8" font-size="9.5">· Non-Dismissible Security</text>
+      <text x="14" y="57" fill="#94A3B8" font-size="9.5">· Permanent Password Init</text>
+      <text x="14" y="72" fill="#94A3B8" font-size="9.5">· Compulsory Bus / Hostel Form</text>
+      <text x="14" y="88" fill="#F43F5E" font-size="9" class="mono">🔒 No Dismissal Allowed</text>
+    </g>
+
+    <!-- 2FA OTP Engine -->
+    <g transform="translate(332, 388)">
+      <rect width="181" height="88" rx="8" fill="#1E1B4B" fill-opacity="0.8" stroke="#38BDF8" stroke-width="1" />
+      <text x="14" y="24" fill="#BAE6FD" font-size="11" font-weight="700">📧 2-Step Email OTP Engine</text>
+      <text x="14" y="43" fill="#94A3B8" font-size="9.5">· Cryptographic 6-Digit Hash</text>
+      <text x="14" y="58" fill="#94A3B8" font-size="9.5">· 10-Minute Expiry Window</text>
+      <text x="14" y="74" fill="#38BDF8" font-size="9" class="mono">🛡️ SMTP &amp; Nodemailer Auth</text>
+    </g>
+
+    <!-- Rate Limiting and Audit -->
+    <g transform="translate(332, 490)">
+      <rect width="181" height="95" rx="8" fill="#1E1B4B" fill-opacity="0.8" stroke="#34D399" stroke-width="1" />
+      <text x="14" y="24" fill="#A7F3D0" font-size="11" font-weight="700">📜 Audit &amp; Event Stream</text>
+      <text x="14" y="42" fill="#94A3B8" font-size="9.5">· Real-Time Security Log</text>
+      <text x="14" y="57" fill="#94A3B8" font-size="9.5">· IP &amp; User-Agent Tracker</text>
+      <text x="14" y="74" fill="#10B981" font-size="9" class="mono">⚡ Zero-Trust Verification</text>
+    </g>
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- CONNECTORS: LAYER 2 -> LAYER 3                       -->
+  <!-- ==================================================== -->
+  <g id="Connectors_L2_L3">
+    <!-- Main Bus Trunk Line -->
+    <path d="M 525 360 L 595 360" fill="none" stroke="#6366F1" stroke-width="4" opacity="0.5" />
+    <path d="M 525 360 L 595 360" fill="none" stroke="#A855F7" stroke-width="3" class="stream-fast" />
+
+    <!-- Branch Lines to Services -->
+    <path d="M 560 360 L 560 160 L 595 160" fill="none" stroke="#38BDF8" stroke-width="2" class="stream-line" />
+    <path d="M 560 360 L 560 255 L 595 255" fill="none" stroke="#10B981" stroke-width="2" class="stream-line" />
+    <path d="M 560 360 L 560 460 L 595 460" fill="none" stroke="#F59E0B" stroke-width="2" class="stream-line" />
+    <path d="M 560 360 L 560 555 L 595 555" fill="none" stroke="#EC4899" stroke-width="2" class="stream-line" />
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- LAYER 3: CORE SERVICE WORKFLOWS (X=595 to 815)       -->
+  <!-- ==================================================== -->
+  <g id="Layer3_Services">
+    <rect x="595" y="90" width="230" height="540" rx="12" fill="#0B1329" fill-opacity="0.75" stroke="#1E293B" stroke-dasharray="4,4" stroke-width="1.5" />
+    <text x="710" y="118" fill="#94A3B8" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="1">3. CORE MICRO-ENGINES</text>
+    <text x="710" y="134" fill="#64748B" font-size="10" text-anchor="middle">Deterministic Logic · Zero Mock</text>
+
+    <!-- 8-Period Attendance Service -->
+    <g transform="translate(607, 145)">
+      <rect width="206" height="88" rx="8" fill="url(#cardGrad1)" stroke="#38BDF8" stroke-width="1.5" />
+      <circle cx="18" cy="18" r="8" fill="#0284C7" />
+      <text x="18" y="22" fill="#FFFFFF" font-size="10" text-anchor="middle" font-weight="700">1</text>
+      <text x="34" y="22" fill="#FFFFFF" font-size="12" font-weight="700">8-Period Attendance Matrix</text>
+      <text x="12" y="44" fill="#94A3B8" font-size="9.5">· Real-Time Daily Period Calculations</text>
+      <text x="12" y="59" fill="#94A3B8" font-size="9.5">· Instant &lt;75% Condonation Alerter</text>
+      <text x="12" y="74" fill="#38BDF8" font-size="9" class="mono">⏰ V.S.B. Master Bell Timings Sync</text>
+    </g>
+
+    <!-- Geotagged OD Verification -->
+    <g transform="translate(607, 243)">
+      <rect width="206" height="88" rx="8" fill="url(#cardGrad1)" stroke="#10B981" stroke-width="1.5" />
+      <circle cx="18" cy="18" r="8" fill="#059669" />
+      <text x="18" y="22" fill="#FFFFFF" font-size="10" text-anchor="middle" font-weight="700">2</text>
+      <text x="34" y="22" fill="#FFFFFF" font-size="12" font-weight="700">Geotagged OD Proof Engine</text>
+      <text x="12" y="44" fill="#94A3B8" font-size="9.5">· EXIF GPS Coordinate Extraction</text>
+      <text x="12" y="59" fill="#94A3B8" font-size="9.5">· Google Maps Pin &amp; Timestamp Hash</text>
+      <text x="12" y="74" fill="#10B981" font-size="9" class="mono">📍 Advisor ➔ HOD 2-Tier Approval</text>
+    </g>
+
+    <!-- Capstone Projects Hub -->
+    <g transform="translate(607, 341)">
+      <rect width="206" height="88" rx="8" fill="url(#cardGrad1)" stroke="#818CF8" stroke-width="1.5" />
+      <circle cx="18" cy="18" r="8" fill="#4F46E5" />
+      <text x="18" y="22" fill="#FFFFFF" font-size="10" text-anchor="middle" font-weight="700">3</text>
+      <text x="34" y="22" fill="#FFFFFF" font-size="12" font-weight="700">Capstone Projects Pipeline</text>
+      <text x="12" y="44" fill="#94A3B8" font-size="9.5">· AD2614, AD2711 &amp; AD2811 Hub</text>
+      <text x="12" y="59" fill="#94A3B8" font-size="9.5">· Milestone Reviews &amp; Supervisor Alloc</text>
+      <text x="12" y="74" fill="#818CF8" font-size="9" class="mono">🚀 Abstract, Repo &amp; Demo Verification</text>
+    </g>
+
+    <!-- AI NLP Assistant -->
+    <g transform="translate(607, 439)">
+      <rect width="206" height="88" rx="8" fill="url(#cardGrad1)" stroke="#F59E0B" stroke-width="1.5" />
+      <circle cx="18" cy="18" r="8" fill="#D97706" />
+      <text x="18" y="22" fill="#FFFFFF" font-size="10" text-anchor="middle" font-weight="700">4</text>
+      <text x="34" y="22" fill="#FFFFFF" font-size="12" font-weight="700">PostgreSQL-Grounded AI</text>
+      <text x="12" y="44" fill="#94A3B8" font-size="9.5">· Natural Language DB Queries</text>
+      <text x="12" y="59" fill="#94A3B8" font-size="9.5">· Google Gemini NLP Intelligence</text>
+      <text x="12" y="74" fill="#FBBF24" font-size="9" class="mono">🤖 Pure Data Verification Fallback</text>
+    </g>
+
+    <!-- Document and Report Engine -->
+    <g transform="translate(607, 537)">
+      <rect width="206" height="82" rx="8" fill="url(#cardGrad1)" stroke="#EC4899" stroke-width="1.5" />
+      <circle cx="18" cy="18" r="8" fill="#DB2777" />
+      <text x="18" y="22" fill="#FFFFFF" font-size="10" text-anchor="middle" font-weight="700">5</text>
+      <text x="34" y="22" fill="#FFFFFF" font-size="12" font-weight="700">Official PDF &amp; Report Engine</text>
+      <text x="12" y="44" fill="#94A3B8" font-size="9.5">· College Watermark Vector Stamps</text>
+      <text x="12" y="59" fill="#94A3B8" font-size="9.5">· Master Excel / CSV Roll Calls</text>
+      <text x="12" y="74" fill="#F472B6" font-size="9" class="mono">📄 jsPDF Vector Document Render</text>
+    </g>
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- CONNECTORS: LAYER 3 -> LAYER 4 (DATABASE)            -->
+  <!-- ==================================================== -->
+  <g id="Connectors_L3_L4">
+    <!-- Stream line from engines to database -->
+    <path d="M 813 189 L 880 189 L 880 340 L 910 340" fill="none" stroke="#38BDF8" stroke-width="2.5" class="stream-line" />
+    <path d="M 813 287 L 850 287 L 850 350 L 910 350" fill="none" stroke="#10B981" stroke-width="2.5" class="stream-fast" />
+    <path d="M 813 385 L 910 360" fill="none" stroke="#818CF8" stroke-width="2" class="stream-line-reverse" />
+    <path d="M 813 483 L 850 483 L 850 370 L 910 370" fill="none" stroke="#F59E0B" stroke-width="2.5" class="stream-line" />
+    <path d="M 813 578 L 880 578 L 880 380 L 910 380" fill="none" stroke="#EC4899" stroke-width="2.5" class="stream-line-reverse" />
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- LAYER 4: CLOUD PERSISTENCE and DEPLOYMENT (X=910)      -->
+  <!-- ==================================================== -->
+  <g id="Layer4_Persistence">
+    <!-- Database Container -->
+    <rect x="910" y="115" width="165" height="490" rx="14" fill="#0C152E" fill-opacity="0.9" stroke="#38BDF8" stroke-width="2" class="pulse-glow" />
+
+    <!-- DB Header -->
+    <rect x="918" y="125" width="149" height="36" rx="8" fill="#0284C7" fill-opacity="0.3" />
+    <text x="992" y="142" fill="#FFFFFF" font-size="12" font-weight="700" text-anchor="middle">4. PERSISTENCE</text>
+    <text x="992" y="154" fill="#7DD3FC" font-size="9" text-anchor="middle" class="mono">Cloud PostgreSQL</text>
+
+    <!-- PostgreSQL Cylinder Graphics -->
+    <g transform="translate(930, 180)">
+      <!-- Disc Top -->
+      <ellipse cx="62" cy="16" rx="55" ry="14" fill="#0284C7" stroke="#38BDF8" stroke-width="1.5" />
+      <path d="M 7 16 L 7 42 C 7 50, 117 50, 117 42 L 117 16" fill="#0369A1" stroke="#38BDF8" stroke-width="1.5" />
+      <ellipse cx="62" cy="42" rx="55" ry="14" fill="#0284C7" fill-opacity="0.5" stroke="#38BDF8" stroke-width="1.5" />
+      <!-- Disc Middle -->
+      <path d="M 7 42 L 7 68 C 7 76, 117 76, 117 68 L 117 42" fill="#075985" stroke="#38BDF8" stroke-width="1.5" />
+      <ellipse cx="62" cy="68" rx="55" ry="14" fill="#0284C7" fill-opacity="0.5" stroke="#38BDF8" stroke-width="1.5" />
+      <!-- Disc Bottom -->
+      <path d="M 7 68 L 7 94 C 7 102, 117 102, 117 94 L 117 68" fill="#0C4A6E" stroke="#38BDF8" stroke-width="1.5" />
+      <ellipse cx="62" cy="94" rx="55" ry="14" fill="#0369A1" stroke="#38BDF8" stroke-width="1.5" />
+
+      <text x="62" y="58" fill="#FFFFFF" font-size="11" font-weight="700" text-anchor="middle">Supabase Cloud</text>
+      <text x="62" y="72" fill="#BAE6FD" font-size="9" font-weight="600" text-anchor="middle">PostgreSQL 15</text>
+    </g>
+
+    <!-- Live Tables Spec -->
+    <g transform="translate(922, 295)">
+      <rect width="141" height="150" rx="6" fill="#082F49" fill-opacity="0.6" stroke="#0369A1" stroke-width="1" />
+      <text x="8" y="18" fill="#38BDF8" font-size="10" font-weight="700" class="mono">ACTIVE TABLES</text>
+      <line x1="8" y1="24" x2="133" y2="24" stroke="#0284C7" stroke-width="0.75" />
+      <text x="8" y="40" fill="#E2E8F0" font-size="9" class="mono">· User (RBAC)</text>
+      <text x="8" y="56" fill="#E2E8F0" font-size="9" class="mono">· Student &amp; Demog</text>
+      <text x="8" y="72" fill="#E2E8F0" font-size="9" class="mono">· Faculty &amp; Advisor</text>
+      <text x="8" y="88" fill="#E2E8F0" font-size="9" class="mono">· AttendanceRecord</text>
+      <text x="8" y="104" fill="#E2E8F0" font-size="9" class="mono">· ODProof &amp; Geotag</text>
+      <text x="8" y="120" fill="#E2E8F0" font-size="9" class="mono">· Subject &amp; Labs</text>
+      <text x="8" y="136" fill="#E2E8F0" font-size="9" class="mono">· ProjectMilestone</text>
+    </g>
+
+    <!-- Connection Pooling Specs -->
+    <g transform="translate(922, 458)">
+      <rect width="141" height="135" rx="6" fill="#082F49" fill-opacity="0.6" stroke="#0369A1" stroke-width="1" />
+      <text x="8" y="18" fill="#10B981" font-size="10" font-weight="700" class="mono">CONNECTION POOL</text>
+      <line x1="8" y1="24" x2="133" y2="24" stroke="#059669" stroke-width="0.75" />
+      <text x="8" y="40" fill="#CBD5E1" font-size="9">PgBouncer Pooled</text>
+      <text x="8" y="54" fill="#38BDF8" font-size="9" class="mono">Port: 6543 / 5432</text>
+      <text x="8" y="72" fill="#CBD5E1" font-size="9">ORM Layer:</text>
+      <text x="8" y="86" fill="#818CF8" font-size="9" class="mono">Prisma ORM 5.17</text>
+      <text x="8" y="104" fill="#10B981" font-size="9">Live Worker Engine:</text>
+      <text x="8" y="118" fill="#FBBF24" font-size="8.5" class="mono">Render Cloud Svc</text>
+    </g>
+  </g>
+
+  <!-- ==================================================== -->
+  <!-- FOOTER TICKER WITH ANIMATED METRICS                  -->
+  <!-- ==================================================== -->
+  <g id="FooterTicker">
+    <rect x="25" y="640" width="1050" height="42" rx="8" fill="#0B132B" stroke="#1E293B" stroke-width="1" />
+    
+    <!-- Moving light indicators -->
+    <circle cx="45" cy="661" r="4" fill="#38BDF8" class="traffic-dot-1" />
+    <circle cx="58" cy="661" r="4" fill="#818CF8" class="traffic-dot-2" />
+    <circle cx="71" cy="661" r="4" fill="#10B981" class="traffic-dot-3" />
+    <circle cx="84" cy="661" r="4" fill="#F59E0B" class="traffic-dot-4" />
+
+    <text x="105" y="666" fill="#94A3B8" font-size="11" class="mono">PIPELINE FLOW: </text>
+    <text x="210" y="666" fill="#38BDF8" font-size="11" font-weight="700" class="mono">NEXT.JS 14 (EDGE)</text>
+    <text x="345" y="666" fill="#64748B" font-size="11">➔</text>
+    <text x="365" y="666" fill="#A855F7" font-size="11" font-weight="700" class="mono">JWT / RBAC GATEWAY</text>
+    <text x="525" y="666" fill="#64748B" font-size="11">➔</text>
+    <text x="545" y="666" fill="#10B981" font-size="11" font-weight="700" class="mono">CORE MICRO-ENGINES</text>
+    <text x="710" y="666" fill="#64748B" font-size="11">➔</text>
+    <text x="730" y="666" fill="#FBBF24" font-size="11" font-weight="700" class="mono">POSTGRESQL (SUPABASE)</text>
+
+    <!-- Pure Data Badge -->
+    <rect x="915" y="647" width="150" height="28" rx="6" fill="#047857" fill-opacity="0.3" stroke="#10B981" stroke-width="1" />
+    <text x="990" y="666" fill="#A7F3D0" font-size="10" font-weight="700" text-anchor="middle" class="mono">🛡️ 100% PURE DATA</text>
+  </g>
+
+  <!-- Animated Moving Light Orbs Along Paths -->
+  <g id="LightPackets">
+    <!-- Layer 1 to Layer 2 -->
+    <circle r="4" fill="#38BDF8" filter="url(#glowCyan)">
+      <animateMotion path="M 222 198 L 290 198 L 290 320 L 320 320" dur="2.2s" repeatCount="indefinite" />
+    </circle>
+    <circle r="4" fill="#10B981" filter="url(#glowGreen)">
+      <animateMotion path="M 222 313 L 320 320" dur="1.8s" repeatCount="indefinite" />
+    </circle>
+    <circle r="4" fill="#C084FC" filter="url(#glowPurple)">
+      <animateMotion path="M 222 428 L 290 428 L 290 360 L 320 360" dur="2.5s" repeatCount="indefinite" />
+    </circle>
+    <circle r="4" fill="#FBBF24">
+      <animateMotion path="M 222 543 L 305 543 L 305 380 L 320 380" dur="2.6s" repeatCount="indefinite" />
+    </circle>
+
+    <!-- Layer 2 to Layer 3 -->
+    <circle r="4.5" fill="#818CF8" filter="url(#glowPurple)">
+      <animateMotion path="M 525 360 L 595 360" dur="1.2s" repeatCount="indefinite" />
+    </circle>
+    <circle r="3.5" fill="#38BDF8" filter="url(#glowCyan)">
+      <animateMotion path="M 560 360 L 560 160 L 595 160" dur="1.7s" repeatCount="indefinite" />
+    </circle>
+    <circle r="3.5" fill="#10B981" filter="url(#glowGreen)">
+      <animateMotion path="M 560 360 L 560 255 L 595 255" dur="1.6s" repeatCount="indefinite" />
+    </circle>
+    <circle r="3.5" fill="#FBBF24">
+      <animateMotion path="M 560 360 L 560 460 L 595 460" dur="1.9s" repeatCount="indefinite" />
+    </circle>
+    <circle r="3.5" fill="#F472B6">
+      <animateMotion path="M 560 360 L 560 555 L 595 555" dur="2.1s" repeatCount="indefinite" />
+    </circle>
+
+    <!-- Layer 3 to Layer 4 (Postgres) -->
+    <circle r="4" fill="#38BDF8" filter="url(#glowCyan)">
+      <animateMotion path="M 813 189 L 880 189 L 880 340 L 910 340" dur="1.9s" repeatCount="indefinite" />
+    </circle>
+    <circle r="4" fill="#10B981" filter="url(#glowGreen)">
+      <animateMotion path="M 813 287 L 850 287 L 850 350 L 910 350" dur="1.6s" repeatCount="indefinite" />
+    </circle>
+    <circle r="4" fill="#818CF8" filter="url(#glowPurple)">
+      <animateMotion path="M 813 385 L 910 360" dur="1.8s" repeatCount="indefinite" />
+    </circle>
+    <circle r="4" fill="#FBBF24">
+      <animateMotion path="M 813 483 L 850 483 L 850 370 L 910 370" dur="2.0s" repeatCount="indefinite" />
+    </circle>
+    <circle r="4" fill="#EC4899">
+      <animateMotion path="M 813 578 L 880 578 L 880 380 L 910 380" dur="2.2s" repeatCount="indefinite" />
+    </circle>
+  </g>
+
+</svg>
