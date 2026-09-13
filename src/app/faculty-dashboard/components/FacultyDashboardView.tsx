@@ -92,10 +92,10 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
     ...(isClassAdvisor
       ? [{ label: 'Class Students', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20 hover:bg-purple-500/20' }]
       : [
-          { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] border-[#1455D9]/20 hover:bg-[#1455D9]/20' },
-          { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' },
-          { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
-        ]),
+        { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] border-[#1455D9]/20 hover:bg-[#1455D9]/20' },
+        { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' },
+        { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
+      ]),
     { label: 'Capstone Projects', href: '/faculty-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 hover:bg-cyan-500/20' },
     { label: 'Department Events', href: '/faculty-dashboard/events', icon: <CalendarDays className="w-5 h-5" />, bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20 hover:bg-rose-500/20' },
     { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
@@ -142,7 +142,6 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           name: data?.user?.name || 'Faculty Member',
           email: data?.user?.email || '',
           phone: data?.user?.phone || '',
-          facultyId: data?.faculty?.facultyId || '',
           designation: data?.faculty?.designation || '',
           qualification: data?.faculty?.qualification || '',
           experience: data?.faculty?.experience || 0,

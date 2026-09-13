@@ -139,7 +139,7 @@ export function StaffOnboardingModal({
     let day = ''
     let month = ''
     let year = ''
-    if (initialData.dateOfBirth && !initialData.dateOfBirth.startsWith('1990-01-01')) {
+    if (initialData?.dateOfBirth && typeof initialData.dateOfBirth === 'string' && !initialData.dateOfBirth.startsWith('1990-01-01')) {
       const parts = initialData.dateOfBirth.split('T')[0].split('-')
       if (parts.length === 3) {
         year = parts[0]
@@ -150,16 +150,17 @@ export function StaffOnboardingModal({
         setDobYear(year)
       }
     }
+    const syncEmail = typeof initialData?.email === 'string' ? initialData.email : ''
     setForm((prev) => ({
       ...prev,
-      name: initialData.name || prev.name,
-      phone: initialData.phone || prev.phone,
+      name: initialData?.name || prev.name,
+      phone: initialData?.phone || prev.phone,
       dateOfBirth: year && month && day ? `${year}-${month}-${day}` : prev.dateOfBirth,
-      specialization: initialData.specialization || prev.specialization,
-      qualification: initialData.qualification || prev.qualification,
-      experience: initialData.experience ? String(initialData.experience) : prev.experience,
-      profileImage: initialData.profileImage || prev.profileImage,
-      email: prev.email || (initialData.email && !initialData.email.toLowerCase().includes('mock') ? initialData.email.trim() : ''),
+      specialization: initialData?.specialization || prev.specialization,
+      qualification: initialData?.qualification || prev.qualification,
+      experience: initialData?.experience ? String(initialData.experience) : prev.experience,
+      profileImage: initialData?.profileImage || prev.profileImage,
+      email: prev.email || (syncEmail && !syncEmail.toLowerCase().includes('mock') ? syncEmail.trim() : ''),
     }))
   }, [initialData])
 
