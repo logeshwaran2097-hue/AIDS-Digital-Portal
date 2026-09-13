@@ -609,16 +609,6 @@ export function StaffOnboardingModal({
                 ? 'CLASS ADVISOR VERIFICATION & SECURITY SETUP'
                 : 'FACULTY APPOINTMENT VERIFICATION & SECURITY SETUP'}
             </span>
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
-                title="Dismiss modal"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
           </div>
 
           <div className="flex items-center justify-between">
