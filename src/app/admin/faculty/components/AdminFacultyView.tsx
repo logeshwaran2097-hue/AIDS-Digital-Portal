@@ -363,6 +363,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [activeTheoryDay, setActiveTheoryDay] = useState<string>('Mon')
   const [theoryDayPeriods, setTheoryDayPeriods] = useState<Record<string, string[]>>({})
 
+  // Per-day Lab Schedule state
+  const [activeLabDay, setActiveLabDay] = useState<string>('Tue')
+  const [labDayPeriods, setLabDayPeriods] = useState<Record<string, string[]>>({})
+
   // Dynamic Editable Labs State (Persistent across browser reloads, without mock data)
   const [semestersLabs, setSemestersLabs] = useState<Record<string, SemesterLabGroup>>(ALL_SEMESTERS_LABS)
 
@@ -400,6 +404,14 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     defaultTime: string
     defaultDays: string
   }) => {
+    const days = lab.defaultDays ? lab.defaultDays.split(',').map((d) => d.trim()).filter(Boolean) : ['Tue']
+    const newLabMap: Record<string, string[]> = {}
+    days.forEach((d) => {
+      newLabMap[d] = [lab.defaultPeriod]
+    })
+    setLabDayPeriods(newLabMap)
+    setActiveLabDay(days[0] || 'Tue')
+
     setFormData((prev) => ({
       ...prev,
       hasLab: true,
@@ -614,6 +626,128 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       ...serialized,
     }))
     toast.success(`Copied ${activeTheoryDay} schedule to ${destDays.join(', ')}`)
+  }
+
+  // Serialize lab schedule into labDay, labPeriod, labTime
+  const serializeLabSchedule = (dayPeriods: Record<string, string[]>) => {
+    const activeDays = DAYS_OF_WEEK.map((d) => d.code).filter(
+      (code) => dayPeriods[code] && dayPeriods[code].length > 0
+    )
+
+    if (activeDays.length === 0) {
+      return {
+        labDay: '',
+        labPeriod: '',
+        labTime: '',
+      }
+    }
+
+    const firstDayPeriods = (dayPeriods[activeDays[0]] || []).slice().sort().join(',')
+    const allSame = activeDays.every(
+      (d) => (dayPeriods[d] || []).slice().sort().join(',') === firstDayPeriods
+    )
+
+    if (allSame) {
+      const periods = dayPeriods[activeDays[0]] || []
+      return {
+        labDay: activeDays.join(', '),
+        labPeriod: periods.join(', '),
+        labTime: calculateTimesForPeriods(periods) || '01:20 PM - 04:30 PM',
+      }
+    }
+
+    const periodParts: string[] = []
+    const timeParts: string[] = []
+
+    activeDays.forEach((day) => {
+      const periods = dayPeriods[day] || []
+      periodParts.push(`${day}: ${periods.join(', ')}`)
+      const t = calculateTimesForPeriods(periods) || '01:20 PM - 04:30 PM'
+      timeParts.push(`${day}: ${t}`)
+    })
+
+    return {
+      labDay: activeDays.join(', '),
+      labPeriod: periodParts.join('; '),
+      labTime: timeParts.join('; '),
+    }
+  }
+
+  // Day selection/switching for lab
+  const handleSelectLabDay = (dayCode: string) => {
+    setActiveLabDay(dayCode)
+    if (!labDayPeriods[dayCode]) {
+      setLabDayPeriods((prev) => ({
+        ...prev,
+        [dayCode]: [],
+      }))
+    }
+  }
+
+  // Toggle lab period/session for current active day
+  const toggleLabPeriodForActiveDay = (periodName: string) => {
+    const currentPeriods = labDayPeriods[activeLabDay] || []
+    const nextPeriods = currentPeriods.includes(periodName)
+      ? currentPeriods.filter((p) => p !== periodName)
+      : [...currentPeriods, periodName]
+
+    nextPeriods.sort((a, b) => {
+      const idxA = PERIOD_LIST.findIndex((p) => p.name === a)
+      const idxB = PERIOD_LIST.findIndex((p) => p.name === b)
+      return idxA - idxB
+    })
+
+    const updated = {
+      ...labDayPeriods,
+      [activeLabDay]: nextPeriods,
+    }
+    setLabDayPeriods(updated)
+
+    const serialized = serializeLabSchedule(updated)
+    setFormData((prev) => ({
+      ...prev,
+      ...serialized,
+    }))
+  }
+
+  // Clear/disable a specific lab day
+  const handleToggleLabDayOff = (dayCode: string) => {
+    const updated = { ...labDayPeriods }
+    delete updated[dayCode]
+    setLabDayPeriods(updated)
+    const remaining = Object.keys(updated)
+    if (activeLabDay === dayCode) {
+      setActiveLabDay(remaining[0] || 'Tue')
+    }
+    const serialized = serializeLabSchedule(updated)
+    setFormData((prev) => ({
+      ...prev,
+      ...serialized,
+    }))
+  }
+
+  // Copy active lab day periods to all other active days
+  const copyActiveLabPeriodsToAllDays = () => {
+    const currentPeriods = labDayPeriods[activeLabDay] || []
+    if (currentPeriods.length === 0) {
+      toast.error(`No periods selected for ${activeLabDay} to copy`)
+      return
+    }
+
+    const updated: Record<string, string[]> = { ...labDayPeriods }
+    const targetDays = Object.keys(updated).filter((d) => d !== activeLabDay && (updated[d] || []).length > 0)
+
+    const destDays = targetDays.length > 0 ? targetDays : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+    destDays.forEach((d) => {
+      updated[d] = [...currentPeriods]
+    })
+    setLabDayPeriods(updated)
+    const serialized = serializeLabSchedule(updated)
+    setFormData((prev) => ({
+      ...prev,
+      ...serialized,
+    }))
+    toast.success(`Copied ${activeLabDay} lab schedule to ${destDays.join(', ')}`)
   }
 
   // Toggle Multiple Theory Days
@@ -997,6 +1131,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
         }
       }
 
+      if (formData.hasLab) {
+        const sched = serializeLabSchedule(labDayPeriods)
+        if (sched.labDay) {
+          formData.labDay = sched.labDay
+          formData.labPeriod = sched.labPeriod
+          formData.labTime = sched.labTime
+        }
+      }
+
       if (formData.hasTheory && formData.hasLab) {
         finalSubjects = [formData.subjects.trim(), formData.labSubjectCode.trim()].filter(Boolean)
         finalSubjectName = [formData.subjectName.trim(), formData.labSubjectName.trim()].filter(Boolean).join(' | ')
@@ -1103,6 +1246,15 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           formData.classDay = sched.classDay
           formData.classPeriod = sched.classPeriod
           formData.classTime = sched.classTime
+        }
+      }
+
+      if (formData.hasLab) {
+        const sched = serializeLabSchedule(labDayPeriods)
+        if (sched.labDay) {
+          formData.labDay = sched.labDay
+          formData.labPeriod = sched.labPeriod
+          formData.labTime = sched.labTime
         }
       }
 
@@ -1217,6 +1369,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const resetForm = () => {
     setActiveTheoryDay('Mon')
     setTheoryDayPeriods({})
+    setActiveLabDay('Tue')
+    setLabDayPeriods({})
     setFormData({
       facultyId: '',
       name: '',
@@ -1368,6 +1522,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
     setTheoryDayPeriods(parsedDaysMap)
     const activeDays = Object.keys(parsedDaysMap)
     setActiveTheoryDay(activeDays[0] || 'Mon')
+
+    const parsedLabDaysMap = parseScheduleToDayPeriods(labDay, labPeriod)
+    setLabDayPeriods(parsedLabDaysMap)
+    const activeLabDays = Object.keys(parsedLabDaysMap)
+    setActiveLabDay(activeLabDays[0] || 'Tue')
 
     setShowEditPassword(false)
     setIsEditModalOpen(true)
@@ -1552,6 +1711,193 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             <span className="text-gray-500 font-medium">Selected Schedule:</span>
             <span className="text-indigo-900 font-mono font-bold truncate max-w-[320px]" title={formData.classPeriod}>
               {formData.classPeriod}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  // Render Lab Schedule with Day Switching, Dedicated Lab Sessions, and Regular Class Periods
+  const renderLabScheduleSection = () => (
+    <div className="space-y-3">
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="block font-bold text-gray-700 text-[11px]">
+            Lab Practical Days (Click a day to choose periods / sessions below):
+          </label>
+          <span className="text-[10px] text-purple-700 font-bold">
+            {Object.keys(labDayPeriods).filter((d) => (labDayPeriods[d] || []).length > 0).length} of 6 days scheduled
+          </span>
+        </div>
+
+        {/* Day Pills Selector for Lab */}
+        <div className="grid grid-cols-6 gap-1.5">
+          {DAYS_OF_WEEK.map((d) => {
+            const periods = labDayPeriods[d.code] || []
+            const hasPeriods = periods.length > 0
+            const isCurrentActive = activeLabDay === d.code
+
+            return (
+              <button
+                key={d.code}
+                type="button"
+                onClick={() => handleSelectLabDay(d.code)}
+                className={cn(
+                  'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5 relative',
+                  isCurrentActive
+                    ? 'bg-purple-700 text-white border-purple-700 shadow-md ring-2 ring-purple-400'
+                    : hasPeriods
+                    ? 'bg-purple-50 text-purple-900 border-purple-300 hover:bg-purple-100'
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                )}
+              >
+                <span className="flex items-center gap-1 font-extrabold">
+                  {d.code}
+                  {hasPeriods && !isCurrentActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-600"></span>
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    'text-[9px]',
+                    isCurrentActive
+                      ? 'text-purple-200 font-semibold'
+                      : hasPeriods
+                      ? 'text-purple-600 font-bold'
+                      : 'text-gray-400 font-normal'
+                  )}
+                >
+                  {hasPeriods ? `${periods.length} ${periods.length === 1 ? 'period' : 'periods'}` : d.label.slice(0, 3)}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Active Day Lab Periods Customizer Box */}
+      <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-lg bg-purple-700 text-white text-[11px] font-black tracking-wider uppercase shadow-xs">
+              {DAYS_OF_WEEK.find((d) => d.code === activeLabDay)?.label || activeLabDay}
+            </span>
+            <span className="text-[11px] font-bold text-[#071A3D]">
+              Periods for {DAYS_OF_WEEK.find((d) => d.code === activeLabDay)?.label || activeLabDay}:
+            </span>
+            <span className="text-[10px] text-purple-700 font-bold">
+              {(labDayPeriods[activeLabDay] || []).length} selected
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            {(labDayPeriods[activeLabDay] || []).length > 0 && (
+              <button
+                type="button"
+                onClick={copyActiveLabPeriodsToAllDays}
+                className="px-2.5 py-1 rounded-lg bg-white hover:bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+                title={`Copy ${activeLabDay} periods to other active days`}
+              >
+                <Copy className="w-3 h-3 text-purple-600" />
+                Copy to other days
+              </button>
+            )}
+            {(labDayPeriods[activeLabDay] || []).length > 0 && (
+              <button
+                type="button"
+                onClick={() => handleToggleLabDayOff(activeLabDay)}
+                className="px-2 py-1 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
+              >
+                <RotateCcw className="w-3 h-3" />
+                Clear {activeLabDay}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 1. Dedicated Block Lab Sessions */}
+        <div>
+          <span className="text-[10px] font-bold text-amber-900 block mb-1.5 flex items-center gap-1">
+            <FlaskConical className="w-3 h-3 text-amber-600" /> Dedicated Block Lab Sessions:
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {PERIOD_LIST.filter((p) => p.isLab).map((p) => {
+              const activePeriods = labDayPeriods[activeLabDay] || []
+              const isSelected = activePeriods.includes(p.name)
+
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => toggleLabPeriodForActiveDay(p.name)}
+                  className={cn(
+                    'p-2.5 rounded-xl text-left font-bold text-xs transition-all cursor-pointer border flex flex-col justify-between',
+                    isSelected
+                      ? 'bg-purple-700 text-white border-purple-700 shadow-sm ring-2 ring-purple-400/40'
+                      : 'bg-white text-gray-800 border-purple-200 hover:border-purple-400 hover:bg-purple-50/50'
+                  )}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-extrabold text-xs">{p.name}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-[#F4C430]" />}
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono mt-1">
+                    <span className={isSelected ? 'text-purple-100 font-bold' : 'text-purple-700 font-bold'}>{p.time}</span>
+                    <span className={isSelected ? 'text-purple-200' : 'text-gray-400'}>{p.duration}</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 2. Regular Class Theory Periods (1 to 8) with Bell Timings */}
+        <div>
+          <span className="text-[10px] font-bold text-gray-700 block mb-1.5 flex items-center gap-1">
+            <Clock className="w-3 h-3 text-indigo-600" /> Regular Class Periods (Periods 1 - 8 with Bell Timings):
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+            {PERIOD_LIST.filter((p) => !p.isLab).map((p) => {
+              const activePeriods = labDayPeriods[activeLabDay] || []
+              const isSelected = activePeriods.includes(p.name)
+
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => toggleLabPeriodForActiveDay(p.name)}
+                  className={cn(
+                    'p-2 rounded-xl text-left font-bold text-[11px] transition-all cursor-pointer border flex flex-col justify-between',
+                    isSelected
+                      ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
+                  )}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-extrabold">{p.name}</span>
+                    {isSelected && <Check className="w-3 h-3 text-[#F4C430]" />}
+                  </div>
+                  <span
+                    className={cn(
+                      'text-[9px] font-mono mt-0.5',
+                      isSelected ? 'text-purple-200' : 'text-gray-500'
+                    )}
+                  >
+                    {p.time}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Schedule Summary Banner for Lab */}
+        {formData.labPeriod && (
+          <div className="pt-2 border-t border-purple-100 flex items-center justify-between text-[10px]">
+            <span className="text-gray-500 font-medium">Lab Schedule:</span>
+            <span className="text-purple-900 font-mono font-bold truncate max-w-[320px]" title={formData.labPeriod}>
+              {formData.labPeriod}
             </span>
           </div>
         )}
@@ -3429,74 +3775,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </div>
                     </div>
 
-                    {/* Multiple Choice Lab Days Selector */}
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
-                        Lab Practical Days (Select all days that apply):
-                      </label>
-                      <div className="grid grid-cols-6 gap-1.5">
-                        {DAYS_OF_WEEK.map((d) => {
-                          const isSelected = parsedLabDays.includes(d.code)
-                          return (
-                            <button
-                              key={d.code}
-                              type="button"
-                              onClick={() => toggleLabDaySelection(d.code)}
-                              className={cn(
-                                'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
-                                isSelected
-                                  ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
-                              )}
-                            >
-                              <span>{d.code}</span>
-                              <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Dedicated Lab Sessions: FN (09:15-12:30) & AN (01:20-04:30) */}
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center gap-1.5">
-                        <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
-                        Laboratory &amp; Practical Sessions (FN / AN):
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {PERIOD_LIST.filter(p => p.isLab).map((p) => {
-                          const isSelected = parsedLabPeriods.includes(p.name)
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => toggleLabPeriodSelection(p.name)}
-                              className={cn(
-                                'p-3 rounded-2xl text-left font-bold text-xs transition-all cursor-pointer border flex flex-col justify-between',
-                                isSelected
-                                  ? 'bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-400/40'
-                                  : 'bg-white text-gray-800 border-amber-200 hover:border-amber-400 hover:bg-amber-50/40'
-                              )}
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="font-black text-sm">{p.name}</span>
-                                {isSelected && (
-                                  <span className="w-5 h-5 rounded-full bg-white text-amber-600 flex items-center justify-center">
-                                    <Check className="w-3.5 h-3.5" />
-                                  </span>
-                                )}
-                              </div>
-                              <span className={cn(
-                                'text-[11px] font-mono font-bold mt-1 block',
-                                isSelected ? 'text-amber-100' : 'text-amber-700'
-                              )}>
-                                {p.time}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
+                    {renderLabScheduleSection()}
                   </div>
                 )}
               </div>
@@ -4084,74 +4363,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       </div>
                     </div>
 
-                    {/* Multiple Choice Lab Days Selector */}
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1.5">
-                        Lab Practical Days (Select all days that apply):
-                      </label>
-                      <div className="grid grid-cols-6 gap-1.5">
-                        {DAYS_OF_WEEK.map((d) => {
-                          const isSelected = parsedLabDays.includes(d.code)
-                          return (
-                            <button
-                              key={d.code}
-                              type="button"
-                              onClick={() => toggleLabDaySelection(d.code)}
-                              className={cn(
-                                'py-2 px-1 rounded-xl text-center font-bold text-xs transition-all cursor-pointer border flex flex-col items-center justify-center gap-0.5',
-                                isSelected
-                                  ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
-                                  : 'bg-white text-gray-700 border-gray-200 hover:bg-purple-50/50'
-                              )}
-                            >
-                              <span>{d.code}</span>
-                              <span className="text-[9px] font-normal opacity-80">{d.label.slice(0, 3)}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Dedicated Lab Sessions: FN (09:15-12:30) & AN (01:20-04:30) */}
-                    <div>
-                      <label className="block font-bold text-gray-700 text-[11px] mb-1.5 flex items-center gap-1.5">
-                        <FlaskConical className="w-3.5 h-3.5 text-amber-600" />
-                        Laboratory &amp; Practical Sessions (FN / AN):
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        {PERIOD_LIST.filter(p => p.isLab).map((p) => {
-                          const isSelected = parsedLabPeriods.includes(p.name)
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => toggleLabPeriodSelection(p.name)}
-                              className={cn(
-                                'p-3 rounded-2xl text-left font-bold text-xs transition-all cursor-pointer border flex flex-col justify-between',
-                                isSelected
-                                  ? 'bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-400/40'
-                                  : 'bg-white text-gray-800 border-amber-200 hover:border-amber-400 hover:bg-amber-50/40'
-                              )}
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className="font-black text-sm">{p.name}</span>
-                                {isSelected && (
-                                  <span className="w-5 h-5 rounded-full bg-white text-amber-600 flex items-center justify-center">
-                                    <Check className="w-3.5 h-3.5" />
-                                  </span>
-                                )}
-                              </div>
-                              <span className={cn(
-                                'text-[11px] font-mono font-bold mt-1 block',
-                                isSelected ? 'text-amber-100' : 'text-amber-700'
-                              )}>
-                                {p.time}
-                              </span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
+                    {renderLabScheduleSection()}
                   </div>
                 )}
               </div>
