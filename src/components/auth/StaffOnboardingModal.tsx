@@ -68,7 +68,7 @@ export function StaffOnboardingModal({
   let initDay = ''
   let initMonth = ''
   let initYear = ''
-  if (initialData.dateOfBirth && !initialData.dateOfBirth.startsWith('1990-01-01')) {
+  if (initialData?.dateOfBirth && typeof initialData.dateOfBirth === 'string' && !initialData.dateOfBirth.startsWith('1990-01-01')) {
     const parts = initialData.dateOfBirth.split('T')[0].split('-')
     if (parts.length === 3) {
       initYear = parts[0]
@@ -81,13 +81,14 @@ export function StaffOnboardingModal({
   const [dobMonth, setDobMonth] = useState(initMonth)
   const [dobYear, setDobYear] = useState(initYear)
 
+  const rawEmail = typeof initialData?.email === 'string' ? initialData.email : ''
   const initialEmail =
-    initialData.email &&
-    !initialData.email.toLowerCase().endsWith('@vsb.edu.in') &&
-    !initialData.email.toLowerCase().includes('mock')
-      ? initialData.email.trim()
-      : initialData.email && initialData.email.includes('@') && !initialData.email.toLowerCase().includes('mock')
-      ? initialData.email.trim()
+    rawEmail &&
+    !rawEmail.toLowerCase().endsWith('@vsb.edu.in') &&
+    !rawEmail.toLowerCase().includes('mock')
+      ? rawEmail.trim()
+      : rawEmail && rawEmail.includes('@') && !rawEmail.toLowerCase().includes('mock')
+      ? rawEmail.trim()
       : ''
 
   // Form State

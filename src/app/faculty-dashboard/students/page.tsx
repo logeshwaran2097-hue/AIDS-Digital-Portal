@@ -193,7 +193,7 @@ export default async function FacultyStudentsPage() {
       id: s.id,
       name: matchedUser?.name || s.registerNumber,
       registerNumber: s.registerNumber,
-      email: matchedUser?.email || `${s.registerNumber.toLowerCase()}@vsb.edu.in`,
+      email: matchedUser?.email || `${(s.registerNumber || 'student').toLowerCase()}@vsb.edu.in`,
       phone: matchedUser?.phone || '',
       year: s.year,
       semester: s.semester,

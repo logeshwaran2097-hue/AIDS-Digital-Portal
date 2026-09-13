@@ -43,8 +43,8 @@ export default async function FacultyProjectsPage() {
       }).catch(() => [])
     : []
 
-  const classNamesLower = classUsers.map((u) => u.name.toLowerCase().trim()).filter(Boolean)
-  const classRegsLower = classStudents.map((s) => s.registerNumber.toLowerCase().trim()).filter(Boolean)
+  const classNamesLower = classUsers.map((u) => (u.name || '').toLowerCase().trim()).filter(Boolean)
+  const classRegsLower = classStudents.map((s) => (s.registerNumber || '').toLowerCase().trim()).filter(Boolean)
 
   // Query ONLY projects belonging to:
   // 1. Advisor's assigned class cohort (Year 2 Sec B)

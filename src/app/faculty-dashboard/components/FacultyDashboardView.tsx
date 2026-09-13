@@ -139,22 +139,22 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           }
         }}
         initialData={{
-          name: data.user.name,
-          email: data.user.email,
-          phone: data.user.phone || '',
-          facultyId: data.faculty?.facultyId || '',
-          designation: data.faculty?.designation || '',
-          qualification: data.faculty?.qualification || '',
-          experience: data.faculty?.experience || 0,
-          specialization: data.faculty?.specialization || '',
-          advisorBatch: data.faculty?.advisorBatch || null,
-          advisorYear: data.faculty?.advisorYear || null,
-          advisorSem: data.faculty?.advisorSem || null,
-          advisorSec: data.faculty?.advisorSec || null,
-          subjects: data.faculty?.subjectName || (data.assignedSubjects && data.assignedSubjects.length > 0 ? data.assignedSubjects.map(s => s.name).join(', ') : (data.faculty?.subjects && data.faculty.subjects !== '[]' ? data.faculty.subjects : 'Artificial Intelligence & Data Science')),
+          name: data?.user?.name || 'Faculty Member',
+          email: data?.user?.email || '',
+          phone: data?.user?.phone || '',
+          facultyId: data?.faculty?.facultyId || '',
+          designation: data?.faculty?.designation || '',
+          qualification: data?.faculty?.qualification || '',
+          experience: data?.faculty?.experience || 0,
+          specialization: data?.faculty?.specialization || '',
+          advisorBatch: data?.faculty?.advisorBatch || null,
+          advisorYear: data?.faculty?.advisorYear || null,
+          advisorSem: data?.faculty?.advisorSem || null,
+          advisorSec: data?.faculty?.advisorSec || null,
+          subjects: data?.faculty?.subjectName || (data?.assignedSubjects && data.assignedSubjects.length > 0 ? data.assignedSubjects.map(s => s.name).join(', ') : (data?.faculty?.subjects && data.faculty.subjects !== '[]' ? data.faculty.subjects : 'Artificial Intelligence & Data Science')),
           department: 'B.Tech Artificial Intelligence & Data Science',
-          dateOfBirth: data.faculty?.dateOfBirth || '',
-          profileImage: data.user?.profileImage || '',
+          dateOfBirth: data?.faculty?.dateOfBirth || '',
+          profileImage: data?.user?.profileImage || '',
         }}
         onComplete={(updated) => {
           setIsOnboardingOpen(false)
@@ -162,13 +162,13 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             localStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
             sessionStorage.setItem(`vsb_staff_onboarding_done_${facultyKey}`, 'true')
           }
-          if (updated?.name) {
+          if (updated?.name && data?.user) {
             data.user.name = updated.name
           }
-          if (updated?.email) {
+          if (updated?.email && data?.user) {
             data.user.email = updated.email
           }
-          if (updated?.phone) {
+          if (updated?.phone && data?.user) {
             data.user.phone = updated.phone
           }
         }}
@@ -180,25 +180,25 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0 ring-4 ring-white/10">
-              {data.user.name.replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
+              {(data?.user?.name || 'Faculty Member').replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className={cn(
                   "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs",
-                  data.faculty?.facultyType === 'lab_faculty'
+                  data?.faculty?.facultyType === 'lab_faculty'
                     ? "bg-[#22C7E8] text-[#051330]"
                     : "bg-[#F4C430] text-[#071A3D]"
                 )}>
-                  {isClassAdvisor ? 'Class Advisor' : data.faculty?.facultyType === 'lab_faculty' ? 'Lab Handler' : 'Faculty Member'}
+                  {isClassAdvisor ? 'Class Advisor' : data?.faculty?.facultyType === 'lab_faculty' ? 'Lab Handler' : 'Faculty Member'}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight text-white">{data.user.name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight text-white">{data?.user?.name || 'Faculty Member'}</h1>
               <p className="text-xs sm:text-sm text-slate-300 font-mono mt-0.5">
-                {data.faculty?.designation || 'Faculty'} {data.faculty?.qualification ? `· ${data.faculty.qualification}` : ''} {data.faculty?.facultyId ? `· ID: ${data.faculty.facultyId}` : ''}
+                {data?.faculty?.designation || 'Faculty'} {data?.faculty?.qualification ? `· ${data.faculty.qualification}` : ''} {data?.faculty?.facultyId ? `· ID: ${data.faculty.facultyId}` : ''}
               </p>
             </div>
           </div>
