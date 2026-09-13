@@ -445,13 +445,14 @@ export function PortalLayout({
     }
   }, [isAdvisor, roleBadgeLabel])
 
-  const [cachedAdvisor] = useState<boolean | null>(() => {
+  const [cachedAdvisor, setCachedAdvisor] = useState<boolean | null>(null)
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const v = sessionStorage.getItem('vsb_faculty_is_advisor')
-      if (v !== null) return v === 'true'
+      if (v !== null) setCachedAdvisor(v === 'true')
     }
-    return null
-  })
+  }, [])
 
   const isFacultyAdvisor =
     typeof isAdvisor === 'boolean'

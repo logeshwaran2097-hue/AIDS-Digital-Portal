@@ -93,15 +93,15 @@ export function StaffOnboardingModal({
 
   // Form State
   const [form, setForm] = useState({
-    name: initialData.name || '',
-    phone: initialData.phone || '',
+    name: initialData?.name || '',
+    phone: initialData?.phone || '',
     dateOfBirth: initYear && initMonth && initDay ? `${initYear}-${initMonth}-${initDay}` : '',
     cabin: '',
-    specialization: initialData.specialization || '',
-    qualification: initialData.qualification || '',
-    experience: initialData.experience ? String(initialData.experience) : '',
+    specialization: initialData?.specialization || '',
+    qualification: initialData?.qualification || '',
+    experience: initialData?.experience ? String(initialData.experience) : '',
     detailsConfirmed: true,
-    profileImage: initialData.profileImage || '',
+    profileImage: initialData?.profileImage || '',
     email: initialEmail,
     newPassword: '',
     confirmPassword: '',

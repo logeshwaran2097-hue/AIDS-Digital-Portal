@@ -359,18 +359,21 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   const [quickTheoryTab, setQuickTheoryTab] = useState<string>('sem3')
 
   // Dynamic Editable Labs State (Persistent across browser reloads, without mock data)
-  const [semestersLabs, setSemestersLabs] = useState<Record<string, SemesterLabGroup>>(() => {
+  const [semestersLabs, setSemestersLabs] = useState<Record<string, SemesterLabGroup>>(ALL_SEMESTERS_LABS)
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem('VSB_AIDS_EDITABLE_LABS_V2')
         if (saved) {
           const parsed = JSON.parse(saved)
-          if (parsed && typeof parsed === 'object' && parsed.sem1) return parsed
+          if (parsed && typeof parsed === 'object' && parsed.sem1) {
+            setSemestersLabs(parsed)
+          }
         }
       } catch {}
     }
-    return ALL_SEMESTERS_LABS
-  })
+  }, [])
 
   // Save changes to localStorage
   useEffect(() => {
