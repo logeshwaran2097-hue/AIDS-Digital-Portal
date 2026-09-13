@@ -185,6 +185,56 @@ export function StudentOnboardingModal({
     }
   }, [form.emailOtp, form.email])
 
+  // Real-time debounced email availability check
+  React.useEffect(() => {
+    if (!isOpen) return
+
+    const rawEmail = form.email?.trim().toLowerCase()
+    if (!rawEmail) {
+      setEmailCheckStatus({ checking: false, available: null, message: null })
+      return
+    }
+
+    if (rawEmail.includes('@') && !rawEmail.endsWith('@gmail.com')) {
+      setEmailCheckStatus({
+        checking: false,
+        available: false,
+        message: 'Only @gmail.com email addresses are allowed (e.g. yourname@gmail.com).',
+      })
+      return
+    }
+
+    if (!rawEmail.endsWith('@gmail.com')) {
+      setEmailCheckStatus({ checking: false, available: null, message: null })
+      return
+    }
+
+    setEmailCheckStatus((prev) => ({ ...prev, checking: true }))
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: rawEmail,
+            registerNumber: initialData.registerNumber,
+          }),
+        })
+        const data = await res.json()
+        setEmailCheckStatus({
+          checking: false,
+          available: Boolean(data.available),
+          message: data.message || (data.available ? null : `The email address ${rawEmail} is already linked to another account.`),
+        })
+      } catch {
+        setEmailCheckStatus({ checking: false, available: true, message: null })
+      }
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [isOpen, form.email, initialData.registerNumber])
+
   // Correction Modal state
   const [showCorrectionModal, setShowCorrectionModal] = useState(false)
   const [correctionCategory, setCorrectionCategory] = useState('name')
@@ -271,53 +321,6 @@ export function StudentOnboardingModal({
     setOnboardingStep(2)
   }
 
-  // Real-time debounced email availability check
-  React.useEffect(() => {
-    const rawEmail = form.email?.trim().toLowerCase()
-    if (!rawEmail) {
-      setEmailCheckStatus({ checking: false, available: null, message: null })
-      return
-    }
-
-    if (rawEmail.includes('@') && !rawEmail.endsWith('@gmail.com')) {
-      setEmailCheckStatus({
-        checking: false,
-        available: false,
-        message: 'Only @gmail.com email addresses are allowed (e.g. yourname@gmail.com).',
-      })
-      return
-    }
-
-    if (!rawEmail.endsWith('@gmail.com')) {
-      setEmailCheckStatus({ checking: false, available: null, message: null })
-      return
-    }
-
-    setEmailCheckStatus((prev) => ({ ...prev, checking: true }))
-
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch('/api/auth/check-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: rawEmail,
-            registerNumber: initialData.registerNumber,
-          }),
-        })
-        const data = await res.json()
-        setEmailCheckStatus({
-          checking: false,
-          available: Boolean(data.available),
-          message: data.message || (data.available ? null : `The email address ${rawEmail} is already linked to another account.`),
-        })
-      } catch {
-        setEmailCheckStatus({ checking: false, available: true, message: null })
-      }
-    }, 350)
-
-    return () => clearTimeout(timer)
-  }, [form.email, initialData.registerNumber])
 
   // Send Email OTP
   const handleSendEmailOTP = async () => {

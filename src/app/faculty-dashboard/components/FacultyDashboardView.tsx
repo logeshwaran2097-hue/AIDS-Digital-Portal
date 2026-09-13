@@ -81,6 +81,8 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
   const facultyKey = data.faculty?.facultyId || data.user?.email || 'faculty'
   const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+  const [odList, setOdList] = useState<{ id: string; studentName: string; regNo: string; event: string; date: string; type: string }[]>([])
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
   const isClassAdvisor =
     data.faculty?.facultyType === 'advisor' ||
@@ -113,9 +115,6 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
       setIsOnboardingOpen(false)
     }
   }, [facultyKey, isInitialNeedsOnboarding])
-
-  const [odList, setOdList] = useState<{ id: string; studentName: string; regNo: string; event: string; date: string; type: string }[]>([])
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
   const assignedSubjects = data.assignedSubjects || []
   const todayTimetable = data.todayTimetable || []

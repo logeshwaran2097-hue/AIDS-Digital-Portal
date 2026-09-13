@@ -27,7 +27,10 @@ export const metadata: Metadata = {
     title: 'Digital Portal of AI&DS',
   },
   icons: {
-    icon: '/icon-512.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon-512.png', sizes: '512x512' },
+    ],
     shortcut: '/icon-192.png',
     apple: '/apple-touch-icon.png',
   },
