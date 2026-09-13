@@ -127,8 +127,7 @@ export function FacultyLaboratoryView({
   const [saving, setSaving] = useState(false)
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  // Communication Lab Specific Mode & Student Tracking
-  const [activityConducted, setActivityConducted] = useState<boolean>(true)
+  // Communication Lab Student Tracking
   const [pendingCount, setPendingCount] = useState<string>('0')
 
   // Form State
@@ -167,8 +166,6 @@ export function FacultyLaboratoryView({
       (a) => !a.labName?.toLowerCase().includes('communication') && a.labCode !== 'GE3271'
     ).length
 
-    const defaultComm = COMMUNICATION_LAB_ACTIVITIES[0]
-    setActivityConducted(true)
     setPendingCount('0')
 
     setFormData({
@@ -176,8 +173,8 @@ export function FacultyLaboratoryView({
       day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
       period: details.labPeriod || 'Period 5 - 8 (01:20 PM - 04:30 PM)',
       experimentNo: isComm ? '' : String(aidsCount + 1 || 1),
-      experimentName: isComm ? defaultComm.name : '',
-      topicsCovered: isComm ? defaultComm.topics : '',
+      experimentName: '',
+      topicsCovered: '',
       activityType: isComm ? 'Communication Activity' : 'Lab Experiment',
       labTrainer: details.labTrainer || '',
       toolsUsed: '',
@@ -194,13 +191,6 @@ export function FacultyLaboratoryView({
     const isCommAct = act.labName?.toLowerCase().includes('communication') || act.labCode === 'GE3271'
     setActiveLabTab(isCommAct ? 'communication' : 'aids')
 
-    const isConducted = isCommAct
-      ? act.activityType !== 'General Session' &&
-        !act.experimentName.toLowerCase().includes('general') &&
-        COMMUNICATION_LAB_ACTIVITIES.some((a) => a.name === act.experimentName)
-      : true
-    setActivityConducted(isConducted)
-
     let pending = '0'
     if (act.remarks) {
       const match = act.remarks.match(/(\d+)/)
@@ -216,7 +206,7 @@ export function FacultyLaboratoryView({
       experimentNo: act.experimentNo ? String(act.experimentNo) : '',
       experimentName: act.experimentName,
       topicsCovered: act.topicsCovered,
-      activityType: act.activityType || (isCommAct ? (isConducted ? 'Communication Activity' : 'General Session') : 'Lab Experiment'),
+      activityType: act.activityType || (isCommAct ? 'Communication Activity' : 'Lab Experiment'),
       labTrainer: act.labTrainer || details.labTrainer || '',
       toolsUsed: act.toolsUsed || '',
       status: act.status || 'completed',
@@ -230,27 +220,14 @@ export function FacultyLaboratoryView({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (activeLabTab === 'communication') {
-      if (!activityConducted) {
-        if (!formData.topicsCovered.trim()) {
-          setAlertMessage({ type: 'error', text: "Please enter Today's Topics covered in the session." })
-          return
-        }
-      } else {
-        if (!formData.experimentName.trim()) {
-          setAlertMessage({ type: 'error', text: 'Please select an Anna University Practical Exercise.' })
-          return
-        }
-        if (!formData.topicsCovered.trim()) {
-          setAlertMessage({ type: 'error', text: "Today's Topics cannot be empty." })
-          return
-        }
-      }
-    } else {
-      if (!formData.experimentName.trim() || !formData.topicsCovered.trim()) {
-        setAlertMessage({ type: 'error', text: 'Experiment Title and Topics Covered are required.' })
-        return
-      }
+    if (!formData.experimentName.trim() || !formData.topicsCovered.trim()) {
+      setAlertMessage({
+        type: 'error',
+        text: activeLabTab === 'communication'
+          ? 'Activity Name and Today\'s Topics are required.'
+          : 'Experiment Title and Topics Covered are required.',
+      })
+      return
     }
 
     setSaving(true)
@@ -259,10 +236,8 @@ export function FacultyLaboratoryView({
       : (details.labName || 'Artificial Intelligence & Data Science Laboratory')
     const currentLabCode = activeLabTab === 'communication' ? 'GE3271' : (details.labCode || 'AD2311')
 
-    const commExpName = activityConducted ? formData.experimentName : 'General Laboratory & Curricular Session'
-    const commActType = activityConducted ? 'Communication Activity' : 'General Session'
-    const commAttendance = activityConducted && formData.attendanceCount !== '' ? Number(formData.attendanceCount) : null
-    const commRemarks = activityConducted && pendingCount !== '' ? `${pendingCount} Pending Students` : null
+    const commAttendance = formData.attendanceCount !== '' ? Number(formData.attendanceCount) : null
+    const commRemarks = pendingCount !== '' ? `${pendingCount} Pending Students` : (formData.remarks || null)
 
     const payload = {
       labName: currentLabName,
@@ -272,8 +247,9 @@ export function FacultyLaboratoryView({
       section: details.section,
       batch: details.batch,
       ...formData,
-      experimentName: activeLabTab === 'communication' ? commExpName : formData.experimentName,
-      activityType: activeLabTab === 'communication' ? commActType : formData.activityType,
+      experimentName: formData.experimentName.trim(),
+      topicsCovered: formData.topicsCovered.trim(),
+      activityType: activeLabTab === 'communication' ? 'Communication Activity' : formData.activityType,
       experimentNo: activeLabTab === 'communication' ? null : (formData.experimentNo ? Number(formData.experimentNo) : null),
       attendanceCount: activeLabTab === 'communication' ? commAttendance : (formData.attendanceCount ? Number(formData.attendanceCount) : null),
       remarks: activeLabTab === 'communication' ? commRemarks : (formData.remarks || null),
@@ -643,7 +619,6 @@ export function FacultyLaboratoryView({
                     type="button"
                     onClick={() => {
                       setEditingActivity(null)
-                      setActivityConducted(true)
                       setPendingCount('0')
                       setFormData({
                         date: new Date().toISOString().split('T')[0],
@@ -956,203 +931,129 @@ export function FacultyLaboratoryView({
               {/* Specific fields for Communication Lab vs AI & DS Lab */}
               {activeLabTab === 'communication' ? (
                 <>
-                  {/* Practical Activity Conducted Toggle */}
-                  <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200/80 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-black text-[#071A3D] flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
-                        <span>Practical Activity Conducted Today?</span>
+                  {/* Activity Name (Typed with suggestions) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-gray-700">
+                        Activity Name *
                       </label>
-                      <span className="text-[10px] font-bold text-purple-700 bg-white px-2 py-0.5 rounded-md border border-purple-200">
-                        Anna University GE3271
-                      </span>
+                      <span className="text-[10px] text-purple-600 font-medium">Type activity or pick a suggestion below</span>
                     </div>
+                    <input
+                      type="text"
+                      required
+                      list="comm-activities-list"
+                      value={formData.experimentName}
+                      onChange={(e) => setFormData({ ...formData, experimentName: e.target.value })}
+                      placeholder="e.g. JAM (Just-A-Minute) / Mock Interviews & Viva / Accent Neutralisation"
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-purple-600 focus:outline-none"
+                    />
+                    <datalist id="comm-activities-list">
+                      {COMMUNICATION_LAB_ACTIVITIES.map((act) => (
+                        <option key={act.name} value={act.name} />
+                      ))}
+                    </datalist>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActivityConducted(true)
-                          if (!formData.experimentName || formData.experimentName.includes('General')) {
-                            const def = COMMUNICATION_LAB_ACTIVITIES[0]
+                    {/* Quick Suggestion Pills */}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="text-[10px] text-gray-400 font-medium">Quick suggestions:</span>
+                      {COMMUNICATION_LAB_ACTIVITIES.map((act) => (
+                        <button
+                          key={act.name}
+                          type="button"
+                          onClick={() => {
                             setFormData((prev) => ({
                               ...prev,
-                              experimentName: def.name,
-                              topicsCovered: def.topics,
-                              attendanceCount: prev.attendanceCount || '58',
+                              experimentName: act.name,
+                              topicsCovered: act.topics,
                             }))
-                            setPendingCount('0')
-                          }
-                        }}
-                        className={cn(
-                          'py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5',
-                          activityConducted
-                            ? 'bg-purple-600 text-white shadow-md'
-                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                        )}
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Yes, Activity Conducted</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActivityConducted(false)
-                          setFormData((prev) => ({
-                            ...prev,
-                            experimentName: 'General Laboratory & Curricular Session',
-                            topicsCovered: prev.topicsCovered === COMMUNICATION_LAB_ACTIVITIES.find(a => a.name === prev.experimentName)?.topics ? '' : prev.topicsCovered,
-                          }))
-                        }}
-                        className={cn(
-                          'py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5',
-                          !activityConducted
-                            ? 'bg-purple-600 text-white shadow-md'
-                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-                        )}
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>No, Enter Topics Only</span>
-                      </button>
+                          }}
+                          className="text-[10px] font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200 transition-colors cursor-pointer"
+                        >
+                          {act.name}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {activityConducted ? (
-                    <>
-                      {/* Activity Name (Selected from standard Anna University list, not manually typed) */}
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
-                          <span>Activity Name (Selected) *</span>
-                          <span className="text-[10px] font-bold text-purple-700">Standard Anna University Practical Exercises</span>
-                        </label>
-                        <select
-                          required
-                          value={formData.experimentName}
-                          onChange={(e) => {
-                            const selectedName = e.target.value
-                            const matched = COMMUNICATION_LAB_ACTIVITIES.find((a) => a.name === selectedName)
-                            setFormData({
-                              ...formData,
-                              experimentName: selectedName,
-                              topicsCovered: matched ? matched.topics : formData.topicsCovered,
-                            })
+                  {/* Today's Topics (Typed textarea) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-gray-700">
+                        Today&apos;s Topics *
+                      </label>
+                      <span className="text-[10px] text-gray-400 font-medium">Type topics and exercises held today</span>
+                    </div>
+                    <textarea
+                      required
+                      rows={3}
+                      value={formData.topicsCovered}
+                      onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
+                      placeholder="e.g. Accent neutralisation, phonetic symbol drills, and comprehension audio tests..."
+                      className="w-full p-3 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-purple-600 focus:outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Student Performance / Completion Tracking */}
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-gray-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-[#071A3D]">Student Activity Performance</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-gray-500 font-medium">Quick preset:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, attendanceCount: '58' }))
+                            setPendingCount('0')
                           }}
-                          className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none cursor-pointer"
+                          className="text-[10px] font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200 cursor-pointer"
                         >
-                          <option value="" disabled>-- Select Standard Anna University Practical Exercise --</option>
-                          {COMMUNICATION_LAB_ACTIVITIES.map((act) => (
-                            <option key={act.name} value={act.name}>
-                              {act.name}
-                            </option>
-                          ))}
-                          {formData.experimentName && !COMMUNICATION_LAB_ACTIVITIES.some((a) => a.name === formData.experimentName) && (
-                            <option value={formData.experimentName}>{formData.experimentName}</option>
-                          )}
-                        </select>
+                          All 58 Completed
+                        </button>
                       </div>
+                    </div>
 
-                      {/* No. of Students Completed & No. of Pending Students */}
-                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-gray-200 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-[#071A3D]">Activity Completion Tracking</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-gray-500 font-medium">Quick preset:</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setFormData((prev) => ({ ...prev, attendanceCount: '58' }))
-                                setPendingCount('0')
-                              }}
-                              className="text-[10px] font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200 cursor-pointer"
-                            >
-                              All 58 Completed
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                          <div>
-                            <label className="block text-xs font-bold text-emerald-800 mb-1 flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                              <span>No. of Students Completed *</span>
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              required
-                              value={formData.attendanceCount}
-                              onChange={(e) => {
-                                const val = e.target.value
-                                setFormData((prev) => ({ ...prev, attendanceCount: val }))
-                                if (val !== '') {
-                                  const comp = Number(val)
-                                  const total = 58
-                                  setPendingCount(String(Math.max(0, total - comp)))
-                                }
-                              }}
-                              placeholder="e.g. 52"
-                              className="w-full p-2.5 rounded-xl border border-emerald-300 bg-white font-black text-xs text-emerald-900 focus:border-emerald-600 focus:outline-none"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs font-bold text-amber-800 mb-1 flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5 text-amber-600" />
-                              <span>No. of Pending Students</span>
-                            </label>
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={pendingCount}
-                              onChange={(e) => setPendingCount(e.target.value)}
-                              placeholder="e.g. 6"
-                              className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-black text-xs text-amber-900 focus:border-amber-600 focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Today's Topics (Auto-filled from syllabus, editable) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
-                          <span>Today&apos;s Topics *</span>
-                          <span className="text-[10px] font-medium text-gray-400">Auto-filled from standard curriculum (editable)</span>
+                        <label className="block text-xs font-bold text-emerald-800 mb-1 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>No. of Students Completed *</span>
                         </label>
-                        <textarea
-                          required
-                          rows={3}
-                          value={formData.topicsCovered}
-                          onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
-                          placeholder="e.g. Accent neutralisation, phonetic symbol drills, and comprehension audio tests."
-                          className="w-full p-3 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none leading-relaxed"
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={formData.attendanceCount}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setFormData((prev) => ({ ...prev, attendanceCount: val }))
+                            if (val !== '') {
+                              const comp = Number(val)
+                              setPendingCount(String(Math.max(0, 58 - comp)))
+                            }
+                          }}
+                          placeholder="e.g. 52"
+                          className="w-full p-2.5 rounded-xl border border-emerald-300 bg-white font-black text-xs text-emerald-900 focus:border-emerald-600 focus:outline-none"
                         />
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* When no activity conducted: faculty enters Today's Topics directly */}
-                      <div className="space-y-1">
-                        <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
-                          <span>Today&apos;s Topics Covered *</span>
-                          <span className="text-[10px] font-bold text-purple-700">Enter Session Details</span>
+
+                      <div>
+                        <label className="block text-xs font-bold text-amber-800 mb-1 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-amber-600" />
+                          <span>No. of Pending Students</span>
                         </label>
-                        <textarea
-                          required
-                          rows={4}
-                          value={formData.topicsCovered}
-                          onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
-                          placeholder="Enter the communication topics, classroom discussion, presentation guidelines, or audio-visual drills covered today..."
-                          className="w-full p-3.5 rounded-xl border border-purple-300 bg-white font-medium text-xs text-[#071A3D] focus:border-purple-600 focus:outline-none leading-relaxed shadow-xs"
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={pendingCount}
+                          onChange={(e) => setPendingCount(e.target.value)}
+                          placeholder="e.g. 6"
+                          className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-black text-xs text-amber-900 focus:border-amber-600 focus:outline-none"
                         />
-                        <p className="text-[11px] text-gray-500 italic pt-1">
-                          * Practical exercise was not conducted today; student completion numbers are omitted.
-                        </p>
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
                 </>
               ) : (
                 <>
