@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { requireRoleSession } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultySettingsView } from './components/FacultySettingsView'
@@ -12,9 +13,9 @@ export default async function FacultySettingsPage() {
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
   const faculty = await prisma.faculty.findUnique({ where: { userId: session.userId } })
 
-  const isAdvisor =
-    faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both'
+  const cookieStore = cookies()
+  const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
+  const isAdvisor = resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
 
   const roleBadgeLabel = isAdvisor
     ? 'Class Advisor'

@@ -449,6 +449,21 @@ export function PortalLayout({
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const cookieMatch = document.cookie.split('; ').find((row) => row.startsWith('portal_login_role='))
+      const cookieRole = cookieMatch ? cookieMatch.split('=')[1] : null
+      const localRole = localStorage.getItem('portal_login_role')
+      const activeRole = cookieRole || localRole
+
+      if (activeRole === 'faculty') {
+        sessionStorage.setItem('vsb_faculty_is_advisor', 'false')
+        setCachedAdvisor(false)
+        return
+      } else if (activeRole === 'advisor') {
+        sessionStorage.setItem('vsb_faculty_is_advisor', 'true')
+        setCachedAdvisor(true)
+        return
+      }
+
       const v = sessionStorage.getItem('vsb_faculty_is_advisor')
       if (v !== null) setCachedAdvisor(v === 'true')
     }
@@ -457,9 +472,7 @@ export function PortalLayout({
   const isFacultyAdvisor =
     typeof isAdvisor === 'boolean'
       ? isAdvisor
-      : roleBadgeLabel
-      ? roleBadgeLabel.toLowerCase().includes('advisor')
-      : (cachedAdvisor ?? false)
+      : (cachedAdvisor !== null ? cachedAdvisor : (roleBadgeLabel ? roleBadgeLabel.toLowerCase().includes('advisor') : false))
 
   const roleBadge = roleBadgeMap[role] || roleBadgeMap.student
   const isLabHandler = roleBadgeLabel === 'Lab Handler' || roleBadgeLabel === 'Lab In-charge'
@@ -476,19 +489,28 @@ export function PortalLayout({
 
   const rawNavItems = navItems || navItemsMap[role] || []
   const baseNavItems = rawNavItems.filter((item) => {
-    // If faculty is not a class advisor, hide the Class Students, Event Proofs, and OD & Leave Requests links
-    if (role === 'faculty' && !isFacultyAdvisor && (
-      item.href.includes('/faculty-dashboard/students') ||
+    // In faculty portal, strictly remove marked menus: OD & Leave, Proofs, Projects, and Events
+    if (role === 'faculty' && (
+      item.href.includes('/faculty-dashboard/od-applications') ||
       item.href.includes('/faculty-dashboard/od-proofs') ||
-      item.href.includes('/faculty-dashboard/od-applications')
+      item.href.includes('/faculty-dashboard/projects') ||
+      item.href.includes('/faculty-dashboard/events')
     )) {
       return false
     }
-    // If faculty is a class advisor, they have no allocated teaching subjects:
-    // Hide "My Subjects", "Resources", and "Question Papers"
+
+    // If faculty is not a class advisor, hide the Class Students link
+    if (role === 'faculty' && !isFacultyAdvisor && (
+      item.href.includes('/faculty-dashboard/students')
+    )) {
+      return false
+    }
+    // If faculty is a class advisor, they have no allocated teaching subjects or laboratory practicals:
+    // Hide "My Subjects", "Laboratory", "Resources", and "Question Papers"
     if (role === 'faculty' && isFacultyAdvisor) {
       if (
         item.href.includes('/faculty-dashboard/subjects') ||
+        item.href.includes('/faculty-dashboard/laboratory') ||
         item.href.includes('/faculty-dashboard/resources') ||
         item.href.includes('/faculty-dashboard/question-papers')
       ) {

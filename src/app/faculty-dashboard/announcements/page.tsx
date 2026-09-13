@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { requireRoleSession } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyAnnouncementsView, FacultyAnnouncementItem } from './components/FacultyAnnouncementsView'
@@ -21,12 +22,13 @@ export default async function FacultyAnnouncementsPage() {
   ])
 
   const facultyName = user?.name || session.name || 'Faculty Member'
-  const isAdvisor = faculty?.facultyType === 'advisor' || faculty?.facultyType === 'both'
+  const cookieStore = cookies()
+  const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
+  const isAdvisor = resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
   const advisorBatch =
-    faculty?.advisorBatch ||
-    (isAdvisor && faculty?.advisorYear
-      ? `Year ${faculty.advisorYear} - Section ${faculty.advisorSec || 'A'} (Sem ${faculty.advisorSem || 3})`
-      : null)
+    isAdvisor
+      ? (faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} - Section ${faculty.advisorSec || 'A'} (Sem ${faculty.advisorSem || 3})` : null))
+      : null
 
   const mappedAnnouncements: FacultyAnnouncementItem[] = announcementsFromDb.map((a) => ({
     id: a.id,

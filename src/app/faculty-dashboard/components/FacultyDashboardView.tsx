@@ -25,6 +25,7 @@ import {
   UserCheck,
   Check,
   X,
+  FlaskConical,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -75,6 +76,7 @@ interface FacultyData {
   attendanceAvg?: string
   assignedSubjects?: AssignedSubjectItem[]
   todayTimetable?: TimetableSlotItem[]
+  isAdvisor?: boolean
 }
 
 export function FacultyDashboardView({ data }: { data: FacultyData }) {
@@ -85,9 +87,11 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null)
 
   const isClassAdvisor =
-    data.faculty?.facultyType === 'advisor' ||
-    data.faculty?.facultyType === 'both' ||
-    Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec))
+    typeof data.isAdvisor === 'boolean'
+      ? data.isAdvisor
+      : (data.faculty?.facultyType === 'advisor' ||
+        data.faculty?.facultyType === 'both' ||
+        Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)))
 
   const quickNav = useMemo(() => [
     { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
@@ -95,11 +99,10 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
       ? [{ label: 'Class Students', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20 hover:bg-purple-500/20' }]
       : [
         { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] border-[#1455D9]/20 hover:bg-[#1455D9]/20' },
+        { label: 'Laboratory', href: '/faculty-dashboard/laboratory', icon: <FlaskConical className="w-5 h-5" />, bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 hover:bg-cyan-500/20' },
         { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' },
         { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
       ]),
-    { label: 'Capstone Projects', href: '/faculty-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 hover:bg-cyan-500/20' },
-    { label: 'Department Events', href: '/faculty-dashboard/events', icon: <CalendarDays className="w-5 h-5" />, bg: 'bg-rose-500/10 text-rose-600 border-rose-500/20 hover:bg-rose-500/20' },
     { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
   ], [isClassAdvisor])
 
@@ -245,9 +248,9 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
 
           {isClassAdvisor ? (
             <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-              <p className="text-[10px] text-gray-300 uppercase font-bold">Pending OD Approvals</p>
-              <p className="text-xl font-black text-amber-300 mt-0.5">{odList.length} Requests</p>
-              <p className="text-[10px] text-amber-200">Student On-Duty Requests</p>
+              <p className="text-[10px] text-gray-300 uppercase font-bold">Class Advisor Scope</p>
+              <p className="text-xl font-black text-amber-300 mt-0.5">{data.totalStudents} Students</p>
+              <p className="text-[10px] text-amber-200">Advisory Jurisdiction</p>
             </div>
           ) : (
             <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
@@ -440,49 +443,42 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             </Card>
           </div>
 
-          {/* Pending On-Duty (OD) Leave Approvals - Only for Class Advisor */}
-          {isClassAdvisor && (
+          {/* Laboratory Practical Activities Quick Access for Course Faculty */}
+          {!isClassAdvisor && (
             <div className="space-y-3">
-              <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#F4C430]" />
-                <span>Pending Student OD Requests</span>
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
+                  <FlaskConical className="w-5 h-5 text-cyan-600" />
+                  <span>Laboratory Practicals &amp; Topics</span>
+                </h2>
+                <Link href="/faculty-dashboard/laboratory" className="text-xs font-bold text-[#1455D9] hover:underline flex items-center gap-1">
+                  Open Lab <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
 
-              {odList.length === 0 ? (
-                <Card className="rounded-3xl border-gray-200">
-                  <CardContent className="p-6 text-center text-xs text-gray-400">
-                    <CheckCircle2 className="w-8 h-8 text-green-500 mx-auto mb-1.5" />
-                    All student On-Duty applications cleared!
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-2.5">
-                  {odList.map((od) => (
-                    <Card key={od.id} className="rounded-3xl border-amber-200/80 bg-amber-50/30 p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-bold text-xs text-[#071A3D]">{od.studentName}</p>
-                          <p className="text-[10px] font-mono text-gray-400">{od.regNo} · Date: {od.date}</p>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9.5px] font-bold">
-                          {od.type}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-gray-600 line-clamp-1">{od.event}</p>
-
-                      <div className="pt-1 flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => handleApproveOD(od.id, od.studentName)}
-                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-xs"
-                        >
-                          <Check className="w-3.5 h-3.5" /> Approve OD
-                        </button>
-                      </div>
-                    </Card>
-                  ))}
+              <Card className="rounded-3xl border-cyan-200/80 bg-gradient-to-br from-cyan-50/40 via-white to-blue-50/30 p-5 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-[#1455D9] text-white flex items-center justify-center shadow-md shrink-0">
+                    <FlaskConical className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-xs text-[#071A3D]">AI &amp; DS Practical Sessions</h3>
+                    <p className="text-[10px] text-gray-500 font-mono">
+                      Log day-wise experiments, topics covered, and lab trainer activities
+                    </p>
+                  </div>
                 </div>
-              )}
+
+                <div className="pt-1 flex items-center justify-between gap-2 border-t border-cyan-100/80 text-xs">
+                  <span className="text-[11px] text-gray-600 font-medium">AU Syllabus &amp; NBA Compliant</span>
+                  <Link
+                    href="/faculty-dashboard/laboratory"
+                    className="px-3 py-1.5 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Log Day&apos;s Lab Activity
+                  </Link>
+                </div>
+              </Card>
             </div>
           )}
         </div>

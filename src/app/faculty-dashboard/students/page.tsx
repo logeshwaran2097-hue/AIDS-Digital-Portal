@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { requireRoleSession } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyStudentsView, StudentRosterItem } from './components/FacultyStudentsView'
@@ -46,10 +47,9 @@ export default async function FacultyStudentsPage() {
     (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
     (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
 
-  const isAdvisor =
-    faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+  const cookieStore = cookies()
+  const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
+  const isAdvisor = resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
 
   if (!isAdvisor) {
     redirect('/faculty-dashboard')

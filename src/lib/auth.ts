@@ -398,10 +398,17 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
     },
   }).catch(() => {})
 
-  const isAdvisor =
+  const hasAdvisorBatch = Boolean(
     faculty.facultyType === 'advisor' ||
     faculty.facultyType === 'both' ||
-    Boolean(faculty.advisorBatch || (faculty.advisorYear && faculty.advisorSec))
+    faculty.advisorBatch ||
+    (faculty.advisorYear && faculty.advisorSec)
+  )
+
+  // Strictly respect targetRole requested during login:
+  // If user logged in under 'faculty' tab, isAdvisor is strictly false.
+  // If user logged in under 'advisor' tab, isAdvisor is true only if they have advisor privileges.
+  const isAdvisor = targetRole === 'advisor' ? hasAdvisorBatch : (targetRole === 'faculty' ? false : (faculty.facultyType === 'advisor' || (!faculty.subjectName && hasAdvisorBatch)))
 
   const token = await createToken({
     userId: faculty.userId,
@@ -414,6 +421,32 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
   })
 
   return { success: true, token, user, faculty, mustChangePassword: Boolean(user.mustChangePassword) }
+}
+
+/**
+ * Resolves whether the current session is actively acting as a Class Advisor vs Course Faculty.
+ * Strictly respects:
+ * 1. The cookie 'portal_login_role' ('faculty' vs 'advisor')
+ * 2. The JWT token session (session.isAdvisor)
+ * If logged in as 'faculty', ALWAYS returns false.
+ * If logged in as 'advisor', returns true only if the faculty has advisor privileges.
+ */
+export function resolveFacultyAdvisorStatus(
+  session: { isAdvisor?: boolean; role?: string },
+  faculty?: { facultyType?: string; advisorBatch?: string | null; advisorYear?: number | null; advisorSec?: string | null } | null,
+  loginCookie?: string | null
+): boolean {
+  if (loginCookie === 'faculty') return false
+  if (loginCookie === 'advisor') {
+    return Boolean(
+      faculty?.facultyType === 'advisor' ||
+      faculty?.facultyType === 'both' ||
+      faculty?.advisorBatch ||
+      (faculty?.advisorYear && faculty?.advisorSec) ||
+      session.isAdvisor
+    )
+  }
+  return Boolean(session.isAdvisor)
 }
 
 export async function authenticateHOD(facultyIdOrName: string, passwordInput: string) {

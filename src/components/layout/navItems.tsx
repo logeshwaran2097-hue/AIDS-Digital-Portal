@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, BookOpen, FileText, FolderOpen, Users, CalendarDays, Megaphone, Trophy, Database, Bot, Bell, User, Settings, GraduationCap, FileQuestion, Newspaper, Info, BarChart3, ShieldCheck } from 'lucide-react'
+import { Home, BookOpen, FileText, FolderOpen, Users, CalendarDays, Megaphone, Trophy, Database, Bot, Bell, User, Settings, GraduationCap, FileQuestion, Newspaper, Info, BarChart3, ShieldCheck, FlaskConical } from 'lucide-react'
 import type { NavItem } from './PortalLayout'
 
 export const studentNavItems: NavItem[] = [
@@ -26,14 +26,11 @@ export const studentNavItems: NavItem[] = [
 export const facultyNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/faculty-dashboard', icon: <Home className="h-4 w-4" /> },
   { label: 'Attendance', href: '/faculty-dashboard/attendance', icon: <CalendarDays className="h-4 w-4" /> },
-  { label: 'OD & Leave Requests', href: '/faculty-dashboard/od-applications', icon: <FileText className="h-4 w-4" /> },
   { label: 'Class Students', href: '/faculty-dashboard/students', icon: <Users className="h-4 w-4" /> },
-  { label: 'Event Proofs', href: '/faculty-dashboard/od-proofs', icon: <ShieldCheck className="h-4 w-4" /> },
   { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="h-4 w-4" /> },
+  { label: 'Laboratory', href: '/faculty-dashboard/laboratory', icon: <FlaskConical className="h-4 w-4" /> },
   { label: 'Resources', href: '/faculty-dashboard/resources', icon: <Database className="h-4 w-4" /> },
   { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="h-4 w-4" /> },
-  { label: 'Projects', href: '/faculty-dashboard/projects', icon: <FolderOpen className="h-4 w-4" /> },
-  { label: 'Events', href: '/faculty-dashboard/events', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'Announcements', href: '/faculty-dashboard/announcements', icon: <Megaphone className="h-4 w-4" /> },
   { label: 'Notifications', href: '/faculty-dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Profile', href: '/faculty-dashboard/profile', icon: <User className="h-4 w-4" /> },

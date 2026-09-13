@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
-import { requireRoleSession } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
-import { FacultyResourcesView, ResourceItem } from './components/FacultyResourcesView'
+import { FacultyResourcesView, FacultyResourceItem } from './components/FacultyResourcesView'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,10 @@ export default async function FacultyResourcesPage() {
     where: { userId: session.userId },
   })
 
-  const isAdvisor = faculty?.facultyType === 'advisor' || faculty?.facultyType === 'both'
+  const cookieStore = cookies()
+  const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
+  const isAdvisor = resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
+
   const roleBadgeLabel = isAdvisor
     ? 'Class Advisor'
     : faculty?.facultyType === 'lab_faculty'

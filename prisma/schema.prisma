@@ -619,3 +619,35 @@ model ODProof {
   @@index([registerNumber, status])
   @@index([odRequestId])
 }
+
+model LabDayActivity {
+  id             String    @id @default(cuid())
+  facultyId      String
+  facultyName    String?
+  labName        String
+  labCode        String?
+  year           Int       @default(2)
+  semester       Int       @default(3)
+  section        String    @default("B")
+  batch          String?
+  day            String
+  date           String
+  period         String?
+  experimentNo   Int?
+  experimentName String
+  topicsCovered  String
+  activityType   String    @default("Lab Experiment")
+  labTrainer     String?
+  toolsUsed      String?
+  status         String    @default("completed")
+  attendanceCount Int?
+  remarks        String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([facultyId])
+  @@index([date])
+  @@index([year, semester, section])
+  @@index([status])
+  @@index([createdAt])
+}

@@ -191,6 +191,7 @@ export default async function FacultyDashboardPage() {
     attendanceAvg,
     assignedSubjects,
     todayTimetable: timetableSlots,
+    isAdvisor,
   }
 
   return (

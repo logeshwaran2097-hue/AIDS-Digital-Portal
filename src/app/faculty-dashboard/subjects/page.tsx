@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
-import { requireRoleSession } from '@/lib/auth'
+import { cookies } from 'next/headers'
+import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultySubjectsView } from './components/FacultySubjectsView'
@@ -22,13 +23,12 @@ export default async function FacultySubjectsPage() {
     }
   }
 
-  const isAdvisor =
-    faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both' ||
-    Boolean(faculty?.advisorBatch || (faculty?.advisorYear && faculty?.advisorSec))
+  const cookieStore = cookies()
+  const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
+  const isAdvisor = resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
 
-  // Class Advisors have no allocated teaching subjects; redirect to Class Students
-  if (faculty?.facultyType === 'advisor' || (isAdvisor && parsedSubjectCodes.length === 0)) {
+  // Class Advisors actively logging in as advisor have no allocated teaching subjects; redirect to Class Students
+  if (isAdvisor && parsedSubjectCodes.length === 0) {
     redirect('/faculty-dashboard/students')
   }
 
