@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -24,6 +24,7 @@ import {
   Download,
   Smartphone,
   ShieldCheck,
+  ChevronDown,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
@@ -107,12 +108,15 @@ export function PortalLayout({
   const isInitialSyncDone = useRef<boolean>(false)
 
   const notificationRef = useRef<HTMLDivElement>(null)
+  const menuNotifRef = useRef<HTMLDivElement>(null)
   const navContainerRef = useRef<HTMLElement>(null)
   const pathname = usePathname()
   const router = useRouter()
   const [accentColor, setAccentColor] = useState('#1455D9')
   const [visibleMenuMap, setVisibleMenuMap] = useState<Record<string, boolean>>({})
   const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
+  const [apiMenuCounts, setApiMenuCounts] = useState<Record<string, number>>({})
+  const [isMenuNotifOpen, setIsMenuNotifOpen] = useState(false)
 
   // Direct 1-Click PWA App Installation
   const deferredInstallPrompt = useRef<any>(null)
@@ -262,6 +266,9 @@ export function PortalLayout({
       if (!res.ok) return
       const data = await res.json()
       if (data.success && Array.isArray(data.notifications)) {
+        if (data.menuCounts && typeof data.menuCounts === 'object') {
+          setApiMenuCounts(data.menuCounts)
+        }
         const fetchedList = data.notifications
 
         if (!isInitialSyncDone.current) {
@@ -275,7 +282,7 @@ export function PortalLayout({
             title: n.title,
             description: n.message,
             time: n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently',
-            unread: true,
+            unread: typeof n.isRead === 'boolean' ? !n.isRead : true,
             type: 'info',
             link: notifLink,
           }))
@@ -312,7 +319,7 @@ export function PortalLayout({
               title: n.title,
               description: n.message,
               time: 'Just now',
-              unread: true,
+              unread: typeof n.isRead === 'boolean' ? !n.isRead : true,
               type: 'info',
               link: notifLink,
             }))
@@ -477,6 +484,151 @@ export function PortalLayout({
   
   const unreadCount = notifications.filter((n) => n.unread).length
 
+  // Calculate notification counts per menu item
+  const getMenuNotificationCount = useCallback(
+    (href: string, label: string): number => {
+      const lowerHref = href.toLowerCase()
+      const lowerLabel = label.toLowerCase()
+
+      // For the main Notifications menu item, return total unread count
+      if (lowerHref.includes('notification') || lowerLabel.includes('notification')) {
+        return unreadCount > 0 ? unreadCount : (apiMenuCounts['notifications'] || 0)
+      }
+
+      // Check pre-aggregated API counts
+      let count = 0
+      if (lowerHref.includes('od-proofs') || lowerLabel.includes('proof')) {
+        count += apiMenuCounts['od-proofs'] || 0
+      } else if (
+        lowerHref.includes('od-applications') ||
+        lowerLabel.includes('od') ||
+        lowerLabel.includes('leave')
+      ) {
+        count += apiMenuCounts['od-applications'] || 0
+      } else if (lowerHref.includes('attendance') || lowerLabel.includes('attendance')) {
+        count += apiMenuCounts['attendance'] || 0
+      } else if (lowerHref.includes('announcement') || lowerLabel.includes('announcement')) {
+        count += apiMenuCounts['announcements'] || 0
+      } else if (lowerHref.includes('event') || lowerLabel.includes('event')) {
+        count += apiMenuCounts['events'] || 0
+      } else if (lowerHref.includes('project') || lowerLabel.includes('project')) {
+        count += apiMenuCounts['projects'] || 0
+      } else if (lowerHref.includes('question') || lowerLabel.includes('question')) {
+        count += apiMenuCounts['question-papers'] || apiMenuCounts['questions'] || 0
+      } else if (lowerHref.includes('achievement') || lowerLabel.includes('achievement')) {
+        count += apiMenuCounts['achievements'] || 0
+      } else if (lowerHref.includes('resource') || lowerHref.includes('study') || lowerLabel.includes('resource') || lowerLabel.includes('study')) {
+        count += apiMenuCounts['resources'] || apiMenuCounts['study'] || 0
+      } else if (lowerHref.includes('subject') || lowerHref.includes('academic') || lowerLabel.includes('subject') || lowerLabel.includes('academic')) {
+        count += apiMenuCounts['subjects'] || apiMenuCounts['academics'] || 0
+      } else if (lowerHref.includes('student') || lowerLabel.includes('student')) {
+        count += apiMenuCounts['students'] || 0
+      } else if (lowerHref.includes('faculty') || lowerLabel.includes('faculty')) {
+        count += apiMenuCounts['faculty'] || 0
+      } else if (lowerHref.includes('report') || lowerLabel.includes('report')) {
+        count += apiMenuCounts['reports'] || 0
+      }
+
+      // Also dynamically match unread notifications by link or title/description keywords
+      const unreadMatches = notifications.filter((n) => {
+        if (!n.unread) return false
+        if (n.link && (n.link === href || n.link.startsWith(href + '/'))) return true
+
+        const combined = `${n.title || ''} ${n.description || ''}`.toLowerCase()
+        if (lowerHref.includes('od-proofs') || lowerLabel.includes('proof')) {
+          return (
+            combined.includes('proof') ||
+            combined.includes('certificate') ||
+            combined.includes('geo-photo')
+          )
+        }
+        if (lowerHref.includes('od') || lowerLabel.includes('od') || lowerLabel.includes('leave')) {
+          return (
+            combined.includes('od') ||
+            combined.includes('on-duty') ||
+            combined.includes('leave') ||
+            combined.includes('permission') ||
+            combined.includes('sanction')
+          )
+        }
+        if (lowerHref.includes('attendance') || lowerLabel.includes('attendance')) {
+          return (
+            combined.includes('attendance') ||
+            combined.includes('roll call') ||
+            combined.includes('absent') ||
+            combined.includes('unlock')
+          )
+        }
+        if (lowerHref.includes('announcement') || lowerLabel.includes('announcement')) {
+          return (
+            combined.includes('announcement') ||
+            combined.includes('circular') ||
+            combined.includes('notice')
+          )
+        }
+        if (lowerHref.includes('event') || lowerLabel.includes('event')) {
+          return (
+            combined.includes('event') ||
+            combined.includes('symposium') ||
+            combined.includes('hackathon') ||
+            combined.includes('workshop')
+          )
+        }
+        if (lowerHref.includes('project') || lowerLabel.includes('project')) {
+          return (
+            combined.includes('project') ||
+            combined.includes('milestone') ||
+            combined.includes('capstone')
+          )
+        }
+        if (lowerHref.includes('question') || lowerLabel.includes('question')) {
+          return combined.includes('question') || combined.includes('iat') || combined.includes('exam') || combined.includes('test paper')
+        }
+        if (lowerHref.includes('achievement') || lowerLabel.includes('achievement')) {
+          return combined.includes('achievement') || combined.includes('winner') || combined.includes('award') || combined.includes('trophy') || combined.includes('prize')
+        }
+        if (lowerHref.includes('resource') || lowerHref.includes('study') || lowerLabel.includes('resource') || lowerLabel.includes('study')) {
+          return combined.includes('resource') || combined.includes('study material') || combined.includes('notes') || combined.includes('manual')
+        }
+        if (lowerHref.includes('subject') || lowerHref.includes('academic') || lowerLabel.includes('subject') || lowerLabel.includes('academic')) {
+          return combined.includes('subject') || combined.includes('syllabus') || combined.includes('course') || combined.includes('curriculum')
+        }
+        if (lowerHref.includes('student') || lowerLabel.includes('student')) {
+          return combined.includes('student') || combined.includes('enroll') || combined.includes('admission')
+        }
+        if (lowerHref.includes('faculty') || lowerLabel.includes('faculty')) {
+          return combined.includes('faculty') || combined.includes('staff') || combined.includes('advisor')
+        }
+        if (lowerHref.includes('report') || lowerLabel.includes('report')) {
+          return combined.includes('report') || combined.includes('analytics') || combined.includes('audit')
+        }
+        return false
+      }).length
+
+      return Math.max(count, unreadMatches)
+    },
+    [notifications, unreadCount, apiMenuCounts]
+  )
+
+  const menusWithNotifications = useMemo(() => {
+    return resolvedNavItems
+      .filter((item) => {
+        // Exclude generic notifications inbox from menu breakdown
+        if (item.href.includes('/notifications') || item.label.toLowerCase() === 'notifications') {
+          return false
+        }
+        return getMenuNotificationCount(item.href, item.label) > 0
+      })
+      .map((item) => ({
+        ...item,
+        count: getMenuNotificationCount(item.href, item.label),
+      }))
+  }, [resolvedNavItems, getMenuNotificationCount])
+
+  const totalMenuNotifications = useMemo(() => {
+    return menusWithNotifications.reduce((acc, item) => acc + item.count, 0)
+  }, [menusWithNotifications])
+
   // Role-specific URLs
   const notificationsHref =
     role === 'hod'
@@ -511,15 +663,19 @@ export function PortalLayout({
   useEffect(() => {
     setIsDrawerOpen(false)
     setIsNotificationOpen(false)
+    setIsMenuNotifOpen(false)
     setIsNavigating(false)
     setActivePath(pathname)
   }, [pathname])
 
-  // Click outside to close notification dropdown
+  // Click outside to close notification dropdowns
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
         setIsNotificationOpen(false)
+      }
+      if (menuNotifRef.current && !menuNotifRef.current.contains(event.target as Node)) {
+        setIsMenuNotifOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -681,6 +837,7 @@ export function PortalLayout({
 
             const meta = key ? menuMetaMap[key] : null
             const displayLabel = meta?.label || item.label
+            const notifCount = getMenuNotificationCount(item.href, displayLabel)
 
             return (
               <Link
@@ -708,20 +865,39 @@ export function PortalLayout({
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={cn('shrink-0 text-base', isActive ? 'text-white' : 'text-[#22C7E8]')}>
+                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-white' : 'text-[#22C7E8]')}>
                     {item.icon}
+                    {notifCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#071A3D] animate-ping" />
+                    )}
                   </span>
                   <span className="truncate">{displayLabel}</span>
                 </div>
 
-                {meta?.badgeText && (
-                  <span
-                    className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase text-white shrink-0 ml-1.5 shadow-2xs"
-                    style={{ backgroundColor: meta.badgeColor || '#1455D9' }}
-                  >
-                    {meta.badgeText}
-                  </span>
-                )}
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {notifCount > 0 && (
+                    <span
+                      className={cn(
+                        'inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black tracking-tight shadow-xs animate-pulse transition-all',
+                        isActive
+                          ? 'bg-white text-[#1455D9] ring-1 ring-white/60'
+                          : 'bg-red-500 text-white ring-2 ring-red-400/40'
+                      )}
+                      title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
+                    >
+                      {notifCount > 99 ? '99+' : notifCount}
+                    </span>
+                  )}
+
+                  {meta?.badgeText && (
+                    <span
+                      className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase text-white shrink-0 shadow-2xs"
+                      style={{ backgroundColor: meta.badgeColor || '#1455D9' }}
+                    >
+                      {meta.badgeText}
+                    </span>
+                  )}
+                </div>
               </Link>
             )
           })}
@@ -750,11 +926,159 @@ export function PortalLayout({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="p-2 rounded-xl text-[#071A3D] hover:bg-gray-100 lg:hidden transition-colors"
+              className="relative p-2 rounded-xl text-[#071A3D] hover:bg-gray-100 lg:hidden transition-colors"
               aria-label="Open Navigation Drawer"
             >
               <Menu className="w-6 h-6" />
+              {totalMenuNotifications > 0 && (
+                <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
+                  {totalMenuNotifications > 99 ? '99+' : totalMenuNotifications}
+                </span>
+              )}
             </button>
+
+            {/* Top Menu Bar: Active Menu Notifications & Dropdown */}
+            {menusWithNotifications.length > 0 && (
+              <div className="relative flex items-center gap-2" ref={menuNotifRef}>
+                {/* 1. Direct Quick Chips for top 2 active menus (visible on desktop) */}
+                <div className="hidden xl:flex items-center gap-2">
+                  {menusWithNotifications.slice(0, 2).map((m) => (
+                    <Link
+                      key={m.href}
+                      href={m.href}
+                      onClick={() => handleNavClick(m.href)}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 border border-slate-200/80 hover:border-blue-200 text-[#071A3D] hover:text-[#1455D9] transition-all text-xs font-bold shadow-2xs group cursor-pointer"
+                      title={`${m.count} new notification${m.count > 1 ? 's' : ''} in ${m.label}`}
+                    >
+                      <span className="text-blue-600 group-hover:scale-110 transition-transform">
+                        {m.icon}
+                      </span>
+                      <span className="truncate max-w-[130px]">{m.label}</span>
+                      <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-xs animate-pulse">
+                        {m.count > 99 ? '99+' : m.count}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* 2. Interactive Menu Updates Pill Button (visible across screen sizes) */}
+                <button
+                  type="button"
+                  onClick={() => setIsMenuNotifOpen((prev) => !prev)}
+                  className={cn(
+                    'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full border text-xs font-bold transition-all shadow-xs cursor-pointer',
+                    isMenuNotifOpen
+                      ? 'bg-red-500 text-white border-red-600 ring-2 ring-red-300/50'
+                      : 'bg-red-50 hover:bg-red-100/90 text-red-700 border-red-200 hover:border-red-300'
+                  )}
+                  title="Click to view all menus with notifications"
+                  aria-expanded={isMenuNotifOpen}
+                >
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                  <span className="tracking-tight">
+                    {menusWithNotifications.length}{' '}
+                    <span className="hidden sm:inline">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
+                    <span className="sm:hidden">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
+                  </span>
+                  <span
+                    className={cn(
+                      'px-1.5 py-0.2 rounded-full text-[10px] font-black',
+                      isMenuNotifOpen ? 'bg-white text-red-600' : 'bg-red-500 text-white'
+                    )}
+                  >
+                    {totalMenuNotifications}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      'w-3.5 h-3.5 transition-transform duration-200',
+                      isMenuNotifOpen ? 'rotate-180' : ''
+                    )}
+                  />
+                </button>
+
+                {/* 3. Dropdown Popover showing all menus with their notification counts */}
+                {isMenuNotifOpen && (
+                  <>
+                    {/* Mobile Backdrop */}
+                    <div
+                      onClick={() => setIsMenuNotifOpen(false)}
+                      className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
+                    />
+
+                    <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 w-auto sm:w-80 rounded-2xl bg-white border border-slate-200 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left flex flex-col font-sans">
+                      <div className="p-3.5 bg-[#071A41] text-white flex items-center justify-between shadow-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-red-500/20 border border-red-400/30 flex items-center justify-center text-red-300">
+                            <Bell className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-black tracking-wide text-white">Menu Notifications</h4>
+                            <p className="text-[10px] text-blue-200">
+                              {totalMenuNotifications} alert{totalMenuNotifications > 1 ? 's' : ''} across {menusWithNotifications.length} menu{menusWithNotifications.length > 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black">
+                          Active
+                        </span>
+                      </div>
+
+                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 p-1.5 bg-white" style={{ scrollbarWidth: 'thin' }}>
+                        {menusWithNotifications.map((m) => (
+                          <Link
+                            key={m.href}
+                            href={m.href}
+                            onClick={() => {
+                              handleNavClick(m.href)
+                              setIsMenuNotifOpen(false)
+                            }}
+                            className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1455D9] group-hover:bg-[#1455D9] group-hover:text-white transition-colors flex items-center justify-center shrink-0 shadow-2xs">
+                                {m.icon}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-800 group-hover:text-[#1455D9] truncate">
+                                  {m.label}
+                                </p>
+                                <p className="text-[10px] text-slate-500 truncate">
+                                  Click to open this section
+                                </p>
+                              </div>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 text-xs font-black shrink-0 shadow-2xs group-hover:bg-red-500 group-hover:text-white group-hover:border-red-500 transition-colors">
+                              {m.count} new
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+
+                      <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+                        <Link
+                          href={notificationsHref}
+                          onClick={() => setIsMenuNotifOpen(false)}
+                          className="text-[11px] font-bold text-[#1455D9] hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>All Notifications</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setIsMenuNotifOpen(false)}
+                          className="text-[11px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             <Link href={role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
               <div className="w-8 h-8 rounded-full p-0.5 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_10px_rgba(231,185,62,0.4)] flex items-center justify-center shrink-0">
@@ -1006,13 +1330,20 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
+            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors relative',
             (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
-          {role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+          <div className="relative">
+            {role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+            {getMenuNotificationCount(role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'hod' ? 'OD Proofs' : 'Courses') > 0 && (
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
+                {getMenuNotificationCount(role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'hod' ? 'OD Proofs' : 'Courses') > 9 ? '9+' : getMenuNotificationCount(role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'hod' ? 'OD Proofs' : 'Courses')}
+              </span>
+            )}
+          </div>
           <span>{role === 'hod' ? 'OD Proofs' : 'Courses'}</span>
         </Link>
         <Link
@@ -1022,12 +1353,38 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
+            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors relative',
             (activePath || pathname).includes('projects') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
-          <FolderOpen className="h-5 w-5" />
+          <div className="relative">
+            <FolderOpen className="h-5 w-5" />
+            {getMenuNotificationCount(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects', 'Projects') > 0 && (
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
+                {getMenuNotificationCount(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects', 'Projects') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects', 'Projects')}
+              </span>
+            )}
+          </div>
           <span>Projects</span>
+        </Link>
+        <Link
+          href={notificationsHref}
+          prefetch={true}
+          onClick={() => handleNavClick(notificationsHref)}
+          className={cn(
+            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors relative',
+            (activePath || pathname).includes('notifications') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
+          )}
+        >
+          <div className="relative">
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </div>
+          <span>Alerts</span>
         </Link>
         <Link
           href={profileHref}

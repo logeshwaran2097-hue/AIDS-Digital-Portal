@@ -95,9 +95,140 @@ export async function GET(request: Request) {
       ['notifications']
     )
 
+    // Determine if notification is read by the current user
+    const notificationsWithReadStatus = notifications.map((n) => {
+      let readArray: string[] = []
+      try {
+        readArray = JSON.parse(n.readBy || '[]')
+      } catch {
+        readArray = []
+      }
+      const isRead = userId ? readArray.includes(userId) : false
+      return {
+        ...n,
+        isRead,
+        readArray,
+      }
+    })
+
+    const unreadNotifications = notificationsWithReadStatus.filter((n) => !n.isRead)
+
+    // Aggregate menu-specific notification counts (focused on unread items)
+    const menuCounts: Record<string, number> = {
+      notifications: unreadNotifications.length,
+    }
+
+    // Check for pending OD items based on role
+    try {
+      let pendingODCount = 0
+      if (userRole === 'admin') {
+        pendingODCount = await prisma.auditLog.count({
+          where: {
+            action: 'OD_APPLICATION_SUBMITTED',
+            status: { in: ['pending_advisor_approval', 'pending_hod_approval'] },
+          },
+        }).catch(() => 0)
+      } else if (userRole === 'hod') {
+        pendingODCount = await prisma.auditLog.count({
+          where: {
+            action: 'OD_APPLICATION_SUBMITTED',
+            status: 'pending_hod_approval',
+          },
+        }).catch(() => 0)
+      } else if (userRole === 'faculty') {
+        pendingODCount = await prisma.auditLog.count({
+          where: {
+            action: 'OD_APPLICATION_SUBMITTED',
+            status: 'pending_advisor_approval',
+          },
+        }).catch(() => 0)
+      }
+      if (pendingODCount > 0) {
+        menuCounts['od-applications'] = (menuCounts['od-applications'] || 0) + pendingODCount
+      }
+    } catch {}
+
+    // Check for pending OD proofs
+    try {
+      let pendingProofCount = 0
+      if (userRole === 'admin' || userRole === 'hod' || userRole === 'faculty') {
+        pendingProofCount = await prisma.oDProof.count({
+          where: {
+            status: 'under_review',
+          },
+        }).catch(() => 0)
+      }
+      if (pendingProofCount > 0) {
+        menuCounts['od-proofs'] = (menuCounts['od-proofs'] || 0) + pendingProofCount
+      }
+    } catch {}
+
+    // Check for pending attendance unlock requests
+    try {
+      if (userRole === 'hod' || userRole === 'admin') {
+        const pendingUnlocks = await prisma.auditLog.count({
+          where: {
+            action: 'ATTENDANCE_UNLOCK_REQUEST',
+            status: 'PENDING',
+          },
+        }).catch(() => 0)
+        if (pendingUnlocks > 0) {
+          menuCounts['attendance'] = (menuCounts['attendance'] || 0) + pendingUnlocks
+        }
+      }
+    } catch {}
+
+    // Categorize unread notifications across all portal menu domains
+    unreadNotifications.forEach((n) => {
+      const combined = `${n.title || ''} ${n.message || ''}`.toLowerCase()
+      if (combined.includes('announcement') || combined.includes('circular') || combined.includes('notice')) {
+        menuCounts['announcements'] = (menuCounts['announcements'] || 0) + 1
+      }
+      if (combined.includes('event') || combined.includes('symposium') || combined.includes('hackathon') || combined.includes('workshop')) {
+        menuCounts['events'] = (menuCounts['events'] || 0) + 1
+      }
+      if (combined.includes('project') || combined.includes('capstone') || combined.includes('milestone')) {
+        menuCounts['projects'] = (menuCounts['projects'] || 0) + 1
+      }
+      if (combined.includes('question') || combined.includes('iat') || combined.includes('exam') || combined.includes('test paper')) {
+        menuCounts['questions'] = (menuCounts['questions'] || 0) + 1
+        menuCounts['question-papers'] = (menuCounts['question-papers'] || 0) + 1
+      }
+      if (combined.includes('achievement') || combined.includes('winner') || combined.includes('award') || combined.includes('trophy') || combined.includes('prize')) {
+        menuCounts['achievements'] = (menuCounts['achievements'] || 0) + 1
+      }
+      if (combined.includes('attendance') || combined.includes('roll call') || combined.includes('condonation') || combined.includes('absent') || combined.includes('unlock')) {
+        menuCounts['attendance'] = (menuCounts['attendance'] || 0) + 1
+      }
+      if (combined.includes('proof') || combined.includes('certificate') || combined.includes('geo-photo')) {
+        menuCounts['od-proofs'] = (menuCounts['od-proofs'] || 0) + 1
+      }
+      if (combined.includes('od') || combined.includes('on-duty') || combined.includes('leave') || combined.includes('permission') || combined.includes('sanction')) {
+        menuCounts['od-applications'] = (menuCounts['od-applications'] || 0) + 1
+      }
+      if (combined.includes('resource') || combined.includes('study material') || combined.includes('notes') || combined.includes('lab manual') || combined.includes('manual')) {
+        menuCounts['resources'] = (menuCounts['resources'] || 0) + 1
+        menuCounts['study'] = (menuCounts['study'] || 0) + 1
+      }
+      if (combined.includes('subject') || combined.includes('syllabus') || combined.includes('curriculum') || combined.includes('academic')) {
+        menuCounts['subjects'] = (menuCounts['subjects'] || 0) + 1
+        menuCounts['academics'] = (menuCounts['academics'] || 0) + 1
+      }
+      if (combined.includes('student') || combined.includes('enroll') || combined.includes('admission') || combined.includes('profile change')) {
+        menuCounts['students'] = (menuCounts['students'] || 0) + 1
+      }
+      if (combined.includes('faculty') || combined.includes('staff') || combined.includes('advisor')) {
+        menuCounts['faculty'] = (menuCounts['faculty'] || 0) + 1
+      }
+      if (combined.includes('report') || combined.includes('analytics') || combined.includes('audit')) {
+        menuCounts['reports'] = (menuCounts['reports'] || 0) + 1
+      }
+    })
+
     return NextResponse.json({
       success: true,
-      notifications: notifications.map((n) => ({
+      menuCounts,
+      notifications: notificationsWithReadStatus.map((n) => ({
         id: n.id,
         title: n.title,
         message: n.message,
@@ -105,13 +236,8 @@ export async function GET(request: Request) {
         createdByName: n.createdByName || 'Administrator',
         status: n.status,
         createdAt: n.createdAt,
-        readBy: (() => {
-          try {
-            return JSON.parse(n.readBy || '[]')
-          } catch {
-            return []
-          }
-        })(),
+        isRead: n.isRead,
+        readBy: n.readArray,
       })),
       timestamp: new Date().toISOString(),
     })
