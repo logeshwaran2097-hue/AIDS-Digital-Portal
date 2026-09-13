@@ -204,7 +204,7 @@ export function StudentProfileView({
           setProfile((prev) => ({ ...prev, ...parsed }))
           setFormData((prev) => ({ ...prev, ...parsed }))
         }
-      } catch {}
+      } catch { }
     }
   }, [regNo, storageKey, verifiedPersonal])
 
@@ -278,7 +278,7 @@ export function StudentProfileView({
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ registerNumber: profile.registerNumber, profileImage: base64 }),
-          }).catch(() => {})
+          }).catch(() => { })
           toast.success('Passport photograph updated!')
           playNotificationChime()
         }
@@ -359,7 +359,7 @@ export function StudentProfileView({
           advisorName: formData.advisor,
           profileImage: formData.profileImage || undefined,
         }),
-      }).catch(() => {})
+      }).catch(() => { })
 
       toast.success('Profile updated successfully!')
       playNotificationChime()
@@ -1544,7 +1544,7 @@ export function StudentProfileView({
                 const parsed = JSON.parse(saved)
                 setProfile((prev) => ({ ...prev, ...parsed, ...updatedUser }))
                 setFormData((prev) => ({ ...prev, ...parsed, ...updatedUser }))
-              } catch {}
+              } catch { }
             }
           }
           toast.success('Onboarding records synchronized to your profile!')
