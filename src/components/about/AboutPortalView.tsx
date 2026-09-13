@@ -1677,73 +1677,29 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
               </div>
             </div>
 
-            {/* Architectural Statement */}
-            <div className="relative z-10 mt-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-slate-50 border-l-4 border-royal shadow-2xs">
-              <blockquote className="text-xs sm:text-sm text-slate-700 leading-relaxed italic font-medium">
-                &ldquo;Conceived, architected, and engineered from foundational code to revolutionize academic administration within the Department of Artificial Intelligence &amp; Data Science. This portal unites strict Anna University autonomous attendance standards, automated WhatsApp parent alerts via Fast2SMS Cloud API, geotagged On-Duty verification, dynamic 8-semester laboratory tracking, and cross-platform PWA offline capabilities into an institutional-grade cloud ecosystem.&rdquo;
-              </blockquote>
-            </div>
+            {/* Architect's Guiding Philosophy Quote */}
+            <div className="relative z-10 mt-8 p-6 sm:p-10 rounded-3xl bg-gradient-to-br from-slate-900 via-[#071A3D] to-slate-900 text-white border border-blue-400/30 shadow-2xl overflow-hidden text-center group">
+              {/* Ambient Glows */}
+              <div className="absolute -top-12 -left-12 w-56 h-56 bg-amber-400/15 rounded-full blur-3xl pointer-events-none animate-pulse" />
+              <div className="absolute -bottom-12 -right-12 w-56 h-56 bg-blue-500/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
 
-            {/* Core Architectural Contributions Grid */}
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all duration-300 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2 text-royal text-xs font-black uppercase tracking-wide mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Code2 className="w-4 h-4" />
-                  </div>
-                  <span>Full-Stack Engine</span>
+              <div className="relative z-10 max-w-2xl mx-auto space-y-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/10 text-amber-300 border border-white/15 mx-auto shadow-inner group-hover:scale-110 transition-transform duration-300">
+                  <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Engineered the complete Next.js 14 App Router, dynamic server rendering, custom REST API endpoints, and client-side reactive state.
-                </p>
-              </div>
 
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200 shadow-2xs hover:shadow-md hover:border-emerald-300 transition-all duration-300 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2 text-emerald-700 text-xs font-black uppercase tracking-wide mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-emerald-600" />
-                  </div>
-                  <span>Fast2SMS Cloud API</span>
+                <blockquote className="text-xl sm:text-3xl font-black tracking-tight leading-relaxed italic text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-white to-amber-300">
+                  &ldquo;Success cannot teach anything<br className="hidden sm:inline" /> but Failure teach everything&rdquo;
+                </blockquote>
+
+                <div className="pt-2 flex items-center justify-center gap-3 text-xs font-bold text-blue-200">
+                  <span className="w-10 h-0.5 bg-gradient-to-r from-transparent via-amber-400/60 to-amber-300 rounded-full" />
+                  <span className="uppercase tracking-widest text-amber-300 font-extrabold text-[11px]">
+                    Architect’s Guiding Philosophy
+                  </span>
+                  <span className="w-10 h-0.5 bg-gradient-to-l from-transparent via-amber-400/60 to-amber-300 rounded-full" />
                 </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Integrated Fast2SMS WhatsApp Cloud API for automated absence notices, multi-channel templates, and live SMS/WhatsApp gateway configurations.
-                </p>
               </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200 shadow-2xs hover:shadow-md hover:border-purple-300 transition-all duration-300 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2 text-purple-700 text-xs font-black uppercase tracking-wide mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                    <Database className="w-4 h-4 text-purple-600" />
-                  </div>
-                  <span>Curricula &amp; 8 Labs</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Designed the comprehensive 8-semester laboratory architecture with zero mock data and dedicated Year &amp; Semester-wise filtering.
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 hover:bg-white border border-slate-200 shadow-2xs hover:shadow-md hover:border-amber-300 transition-all duration-300 hover:-translate-y-0.5">
-                <div className="flex items-center gap-2 text-amber-800 text-xs font-black uppercase tracking-wide mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <Smartphone className="w-4 h-4 text-amber-600" />
-                  </div>
-                  <span>Offline-Ready PWA</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Built 1-click installable Progressive Web App for Windows, Android, Mac, and iOS with Service Worker cache and Web Push notifications.
-                </p>
-              </div>
-            </div>
-
-            {/* Institutional Mentorship & Acknowledgement */}
-            <div className="relative z-10 mt-6 p-5 rounded-2xl bg-slate-50 border border-slate-200/80">
-              <h4 className="text-xs font-black text-[#071A3D] uppercase tracking-wider mb-2 flex items-center gap-2">
-                <Award className="w-4 h-4 text-amber-600" />
-                <span>Institutional Patronage &amp; Acknowledgement</span>
-              </h4>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Special gratitude is extended to the <strong>College Management</strong>, <strong>Principal</strong>, <strong>Head of the Department</strong>, and <strong>Faculty Members</strong> of the Department of Artificial Intelligence &amp; Data Science at V.S.B. Engineering College (Autonomous), Karur, for their unwavering guidance, encouragement, and institutional support throughout the development and deployment of this enterprise digital portal.
-              </p>
             </div>
           </div>
         </section>
