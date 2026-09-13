@@ -18,6 +18,12 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail.endsWith('@gmail.com')) {
+      return NextResponse.json(
+        { success: false, message: 'Only @gmail.com personal email addresses are allowed (e.g. name@gmail.com).' },
+        { status: 400 }
+      )
+    }
 
     // Check if email is already linked to another active account
     const availability = await checkEmailAvailability(normalizedEmail, {

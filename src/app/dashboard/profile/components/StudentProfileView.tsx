@@ -315,12 +315,19 @@ export function StudentProfileView({
     e.preventDefault()
     setLoading(true)
 
+    const cleanPersonalEmail = (formData.personalEmail && !formData.personalEmail.endsWith('@student.vsb.edu.in'))
+      ? formData.personalEmail.trim()
+      : (formData.email && !formData.email.endsWith('@student.vsb.edu.in'))
+        ? formData.email.trim()
+        : ''
+
+    if (cleanPersonalEmail && !cleanPersonalEmail.toLowerCase().endsWith('@gmail.com')) {
+      toast.error('Only @gmail.com email addresses are permitted (e.g. name@gmail.com).')
+      setLoading(false)
+      return
+    }
+
     try {
-      const cleanPersonalEmail = (formData.personalEmail && !formData.personalEmail.endsWith('@student.vsb.edu.in'))
-        ? formData.personalEmail
-        : (formData.email && !formData.email.endsWith('@student.vsb.edu.in'))
-          ? formData.email
-          : ''
       const updatedProfile = {
         ...formData,
         email: cleanPersonalEmail,
@@ -837,7 +844,12 @@ export function StudentProfileView({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Personal Email Address</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-bold text-[#071A3D]">Personal Email Address</label>
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                          @gmail.com only
+                        </span>
+                      </div>
                       <input
                         type="email"
                         value={formData.personalEmail || (formData.email && !formData.email.endsWith('@student.vsb.edu.in') ? formData.email : '')}
@@ -846,7 +858,7 @@ export function StudentProfileView({
                           setFormData({ ...formData, personalEmail: val, email: val })
                         }}
                         className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono text-[#071A3D] text-xs"
-                        placeholder="e.g. name@gmail.com"
+                        placeholder="e.g. yourname@gmail.com"
                       />
                     </div>
 

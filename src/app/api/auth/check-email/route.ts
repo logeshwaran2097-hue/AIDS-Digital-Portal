@@ -15,6 +15,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (registerNumber && !email.trim().toLowerCase().endsWith('@gmail.com')) {
+      return NextResponse.json({
+        available: false,
+        message: 'Only @gmail.com personal email addresses are permitted.',
+      })
+    }
+
     const result = await checkEmailAvailability(email, {
       userId,
       registerNumber,

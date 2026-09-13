@@ -274,7 +274,21 @@ export function StudentOnboardingModal({
   // Real-time debounced email availability check
   React.useEffect(() => {
     const rawEmail = form.email?.trim().toLowerCase()
-    if (!rawEmail || !rawEmail.includes('@') || !rawEmail.includes('.')) {
+    if (!rawEmail) {
+      setEmailCheckStatus({ checking: false, available: null, message: null })
+      return
+    }
+
+    if (rawEmail.includes('@') && !rawEmail.endsWith('@gmail.com')) {
+      setEmailCheckStatus({
+        checking: false,
+        available: false,
+        message: 'Only @gmail.com email addresses are allowed (e.g. yourname@gmail.com).',
+      })
+      return
+    }
+
+    if (!rawEmail.endsWith('@gmail.com')) {
       setEmailCheckStatus({ checking: false, available: null, message: null })
       return
     }
@@ -307,15 +321,16 @@ export function StudentOnboardingModal({
 
   // Send Email OTP
   const handleSendEmailOTP = async () => {
-    if (!form.email.trim() || !form.email.includes('@')) {
-      toast.error('Please enter a valid personal email address.')
+    const normalizedEmail = form.email.trim().toLowerCase()
+    if (!normalizedEmail || !normalizedEmail.endsWith('@gmail.com')) {
+      toast.error('Only @gmail.com email addresses are permitted (e.g. yourname@gmail.com).')
       return
     }
 
     if (emailCheckStatus.available === false) {
       toast.error(
         emailCheckStatus.message ||
-        'This email address is already linked to another account. Please use a unique personal email.'
+        'Only @gmail.com email addresses are allowed.'
       )
       return
     }
@@ -381,8 +396,9 @@ export function StudentOnboardingModal({
       toast.error('New password and confirm password do not match.')
       return
     }
-    if (!form.email.trim() || !form.email.includes('@')) {
-      toast.error('Please enter a valid email address.')
+    const normalizedEmail = form.email.trim().toLowerCase()
+    if (!normalizedEmail || !normalizedEmail.endsWith('@gmail.com')) {
+      toast.error('Only @gmail.com personal email addresses are allowed (e.g. yourname@gmail.com).')
       return
     }
     if (!emailOtpSent && !demoOtp) {
@@ -1234,15 +1250,20 @@ export function StudentOnboardingModal({
               </div>
 
               <div>
-                <label className="block font-bold text-gray-700 text-[11px] mb-1">
-                  Email Address *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-gray-700 text-[11px]">
+                    Personal Email Address (@gmail.com only) *
+                  </label>
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md border border-blue-200">
+                    Only @gmail.com
+                  </span>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="email"
                     required
                     autoComplete="email"
-                    placeholder="Enter personal email (e.g. name@gmail.com)"
+                    placeholder="Enter your Gmail address (e.g. name@gmail.com)"
                     value={form.email}
                     onChange={(e) => {
                       const val = e.target.value

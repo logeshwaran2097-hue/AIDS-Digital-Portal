@@ -149,6 +149,9 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail.endsWith('@gmail.com')) {
+      return NextResponse.json({ success: false, message: 'Only @gmail.com email addresses are allowed (e.g. name@gmail.com).' }, { status: 400 })
+    }
     const trimmedOtp = otp ? otp.trim() : ''
 
     // Verify OTP

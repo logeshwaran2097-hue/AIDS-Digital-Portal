@@ -365,6 +365,12 @@ export async function PUT(request: Request) {
     }
 
     const isEmailCustom = Boolean(email?.trim())
+    if (isEmailCustom && !email.trim().toLowerCase().endsWith('@gmail.com') && !email.trim().toLowerCase().endsWith('@student.vsb.edu.in')) {
+      return NextResponse.json({
+        success: false,
+        error: 'Only @gmail.com email addresses are permitted for student personal emails.',
+      }, { status: 400 })
+    }
 
     // If student record exists, update both Student and User
     if (student) {
