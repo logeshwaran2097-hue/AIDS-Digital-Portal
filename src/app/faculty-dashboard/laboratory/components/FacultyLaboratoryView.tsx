@@ -74,6 +74,33 @@ export interface LabPreset {
   tools: string
 }
 
+export const COMMUNICATION_LAB_ACTIVITIES = [
+  {
+    name: 'Listening & Phonetics',
+    topics: 'Accent neutralisation, phonetic symbol drills, and comprehension audio tests.',
+  },
+  {
+    name: 'JAM (Just-A-Minute)',
+    topics: '1-minute impromptu speaking drills for spontaneity and fluency.',
+  },
+  {
+    name: 'Oral & Technical Presentations',
+    topics: 'Formal PPT presentations with visual aids and peer Q&A.',
+  },
+  {
+    name: 'Group Discussions (GD)',
+    topics: 'Formal GD rounds on contemporary tech and social issues.',
+  },
+  {
+    name: 'Formal Writing & Etiquette',
+    topics: 'Professional resumes, cover letters, and corporate email correspondence.',
+  },
+  {
+    name: 'Mock Interviews & Viva',
+    topics: 'One-on-one HR and technical interview simulations with behavioral scoring.',
+  },
+]
+
 interface Props {
   initialDetails: LabDetails
   initialActivities: LabActivityRecord[]
@@ -136,18 +163,20 @@ export function FacultyLaboratoryView({
       (a) => !a.labName?.toLowerCase().includes('communication') && a.labCode !== 'GE3271'
     ).length
 
+    const defaultComm = COMMUNICATION_LAB_ACTIVITIES[0]
+
     setFormData({
       date: new Date().toISOString().split('T')[0],
       day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
       period: details.labPeriod || 'Period 5 - 8 (01:20 PM - 04:30 PM)',
       experimentNo: isComm ? '' : String(aidsCount + 1 || 1),
-      experimentName: '',
-      topicsCovered: '',
+      experimentName: isComm ? defaultComm.name : '',
+      topicsCovered: isComm ? defaultComm.topics : '',
       activityType: isComm ? 'Communication Activity' : 'Lab Experiment',
       labTrainer: details.labTrainer || '',
       toolsUsed: '',
       status: 'completed',
-      attendanceCount: isComm ? '' : '58',
+      attendanceCount: isComm ? '58' : '58',
       remarks: '',
     })
     setIsModalOpen(true)
@@ -502,6 +531,104 @@ export function FacultyLaboratoryView({
         </div>
       </div>
 
+      {/* Standard Anna University Curricular Topics Covered (Communication Laboratory) */}
+      {activeLabTab === 'communication' && (
+        <div className="bg-gradient-to-br from-purple-950/10 via-indigo-900/5 to-white p-6 rounded-3xl border border-purple-200 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-purple-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-black uppercase tracking-wider">
+                  Anna University GE3271 Syllabus
+                </span>
+                <span className="text-xs font-semibold text-purple-700 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-600" /> Prescribed Practical Curricular Exercises
+                </span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-black text-[#071A3D] mt-1.5">
+                Standard Anna University Curricular Topics Covered
+              </h3>
+              <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                The Communication Laboratory is designed to support the following practical exercises:
+              </p>
+            </div>
+            <button
+              onClick={handleOpenCreate}
+              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-2 cursor-pointer self-start sm:self-center"
+            >
+              <Plus className="w-4 h-4" /> Log Practical Session
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            {COMMUNICATION_LAB_ACTIVITIES.map((act, idx) => {
+              const count = activities.filter(
+                (a) =>
+                  (a.labName?.toLowerCase().includes('communication') || a.labCode === 'GE3271') &&
+                  a.experimentName === act.name
+              ).length
+
+              return (
+                <div
+                  key={act.name}
+                  className="p-4 rounded-2xl bg-white border border-purple-100 hover:border-purple-300 hover:shadow-md transition-all flex flex-col justify-between gap-3 group"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono font-black text-purple-700 bg-purple-50 border border-purple-200 px-2.5 py-0.5 rounded-md">
+                        Exercise 0{idx + 1}
+                      </span>
+                      {count > 0 ? (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> {count} {count === 1 ? 'Session' : 'Sessions'} Logged
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+                          Not Logged Yet
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm text-[#071A3D] group-hover:text-purple-700 transition-colors">
+                        {act.name}
+                      </h4>
+                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                        {act.topics}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingActivity(null)
+                      setFormData({
+                        date: new Date().toISOString().split('T')[0],
+                        day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+                        period: details.labPeriod || 'Period 5 - 8 (01:20 PM - 04:30 PM)',
+                        experimentNo: '',
+                        experimentName: act.name,
+                        topicsCovered: act.topics,
+                        activityType: 'Communication Activity',
+                        labTrainer: details.labTrainer || '',
+                        toolsUsed: '',
+                        status: 'completed',
+                        attendanceCount: '58',
+                        remarks: '',
+                      })
+                      setIsModalOpen(true)
+                    }}
+                    className="w-full mt-1 py-1.5 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <span>Log this Activity</span>
+                    <span className="text-sm">&rarr;</span>
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Filter and Action Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
         <div className="relative flex-1 w-full">
@@ -785,33 +912,51 @@ export function FacultyLaboratoryView({
               {/* Specific fields for Communication Lab vs AI & DS Lab */}
               {activeLabTab === 'communication' ? (
                 <>
-                  {/* Today's Topics */}
+                  {/* Activity Name (Selected from standard Anna University list, not manually typed) */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
-                      Today&apos;s Topics *
+                    <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
+                      <span>Activity Name *</span>
+                      <span className="text-[10px] font-bold text-purple-700">Standard Anna University Practical Exercises</span>
+                    </label>
+                    <select
+                      required
+                      value={formData.experimentName}
+                      onChange={(e) => {
+                        const selectedName = e.target.value
+                        const matched = COMMUNICATION_LAB_ACTIVITIES.find((a) => a.name === selectedName)
+                        setFormData({
+                          ...formData,
+                          experimentName: selectedName,
+                          topicsCovered: matched ? matched.topics : formData.topicsCovered,
+                        })
+                      }}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none cursor-pointer"
+                    >
+                      <option value="" disabled>-- Select Standard Anna University Practical Exercise --</option>
+                      {COMMUNICATION_LAB_ACTIVITIES.map((act) => (
+                        <option key={act.name} value={act.name}>
+                          {act.name}
+                        </option>
+                      ))}
+                      {formData.experimentName && !COMMUNICATION_LAB_ACTIVITIES.some((a) => a.name === formData.experimentName) && (
+                        <option value={formData.experimentName}>{formData.experimentName}</option>
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Today's Topics (Auto-filled from syllabus, editable) */}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
+                      <span>Today&apos;s Topics *</span>
+                      <span className="text-[10px] font-medium text-gray-400">Auto-filled from standard curriculum (editable)</span>
                     </label>
                     <textarea
                       required
                       rows={3}
                       value={formData.topicsCovered}
                       onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
-                      placeholder="e.g. Group discussion etiquette, body language, phonetics pronunciation drills..."
+                      placeholder="e.g. Accent neutralisation, phonetic symbol drills, and comprehension audio tests."
                       className="w-full p-3 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none leading-relaxed"
-                    />
-                  </div>
-
-                  {/* Activity Name */}
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
-                      Activity Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.experimentName}
-                      onChange={(e) => setFormData({ ...formData, experimentName: e.target.value })}
-                      placeholder="e.g. Mock Interview Simulation / JAM (Just-A-Minute) Session"
-                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
                     />
                   </div>
 
