@@ -49,7 +49,7 @@ export default async function FacultyStudentsPage() {
 
   const cookieStore = cookies()
   const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
-  const isAdvisor = resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
+  const isAdvisor = rawLoginRole === 'advisor' && resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
 
   if (!isAdvisor) {
     redirect('/faculty-dashboard')

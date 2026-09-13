@@ -18,8 +18,16 @@ export async function GET(request: NextRequest) {
     maxAge: 0,
     path: '/',
   })
+  response.cookies.set('portal_login_role', '', {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  })
   response.cookies.delete('auth-token')
   response.cookies.delete('otp-challenge')
+  response.cookies.delete('portal_login_role')
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
   return response
 }
@@ -40,8 +48,16 @@ export async function POST() {
     maxAge: 0,
     path: '/',
   })
+  response.cookies.set('portal_login_role', '', {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  })
   response.cookies.delete('auth-token')
   response.cookies.delete('otp-challenge')
+  response.cookies.delete('portal_login_role')
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
   return response
 }

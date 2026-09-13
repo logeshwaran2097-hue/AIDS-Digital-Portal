@@ -735,6 +735,12 @@ export function PortalLayout({
     // Clear cookies on client side
     document.cookie = 'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
     document.cookie = 'otp-challenge=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
+    document.cookie = 'portal_login_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('portal_login_role')
+      sessionStorage.removeItem('vsb_faculty_is_advisor')
+      sessionStorage.clear()
+    }
     window.location.href = '/login'
   }
 

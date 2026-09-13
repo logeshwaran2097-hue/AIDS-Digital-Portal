@@ -27,9 +27,9 @@ export default async function FacultySubjectsPage() {
   const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
   const isAdvisor = resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
 
-  // Class Advisors actively logging in as advisor have no allocated teaching subjects; redirect to Class Students
-  if (isAdvisor && parsedSubjectCodes.length === 0) {
-    redirect('/faculty-dashboard/students')
+  // If actively logged in as Class Advisor, redirect to faculty dashboard (advisors do not handle course subjects)
+  if (isAdvisor) {
+    redirect('/faculty-dashboard')
   }
 
   const dbSubjects = await prisma.subject.findMany({
