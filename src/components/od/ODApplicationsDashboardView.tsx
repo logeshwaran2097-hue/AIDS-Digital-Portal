@@ -527,21 +527,24 @@ export function ODApplicationsDashboardView({
             <p className="text-xs sm:text-sm text-blue-200/90 font-medium mt-1">
               {viewRole === 'student'
                 ? 'Student On-Duty & Leave Requisitions · Live Endorsement Clearance & Attendance Sync · B.Tech AI & DS'
+                : viewRole === 'hod'
+                ? 'Department Head Sanctions & Institutional Approvals · Absence & Event Records · B.Tech AI & DS'
                 : 'Class Advisor Section Advisory · Official Institutional Student Representation & Absence Records · B.Tech AI & DS'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Mode Banner / Class Jurisdiction ─────────────────────────────── */}
-      <div
-        className={cn(
-          'text-white rounded-2xl shadow-md p-3.5 px-5 flex items-center justify-between gap-3',
-          viewRole === 'student'
-            ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 border border-blue-400/30'
-            : 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700'
-        )}
-      >
+      {/* ── Mode Banner / Class Jurisdiction (Only for Student and Advisor, hidden for HOD) ── */}
+      {viewRole !== 'hod' && (
+        <div
+          className={cn(
+            'text-white rounded-2xl shadow-md p-3.5 px-5 flex items-center justify-between gap-3',
+            viewRole === 'student'
+              ? 'bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 border border-blue-400/30'
+              : 'bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700'
+          )}
+        >
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold shrink-0">
             {viewRole === 'student' ? <Sparkles className="w-4 h-4 text-white" /> : <Sun className="w-4 h-4 text-white" />}
@@ -579,6 +582,7 @@ export function ODApplicationsDashboardView({
           </span>
         )}
       </div>
+      )}
 
       {/* ── Real-Time KPI Stats Summary ──────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

@@ -873,7 +873,11 @@ export function PortalLayout({
           <div className="min-w-0 flex-1">
             <h4 className="text-sm font-bold text-white truncate leading-tight">{userName}</h4>
             <p className="text-[11px] text-gray-300 truncate mt-0.5">
-              {(userEmail && !userEmail.endsWith('@student.vsb.edu.in')) ? userEmail : 'AI & DS Dept'}
+              {role === 'hod' || (userEmail && userEmail.toLowerCase().startsWith('hod'))
+                ? 'AI & DS Dept'
+                : (userEmail && !userEmail.endsWith('@student.vsb.edu.in'))
+                ? userEmail
+                : 'AI & DS Dept'}
             </p>
             <span
               className={cn(
