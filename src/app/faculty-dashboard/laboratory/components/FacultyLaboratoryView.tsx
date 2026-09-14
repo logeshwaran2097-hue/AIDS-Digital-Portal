@@ -994,49 +994,18 @@ export function FacultyLaboratoryView({
                 <>
                   {/* Activity Name / Topic of Exercise */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-gray-700 flex items-center gap-1">
-                        <span>🎯</span>
-                        <span>Activity Name / Practical Topic *</span>
-                      </label>
-                      <span className="text-[10px] text-purple-600 font-medium">Type activity or pick a preset</span>
-                    </div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                      <span>🎯</span>
+                      <span>Activity Name / Practical Topic *</span>
+                    </label>
                     <input
                       type="text"
                       required
-                      list="comm-activities-list"
                       value={formData.experimentName}
                       onChange={(e) => setFormData({ ...formData, experimentName: e.target.value })}
                       placeholder="e.g. JAM (Just-A-Minute) / Mock Interviews & Viva / Accent Neutralisation"
                       className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-purple-600 focus:outline-none"
                     />
-                    <datalist id="comm-activities-list">
-                      {COMMUNICATION_LAB_ACTIVITIES.map((act) => (
-                        <option key={act.name} value={act.name} />
-                      ))}
-                    </datalist>
-
-                    {/* Quick Suggestion Pills */}
-                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      <span className="text-[10px] text-gray-400 font-medium">💡 Quick suggestions:</span>
-                      {COMMUNICATION_LAB_ACTIVITIES.map((act) => (
-                        <button
-                          key={act.name}
-                          type="button"
-                          onClick={() => {
-                            setFormData((prev) => ({
-                              ...prev,
-                              experimentName: act.name,
-                              topicsCovered: act.topics,
-                              toolsUsed: prev.toolsUsed || `Instructor drills & demonstration for ${act.name}`,
-                            }))
-                          }}
-                          className="text-[10px] font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200 transition-colors cursor-pointer"
-                        >
-                          {act.name}
-                        </button>
-                      ))}
-                    </div>
                   </div>
 
                   {/* 👨‍🏫 What Topics Covered by Trainer */}
