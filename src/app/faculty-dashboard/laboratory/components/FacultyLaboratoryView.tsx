@@ -880,7 +880,7 @@ export function FacultyLaboratoryView({
                               <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 flex items-center gap-1.5">
                                 <span>👥</span>
                                 <span>
-                                  Students Present: <strong>{act.attendanceCount} Students</strong>
+                                  Lab Attendance: <strong>{act.attendanceCount} Students Present</strong>
                                 </span>
                               </span>
                             )}
@@ -1215,12 +1215,12 @@ export function FacultyLaboratoryView({
                     />
                   </div>
 
-                  {/* 👥 Students Present / Attendance Count */}
+                  {/* 👥 Lab Attendance */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-xs font-bold text-gray-700 flex items-center gap-1">
                         <span>👥</span>
-                        <span>Students Present / Attendance Count</span>
+                        <span>Lab Attendance</span>
                       </label>
                       <button
                         type="button"
