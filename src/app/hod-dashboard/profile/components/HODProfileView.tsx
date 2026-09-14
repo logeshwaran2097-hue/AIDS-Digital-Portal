@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -30,6 +30,7 @@ import {
   FileCheck,
   Building2,
   FileText,
+  Camera,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import toast from 'react-hot-toast'
@@ -43,6 +44,7 @@ export interface HODProfileData {
   designation: string
   qualification: string
   experience: number
+  profileImage?: string
   department: string
   officeLocation?: string
   officeHours?: string
@@ -62,8 +64,77 @@ export interface HODProfileData {
 
 export function HODProfileView({ initialProfile }: { initialProfile: HODProfileData }) {
   const [profile, setProfile] = useState<HODProfileData>(initialProfile)
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initialProfile.profileImage)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Sync avatar from localStorage or global event
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('user_profile_image')
+      if (cached && !avatarUrl) {
+        setAvatarUrl(cached)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleImgUpdated = (e: any) => {
+      const img = e.detail || localStorage.getItem('user_profile_image')
+      if (img) setAvatarUrl(img)
+    }
+    window.addEventListener('portal-profile-image-updated', handleImgUpdated)
+    return () => window.removeEventListener('portal-profile-image-updated', handleImgUpdated)
+  }, [])
+
+  const handlePhotoUpload = (file: File) => {
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('Image size must be less than 15MB')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = document.createElement('img')
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxDim = 400
+        let w = img.width
+        let h = img.height
+        if (w > h) {
+          if (w > maxDim) {
+            h = Math.round((h * maxDim) / w)
+            w = maxDim
+          }
+        } else {
+          if (h > maxDim) {
+            w = Math.round((w * maxDim) / h)
+            h = maxDim
+          }
+        }
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h)
+          const base64 = canvas.toDataURL('image/jpeg', 0.85)
+          setAvatarUrl(base64)
+          setProfile((prev) => ({ ...prev, profileImage: base64 }))
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user_profile_image', base64)
+            window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: base64 }))
+          }
+          fetch('/api/auth/complete-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileImage: base64 }),
+          }).catch(() => {})
+          toast.success('HOD photograph updated successfully!')
+        }
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
 
   // Edit form state
   const [formData, setFormData] = useState({
@@ -169,8 +240,33 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
         <div className="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
         <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10 text-center sm:text-left">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-white/10 backdrop-blur-md border-2 border-[#F4C430] flex items-center justify-center text-4xl sm:text-5xl font-black text-[#F4C430] shadow-2xl shrink-0">
-            {profile.name.charAt(0).toUpperCase()}
+          <div className="relative group shrink-0">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden bg-white/10 backdrop-blur-md border-2 border-[#F4C430] flex items-center justify-center text-4xl sm:text-5xl font-black text-[#F4C430] shadow-2xl shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={profile.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                profile.name.charAt(0).toUpperCase()
+              )}
+            </div>
+            <label
+              className="absolute -bottom-1 -right-1 bg-[#F4C430] hover:bg-white text-[#071A3D] p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] hover:scale-110 flex items-center justify-center"
+              title="Upload / Change HOD Photo"
+            >
+              <Camera className="w-4 h-4" />
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/jpg, image/webp"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) handlePhotoUpload(f)
+                }}
+                className="hidden"
+              />
+            </label>
           </div>
 
           <div className="space-y-1">

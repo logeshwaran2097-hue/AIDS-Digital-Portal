@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -29,6 +29,8 @@ import {
   ArrowRight,
   Sliders,
   Building,
+  Camera,
+  Upload,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -48,6 +50,7 @@ export interface FacultyProfileData {
   publicationsCount: number
   citationsCount: number
   allocatedCourses: string[]
+  profileImage?: string
   isAdvisor?: boolean
   advisorBatch?: string
   advisorYear?: number
@@ -59,6 +62,7 @@ export interface FacultyProfileData {
 
 export function FacultyProfileView({ data: initialData }: { data: FacultyProfileData }) {
   const [data, setData] = useState(initialData)
+  const [avatarUrl, setAvatarUrl] = useState<string | undefined>(initialData.profileImage)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editForm, setEditForm] = useState({
     name: data.name,
@@ -71,6 +75,79 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
     officeHours: data.officeHours || 'Tuesday & Thursday · 03:30 PM - 04:30 PM',
   })
   const [loading, setLoading] = useState(false)
+
+  // Sync avatar from localStorage or global event
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('user_profile_image')
+      if (cached && !avatarUrl) {
+        setAvatarUrl(cached)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleImgUpdated = (e: any) => {
+      const img = e.detail || localStorage.getItem('user_profile_image')
+      if (img) setAvatarUrl(img)
+    }
+    window.addEventListener('portal-profile-image-updated', handleImgUpdated)
+    return () => window.removeEventListener('portal-profile-image-updated', handleImgUpdated)
+  }, [])
+
+  const handlePhotoUpload = (file: File) => {
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('Image size must be less than 15MB')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = document.createElement('img')
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        const maxDim = 400
+        let w = img.width
+        let h = img.height
+        if (w > h) {
+          if (w > maxDim) {
+            h = Math.round((h * maxDim) / w)
+            w = maxDim
+          }
+        } else {
+          if (h > maxDim) {
+            w = Math.round((w * maxDim) / h)
+            h = maxDim
+          }
+        }
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h)
+          const base64 = canvas.toDataURL('image/jpeg', 0.85)
+          setAvatarUrl(base64)
+          setData((prev) => ({ ...prev, profileImage: base64 }))
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user_profile_image', base64)
+            window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: base64 }))
+          }
+          fetch('/api/auth/complete-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileImage: base64 }),
+          }).catch(() => {})
+          fetch('/api/faculty/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'UPDATE_PROFILE', profileImage: base64 }),
+          }).catch(() => {})
+          toast.success('Faculty photograph updated successfully!')
+        }
+      }
+      img.src = event.target?.result as string
+    }
+    reader.readAsDataURL(file)
+  }
 
   const isAdvisor = Boolean(data.isAdvisor)
 
@@ -141,6 +218,7 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
           qualification: editForm.qualification.trim(),
           specialization: editForm.specialization.trim(),
           experience: Number(editForm.experience) || 1,
+          profileImage: avatarUrl || undefined,
         }),
       })
 
@@ -157,6 +235,7 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
           experience: Number(editForm.experience) || 0,
           cabin: editForm.cabin.trim(),
           officeHours: editForm.officeHours.trim(),
+          profileImage: avatarUrl || undefined,
         }),
       }).catch(() => {})
 
@@ -190,12 +269,37 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
       {/* Header Profile Hero */}
       <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left relative z-10">
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-[#22C7E8] to-[#F4C430] text-[#071A3D] font-black text-3xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0">
-            {data.name
-              .split(' ')
-              .map((n) => n[0])
-              .join('')
-              .slice(0, 2)}
+          <div className="relative group shrink-0">
+            <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-lg border-2 border-white/20 shrink-0 bg-gradient-to-tr from-[#22C7E8] to-[#F4C430] flex items-center justify-center text-[#071A3D] font-black text-3xl">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={data.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                data.name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .slice(0, 2)
+              )}
+            </div>
+            <label
+              className="absolute -bottom-1 -right-1 bg-[#22C7E8] hover:bg-white text-[#071A3D] p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] hover:scale-110 flex items-center justify-center"
+              title="Upload / Change Faculty Photo"
+            >
+              <Camera className="w-4 h-4" />
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/jpg, image/webp"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) handlePhotoUpload(f)
+                }}
+                className="hidden"
+              />
+            </label>
           </div>
           <div className="space-y-1">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
@@ -689,6 +793,34 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
             </div>
 
             <form onSubmit={handleSaveProfile} className="space-y-3.5 text-xs">
+              {/* Profile Photo Upload Field */}
+              <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-tr from-[#22C7E8] to-[#F4C430] flex items-center justify-center text-[#071A3D] font-black text-xl shadow-xs border-2 border-white shrink-0">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={editForm.name} className="w-full h-full object-cover" />
+                  ) : (
+                    editForm.name.charAt(0) || 'F'
+                  )}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <p className="font-bold text-[#071A3D] text-xs">Faculty Passport Photograph</p>
+                  <p className="text-[10px] text-gray-500">Supports JPG, PNG, WEBP (auto-compressed for mobile)</p>
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-[11px] font-bold cursor-pointer transition-all shadow-xs hover:scale-102">
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>{avatarUrl ? 'Change Photo' : 'Upload Photo'}</span>
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0]
+                        if (f) handlePhotoUpload(f)
+                      }}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Full Name *</label>
                 <input

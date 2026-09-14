@@ -37,6 +37,7 @@ export default async function HODProfilePage() {
     qualification: hodRecord?.qualification || '',
     experience: hodRecord?.experience !== undefined && hodRecord?.experience !== null ? hodRecord.experience : 0,
     department: hodRecord?.department || 'Department of Artificial Intelligence & Data Science',
+    profileImage: user?.profileImage || undefined,
     officeLocation: extraData.officeLocation || '',
     officeHours: extraData.officeHours || '',
     specializations: extraData.specializations || [],

@@ -113,13 +113,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'UPDATE_PROFILE') {
-      const { name, phone, specialization, qualification, experience, cabin, officeHours } = body
-      if (name !== undefined || phone !== undefined) {
+      const { name, phone, specialization, qualification, experience, cabin, officeHours, profileImage } = body
+      if (name !== undefined || phone !== undefined || profileImage !== undefined) {
         await prisma.user.update({
           where: { id: session.userId },
           data: {
             ...(name ? { name: name.trim() } : {}),
             ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
+            ...(profileImage ? { profileImage } : {}),
             updatedAt: new Date(),
           },
         }).catch(() => {})

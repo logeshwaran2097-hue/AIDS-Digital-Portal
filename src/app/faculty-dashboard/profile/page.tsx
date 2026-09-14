@@ -79,6 +79,7 @@ export default async function FacultyProfilePage() {
     publicationsCount: preferences?.publicationsCount || 0,
     citationsCount: preferences?.citationsCount || 0,
     allocatedCourses: allocatedCourseList,
+    profileImage: user?.profileImage || undefined,
     isAdvisor,
     advisorBatch: isAdvisor
       ? (faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} - Section ${faculty.advisorSec || 'A'} (Sem ${faculty.advisorSem || 3})` : 'Class Advisor'))
@@ -101,6 +102,7 @@ export default async function FacultyProfilePage() {
       role="faculty"
       userName={user?.name || 'Faculty'}
       userEmail={user?.email || session.email}
+      userImage={user?.profileImage}
       roleBadgeLabel={roleBadgeLabel}
       isAdvisor={isAdvisor}
     >
