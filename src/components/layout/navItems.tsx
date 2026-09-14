@@ -24,8 +24,7 @@ import {
   Bus,
   Calculator,
   Monitor,
-  Sparkles,
-  MessageSquareHeart
+  Sparkles
 } from 'lucide-react'
 import type { NavItem } from './PortalLayout'
 
@@ -47,7 +46,6 @@ export const studentNavItems: NavItem[] = [
   { label: 'Announcements', href: '/dashboard/announcements', icon: <Megaphone className="h-4 w-4" /> },
   { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-4 w-4" /> },
   { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-4 w-4" /> },
-  { label: 'Portal Survey', href: '/dashboard/survey', icon: <MessageSquareHeart className="h-4 w-4" /> },
   { label: 'Notifications', href: '/dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Profile', href: '/dashboard/profile', icon: <User className="h-4 w-4" /> },
   { label: 'Settings', href: '/dashboard/settings', icon: <Settings className="h-4 w-4" /> },
@@ -67,7 +65,6 @@ export const facultyNavItems: NavItem[] = [
   { label: 'Resources', href: '/faculty-dashboard/resources', icon: <Database className="h-4 w-4" /> },
   { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="h-4 w-4" /> },
   { label: 'Announcements', href: '/faculty-dashboard/announcements', icon: <Megaphone className="h-4 w-4" /> },
-  { label: 'Portal Survey', href: '/dashboard/survey', icon: <MessageSquareHeart className="h-4 w-4" /> },
   { label: 'Notifications', href: '/faculty-dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Profile', href: '/faculty-dashboard/profile', icon: <User className="h-4 w-4" /> },
   { label: 'Settings', href: '/faculty-dashboard/settings', icon: <Settings className="h-4 w-4" /> },
@@ -90,7 +87,6 @@ export const hodNavItems: NavItem[] = [
   { label: 'Announcements', href: '/hod-dashboard/announcements', icon: <Megaphone className="h-4 w-4" /> },
   { label: 'Achievements', href: '/hod-dashboard/achievements', icon: <Trophy className="h-4 w-4" /> },
   { label: 'Reports', href: '/hod-dashboard/reports', icon: <BarChart3 className="h-4 w-4" /> },
-  { label: 'Portal Survey', href: '/dashboard/survey', icon: <MessageSquareHeart className="h-4 w-4" /> },
   { label: 'Notifications', href: '/hod-dashboard/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Profile', href: '/hod-dashboard/profile', icon: <User className="h-4 w-4" /> },
   { label: 'Settings', href: '/hod-dashboard/settings', icon: <Settings className="h-4 w-4" /> },
@@ -117,7 +113,6 @@ export const adminNavItems: NavItem[] = [
   { label: 'Events', href: '/admin/events', icon: <CalendarDays className="h-4 w-4" /> },
   { label: 'Announcements', href: '/admin/announcements', icon: <Megaphone className="h-4 w-4" /> },
   { label: 'Achievements', href: '/admin/achievements', icon: <Trophy className="h-4 w-4" /> },
-  { label: 'Portal Survey', href: '/dashboard/survey', icon: <MessageSquareHeart className="h-4 w-4" /> },
   { label: 'Notifications', href: '/admin/notifications', icon: <Bell className="h-4 w-4" /> },
   { label: 'Reports', href: '/admin/reports', icon: <BarChart3 className="h-4 w-4" /> },
   { label: 'Activity Logs', href: '/admin/activity-logs', icon: <Newspaper className="h-4 w-4" /> },
