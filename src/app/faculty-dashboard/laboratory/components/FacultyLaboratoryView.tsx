@@ -1085,19 +1085,6 @@ export function FacultyLaboratoryView({
                         <span>👥</span>
                         <span>Student Activity Performance</span>
                       </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] text-gray-500 font-medium">Quick preset:</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFormData((prev) => ({ ...prev, attendanceCount: '58' }))
-                            setPendingCount('0')
-                          }}
-                          className="text-[10px] font-bold text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200 cursor-pointer"
-                        >
-                          All 58 Completed
-                        </button>
-                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -1217,19 +1204,10 @@ export function FacultyLaboratoryView({
 
                   {/* 👥 Lab Attendance */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-gray-700 flex items-center gap-1">
-                        <span>👥</span>
-                        <span>Lab Attendance</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, attendanceCount: '58' })}
-                        className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 cursor-pointer"
-                      >
-                        👥 Total 58 Present
-                      </button>
-                    </div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                      <span>👥</span>
+                      <span>Lab Attendance</span>
+                    </label>
                     <input
                       type="number"
                       min="0"
