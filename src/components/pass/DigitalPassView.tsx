@@ -4,7 +4,6 @@ import React, { useState, useRef } from 'react'
 import {
   Bus,
   Home,
-  Utensils,
   QrCode,
   Download,
   Printer,
@@ -117,7 +116,7 @@ export default function DigitalPassView({
   initialBusDetails,
   initialBoardingPoint,
 }: DigitalPassViewProps) {
-  const [activeTab, setActiveTab] = useState<'bus' | 'hostel' | 'mess'>('bus')
+  const [activeTab, setActiveTab] = useState<'bus' | 'hostel'>('bus')
   
   // Bus state
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0)
@@ -135,14 +134,6 @@ export default function DigitalPassView({
   const [expectedReturn, setExpectedReturn] = useState('06:15 PM Today')
   const [parentApprovalConfirmed, setParentApprovalConfirmed] = useState(true)
 
-  // Mess state
-  const [mealPreference, setMealPreference] = useState<'veg' | 'non_veg'>('non_veg')
-  const [checkedMeals, setCheckedMeals] = useState<Record<string, boolean>>({
-    breakfast: true,
-    lunch: true,
-    dinner: false
-  })
-
   const currentRoute = BUS_ROUTES[selectedRouteIndex]
   const currentHostel = HOSTEL_BLOCKS[selectedHostelIndex]
   const passRef = useRef<HTMLDivElement>(null)
@@ -155,13 +146,7 @@ export default function DigitalPassView({
     toast.success('Digital Pass slip saved as offline verifiable token!', { icon: '🎫' })
   }
 
-  const toggleMealCheck = (meal: string) => {
-    setCheckedMeals(prev => {
-      const nextVal = !prev[meal]
-      toast.success(`${meal.toUpperCase()} pass verified at mess counter!`, { icon: '🍽️' })
-      return { ...prev, [meal]: nextVal }
-    })
-  }
+
 
   // Live timestamp
   const issueDate = new Date().toLocaleDateString('en-IN', {
@@ -185,7 +170,7 @@ export default function DigitalPassView({
               Bus Route & Hostel Digital Pass
             </h1>
             <p className="text-sm text-cyan-100/80 max-w-2xl leading-relaxed">
-              Tamper-proof encrypted digital passes for college transport, hostel gate security, and mess dining authentication. Fully paperless and instant verification.
+              Tamper-proof encrypted digital passes for college transport and hostel gate security. Fully paperless and instant verification.
             </p>
           </div>
 
@@ -231,17 +216,6 @@ export default function DigitalPassView({
           >
             <Home className="w-4 h-4 text-emerald-600" />
             <span>Hostel & Gate Outing Pass</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('mess')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-              activeTab === 'mess'
-                ? 'bg-white text-[#071A3D] shadow-lg shadow-black/20'
-                : 'text-white/80 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <Utensils className="w-4 h-4 text-amber-600" />
-            <span>Mess Dining Token</span>
           </button>
         </div>
       </div>
@@ -292,7 +266,6 @@ export default function DigitalPassView({
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900">
                     {activeTab === 'bus' && 'College Bus Transportation Pass'}
                     {activeTab === 'hostel' && 'Hostel Resident & Gate Outing Pass'}
-                    {activeTab === 'mess' && 'Student Dining Token & Mess Card'}
                   </h2>
                 </div>
                 <div className="px-3 py-1 rounded-xl bg-slate-100 text-slate-700 font-mono text-xs font-bold">
@@ -434,70 +407,6 @@ export default function DigitalPassView({
                     <div className="flex items-center gap-1.5 text-emerald-700 font-mono">
                       <Phone className="w-3.5 h-3.5" />
                       <span>{currentHostel.contact}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'mess' && (
-                <div className="space-y-4">
-                  <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-4 sm:p-5 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Utensils className="w-5 h-5 text-amber-600" />
-                        <h4 className="font-bold text-amber-950 text-sm">Hostel Central Dining Hall</h4>
-                      </div>
-                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900 capitalize">
-                        {mealPreference.replace('_', '-')} Diet
-                      </span>
-                    </div>
-
-                    {/* Meal Slots for Today */}
-                    <div className="grid grid-cols-3 gap-2.5 pt-2">
-                      <div
-                        onClick={() => toggleMealCheck('breakfast')}
-                        className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${
-                          checkedMeals.breakfast
-                            ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                            : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300'
-                        }`}
-                      >
-                        <span className="text-[10px] uppercase font-bold block">Breakfast</span>
-                        <span className="text-[11px] text-slate-400 block mt-0.5">07:30 - 08:30 AM</span>
-                        <span className={`inline-block mt-2 text-xs font-black ${checkedMeals.breakfast ? 'text-emerald-700' : 'text-slate-400'}`}>
-                          {checkedMeals.breakfast ? '✓ Claimed' : 'Available'}
-                        </span>
-                      </div>
-
-                      <div
-                        onClick={() => toggleMealCheck('lunch')}
-                        className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${
-                          checkedMeals.lunch
-                            ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                            : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300'
-                        }`}
-                      >
-                        <span className="text-[10px] uppercase font-bold block">Lunch</span>
-                        <span className="text-[11px] text-slate-400 block mt-0.5">12:30 - 01:30 PM</span>
-                        <span className={`inline-block mt-2 text-xs font-black ${checkedMeals.lunch ? 'text-emerald-700' : 'text-slate-400'}`}>
-                          {checkedMeals.lunch ? '✓ Claimed' : 'Available'}
-                        </span>
-                      </div>
-
-                      <div
-                        onClick={() => toggleMealCheck('dinner')}
-                        className={`p-3 rounded-xl border text-center cursor-pointer transition-all ${
-                          checkedMeals.dinner
-                            ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                            : 'bg-white border-slate-200 text-slate-600 hover:border-amber-300'
-                        }`}
-                      >
-                        <span className="text-[10px] uppercase font-bold block">Dinner</span>
-                        <span className="text-[11px] text-slate-400 block mt-0.5">07:30 - 08:45 PM</span>
-                        <span className={`inline-block mt-2 text-xs font-black ${checkedMeals.dinner ? 'text-emerald-700' : 'text-amber-600'}`}>
-                          {checkedMeals.dinner ? '✓ Claimed' : 'Tap to Swipe'}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -716,70 +625,6 @@ export default function DigitalPassView({
               >
                 <Sparkles className="w-4 h-4" />
                 <span>Issue Live Gate Outing Token</span>
-              </button>
-            </div>
-          )}
-
-          {activeTab === 'mess' && (
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                <Utensils className="w-5 h-5 text-amber-600" />
-                <h3 className="font-bold text-slate-800 text-sm">Mess Preferences & Live Balance</h3>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-600 block">Diet Preference:</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => {
-                      setMealPreference('veg')
-                      toast.success('Diet preference set to Vegetarian!')
-                    }}
-                    className={`p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
-                      mealPreference === 'veg'
-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    🥬 Vegetarian
-                  </button>
-                  <button
-                    onClick={() => {
-                      setMealPreference('non_veg')
-                      toast.success('Diet preference set to Non-Vegetarian!')
-                    }}
-                    className={`p-3 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
-                      mealPreference === 'non_veg'
-                        ? 'bg-amber-50 border-amber-500 text-amber-800'
-                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    🍗 Non-Vegetarian (Wed/Sun)
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2 text-xs">
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Monthly Mess Bill Status:</span>
-                  <strong className="text-emerald-600 font-bold">PAID (Clear)</strong>
-                </div>
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Token Allowance Remaining:</span>
-                  <strong className="text-slate-800 font-mono">82 / 90 Meals</strong>
-                </div>
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Special Feast Pass:</span>
-                  <strong className="text-purple-600 font-bold">Active (Hostel Day)</strong>
-                </div>
-              </div>
-
-              <button
-                onClick={() => toast.success('Mess token regenerated!')}
-                className="w-full py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Refresh Digital Dining Token</span>
               </button>
             </div>
           )}
