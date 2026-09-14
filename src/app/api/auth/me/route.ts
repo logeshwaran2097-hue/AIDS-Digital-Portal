@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -17,87 +18,96 @@ export async function GET() {
       )
     }
 
-    let roleQuery: Promise<any> | null = null
+    const userData = await cachedDbQuery(
+      `auth_me_${session.userId}`,
+      async () => {
+        let roleQuery: Promise<any> | null = null
 
-    if (session.role === 'student') {
-      roleQuery = prisma.student.findUnique({
-        where: { userId: session.userId },
-        select: {
-          registerNumber: true,
-          department: true,
-          year: true,
-          semester: true,
-          section: true,
-          dateOfBirth: true,
-        },
-      })
-    } else if (session.role === 'faculty') {
-      roleQuery = prisma.faculty.findUnique({
-        where: { userId: session.userId },
-        select: {
-          facultyId: true,
-          designation: true,
-          qualification: true,
-          experience: true,
-          specialization: true,
-          subjects: true,
-          dateOfBirth: true,
-        },
-      })
-    } else if (session.role === 'hod') {
-      roleQuery = prisma.hOD.findUnique({
-        where: { userId: session.userId },
-        select: {
-          facultyId: true,
-          department: true,
-          designation: true,
-          qualification: true,
-          experience: true,
-          dateOfBirth: true,
-        },
-      })
-    } else if (session.role === 'admin') {
-      roleQuery = prisma.admin.findUnique({
-        where: { userId: session.userId },
-        select: {
-          name: true,
-          role: true,
-        },
-      })
-    }
+        if (session.role === 'student') {
+          roleQuery = prisma.student.findUnique({
+            where: { userId: session.userId },
+            select: {
+              registerNumber: true,
+              department: true,
+              year: true,
+              semester: true,
+              section: true,
+              dateOfBirth: true,
+            },
+          })
+        } else if (session.role === 'faculty') {
+          roleQuery = prisma.faculty.findUnique({
+            where: { userId: session.userId },
+            select: {
+              facultyId: true,
+              designation: true,
+              qualification: true,
+              experience: true,
+              specialization: true,
+              subjects: true,
+              dateOfBirth: true,
+            },
+          })
+        } else if (session.role === 'hod') {
+          roleQuery = prisma.hOD.findUnique({
+            where: { userId: session.userId },
+            select: {
+              facultyId: true,
+              department: true,
+              designation: true,
+              qualification: true,
+              experience: true,
+              dateOfBirth: true,
+            },
+          })
+        } else if (session.role === 'admin') {
+          roleQuery = prisma.admin.findUnique({
+            where: { userId: session.userId },
+            select: {
+              name: true,
+              role: true,
+            },
+          })
+        }
 
-    const userQuery = prisma.user.findUnique({
-      where: { id: session.userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        phone: true,
-        role: true,
-        profileImage: true,
-        mustChangePassword: true,
+        const userQuery = prisma.user.findUnique({
+          where: { id: session.userId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            role: true,
+            profileImage: true,
+            mustChangePassword: true,
+          },
+        })
+
+        const [roleData, dbUser] = await Promise.all([
+          roleQuery ? roleQuery.catch(() => null) : Promise.resolve(null),
+          userQuery.catch(() => null),
+        ])
+
+        const extendedInfo: Record<string, unknown> = roleData || {}
+
+        return {
+          id: session.userId,
+          name: dbUser?.name || session.name,
+          email: dbUser?.email || session.email,
+          phone: dbUser?.phone || '',
+          profileImage: dbUser?.profileImage || null,
+          role: session.role,
+          mustChangePassword: dbUser?.mustChangePassword ?? false,
+          ...extendedInfo,
+        }
       },
-    })
-
-    const [roleData, dbUser] = await Promise.all([
-      roleQuery ? roleQuery.catch(() => null) : Promise.resolve(null),
-      userQuery.catch(() => null),
-    ])
-
-    const extendedInfo: Record<string, unknown> = roleData || {}
+      8000,
+      ['auth', `user_${session.userId}`]
+    )
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: session.userId,
-        name: dbUser?.name || session.name,
-        email: dbUser?.email || session.email,
-        phone: dbUser?.phone || '',
-        profileImage: dbUser?.profileImage || null,
-        role: session.role,
-        mustChangePassword: dbUser?.mustChangePassword ?? false,
-        ...extendedInfo,
-      },
+      user: userData,
     })
   } catch (error) {
     console.error('Get session error:', error)

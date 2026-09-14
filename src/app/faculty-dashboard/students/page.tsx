@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyStudentsView, StudentRosterItem } from './components/FacultyStudentsView'
 
@@ -42,19 +43,30 @@ function parseSubjectCode(rawCode: string): { year: number; semester: number } |
 export default async function FacultyStudentsPage() {
   const session = await requireRoleSession(['faculty'])
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
-  const faculty =
-    (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
-
   const cookieStore = cookies()
   const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
-  const isAdvisor =
-    rawLoginRole === 'advisor'
-      ? resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
-      : Boolean(faculty?.advisorYear && faculty?.advisorSec) ||
-        faculty?.facultyType === 'advisor' ||
-        faculty?.facultyType === 'both'
+
+  const pageData = await cachedDbQuery(
+    `faculty_students_page_${session.userId}_${rawLoginRole}`,
+    async () => {
+      const [user, faculty] = await Promise.all([
+        prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+        (async () => {
+          const byUserId = await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)
+          if (byUserId) return byUserId
+          if (session.facultyId) {
+            return prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null)
+          }
+          return null
+        })(),
+      ])
+
+      const isAdvisor =
+        rawLoginRole === 'advisor'
+          ? resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
+          : Boolean(faculty?.advisorYear && faculty?.advisorSec) ||
+            faculty?.facultyType === 'advisor' ||
+            faculty?.facultyType === 'both'
 
   // Collect exclusively the faculty's assigned classes / cohorts:
   // Key format: `${year}_${section || 'ALL'}`
@@ -239,6 +251,30 @@ export default async function FacultyStudentsPage() {
     specialization: faculty?.specialization || '',
     dateOfBirth: faculty?.dateOfBirth ? faculty.dateOfBirth.toISOString() : undefined,
   }
+
+      return {
+        mappedStudents,
+        advisorDetails,
+        assignedYears,
+        assignedSections,
+        assignedClassesList,
+        isAdvisor,
+        user,
+      }
+    },
+    8000,
+    ['students', 'faculty']
+  )
+
+  const {
+    mappedStudents,
+    advisorDetails,
+    assignedYears,
+    assignedSections,
+    assignedClassesList,
+    isAdvisor,
+    user,
+  } = pageData
 
   return (
     <PortalLayout

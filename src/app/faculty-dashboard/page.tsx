@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyDashboardView } from './components/FacultyDashboardView'
 
@@ -13,186 +14,213 @@ export default async function FacultyDashboardPage() {
   const cookieStore = cookies()
   const rawLoginRole = cookieStore.get('portal_login_role')?.value || 'faculty'
 
-  const faculty = (await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)) ||
-    (session.facultyId ? await prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null) : null)
+  const dashboardPayload = await cachedDbQuery(
+    `faculty_dashboard_${session.userId}_${rawLoginRole}`,
+    async () => {
+      // 1. Concurrently fetch faculty profile and user record
+      const [faculty, user] = await Promise.all([
+        (async () => {
+          const byUserId = await prisma.faculty.findUnique({ where: { userId: session.userId } }).catch(() => null)
+          if (byUserId) return byUserId
+          if (session.facultyId) {
+            return prisma.faculty.findUnique({ where: { facultyId: session.facultyId } }).catch(() => null)
+          }
+          return null
+        })(),
+        prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+      ])
 
-  const hasAdvisorPrivileges = Boolean(
-    faculty?.facultyType === 'advisor' ||
-    faculty?.facultyType === 'both' ||
-    faculty?.advisorBatch ||
-    (faculty?.advisorYear && faculty?.advisorSec)
+      const hasAdvisorPrivileges = Boolean(
+        faculty?.facultyType === 'advisor' ||
+        faculty?.facultyType === 'both' ||
+        faculty?.advisorBatch ||
+        (faculty?.advisorYear && faculty?.advisorSec)
+      )
+
+      // Only act as Class Advisor if logged in as advisor; otherwise act as standard course faculty
+      const isAdvisor = rawLoginRole === 'advisor' && hasAdvisorPrivileges
+      const effectiveRole = isAdvisor ? 'advisor' : 'faculty'
+
+      const roleBadgeLabel = isAdvisor
+        ? 'Class Advisor'
+        : faculty?.facultyType === 'lab_faculty'
+        ? 'Lab Handler'
+        : 'Faculty Member'
+
+      const activeUser = user || {
+        id: session.userId,
+        name: session.name || 'Faculty Member',
+        email: session.email || '',
+        phone: null,
+        role: 'faculty',
+        status: 'active',
+      }
+
+      let parsedSubjectCodes: string[] = []
+      if (faculty?.subjects) {
+        try {
+          parsedSubjectCodes = JSON.parse(faculty.subjects)
+        } catch {
+          parsedSubjectCodes = []
+        }
+      }
+
+      const advisorBatchFilter = faculty?.advisorYear && faculty?.advisorSec ? {
+        year: faculty.advisorYear,
+        section: faculty.advisorSec,
+      } : undefined
+
+      // 2. Concurrently run all secondary DB queries in a single roundtrip
+      const [
+        dbSubjects,
+        totalStudents,
+        resourcesCount,
+        questionPapersCount,
+        attendanceSessions,
+      ] = await Promise.all([
+        prisma.subject.findMany({
+          where: parsedSubjectCodes.length > 0 ? { code: { in: parsedSubjectCodes } } : undefined,
+          orderBy: { code: 'asc' },
+        }).catch(() => []),
+        prisma.student.count({
+          where: advisorBatchFilter,
+        }).catch(() => 0),
+        prisma.resource.count({
+          where: faculty?.id ? { uploadedById: faculty.id } : undefined,
+        }).catch(() => 0),
+        prisma.questionPaper.count({
+          where: faculty?.id ? { uploadedById: faculty.id } : undefined,
+        }).catch(() => 0),
+        prisma.attendanceSession.findMany({
+          where: faculty?.id ? { takenByFacultyId: faculty.id } : undefined,
+          include: { records: true },
+          take: 20,
+          orderBy: { createdAt: 'desc' },
+        }).catch(() => []),
+      ])
+
+      const effectiveSubjects = parsedSubjectCodes.length > 0 ? dbSubjects : []
+      const totalSubjectsCount = effectiveSubjects.length
+
+      let attendanceAvg = '0.0%'
+      if (attendanceSessions.length > 0) {
+        let totalRecs = 0
+        let presentRecs = 0
+        for (const sess of attendanceSessions) {
+          for (const rec of sess.records) {
+            totalRecs++
+            if (rec.status === 'P' || rec.status === 'OD') presentRecs++
+          }
+        }
+        if (totalRecs > 0) {
+          attendanceAvg = `${((presentRecs / totalRecs) * 100).toFixed(1)}%`
+        }
+      }
+
+      const assignedSubjects = effectiveSubjects.map((s) => ({
+        code: s.code,
+        name: s.name,
+        batch: faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} (Sec ${faculty.advisorSec || 'A'})` : 'Year 2 · Sec B'),
+        students: totalStudents > 0 ? totalStudents : 0,
+        hoursConducted: attendanceSessions.filter(sess => sess.subjectCode === s.code).length,
+        nextClass: faculty?.classDay && faculty?.classTime ? `${faculty.classDay}, ${faculty.classTime}` : 'As Scheduled',
+        attendanceAvg: attendanceAvg !== '0.0%' ? attendanceAvg : '—',
+      }))
+
+      const timetableSlots: Array<{
+        time: string
+        subject: string
+        room: string
+        type: string
+        status: string
+      }> = []
+
+      if (faculty?.classDay && faculty?.classTime && effectiveSubjects.length > 0) {
+        if (faculty.subjectName?.includes(' | ')) {
+          const sNames = faculty.subjectName.split(' | ')
+          const times = faculty.classTime.split(' | ')
+          const periods = (faculty.classPeriod || '').split(' | ')
+          const days = (faculty.classDay || '').split(' | ')
+
+          if (sNames[0]) {
+            timetableSlots.push({
+              time: times[0] || '09:15 AM - 10:00 AM',
+              subject: sNames[0],
+              room: periods[0] ? `${periods[0]} (${days[0] || 'Theory'})` : 'Lecture Hall',
+              type: 'Lecture Session',
+              status: 'Upcoming',
+            })
+          }
+
+          if (sNames[1]) {
+            timetableSlots.push({
+              time: times[1] || '01:20 PM - 04:30 PM',
+              subject: sNames[1],
+              room: periods[1] ? `${periods[1]} (${days[1] || 'Lab'})` : 'AI & DS Lab',
+              type: 'Practical Lab Session',
+              status: 'Upcoming',
+            })
+          }
+        } else {
+          timetableSlots.push({
+            time: faculty.classTime,
+            subject: faculty?.subjectName || (effectiveSubjects[0]?.name) || effectiveSubjects[0]?.code,
+            room: faculty?.classPeriod ? `${faculty.classPeriod} (${faculty.classDay || 'Weekly'})` : 'AI & DS Lab',
+            type: faculty?.facultyType === 'lab_faculty' || faculty?.subjectName?.toLowerCase().includes('lab') ? 'Practical Lab Session' : 'Lecture Session',
+            status: 'Upcoming',
+          })
+        }
+      }
+
+      const facultyData = {
+        user: {
+          name: activeUser.name || session.name || 'Faculty Member',
+          email: activeUser.email || session.email || 'faculty@vsb.edu.in',
+          phone: activeUser.phone || '',
+          profileImage: (activeUser as any)?.profileImage || null,
+          mustChangePassword: Boolean((activeUser as any)?.mustChangePassword),
+        },
+        faculty: faculty
+          ? {
+              facultyId: faculty.facultyId,
+              designation: faculty.designation || 'Faculty Member',
+              qualification: faculty.qualification || '',
+              experience: faculty.experience ?? 0,
+              specialization: faculty.specialization || '',
+              subjects: faculty.subjects || '[]',
+              subjectName: faculty.subjectName || null,
+              advisorBatch: faculty.advisorBatch || null,
+              advisorYear: faculty.advisorYear || null,
+              advisorSem: faculty.advisorSem || null,
+              advisorSec: faculty.advisorSec || null,
+              facultyType: faculty.facultyType || 'teaching',
+              dateOfBirth: faculty.dateOfBirth ? faculty.dateOfBirth.toISOString() : null,
+              classPeriod: faculty.classPeriod || null,
+            }
+          : null,
+        totalStudents,
+        totalSubjects: totalSubjectsCount,
+        resourcesCount,
+        questionPapersCount,
+        attendanceAvg,
+        assignedSubjects,
+        todayTimetable: timetableSlots,
+        isAdvisor,
+      }
+
+      return {
+        facultyData,
+        user: activeUser,
+        roleBadgeLabel,
+        isAdvisor,
+        effectiveRole,
+      }
+    },
+    8000,
+    ['faculty', 'students', 'resources', 'attendance']
   )
 
-  // Only act as Class Advisor if logged in as advisor; otherwise act as standard course faculty
-  const isAdvisor = rawLoginRole === 'advisor' && hasAdvisorPrivileges
-  const effectiveRole = isAdvisor ? 'advisor' : 'faculty'
-
-  const roleBadgeLabel = isAdvisor
-    ? 'Class Advisor'
-    : faculty?.facultyType === 'lab_faculty'
-    ? 'Lab Handler'
-    : 'Faculty Member'
-
-  const user = (await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)) || {
-    id: session.userId,
-    name: session.name || 'Faculty Member',
-    email: session.email || '',
-    phone: null,
-    role: 'faculty',
-    status: 'active',
-  }
-
-  let parsedSubjectCodes: string[] = []
-  if (faculty?.subjects) {
-    try {
-      parsedSubjectCodes = JSON.parse(faculty.subjects)
-    } catch {
-      parsedSubjectCodes = []
-    }
-  }
-
-  // Fetch real subjects allocated to this faculty member from DB
-  const dbSubjects = await prisma.subject.findMany({
-    where: parsedSubjectCodes.length > 0 ? { code: { in: parsedSubjectCodes } } : undefined,
-    orderBy: { code: 'asc' },
-  }).catch(() => [])
-
-  // Strictly use real allocated subjects from DB (do NOT fabricate mock subjects for advisors)
-  const effectiveSubjects = parsedSubjectCodes.length > 0 ? dbSubjects : []
-
-  // If faculty has advisor batch, count students in that batch, else count total students in department
-  const advisorBatchFilter = faculty?.advisorYear && faculty?.advisorSec ? {
-    year: faculty.advisorYear,
-    section: faculty.advisorSec,
-  } : undefined
-
-  const totalStudents = await prisma.student.count({
-    where: advisorBatchFilter,
-  }).catch(() => 0)
-
-  const totalSubjectsCount = effectiveSubjects.length
-  const resourcesCount = await prisma.resource.count({
-    where: faculty?.id ? { uploadedById: faculty.id } : undefined,
-  }).catch(() => 0)
-  const questionPapersCount = await prisma.questionPaper.count({
-    where: faculty?.id ? { uploadedById: faculty.id } : undefined,
-  }).catch(() => 0)
-
-  // Fetch real attendance average if sessions exist
-  const attendanceSessions = await prisma.attendanceSession.findMany({
-    where: faculty?.id ? { takenByFacultyId: faculty.id } : undefined,
-    include: { records: true },
-    take: 20,
-    orderBy: { createdAt: 'desc' },
-  }).catch(() => [])
-
-  let attendanceAvg = '0.0%'
-  if (attendanceSessions.length > 0) {
-    let totalRecs = 0
-    let presentRecs = 0
-    for (const sess of attendanceSessions) {
-      for (const rec of sess.records) {
-        totalRecs++
-        if (rec.status === 'P' || rec.status === 'OD') presentRecs++
-      }
-    }
-    if (totalRecs > 0) {
-      attendanceAvg = `${((presentRecs / totalRecs) * 100).toFixed(1)}%`
-    }
-  }
-
-  const assignedSubjects = effectiveSubjects.map((s) => ({
-    code: s.code,
-    name: s.name,
-    batch: faculty?.advisorBatch || (faculty?.advisorYear ? `Year ${faculty.advisorYear} (Sec ${faculty.advisorSec || 'A'})` : 'Year 2 · Sec B'),
-    students: totalStudents > 0 ? totalStudents : 0,
-    hoursConducted: attendanceSessions.filter(sess => sess.subjectCode === s.code).length,
-    nextClass: faculty?.classDay && faculty?.classTime ? `${faculty.classDay}, ${faculty.classTime}` : 'As Scheduled',
-    attendanceAvg: attendanceAvg !== '0.0%' ? attendanceAvg : '—',
-  }))
-
-  const timetableSlots: Array<{
-    time: string
-    subject: string
-    room: string
-    type: string
-    status: string
-  }> = []
-
-  if (faculty?.classDay && faculty?.classTime && effectiveSubjects.length > 0) {
-    if (faculty.subjectName?.includes(' | ')) {
-      const sNames = faculty.subjectName.split(' | ')
-      const times = faculty.classTime.split(' | ')
-      const periods = (faculty.classPeriod || '').split(' | ')
-      const days = (faculty.classDay || '').split(' | ')
-
-      // Theory Lecture Slot
-      if (sNames[0]) {
-        timetableSlots.push({
-          time: times[0] || '09:15 AM - 10:00 AM',
-          subject: sNames[0],
-          room: periods[0] ? `${periods[0]} (${days[0] || 'Theory'})` : 'Lecture Hall',
-          type: 'Lecture Session',
-          status: 'Upcoming',
-        })
-      }
-
-      // Practical Lab Slot
-      if (sNames[1]) {
-        timetableSlots.push({
-          time: times[1] || '01:20 PM - 04:30 PM',
-          subject: sNames[1],
-          room: periods[1] ? `${periods[1]} (${days[1] || 'Lab'})` : 'AI & DS Lab',
-          type: 'Practical Lab Session',
-          status: 'Upcoming',
-        })
-      }
-    } else {
-      timetableSlots.push({
-        time: faculty.classTime,
-        subject: faculty?.subjectName || (effectiveSubjects[0]?.name) || effectiveSubjects[0]?.code,
-        room: faculty?.classPeriod ? `${faculty.classPeriod} (${faculty.classDay || 'Weekly'})` : 'AI & DS Lab',
-        type: faculty?.facultyType === 'lab_faculty' || faculty?.subjectName?.toLowerCase().includes('lab') ? 'Practical Lab Session' : 'Lecture Session',
-        status: 'Upcoming',
-      })
-    }
-  }
-
-  const facultyData = {
-    user: {
-      name: user.name || session.name || 'Faculty Member',
-      email: user.email || session.email || 'faculty@vsb.edu.in',
-      phone: user.phone || '',
-      profileImage: (user as any)?.profileImage || null,
-      mustChangePassword: Boolean((user as any)?.mustChangePassword),
-    },
-    faculty: faculty
-      ? {
-          facultyId: faculty.facultyId,
-          designation: faculty.designation || 'Faculty Member',
-          qualification: faculty.qualification || '',
-          experience: faculty.experience ?? 0,
-          specialization: faculty.specialization || '',
-          subjects: faculty.subjects || '[]',
-          subjectName: faculty.subjectName || null,
-          advisorBatch: faculty.advisorBatch || null,
-          advisorYear: faculty.advisorYear || null,
-          advisorSem: faculty.advisorSem || null,
-          advisorSec: faculty.advisorSec || null,
-          facultyType: faculty.facultyType || 'teaching',
-          dateOfBirth: faculty.dateOfBirth ? faculty.dateOfBirth.toISOString() : null,
-          classPeriod: faculty.classPeriod || null,
-        }
-      : null,
-    totalStudents,
-    totalSubjects: totalSubjectsCount,
-    resourcesCount,
-    questionPapersCount,
-    attendanceAvg,
-    assignedSubjects,
-    todayTimetable: timetableSlots,
-    isAdvisor,
-  }
+  const { facultyData, user, roleBadgeLabel, isAdvisor, effectiveRole } = dashboardPayload
 
   return (
     <PortalLayout

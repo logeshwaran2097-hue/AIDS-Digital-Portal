@@ -1,5 +1,6 @@
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { HODEventsView, HODEventItem } from './components/HODEventsView'
 
@@ -8,12 +9,19 @@ export const dynamic = 'force-dynamic'
 export default async function HODEventsPage() {
   const session = await requireRoleSession(['hod'])
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
-  const hodName = user?.name || session.name || 'Head of Department'
+  const [user, dbEvents] = await cachedDbQuery(
+    `hod_events_page_${session.userId}`,
+    () => Promise.all([
+      prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+      prisma.event.findMany({
+        orderBy: { date: 'asc' },
+      }).catch(() => []),
+    ]),
+    8000,
+    ['events', 'hod']
+  )
 
-  const dbEvents = await prisma.event.findMany({
-    orderBy: { date: 'asc' },
-  }).catch(() => [])
+  const hodName = user?.name || session.name || 'Head of Department'
 
 
   const mappedEvents: HODEventItem[] = dbEvents.map((e: any) => ({

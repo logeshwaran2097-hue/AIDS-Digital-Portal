@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import {
   HODAnnouncementsView,
@@ -14,21 +15,38 @@ export const dynamic = 'force-dynamic'
 export default async function HODAnnouncementsPage() {
   const session = await requireRoleSession(['hod'])
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } })
+  const [
+    user,
+    announcementsFromDb,
+    facultyFromDb,
+    facultyUsers,
+    studentsFromDb,
+    studentUsers,
+  ] = await cachedDbQuery(
+    `hod_announcements_page_${session.userId}`,
+    () => Promise.all([
+      prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+      prisma.announcement.findMany({
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => []),
+      prisma.faculty.findMany({
+        orderBy: { facultyId: 'asc' },
+      }).catch(() => []),
+      prisma.user.findMany({
+        where: { role: 'faculty' },
+      }).catch(() => []),
+      prisma.student.findMany({
+        orderBy: { registerNumber: 'asc' },
+      }).catch(() => []),
+      prisma.user.findMany({
+        where: { role: 'student' },
+      }).catch(() => []),
+    ]),
+    8000,
+    ['announcements', 'faculty', 'students', 'hod']
+  )
 
-  const announcementsFromDb = await prisma.announcement.findMany({
-    orderBy: { createdAt: 'desc' },
-  })
-
-  // Fetch Faculty List
-  const facultyFromDb = await prisma.faculty.findMany({
-    orderBy: { facultyId: 'asc' },
-  })
-  const facultyUsers = await prisma.user.findMany({
-    where: { role: 'faculty' },
-  })
   const facultyUserMap = new Map(facultyUsers.map((u) => [u.id, u]))
-
   const facultyList: TargetFacultyOption[] = facultyFromDb.map((f) => {
     const u = facultyUserMap.get(f.userId)
     return {
@@ -39,15 +57,7 @@ export default async function HODAnnouncementsPage() {
     }
   })
 
-  // Fetch Student List
-  const studentsFromDb = await prisma.student.findMany({
-    orderBy: { registerNumber: 'asc' },
-  })
-  const studentUsers = await prisma.user.findMany({
-    where: { role: 'student' },
-  })
   const studentUserMap = new Map(studentUsers.map((u) => [u.id, u]))
-
   const studentList: TargetStudentOption[] = studentsFromDb.map((s) => {
     const u = studentUserMap.get(s.userId)
     return {

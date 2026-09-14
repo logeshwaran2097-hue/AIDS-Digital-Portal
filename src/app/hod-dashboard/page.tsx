@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { HODOnboardingWrapper } from './components/HODOnboardingWrapper'
 import { HODAttendanceApprovals } from './notifications/components/HODAttendanceApprovals'
@@ -40,21 +41,26 @@ export default async function HODDashboardPage() {
     pendingODProofs,
     user,
     hodRec,
-  ] = await Promise.all([
-    prisma.student.count().catch(() => 0),
-    prisma.faculty.count().catch(() => 0),
-    prisma.subject.count().catch(() => 0),
-    prisma.project.count().catch(() => 0),
-    prisma.resource.count({ where: { status: 'published' } }).catch(() => 0),
-    prisma.questionPaper.count({ where: { status: 'published' } }).catch(() => 0),
-    prisma.event.count({ where: { isPublished: true } }).catch(() => 0),
-    prisma.resource.count({ where: { status: 'pending' } }).catch(() => 0),
-    prisma.questionPaper.count({ where: { status: 'pending' } }).catch(() => 0),
-    prisma.achievement.count({ where: { status: 'pending' } }).catch(() => 0),
-    prisma.oDProof.count({ where: { status: { in: ['advisor_approved', 'under_review'] } } }).catch(() => 0),
-    prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
-    prisma.hOD.findFirst({ where: { OR: [{ userId: session.userId }, { facultyId: session.facultyId || '' }] } }).catch(() => null),
-  ])
+  ] = await cachedDbQuery(
+    `hod_dashboard_kpis_${session.userId}`,
+    () => Promise.all([
+      prisma.student.count().catch(() => 0),
+      prisma.faculty.count().catch(() => 0),
+      prisma.subject.count().catch(() => 0),
+      prisma.project.count().catch(() => 0),
+      prisma.resource.count({ where: { status: 'published' } }).catch(() => 0),
+      prisma.questionPaper.count({ where: { status: 'published' } }).catch(() => 0),
+      prisma.event.count({ where: { isPublished: true } }).catch(() => 0),
+      prisma.resource.count({ where: { status: 'pending' } }).catch(() => 0),
+      prisma.questionPaper.count({ where: { status: 'pending' } }).catch(() => 0),
+      prisma.achievement.count({ where: { status: 'pending' } }).catch(() => 0),
+      prisma.oDProof.count({ where: { status: { in: ['advisor_approved', 'under_review'] } } }).catch(() => 0),
+      prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+      prisma.hOD.findFirst({ where: { OR: [{ userId: session.userId }, { facultyId: session.facultyId || '' }] } }).catch(() => null),
+    ]),
+    8000,
+    ['hod', 'students', 'faculty', 'resources', 'projects', 'od_proofs']
+  )
 
   const totalPending = pendingResources + pendingQP + pendingAchievements + pendingODProofs
 

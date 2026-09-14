@@ -4,6 +4,7 @@ import { getSession, createToken, verifyOTPChallenge } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { verifyOTP, parseSafeDateOfBirth } from '@/lib/utils'
+import { invalidateCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 
@@ -417,6 +418,8 @@ export async function POST(request: NextRequest) {
 
     // Invalidate dashboard caches to ensure updated profile loads fresh without onboarding popups
     try {
+      invalidateCache('auth')
+      invalidateCache(updatedUser.id)
       revalidatePath('/dashboard')
       revalidatePath('/dashboard/profile')
       revalidatePath('/faculty-dashboard')

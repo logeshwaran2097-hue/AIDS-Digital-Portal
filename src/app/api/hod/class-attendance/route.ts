@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { cachedDbQuery } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,102 +28,109 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const today = searchParams.get('date') || new Date().toISOString().split('T')[0]
 
-    // Fetch morning attendance sessions from database
-    const db = prisma as any
-    const [sessions, students, faculties, facultyUsers] = await Promise.all([
-      db.attendanceSession
-        ? db.attendanceSession.findMany({
-            where: { sessionType: 'morning' },
-            orderBy: { date: 'desc' },
-          }).catch(() => [])
-        : [],
-      prisma.student.findMany({
-        select: { year: true, section: true },
-      }).catch(() => []),
-      prisma.faculty.findMany({
-        where: { advisorYear: { not: null }, advisorSec: { not: null } },
-      }).catch(() => []),
-      prisma.user.findMany({
-        where: { role: 'faculty' },
-        select: { id: true, name: true },
-      }).catch(() => []),
-    ])
+    const result = await cachedDbQuery(
+      `hod_class_attendance_${today}`,
+      async () => {
+        // Fetch morning attendance sessions from database
+        const db = prisma as any
+        const [sessions, students, faculties, facultyUsers] = await Promise.all([
+          db.attendanceSession
+            ? db.attendanceSession.findMany({
+                where: { sessionType: 'morning' },
+                orderBy: { date: 'desc' },
+              }).catch(() => [])
+            : [],
+          prisma.student.findMany({
+            select: { year: true, section: true },
+          }).catch(() => []),
+          prisma.faculty.findMany({
+            where: { advisorYear: { not: null }, advisorSec: { not: null } },
+          }).catch(() => []),
+          prisma.user.findMany({
+            where: { role: 'faculty' },
+            select: { id: true, name: true },
+          }).catch(() => []),
+        ])
 
-    const facultyUserMap = new Map(facultyUsers.map((u: any) => [u.id, u.name]))
-    const advisorMap = new Map<string, string>()
-    faculties.forEach((f: any) => {
-      if (f.advisorYear && f.advisorSec) {
-        const name = facultyUserMap.get(f.userId)
-        const displayAdvisor = name
-          ? (name.toLowerCase().startsWith('prof') || name.toLowerCase().startsWith('dr') ? name : `Prof. ${name}`)
-          : f.facultyId
-        advisorMap.set(`${f.advisorYear}-${f.advisorSec.toUpperCase()}`, displayAdvisor)
-      }
-    })
+        const facultyUserMap = new Map(facultyUsers.map((u: any) => [u.id, u.name]))
+        const advisorMap = new Map<string, string>()
+        faculties.forEach((f: any) => {
+          if (f.advisorYear && f.advisorSec) {
+            const name = facultyUserMap.get(f.userId)
+            const displayAdvisor = name
+              ? (name.toLowerCase().startsWith('prof') || name.toLowerCase().startsWith('dr') ? name : `Prof. ${name}`)
+              : f.facultyId
+            advisorMap.set(`${f.advisorYear}-${f.advisorSec.toUpperCase()}`, displayAdvisor)
+          }
+        })
 
-    const headcountMap = new Map<string, number>()
-    students.forEach((s) => {
-      const key = `${s.year}-${(s.section || 'A').toUpperCase()}`
-      headcountMap.set(key, (headcountMap.get(key) || 0) + 1)
-    })
+        const headcountMap = new Map<string, number>()
+        students.forEach((s) => {
+          const key = `${s.year}-${(s.section || 'A').toUpperCase()}`
+          headcountMap.set(key, (headcountMap.get(key) || 0) + 1)
+        })
 
-    // Map each class purely from actual database data
-    const result = DEPARTMENT_CLASSES.map((cls) => {
-      const key = `${cls.year}-${cls.section.toUpperCase()}`
-      const dbCount = headcountMap.get(key) || 0
-      const assignedAdvisor = advisorMap.get(key) || 'Not Allocated'
+        // Map each class purely from actual database data
+        return DEPARTMENT_CLASSES.map((cls) => {
+          const key = `${cls.year}-${cls.section.toUpperCase()}`
+          const dbCount = headcountMap.get(key) || 0
+          const assignedAdvisor = advisorMap.get(key) || 'Not Allocated'
 
-      // Find today's session first, or latest morning session for this class
-      const todaySession = sessions.find(
-        (s: any) => s.year === cls.year && (s.section || 'A').toUpperCase() === cls.section.toUpperCase() && s.date === today
-      )
-      const latestSession = todaySession || sessions.find(
-        (s: any) => s.year === cls.year && (s.section || 'A').toUpperCase() === cls.section.toUpperCase()
-      )
+          // Find today's session first, or latest morning session for this class
+          const todaySession = sessions.find(
+            (s: any) => s.year === cls.year && (s.section || 'A').toUpperCase() === cls.section.toUpperCase() && s.date === today
+          )
+          const latestSession = todaySession || sessions.find(
+            (s: any) => s.year === cls.year && (s.section || 'A').toUpperCase() === cls.section.toUpperCase()
+          )
 
-      if (latestSession) {
-        const total = dbCount
-        const presents = Math.min(dbCount, (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0))
-        const absents = typeof latestSession.absentCount === 'number'
-          ? Math.min(dbCount, latestSession.absentCount)
-          : Math.max(0, total - presents)
-        const pct = total > 0 ? Math.round((presents / total) * 10000) / 100 : 0
-        const isPending = (latestSession.presentCount || 0) === 0 && (latestSession.absentCount || 0) === 0
+          if (latestSession) {
+            const total = dbCount
+            const presents = Math.min(dbCount, (latestSession.presentCount || 0) + (latestSession.odCount || 0) + (latestSession.mlCount || 0))
+            const absents = typeof latestSession.absentCount === 'number'
+              ? Math.min(dbCount, latestSession.absentCount)
+              : Math.max(0, total - presents)
+            const pct = total > 0 ? Math.round((presents / total) * 10000) / 100 : 0
+            const isPending = (latestSession.presentCount || 0) === 0 && (latestSession.absentCount || 0) === 0
 
-        return {
-          className: cls.className,
-          year: cls.year,
-          section: cls.section,
-          totalStudents: total,
-          presentAvg: presents,
-          absentCount: isPending ? 0 : absents,
-          attendancePct: pct,
-          statusNote: isPending
-            ? 'Register Pending'
-            : latestSession.takenByName
-            ? `Posted by ${latestSession.takenByName}`
-            : 'Advisor Morning Verified',
-          advisorName: latestSession.takenByName || assignedAdvisor,
-          isLive: true,
-          date: latestSession.date,
-        }
-      }
+            return {
+              className: cls.className,
+              year: cls.year,
+              section: cls.section,
+              totalStudents: total,
+              presentAvg: presents,
+              absentCount: isPending ? 0 : absents,
+              attendancePct: pct,
+              statusNote: isPending
+                ? 'Register Pending'
+                : latestSession.takenByName
+                ? `Posted by ${latestSession.takenByName}`
+                : 'Advisor Morning Verified',
+              advisorName: latestSession.takenByName || assignedAdvisor,
+              isLive: true,
+              date: latestSession.date,
+            }
+          }
 
-      // No session exists in DB yet — strictly show real database enrolled headcount and 0%
-      return {
-        className: cls.className,
-        year: cls.year,
-        section: cls.section,
-        totalStudents: dbCount,
-        presentAvg: 0,
-        absentCount: 0,
-        attendancePct: 0,
-        statusNote: dbCount === 0 ? 'No Students Enrolled' : 'Register Pending',
-        advisorName: assignedAdvisor,
-        isLive: false,
-        date: today,
-      }
-    })
+          // No session exists in DB yet — strictly show real database enrolled headcount and 0%
+          return {
+            className: cls.className,
+            year: cls.year,
+            section: cls.section,
+            totalStudents: dbCount,
+            presentAvg: 0,
+            absentCount: 0,
+            attendancePct: 0,
+            statusNote: dbCount === 0 ? 'No Students Enrolled' : 'Register Pending',
+            advisorName: assignedAdvisor,
+            isLive: false,
+            date: today,
+          }
+        })
+      },
+      10000,
+      ['attendance', 'students', 'faculty']
+    )
 
     return NextResponse.json({
       success: true,

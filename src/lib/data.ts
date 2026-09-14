@@ -7,7 +7,7 @@ export async function getStudentData(userId: string) {
     async () => {
       return fetchStudentDataDirect(userId)
     },
-    4000,
+    8000,
     ['student_data', 'attendance', 'students', 'announcements', 'events']
   )
 }
@@ -97,6 +97,7 @@ async function fetchStudentDataDirect(userId: string) {
 
     const [
       [announcements, events, resources, achievements, questionPapers, projects, faculty, notifications],
+      allSubjects,
       semesters,
       attendanceRecords,
     ] = await Promise.all([
@@ -110,6 +111,7 @@ async function fetchStudentDataDirect(userId: string) {
         prisma.user.findMany({ where: { role: 'faculty' }, select: { id: true, name: true, email: true, profileImage: true } }).catch(() => []),
         prisma.notification.findMany({ orderBy: { createdAt: 'desc' }, take: 5 }).catch(() => []),
       ]),
+      prisma.subject.findMany({ take: 30, orderBy: { code: 'asc' } }).catch(() => []),
       prisma.semester.findMany({
         where: { number: student.semester },
         select: { id: true },
@@ -128,13 +130,10 @@ async function fetchStudentDataDirect(userId: string) {
       }).catch(() => []),
     ])
 
-    const semesterIds = semesters.map((s) => s.id)
-
-    let mySubjects = await prisma.subject.findMany({
-      where: semesterIds.length > 0 ? { semesterId: { in: semesterIds } } : undefined,
-      take: 10,
-      orderBy: { code: 'asc' },
-    }).catch(() => [])
+    const semesterIds = new Set(semesters.map((s) => s.id))
+    const mySubjects = semesterIds.size > 0
+      ? allSubjects.filter((sub) => sub.semesterId && semesterIds.has(sub.semesterId)).slice(0, 10)
+      : allSubjects.slice(0, 10)
 
     const totalSessions = attendanceRecords.length
     const presentSessions = attendanceRecords.filter((r) => r.status === 'P' || r.status === 'OD').length

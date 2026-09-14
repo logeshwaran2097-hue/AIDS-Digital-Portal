@@ -21,12 +21,22 @@ const nextConfig = {
       bodySizeLimit: '10mb',
     },
     outputFileTracingIncludes: {
-      '/api/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
-      '/admin/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
-      '/dashboard/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
-      '/faculty-dashboard/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
-      '/hod-dashboard/**/*': ['./prisma/dev.db', './prisma/schema.prisma'],
+      '/api/**/*': ['./prisma/schema.prisma'],
+      '/admin/**/*': ['./prisma/schema.prisma'],
+      '/dashboard/**/*': ['./prisma/schema.prisma'],
+      '/faculty-dashboard/**/*': ['./prisma/schema.prisma'],
+      '/hod-dashboard/**/*': ['./prisma/schema.prisma'],
     },
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'framer-motion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-avatar',
+    ],
   },
   async headers() {
     return [
