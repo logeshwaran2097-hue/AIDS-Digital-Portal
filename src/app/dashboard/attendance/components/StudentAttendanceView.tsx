@@ -21,6 +21,11 @@ import {
   FileDown,
   Printer,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Calendar,
+  Filter,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -94,6 +99,112 @@ export function StudentAttendanceView({
     studentName?: string
     registerNumber?: string
   } | null>(null)
+
+  // Date-wise history states
+  const [historyViewMode, setHistoryViewMode] = useState<'date_wise' | 'flat_table'>('date_wise')
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({})
+  const [historyDateSearch, setHistoryDateSearch] = useState('')
+  const [historyStatusFilter, setHistoryStatusFilter] = useState<'all' | 'P' | 'OD' | 'A'>('all')
+
+  const toggleDateExpanded = (date: string) => {
+    setExpandedDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }))
+  }
+
+  const expandAllDates = (dates: string[]) => {
+    const next: Record<string, boolean> = {}
+    dates.forEach((d) => (next[d] = true))
+    setExpandedDates(next)
+  }
+
+  const collapseAllDates = () => {
+    setExpandedDates({})
+  }
+
+  // Grouped history by date (sorted descending)
+  const groupedHistory = React.useMemo(() => {
+    const map: Record<string, AttendanceHistoryItem[]> = {}
+    stats.history.forEach((item) => {
+      if (!map[item.date]) map[item.date] = []
+      map[item.date].push(item)
+    })
+
+    const sortedDates = Object.keys(map).sort((a, b) => b.localeCompare(a))
+
+    return sortedDates.map((date) => {
+      const getHourOrder = (h: string) => {
+        const num = parseInt(h.replace(/\D/g, '') || '0', 10)
+        return num || 0
+      }
+      const sortedSessions = [...map[date]].sort((a, b) => getHourOrder(a.hour) - getHourOrder(b.hour))
+      const total = sortedSessions.length
+      const present = sortedSessions.filter((s) => s.status === 'P').length
+      const od = sortedSessions.filter((s) => s.status === 'OD').length
+      const absent = sortedSessions.filter((s) => s.status === 'A' || s.status === 'L').length
+      const pct = total > 0 ? Math.round(((present + od) / total) * 100) : 0
+
+      let formattedDate = date
+      try {
+        const d = new Date(date + 'T00:00:00')
+        formattedDate = d.toLocaleDateString('en-IN', {
+          weekday: 'long',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      } catch {}
+
+      return {
+        date,
+        formattedDate,
+        sessions: sortedSessions,
+        total,
+        present,
+        od,
+        absent,
+        pct,
+      }
+    })
+  }, [stats.history])
+
+  // Filtered grouped dates based on search and status
+  const filteredGroupedHistory = React.useMemo(() => {
+    return groupedHistory
+      .map((group) => {
+        let matchingSessions = group.sessions
+
+        if (historyStatusFilter !== 'all') {
+          matchingSessions = matchingSessions.filter((s) => {
+            if (historyStatusFilter === 'P') return s.status === 'P'
+            if (historyStatusFilter === 'OD') return s.status === 'OD'
+            if (historyStatusFilter === 'A') return s.status === 'A' || s.status === 'L'
+            return true
+          })
+        }
+
+        if (historyDateSearch.trim()) {
+          const q = historyDateSearch.toLowerCase().trim()
+          const dateMatches = group.date.toLowerCase().includes(q) || group.formattedDate.toLowerCase().includes(q)
+          if (!dateMatches) {
+            matchingSessions = matchingSessions.filter(
+              (s) =>
+                s.subjectCode.toLowerCase().includes(q) ||
+                s.subjectName.toLowerCase().includes(q) ||
+                s.takenByName.toLowerCase().includes(q) ||
+                s.hour.toLowerCase().includes(q)
+            )
+          }
+        }
+
+        return {
+          ...group,
+          sessions: matchingSessions,
+        }
+      })
+      .filter((group) => group.sessions.length > 0)
+  }, [groupedHistory, historyStatusFilter, historyDateSearch])
 
   const fetchTrackedApplications = useCallback(async () => {
     if (!student.registerNumber) return
@@ -500,20 +611,291 @@ export function StudentAttendanceView({
         </CardContent>
       </Card>
 
-      {/* Attendance History Log */}
-      <Card className="rounded-3xl border-gray-200 shadow-xs">
-        <CardContent className="p-6 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+      {/* Date-Wise Attendance History Log */}
+      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
+        <CardContent className="p-5 sm:p-7 space-y-6">
+          {/* Header & Controls */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100">
             <div>
-              <h3 className="font-black text-base text-[#071A3D]">Live Class Period Log</h3>
-              <p className="text-xs text-gray-400">Chronological attendance marked by faculty handlers</p>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-[#1455D9]" />
+                <h3 className="font-black text-base sm:text-lg text-[#071A3D]">Date-Wise Attendance History</h3>
+              </div>
+              <p className="text-xs text-gray-400 mt-0.5">Chronological day-by-day class attendance marked by faculty handlers</p>
             </div>
-            <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200">
-              {stats.history.length} Sessions Recorded
-            </span>
+
+            {/* View Switcher & Actions */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="bg-gray-100 p-1 rounded-xl flex items-center gap-1 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setHistoryViewMode('date_wise')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
+                    historyViewMode === 'date_wise'
+                      ? "bg-white text-[#071A3D] shadow-xs"
+                      : "text-gray-500 hover:text-[#071A3D]"
+                  )}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Date-Wise View</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryViewMode('flat_table')}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
+                    historyViewMode === 'flat_table'
+                      ? "bg-white text-[#071A3D] shadow-xs"
+                      : "text-gray-500 hover:text-[#071A3D]"
+                  )}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>All Periods Table</span>
+                </button>
+              </div>
+
+              {historyViewMode === 'date_wise' && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => expandAllDates(filteredGroupedHistory.map((g) => g.date))}
+                    className="px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:text-[#1455D9] hover:bg-blue-50 rounded-lg border border-gray-200 transition-colors cursor-pointer"
+                  >
+                    Expand All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={collapseAllDates}
+                    className="px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer"
+                  >
+                    Collapse All
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          {stats.history.length > 0 ? (
+          {/* Search & Filter Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/70 p-3 rounded-2xl border border-gray-100 text-xs">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={historyDateSearch}
+                onChange={(e) => setHistoryDateSearch(e.target.value)}
+                placeholder="Search date (e.g. 2026-09-12), subject, faculty..."
+                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border border-gray-200 text-xs text-slate-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              <span className="text-[11px] font-bold text-gray-400 mr-1 flex items-center gap-1">
+                <Filter className="w-3 h-3" />
+                Filter:
+              </span>
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'P', label: 'Present' },
+                { id: 'OD', label: 'On-Duty' },
+                { id: 'A', label: 'Absent' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setHistoryStatusFilter(f.id as any)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
+                    historyStatusFilter === f.id
+                      ? "bg-[#071A3D] text-white shadow-xs"
+                      : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Grouped Date-Wise History Cards */}
+          {historyViewMode === 'date_wise' ? (
+            filteredGroupedHistory.length > 0 ? (
+              <div className="space-y-4">
+                {filteredGroupedHistory.map((group, idx) => {
+                  const isExpanded = expandedDates[group.date] ?? (idx === 0) // Default expand the latest date
+                  const isPerfect = group.absent === 0 && group.od === 0 && group.present > 0
+                  const hasOD = group.od > 0
+                  const hasAbsent = group.absent > 0
+
+                  return (
+                    <div
+                      key={group.date}
+                      className="rounded-2xl border border-gray-200/90 bg-white overflow-hidden transition-all shadow-xs hover:border-blue-200"
+                    >
+                      {/* Date Header Accordion Bar */}
+                      <div
+                        onClick={() => toggleDateExpanded(group.date)}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer hover:bg-slate-50/80 transition-colors gap-3 border-b border-gray-100"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-10 h-10 rounded-xl flex flex-col items-center justify-center font-black text-xs shrink-0 ring-2",
+                            isPerfect && "bg-emerald-50 text-emerald-700 ring-emerald-100",
+                            hasOD && "bg-amber-50 text-amber-700 ring-amber-100",
+                            hasAbsent && "bg-red-50 text-red-700 ring-red-100"
+                          )}>
+                            <span className="text-[10px] leading-none uppercase font-bold">
+                              {group.date.split('-')[2]}
+                            </span>
+                            <span className="text-[9px] leading-none font-semibold text-slate-500 mt-0.5">
+                              {new Date(group.date + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short' })}
+                            </span>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-extrabold text-sm sm:text-base text-[#071A3D]">
+                                {group.formattedDate}
+                              </h4>
+                              <span className="text-[11px] font-mono text-gray-400">({group.date})</span>
+                            </div>
+                            <p className="text-xs text-gray-500 font-medium mt-0.5">
+                              {group.total} Periods Conducted • <strong className="text-emerald-700">{group.present} Present</strong>
+                              {group.od > 0 && <> • <strong className="text-amber-700">{group.od} OD</strong></>}
+                              {group.absent > 0 && <> • <strong className="text-red-700">{group.absent} Absent</strong></>}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Right Summary Badges & Chevron */}
+                        <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+                          <span
+                            className={cn(
+                              "px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5",
+                              isPerfect && "bg-emerald-50 text-emerald-800 border border-emerald-200",
+                              hasOD && "bg-amber-50 text-amber-900 border border-amber-200",
+                              hasAbsent && "bg-red-50 text-red-900 border border-red-200"
+                            )}
+                          >
+                            {isPerfect && (
+                              <>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>100% Present</span>
+                              </>
+                            )}
+                            {hasOD && !hasAbsent && (
+                              <>
+                                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                                <span>{group.od} Period OD • {group.pct}%</span>
+                              </>
+                            )}
+                            {hasAbsent && (
+                              <>
+                                <XCircle className="w-3.5 h-3.5 text-red-600" />
+                                <span>{group.absent} Absent • {group.pct}% Attended</span>
+                              </>
+                            )}
+                          </span>
+
+                          <button
+                            type="button"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                            aria-label="Toggle Date Periods"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="w-4 h-4 text-[#071A3D]" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expanded Periods List */}
+                      {isExpanded && (
+                        <div className="p-4 bg-slate-50/40 divide-y divide-gray-100 space-y-2">
+                          {group.sessions.map((s) => {
+                            const isPresent = s.status === 'P'
+                            const isOD = s.status === 'OD'
+                            const isAbsent = s.status === 'A' || s.status === 'L'
+
+                            return (
+                              <div
+                                key={s.id}
+                                className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 px-3 rounded-xl bg-white border border-gray-100 hover:border-blue-200 transition-all gap-2 text-xs"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <span className="w-20 px-2 py-1 rounded-lg bg-gray-100 text-[#071A3D] font-mono font-bold text-[11px] text-center shrink-0">
+                                    {s.hour.split(' ')[0]} {s.hour.split(' ')[1]}
+                                  </span>
+
+                                  <div>
+                                    <div className="font-bold text-[#071A3D] text-xs sm:text-sm">
+                                      <span className="text-blue-700 font-mono mr-1.5">{s.subjectCode}</span>
+                                      <span>{s.subjectName}</span>
+                                    </div>
+                                    <div className="text-gray-400 text-[11px] flex items-center gap-2 mt-0.5">
+                                      <span>Faculty: <strong className="text-gray-600">{s.takenByName}</strong></span>
+                                      <span>•</span>
+                                      <span className="font-mono text-gray-500">{s.hour.includes('(') ? s.hour.substring(s.hour.indexOf('(')) : s.hour}</span>
+                                      {s.remarks && (
+                                        <>
+                                          <span>•</span>
+                                          <span className="text-amber-700 font-medium italic">Remarks: {s.remarks}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="self-end sm:self-center shrink-0">
+                                  <span
+                                    className={cn(
+                                      "px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1",
+                                      isPresent && "bg-emerald-100 text-emerald-800 border border-emerald-200",
+                                      isOD && "bg-amber-100 text-amber-900 border border-amber-200",
+                                      isAbsent && "bg-red-100 text-red-800 border border-red-200"
+                                    )}
+                                  >
+                                    {isPresent && (
+                                      <>
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                        <span>Present</span>
+                                      </>
+                                    )}
+                                    {isOD && (
+                                      <>
+                                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                                        <span>On-Duty (OD)</span>
+                                      </>
+                                    )}
+                                    {isAbsent && (
+                                      <>
+                                        <XCircle className="w-3.5 h-3.5 text-red-600" />
+                                        <span>Absent</span>
+                                      </>
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-xs text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="font-bold text-gray-600 text-sm">No Attendance Matches Found</p>
+                <p className="text-[11px] text-gray-400 mt-1">Try clearing your date or status filters above.</p>
+              </div>
+            )
+          ) : (
+            /* Flat Table View Option */
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
@@ -555,12 +937,6 @@ export function StudentAttendanceView({
                   })}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <div className="py-10 text-center text-xs text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
-              <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-              <p className="font-bold text-gray-500">No Attendance Sessions Recorded Yet</p>
-              <p className="text-[11px] text-gray-400 mt-0.5">Faculty period attendance entries will appear here in real-time as they are marked.</p>
             </div>
           )}
         </CardContent>
