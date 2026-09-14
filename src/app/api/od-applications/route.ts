@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { dispatchWebPushNotification } from '@/lib/pushNotifier'
 
 export const dynamic = 'force-dynamic'
 
@@ -461,34 +462,58 @@ export async function PATCH(request: Request) {
 
     // 2. Dispatch Notification to Student
     if (action === 'endorse') {
+      const title = `✅ [OD Endorsed] ${eventName || 'On-Duty Leave'} Endorsed by Class Advisor`
+      const message = `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) has been ENDORSED by Class Advisor ${reviewerName} and forwarded to HOD for final authorization.`
       await prisma.notification.create({
         data: {
-          title: `✅ [OD Endorsed] ${eventName || 'On-Duty Leave'} Endorsed by Class Advisor`,
-          message: `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) has been ENDORSED by Class Advisor ${reviewerName} and forwarded to HOD for final authorization.`,
+          title,
+          message,
           target: 'student',
           createdByName: reviewerName,
           status: 'published',
         },
+      }).catch(() => {})
+      dispatchWebPushNotification({
+        title,
+        message,
+        targetRegNo: regUpper,
+        url: '/dashboard/notifications',
       }).catch(() => {})
     } else if (action === 'reject' || action === 'hod_reject') {
+      const title = `❌ [OD Declined] ${eventName || 'On-Duty Leave'} Declined`
+      const message = `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) was DECLINED by ${reviewerName}. Reason: "${remarks || 'Incomplete proofs or below 75% attendance criteria.'}"`
       await prisma.notification.create({
         data: {
-          title: `❌ [OD Declined] ${eventName || 'On-Duty Leave'} Declined`,
-          message: `Your OD / Leave application for "${eventName || 'Activity'}" (${dates || 'scheduled period'}) was DECLINED by ${reviewerName}. Reason: "${remarks || 'Incomplete proofs or below 75% attendance criteria.'}"`,
+          title,
+          message,
           target: 'student',
           createdByName: reviewerName,
           status: 'published',
         },
       }).catch(() => {})
+      dispatchWebPushNotification({
+        title,
+        message,
+        targetRegNo: regUpper,
+        url: '/dashboard/notifications',
+      }).catch(() => {})
     } else if (action === 'hod_approve' || (session.role === 'hod' && action === 'approve')) {
+      const studentTitle = `🎉 [OD Sanctioned] ${eventName || 'On-Duty Leave'} Officially Authorized by HOD`
+      const studentMsg = `Official institutional sanction has been granted by Head of Department ${reviewerName} for "${eventName || 'Activity'}" (${dates || 'scheduled period'}). Official OD attendance has been credited to your academic roll.`
       await prisma.notification.create({
         data: {
-          title: `🎉 [OD Sanctioned] ${eventName || 'On-Duty Leave'} Officially Authorized by HOD`,
-          message: `Official institutional sanction has been granted by Head of Department ${reviewerName} for "${eventName || 'Activity'}" (${dates || 'scheduled period'}). Official OD attendance has been credited to your academic roll.`,
+          title: studentTitle,
+          message: studentMsg,
           target: 'student',
           createdByName: reviewerName,
           status: 'published',
         },
+      }).catch(() => {})
+      dispatchWebPushNotification({
+        title: studentTitle,
+        message: studentMsg,
+        targetRegNo: regUpper,
+        url: '/dashboard/notifications',
       }).catch(() => {})
 
       // Also notify Class Advisor

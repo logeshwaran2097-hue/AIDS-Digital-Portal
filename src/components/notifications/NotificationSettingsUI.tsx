@@ -1,14 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Bell, Volume2, Sparkles, Smartphone, CheckCircle2 } from 'lucide-react'
+import { Bell, Volume2, Sparkles, Smartphone, CheckCircle2, Send, Clock, ShieldCheck, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   playNotificationChime,
   triggerDeviceVibration,
   requestNotificationPermission,
   getNotificationPermissionStatus,
-  dispatchNativeNotification,
+  subscribeUserToPush,
+  sendTestMobilePush,
+  isPushSubscribed,
   getSavedSoundTheme,
   setSavedSoundTheme,
   getCustomSoundUrl,
@@ -27,6 +29,10 @@ const SOUND_OPTIONS: { id: NotificationSoundType; name: string; desc: string; ic
 
 export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | 'faculty' }) {
   const [pushStatus, setPushStatus] = useState<NotificationPermission>('default')
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [isRegistering, setIsRegistering] = useState(false)
+  const [testStatus, setTestStatus] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState<number | null>(null)
   const [activeSound, setActiveSound] = useState<NotificationSoundType>('quantum')
   const [previewingSound, setPreviewingSound] = useState<string | null>(null)
   const [customUrl, setCustomUrl] = useState('')
@@ -36,6 +42,10 @@ export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | '
       setPushStatus(getNotificationPermissionStatus())
       setActiveSound(getSavedSoundTheme())
       setCustomUrl(getCustomSoundUrl())
+
+      isPushSubscribed().then((sub) => {
+        setIsSubscribed(sub)
+      })
     }
   }, [])
 
@@ -49,56 +59,149 @@ export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | '
   }
 
   const handleEnablePush = async () => {
-    const perm = await requestNotificationPermission()
-    setPushStatus(perm)
-    if (perm === 'granted') {
-      playNotificationChime()
-      triggerDeviceVibration([150, 80, 150])
+    setIsRegistering(true)
+    setTestStatus(null)
+    try {
+      const res = await subscribeUserToPush(role)
+      setPushStatus(res.permission)
+      if (res.success) {
+        setIsSubscribed(true)
+        setTestStatus('✅ Real phone push notifications successfully enabled!')
+      } else {
+        setTestStatus(`⚠️ ${res.message}`)
+      }
+    } catch (e: any) {
+      setTestStatus(`Error: ${e?.message || 'Failed to enable push'}`)
+    } finally {
+      setIsRegistering(false)
+    }
+  }
+
+  const handleSendTestPush = async (delaySeconds: number = 0) => {
+    if (delaySeconds > 0) {
+      setCountdown(delaySeconds)
+      setTestStatus(`Lock your phone screen now! Notification arrives in ${delaySeconds}s...`)
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(timer)
+            return null
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else {
+      setTestStatus('Sending instant push to your device...')
+    }
+
+    const res = await sendTestMobilePush(delaySeconds)
+    if (res.success) {
+      setTestStatus('🎉 Push notification dispatched to your phone!')
+    } else {
+      setTestStatus(`Push note: ${res.message}`)
     }
   }
 
   return (
     <div className="space-y-6">
       {/* Real-Time Mobile Push Configuration Banner */}
-      <div className="bg-white rounded-3xl p-5 border border-blue-200/80 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shrink-0 shadow-md">
-            <Smartphone className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm text-[#071A3D]">Real-Time Mobile Push &amp; Sound Alerts</h3>
-              <span
-                className={cn(
-                  'px-2 py-0.5 rounded-full text-[10px] font-black uppercase',
-                  pushStatus === 'granted' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                )}
-              >
-                {pushStatus === 'granted' ? '● Connected' : '○ Permission Needed'}
-              </span>
+      <div className="bg-white rounded-3xl p-5 border border-blue-200/80 shadow-md flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shrink-0 shadow-md">
+              <Smartphone className="w-6 h-6" />
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Instant mobile push notifications and haptic alerts for student OD approvals, circulars, exam notices, and faculty announcements.
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm text-[#071A3D]">Real Phone &amp; Lock-Screen Push Notifications</h3>
+                <span
+                  className={cn(
+                    'px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide',
+                    pushStatus === 'granted' && isSubscribed
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : pushStatus === 'granted'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-amber-100 text-amber-700'
+                  )}
+                >
+                  {pushStatus === 'granted' && isSubscribed
+                    ? '● Phone Push Connected'
+                    : pushStatus === 'granted'
+                    ? '○ Ready to Register'
+                    : '○ Permission Needed'}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Delivers alerts straight to your Android/phone status bar, lock screen, and system notification drawer even when the app is closed.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            {!isSubscribed || pushStatus !== 'granted' ? (
+              <button
+                onClick={handleEnablePush}
+                disabled={isRegistering}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1455D9] to-[#1E40AF] hover:from-[#0f44b0] hover:to-[#172554] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer hover:scale-102 disabled:opacity-50"
+              >
+                {isRegistering ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Connecting Device...
+                  </>
+                ) : (
+                  <>
+                    <Bell className="w-4 h-4" /> Enable Real App Notifications
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 shadow-2xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Connected to Device</span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          {pushStatus !== 'granted' ? (
+        {/* Action Testing Bar for Real Phone Notifications */}
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-slate-600">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-medium text-[11px]">
+              Works outside the app on Android phones, Chromebooks, and PWA mobile screens.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
             <button
-              onClick={handleEnablePush}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer hover:scale-102"
+              onClick={() => handleSendTestPush(0)}
+              disabled={isRegistering}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#071A3D] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+              title="Dispatches real notification right now"
             >
-              <Bell className="w-4 h-4" /> Enable Mobile Push
+              <Send className="w-3.5 h-3.5 text-[#1455D9]" />
+              <span>Test Push Now</span>
             </button>
-          ) : (
-            <div className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 shadow-2xs">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Active · Live Official Alerts</span>
-            </div>
-          )}
+
+            <button
+              onClick={() => handleSendTestPush(3)}
+              disabled={isRegistering || countdown !== null}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+              title="Locks phone screen and triggers push after 3 seconds"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>{countdown !== null ? `Lock Screen (${countdown}s)...` : 'Lock-Screen Test (3s)'}</span>
+            </button>
+          </div>
         </div>
+
+        {testStatus && (
+          <div className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-2 animate-fade-in">
+            <span>{testStatus}</span>
+          </div>
+        )}
       </div>
+
 
       {/* Unique Notification Sound Engine Studio */}
       <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-sm space-y-4">

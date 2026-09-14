@@ -650,4 +650,22 @@ model LabDayActivity {
   @@index([year, semester, section])
   @@index([status])
   @@index([createdAt])
-}
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String?
+  regNo     String?
+  role      String?  @default("student")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([regNo])
+  @@index([role])
+}
+

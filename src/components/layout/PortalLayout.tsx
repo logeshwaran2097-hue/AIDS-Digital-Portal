@@ -37,6 +37,8 @@ import {
   requestNotificationPermission,
   getNotificationPermissionStatus,
   dispatchNativeNotification,
+  subscribeUserToPush,
+  isPushSubscribed,
 } from '@/lib/notificationEngine'
 import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationClassifier'
 import { NotificationDetailModal, NotificationDetailData } from '@/components/notifications/NotificationDetailModal'
@@ -344,15 +346,48 @@ export function PortalLayout({
     return () => clearInterval(interval)
   }, [role])
 
+  // Auto-sync real mobile push subscription if permission already granted
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      isPushSubscribed().then((subscribed) => {
+        if (!subscribed) {
+          const derivedRegNo = userEmail ? userEmail.split('@')[0].toUpperCase() : undefined
+          subscribeUserToPush(role, derivedRegNo).catch(() => {})
+        }
+      })
+    }
+  }, [role, userEmail])
+
   // Handle user requesting push permission
   const handleEnablePush = async () => {
-    const perm = await requestNotificationPermission()
-    setPushPermission(perm)
-    if (perm === 'granted') {
-      playNotificationChime()
-      triggerDeviceVibration([200, 100, 200])
+    try {
+      const derivedRegNo = userEmail ? userEmail.split('@')[0].toUpperCase() : undefined
+      const res = await subscribeUserToPush(role, derivedRegNo)
+      setPushPermission(res.permission)
+      if (res.permission === 'granted') {
+        playNotificationChime()
+        triggerDeviceVibration([200, 100, 200])
+      }
+    } catch {
+      const perm = await requestNotificationPermission()
+      setPushPermission(perm)
     }
   }
+
+  // Listen for real-time mobile push broadcasts from Service Worker
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      const handleSwMessage = (event: MessageEvent) => {
+        if (event.data?.type === 'PUSH_NOTIFICATION_RECEIVED') {
+          syncNotifications()
+        }
+      }
+      navigator.serviceWorker.addEventListener('message', handleSwMessage)
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleSwMessage)
+      }
+    }
+  }, [])
 
   const updatePortalState = () => {
     try {

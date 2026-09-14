@@ -300,7 +300,7 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
   const title = payload.title || 'Digital Portal of AI&DS'
   const notifTag = payload.id ? `vsb-notif-${payload.id}` : 'vsb-portal-announcements'
 
-  const options: NotificationOptions = {
+  const options: any = {
     body: payload.message,
     icon: origin ? `${origin}/icon-192.png` : '/icon-192.png',
     badge: origin ? `${origin}/icon-192.png` : '/icon-192.png',
@@ -332,4 +332,171 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
       notif.close()
     }
   } catch {}
+}
+
+/**
+ * Convert base64 url-safe string to Uint8Array for PushManager applicationServerKey
+ */
+export function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const outputArray = new Uint8Array(rawData.length)
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i)
+  }
+  return outputArray
+}
+
+/**
+ * Check if the current browser/device is subscribed to Web Push notifications
+ */
+export async function isPushSubscribed(): Promise<boolean> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return false
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready
+    const sub = await reg.pushManager.getSubscription()
+    return !!sub
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Get active push subscription object if available
+ */
+export async function getActivePushSubscription(): Promise<PushSubscription | null> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return null
+  }
+
+  try {
+    const reg = await navigator.serviceWorker.ready
+    return await reg.pushManager.getSubscription()
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Subscribe device to real mobile push notifications with VAPID key
+ */
+export async function subscribeUserToPush(
+  role: string = 'student',
+  regNo?: string
+): Promise<{ success: boolean; message: string; permission: NotificationPermission }> {
+  if (typeof window === 'undefined') {
+    return { success: false, message: 'Window not available', permission: 'denied' }
+  }
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return {
+      success: false,
+      message: 'Push notifications are not supported in this browser.',
+      permission: 'denied',
+    }
+  }
+
+  const permission = await requestNotificationPermission()
+  if (permission !== 'granted') {
+    return {
+      success: false,
+      message: 'Notification permission was denied or dismissed.',
+      permission,
+    }
+  }
+
+  try {
+    let vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    if (!vapidPublicKey) {
+      // Fetch public key dynamically from API
+      const res = await fetch('/api/push/subscribe')
+      const data = await res.json()
+      vapidPublicKey = data.publicKey
+    }
+
+    if (!vapidPublicKey) {
+      return {
+        success: false,
+        message: 'VAPID public key not found on server.',
+        permission,
+      }
+    }
+
+    const reg = await navigator.serviceWorker.ready
+    let subscription = await reg.pushManager.getSubscription()
+
+    if (!subscription) {
+      const convertedKey = urlBase64ToUint8Array(vapidPublicKey)
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedKey,
+      })
+    }
+
+    const subJson = subscription.toJSON()
+
+    // Send subscription to server
+    const response = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        endpoint: subscription.endpoint,
+        keys: subJson.keys,
+        role,
+        regNo,
+      }),
+    })
+
+    const result = await response.json()
+
+    if (response.ok && result.success) {
+      playNotificationChime()
+      triggerDeviceVibration([150, 80, 150])
+      return {
+        success: true,
+        message: 'Real mobile push notifications connected successfully!',
+        permission,
+      }
+    } else {
+      return {
+        success: false,
+        message: result.message || 'Server rejected push subscription.',
+        permission,
+      }
+    }
+  } catch (error: any) {
+    console.error('Subscription error:', error)
+    return {
+      success: false,
+      message: error?.message || 'Failed to subscribe to push notifications.',
+      permission,
+    }
+  }
+}
+
+/**
+ * Trigger an instant or delayed test push notification to verify lock screen / tray behavior
+ */
+export async function sendTestMobilePush(delaySeconds: number = 0): Promise<{ success: boolean; message: string }> {
+  try {
+    const sub = await getActivePushSubscription()
+    const res = await fetch('/api/push/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        endpoint: sub?.endpoint,
+        delaySeconds,
+        title: '🔔 Digital Portal of AI&DS',
+        message: 'Official Alert: Real mobile push notifications are fully active on your phone!',
+      }),
+    })
+    const data = await res.json()
+    return { success: data.success, message: data.message }
+  } catch (e: any) {
+    return { success: false, message: e?.message || 'Failed to trigger test push' }
+  }
 }

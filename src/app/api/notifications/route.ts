@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import { categorizeNotification } from '@/lib/notificationClassifier'
+import { dispatchWebPushNotification } from '@/lib/pushNotifier'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -237,6 +238,15 @@ export async function POST(request: Request) {
     })
 
     invalidateCache('notifications')
+
+    // Dispatch real mobile push notifications to subscribed phones & browsers
+    dispatchWebPushNotification({
+      title: notification.title,
+      message: notification.message,
+      url: link || '/dashboard/notifications',
+      tag: `vsb-notif-${notification.id}`,
+      targetRole: notification.target === 'students' ? 'student' : notification.target,
+    }).catch((err) => console.error('Background web push error:', err))
 
     return NextResponse.json(
       {

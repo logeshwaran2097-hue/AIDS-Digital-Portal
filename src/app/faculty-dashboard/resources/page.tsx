@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
-import { FacultyResourcesView, FacultyResourceItem } from './components/FacultyResourcesView'
+import { FacultyResourcesView, ResourceItem } from './components/FacultyResourcesView'
 
 export const dynamic = 'force-dynamic'
 

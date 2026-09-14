@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v5'
+const CACHE_NAME = 'vsb-aids-portal-v6'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -87,19 +87,27 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: iconUrl,
     badge: badgeUrl,
-    vibrate: [150, 80, 150],
+    vibrate: [200, 100, 200, 100, 200],
     timestamp: Date.now(),
     data: data.data || { url: '/dashboard/notifications' },
     tag: notifTag,
-    renotify: false,
+    renotify: true,
+    requireInteraction: false,
     actions: [
       { action: 'open', title: 'Open Portal' }
     ]
   }
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'Digital Portal of AI&DS', options)
-  )
+  const showNotifPromise = self.registration.showNotification(data.title || 'Digital Portal of AI&DS', options)
+
+  // Notify any active clients/tabs in the foreground to refresh their alerts
+  const notifyClientsPromise = clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    for (const client of clientList) {
+      client.postMessage({ type: 'PUSH_NOTIFICATION_RECEIVED', payload: data })
+    }
+  }).catch(() => {})
+
+  event.waitUntil(Promise.all([showNotifPromise, notifyClientsPromise]))
 })
 
 // Notification Click Event - open or focus application tab
@@ -113,7 +121,9 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if ('focus' in client) {
-          client.navigate(targetUrl)
+          if ('navigate' in client) {
+            client.navigate(targetUrl)
+          }
           return client.focus()
         }
       }
