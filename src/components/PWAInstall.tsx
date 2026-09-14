@@ -272,8 +272,8 @@ export function PWAInstall() {
             {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#051329] via-[#1455D9] to-[#22C7E8] p-0.5 shadow-md shrink-0">
-                  <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center p-1">
+                <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] via-[#EC4899] to-[#FACC15] p-[2.5px] shadow-[0_0_15px_rgba(0,245,255,0.45)] shrink-0">
+                  <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center p-1 border border-amber-300/80">
                     <Image
                       src="/college-emblem.png"
                       alt="VSB"

@@ -216,9 +216,9 @@ export function MobileAppSplashScreen() {
           {/* Layer 2: Middle Sapphire-Gold Glass Halo */}
           <div className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full border-[2px] border-[#1557C0]/30 bg-gradient-to-tr from-white/60 via-blue-50/40 to-amber-50/50 backdrop-blur-md anim-ring-spin-reverse" />
           
-          {/* Layer 1: Core Gold Medallion with College Emblem */}
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-2 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_25px_60px_rgba(7,26,65,0.25),0_0_40px_rgba(231,185,62,0.7)] ring-4 ring-white/90 overflow-hidden">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-3 shadow-inner overflow-hidden relative z-10">
+          {/* Layer 1: Core Medallion with Colorful Ring and College Emblem */}
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-2 bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] via-[#EC4899] to-[#FACC15] shadow-[0_25px_60px_rgba(7,26,65,0.35),0_0_45px_rgba(0,245,255,0.6),0_0_30px_rgba(236,72,153,0.5)] ring-4 ring-white/90 overflow-hidden">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-3 shadow-inner overflow-hidden relative z-10 border border-amber-300/80">
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
