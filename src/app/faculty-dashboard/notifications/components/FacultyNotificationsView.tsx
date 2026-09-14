@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -46,6 +46,36 @@ export function FacultyNotificationsView({
   const [selectedDetailNotification, setSelectedDetailNotification] = useState<NotificationItem | null>(null)
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
+
+  // Automatically mark all notifications as read when seen on this page
+  useEffect(() => {
+    const hasUnread = notifications.some((n) => !n.isRead)
+    if (hasUnread) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+      fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true }),
+      }).catch(() => {})
+      window.dispatchEvent(new CustomEvent('portal-notifications-marked-read'))
+    }
+  }, [])
+
+  // Sync when cross-component mark-read event fires
+  useEffect(() => {
+    const handleCrossRead = (e: any) => {
+      const specificId = e?.detail?.id
+      if (specificId) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === specificId ? { ...n, isRead: true } : n))
+        )
+      } else {
+        setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+      }
+    }
+    window.addEventListener('portal-notifications-marked-read', handleCrossRead)
+    return () => window.removeEventListener('portal-notifications-marked-read', handleCrossRead)
+  }, [])
 
   const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
@@ -149,6 +179,14 @@ export function FacultyNotificationsView({
             )}
           </button>
         </div>
+
+        <button
+          onClick={markAllAsRead}
+          className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-[#1455D9] hover:bg-blue-50 border border-blue-100 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+        >
+          <CheckCircle2 className="w-3.5 h-3.5 text-[#1455D9]" />
+          <span>Mark all as read</span>
+        </button>
       </div>
 
       {/* Notifications List */}

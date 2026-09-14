@@ -70,6 +70,34 @@ export function StudentNotificationsView({ notifications: initialNotifications }
     }
   }, [])
 
+  // Auto-mark all as read when seen on this page
+  useEffect(() => {
+    const hasUnread = items.some((n) => !readIds.has(n.id))
+    if (hasUnread) {
+      setReadIds(new Set(items.map((n) => n.id)))
+      fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true }),
+      }).catch(() => {})
+      window.dispatchEvent(new CustomEvent('portal-notifications-marked-read'))
+    }
+  }, [items])
+
+  // Cross-component sync for marked-read events
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const specificId = e?.detail?.id
+      if (specificId) {
+        setReadIds((prev) => new Set(prev).add(specificId))
+      } else {
+        setReadIds(new Set(items.map((n) => n.id)))
+      }
+    }
+    window.addEventListener('portal-notifications-marked-read', handleSync)
+    return () => window.removeEventListener('portal-notifications-marked-read', handleSync)
+  }, [items])
+
   const handleMarkAllRead = async () => {
     setReadIds(new Set(items.map((n) => n.id)))
     try {

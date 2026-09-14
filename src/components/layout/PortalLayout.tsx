@@ -451,11 +451,30 @@ export function PortalLayout({
     return () => window.removeEventListener('portal-notifications-marked-read', handleMarkedRead)
   }, [])
 
-  // Auto-mark domain notifications as read when user navigates into that specific section
+  // Auto-mark domain notifications as read when user navigates into that specific section,
+  // or auto-mark all notifications as read when visiting the notifications page across all roles.
   useEffect(() => {
     if (!pathname) return
+    const isNotifPage = pathname.includes('/notifications')
     const matchingKey = getMenuCategoryKey(pathname, '')
-    if (matchingKey && matchingKey !== 'notifications') {
+
+    if (isNotifPage || matchingKey === 'notifications') {
+      const hasUnread = notifications.some((n) => n.unread)
+      if (hasUnread) {
+        fetch('/api/notifications', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ markAllRead: true }),
+        }).catch(() => {})
+
+        setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
+        setApiMenuCounts({})
+        window.dispatchEvent(new CustomEvent('portal-notifications-marked-read'))
+      }
+      return
+    }
+
+    if (matchingKey) {
       const unreadForDomain = notifications.filter(
         (n) => n.unread && categorizeNotification(n.title, n.description) === matchingKey
       )
