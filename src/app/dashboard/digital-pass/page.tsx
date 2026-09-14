@@ -24,8 +24,9 @@ export default async function DigitalPassPage() {
   const initialHostelBlock = student?.hostelBlock || 'Boys Hostel I'
   const initialRoomNo = student?.roomNo || 'Room 204'
   const initialResidencyStatus = student?.residencyStatus || 'Hostel'
-  const initialBusDetails = student?.busDetails || 'Route 12 - Karur Central'
-  const initialBoardingPoint = student?.boardingPoint || 'Karur Bus Stand (07:45 AM)'
+  const initialBusNo = student?.busNo || (student?.busDetails ? student.busDetails.match(/bus\s*(\d+)/i)?.[1] : null) || '5'
+  const initialBusDetails = student?.busDetails || 'Route 05 - Namakkal Central'
+  const initialBoardingPoint = student?.boardingPoint || 'Vkl'
 
   return (
     <PortalLayout role={session.role as any} userName={studentName}>
@@ -39,6 +40,7 @@ export default async function DigitalPassPage() {
         initialHostelBlock={initialHostelBlock}
         initialRoomNo={initialRoomNo}
         initialResidencyStatus={initialResidencyStatus}
+        initialBusNo={initialBusNo}
         initialBusDetails={initialBusDetails}
         initialBoardingPoint={initialBoardingPoint}
       />

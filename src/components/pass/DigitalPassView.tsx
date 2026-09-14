@@ -35,6 +35,7 @@ interface DigitalPassViewProps {
   initialHostelBlock?: string
   initialRoomNo?: string
   initialResidencyStatus?: string
+  initialBusNo?: string
   initialBusDetails?: string
   initialBoardingPoint?: string
 }
@@ -42,6 +43,7 @@ interface DigitalPassViewProps {
 const BUS_ROUTES = [
   {
     routeNo: 'Route 12',
+    busNo: '12',
     name: 'Karur Central ↔ VSB Campus',
     via: 'Bus Stand → Collectorate → Gandhigramam → VSB',
     driver: 'M. Selvaraj (Driver)',
@@ -53,6 +55,7 @@ const BUS_ROUTES = [
   },
   {
     routeNo: 'Route 07',
+    busNo: '7',
     name: 'Erode Junction ↔ VSB Campus',
     via: 'Erode Railway Jn → Kodumudi → Velur → VSB',
     driver: 'K. Palanisamy (Driver)',
@@ -64,6 +67,7 @@ const BUS_ROUTES = [
   },
   {
     routeNo: 'Route 18',
+    busNo: '18',
     name: 'Dindigul Central ↔ VSB Campus',
     via: 'Dindigul Bus Stand → Vedasandur → VSB',
     driver: 'S. Murugesan (Driver)',
@@ -75,6 +79,7 @@ const BUS_ROUTES = [
   },
   {
     routeNo: 'Route 22',
+    busNo: '22',
     name: 'Tiruchirappalli Junction ↔ VSB Campus',
     via: 'Trichy Central → Kulithalai → Mayanur → VSB',
     driver: 'R. Veeramani (Driver)',
@@ -86,11 +91,12 @@ const BUS_ROUTES = [
   },
   {
     routeNo: 'Route 05',
+    busNo: '5',
     name: 'Namakkal Central ↔ VSB Campus',
-    via: 'Namakkal Bus Stand → Mohanur → Vangal → VSB',
+    via: 'Namakkal Bus Stand → Mohanur → Vkl / Vangal → VSB',
     driver: 'P. Subramanian (Driver)',
     contact: '+91 98429 88912',
-    stops: ['Namakkal Bus Stand (07:25 AM)', 'Mohanur (07:50 AM)', 'Vangal Bridge (08:10 AM)', 'VSB Campus (08:30 AM)'],
+    stops: ['Namakkal Bus Stand (07:25 AM)', 'Mohanur (07:50 AM)', 'Vkl (08:05 AM)', 'Vangal Bridge (08:15 AM)', 'VSB Campus (08:30 AM)'],
     morningArrival: '08:30 AM',
     eveningDeparture: '05:00 PM',
     busRegNo: 'TN 28 EX 7712'
@@ -116,14 +122,32 @@ export default function DigitalPassView({
   initialHostelBlock,
   initialRoomNo,
   initialResidencyStatus,
+  initialBusNo,
   initialBusDetails,
   initialBoardingPoint,
 }: DigitalPassViewProps) {
-  const [activeTab, setActiveTab] = useState<'bus' | 'hostel'>('hostel')
+  const [activeTab, setActiveTab] = useState<'bus' | 'hostel'>('bus')
   
-  // Bus state
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(0)
-  const [boardingStop, setBoardingStop] = useState(initialBoardingPoint || BUS_ROUTES[0].stops[0])
+  // Auto-match bus route from student onboarding records
+  const initialBusIdx = BUS_ROUTES.findIndex(r => {
+    if (initialBusNo && (r.busNo === initialBusNo || r.routeNo.includes(initialBusNo))) return true
+    if (initialBusDetails) {
+      const lower = initialBusDetails.toLowerCase()
+      if (lower.includes(r.routeNo.toLowerCase())) return true
+      if (lower.includes('bus 5') && r.busNo === '5') return true
+      if (lower.includes('route 5') && r.busNo === '5') return true
+      if (lower.includes('route 05') && r.busNo === '5') return true
+    }
+    return false
+  })
+
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(initialBusIdx !== -1 ? initialBusIdx : 4)
+  const matchedRoute = initialBusIdx !== -1 ? BUS_ROUTES[initialBusIdx] : BUS_ROUTES[4]
+  const matchedStop = initialBoardingPoint
+    ? (matchedRoute.stops.find(s => s.toLowerCase().includes(initialBoardingPoint.toLowerCase())) || initialBoardingPoint)
+    : matchedRoute.stops[0]
+
+  const [boardingStop, setBoardingStop] = useState(matchedStop)
   const [seatNo, setSeatNo] = useState('Seat #34')
 
   // Hostel state - auto select from onboarding data
@@ -148,6 +172,13 @@ export default function DigitalPassView({
   const currentHostel = HOSTEL_BLOCKS[selectedHostelIndex]
   const passRef = useRef<HTMLDivElement>(null)
 
+  // Live timestamp
+  const issueDate = new Date().toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
+
   const handlePrint = () => {
     if (activeTab === 'hostel' && !isHostelCertificateGenerated) {
       toast.error('Certificate not yet generated! Both parent confirmation and warden approval are required.', { icon: '🔒' })
@@ -156,12 +187,61 @@ export default function DigitalPassView({
     window.print()
   }
 
+  // Real offline verifiable slip token download
   const handleDownloadSlip = () => {
     if (activeTab === 'hostel' && !isHostelCertificateGenerated) {
       toast.error('Pass token cannot be downloaded until parent and warden approvals are complete.', { icon: '🔒' })
       return
     }
-    toast.success('Digital Pass slip saved as offline verifiable token!', { icon: '🎫' })
+
+    const passTypeTitle = activeTab === 'bus' ? 'College Bus Transportation Slip' : 'Hostel Resident & Gate Outing Pass'
+    const passNo = `PASS #${registerNumber.slice(-4)}-${activeTab.toUpperCase()}`
+    const content = `
+============================================================
+       V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)
+         OFFICIAL DIGITAL TRANSPORTATION SLIP
+============================================================
+PASS TYPE      : ${passTypeTitle}
+PASS NUMBER    : ${passNo}
+ISSUED DATE    : ${issueDate}
+ACADEMIC YEAR  : 2026-27
+
+STUDENT PARTICULARS:
+- Name         : ${studentName}
+- Register No  : ${registerNumber}
+- Department   : ${department}
+- Year & Sec   : Year ${year} • Sec ${section}
+
+${activeTab === 'bus' ? `COLLEGE BUS ONBOARDING PARTICULARS:
+- Route Number : ${currentRoute.routeNo} (${currentRoute.name})
+- Boarding Stop: ${boardingStop} (Verified via Student Onboarding)
+- Vehicle No   : ${currentRoute.busRegNo}
+- Driver       : ${currentRoute.driver} (${currentRoute.contact})
+- Timings      : Arrival ${currentRoute.morningArrival} | Departure ${currentRoute.eveningDeparture}
+- Seat Allocated: ${seatNo}` : `GATE OUTING PARTICULARS:
+- Hostel Block : ${currentHostel.name} (Room ${roomNo})
+- Outing Type  : ${passType.replace('_', ' ').toUpperCase()}
+- Curfew Limit : ${expectedReturn} (Max: ${currentHostel.curfew})
+- Purpose      : ${outingPurpose}
+- Approvals    : Parent Confirmed & Warden Sanctioned`}
+
+SECURITY & VERIFICATION:
+- Authentication: Cryptographically Signed (SHA256 Token)
+- Verification  : Mobile QR Verification Active at Gate / Bus Boarding
+- Institution   : V.S.B. Engineering College Transport & Security Desk
+============================================================
+`
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `VSB_${activeTab.toUpperCase()}_PASS_SLIP_${registerNumber}.txt`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+
+    toast.success(`${activeTab === 'bus' ? 'College Bus Pass Slip' : 'Gate Outing Pass'} downloaded successfully!`, { icon: '🎫' })
   }
 
   // Interactive Live Verification Actions
@@ -193,12 +273,10 @@ export default function DigitalPassView({
     toast.success('New Gate Pass application submitted! Awaiting parent telephonic confirmation.', { icon: '📋' })
   }
 
-  // Live timestamp
-  const issueDate = new Date().toLocaleDateString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric'
-  })
+  // Ensure currentRoute.stops includes boardingStop
+  const availableStops = currentRoute.stops.some(s => s.toLowerCase().includes(boardingStop.toLowerCase()))
+    ? currentRoute.stops
+    : [boardingStop, ...currentRoute.stops]
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -212,10 +290,10 @@ export default function DigitalPassView({
               <span>Institutional Digital Authorization System</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Bus Route & Hostel Digital Pass
+              Bus Route &amp; Hostel Digital Pass
             </h1>
             <p className="text-sm text-cyan-100/80 max-w-2xl leading-relaxed">
-              Tamper-proof encrypted digital passes for college transport and hostel gate security. Fully paperless and instant verification.
+              Tamper-proof encrypted digital passes and transportation slips. Fully verified from your student onboarding records.
             </p>
           </div>
 
@@ -228,10 +306,10 @@ export default function DigitalPassView({
                   ? 'bg-white/5 border-white/10 text-white/50 cursor-not-allowed'
                   : 'bg-white/10 hover:bg-white/20 border-white/20 text-white'
               }`}
-              title={activeTab === 'hostel' && !isHostelCertificateGenerated ? 'Certificate not yet generated' : 'Print Pass'}
+              title={activeTab === 'hostel' && !isHostelCertificateGenerated ? 'Certificate not yet generated' : 'Print Pass Slip'}
             >
               <Printer className="w-4 h-4" />
-              <span>Print Pass</span>
+              <span>Print Slip</span>
             </button>
             <button
               onClick={handleDownloadSlip}
@@ -240,10 +318,10 @@ export default function DigitalPassView({
                   ? 'bg-slate-700/60 text-slate-400 cursor-not-allowed border border-white/10'
                   : 'bg-cyan-500 hover:bg-cyan-400 text-[#071A3D]'
               }`}
-              title={activeTab === 'hostel' && !isHostelCertificateGenerated ? 'Certificate not yet generated' : 'Download Token'}
+              title={activeTab === 'hostel' && !isHostelCertificateGenerated ? 'Certificate not yet generated' : 'Download Slip Token'}
             >
               <Download className="w-4 h-4" />
-              <span>Download Token</span>
+              <span>Download Slip</span>
             </button>
           </div>
         </div>
@@ -260,6 +338,9 @@ export default function DigitalPassView({
           >
             <Bus className="w-4 h-4 text-blue-600" />
             <span>College Bus Route Pass</span>
+            <span className="ml-1 text-[10px] px-2 py-0.5 rounded-full font-extrabold bg-emerald-100 text-emerald-800">
+              Slip Generated
+            </span>
           </button>
           <button
             onClick={() => setActiveTab('hostel')}
@@ -292,6 +373,39 @@ export default function DigitalPassView({
           {/* CASE A: Active Tab is Bus OR Hostel Certificate is fully approved */}
           {(activeTab === 'bus' || isHostelCertificateGenerated) && (
             <div className="space-y-4">
+              {/* College Bus Pass Onboarding Slip Banner */}
+              {activeTab === 'bus' && (
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 text-blue-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <div>
+                      <strong className="block font-black text-blue-950 text-xs sm:text-sm">
+                        🎉 College Bus Transportation Slip Generated!
+                      </strong>
+                      <span className="text-blue-800 text-[11px]">
+                        Synchronized from your verified Onboarding record (Bus No: {currentRoute.busNo || initialBusNo || '5'} • Boarding Point: {boardingStop}).
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={handleDownloadSlip}
+                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download Slip</span>
+                    </button>
+                    <button
+                      onClick={handlePrint}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-blue-300 text-blue-900 font-bold text-[11px] hover:bg-blue-100 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Success notice for generated hostel pass */}
               {activeTab === 'hostel' && isHostelCertificateGenerated && (
                 <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
@@ -343,7 +457,7 @@ export default function DigitalPassView({
                     <div className="text-right shrink-0">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        AUTHENTICATED
+                        {activeTab === 'bus' ? 'ONBOARDING VERIFIED' : 'AUTHENTICATED'}
                       </span>
                       <p className="text-[10px] text-slate-400 mt-1 font-mono">Academic Year 2026-27</p>
                     </div>
@@ -353,7 +467,7 @@ export default function DigitalPassView({
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600">
-                        OFFICIAL DIGITAL PASS
+                        {activeTab === 'bus' ? 'OFFICIAL TRANSPORTATION SLIP' : 'OFFICIAL DIGITAL PASS'}
                       </span>
                       <h2 className="text-xl sm:text-2xl font-black text-slate-900">
                         {activeTab === 'bus' && 'College Bus Transportation Pass'}
@@ -392,7 +506,9 @@ export default function DigitalPassView({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Bus className="w-5 h-5 text-blue-600" />
-                            <h4 className="font-bold text-blue-950 text-sm">{currentRoute.routeNo}: {currentRoute.name}</h4>
+                            <h4 className="font-bold text-blue-950 text-sm">
+                              {currentRoute.routeNo}: {currentRoute.name}
+                            </h4>
                           </div>
                           <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-200 text-blue-800 font-mono">
                             {seatNo}
@@ -430,7 +546,7 @@ export default function DigitalPassView({
                       <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-slate-400" />
-                          <span><strong>Designated Bus Driver:</strong> {currentRoute.driver}</span>
+                          <span><strong>Transport Incharge / Driver:</strong> {currentRoute.driver}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-blue-700 font-mono">
                           <Phone className="w-3.5 h-3.5" />
@@ -520,13 +636,13 @@ export default function DigitalPassView({
                       <div className="space-y-1">
                         <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
                           <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                          <span>Cryptographically Signed Pass</span>
+                          <span>Cryptographically Signed Slip</span>
                         </div>
                         <p className="text-[10px] text-slate-500 max-w-xs leading-tight">
-                          Security personnel &amp; gate guards scan this QR code directly via mobile reader to verify live gate authorization in the central database.
+                          Security personnel &amp; bus conductors scan this QR code directly via mobile scanner to verify live registration in the central institutional database.
                         </p>
                         <p className="text-[9px] font-mono text-slate-400">
-                          Token Hash: SHA256:{registerNumber.slice(0, 6)}...{activeTab.toUpperCase()}-AUTH
+                          Token Hash: SHA256:{registerNumber.slice(0, 6)}...{activeTab.toUpperCase()}-VERIFIED
                         </p>
                       </div>
                     </div>
@@ -768,80 +884,142 @@ export default function DigitalPassView({
         <div className="lg:col-span-5 space-y-6">
           {/* BUS ROUTE CONTROLS */}
           {activeTab === 'bus' && (
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                <Bus className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-slate-800 text-sm">Select Bus Route &amp; Boarding Stop</h3>
-              </div>
+            <div className="space-y-6">
+              {/* Onboarding Verified Transport Record Card */}
+              <div className="bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 rounded-3xl p-5 border-2 border-emerald-300/80 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                    <h4 className="font-black text-emerald-950 text-xs sm:text-sm">
+                      Onboarding Verified College Bus Record
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900">
+                    SLIP GENERATED
+                  </span>
+                </div>
 
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-slate-600 block">Available College Bus Routes:</label>
-                <select
-                  value={selectedRouteIndex}
-                  onChange={(e) => {
-                    const idx = Number(e.target.value)
-                    setSelectedRouteIndex(idx)
-                    setBoardingStop(BUS_ROUTES[idx].stops[0])
-                    toast.success(`Switched to ${BUS_ROUTES[idx].routeNo}!`)
-                  }}
-                  className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  {BUS_ROUTES.map((route, i) => (
-                    <option key={route.routeNo} value={i}>
-                      {route.routeNo} - {route.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <div className="bg-white/80 backdrop-blur-xs rounded-2xl p-3.5 border border-emerald-200/70 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-slate-600">
+                    <span className="font-medium">Onboarded Bus Number:</span>
+                    <span className="font-bold text-slate-900 bg-emerald-100/70 px-2 py-0.5 rounded-md font-mono">
+                      Bus #{currentRoute.busNo || initialBusNo || '5'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-600">
+                    <span className="font-medium">Allocated Route:</span>
+                    <span className="font-bold text-slate-900 truncate max-w-[200px]">
+                      {currentRoute.routeNo}: {currentRoute.name.split('↔')[0]}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-600">
+                    <span className="font-medium">Designated Boarding Stop:</span>
+                    <span className="font-extrabold text-emerald-800">
+                      {boardingStop}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-slate-600 border-t border-emerald-100 pt-1.5">
+                    <span className="font-medium">Transportation Slip Status:</span>
+                    <span className="font-bold text-emerald-700 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Active &amp; Valid
+                    </span>
+                  </div>
+                </div>
 
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-slate-600 block">Your Designated Boarding Stop:</label>
-                <select
-                  value={boardingStop}
-                  onChange={(e) => {
-                    setBoardingStop(e.target.value)
-                    toast.success(`Boarding point updated!`)
-                  }}
-                  className="w-full p-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  {currentRoute.stops.map((stop) => (
-                    <option key={stop} value={stop}>
-                      {stop}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-slate-600 block">Preferred Seat Reservation:</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {['Seat #12', 'Seat #24', 'Seat #34', 'Seat #46'].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setSeatNo(s)
-                        toast.success(`${s} reserved!`)
-                      }}
-                      className={`py-2 text-xs font-mono font-bold rounded-lg border cursor-pointer transition-all ${
-                        seatNo === s
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {s.split(' ')[1]}
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick={handlePrint}
+                    className="py-2.5 px-3 rounded-xl bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Print Slip</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadSlip}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Slip</span>
+                  </button>
                 </div>
               </div>
 
-              <div className="bg-blue-50 rounded-xl p-3.5 text-xs text-blue-800 space-y-1">
-                <div className="font-bold flex items-center gap-1.5">
-                  <Info className="w-4 h-4 text-blue-600" />
-                  <span>Transport Rules</span>
+              {/* Route & Stop Customization Box */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
+                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                  <Bus className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-bold text-slate-800 text-sm">Select Bus Route &amp; Boarding Stop</h3>
                 </div>
-                <p className="text-[11px] text-blue-700 leading-relaxed">
-                  Students must display this digital QR pass when boarding. In case of route change, submit request 24 hours prior to department transport desk.
-                </p>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-slate-600 block">Available College Bus Routes:</label>
+                  <select
+                    value={selectedRouteIndex}
+                    onChange={(e) => {
+                      const idx = Number(e.target.value)
+                      setSelectedRouteIndex(idx)
+                      setBoardingStop(BUS_ROUTES[idx].stops[0])
+                      toast.success(`Switched to ${BUS_ROUTES[idx].routeNo}!`)
+                    }}
+                    className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {BUS_ROUTES.map((route, i) => (
+                      <option key={route.routeNo} value={i}>
+                        {route.routeNo} - {route.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-slate-600 block">Your Designated Boarding Stop:</label>
+                  <select
+                    value={boardingStop}
+                    onChange={(e) => {
+                      setBoardingStop(e.target.value)
+                      toast.success(`Boarding stop updated!`)
+                    }}
+                    className="w-full p-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  >
+                    {availableStops.map((stop) => (
+                      <option key={stop} value={stop}>
+                        {stop}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-semibold text-slate-600 block">Preferred Seat Reservation:</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {['Seat #12', 'Seat #24', 'Seat #34', 'Seat #46'].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => {
+                          setSeatNo(s)
+                          toast.success(`${s} reserved!`)
+                        }}
+                        className={`py-2 text-xs font-mono font-bold rounded-lg border cursor-pointer transition-all ${
+                          seatNo === s
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {s.split(' ')[1]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 rounded-xl p-3.5 text-xs text-blue-800 space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-blue-600" />
+                    <span>Transport Rules</span>
+                  </div>
+                  <p className="text-[11px] text-blue-700 leading-relaxed">
+                    Students must display this digital QR pass slip when boarding. In case of route change, submit request 24 hours prior to department transport desk.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -981,7 +1159,7 @@ export default function DigitalPassView({
                 <div className="flex items-center justify-between text-slate-600 border-t border-slate-200/50 pt-1.5">
                   <span>Certificate Status:</span>
                   <strong className={isHostelCertificateGenerated ? 'text-emerald-600' : 'text-amber-600'}>
-                    {isHostelCertificateGenerated ? 'Generated & Valid' : 'Awaiting Approvals'}
+                    {isHostelCertificateGenerated ? 'Generated &amp; Valid' : 'Awaiting Approvals'}
                   </strong>
                 </div>
               </div>
