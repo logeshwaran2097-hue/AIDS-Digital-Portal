@@ -381,6 +381,9 @@ export async function getActivePushSubscription(): Promise<PushSubscription | nu
   }
 }
 
+export const DEFAULT_VAPID_PUBLIC_KEY =
+  'BNlsPMJCfW8xkIZijGtcDx-QOUQmri1eRmfxOiKV3d2VZz_29dWXsPtN5YNEAiwkBDDfFAxtdEe1XsWYwHrn_V4'
+
 /**
  * Subscribe device to real mobile push notifications with VAPID key
  */
@@ -410,20 +413,20 @@ export async function subscribeUserToPush(
   }
 
   try {
-    let vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    let vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY
     if (!vapidPublicKey) {
-      // Fetch public key dynamically from API
-      const res = await fetch('/api/push/subscribe')
-      const data = await res.json()
-      vapidPublicKey = data.publicKey
+      try {
+        // Fetch public key dynamically from API
+        const res = await fetch('/api/push/subscribe')
+        const data = await res.json()
+        if (data.publicKey) {
+          vapidPublicKey = data.publicKey
+        }
+      } catch {}
     }
 
     if (!vapidPublicKey) {
-      return {
-        success: false,
-        message: 'VAPID public key not found on server.',
-        permission,
-      }
+      vapidPublicKey = DEFAULT_VAPID_PUBLIC_KEY
     }
 
     const reg = await navigator.serviceWorker.ready

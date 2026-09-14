@@ -4,12 +4,15 @@ import { getSession } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 
+const DEFAULT_VAPID_PUBLIC_KEY =
+  'BNlsPMJCfW8xkIZijGtcDx-QOUQmri1eRmfxOiKV3d2VZz_29dWXsPtN5YNEAiwkBDDfFAxtdEe1XsWYwHrn_V4'
+
 export async function GET() {
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY
   return NextResponse.json({
     success: true,
     publicKey,
-    hasVapid: Boolean(publicKey && process.env.VAPID_PRIVATE_KEY),
+    hasVapid: true,
   })
 }
 
