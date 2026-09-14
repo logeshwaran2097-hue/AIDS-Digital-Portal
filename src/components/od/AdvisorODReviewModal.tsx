@@ -52,12 +52,22 @@ export interface ODNotificationData {
   time?: string
   isRead?: boolean
   applicationType?: string
+  fromDate?: string
+  toDate?: string
+  days?: string
+  totalDays?: string
+  eventName?: string
+  reason?: string
+  registerNumber?: string
+  studentName?: string
+  parentPhone?: string
 }
 
 interface AdvisorODReviewModalProps {
   isOpen: boolean
   onClose: () => void
-  notification: ODNotificationData | null
+  notification?: ODNotificationData | any | null
+  application?: any
   onStatusUpdated?: (notifId: string, status: 'endorsed' | 'rejected') => void
 }
 
@@ -79,6 +89,7 @@ export function AdvisorODReviewModal({
   isOpen,
   onClose,
   notification,
+  application,
   onStatusUpdated,
 }: AdvisorODReviewModalProps) {
   const [loading, setLoading] = useState(false)
@@ -94,13 +105,29 @@ export function AdvisorODReviewModal({
   const [uploadingProof, setUploadingProof] = useState(false)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  // Parse preliminary details from notification title & message
+  // Parse preliminary details from notification title & message or application object
   const parseNotificationText = (): ParsedODInfo => {
+    if (application) {
+      return {
+        studentName: application.studentName || 'Student',
+        registerNumber: application.registerNumber || '',
+        yearSec: `Year ${application.year || 2} · Sem ${application.semester || 3} (Sec ${application.section || 'B'})`,
+        applicationType: application.applicationType || application.category || 'On Duty (OD) / Leave',
+        fromDate: application.fromDate || application.startDate || '',
+        toDate: application.toDate || application.endDate || '',
+        totalDays: application.days || application.totalDays || '1 Day',
+        eventName: application.eventName || 'Academic Activity',
+        reason: application.reason || '',
+        parentPhone: application.parentPhone || '',
+        proofStatus: 'Verified Application',
+      }
+    }
+
     if (!notification) {
       return {
         studentName: 'Student',
         registerNumber: '',
-        yearSec: 'Year 2 - Sec A',
+        yearSec: 'Year 2 - Sec B',
         applicationType: 'On Duty (OD) / Leave',
         fromDate: '',
         toDate: '',
@@ -115,34 +142,54 @@ export function AdvisorODReviewModal({
     const title = notification.title || ''
     const msg = notification.message || ''
 
-    // Name: match "OD Application: Name (RegNo)"
-    const nameMatch = title.match(/OD Application:\s*([A-Za-z\s.]+)\s*\(/i)
-    const studentName = nameMatch ? nameMatch[1].trim() : 'Student'
+    // Name: match "OD Application: Name (RegNo)" or "[OD Application] Name (RegNo)" or ": Name (RegNo)"
+    const nameMatch =
+      title.match(/OD Application:\s*([A-Za-z\s.]+)\s*\(/i) ||
+      title.match(/\[OD Application\]\s*([A-Za-z\s.]+)\s*\(/i) ||
+      title.match(/:\s*([A-Za-z\s.]+)\s*\(/i)
+    const studentName = notification.studentName || (nameMatch ? nameMatch[1].trim() : 'Student')
 
     // RegNo: match "(9225...)"
-    const regMatch = title.match(/\((9225[0-9]+|[0-9]{12})\)/i) || msg.match(/\((9225[0-9]+|[0-9]{12})\)/i)
-    const registerNumber = regMatch ? regMatch[1].trim() : ''
+    const regMatch =
+      title.match(/\((9225[0-9]+|[0-9]{12})\)/i) ||
+      msg.match(/\((9225[0-9]+|[0-9]{12})\)/i) ||
+      title.match(/(9225[0-9]{8,})/i) ||
+      msg.match(/(9225[0-9]{8,})/i)
+    const registerNumber = notification.registerNumber || (regMatch ? regMatch[1].trim() : '')
 
     // Year / Sec: match "(Yr 2 - Sec A)" or similar
-    const yrSecMatch = msg.match(/\((Yr\s*[0-9]+\s*[-/]?\s*Sec\s*[A-Z])\)/i)
-    const yearSec = yrSecMatch ? yrSecMatch[1].trim() : 'Year 2 - Sec A'
+    const yrSecMatch = msg.match(/\((Yr\s*[0-9]+\s*[-/]?\s*Sec\s*[A-Z])\)/i) || msg.match(/Year\s*([0-9]+).*Sec\s*([A-Z])/i)
+    const yearSec = yrSecMatch ? (yrSecMatch[2] ? `Year ${yrSecMatch[1]} - Sec ${yrSecMatch[2]}` : yrSecMatch[1].trim()) : 'Year 2 - Sec B'
 
-    // Application Type: match "requested Personal / Emergency Leave from" or similar
-    const typeMatch = msg.match(/requested\s+([^from]+?)\s+from/i)
-    const applicationType = typeMatch ? typeMatch[1].trim() : 'On Duty / Leave Request'
+    // Application Type:
+    const notifAppType = (notification as any)?.applicationType
+    const typeMatch =
+      title.match(/\[(?:OD Request|HOD Approval Needed|Class Advisor Review)\]\s*([^:]+)/i) ||
+      title.match(/Dispatched:\s*([^:]+)/i) ||
+      msg.match(/OD Type:\s*([^|]+)/i) ||
+      msg.match(/(?:applied for|requested)\s+([^from]+?)\s+from/i)
+    const applicationType = notifAppType || (typeMatch ? typeMatch[1].trim() : 'On Duty / Leave Request')
 
     // Dates: match "from YYYY-MM-DD to YYYY-MM-DD"
-    const dateMatch = msg.match(/from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
-    const fromDate = dateMatch ? dateMatch[1] : ''
-    const toDate = dateMatch ? dateMatch[2] : ''
+    const dateMatch =
+      msg.match(/from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i) ||
+      msg.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
+    const fromDate = (notification as any)?.fromDate || (dateMatch ? dateMatch[1] : '')
+    const toDate = (notification as any)?.toDate || (dateMatch ? dateMatch[2] : '')
 
     // Total days: match "(X days)"
     const daysMatch = msg.match(/\(([0-9]+)\s*days?\)/i)
-    const totalDays = daysMatch ? `${daysMatch[1]} Day${Number(daysMatch[1]) > 1 ? 's' : ''}` : '2 Days'
+    const totalDays = (notification as any)?.days || (notification as any)?.totalDays || (daysMatch ? `${daysMatch[1]} Day${Number(daysMatch[1]) > 1 ? 's' : ''}` : '')
 
-    // Event: match "Event: Event Name."
-    const eventMatch = msg.match(/Event:\s*([^.]+)/i)
-    const eventName = eventMatch ? eventMatch[1].trim() : 'Academic Activity'
+    // Event: match "Event: Event Name" or 'for "Event Name"'
+    const eventMatch =
+      msg.match(/Event:\s*([^.|]+)/i) ||
+      msg.match(/for\s+"([^"]+)"/i)
+    const eventName = (notification as any)?.eventName || (eventMatch ? eventMatch[1].trim() : '')
+
+    // Reason:
+    const reasonMatch = msg.match(/Reason:\s*"([^"]+)"/i) || msg.match(/Reason:\s*([^|]+)/i)
+    const reason = (notification as any)?.reason || (reasonMatch ? reasonMatch[1].trim() : '')
 
     return {
       studentName,
@@ -151,10 +198,10 @@ export function AdvisorODReviewModal({
       applicationType,
       fromDate,
       toDate,
-      totalDays,
-      eventName,
-      reason: '',
-      parentPhone: '',
+      totalDays: totalDays || '1 Day',
+      eventName: eventName || 'Academic Activity',
+      reason,
+      parentPhone: (notification as any)?.parentPhone || '',
       proofStatus: 'Standard Verification',
     }
   }
@@ -163,18 +210,30 @@ export function AdvisorODReviewModal({
 
   // Fetch full details from database on open
   useEffect(() => {
-    if (!isOpen || !notification) return
+    if (!isOpen || (!notification && !application)) return
 
     let isMounted = true
     setLoading(true)
     setEndorsementDone(null)
     setRemarks('')
 
+    if (application?.status === 'endorsed_by_advisor') {
+      setEndorsementDone('endorsed')
+    } else if (application?.status === 'rejected_by_advisor' || application?.status === 'rejected') {
+      setEndorsementDone('rejected')
+    }
+
+    if (application?.files && application.files.length > 0) {
+      setProofFiles(application.files)
+    }
+
     const fetchData = async () => {
       try {
         const queryParams = new URLSearchParams()
-        if (notification.id) queryParams.set('notificationId', notification.id)
-        if (parsed.registerNumber) queryParams.set('registerNumber', parsed.registerNumber)
+        const targetId = application?.id || notification?.id
+        const targetReg = application?.registerNumber || parsed.registerNumber
+        if (targetId) queryParams.set('notificationId', targetId)
+        if (targetReg) queryParams.set('registerNumber', targetReg)
 
         const res = await fetch(`/api/od-applications?${queryParams.toString()}`)
         const data = await res.json()
@@ -189,7 +248,9 @@ export function AdvisorODReviewModal({
               setEndorsementDone('rejected')
             }
           }
-          if (data.files) setProofFiles(data.files)
+          if (data.files && data.files.length > 0) {
+            setProofFiles(data.files)
+          }
           if (typeof data.attendanceRate === 'number') {
             setAttendanceRate(data.attendanceRate)
           }
@@ -206,32 +267,119 @@ export function AdvisorODReviewModal({
     return () => {
       isMounted = false
     }
-  }, [isOpen, notification?.id, parsed.registerNumber])
+  }, [isOpen, notification?.id, application?.id, parsed.registerNumber])
 
-  if (!isOpen || !notification) return null
+  if (!isOpen || (!notification && !application)) return null
 
-  // Extract Reason from audit log if available
+  // Extract Reason from application or audit log if available
   const extractReason = (): string => {
+    if (application?.reason) return application.reason
     if (auditLog?.details) {
       const match = auditLog.details.match(/Reason:\s*([^|]+)/i)
-      if (match) return match[1].trim()
+      if (match && match[1].trim() && match[1].trim() !== 'N/A') return match[1].trim()
     }
+    if (parsed.reason) return parsed.reason
     return 'Official permission requested by student for academic/personal leave.'
   }
 
+  // Extract the exact application type chosen by the student (no generic fallbacks)
+  const getExactApplicationType = (): string => {
+    if (application?.applicationType) return application.applicationType
+    if (application?.category) return application.category
+    if ((notification as any)?.applicationType) {
+      return (notification as any).applicationType
+    }
+    if (auditLog?.details) {
+      const match = auditLog.details.match(/OD Type:\s*([^|]+)/i)
+      if (match && match[1].trim()) return match[1].trim()
+    }
+    const title = notification?.title || ''
+    const titleMatch = title.match(/\[(?:OD Request|HOD Approval Needed|OD Application Dispatched|Class Advisor Review)\]\s*([^:]+)/i)
+    if (titleMatch && titleMatch[1].trim()) {
+      return titleMatch[1].trim()
+    }
+    const msg = notification?.message || ''
+    const msgMatch = msg.match(/(?:applied for|requested)\s+(.+?)\s+from\s+[0-9]{4}/i) ||
+                     msg.match(/OD Type:\s*([^|]+)/i)
+    if (msgMatch && msgMatch[1].trim()) {
+      return msgMatch[1].trim()
+    }
+    if (parsed.applicationType && !parsed.applicationType.includes('On Duty / Leave Request') && !parsed.applicationType.includes('On Duty (OD) / Leave')) {
+      return parsed.applicationType
+    }
+    const r = (application?.reason || extractReason()).toLowerCase()
+    if (r.includes('medic') || r.includes('sick') || r.includes('hospital') || r.includes('fever') || r.includes('doctor')) {
+      return 'Medical Leave (ML)'
+    }
+    if (r.includes('hackathon') || r.includes('competition')) {
+      return 'Technical Hackathon / Competition OD'
+    }
+    if (r.includes('paper') || r.includes('symposium') || r.includes('conference')) {
+      return 'Paper Presentation / Conference OD'
+    }
+    if (r.includes('internship') || r.includes('project work')) {
+      return 'Industry Internship / Project Work OD'
+    }
+    if (r.includes('sports') || r.includes('cultural') || r.includes('tournament')) {
+      return 'Sports / Cultural Event OD'
+    }
+    return parsed.applicationType || 'Industry Internship / Project Work OD'
+  }
+
+  const effectiveApplicationType = getExactApplicationType()
+
   // Resolve authentic context-aware event name
   const getContextualEventName = (): string => {
+    if (application?.eventName) return application.eventName
+    if (parsed.eventName && parsed.eventName !== 'Academic Activity' && parsed.eventName !== 'Department Activity') {
+      return parsed.eventName
+    }
+    if (auditLog?.details) {
+      const match = auditLog.details.match(/Event:\s*([^|]+)/i)
+      if (match && match[1].trim()) return match[1].trim()
+    }
     const r = extractReason().toLowerCase()
     if (r.includes('temple')) return 'Temple Festival & Family Religious Ceremony'
     if (r.includes('medical') || r.includes('hospital') || r.includes('sick')) return 'Medical Leave / Treatment'
     if (r.includes('marriage') || r.includes('wedding')) return 'Family Wedding / Function'
-    if (parsed.eventName && parsed.eventName !== 'Academic Activity') return parsed.eventName
-    if (parsed.applicationType.includes('Personal') || parsed.applicationType.includes('Leave')) {
+    if (effectiveApplicationType.includes('Personal') || effectiveApplicationType.includes('Leave')) {
       const stated = extractReason()
-      return stated.length > 3 ? `${stated.charAt(0).toUpperCase() + stated.slice(1)} (Personal Leave)` : parsed.applicationType
+      return stated.length > 3 && stated !== 'Official permission requested by student for academic/personal leave.'
+        ? `${stated.charAt(0).toUpperCase() + stated.slice(1)} (Personal Leave)`
+        : effectiveApplicationType
     }
-    return parsed.eventName || 'Academic Activity'
+    return parsed.eventName || 'Academic / Project Work OD'
   }
+
+  const effectiveStudentName = application?.studentName || studentDetails?.name || parsed.studentName || 'Student'
+  const effectiveRegisterNumber = application?.registerNumber || studentDetails?.registerNumber || parsed.registerNumber || '922525243103'
+  const effectiveYear = application?.year || studentDetails?.year || 2
+  const effectiveSemester = application?.semester || studentDetails?.semester || 3
+  const effectiveSection = application?.section || studentDetails?.section || 'B'
+  const effectiveBatch = application?.batch || studentDetails?.batch || '2025–2029'
+  const effectiveBloodGroup = application?.bloodGroup || studentDetails?.bloodGroup || 'O+ve'
+  const effectiveResidency = application?.residencyStatus || studentDetails?.residencyStatus || (studentDetails?.busNo ? `Day Scholar · College Bus ${studentDetails.busNo}` : 'Day Scholar')
+  const effectiveParentPhone = application?.parentPhone || studentDetails?.parentPhone || parsed.parentPhone || '6381366088'
+  const effectiveRate = application?.attendanceRate ?? attendanceRate ?? studentDetails?.attendanceRate ?? 92.4
+  const isAttendanceCompliant = effectiveRate >= 75.0
+
+  const effectiveFromDate = application?.fromDate || application?.startDate || parsed.fromDate || (auditLog?.details?.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/i)?.[1]) || ''
+  const effectiveToDate = application?.toDate || application?.endDate || parsed.toDate || (auditLog?.details?.match(/to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)?.[1]) || effectiveFromDate
+
+  const displayFromDate = effectiveFromDate || '2026-09-14'
+  const displayToDate = effectiveToDate || displayFromDate
+
+  const effectiveTotalDays =
+    application?.days ||
+    application?.totalDays ||
+    (parsed.totalDays && !['2 Days', '1 Day', '1 day'].includes(parsed.totalDays) ? parsed.totalDays : null) ||
+    (auditLog?.details?.match(/\(([^)]+days?)\)/i)?.[1]) ||
+    parsed.totalDays ||
+    '1 Day'
+
+  const effectiveEventName = getContextualEventName()
+  const effectiveReason = extractReason()
+  const effectiveProofFiles = application?.files && application.files.length > 0 ? application.files : proofFiles
 
   // Download official verification dossier as PDF
   const handleDownloadPdf = async (customUrl?: string, customName?: string) => {
@@ -241,7 +389,7 @@ export function AdvisorODReviewModal({
     setDownloadingPdf(true)
     const toastId = toast.loading('Generating official high-resolution PDF...')
     try {
-      const reg = studentDetails?.registerNumber || parsed.registerNumber || '922525243103'
+      const reg = effectiveRegisterNumber
       const fileName = customName || `Official_Student_Leave_Verification_Dossier_${reg}.pdf`
       const { downloadSvgAsPdf } = await import('@/lib/pdfGenerator')
       await downloadSvgAsPdf(targetUrl, fileName)
@@ -277,7 +425,7 @@ export function AdvisorODReviewModal({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'upload_advisor_proof',
-            registerNumber: studentDetails?.registerNumber || parsed.registerNumber,
+            registerNumber: effectiveRegisterNumber,
             fileName: file.name,
             fileData: base64,
             fileSize: file.size,
@@ -301,7 +449,6 @@ export function AdvisorODReviewModal({
     reader.readAsDataURL(file)
   }
 
-
   // Handle Advisor Endorsement or Rejection
   const handleAction = async (action: 'endorse' | 'reject') => {
     if (action === 'reject' && !remarks.trim()) {
@@ -311,16 +458,17 @@ export function AdvisorODReviewModal({
 
     setActionLoading(action)
     try {
+      const targetNotifId = application?.id || notification?.id
       const res = await fetch('/api/od-applications', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action,
-          notificationId: notification.id,
-          registerNumber: studentDetails?.registerNumber || parsed.registerNumber,
-          studentName: studentDetails?.name || parsed.studentName,
-          eventName: parsed.eventName,
-          dates: parsed.fromDate ? `${parsed.fromDate} to ${parsed.toDate}` : 'Requested Dates',
+          notificationId: targetNotifId,
+          registerNumber: effectiveRegisterNumber,
+          studentName: effectiveStudentName,
+          eventName: effectiveEventName,
+          dates: `${displayFromDate} to ${displayToDate}`,
           remarks: remarks.trim() || undefined,
         }),
       })
@@ -329,8 +477,8 @@ export function AdvisorODReviewModal({
       if (res.ok && result.success) {
         setEndorsementDone(action === 'endorse' ? 'endorsed' : 'rejected')
         toast.success(result.message)
-        if (onStatusUpdated) {
-          onStatusUpdated(notification.id, action === 'endorse' ? 'endorsed' : 'rejected')
+        if (onStatusUpdated && targetNotifId) {
+          onStatusUpdated(targetNotifId, action === 'endorse' ? 'endorsed' : 'rejected')
         }
       } else {
         toast.error(result.message || 'Failed to update application status.')
@@ -347,62 +495,17 @@ export function AdvisorODReviewModal({
     window.print()
   }
 
-  const effectiveRate = attendanceRate ?? studentDetails?.attendanceRate ?? 92.4
-  const isAttendanceCompliant = effectiveRate >= 75.0
-  const effectiveParentPhone = studentDetails?.parentPhone || '6381366088'
-
-  // Extract the exact application type chosen by the student (no generic fallbacks)
-  const getExactApplicationType = (): string => {
-    if (auditLog?.details) {
-      const match = auditLog.details.match(/OD Type:\s*([^|]+)/i)
-      if (match && match[1].trim()) return match[1].trim()
-    }
-    if ((notification as any)?.applicationType) {
-      return (notification as any).applicationType
-    }
-    const title = notification?.title || ''
-    const titleMatch = title.match(/\[(?:OD Request|HOD Approval Needed|OD Application Dispatched)\]\s*([^:]+)/i)
-    if (titleMatch && titleMatch[1].trim()) {
-      return titleMatch[1].trim()
-    }
-    const msg = notification?.message || ''
-    const msgMatch = msg.match(/(?:applied for|requested)\s+(.+?)\s+from\s+[0-9]{4}/i) ||
-                     msg.match(/OD Type:\s*([^|]+)/i)
-    if (msgMatch && msgMatch[1].trim()) {
-      return msgMatch[1].trim()
-    }
-    if (parsed.applicationType && !parsed.applicationType.includes('On Duty / Leave Request') && !parsed.applicationType.includes('On Duty (OD) / Leave')) {
-      return parsed.applicationType
-    }
-    const r = extractReason().toLowerCase()
-    if (r.includes('medic') || r.includes('sick') || r.includes('hospital') || r.includes('fever') || r.includes('doctor')) {
-      return 'Medical Leave (ML)'
-    }
-    if (r.includes('hackathon') || r.includes('competition')) {
-      return 'Technical Hackathon / Competition OD'
-    }
-    if (r.includes('paper') || r.includes('symposium') || r.includes('conference')) {
-      return 'Paper Presentation / Conference OD'
-    }
-    if (r.includes('internship') || r.includes('project work')) {
-      return 'Industry Internship / Project Work OD'
-    }
-    if (r.includes('sports') || r.includes('cultural') || r.includes('tournament')) {
-      return 'Sports / Cultural Event OD'
-    }
-    return 'Personal / Emergency Leave'
-  }
-
   const buildDossierUrl = () => {
-    const reg = studentDetails?.registerNumber || parsed.registerNumber || '922525243103'
-    const name = studentDetails?.name || parsed.studentName || 'Student'
-    const type = getExactApplicationType()
-    const reason = extractReason()
-    const from = parsed.fromDate || '2026-09-17'
-    const to = parsed.toDate || '2026-09-18'
-    const phone = studentDetails?.parentPhone || parsed.parentPhone || effectiveParentPhone || '6381366088'
-    const proofName = proofFiles?.[0]?.originalName || proofFiles?.[0]?.fileName || ''
-    const currentStatus = endorsementDone || (auditLog?.status === 'endorsed_by_advisor' ? 'endorsed' : auditLog?.status === 'rejected_by_advisor' ? 'rejected' : '')
+    const reg = effectiveRegisterNumber
+    const name = effectiveStudentName
+    const type = effectiveApplicationType
+    const reason = effectiveReason
+    const from = displayFromDate
+    const to = displayToDate
+    const phone = effectiveParentPhone
+    const event = effectiveEventName
+    const proofName = effectiveProofFiles?.[0]?.originalName || effectiveProofFiles?.[0]?.fileName || ''
+    const currentStatus = endorsementDone || (auditLog?.status === 'endorsed_by_advisor' ? 'endorsed' : auditLog?.status === 'rejected_by_advisor' ? 'rejected' : application?.status || '')
 
     const params = new URLSearchParams({
       registerNumber: reg,
@@ -412,6 +515,7 @@ export function AdvisorODReviewModal({
       from,
       to,
       parentPhone: phone,
+      event,
     })
     if (proofName) params.set('proofFileName', proofName)
     if (currentStatus) params.set('status', currentStatus)
@@ -494,31 +598,31 @@ export function AdvisorODReviewModal({
           <div className="p-4 bg-gradient-to-r from-blue-50/50 via-indigo-50/20 to-slate-50 rounded-2xl border border-blue-100 shadow-2xs">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-[#071A3D] text-[#F4C430] flex items-center justify-center font-black text-lg shadow-md shrink-0">
-                {(studentDetails?.name || parsed.studentName).charAt(0).toUpperCase()}
+                {effectiveStudentName.charAt(0).toUpperCase()}
               </div>
               <div className="space-y-0.5 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-extrabold text-base text-[#071A3D]">
-                    {studentDetails?.name || parsed.studentName}
+                    {effectiveStudentName}
                   </h3>
                   <span className="px-2 py-0.5 rounded-md bg-blue-100 text-[#1455D9] font-mono text-xs font-bold">
-                    {studentDetails?.registerNumber || parsed.registerNumber}
+                    {effectiveRegisterNumber}
                   </span>
                 </div>
                 <div className="text-xs text-gray-600 flex items-center gap-2 flex-wrap">
                   <span>
-                    Year {studentDetails?.year || 2} · Sem {studentDetails?.semester || 3} (Sec {studentDetails?.section || 'B'})
+                    Year {effectiveYear} · Sem {effectiveSemester} (Sec {effectiveSection})
                   </span>
                   <span>•</span>
-                  <span>Batch {studentDetails?.batch || '2025–2029'}</span>
+                  <span>Batch {effectiveBatch}</span>
                   <span>•</span>
                   <span className="font-semibold text-gray-700">
-                    Blood: {studentDetails?.bloodGroup || 'O+ve'}
+                    Blood: {effectiveBloodGroup}
                   </span>
                 </div>
                 <div className="text-[11px] text-gray-500 mt-1 flex items-center gap-1.5">
                   <Building className="w-3.5 h-3.5 text-gray-400" />
-                  <span>{studentDetails?.residencyStatus || 'Day Scholar · College Bus 44 (Olappalayam)'}</span>
+                  <span>{effectiveResidency}</span>
                 </div>
               </div>
             </div>
@@ -532,11 +636,11 @@ export function AdvisorODReviewModal({
               <div className="print:hidden">
                 <ParentWhatsAppButton
                   parentPhone={effectiveParentPhone}
-                  studentName={studentDetails?.name || parsed.studentName}
-                  registerNumber={studentDetails?.registerNumber || parsed.registerNumber}
-                  eventName={parsed.eventName}
-                  fromDate={parsed.fromDate}
-                  toDate={parsed.toDate}
+                  studentName={effectiveStudentName}
+                  registerNumber={effectiveRegisterNumber}
+                  eventName={effectiveEventName}
+                  fromDate={displayFromDate}
+                  toDate={displayToDate}
                   size="sm"
                   allowEdit={true}
                 />
@@ -552,7 +656,7 @@ export function AdvisorODReviewModal({
                 <h4 className="font-black text-sm text-[#071A3D]">Application Particulars</h4>
               </div>
               <span className="px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] text-xs font-black shadow-2xs">
-                {getExactApplicationType()}
+                {effectiveApplicationType}
               </span>
             </div>
 
@@ -563,7 +667,7 @@ export function AdvisorODReviewModal({
                 </span>
                 <p className="text-xs font-black text-[#071A3D] mt-0.5 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-[#1455D9]" />
-                  {parsed.fromDate || '2026-09-17'} → {parsed.toDate || '2026-09-18'}
+                  {displayFromDate} → {displayToDate}
                 </p>
               </div>
 
@@ -573,7 +677,7 @@ export function AdvisorODReviewModal({
                 </span>
                 <p className="text-xs font-black text-[#071A3D] mt-0.5 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-purple-600" />
-                  {parsed.totalDays}
+                  {effectiveTotalDays}
                 </p>
               </div>
 
@@ -583,7 +687,7 @@ export function AdvisorODReviewModal({
                 </span>
                 <p className="text-xs font-black text-[#071A3D] mt-0.5 flex items-center gap-1.5 truncate">
                   <Award className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span className="truncate" title={getContextualEventName()}>{getContextualEventName()}</span>
+                  <span className="truncate" title={effectiveEventName}>{effectiveEventName}</span>
                 </p>
               </div>
             </div>
@@ -594,7 +698,7 @@ export function AdvisorODReviewModal({
                 Student Stated Reason & Context:
               </span>
               <div className="p-3.5 bg-amber-50/50 rounded-xl border border-amber-200/60 text-xs text-gray-800 leading-relaxed font-medium italic">
-                "{extractReason()}"
+                "{effectiveReason}"
               </div>
             </div>
 
@@ -640,7 +744,7 @@ export function AdvisorODReviewModal({
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-bold text-xs text-[#071A3D]">
-                          Official Student Leave Requisition & Verification Dossier
+                          Official Student {effectiveApplicationType.includes('Leave') ? 'Leave' : 'On-Duty (OD)'} Requisition & Verification Dossier
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
                           ✓ Verified Dossier
@@ -658,7 +762,7 @@ export function AdvisorODReviewModal({
                       onClick={() =>
                         setSelectedPreviewFile({
                           url: buildDossierUrl(),
-                          title: `Official Leave & Verification Dossier - ${studentDetails?.name || parsed.studentName} (${parsed.registerNumber})`,
+                          title: `Official ${effectiveApplicationType.includes('Leave') ? 'Leave' : 'On-Duty (OD)'} & Verification Dossier - ${effectiveStudentName} (${effectiveRegisterNumber})`,
                           type: 'image/svg+xml',
                         })
                       }
@@ -669,7 +773,7 @@ export function AdvisorODReviewModal({
                     <button
                       type="button"
                       onClick={() => {
-                        handleDownloadPdf(buildDossierUrl(), `Official_Verification_Dossier_${parsed.registerNumber || 'Student'}.pdf`)
+                        handleDownloadPdf(buildDossierUrl(), `Official_Verification_Dossier_${effectiveRegisterNumber}.pdf`)
                       }}
                       disabled={downloadingPdf}
                       className="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#071A3D] font-bold text-xs flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
@@ -684,7 +788,7 @@ export function AdvisorODReviewModal({
                     </button>
                     <a
                       href={buildDossierUrl()}
-                      download={`Official_Verification_Dossier_${parsed.registerNumber}.svg`}
+                      download={`Official_Verification_Dossier_${effectiveRegisterNumber}.svg`}
                       className="px-2 py-1.5 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs flex items-center gap-1 transition-colors"
                       title="Download SVG"
                     >
@@ -698,7 +802,7 @@ export function AdvisorODReviewModal({
                   onClick={() =>
                     setSelectedPreviewFile({
                       url: buildDossierUrl(),
-                      title: `Official Leave & Verification Dossier - ${studentDetails?.name || parsed.studentName} (${parsed.registerNumber})`,
+                      title: `Official ${effectiveApplicationType.includes('Leave') ? 'Leave' : 'On-Duty (OD)'} & Verification Dossier - ${effectiveStudentName} (${effectiveRegisterNumber})`,
                       type: 'image/svg+xml',
                     })
                   }
@@ -710,7 +814,7 @@ export function AdvisorODReviewModal({
                         <ShieldCheck className="w-5 h-5 text-[#071A3D]" />
                       </div>
                       <div className="text-left">
-                        <div className="font-black text-xs text-white">Official Student Leave Requisition Dossier</div>
+                        <div className="font-black text-xs text-white">Official Student {effectiveApplicationType.includes('Leave') ? 'Leave' : 'On-Duty (OD)'} Requisition Dossier</div>
                         <div className="text-[10px] text-blue-200">Anna Univ R2021 Compliant · Digitally Signed Letter &amp; Evidence</div>
                       </div>
                     </div>
@@ -934,7 +1038,7 @@ export function AdvisorODReviewModal({
                 </a>
                 <a
                   href={selectedPreviewFile.url}
-                  download={`Official_Verification_Dossier_${parsed.registerNumber || 'Student'}.svg`}
+                  download={`Official_Verification_Dossier_${effectiveRegisterNumber || 'Student'}.svg`}
                   target="_blank"
                   rel="noreferrer"
                   className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"

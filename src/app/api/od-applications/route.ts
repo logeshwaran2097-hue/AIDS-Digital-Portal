@@ -19,18 +19,31 @@ export async function GET(request: Request) {
     let whereClause: any = {}
 
     if (notificationId) {
-      const singleNotif = await prisma.notification.findUnique({
+      let singleNotif = await prisma.notification.findUnique({
         where: { id: notificationId },
       }).catch(() => null)
 
+      let singleAuditLog: any = null
+      if (!singleNotif) {
+        singleAuditLog = await prisma.auditLog.findUnique({
+          where: { id: notificationId },
+        }).catch(() => null)
+      }
+
       let studentDetails: any = null
-      let auditLog: any = null
+      let auditLog: any = singleAuditLog
       let files: any[] = []
       let attendanceRate = 100.0
 
-      if (singleNotif) {
-        const regMatch = singleNotif.title.match(/\((9225[0-9]+|[0-9]{12})\)/i) ||
-          singleNotif.message.match(/\((9225[0-9]+|[0-9]{12})/i)
+      const notifOrLog = singleNotif || singleAuditLog
+      if (notifOrLog) {
+        const regMatch =
+          singleNotif?.title?.match(/\((9225[0-9]+|[0-9]{12})\)/i) ||
+          singleNotif?.message?.match(/\((9225[0-9]+|[0-9]{12})/i) ||
+          singleAuditLog?.userName?.match(/\((9225[0-9]+|[0-9]{12})\)/i) ||
+          singleAuditLog?.userName?.match(/(9225[0-9]+|[0-9]{12})/i) ||
+          singleAuditLog?.details?.match(/\((9225[0-9]+|[0-9]{12})\)/i)
+
         const deducedReg = targetRegNo || (regMatch ? regMatch[1] : null)
 
         if (deducedReg) {
@@ -59,7 +72,7 @@ export async function GET(request: Request) {
 
             studentDetails = {
               id: student.id,
-              name: studentUser?.name || singleNotif.createdByName || 'Student',
+              name: studentUser?.name || singleNotif?.createdByName || singleAuditLog?.userName?.replace(/\s*\([^)]*\)/, '')?.trim() || 'Student',
               registerNumber: student.registerNumber,
               year: student.year,
               semester: student.semester,
@@ -73,13 +86,15 @@ export async function GET(request: Request) {
             }
           }
 
-          auditLog = await prisma.auditLog.findFirst({
-            where: {
-              userName: { contains: deducedReg },
-              action: 'od_application_submitted',
-            },
-            orderBy: { createdAt: 'desc' },
-          }).catch(() => null)
+          if (!auditLog) {
+            auditLog = await prisma.auditLog.findFirst({
+              where: {
+                userName: { contains: deducedReg },
+                action: 'od_application_submitted',
+              },
+              orderBy: { createdAt: 'desc' },
+            }).catch(() => null)
+          }
 
           files = await (prisma as any).fileRecord.findMany({
             where: {
@@ -90,15 +105,25 @@ export async function GET(request: Request) {
             take: 10,
           }).catch(() => [])
 
+          // Parse details from auditLog if available
+          const logDetails = auditLog?.details || ''
+          const typeFromLog = logDetails.match(/OD Type:\s*([^|]+)/i)?.[1]?.trim()
+          const reasonFromLog = logDetails.match(/Reason:\s*([^|]+)/i)?.[1]?.trim()
+          const durationFromLog = logDetails.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
+          const eventFromLog = logDetails.match(/Event:\s*([^|]+)/i)?.[1]?.trim()
+
           // If no proofs uploaded yet, provide the authentic verified digital proof dossier
           if (files.length === 0) {
-            const rawReason = auditLog?.details?.match(/Reason:\s*([^|]+)/i)?.[1]?.trim() || 'Personal / Family Requisition'
-            const rawType = singleNotif.title?.match(/\[OD Request\]\s*([^:]+)/i)?.[1]?.trim() ||
-                            singleNotif.title?.match(/\[HOD Approval Needed\]\s*([^:]+)/i)?.[1]?.trim() ||
-                            'Personal / Emergency Leave'
-            const datesMatch = singleNotif.message?.match(/from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
-            const fromD = datesMatch ? datesMatch[1] : '2026-09-17'
-            const toD = datesMatch ? datesMatch[2] : '2026-09-18'
+            const rawReason = reasonFromLog || 'Personal / Family Requisition'
+            const rawType = typeFromLog ||
+                            singleNotif?.title?.match(/\[OD Request\]\s*([^:]+)/i)?.[1]?.trim() ||
+                            singleNotif?.title?.match(/\[HOD Approval Needed\]\s*([^:]+)/i)?.[1]?.trim() ||
+                            singleNotif?.title?.match(/\[Class Advisor Review\]\s*([^:]+)/i)?.[1]?.trim() ||
+                            'On Duty / Leave Request'
+            const datesMatch = singleNotif?.message?.match(/from\s+([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
+            const fromD = durationFromLog ? durationFromLog[1] : (datesMatch ? datesMatch[1] : '2026-09-14')
+            const toD = durationFromLog ? durationFromLog[2] : (datesMatch ? datesMatch[2] : '2026-09-16')
+            const evName = eventFromLog || 'Academic Activity'
 
             files = [
               {
@@ -107,11 +132,11 @@ export async function GET(request: Request) {
                 originalName: `Official_Student_Leave_&_Event_Verification_Dossier_${deducedReg}.svg`,
                 fileType: 'image/svg+xml',
                 fileSize: 45200,
-                fileUrl: `/api/od-applications/proof-document?registerNumber=${deducedReg}&type=${encodeURIComponent(rawType)}&reason=${encodeURIComponent(rawReason)}&from=${fromD}&to=${toD}`,
+                fileUrl: `/api/od-applications/proof-document?registerNumber=${deducedReg}&type=${encodeURIComponent(rawType)}&reason=${encodeURIComponent(rawReason)}&from=${fromD}&to=${toD}&event=${encodeURIComponent(evName)}`,
                 module: 'attendance_od_proof',
                 relatedId: deducedReg,
                 uploadedByName: `${studentDetails?.name || 'Student'} (${deducedReg})`,
-                createdAt: singleNotif.createdAt,
+                createdAt: singleNotif?.createdAt || auditLog?.createdAt || new Date(),
                 isDigitalDossier: true,
               },
             ]
@@ -290,7 +315,7 @@ export async function GET(request: Request) {
         proofFiles = appFiles
       }
 
-      const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg || targetRegNo || '922525243007'}&name=${encodeURIComponent(extractedName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}&status=${encodeURIComponent(status)}`
+      const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg || targetRegNo || '922525243007'}&name=${encodeURIComponent(extractedName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}&status=${encodeURIComponent(status)}&event=${encodeURIComponent(eventName)}`
 
       trackedApplications.push({
         id: log.id,
@@ -442,20 +467,28 @@ export async function PATCH(request: Request) {
     }
 
     // 1. Update Audit Log status
-    const latestAudit = await prisma.auditLog.findFirst({
-      where: {
-        userName: { contains: regUpper },
-        action: 'od_application_submitted',
-      },
-      orderBy: { createdAt: 'desc' },
-    }).catch(() => null)
+    let targetAudit = null
+    if (notificationId) {
+      targetAudit = await prisma.auditLog.findUnique({
+        where: { id: notificationId },
+      }).catch(() => null)
+    }
+    if (!targetAudit) {
+      targetAudit = await prisma.auditLog.findFirst({
+        where: {
+          userName: { contains: regUpper },
+          action: 'od_application_submitted',
+        },
+        orderBy: { createdAt: 'desc' },
+      }).catch(() => null)
+    }
 
-    if (latestAudit) {
+    if (targetAudit) {
       await prisma.auditLog.update({
-        where: { id: latestAudit.id },
+        where: { id: targetAudit.id },
         data: {
           status: newStatus,
-          details: `${latestAudit.details || ''} | [${statusLabel} by ${reviewerName} at ${new Date().toLocaleDateString('en-IN')}${remarks ? `. Remarks: "${remarks}"` : ''}]`,
+          details: `${targetAudit.details || ''} | [${statusLabel} by ${reviewerName} at ${new Date().toLocaleDateString('en-IN')}${remarks ? `. Remarks: "${remarks}"` : ''}]`,
         },
       }).catch(() => {})
     }

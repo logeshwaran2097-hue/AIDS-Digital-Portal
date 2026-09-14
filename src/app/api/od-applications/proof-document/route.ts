@@ -70,7 +70,7 @@ export async function GET(request: Request) {
   const reasonLower = (customReason || '').toLowerCase()
   const typeLower = (customType || '').toLowerCase()
   const isMedical = reasonLower.includes('medic') || reasonLower.includes('fever') || reasonLower.includes('doctor') || reasonLower.includes('sick') || reasonLower.includes('hospital') || typeLower.includes('medic')
-  const isOD = typeLower.includes('duty') || typeLower.includes('od') || typeLower.includes('hackathon') || typeLower.includes('symposium') || reasonLower.includes('symposium') || reasonLower.includes('hackathon') || reasonLower.includes('speckathon') || reasonLower.includes('conference') || reasonLower.includes('paper') || reasonLower.includes('workshop') || reasonLower.includes('sports')
+  const isOD = typeLower.includes('duty') || typeLower.includes('od') || typeLower.includes('hackathon') || typeLower.includes('symposium') || typeLower.includes('internship') || typeLower.includes('project') || reasonLower.includes('symposium') || reasonLower.includes('hackathon') || reasonLower.includes('speckathon') || reasonLower.includes('conference') || reasonLower.includes('paper') || reasonLower.includes('workshop') || reasonLower.includes('sports') || reasonLower.includes('internship') || reasonLower.includes('project')
   const isTemple = reasonLower.includes('temple') || reasonLower.includes('festival') || reasonLower.includes('pooja') || reasonLower.includes('marriage') || reasonLower.includes('ceremony') || reasonLower.includes('kula')
 
   let rawProofDocName = proofFileNameParam
@@ -125,15 +125,34 @@ export async function GET(request: Request) {
     eventStages = 'Family Religious Pooja & Traditional Program'
     organizerHost = 'Native Residence / Ancestral Village, Tamil Nadu'
   } else if (isOD) {
-    if (reasonLower.includes('speckathon')) eventName = eventParam || 'Speckathon (Technical Hackathon)'
-    else if (typeLower.includes('hackathon')) eventName = eventParam || 'Technical Hackathon Competition'
-    else if (typeLower.includes('symposium')) eventName = eventParam || 'Inter-Collegiate Technical Symposium'
-    else eventName = eventParam || 'Academic Activity / On-Duty Contest'
-    eventNature = 'Academic On-Duty Contest (Institution Team)'
-    eventStages = (reasonLower.includes('ideathon') || reasonLower.includes('prototype'))
-      ? 'Round 1: Ideathon → Round 2: Prototype → Grand Finale'
-      : 'Paper Presentation & Project Exhibition'
-    organizerHost = reasonLower.includes('unstop') ? 'Unstop / Host Engineering College' : 'Host Engineering College (Autonomous)'
+    if (typeLower.includes('internship') || typeLower.includes('project') || reasonLower.includes('internship') || reasonLower.includes('project')) {
+      eventName = eventParam || 'Industry Internship / Project Work'
+      eventNature = 'Industry Internship & Technical Project Work OD'
+      eventStages = 'Internship Selection → Technical Project Work → Institutional Review'
+      organizerHost = 'Industry Partner / Technology Organization'
+    } else if (reasonLower.includes('speckathon')) {
+      eventName = eventParam || 'Speckathon (Technical Hackathon)'
+      eventNature = 'Academic On-Duty Contest (Institution Team)'
+      eventStages = 'Round 1: Ideathon → Round 2: Prototype → Grand Finale'
+      organizerHost = 'Host Engineering College (Autonomous)'
+    } else if (typeLower.includes('hackathon')) {
+      eventName = eventParam || 'Technical Hackathon Competition'
+      eventNature = 'Academic On-Duty Contest (Institution Team)'
+      eventStages = (reasonLower.includes('ideathon') || reasonLower.includes('prototype'))
+        ? 'Round 1: Ideathon → Round 2: Prototype → Grand Finale'
+        : 'Paper Presentation & Project Exhibition'
+      organizerHost = reasonLower.includes('unstop') ? 'Unstop / Host Engineering College' : 'Host Engineering College (Autonomous)'
+    } else if (typeLower.includes('symposium')) {
+      eventName = eventParam || 'Inter-Collegiate Technical Symposium'
+      eventNature = 'Academic On-Duty Contest (Institution Team)'
+      eventStages = 'Paper Presentation & Project Exhibition'
+      organizerHost = 'Host Engineering College (Autonomous)'
+    } else {
+      eventName = eventParam || 'Academic Activity / On-Duty Contest'
+      eventNature = 'Academic On-Duty Contest (Institution Team)'
+      eventStages = 'Requisition Submitted → Department Endorsement'
+      organizerHost = 'Host Engineering College (Autonomous)'
+    }
   } else {
     eventName = eventParam || 'Personal Leave & Parent Consent Requisition'
     eventNature = 'Student Personal Leave (Parent Verified)'

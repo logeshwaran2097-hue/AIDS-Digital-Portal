@@ -1094,14 +1094,7 @@ export function ODApplicationsDashboardView({
                       {/* Audit & Review Modal */}
                       <button
                         type="button"
-                        onClick={() =>
-                          setSelectedODModal({
-                            id: app.id,
-                            title: `[OD Application] ${app.studentName} (${app.registerNumber})`,
-                            message: app.reason || app.eventName,
-                            registerNumber: app.registerNumber,
-                          })
-                        }
+                        onClick={() => setSelectedODModal(app)}
                         className="px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5 text-gray-600" />
@@ -1294,14 +1287,7 @@ export function ODApplicationsDashboardView({
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
-                              setSelectedODModal({
-                                id: app.id,
-                                title: `[OD Application] ${app.studentName} (${app.registerNumber})`,
-                                message: app.reason || app.eventName,
-                                registerNumber: app.registerNumber,
-                              })
-                            }
+                            onClick={() => setSelectedODModal(app)}
                             className="p-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all cursor-pointer"
                             title="Open Audit Modal"
                           >
@@ -1376,7 +1362,21 @@ export function ODApplicationsDashboardView({
         <AdvisorODReviewModal
           isOpen={Boolean(selectedODModal)}
           onClose={() => setSelectedODModal(null)}
-          notification={selectedODModal}
+          application={selectedODModal}
+          notification={{
+            id: selectedODModal.id,
+            title: `[OD Application] ${selectedODModal.studentName} (${selectedODModal.registerNumber})`,
+            message: selectedODModal.reason || selectedODModal.eventName,
+            applicationType: selectedODModal.applicationType,
+            fromDate: selectedODModal.fromDate,
+            toDate: selectedODModal.toDate,
+            days: selectedODModal.days,
+            eventName: selectedODModal.eventName,
+            reason: selectedODModal.reason,
+            registerNumber: selectedODModal.registerNumber,
+            studentName: selectedODModal.studentName,
+            parentPhone: selectedODModal.parentPhone,
+          }}
           onStatusUpdated={(notifId, status) => {
             fetchApplications()
           }}

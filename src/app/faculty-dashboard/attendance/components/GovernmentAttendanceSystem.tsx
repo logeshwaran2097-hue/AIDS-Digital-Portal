@@ -2232,6 +2232,7 @@ export function GovernmentAttendanceSystem({
       <AdvisorODReviewModal
         isOpen={selectedODModal !== null}
         onClose={() => setSelectedODModal(null)}
+        application={selectedODModal}
         notification={
           selectedODModal
             ? {
