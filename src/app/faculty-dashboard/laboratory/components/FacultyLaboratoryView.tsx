@@ -249,6 +249,7 @@ export function FacultyLaboratoryView({
       ...formData,
       experimentName: formData.experimentName.trim(),
       topicsCovered: formData.topicsCovered.trim(),
+      toolsUsed: formData.toolsUsed ? formData.toolsUsed.trim() : null,
       activityType: activeLabTab === 'communication' ? 'Communication Activity' : formData.activityType,
       experimentNo: activeLabTab === 'communication' ? null : (formData.experimentNo ? Number(formData.experimentNo) : null),
       attendanceCount: activeLabTab === 'communication' ? commAttendance : (formData.attendanceCount ? Number(formData.attendanceCount) : null),
@@ -648,13 +649,13 @@ export function FacultyLaboratoryView({
         </div>
       )}
 
-      {/* Filter and Action Bar */}
+      {/* Filter and Action Bar with Emojis */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-200 shadow-xs">
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by topic, experiment name, date, software tool, or trainer..."
+            placeholder="🔍 Search history by experiment #, topic, trainer coverage, date..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 text-xs font-medium text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
@@ -667,12 +668,12 @@ export function FacultyLaboratoryView({
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 bg-gray-50 focus:border-[#1455D9] focus:outline-none cursor-pointer"
           >
-            <option value="all">All Activity Types</option>
-            <option value="Lab Experiment">Lab Experiments</option>
-            <option value="Hands-on Activity">Hands-on Exercises</option>
-            <option value="Model Practical">Model Practicals</option>
-            <option value="Viva Voce">Viva Voce &amp; Code Review</option>
-            <option value="Project Review">Project Reviews</option>
+            <option value="all">📂 All Activity Types</option>
+            <option value="Lab Experiment">🧪 Lab Experiments</option>
+            <option value="Hands-on Activity">💻 Hands-on Exercises</option>
+            <option value="Model Practical">📋 Model Practicals</option>
+            <option value="Viva Voce">🗣️ Viva Voce</option>
+            <option value="Project Review">🚀 Project Reviews</option>
           </select>
 
           <select
@@ -680,10 +681,10 @@ export function FacultyLaboratoryView({
             onChange={(e) => setSelectedStatus(e.target.value)}
             className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 bg-gray-50 focus:border-[#1455D9] focus:outline-none cursor-pointer"
           >
-            <option value="all">All Status</option>
-            <option value="completed">Completed</option>
-            <option value="in_progress">In Progress</option>
-            <option value="scheduled">Scheduled</option>
+            <option value="all">📊 All Status</option>
+            <option value="completed">✅ Completed</option>
+            <option value="in_progress">⏳ In Progress</option>
+            <option value="scheduled">📅 Scheduled</option>
           </select>
         </div>
       </div>
@@ -694,13 +695,15 @@ export function FacultyLaboratoryView({
           <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
             <Calendar className="w-5 h-5 text-[#1455D9]" />
             <span>
+              📚{' '}
               {activeLabTab === 'communication'
-                ? `Day-wise Communication Activities Conducted (${filteredActivities.length})`
-                : `Day-wise Laboratory Topics & Activities Conducted (${filteredActivities.length})`}
+                ? `Day-wise Communication Practical History (${filteredActivities.length})`
+                : `Day-wise Laboratory Practical & Activity History (${filteredActivities.length})`}
             </span>
           </h2>
-          <span className="text-xs text-gray-500 font-mono">
-            {details.batch} · {activeLabTab === 'communication' ? 'Communication Skills Lab' : 'AI & DS Laboratory'}
+          <span className="text-xs text-gray-500 font-mono flex items-center gap-1">
+            <span>🏛️</span>
+            <span>{details.batch} · {activeLabTab === 'communication' ? 'GE3271 Communication Skills Lab' : 'AD2311 AI & DS Laboratory'}</span>
           </span>
         </div>
 
@@ -746,97 +749,153 @@ export function FacultyLaboratoryView({
               return (
                 <Card
                   key={act.id}
-                  className="rounded-3xl border-gray-200 hover:shadow-md transition-all bg-white overflow-hidden group hover:border-[#1455D9]/40"
+                  className="rounded-3xl border-gray-200 hover:shadow-lg transition-all bg-white overflow-hidden group hover:border-[#1455D9]/40"
                 >
                   <CardContent className="p-5 sm:p-6 space-y-4">
+                    {/* Top Meta Bar with Emojis */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
-                      <div className="flex flex-wrap items-center gap-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
                         {act.experimentNo && !isCommAct && (
-                          <span className="px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] font-mono text-xs font-black">
-                            Ex. {act.experimentNo}
+                          <span className="px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] font-mono text-xs font-black flex items-center gap-1.5 shadow-2xs">
+                            <span>🧪</span>
+                            <span>Experiment #{act.experimentNo}</span>
+                          </span>
+                        )}
+                        {isCommAct && (
+                          <span className="px-3 py-1 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 font-mono text-xs font-black flex items-center gap-1.5 shadow-2xs">
+                            <span>🗣️</span>
+                            <span>Communication Practical</span>
                           </span>
                         )}
                         <span className="px-2.5 py-1 rounded-xl bg-gray-100 text-gray-700 font-bold text-xs flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                          {act.day}, {act.date}
+                          <span>📅</span>
+                          <span>{act.day}, {act.date}</span>
                         </span>
                         {act.period && (
-                          <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-medium text-xs flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-purple-500" />
-                            {act.period}
+                          <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-medium text-xs flex items-center gap-1.5">
+                            <span>⏰</span>
+                            <span>{act.period}</span>
                           </span>
                         )}
-                        <span
-                          className={cn(
-                            'px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider',
-                            isCommAct
-                              ? 'bg-purple-100 text-purple-800'
-                              : 'bg-blue-100 text-blue-800'
-                          )}
-                        >
-                          {isCommAct ? 'Communication' : act.activityType}
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                          <span>✅</span>
+                          <span>Completed</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 self-end sm:self-center">
                         <button
                           onClick={() => handleOpenEdit(act)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
                           title="Edit Activity"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Edit</span>
                         </button>
                         <button
                           onClick={() => handleDelete(act.id, act.experimentName)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
                           title="Delete Log"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Title & Covered Topics */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base sm:text-lg font-black text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
-                          {act.experimentName}
-                        </h3>
+                    {/* 🎯 Topic of the Experiment */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-gray-500 uppercase tracking-wider">
+                        <span>🎯</span>
+                        <span>Topic of the Experiment:</span>
                       </div>
-                      <div className="bg-slate-50 p-3.5 rounded-2xl border border-gray-100">
-                        <p className="text-[11px] font-bold text-gray-500 uppercase mb-1">
-                          {isCommAct ? "Today's Topics:" : "Topics & Practical Activity Held on the Day:"}
-                        </p>
-                        <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
-                          {act.topicsCovered}
-                        </p>
-                      </div>
+                      <h3 className="text-base sm:text-lg font-black text-[#071A3D] group-hover:text-[#1455D9] transition-colors leading-snug flex items-center gap-2">
+                        {act.experimentNo && !isCommAct && (
+                          <span className="px-2 py-0.5 rounded-lg bg-blue-100 text-[#1455D9] text-xs font-mono font-bold shrink-0">
+                            Ex. {act.experimentNo}
+                          </span>
+                        )}
+                        <span>{act.experimentName}</span>
+                      </h3>
                     </div>
 
-                    {/* Activity Meta / Progress */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
-                      {act.attendanceCount !== null && act.attendanceCount !== undefined && (
-                        <div className="flex items-center gap-1.5 text-gray-600">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span>
-                            <strong>
-                              {isCommAct ? 'No. of Students Completed:' : 'Students Present / Attendance:'}
-                            </strong>{' '}
-                            {act.attendanceCount} Students
+                    {/* 👨‍🏫 What Topics Covered by Trainer */}
+                    {act.toolsUsed && (
+                      <div className="bg-gradient-to-r from-amber-50/80 via-amber-50/40 to-orange-50/20 p-3.5 rounded-2xl border border-amber-200/90 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[11px] font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <span>👨‍🏫</span>
+                            <span>Topics Covered by Trainer:</span>
+                          </p>
+                          <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                            Instructor: {act.labTrainer || details.labTrainer || 'Designated Trainer'}
                           </span>
                         </div>
-                      )}
-                      {act.remarks && (
-                        <div className="flex items-center gap-1.5 text-gray-600">
-                          <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                          <span>
-                            <strong>
-                              {isCommAct ? 'No. of Pending Students:' : 'Remarks / Other Work:'}
-                            </strong>{' '}
-                            {act.remarks}
-                          </span>
-                        </div>
-                      )}
+                        <p className="text-xs text-gray-800 leading-relaxed font-sans whitespace-pre-wrap">
+                          {act.toolsUsed}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* 📝 Topics & Practical Activity Held on the Day */}
+                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-gray-100 space-y-1">
+                      <p className="text-[11px] font-black text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
+                        <span>📝</span>
+                        <span>
+                          {isCommAct
+                            ? "Today's Practical Drills & Student Activities:"
+                            : "Topics & Practical Activity Held on the Day:"}
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
+                        {act.topicsCovered}
+                      </p>
+                    </div>
+
+                    {/* 👥 Student Attendance & Progress Strip */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100 text-xs text-gray-600">
+                      <div className="flex flex-wrap items-center gap-3">
+                        {isCommAct ? (
+                          <>
+                            {act.attendanceCount !== null && act.attendanceCount !== undefined && (
+                              <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 flex items-center gap-1.5">
+                                <span>✅</span>
+                                <span>
+                                  No. of Students Completed: <strong>{act.attendanceCount} Students</strong>
+                                </span>
+                              </span>
+                            )}
+                            {act.remarks && (
+                              <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-bold border border-amber-200 flex items-center gap-1.5">
+                                <span>⏳</span>
+                                <span>
+                                  No. of Pending Students: <strong>{act.remarks}</strong>
+                                </span>
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {act.attendanceCount !== null && act.attendanceCount !== undefined && (
+                              <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 flex items-center gap-1.5">
+                                <span>👥</span>
+                                <span>
+                                  Students Present: <strong>{act.attendanceCount} Students</strong>
+                                </span>
+                              </span>
+                            )}
+                          </>
+                        )}
+                        <span className="text-gray-400 font-mono text-[11px] flex items-center gap-1">
+                          <span>🏫</span>
+                          <span>Year {act.year || details.year} · Sem {act.semester || details.semester} · Sec {act.section || details.section} · {act.batch || details.batch}</span>
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] text-gray-400 font-mono flex items-center gap-1">
+                        <span>🕒</span>
+                        <span>Logged: {new Date(act.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -852,30 +911,29 @@ export function FacultyLaboratoryView({
           <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
             <div className="p-5 sm:p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <div className="flex items-center gap-3">
-                <div
-                  className={cn(
-                    'w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-md',
-                    activeLabTab === 'communication'
-                      ? 'bg-gradient-to-tr from-purple-600 to-indigo-500'
-                      : 'bg-gradient-to-tr from-[#1455D9] to-[#22C7E8]'
-                  )}
-                >
-                  {activeLabTab === 'communication' ? <Sparkles className="w-5 h-5" /> : <FlaskConical className="w-5 h-5" />}
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md text-lg",
+                  activeLabTab === 'communication'
+                    ? "bg-gradient-to-tr from-purple-600 to-indigo-600"
+                    : "bg-gradient-to-tr from-[#1455D9] to-cyan-500"
+                )}>
+                  {activeLabTab === 'communication' ? '🗣️' : '🧪'}
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-[#071A3D]">
                     {editingActivity
-                      ? activeLabTab === 'communication'
-                        ? 'Edit Communication Lab Activity'
-                        : 'Edit Lab Day Activity'
+                      ? '✏️ Edit Laboratory Activity Log'
                       : activeLabTab === 'communication'
-                        ? 'Log Communication Lab Activity'
-                        : "Log Day's Laboratory Practical & Topics"}
+                        ? '🗣️ Log Communication Laboratory Practical & Topics'
+                        : "🧪 Log Day's Laboratory Practical & Topics"}
                   </h2>
-                  <p className="text-xs text-gray-400 font-mono">
-                    {activeLabTab === 'communication'
-                      ? 'Communication Skills Laboratory (GE3271)'
-                      : `${details.labName} (${details.labCode})`}
+                  <p className="text-xs text-gray-400 font-mono flex items-center gap-1">
+                    <span>🏛️</span>
+                    <span>
+                      {activeLabTab === 'communication'
+                        ? 'Communication Skills Laboratory (GE3271)'
+                        : `${details.labName} (${details.labCode})`}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -888,11 +946,12 @@ export function FacultyLaboratoryView({
             </div>
 
             <form onSubmit={handleSave} className="p-5 sm:p-6 space-y-4">
-              {/* Date, Day, Period */}
+              {/* Date, Day, Period with Emojis */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Date of Session *
+                  <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <span>📅</span>
+                    <span>Date of Session *</span>
                   </label>
                   <input
                     type="date"
@@ -903,20 +962,22 @@ export function FacultyLaboratoryView({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Day of the Week
+                  <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <span>🗓️</span>
+                    <span>Day of the Week</span>
                   </label>
                   <input
                     type="text"
                     value={formData.day}
                     onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                    placeholder="e.g. Wednesday"
+                    placeholder="e.g. Monday"
                     className="w-full p-2.5 rounded-xl border border-gray-200 bg-gray-50 font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
-                    Lab Period / Timings
+                  <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                    <span>⏰</span>
+                    <span>Lab Period / Timings</span>
                   </label>
                   <input
                     type="text"
@@ -931,13 +992,14 @@ export function FacultyLaboratoryView({
               {/* Specific fields for Communication Lab vs AI & DS Lab */}
               {activeLabTab === 'communication' ? (
                 <>
-                  {/* Activity Name (Typed with suggestions) */}
+                  {/* Activity Name / Topic of Exercise */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-gray-700">
-                        Activity Name *
+                      <label className="block text-xs font-bold text-gray-700 flex items-center gap-1">
+                        <span>🎯</span>
+                        <span>Activity Name / Practical Topic *</span>
                       </label>
-                      <span className="text-[10px] text-purple-600 font-medium">Type activity or pick a suggestion below</span>
+                      <span className="text-[10px] text-purple-600 font-medium">Type activity or pick a preset</span>
                     </div>
                     <input
                       type="text"
@@ -956,7 +1018,7 @@ export function FacultyLaboratoryView({
 
                     {/* Quick Suggestion Pills */}
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      <span className="text-[10px] text-gray-400 font-medium">Quick suggestions:</span>
+                      <span className="text-[10px] text-gray-400 font-medium">💡 Quick suggestions:</span>
                       {COMMUNICATION_LAB_ACTIVITIES.map((act) => (
                         <button
                           key={act.name}
@@ -966,6 +1028,7 @@ export function FacultyLaboratoryView({
                               ...prev,
                               experimentName: act.name,
                               topicsCovered: act.topics,
+                              toolsUsed: prev.toolsUsed || `Instructor drills & demonstration for ${act.name}`,
                             }))
                           }}
                           className="text-[10px] font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200 transition-colors cursor-pointer"
@@ -976,28 +1039,52 @@ export function FacultyLaboratoryView({
                     </div>
                   </div>
 
-                  {/* Today's Topics (Typed textarea) */}
+                  {/* 👨‍🏫 What Topics Covered by Trainer */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-bold text-gray-700">
-                        Today&apos;s Topics *
+                      <label className="block text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                        <span>👨‍🏫</span>
+                        <span>Topics Covered by Trainer / Instructor</span>
                       </label>
-                      <span className="text-[10px] text-gray-400 font-medium">Type topics and exercises held today</span>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        Language Trainer: {details.labTrainer || 'Designated Trainer'}
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={formData.toolsUsed}
+                      onChange={(e) => setFormData({ ...formData, toolsUsed: e.target.value })}
+                      placeholder="Describe the theoretical guidance, pronunciation rules, GD evaluation criteria, or interview etiquette delivered by the trainer..."
+                      className="w-full p-2.5 rounded-xl border border-amber-300 bg-amber-50/30 font-medium text-xs text-[#071A3D] focus:border-amber-500 focus:bg-white focus:outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* 📝 Today's Topics (Typed textarea) */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-gray-700 flex items-center gap-1">
+                        <span>📝</span>
+                        <span>Today&apos;s Topics &amp; Student Practical Drills *</span>
+                      </label>
+                      <span className="text-[10px] text-gray-400 font-medium">Type practical tasks and exercises held today</span>
                     </div>
                     <textarea
                       required
                       rows={3}
                       value={formData.topicsCovered}
                       onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
-                      placeholder="e.g. Accent neutralisation, phonetic symbol drills, and comprehension audio tests..."
+                      placeholder="e.g. Accent neutralisation, phonetic symbol drills, audio tests, 1-minute impromptu speech by each student..."
                       className="w-full p-3 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-purple-600 focus:outline-none leading-relaxed"
                     />
                   </div>
 
-                  {/* Student Performance / Completion Tracking */}
+                  {/* 👥 Student Activity Performance: No. of Students Completed & Pending */}
                   <div className="p-3.5 rounded-2xl bg-slate-50 border border-gray-200 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#071A3D]">Student Activity Performance</span>
+                      <span className="text-xs font-bold text-[#071A3D] flex items-center gap-1">
+                        <span>👥</span>
+                        <span>Student Activity Performance</span>
+                      </span>
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-gray-500 font-medium">Quick preset:</span>
                         <button
@@ -1016,7 +1103,7 @@ export function FacultyLaboratoryView({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <div>
                         <label className="block text-xs font-bold text-emerald-800 mb-1 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>✅</span>
                           <span>No. of Students Completed *</span>
                         </label>
                         <input
@@ -1039,7 +1126,7 @@ export function FacultyLaboratoryView({
 
                       <div>
                         <label className="block text-xs font-bold text-amber-800 mb-1 flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-amber-600" />
+                          <span>⏳</span>
                           <span>No. of Pending Students</span>
                         </label>
                         <input
@@ -1057,23 +1144,25 @@ export function FacultyLaboratoryView({
                 </>
               ) : (
                 <>
-                  {/* Experiment Number and Title */}
+                  {/* AI & DS Lab: Experiment Number and Topic of the Experiment */}
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1">
-                        Experiment #
+                      <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                        <span>🧪</span>
+                        <span>Experiment #</span>
                       </label>
                       <input
                         type="number"
                         value={formData.experimentNo}
                         onChange={(e) => setFormData({ ...formData, experimentNo: e.target.value })}
                         placeholder="e.g. 1"
-                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                        className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-black text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
                       />
                     </div>
                     <div className="sm:col-span-3">
-                      <label className="block text-xs font-bold text-gray-700 mb-1">
-                        Experiment / Practical Activity Title *
+                      <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
+                        <span>🎯</span>
+                        <span>Topic of the Experiment (Title) *</span>
                       </label>
                       <input
                         type="text"
@@ -1086,15 +1175,76 @@ export function FacultyLaboratoryView({
                     </div>
                   </div>
 
-                  {/* Topics & Practical Activity Held on the Day */}
+                  {/* Syllabus Quick Presets */}
+                  {presets && presets.length > 0 && (
+                    <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-[#1455D9] flex items-center gap-1">
+                          <span>💡</span>
+                          <span>Quick Syllabus Presets:</span>
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-medium">Click to fill experiment details</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 max-h-24 overflow-y-auto pr-1">
+                        {presets.map((p) => (
+                          <button
+                            key={p.experimentNo}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                experimentNo: String(p.experimentNo),
+                                experimentName: p.name,
+                                topicsCovered: p.topics,
+                                toolsUsed: p.tools || `Theoretical concepts, algorithms, and practical instructions for Ex. ${p.experimentNo}`,
+                              }))
+                            }}
+                            className={cn(
+                              "text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all cursor-pointer",
+                              formData.experimentNo === String(p.experimentNo)
+                                ? "bg-[#1455D9] text-white border-[#1455D9] shadow-xs"
+                                : "bg-white text-gray-700 border-gray-200 hover:bg-blue-100/60 hover:text-[#1455D9]"
+                            )}
+                          >
+                            🧪 Ex {p.experimentNo}: {p.name.length > 32 ? p.name.slice(0, 32) + '...' : p.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 👨‍🏫 What Topics Covered by Trainer */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                        <span>👨‍🏫</span>
+                        <span>Topics Covered by Trainer / Instructor</span>
+                      </label>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        Instructor: {details.labTrainer || 'Designated Lab Instructor'}
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      value={formData.toolsUsed}
+                      onChange={(e) => setFormData({ ...formData, toolsUsed: e.target.value })}
+                      placeholder="Describe the theoretical concepts, algorithms, state space graphs, or code walkthroughs delivered by the trainer..."
+                      className="w-full p-2.5 rounded-xl border border-amber-300 bg-amber-50/30 font-medium text-xs text-[#071A3D] focus:border-amber-500 focus:bg-white focus:outline-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* 📝 Topics & Practical Activity Held on the Day */}
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center justify-between">
-                      <span>Topics &amp; Practical Activity Held on the Day *</span>
+                      <span className="flex items-center gap-1">
+                        <span>📝</span>
+                        <span>Topics &amp; Practical Activity Held on the Day *</span>
+                      </span>
                       <span className="text-[10px] text-gray-400 font-normal">Mention practical coverage &amp; code tasks</span>
                     </label>
                     <textarea
                       required
-                      rows={4}
+                      rows={3}
                       value={formData.topicsCovered}
                       onChange={(e) => setFormData({ ...formData, topicsCovered: e.target.value })}
                       placeholder="Describe the exact syllabus topics taught, programming exercises implemented by students, problems solved, and viva questions covered during this session..."
@@ -1102,17 +1252,29 @@ export function FacultyLaboratoryView({
                     />
                   </div>
 
-                  {/* Students Present / Attendance Count */}
+                  {/* 👥 Students Present / Attendance Count */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
-                      Students Present / Attendance Count
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-gray-700 flex items-center gap-1">
+                        <span>👥</span>
+                        <span>Students Present / Attendance Count</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, attendanceCount: '58' })}
+                        className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 cursor-pointer"
+                      >
+                        👥 Total 58 Present
+                      </button>
+                    </div>
                     <input
                       type="number"
+                      min="0"
+                      max="100"
                       value={formData.attendanceCount}
                       onChange={(e) => setFormData({ ...formData, attendanceCount: e.target.value })}
                       placeholder="e.g. 58"
-                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-medium text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
+                      className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-black text-xs text-[#071A3D] focus:border-[#1455D9] focus:outline-none"
                     />
                   </div>
                 </>
