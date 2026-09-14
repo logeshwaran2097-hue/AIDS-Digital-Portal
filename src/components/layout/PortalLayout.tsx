@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   ChevronDown,
   Target,
+  MessageSquareHeart,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/FloatingChatbot'
@@ -43,6 +44,7 @@ import {
 import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationClassifier'
 import { NotificationDetailModal, NotificationDetailData } from '@/components/notifications/NotificationDetailModal'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
+import PortalFeedbackSurvey from '@/components/survey/PortalFeedbackSurveyModal'
 
 export interface NavItem {
   label: string
@@ -105,6 +107,7 @@ export function PortalLayout({
   const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
   const [showVisionModal, setShowVisionModal] = useState(false)
+  const [showSurveyModal, setShowSurveyModal] = useState(false)
   const [isNavigating, setIsNavigating] = useState(false)
   const [activePath, setActivePath] = useState('')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
@@ -1358,6 +1361,17 @@ export function PortalLayout({
               <span>Vision &amp; Mission</span>
             </button>
 
+            {/* Portal Feedback & Usability Survey Quick Access */}
+            <button
+              type="button"
+              onClick={() => setShowSurveyModal(true)}
+              title="Take AI & DS Portal Feedback Survey"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-purple-300/80 bg-purple-50/80 hover:bg-purple-100 text-purple-900 text-xs font-bold transition-all shadow-2xs cursor-pointer hover:scale-102"
+            >
+              <MessageSquareHeart className="w-3.5 h-3.5 text-purple-600" />
+              <span>Portal Survey</span>
+            </button>
+
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
@@ -1541,6 +1555,15 @@ export function PortalLayout({
       <VisionMissionModal
         isOpen={showVisionModal}
         onClose={() => setShowVisionModal(false)}
+      />
+
+      {/* Feedback & Usability Survey Modal */}
+      <PortalFeedbackSurvey
+        isOpen={showSurveyModal}
+        onClose={() => setShowSurveyModal(false)}
+        isModal={true}
+        userName={userName}
+        role={role}
       />
 
       {/* Real-Time App Downloader Modal */}
