@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Bell, Zap, Volume2, Sparkles, Smartphone, CheckCircle2, ShieldCheck, AlertTriangle, Download } from 'lucide-react'
+import { Bell, Volume2, Sparkles, Smartphone, CheckCircle2, ShieldCheck, AlertTriangle, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   playNotificationChime,
@@ -27,7 +27,6 @@ const SOUND_OPTIONS: { id: NotificationSoundType; name: string; desc: string; ic
 
 export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | 'faculty' }) {
   const [pushStatus, setPushStatus] = useState<NotificationPermission>('default')
-  const [isSendingTest, setIsSendingTest] = useState(false)
   const [activeSound, setActiveSound] = useState<NotificationSoundType>('quantum')
   const [previewingSound, setPreviewingSound] = useState<string | null>(null)
   const [customUrl, setCustomUrl] = useState('')
@@ -54,28 +53,7 @@ export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | '
     setPushStatus(perm)
     if (perm === 'granted') {
       playNotificationChime()
-      triggerDeviceVibration([200, 100, 200])
-      dispatchNativeNotification({
-        id: 'welcome_' + Date.now(),
-        title: '🔔 Mobile Notifications Enabled!',
-        message: 'You are all set to receive real-time alerts.',
-      })
-    }
-  }
-
-  const handleTestAlert = async () => {
-    setIsSendingTest(true)
-    try {
-      playNotificationChime()
       triggerDeviceVibration([150, 80, 150])
-
-      dispatchNativeNotification({
-        id: 'test_alert_' + role,
-        title: '📱 Digital Portal of AI&DS',
-        message: `Department alert delivered at ${new Date().toLocaleTimeString()} with sound & vibration!`,
-      })
-    } catch {} finally {
-      setIsSendingTest(false)
     }
   }
 
@@ -100,7 +78,7 @@ export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | '
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Receive native mobile push notifications, haptic vibrations, and audio chimes for immediate department updates.
+              Instant mobile push notifications and haptic alerts for student OD approvals, circulars, exam notices, and faculty announcements.
             </p>
           </div>
         </div>
@@ -114,13 +92,10 @@ export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | '
               <Bell className="w-4 h-4" /> Enable Mobile Push
             </button>
           ) : (
-            <button
-              onClick={handleTestAlert}
-              disabled={isSendingTest}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer hover:scale-102 disabled:opacity-50"
-            >
-              <Zap className="w-4 h-4" /> {isSendingTest ? 'Sending Alert...' : 'Test Mobile Notification'}
-            </button>
+            <div className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 shadow-2xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Active · Live Official Alerts</span>
+            </div>
           )}
         </div>
       </div>
