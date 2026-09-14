@@ -239,7 +239,7 @@ export function PWAInstall() {
     }, 1500)
   }
 
-  const handleInstallApk = () => {
+  const handleInstallApk = async () => {
     setShowMobileApkPrompt(false)
     try {
       sessionStorage.setItem('vsb_apk_prompt_dismissed', 'true')
@@ -247,6 +247,12 @@ export function PWAInstall() {
 
     if (isIOS) {
       setShowIOSGuide(true)
+      return
+    }
+
+    const prompt = promptRef.current || (typeof window !== 'undefined' ? window.__pwaInstallPrompt : null)
+    if (prompt) {
+      await handleInstall()
       return
     }
 
