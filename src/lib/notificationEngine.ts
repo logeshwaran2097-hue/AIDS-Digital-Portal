@@ -288,21 +288,26 @@ export function getNotificationPermissionStatus(): NotificationPermission {
 export async function dispatchNativeNotification(payload: RealtimeNotificationPayload) {
   if (typeof window === 'undefined') return
 
-  // Play sound & vibrate
+  // Play sound & gentle vibration
   playNotificationChime()
-  triggerDeviceVibration([200, 100, 200])
+  triggerDeviceVibration([150, 80, 150])
 
   if (!('Notification' in window) || Notification.permission !== 'granted') {
     return
   }
 
-  const title = payload.title || 'V.S.B. AI & DS Notification'
+  const origin = window.location.origin
+  const title = payload.title || 'Digital Portal of AI&DS'
+  const notifTag = payload.id ? `vsb-notif-${payload.id}` : 'vsb-portal-announcements'
+
   const options: NotificationOptions = {
     body: payload.message,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: origin ? `${origin}/icon-192.png` : '/icon-192.png',
+    badge: origin ? `${origin}/icon-192.png` : '/icon-192.png',
+    timestamp: Date.now(),
     data: { url: payload.link || '/dashboard/notifications', id: payload.id },
-    tag: `vsb-notif-${payload.id || Date.now()}`,
+    tag: notifTag,
+    renotify: false,
   }
 
   // Try service worker notification first (best for mobile and background tabs)

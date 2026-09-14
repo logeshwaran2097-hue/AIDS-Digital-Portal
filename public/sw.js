@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v4'
+const CACHE_NAME = 'vsb-aids-portal-v5'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -62,11 +62,12 @@ self.addEventListener('periodicsync', (event) => {
 
 // Push Notification Event (Web Push API)
 self.addEventListener('push', (event) => {
+  const origin = self.location.origin
   let data = {
-    title: 'V.S.B. AI & DS Department Alert',
+    title: 'Digital Portal of AI&DS',
     body: 'New real-time announcement received.',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: origin + '/icon-192.png',
+    badge: origin + '/icon-192.png',
     data: { url: '/dashboard/notifications' }
   }
 
@@ -78,22 +79,26 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : (origin + '/icon-192.png')
+  const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : (origin + '/icon-192.png')
+  const notifTag = data.tag || (data.id ? ('vsb-notif-' + data.id) : 'vsb-portal-announcements')
+
   const options = {
     body: data.body,
-    icon: data.icon || '/icon-192.png',
-    badge: data.badge || '/icon-192.png',
-    vibrate: [200, 100, 200, 100, 200],
+    icon: iconUrl,
+    badge: badgeUrl,
+    vibrate: [150, 80, 150],
+    timestamp: Date.now(),
     data: data.data || { url: '/dashboard/notifications' },
+    tag: notifTag,
+    renotify: false,
     actions: [
-      { action: 'open', title: 'Open Portal' },
-      { action: 'close', title: 'Dismiss' }
-    ],
-    tag: 'vsb-notification-' + Date.now(),
-    renotify: true
+      { action: 'open', title: 'Open Portal' }
+    ]
   }
 
   event.waitUntil(
-    self.registration.showNotification(data.title, options)
+    self.registration.showNotification(data.title || 'Digital Portal of AI&DS', options)
   )
 })
 
