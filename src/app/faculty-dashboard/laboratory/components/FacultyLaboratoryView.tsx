@@ -101,6 +101,59 @@ export const COMMUNICATION_LAB_ACTIVITIES = [
   },
 ]
 
+export function parseLabRemarks(remarks?: string | null, attendanceCount?: number | null) {
+  const defaultComp = attendanceCount !== null && attendanceCount !== undefined ? String(attendanceCount) : '58'
+  if (!remarks) {
+    return {
+      pendingCount: '0',
+      pendingStart: '',
+      pendingEnd: '',
+      completedStart: '1',
+      completedEnd: defaultComp,
+      classStrength: '58',
+      raw: '',
+    }
+  }
+
+  // Extract Strength
+  const strengthMatch = remarks.match(/Strength:\s*(\d+)/i)
+  const classStrength = strengthMatch ? strengthMatch[1] : '58'
+
+  // Extract Completed Range e.g. "Completed Roll: 1 - 35" or "Roll 1 - 35 completed" or "Roll 1-35 Done"
+  const compRangeMatch =
+    remarks.match(/Completed(?:\s*Roll)?(?::|\s)?\s*(?:Roll\s*)?(\d+)\s*(?:-|to)\s*(\d+)/i) ||
+    remarks.match(/Roll\s*(\d+)\s*(?:-|to)\s*(\d+)\s*completed/i) ||
+    remarks.match(/Roll\s*(\d+)-(\d+)\s*Done/i)
+
+  const completedStart = compRangeMatch ? compRangeMatch[1] : '1'
+  const completedEnd = compRangeMatch ? compRangeMatch[2] : defaultComp
+
+  // Extract Pending Count
+  const pendCountMatch = remarks.match(/(\d+)\s*Pending/i)
+  let pendingCount = pendCountMatch ? pendCountMatch[1] : '0'
+  if (!pendCountMatch) {
+    const numOnly = remarks.match(/\d+/)
+    if (numOnly) pendingCount = numOnly[0]
+  }
+
+  // Extract Pending Range e.g. "(Roll: 36 - 58)"
+  const pendRangeMatch =
+    remarks.match(/Pending[^(]*\((?:Roll:?\s*)?(\d+)\s*(?:-|to)\s*(\d+)\)/i) ||
+    remarks.match(/Roll:?\s*(\d+)\s*(?:-|to)\s*(\d+)\s*Pending/i)
+  const pendingStart = pendRangeMatch ? pendRangeMatch[1] : ''
+  const pendingEnd = pendRangeMatch ? pendRangeMatch[2] : ''
+
+  return {
+    pendingCount,
+    pendingStart,
+    pendingEnd,
+    completedStart,
+    completedEnd,
+    classStrength,
+    raw: remarks,
+  }
+}
+
 interface Props {
   initialDetails: LabDetails
   initialActivities: LabActivityRecord[]
@@ -127,7 +180,12 @@ export function FacultyLaboratoryView({
   const [saving, setSaving] = useState(false)
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  // Communication Lab Student Tracking
+  // Communication Lab Student Tracking & Auto-fill
+  const [classStrength, setClassStrength] = useState<string>('58')
+  const [completedStart, setCompletedStart] = useState<string>('1')
+  const [completedEnd, setCompletedEnd] = useState<string>('58')
+  const [pendingStart, setPendingStart] = useState<string>('')
+  const [pendingEnd, setPendingEnd] = useState<string>('')
   const [pendingCount, setPendingCount] = useState<string>('0')
 
   // Form State
@@ -142,7 +200,7 @@ export function FacultyLaboratoryView({
     labTrainer: initialDetails.labTrainer || '',
     toolsUsed: '',
     status: 'completed',
-    attendanceCount: '',
+    attendanceCount: '58',
     remarks: '',
   })
 
@@ -158,6 +216,79 @@ export function FacultyLaboratoryView({
     setFormData((prev) => ({ ...prev, date: newDate, day: dayName }))
   }
 
+  // Auto-fill logic for Roll Numbers and Remaining Students based on Class Strength
+  const updateCompletedRange = (newStart: string, newEnd: string, newStrength: string = classStrength) => {
+    setCompletedStart(newStart)
+    setCompletedEnd(newEnd)
+    const s = parseInt(newStart, 10)
+    const e = parseInt(newEnd, 10)
+    const strength = parseInt(newStrength, 10) || 58
+
+    if (!isNaN(s) && !isNaN(e) && e >= s) {
+      const completed = e - s + 1
+      setFormData((prev) => ({ ...prev, attendanceCount: String(completed) }))
+      const remaining = Math.max(0, strength - completed)
+      setPendingCount(String(remaining))
+      if (remaining > 0) {
+        if (s === 1 && e < strength) {
+          setPendingStart(String(e + 1))
+          setPendingEnd(String(strength))
+        } else if (s > 1 && e >= strength) {
+          setPendingStart('1')
+          setPendingEnd(String(s - 1))
+        } else if (s > 1 && e < strength) {
+          setPendingStart(String(e + 1))
+          setPendingEnd(String(strength))
+        } else {
+          setPendingStart('')
+          setPendingEnd('')
+        }
+      } else {
+        setPendingStart('')
+        setPendingEnd('')
+      }
+    }
+  }
+
+  const updateCompletedCount = (newCountStr: string, newStrength: string = classStrength) => {
+    setFormData((prev) => ({ ...prev, attendanceCount: newCountStr }))
+    const count = parseInt(newCountStr, 10)
+    const strength = parseInt(newStrength, 10) || 58
+
+    if (!isNaN(count)) {
+      const s = parseInt(completedStart, 10) || 1
+      const e = s + count - 1
+      setCompletedEnd(String(e))
+      const remaining = Math.max(0, strength - count)
+      setPendingCount(String(remaining))
+      if (remaining > 0 && e < strength) {
+        setPendingStart(String(e + 1))
+        setPendingEnd(String(strength))
+      } else if (remaining === 0) {
+        setPendingStart('')
+        setPendingEnd('')
+      }
+    }
+  }
+
+  const updateClassStrength = (newStrengthStr: string) => {
+    setClassStrength(newStrengthStr)
+    const strength = parseInt(newStrengthStr, 10) || 58
+    const completed = parseInt(formData.attendanceCount, 10)
+    if (!isNaN(completed)) {
+      const remaining = Math.max(0, strength - completed)
+      setPendingCount(String(remaining))
+      const e = parseInt(completedEnd, 10)
+      if (remaining > 0 && !isNaN(e) && e < strength) {
+        setPendingStart(String(e + 1))
+        setPendingEnd(String(strength))
+      } else if (remaining === 0) {
+        setPendingStart('')
+        setPendingEnd('')
+      }
+    }
+  }
+
   // Open Create Modal
   const handleOpenCreate = () => {
     setEditingActivity(null)
@@ -166,6 +297,11 @@ export function FacultyLaboratoryView({
       (a) => !a.labName?.toLowerCase().includes('communication') && a.labCode !== 'GE3271'
     ).length
 
+    setClassStrength('58')
+    setCompletedStart('1')
+    setCompletedEnd('58')
+    setPendingStart('')
+    setPendingEnd('')
     setPendingCount('0')
 
     setFormData({
@@ -179,7 +315,7 @@ export function FacultyLaboratoryView({
       labTrainer: details.labTrainer || '',
       toolsUsed: '',
       status: 'completed',
-      attendanceCount: isComm ? '58' : '58',
+      attendanceCount: '58',
       remarks: '',
     })
     setIsModalOpen(true)
@@ -191,13 +327,13 @@ export function FacultyLaboratoryView({
     const isCommAct = act.labName?.toLowerCase().includes('communication') || act.labCode === 'GE3271'
     setActiveLabTab(isCommAct ? 'communication' : 'aids')
 
-    let pending = '0'
-    if (act.remarks) {
-      const match = act.remarks.match(/(\d+)/)
-      if (match) pending = match[1]
-      else pending = act.remarks
-    }
-    setPendingCount(pending)
+    const parsed = parseLabRemarks(act.remarks, act.attendanceCount)
+    setClassStrength(parsed.classStrength)
+    setCompletedStart(parsed.completedStart)
+    setCompletedEnd(parsed.completedEnd)
+    setPendingStart(parsed.pendingStart)
+    setPendingEnd(parsed.pendingEnd)
+    setPendingCount(parsed.pendingCount)
 
     setFormData({
       date: act.date,
@@ -237,7 +373,16 @@ export function FacultyLaboratoryView({
     const currentLabCode = activeLabTab === 'communication' ? 'GE3271' : (details.labCode || 'AD2311')
 
     const commAttendance = formData.attendanceCount !== '' ? Number(formData.attendanceCount) : null
-    const commRemarks = pendingCount !== '' ? `${pendingCount} Pending Students` : (formData.remarks || null)
+    let commRemarks = formData.remarks || null
+    if (activeLabTab === 'communication') {
+      const pCount = parseInt(pendingCount, 10) || 0
+      if (pCount > 0) {
+        const pRange = pendingStart && pendingEnd ? `(Roll: ${pendingStart} - ${pendingEnd})` : ''
+        commRemarks = `${pCount} Pending Students ${pRange} | Completed Roll: ${completedStart || '1'} - ${completedEnd || formData.attendanceCount} [Strength: ${classStrength || '58'}]`.trim()
+      } else {
+        commRemarks = `0 Pending Students (All Completed) | Completed Roll: ${completedStart || '1'} - ${completedEnd || formData.attendanceCount || '58'} [Strength: ${classStrength || '58'}]`
+      }
+    }
 
     const payload = {
       labName: currentLabName,
@@ -620,6 +765,11 @@ export function FacultyLaboratoryView({
                     type="button"
                     onClick={() => {
                       setEditingActivity(null)
+                      setClassStrength('58')
+                      setCompletedStart('1')
+                      setCompletedEnd('58')
+                      setPendingStart('')
+                      setPendingEnd('')
                       setPendingCount('0')
                       setFormData({
                         date: new Date().toISOString().split('T')[0],
@@ -857,22 +1007,44 @@ export function FacultyLaboratoryView({
                       <div className="flex flex-wrap items-center gap-3">
                         {isCommAct ? (
                           <>
-                            {act.attendanceCount !== null && act.attendanceCount !== undefined && (
-                              <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 flex items-center gap-1.5">
-                                <span>✅</span>
-                                <span>
-                                  No. of Students Completed: <strong>{act.attendanceCount} Students</strong>
-                                </span>
-                              </span>
-                            )}
-                            {act.remarks && (
-                              <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-bold border border-amber-200 flex items-center gap-1.5">
-                                <span>⏳</span>
-                                <span>
-                                  No. of Pending Students: <strong>{act.remarks}</strong>
-                                </span>
-                              </span>
-                            )}
+                            {(() => {
+                              const parsed = parseLabRemarks(act.remarks, act.attendanceCount)
+                              return (
+                                <>
+                                  {act.attendanceCount !== null && act.attendanceCount !== undefined && (
+                                    <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200 flex items-center gap-1.5">
+                                      <span>✅</span>
+                                      <span>
+                                        No. of Students Completed: <strong>{act.attendanceCount} Students</strong>
+                                        {parsed.completedStart && parsed.completedEnd && (
+                                          <span className="ml-1 text-[11px] font-mono text-emerald-700 font-semibold">
+                                            (Roll: {parsed.completedStart} – {parsed.completedEnd})
+                                          </span>
+                                        )}
+                                      </span>
+                                    </span>
+                                  )}
+                                  {act.remarks && (
+                                    <span className={cn(
+                                      "px-2.5 py-1 rounded-xl font-bold border flex items-center gap-1.5",
+                                      Number(parsed.pendingCount) > 0
+                                        ? "bg-amber-50 text-amber-800 border-amber-200"
+                                        : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    )}>
+                                      <span>{Number(parsed.pendingCount) > 0 ? '⏳' : '🎉'}</span>
+                                      <span>
+                                        Pending Students: <strong>{parsed.pendingCount}</strong>
+                                        {parsed.pendingStart && parsed.pendingEnd && Number(parsed.pendingCount) > 0 && (
+                                          <span className="ml-1 text-[11px] font-mono text-amber-700 font-semibold">
+                                            (Roll: {parsed.pendingStart} – {parsed.pendingEnd})
+                                          </span>
+                                        )}
+                                      </span>
+                                    </span>
+                                  )}
+                                </>
+                              )
+                            })()}
                           </>
                         ) : (
                           <>
@@ -1047,53 +1219,183 @@ export function FacultyLaboratoryView({
                     />
                   </div>
 
-                  {/* 👥 Student Activity Performance: No. of Students Completed & Pending */}
-                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-gray-200 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#071A3D] flex items-center gap-1">
+                  {/* 👥 Student Activity Performance: Class Strength, Completed & Remaining Students */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/30 border border-indigo-100 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-black text-[#071A3D] flex items-center gap-1.5">
                         <span>👥</span>
-                        <span>Student Activity Performance</span>
+                        <span>Student Activity Performance &amp; Roll Tracking</span>
                       </span>
+
+                      {/* Class Strength Control */}
+                      <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-indigo-200 shadow-2xs">
+                        <span className="text-[11px] font-bold text-gray-600">🏫 Class Strength:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={classStrength}
+                          onChange={(e) => updateClassStrength(e.target.value)}
+                          className="w-12 font-black text-xs text-indigo-950 text-center focus:outline-none border-b-2 border-indigo-500 py-0.5"
+                        />
+                        <span className="text-[10px] text-gray-400 font-bold">Students</span>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div>
-                        <label className="block text-xs font-bold text-emerald-800 mb-1 flex items-center gap-1">
+                    {/* Quick Preset Buttons for Instant Selection */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quick Fill:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const str = parseInt(classStrength, 10) || 58
+                          updateCompletedRange('1', String(str))
+                        }}
+                        className="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 transition-colors cursor-pointer"
+                      >
+                        ✨ All {classStrength} Completed (Roll 1 - {classStrength})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateCompletedRange('1', '30')}
+                        className="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-colors cursor-pointer"
+                      >
+                        🎯 Batch 1 (Roll 1 - 30)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const str = parseInt(classStrength, 10) || 58
+                          updateCompletedRange('31', String(str))
+                        }}
+                        className="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-colors cursor-pointer"
+                      >
+                        🎯 Batch 2 (Roll 31 - {classStrength})
+                      </button>
+                    </div>
+
+                    {/* Completed Students Container */}
+                    <div className="p-3 bg-white rounded-xl border border-emerald-200 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-emerald-800 flex items-center gap-1">
                           <span>✅</span>
-                          <span>No. of Students Completed *</span>
+                          <span>Completed Students</span>
                         </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={formData.attendanceCount}
-                          onChange={(e) => {
-                            const val = e.target.value
-                            setFormData((prev) => ({ ...prev, attendanceCount: val }))
-                            if (val !== '') {
-                              const comp = Number(val)
-                              setPendingCount(String(Math.max(0, 58 - comp)))
-                            }
-                          }}
-                          placeholder="e.g. 52"
-                          className="w-full p-2.5 rounded-xl border border-emerald-300 bg-white font-black text-xs text-emerald-900 focus:border-emerald-600 focus:outline-none"
-                        />
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          {formData.attendanceCount || 0} / {classStrength} Completed
+                        </span>
                       </div>
 
-                      <div>
-                        <label className="block text-xs font-bold text-amber-800 mb-1 flex items-center gap-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                            Starting Number (Roll From) *
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="120"
+                            value={completedStart}
+                            onChange={(e) => updateCompletedRange(e.target.value, completedEnd)}
+                            placeholder="e.g. 1"
+                            className="w-full p-2 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-950 focus:border-emerald-600 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                            Ending Number (Roll To) *
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="120"
+                            value={completedEnd}
+                            onChange={(e) => updateCompletedRange(completedStart, e.target.value)}
+                            placeholder="e.g. 35"
+                            className="w-full p-2 rounded-lg border border-emerald-300 bg-white font-black text-xs text-emerald-950 focus:border-emerald-600 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                            No. of Completed Students *
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="120"
+                            value={formData.attendanceCount}
+                            onChange={(e) => updateCompletedCount(e.target.value)}
+                            placeholder="e.g. 35"
+                            className="w-full p-2 rounded-lg border border-emerald-300 bg-emerald-50/40 font-black text-xs text-emerald-950 focus:border-emerald-600 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Remaining / Pending Students Container */}
+                    <div className="p-3 bg-white rounded-xl border border-amber-200 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-amber-800 flex items-center gap-1">
                           <span>⏳</span>
-                          <span>No. of Pending Students</span>
+                          <span>Remaining Students (Auto-filled based on Class Strength)</span>
                         </label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={pendingCount}
-                          onChange={(e) => setPendingCount(e.target.value)}
-                          placeholder="e.g. 6"
-                          className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-black text-xs text-amber-900 focus:border-amber-600 focus:outline-none"
-                        />
+                        <span className={cn(
+                          "text-[10px] font-black px-2 py-0.5 rounded-md border",
+                          Number(pendingCount) > 0
+                            ? "bg-amber-50 text-amber-800 border-amber-200"
+                            : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                        )}>
+                          {Number(pendingCount) > 0 ? `${pendingCount} Remaining` : 'All Completed! 🎉'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                            Remaining Starting Number
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="120"
+                            value={pendingStart}
+                            onChange={(e) => setPendingStart(e.target.value)}
+                            placeholder={Number(pendingCount) > 0 ? 'e.g. 36' : 'None'}
+                            className="w-full p-2 rounded-lg border border-amber-300 bg-white font-black text-xs text-amber-950 focus:border-amber-600 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                            Remaining Ending Number
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="120"
+                            value={pendingEnd}
+                            onChange={(e) => setPendingEnd(e.target.value)}
+                            placeholder={Number(pendingCount) > 0 ? `e.g. ${classStrength}` : 'None'}
+                            className="w-full p-2 rounded-lg border border-amber-300 bg-white font-black text-xs text-amber-950 focus:border-amber-600 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-600 mb-1">
+                            No. of Pending / Remaining Students
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="120"
+                            value={pendingCount}
+                            onChange={(e) => setPendingCount(e.target.value)}
+                            placeholder="e.g. 23"
+                            className="w-full p-2 rounded-lg border border-amber-300 bg-amber-50/40 font-black text-xs text-amber-950 focus:border-amber-600 focus:outline-none"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
