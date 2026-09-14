@@ -71,6 +71,9 @@ async function seed() {
         batch: '2023-2027',
         advisorName: 'Dr. K. Suresh',
         parentPhone: '+91 98421 77123',
+        residencyStatus: 'Hostel',
+        hostelBlock: 'Boys Hostel I',
+        roomNo: 'Room 204',
         cgpa: 8.92
       }
     })

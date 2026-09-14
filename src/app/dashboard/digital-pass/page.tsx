@@ -21,6 +21,11 @@ export default async function DigitalPassPage() {
   const department = student?.department || 'Artificial Intelligence & Data Science'
   const year = student?.year || 2
   const section = student?.section || 'B'
+  const initialHostelBlock = student?.hostelBlock || 'Boys Hostel I'
+  const initialRoomNo = student?.roomNo || 'Room 204'
+  const initialResidencyStatus = student?.residencyStatus || 'Hostel'
+  const initialBusDetails = student?.busDetails || 'Route 12 - Karur Central'
+  const initialBoardingPoint = student?.boardingPoint || 'Karur Bus Stand (07:45 AM)'
 
   return (
     <PortalLayout role={session.role as any} userName={studentName}>
@@ -31,6 +36,11 @@ export default async function DigitalPassPage() {
         year={year}
         section={section}
         role={session.role}
+        initialHostelBlock={initialHostelBlock}
+        initialRoomNo={initialRoomNo}
+        initialResidencyStatus={initialResidencyStatus}
+        initialBusDetails={initialBusDetails}
+        initialBoardingPoint={initialBoardingPoint}
       />
     </PortalLayout>
   )

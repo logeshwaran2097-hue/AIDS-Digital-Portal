@@ -30,6 +30,11 @@ interface DigitalPassViewProps {
   year?: number
   section?: string
   role?: string
+  initialHostelBlock?: string
+  initialRoomNo?: string
+  initialResidencyStatus?: string
+  initialBusDetails?: string
+  initialBoardingPoint?: string
 }
 
 const BUS_ROUTES = [
@@ -91,10 +96,12 @@ const BUS_ROUTES = [
 ]
 
 const HOSTEL_BLOCKS = [
-  { name: 'Amaravathi Boys Hostel (Block A)', warden: 'Dr. K. Ravikumar', contact: '+91 94861 22340', curfew: '06:30 PM' },
-  { name: 'Kaveri Boys Hostel (Block B)', warden: 'Prof. N. Venkatesh', contact: '+91 94861 22341', curfew: '06:30 PM' },
-  { name: 'Bhavani Girls Hostel (Block C)', warden: 'Dr. S. Meenakshi', contact: '+91 94861 22342', curfew: '06:00 PM' },
-  { name: 'Vaigai Girls Hostel (Block D)', warden: 'Prof. M. Geetha', contact: '+91 94861 22343', curfew: '06:00 PM' }
+  { id: 'Boys Hostel I', name: 'Boys Hostel I', label: '👦 Boys Hostel I', blockNumber: 'Block 1', emoji: '👦', warden: 'Dr. K. Ravikumar', contact: '+91 94861 22340', curfew: '06:30 PM' },
+  { id: 'Boys Hostel II', name: 'Boys Hostel II', label: '👦 Boys Hostel II', blockNumber: 'Block 2', emoji: '👦', warden: 'Prof. N. Venkatesh', contact: '+91 94861 22341', curfew: '06:30 PM' },
+  { id: 'Boys Hostel III', name: 'Boys Hostel III', label: '👦 Boys Hostel III', blockNumber: 'Block 3', emoji: '👦', warden: 'Dr. M. Suresh Kumar', contact: '+91 94861 22342', curfew: '06:30 PM' },
+  { id: 'Girls Hostel I', name: 'Girls Hostel I', label: '👧 Girls Hostel I', blockNumber: 'Block 1', emoji: '👧', warden: 'Dr. S. Meenakshi', contact: '+91 94861 22343', curfew: '06:00 PM' },
+  { id: 'Girls Hostel II', name: 'Girls Hostel II', label: '👧 Girls Hostel II', blockNumber: 'Block 2', emoji: '👧', warden: 'Prof. M. Geetha', contact: '+91 94861 22344', curfew: '06:00 PM' },
+  { id: 'Girls Hostel III', name: 'Girls Hostel III', label: '👧 Girls Hostel III', blockNumber: 'Block 3', emoji: '👧', warden: 'Prof. K. Nithya', contact: '+91 94861 22345', curfew: '06:00 PM' }
 ]
 
 export default function DigitalPassView({
@@ -103,18 +110,26 @@ export default function DigitalPassView({
   department = 'Artificial Intelligence & Data Science',
   year = 2,
   section = 'B',
-  role = 'student'
+  role = 'student',
+  initialHostelBlock,
+  initialRoomNo,
+  initialResidencyStatus,
+  initialBusDetails,
+  initialBoardingPoint,
 }: DigitalPassViewProps) {
   const [activeTab, setActiveTab] = useState<'bus' | 'hostel' | 'mess'>('bus')
   
   // Bus state
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0)
-  const [boardingStop, setBoardingStop] = useState(BUS_ROUTES[0].stops[0])
+  const [boardingStop, setBoardingStop] = useState(initialBoardingPoint || BUS_ROUTES[0].stops[0])
   const [seatNo, setSeatNo] = useState('Seat #34')
 
-  // Hostel state
-  const [selectedHostelIndex, setSelectedHostelIndex] = useState(0)
-  const [roomNo, setRoomNo] = useState('Room 312')
+  // Hostel state - auto select from onboarding data
+  const initialHostelIdx = HOSTEL_BLOCKS.findIndex(
+    (h) => h.id === initialHostelBlock || h.name === initialHostelBlock || (initialHostelBlock && h.name.toLowerCase().includes(initialHostelBlock.toLowerCase()))
+  )
+  const [selectedHostelIndex, setSelectedHostelIndex] = useState(initialHostelIdx !== -1 ? initialHostelIdx : 0)
+  const [roomNo, setRoomNo] = useState(initialRoomNo || 'Room 204')
   const [passType, setPassType] = useState<'day_outing' | 'home_leave' | 'emergency'>('day_outing')
   const [outingPurpose, setOutingPurpose] = useState('Library & Project Component Sourcing')
   const [expectedReturn, setExpectedReturn] = useState('06:15 PM Today')
@@ -620,15 +635,21 @@ export default function DigitalPassView({
               </div>
 
               <div className="space-y-3">
-                <label className="text-xs font-semibold text-slate-600 block">Hostel Block:</label>
+                <label className="text-xs font-semibold text-slate-600 block">
+                  🏢 Hostel Number / Block (6 Options):
+                </label>
                 <select
                   value={selectedHostelIndex}
-                  onChange={(e) => setSelectedHostelIndex(Number(e.target.value))}
-                  className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  onChange={(e) => {
+                    const idx = Number(e.target.value)
+                    setSelectedHostelIndex(idx)
+                    toast.success(`Selected ${HOSTEL_BLOCKS[idx].name}!`)
+                  }}
+                  className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white"
                 >
                   {HOSTEL_BLOCKS.map((h, i) => (
-                    <option key={h.name} value={i}>
-                      {h.name}
+                    <option key={h.id} value={i}>
+                      {h.label}
                     </option>
                   ))}
                 </select>
