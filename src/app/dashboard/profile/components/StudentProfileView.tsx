@@ -581,22 +581,7 @@ export function StudentProfileView({
                   <p className="text-[11px] text-gray-400">Official student registry contact details</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsOnboardingOpen(true)}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-amber-850 bg-amber-100/90 hover:bg-amber-200 transition-colors flex items-center gap-1 cursor-pointer border border-amber-200"
-                  title="Verify or Edit Onboarding Details"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-amber-700" /> Onboarding
-                </button>
-                <button
-                  onClick={() => handleOpenEdit('personal')}
-                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors flex items-center gap-1 cursor-pointer"
-                  title="Edit Contact Details"
-                >
-                  <Edit3 className="w-3.5 h-3.5" /> Edit
-                </button>
-              </div>
+
             </div>
 
             <div className="space-y-3 text-xs">
