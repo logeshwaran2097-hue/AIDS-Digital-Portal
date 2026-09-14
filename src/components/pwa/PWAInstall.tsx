@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { Download, X, Share, PlusSquare, Sparkles, ShieldCheck, CheckCircle2, AlertTriangle } from 'lucide-react'
 import Image from 'next/image'
-import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
+import { RealtimeAppDownloader } from './RealtimeAppDownloader'
 import { toast } from '@/components/ui/Toast'
 
 interface BeforeInstallPromptEvent extends Event {

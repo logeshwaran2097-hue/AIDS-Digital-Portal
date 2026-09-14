@@ -28,8 +28,8 @@ import {
   Target,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
-import { FloatingChatbot } from '@/components/FloatingChatbot'
-import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
+import { FloatingChatbot } from '@/components/ai/FloatingChatbot'
+import { RealtimeAppDownloader } from '@/components/pwa/RealtimeAppDownloader'
 import { RealtimeNotificationToast, RealtimeToastData } from '@/components/notifications/RealtimeNotificationToast'
 import {
   playNotificationChime,

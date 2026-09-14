@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireRoleSession } from '@/lib/auth'
 import { PortalLayout } from '@/components/layout/PortalLayout'
-import { AIChatbot } from '@/components/AIChatbot'
+import { AIChatbot } from '@/components/ai/AIChatbot'
 
 export const dynamic = 'force-dynamic'
 

@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import { Toaster } from '@/components/ui/Toast'
-import { ThemeProvider } from '@/components/ThemeProvider'
-import { MobileAppSplashScreen } from '@/components/MobileAppSplashScreen'
-import { PWAInstall } from '@/components/PWAInstall'
-import { VersionUpdateNotifier } from '@/components/VersionUpdateNotifier'
+import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { MobileAppSplashScreen } from '@/components/pwa/MobileAppSplashScreen'
+import { PWAInstall } from '@/components/pwa/PWAInstall'
+import { VersionUpdateNotifier } from '@/components/pwa/VersionUpdateNotifier'
 
 const inter = Inter({ subsets: ['latin'] })
 

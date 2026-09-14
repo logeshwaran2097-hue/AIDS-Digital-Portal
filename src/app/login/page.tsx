@@ -38,7 +38,7 @@ import {
   Loader2,
   Target,
 } from 'lucide-react'
-import { RealtimeAppDownloader } from '@/components/RealtimeAppDownloader'
+import { RealtimeAppDownloader } from '@/components/pwa/RealtimeAppDownloader'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 
 export default function LoginPage() {
