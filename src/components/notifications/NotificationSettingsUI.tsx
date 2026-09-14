@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Bell, Volume2, Sparkles, Smartphone, CheckCircle2, ShieldCheck, AlertTriangle, Download } from 'lucide-react'
+import { Bell, Volume2, Sparkles, Smartphone, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   playNotificationChime,
@@ -216,40 +216,7 @@ export function NotificationSettingsUI({ role }: { role: 'student' | 'admin' | '
         )}
       </div>
 
-      {/* Android Real App Notifications & Spam Protection Helper */}
-      <div className="bg-gradient-to-br from-[#071A3D] to-[#0D2E6B] rounded-3xl p-5 sm:p-6 text-white shadow-lg space-y-4 border border-blue-900/50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] flex items-center justify-center shrink-0 shadow-md">
-            <ShieldCheck className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h3 className="font-bold text-sm text-white">How to Get Real App Notifications (No Spam Warning)</h3>
-            <p className="text-xs text-blue-200">Transform browser notifications into native Android app alerts with the College Crest</p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-          <div className="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2">
-            <div className="flex items-center gap-2 text-[#22C7E8] font-bold text-xs">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>Fix &quot;Possible Spam&quot; Warning in Chrome</span>
-            </div>
-            <p className="text-xs text-blue-100 leading-relaxed">
-              When Android Chrome displays <strong>&quot;Possible spam&quot;</strong>, simply tap <strong className="text-white bg-white/20 px-1.5 py-0.5 rounded">&quot;Show notifications&quot;</strong> on that banner. Chrome will instantly verify the college portal as trusted.
-            </p>
-          </div>
-
-          <div className="bg-white/10 rounded-2xl p-4 border border-white/10 space-y-2">
-            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-              <Download className="w-4 h-4 shrink-0" />
-              <span>Real App Name &amp; Icon (Install App)</span>
-            </div>
-            <p className="text-xs text-blue-100 leading-relaxed">
-              Tap Chrome menu <strong>(⋮) &rarr; &quot;Install app&quot;</strong> (or &quot;Add to Home screen&quot;). Once opened from your Home Screen, Android assigns our official <strong>College Crest</strong> and <strong>Digital Portal of AI&DS</strong> name to all notifications!
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
