@@ -23,7 +23,6 @@ import {
   FlaskConical,
   Bus,
   Calculator,
-  Monitor,
   Sparkles
 } from 'lucide-react'
 import type { NavItem } from './PortalLayout'
@@ -34,7 +33,6 @@ export const studentNavItems: NavItem[] = [
   { label: 'OD & Leave Requests', href: '/dashboard/od-applications', icon: <FileText className="h-4 w-4" /> },
   { label: 'Event Proofs', href: '/dashboard/od-proofs', icon: <ShieldCheck className="h-4 w-4" /> },
   { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" /> },
-  { label: 'Lab Exam Seats', href: '/dashboard/lab-seats', icon: <Monitor className="h-4 w-4" /> },
   { label: 'GPA & Marksheets', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" /> },
   { label: 'AI Study Assistant', href: '/dashboard/study-assistant', icon: <Sparkles className="h-4 w-4" /> },
   { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-4 w-4" /> },
@@ -58,7 +56,6 @@ export const facultyNavItems: NavItem[] = [
   { label: 'Students', href: '/faculty-dashboard/students', icon: <Users className="h-4 w-4" /> },
   { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="h-4 w-4" /> },
   { label: 'Laboratory', href: '/faculty-dashboard/laboratory', icon: <FlaskConical className="h-4 w-4" /> },
-  { label: 'Lab Seat Allocator', href: '/faculty-dashboard/lab-seat-allocator', icon: <Monitor className="h-4 w-4" /> },
   { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" /> },
   { label: 'GPA & Marksheets', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" /> },
   { label: 'AI Study Assistant', href: '/dashboard/study-assistant', icon: <Sparkles className="h-4 w-4" /> },
@@ -77,7 +74,6 @@ export const hodNavItems: NavItem[] = [
   { label: 'OD & Leave Requests', href: '/hod-dashboard/od-applications', icon: <FileText className="h-4 w-4" /> },
   { label: 'Students', href: '/hod-dashboard/students', icon: <Users className="h-4 w-4" /> },
   { label: 'Faculty', href: '/hod-dashboard/faculty', icon: <GraduationCap className="h-4 w-4" /> },
-  { label: 'Lab Seat Allocator', href: '/faculty-dashboard/lab-seat-allocator', icon: <Monitor className="h-4 w-4" /> },
   { label: 'Event Proofs', href: '/hod-dashboard/od-proofs', icon: <ShieldCheck className="h-4 w-4" /> },
   { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" /> },
   { label: 'GPA & Marksheets', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" /> },
@@ -101,7 +97,6 @@ export const adminNavItems: NavItem[] = [
   { label: 'Admins', href: '/admin/admins', icon: <User className="h-4 w-4" /> },
   { label: 'Roles & Permissions', href: '/admin/roles', icon: <ShieldCheck className="h-4 w-4" /> },
   { label: 'Academics', href: '/admin/academics', icon: <BookOpen className="h-4 w-4" /> },
-  { label: 'Lab Seat Allocator', href: '/faculty-dashboard/lab-seat-allocator', icon: <Monitor className="h-4 w-4" /> },
   { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" /> },
   { label: 'GPA & Marksheets', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" /> },
   { label: 'AI Study Assistant', href: '/dashboard/study-assistant', icon: <Sparkles className="h-4 w-4" /> },
