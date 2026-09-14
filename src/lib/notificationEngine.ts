@@ -302,8 +302,8 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
 
   const options: any = {
     body: payload.message,
-    icon: origin ? `${origin}/icon-192.png` : '/icon-192.png',
-    badge: origin ? `${origin}/icon-192.png` : '/icon-192.png',
+    icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
+    badge: origin ? `${origin}/notification-badge.png` : '/notification-badge.png',
     timestamp: Date.now(),
     data: { url: payload.link || '/dashboard/notifications', id: payload.id },
     tag: notifTag,

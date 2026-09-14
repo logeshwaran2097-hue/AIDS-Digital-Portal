@@ -380,6 +380,18 @@ export function PortalLayout({
       const handleSwMessage = (event: MessageEvent) => {
         if (event.data?.type === 'PUSH_NOTIFICATION_RECEIVED') {
           syncNotifications()
+          if (event.data?.payload) {
+            const p = event.data.payload
+            setRealtimeToast({
+              id: p.id || `toast-${Date.now()}`,
+              title: p.title || 'Digital Portal of AI&DS',
+              message: p.body || p.message || 'New announcement received',
+              createdByName: p.createdByName || 'AI & DS Dept',
+              link: p.data?.url || '/dashboard/notifications',
+            })
+            playNotificationChime()
+            triggerDeviceVibration([200, 100, 200])
+          }
         }
       }
       navigator.serviceWorker.addEventListener('message', handleSwMessage)

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { Bell, X, ExternalLink, Sparkles, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -60,8 +61,23 @@ export function RealtimeNotificationToast({
         {/* Glowing top line accent */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#F4C430] animate-pulse" />
 
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center shrink-0 shadow-md mt-0.5 group-hover:scale-105 transition-transform">
-          <Bell className="w-5 h-5 animate-bounce" />
+        {/* Animated College Emblem & Live Pulse Badge on Left */}
+        <div className="relative shrink-0 mt-0.5">
+          <div className="w-11 h-11 rounded-2xl bg-white p-1 shadow-md border border-white/40 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
+            <Image
+              src="/college-emblem.png"
+              alt="VSB Emblem"
+              width={38}
+              height={38}
+              className="object-contain"
+            />
+          </div>
+          <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C7E8] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-[#1455D9] border border-white items-center justify-center text-white text-[8px]">
+              <Bell className="w-2.5 h-2.5 animate-bounce" />
+            </span>
+          </span>
         </div>
 
         <div className="min-w-0 flex-1 space-y-1">

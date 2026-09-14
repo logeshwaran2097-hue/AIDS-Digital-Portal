@@ -30,8 +30,8 @@ export async function POST(request: Request) {
           {
             title: notifTitle,
             body: notifMessage,
-            icon: '/icon-192.png',
-            badge: '/icon-192.png',
+            icon: '/college-emblem.png',
+            badge: '/notification-badge.png',
             tag: `test-push-${Date.now()}`,
             data: {
               url: '/dashboard/notifications',

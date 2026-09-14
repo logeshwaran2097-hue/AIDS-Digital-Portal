@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v6'
+const CACHE_NAME = 'vsb-aids-portal-v7'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -79,8 +79,8 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : (origin + '/icon-192.png')
-  const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : (origin + '/icon-192.png')
+  const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : (origin + '/college-emblem.png')
+  const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : (origin + '/notification-badge.png')
   const notifTag = data.tag || (data.id ? ('vsb-notif-' + data.id) : 'vsb-portal-announcements')
 
   const options = {
