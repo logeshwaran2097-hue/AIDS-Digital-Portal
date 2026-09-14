@@ -184,7 +184,7 @@ export function FloatingChatbot() {
   }
 
   return (
-    <div className="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-50 flex flex-col items-end">
+    <div className="fixed bottom-[84px] lg:bottom-6 right-3.5 lg:right-6 z-50 flex flex-col items-end">
       {/* Floating Chat Modal */}
       {isOpen && (
         <div
@@ -193,8 +193,8 @@ export function FloatingChatbot() {
             isMinimized
               ? 'w-80 h-14'
               : isMaximized
-              ? 'w-[calc(100vw-2rem)] sm:w-[92vw] md:w-[760px] lg:w-[920px] h-[85vh] max-h-[88vh]'
-              : 'w-[calc(100vw-2rem)] sm:w-[440px] h-[70vh] sm:h-[580px] max-h-[85vh]'
+              ? 'w-[calc(100vw-1.5rem)] sm:w-[92vw] md:w-[760px] lg:w-[920px] h-[80vh] sm:h-[85vh] max-h-[calc(100dvh-155px)]'
+              : 'w-[calc(100vw-1.5rem)] sm:w-[440px] h-[68vh] sm:h-[580px] max-h-[calc(100dvh-155px)]'
           )}
           style={{
             boxShadow: '0 20px 40px -15px rgba(7, 26, 61, 0.35), 0 0 20px rgba(34, 199, 232, 0.2)',
@@ -397,14 +397,14 @@ export function FloatingChatbot() {
       {/* Floating Toggle Button */}
       <button
         onClick={handleToggle}
-        className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] hover:scale-105 transition-all text-white flex items-center justify-center shadow-xl border-2 border-white/20 relative group cursor-pointer"
+        className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-[#071A3D] to-[#1455D9] hover:scale-105 active:scale-95 transition-all text-white flex items-center justify-center shadow-xl border-2 border-white/20 relative group cursor-pointer"
         aria-label="Open AI Assistant"
       >
         {isOpen ? (
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5 sm:w-6 sm:h-6" />
         ) : (
           <>
-            <Bot className="w-6 h-6 text-[#F4C430]" />
+            <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-[#F4C430]" />
             <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white" />
           </>
         )}

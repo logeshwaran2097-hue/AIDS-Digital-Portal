@@ -1357,9 +1357,9 @@ export function PortalLayout({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">{children}</div>
       </main>
 
-      {/* Mobile Bottom 4-Tab Navigation Bar */}
+      {/* Mobile Bottom 5-Tab Navigation Bar */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 grid grid-cols-4 py-2 px-1 pb-safe shadow-lg"
+        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 grid grid-cols-5 py-2 px-1 pb-safe shadow-lg"
         aria-label="Bottom mobile navigation"
       >
         <Link
@@ -1369,14 +1369,14 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors',
             (activePath || pathname) === '/dashboard' || (activePath || pathname) === '/faculty-dashboard' || (activePath || pathname) === '/hod-dashboard' || (activePath || pathname) === '/admin/dashboard'
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <Home className="h-5 w-5" />
-          <span>Home</span>
+          <span className="truncate max-w-[64px]">Home</span>
         </Link>
         <Link
           href={role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects'}
@@ -1385,7 +1385,7 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors relative',
             (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
@@ -1399,7 +1399,7 @@ export function PortalLayout({
               </span>
             )}
           </div>
-          <span>{role === 'hod' ? 'OD Proofs' : 'Courses'}</span>
+          <span className="truncate max-w-[64px]">{role === 'hod' ? 'OD Proofs' : 'Courses'}</span>
         </Link>
         <Link
           href={role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects'}
@@ -1408,7 +1408,7 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors relative',
             (activePath || pathname).includes('projects') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
@@ -1420,14 +1420,14 @@ export function PortalLayout({
               </span>
             )}
           </div>
-          <span>Projects</span>
+          <span className="truncate max-w-[64px]">Projects</span>
         </Link>
         <Link
           href={notificationsHref}
           prefetch={true}
           onClick={() => handleNavClick(notificationsHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors relative',
             (activePath || pathname).includes('notifications') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
@@ -1439,7 +1439,7 @@ export function PortalLayout({
               </span>
             )}
           </div>
-          <span>Alerts</span>
+          <span className="truncate max-w-[64px]">Alerts</span>
         </Link>
         <Link
           href={profileHref}
@@ -1448,12 +1448,12 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(profileHref) } catch {} }}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[11px] font-semibold transition-colors',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors',
             (activePath || pathname).includes('profile') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <UserIcon className="h-5 w-5" />
-          <span>Profile</span>
+          <span className="truncate max-w-[64px]">Profile</span>
         </Link>
       </nav>
 
