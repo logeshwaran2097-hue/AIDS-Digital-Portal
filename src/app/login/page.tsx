@@ -1813,7 +1813,35 @@ export default function LoginPage() {
                             const file = e.target.files?.[0]
                             if (file) {
                               setPassportPhotoFile(file)
-                              setPassportPhotoPreview(URL.createObjectURL(file))
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
+                                const img = document.createElement('img')
+                                img.onload = () => {
+                                  const canvas = document.createElement('canvas')
+                                  const maxDim = 400
+                                  let w = img.width
+                                  let h = img.height
+                                  if (w > maxDim || h > maxDim) {
+                                    if (w > h) {
+                                      h = Math.round((h * maxDim) / w)
+                                      w = maxDim
+                                    } else {
+                                      w = Math.round((w * maxDim) / h)
+                                      h = maxDim
+                                    }
+                                  }
+                                  canvas.width = w
+                                  canvas.height = h
+                                  const ctx = canvas.getContext('2d')
+                                  if (ctx) {
+                                    ctx.drawImage(img, 0, 0, w, h)
+                                    const base64 = canvas.toDataURL('image/jpeg', 0.85)
+                                    setPassportPhotoPreview(base64)
+                                  }
+                                }
+                                img.src = event.target?.result as string
+                              }
+                              reader.readAsDataURL(file)
                             }
                           }}
                         />

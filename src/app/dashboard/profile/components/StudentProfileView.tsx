@@ -174,10 +174,11 @@ export function StudentProfileView({
     arrears: '',
     arrearRemark: '',
     enrollmentStatus: 'Enrolled & Active',
-    profileImage: initialUser.profileImage || null,
+    profileImage: (initialUser.profileImage && !initialUser.profileImage.startsWith('blob:')) ? initialUser.profileImage : null,
   }
 
   const [profile, setProfile] = useState<StudentFullProfile>(defaultProfile)
+  const [imageError, setImageError] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'personal' | 'academic' | 'kpis'>('personal')
@@ -191,6 +192,9 @@ export function StudentProfileView({
         const saved = localStorage.getItem(storageKey)
         if (saved) {
           const parsed = JSON.parse(saved)
+          if (parsed.profileImage && parsed.profileImage.startsWith('blob:')) {
+            parsed.profileImage = null
+          }
           if (parsed.email && parsed.email.endsWith('@student.vsb.edu.in')) {
             parsed.email = (parsed.personalEmail && !parsed.personalEmail.endsWith('@student.vsb.edu.in')) ? parsed.personalEmail : verifiedPersonal || ''
           }
@@ -213,6 +217,9 @@ export function StudentProfileView({
     const handleProfileUpdated = (e: any) => {
       if (e.detail) {
         const d = { ...e.detail }
+        if (d.profileImage && d.profileImage.startsWith('blob:')) {
+          d.profileImage = null
+        }
         if (d.email && d.email.endsWith('@student.vsb.edu.in')) {
           d.email = (d.personalEmail && !d.personalEmail.endsWith('@student.vsb.edu.in')) ? d.personalEmail : verifiedPersonal || ''
         }
@@ -264,6 +271,7 @@ export function StudentProfileView({
         if (ctx) {
           ctx.drawImage(img, 0, 0, w, h)
           const base64 = canvas.toDataURL('image/jpeg', 0.85)
+          setImageError(false)
           setProfile((prev) => {
             const upd = { ...prev, profileImage: base64 }
             if (typeof window !== 'undefined') {
@@ -278,6 +286,11 @@ export function StudentProfileView({
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ registerNumber: profile.registerNumber, profileImage: base64 }),
+          }).catch(() => { })
+          fetch('/api/auth/complete-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileImage: base64 }),
           }).catch(() => { })
           toast.success('Passport photograph updated!')
           playNotificationChime()
@@ -389,15 +402,16 @@ export function StudentProfileView({
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="relative group shrink-0">
-              {profile.profileImage ? (
+              {profile.profileImage && !imageError && !profile.profileImage.startsWith('blob:') ? (
                 <img
                   src={profile.profileImage}
                   alt={profile.name}
                   className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl object-cover shadow-xl border-4 border-white/20 shrink-0 bg-white"
+                  onError={() => setImageError(true)}
                 />
               ) : (
                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-3xl sm:text-4xl flex items-center justify-center shadow-xl border-4 border-white/20 shrink-0">
-                  {profile.name.charAt(0) || 'M'}
+                  {profile.name.charAt(0) || 'L'}
                 </div>
               )}
               <label

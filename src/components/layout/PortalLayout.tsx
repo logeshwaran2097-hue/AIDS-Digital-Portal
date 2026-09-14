@@ -187,11 +187,12 @@ export function PortalLayout({
 
   // Sync profile image from props, localStorage, and /api/auth/me
   useEffect(() => {
-    if (userImage || profileImage) {
-      setAvatarImage(userImage || profileImage || null)
+    const imgProp = userImage || profileImage
+    if (imgProp && !imgProp.startsWith('blob:')) {
+      setAvatarImage(imgProp)
       setAvatarError(false)
-      if (typeof window !== 'undefined' && (userImage || profileImage)) {
-        localStorage.setItem('user_profile_image', (userImage || profileImage) as string)
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_profile_image', imgProp as string)
       }
     }
   }, [userImage, profileImage])
@@ -202,9 +203,12 @@ export function PortalLayout({
     // 1. Initial check in localStorage if avatarImage is still empty
     if (!avatarImage) {
       const cached = localStorage.getItem('user_profile_image')
-      if (cached) {
+      if (cached && !cached.startsWith('blob:')) {
         setAvatarImage(cached)
       } else {
+        if (cached?.startsWith('blob:')) {
+          localStorage.removeItem('user_profile_image')
+        }
         try {
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i)
@@ -212,7 +216,7 @@ export function PortalLayout({
               const item = localStorage.getItem(key)
               if (item) {
                 const parsed = JSON.parse(item)
-                if (parsed?.profileImage) {
+                if (parsed?.profileImage && !parsed.profileImage.startsWith('blob:')) {
                   setAvatarImage(parsed.profileImage)
                   localStorage.setItem('user_profile_image', parsed.profileImage)
                   break
@@ -228,7 +232,7 @@ export function PortalLayout({
     fetch('/api/auth/me')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.success && data?.user?.profileImage) {
+        if (data?.success && data?.user?.profileImage && !data.user.profileImage.startsWith('blob:')) {
           setAvatarImage(data.user.profileImage)
           setAvatarError(false)
           localStorage.setItem('user_profile_image', data.user.profileImage)
@@ -239,14 +243,14 @@ export function PortalLayout({
     // 3. Listen to realtime profile image update events across the portal
     const handleProfileUpdate = (e: any) => {
       const newImg = e.detail || localStorage.getItem('user_profile_image')
-      if (newImg) {
+      if (newImg && !newImg.startsWith('blob:')) {
         setAvatarImage(newImg)
         setAvatarError(false)
       }
     }
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user_profile_image' && e.newValue) {
+      if (e.key === 'user_profile_image' && e.newValue && !e.newValue.startsWith('blob:')) {
         setAvatarImage(e.newValue)
         setAvatarError(false)
       }
