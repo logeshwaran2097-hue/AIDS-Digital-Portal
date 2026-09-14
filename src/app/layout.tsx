@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import { Toaster } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
-import { MobileAppSplashScreen } from '@/components/pwa/MobileAppSplashScreen'
 import { PWAInstall } from '@/components/pwa/PWAInstall'
 import { VersionUpdateNotifier } from '@/components/pwa/VersionUpdateNotifier'
 
@@ -19,13 +18,13 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Digital Portal of AI&DS - V.S.B. Engineering College',
+  title: 'Digital POrtal Of AI&DS - V.S.B. Engineering College',
   description: 'V.S.B. Engineering College - Department of Artificial Intelligence & Data Science Digital Portal, Karur, Tamil Nadu, India',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Digital Portal of AI&DS',
+    title: 'Digital POrtal Of AI&DS',
   },
   icons: {
     icon: [
@@ -51,8 +50,8 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="application-name" content="Digital Portal of AI&DS" />
-        <meta name="apple-mobile-web-app-title" content="Digital Portal of AI&DS" />
+        <meta name="application-name" content="Digital POrtal Of AI&DS" />
+        <meta name="apple-mobile-web-app-title" content="Digital POrtal Of AI&DS" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <script
@@ -71,7 +70,6 @@ export default function RootLayout({
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider>
-          <MobileAppSplashScreen />
           <PWAInstall />
           <VersionUpdateNotifier />
           {children}

@@ -1,6 +1,6 @@
 {
 	"appId": "in.edu.vsb.aidsportal",
-	"appName": "Digital Portal of AI&DS",
+	"appName": "Digital POrtal Of AI&DS",
 	"webDir": "out",
 	"bundledWebRuntime": false,
 	"server": {
@@ -9,9 +9,9 @@
 	},
 	"plugins": {
 		"SplashScreen": {
-			"launchShowDuration": 2000,
-			"backgroundColor": "#071A3D",
-			"showSpinner": true,
+			"launchShowDuration": 0,
+			"backgroundColor": "#071A41",
+			"showSpinner": false,
 			"spinnerColor": "#F4C430"
 		}
 	},

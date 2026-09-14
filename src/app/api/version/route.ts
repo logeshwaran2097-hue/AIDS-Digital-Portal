@@ -7,7 +7,7 @@ export async function GET() {
   return NextResponse.json(
     {
       version: packageJson.version || '1.0.0',
-      name: 'Digital Portal of AI&DS',
+      name: 'Digital POrtal Of AI&DS',
       timestamp: Date.now(),
     },
     {

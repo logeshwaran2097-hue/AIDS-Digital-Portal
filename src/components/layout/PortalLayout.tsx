@@ -833,7 +833,7 @@ export function PortalLayout({
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
+              <p className="text-sm font-black text-white leading-tight tracking-wide">Digital POrtal Of AI&amp;DS</p>
               <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
             </div>
           </div>
@@ -1189,7 +1189,7 @@ export function PortalLayout({
                   />
                 </div>
               </div>
-              <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital Portal of AI&amp;DS</span>
+              <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital POrtal Of AI&amp;DS</span>
             </Link>
           </div>
 

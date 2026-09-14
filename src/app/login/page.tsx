@@ -981,7 +981,7 @@ export default function LoginPage() {
             <div className="inline-flex items-center gap-2.5 px-6 py-2 rounded-2xl bg-gradient-to-r from-[#1455D9] via-[#1E60E6] to-[#0F44B8] text-white shadow-[0_10px_25px_-3px_rgba(20,85,217,0.4)] border-2 border-[#E7B93E] hover:scale-105 transition-all duration-300">
               <Cpu className="w-5 h-5 text-[#FFF3B8] animate-pulse shrink-0" />
               <span className="text-base sm:text-2xl font-black tracking-wider text-white drop-shadow-sm">
-                Digital Portal of AI&amp;DS
+                Digital POrtal Of AI&amp;DS
               </span>
               <Sparkles className="w-4 h-4 text-[#F4C430] shrink-0" />
             </div>

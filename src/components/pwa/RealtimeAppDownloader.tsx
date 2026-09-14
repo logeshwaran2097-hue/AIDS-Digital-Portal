@@ -78,20 +78,20 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
 
         {/* Header with App Icon + Title */}
         <div className="flex items-start gap-4 pr-6">
-          <div className="w-14 h-14 rounded-xl border border-slate-200 p-1 bg-white shadow-sm flex items-center justify-center shrink-0">
+          <div className="w-14 h-14 rounded-xl border border-slate-200 p-1 bg-white shadow-sm flex items-center justify-center shrink-0 overflow-hidden">
             <Image
-              src="/college-emblem.png"
-              alt="Digital Portal of AI&DS"
+              src="/icon-192.png"
+              alt="Digital POrtal Of AI&DS"
               width={48}
               height={48}
-              className="object-contain"
+              className="object-contain rounded-lg"
               priority
             />
           </div>
 
           <div className="space-y-1">
             <h2 className="text-lg font-bold text-slate-900 leading-snug tracking-tight">
-              Install Digital Portal of AI&amp;DS app
+              Install Digital POrtal Of AI&amp;DS app
             </h2>
             <p className="text-xs text-slate-500 font-medium truncate max-w-[220px]">
               Publisher: {originHost}

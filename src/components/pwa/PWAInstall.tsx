@@ -278,22 +278,20 @@ export function PWAInstall() {
             {/* Header */}
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] via-[#EC4899] to-[#FACC15] p-[2.5px] shadow-[0_0_15px_rgba(0,245,255,0.45)] shrink-0">
-                  <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center p-1 border border-amber-300/80">
-                    <Image
-                      src="/college-emblem.png"
-                      alt="VSB"
-                      width={44}
-                      height={44}
-                      className="object-contain"
-                      priority
-                    />
-                  </div>
+                <div className="w-13 h-13 rounded-2xl overflow-hidden shadow-[0_0_15px_rgba(0,245,255,0.45)] shrink-0">
+                  <Image
+                    src="/icon-192.png"
+                    alt="Digital POrtal Of AI&DS"
+                    width={52}
+                    height={52}
+                    className="w-full h-full object-cover rounded-2xl"
+                    priority
+                  />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <h3 className="text-sm font-black text-[#071A41] leading-tight truncate">
-                      Digital Portal of AI&amp;DS
+                      Digital POrtal Of AI&amp;DS
                     </h3>
                   </div>
                   <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
