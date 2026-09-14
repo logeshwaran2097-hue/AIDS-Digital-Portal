@@ -80,6 +80,7 @@ export interface TrackedApplication {
   status: string
   statusLabel: string
   statusBadge: string
+  parentConsentVerified?: boolean
   remarks?: string
   createdAt: string
   dossierUrl: string
@@ -350,6 +351,49 @@ export function ODApplicationsDashboardView({
       }
     } catch {
       toast.error('Network error declining application.')
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  // Handle direct telephonic consent verification from card/table
+  const handleVerifyParentConsentDirect = async (app: TrackedApplication) => {
+    setActionLoadingId(app.id)
+    try {
+      const res = await fetch('/api/od-applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify_parent_consent',
+          notificationId: app.id,
+          registerNumber: app.registerNumber,
+          studentName: app.studentName,
+          eventName: app.eventName,
+          remarks: 'Parent telephonic confirmation verified by Advisor',
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Parent consent verified! Advisor endorsement waiting.')
+        setApplications((prev) =>
+          prev.map((item) =>
+            item.id === app.id
+              ? {
+                  ...item,
+                  parentConsentVerified: true,
+                  statusLabel: 'Parent Confirmed (Awaiting Advisor Endorsement)',
+                  dossierUrl: item.dossierUrl.includes('parentConsent=')
+                    ? item.dossierUrl.replace('parentConsent=pending', 'parentConsent=verified')
+                    : `${item.dossierUrl}&parentConsent=verified`,
+                }
+              : item
+          )
+        )
+      } else {
+        toast.error(data.message || 'Failed to verify parent consent.')
+      }
+    } catch {
+      toast.error('Network error verifying parent consent.')
     } finally {
       setActionLoadingId(null)
     }
@@ -891,11 +935,22 @@ export function ODApplicationsDashboardView({
                     </div>
 
                     {/* Parent Contact & Quick Verification */}
-                    <div className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/80 space-y-1.5">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
-                        Parent Contact &amp; Verification
-                      </span>
-                      <div>
+                    <div className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/80 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                          Parent Contact &amp; Verification
+                        </span>
+                        {app.parentConsentVerified ? (
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1 border border-emerald-200">
+                            ✓ Consent Verified
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 text-[10px] font-bold flex items-center gap-1 border border-amber-200">
+                            ⏳ Call Pending
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <ParentWhatsAppButton
                           parentPhone={app.parentPhone}
                           studentName={app.studentName}
@@ -904,6 +959,22 @@ export function ODApplicationsDashboardView({
                           size="sm"
                           allowEdit={true}
                         />
+                        {(viewRole === 'advisor' || viewRole === 'admin') && isAdvisorPending && !app.parentConsentVerified && (
+                          <button
+                            type="button"
+                            onClick={() => handleVerifyParentConsentDirect(app)}
+                            disabled={actionLoadingId === app.id}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-[10px] flex items-center gap-1 shadow-2xs cursor-pointer transition-all disabled:opacity-50"
+                            title="Confirm that parent telephonic consent has been verified"
+                          >
+                            {actionLoadingId === app.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Phone className="w-3 h-3" />
+                            )}
+                            <span>Verify Call</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1009,7 +1080,7 @@ export function ODApplicationsDashboardView({
                           <span className="font-bold text-gray-900 block text-[11px]">2. Advisor Review</span>
                           <span className="text-[10px] text-gray-600">
                             {isAdvisorPending
-                              ? 'Pending Roll Call Review'
+                              ? (app.parentConsentVerified ? 'Parent Confirmed · Awaiting Endorsement' : 'Awaiting Parent Call Verification')
                               : isRejected && app.status === 'rejected_by_advisor'
                               ? 'Declined by Advisor'
                               : 'Endorsed by Advisor'}
@@ -1244,13 +1315,24 @@ export function ODApplicationsDashboardView({
                         </span>
                       </td>
                       <td className="p-3.5">
-                        <a
-                          href={`tel:${app.parentPhone || '6381366088'}`}
-                          className="text-gray-700 font-mono hover:text-[#1455D9] flex items-center gap-1"
-                        >
-                          <Phone className="w-3 h-3 text-emerald-600" />
-                          <span>{app.parentPhone || '6381366088'}</span>
-                        </a>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <a
+                            href={`tel:${app.parentPhone || '6381366088'}`}
+                            className="text-gray-700 font-mono hover:text-[#1455D9] flex items-center gap-1"
+                          >
+                            <Phone className="w-3 h-3 text-emerald-600" />
+                            <span>{app.parentPhone || '6381366088'}</span>
+                          </a>
+                          {app.parentConsentVerified ? (
+                            <span className="px-1.5 py-0.2 rounded-md text-[9px] bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
+                              ✓ Verified
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.2 rounded-md text-[9px] bg-amber-100 text-amber-900 font-bold border border-amber-200">
+                              ⏳ Call Pending
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3.5 text-center whitespace-nowrap">
                         <span

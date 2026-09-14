@@ -165,24 +165,53 @@ export async function GET(request: Request) {
   // Status resolution
   const statusParam = searchParams.get('status')
   let resolvedStatus = (statusParam || '').toLowerCase()
+  let auditRecord: any = null
   if (!resolvedStatus) {
-    const latestAudit = await prisma.auditLog.findFirst({
+    auditRecord = await prisma.auditLog.findFirst({
       where: { userName: { contains: registerNumber }, action: 'od_application_submitted' },
       orderBy: { createdAt: 'desc' },
     }).catch(() => null)
-    if (latestAudit?.status) resolvedStatus = latestAudit.status.toLowerCase()
+    if (auditRecord?.status) resolvedStatus = auditRecord.status.toLowerCase()
+  } else {
+    auditRecord = await prisma.auditLog.findFirst({
+      where: { userName: { contains: registerNumber }, action: 'od_application_submitted' },
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => null)
   }
 
   const isApproved = ['endorsed', 'endorsed_by_advisor', 'approved_by_hod', 'approved'].includes(resolvedStatus)
   const isDeclined = ['rejected', 'rejected_by_advisor', 'rejected_by_hod'].includes(resolvedStatus)
 
-  let statusLabel = 'Pending Advisor Approval'
-  let statusClass = 'status-pending'
-  let statusIcon = '⏳'
-  let endorseTitle = 'Awaiting Advisor Verification'
-  let endorseSubtitle = 'Advisor Review Pending · Next Stage: Forward to HOD'
-  let endorsePill = 'Step 1 of 2: Advisor Review → HOD'
-  let endorsePillClass = 'pill-pending'
+  // Parent Consent verification resolution
+  const parentConsentParam = (searchParams.get('parentConsent') || '').toLowerCase()
+  const isParentExplicitlyVerified = parentConsentParam === 'verified' || parentConsentParam === 'confirmed' || parentConsentParam === 'true'
+  const isParentExplicitlyPending = parentConsentParam === 'pending' || parentConsentParam === 'false'
+
+  let isParentConsentVerified = false
+  if (isParentExplicitlyVerified) {
+    isParentConsentVerified = true
+  } else if (isParentExplicitlyPending) {
+    isParentConsentVerified = false
+  } else if (isApproved) {
+    isParentConsentVerified = true
+  } else {
+    const details = auditRecord?.details || ''
+    if (details.includes('ParentConsent: verified') || details.includes('Parent Consent Verified') || details.includes('Parent Telephonic Consent Verified')) {
+      isParentConsentVerified = true
+    }
+  }
+
+  let statusLabel = isApproved ? 'Approved & Forwarded to HOD' : isDeclined ? 'Declined' : isParentConsentVerified ? 'Awaiting Advisor Approval' : 'Pending Parent Verification'
+  let statusClass = isApproved ? 'status-approved' : isDeclined ? 'status-declined' : 'status-pending'
+  let statusIcon = isApproved ? '✓' : isDeclined ? '✕' : '⏳'
+  let endorseTitle = isApproved ? 'Approved & Endorsed by Advisor' : isDeclined ? 'Declined by Advisor' : isParentConsentVerified ? 'Awaiting Advisor Approval' : 'Awaiting Parent Verification'
+  let endorseSubtitle = isParentConsentVerified
+    ? 'Parent Telephonic Consent Verified · Awaiting Advisor Endorsement'
+    : 'Advisor Review Pending · Telephonic Parent Verification Required'
+  let endorsePill = isParentConsentVerified
+    ? 'Step 2 of 2: Advisor Approval Waiting'
+    : 'Step 1 of 2: Parent Call Verification'
+  let endorsePillClass = isParentConsentVerified ? 'pill-pending' : 'pill-pending'
 
   if (isApproved) {
     statusLabel = 'Approved & Forwarded to HOD'
@@ -927,12 +956,14 @@ export async function GET(request: Request) {
             <p style="margin-top:10px;">I pledge that I will strictly abide by all institutional regulations and Anna University guidelines.</p>
           </div>
 
-          <div class="letter-highlight-box">
-            <span style="font-size:18px;">📞</span>
+          <div class="letter-highlight-box" style="${isParentConsentVerified ? 'background:#ECFDF5; border:1px solid #A7F3D0; color:#065F46;' : 'background:#FFFBEB; border:1px solid #FCD34D; color:#92400E;'}">
+            <span style="font-size:18px;">${isParentConsentVerified ? '✅' : '📞'}</span>
             <div>
-              <div style="font-weight:800; font-size:11px;">PARENT / GUARDIAN TELEPHONIC VERIFICATION CONFIRMED</div>
+              <div style="font-weight:800; font-size:11px;">
+                ${isParentConsentVerified ? 'PARENT / GUARDIAN TELEPHONIC VERIFICATION CONFIRMED' : 'PARENT / GUARDIAN TELEPHONIC VERIFICATION: PENDING ADVISOR CALL'}
+              </div>
               <div style="font-size:10px; opacity:0.9;">
-                Parent Phone: <strong>+91-${esc(parentPhone)}</strong> · Telephonic Consent Confirmed on File · Residency: ${esc(residency)}
+                Parent Phone: <strong>+91-${esc(parentPhone)}</strong> · ${isParentConsentVerified ? 'Telephonic Consent Confirmed on File by Class Advisor' : 'Awaiting Advisor Call & Telephonic Consent'} · Residency: ${esc(residency)}
               </div>
             </div>
           </div>
@@ -947,23 +978,25 @@ export async function GET(request: Request) {
             </div>
 
             <div class="letter-sign-item">
-              <div class="letter-cursive-sign" style="font-size:14px; font-family:inherit; font-weight:800; color:#059669;">
-                ✓ Consent Confirmed
+              <div class="letter-cursive-sign" style="font-size:14px; font-family:inherit; font-weight:800; color:${isParentConsentVerified ? '#059669' : '#D97706'};">
+                ${isParentConsentVerified ? '✓ Consent Confirmed' : '⏳ Pending Advisor Call'}
               </div>
               <div style="width:120px; height:1px; background:#CBD5E1; margin:4px auto;"></div>
               <div class="letter-sign-role">Parent / Guardian Consent</div>
-              <div class="letter-sign-sub">Verified: +91-${esc(parentPhone)}</div>
-              <span class="letter-verified-badge">✓ Telephonically Verified</span>
+              <div class="letter-sign-sub">${isParentConsentVerified ? `Verified: +91-${esc(parentPhone)}` : `Contact: +91-${esc(parentPhone)}`}</div>
+              <span class="letter-verified-badge" style="${isParentConsentVerified ? 'background:#ECFDF5; color:#059669;' : 'background:#FEF3C7; color:#B45309;'}">
+                ${isParentConsentVerified ? '✓ Telephonically Verified' : '⏳ Awaiting Advisor Call'}
+              </span>
             </div>
 
             <div class="letter-sign-item">
-              <div class="letter-cursive-sign" style="font-size:14px; font-family:inherit; font-weight:800; color:${isApproved ? '#059669' : isDeclined ? '#DC2626' : '#B45309'};">
-                ${statusIcon} ${isApproved ? 'Endorsed & Forwarded' : isDeclined ? 'Declined' : 'Pending Advisor Review'}
+              <div class="letter-cursive-sign" style="font-size:14px; font-family:inherit; font-weight:800; color:${isApproved ? '#059669' : isDeclined ? '#DC2626' : isParentConsentVerified ? '#2563EB' : '#B45309'};">
+                ${statusIcon} ${isApproved ? 'Endorsed & Forwarded' : isDeclined ? 'Declined' : isParentConsentVerified ? 'Awaiting Advisor Approval' : 'Pending Advisor Review'}
               </div>
               <div style="width:120px; height:1px; background:#CBD5E1; margin:4px auto;"></div>
               <div class="letter-sign-role">Class Advisor Verification</div>
               <div class="letter-sign-sub">${esc(endorseSubtitle)}</div>
-              <span class="letter-verified-badge" style="${isApproved ? 'background:#ECFDF5; color:#059669;' : isDeclined ? 'background:#FEF2F2; color:#DC2626;' : 'background:#FEF3C7; color:#B45309;'}">
+              <span class="letter-verified-badge" style="${isApproved ? 'background:#ECFDF5; color:#059669;' : isDeclined ? 'background:#FEF2F2; color:#DC2626;' : isParentConsentVerified ? 'background:#EFF6FF; color:#1D4ED8;' : 'background:#FEF3C7; color:#B45309;'}">
                 ${esc(endorsePill)}
               </span>
             </div>
@@ -1003,7 +1036,7 @@ export async function GET(request: Request) {
         </div>
         <!-- Advisor / HOD -->
         <div class="sig-col">
-          <span class="sig-title" style="font-size:14px; color: ${isApproved ? 'var(--emerald)' : isDeclined ? 'var(--rose)' : 'var(--amber)'}">${statusIcon} ${esc(endorseTitle)}</span>
+          <span class="sig-title" style="font-size:14px; color: ${isApproved ? 'var(--emerald)' : isDeclined ? 'var(--rose)' : isParentConsentVerified ? 'var(--blue)' : 'var(--amber)'}">${statusIcon} ${esc(endorseTitle)}</span>
           <div class="sig-line"></div>
           <span class="sig-title">Class Advisor → HOD Sanction</span>
           <span class="sig-subtitle">${esc(endorseSubtitle)}</span>

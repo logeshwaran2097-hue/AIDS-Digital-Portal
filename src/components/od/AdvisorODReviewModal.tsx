@@ -100,6 +100,8 @@ export function AdvisorODReviewModal({
   const [attendanceRate, setAttendanceRate] = useState<number | null>(null)
   const [remarks, setRemarks] = useState('')
   const [endorsementDone, setEndorsementDone] = useState<'endorsed' | 'rejected' | null>(null)
+  const [parentConsentVerified, setParentConsentVerified] = useState<boolean>(false)
+  const [verifyingConsent, setVerifyingConsent] = useState(false)
   const [selectedPreviewFile, setSelectedPreviewFile] = useState<{ url: string; title: string; type?: string } | null>(null)
   const [downloadingPdf, setDownloadingPdf] = useState(false)
   const [uploadingProof, setUploadingProof] = useState(false)
@@ -247,6 +249,11 @@ export function AdvisorODReviewModal({
             } else if (data.auditLog.status === 'rejected_by_advisor') {
               setEndorsementDone('rejected')
             }
+          }
+          if (data.parentConsentVerified !== undefined) {
+            setParentConsentVerified(Boolean(data.parentConsentVerified))
+          } else if (data.auditLog?.details?.includes('ParentConsent: verified') || data.auditLog?.status === 'endorsed_by_advisor') {
+            setParentConsentVerified(true)
           }
           if (data.files && data.files.length > 0) {
             setProofFiles(data.files)
@@ -490,6 +497,39 @@ export function AdvisorODReviewModal({
     }
   }
 
+  // Handle Advisor verifying parent telephonic consent
+  const handleVerifyParentConsent = async () => {
+    setVerifyingConsent(true)
+    try {
+      const targetNotifId = application?.id || notification?.id
+      const res = await fetch('/api/od-applications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify_parent_consent',
+          notificationId: targetNotifId,
+          registerNumber: effectiveRegisterNumber,
+          studentName: effectiveStudentName,
+          eventName: effectiveEventName,
+          dates: `${displayFromDate} to ${displayToDate}`,
+          remarks: 'Parent telephonic confirmation verified by Advisor',
+        }),
+      })
+
+      const result = await res.json()
+      if (res.ok && result.success) {
+        setParentConsentVerified(true)
+        toast.success(result.message || 'Parent telephonic consent verified successfully!')
+      } else {
+        toast.error(result.message || 'Failed to verify parent consent.')
+      }
+    } catch {
+      toast.error('Network error verifying parent consent.')
+    } finally {
+      setVerifyingConsent(false)
+    }
+  }
+
   // Print Authorization Slip
   const handlePrintSlip = () => {
     window.print()
@@ -506,6 +546,7 @@ export function AdvisorODReviewModal({
     const event = effectiveEventName
     const proofName = effectiveProofFiles?.[0]?.originalName || effectiveProofFiles?.[0]?.fileName || ''
     const currentStatus = endorsementDone || (auditLog?.status === 'endorsed_by_advisor' ? 'endorsed' : auditLog?.status === 'rejected_by_advisor' ? 'rejected' : application?.status || '')
+    const isConsentConfirmed = parentConsentVerified || endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' || (auditLog?.details?.includes('ParentConsent: verified'))
 
     const params = new URLSearchParams({
       registerNumber: reg,
@@ -516,6 +557,7 @@ export function AdvisorODReviewModal({
       to,
       parentPhone: phone,
       event,
+      parentConsent: isConsentConfirmed ? 'verified' : 'pending',
     })
     if (proofName) params.set('proofFileName', proofName)
     if (currentStatus) params.set('status', currentStatus)
@@ -632,8 +674,9 @@ export function AdvisorODReviewModal({
               <div className="flex items-center gap-2 text-gray-700">
                 <Phone className="w-3.5 h-3.5 text-[#1455D9]" />
                 <span className="font-semibold">Parent Contact &amp; WhatsApp:</span>
+                <span className="font-bold text-[#071A3D] font-mono">+91-{effectiveParentPhone}</span>
               </div>
-              <div className="print:hidden">
+              <div className="flex items-center gap-2 print:hidden flex-wrap">
                 <ParentWhatsAppButton
                   parentPhone={effectiveParentPhone}
                   studentName={effectiveStudentName}
@@ -644,6 +687,27 @@ export function AdvisorODReviewModal({
                   size="sm"
                   allowEdit={true}
                 />
+                {parentConsentVerified ? (
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-xs flex items-center gap-1 shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>✓ Parent Consent Verified</span>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleVerifyParentConsent}
+                    disabled={verifyingConsent}
+                    className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                    title="Confirm that you called the parent and verified consent"
+                  >
+                    {verifyingConsent ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Phone className="w-3.5 h-3.5" />
+                    )}
+                    <span>Verify Parent Telephonic Consent</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -908,7 +972,9 @@ export function AdvisorODReviewModal({
                   Class Advisor Evidence Verification &amp; Endorsement
                 </h4>
               </div>
-              <span className="text-[11px] font-bold text-gray-400">Step 1 of 2 (Next: HOD Sanction)</span>
+              <span className="text-[11px] font-bold text-gray-400">
+                {parentConsentVerified ? 'Step 2: Advisor Endorsement' : 'Step 1: Parent Call Verification'}
+              </span>
             </div>
 
             {endorsementDone ? (
@@ -934,6 +1000,33 @@ export function AdvisorODReviewModal({
               </div>
             ) : (
               <div className="space-y-3">
+                {!parentConsentVerified ? (
+                  <div className="p-3 bg-amber-50 border border-amber-300/80 rounded-xl text-xs text-amber-900 flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2">
+                      <Phone className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold block">Parent Telephonic Verification Required</span>
+                        <span className="text-[11px] text-amber-800">
+                          Advisor must verify parental consent (+91-{effectiveParentPhone}) before student leave is endorsed to HOD.
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleVerifyParentConsent}
+                      disabled={verifyingConsent}
+                      className="px-2.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] shrink-0 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                    >
+                      {verifyingConsent ? <Loader2 className="w-3 h-3 animate-spin" /> : <Phone className="w-3 h-3" />}
+                      <span>Verify Call</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="font-bold">✓ Parent consent verified. Advisor approval &amp; endorsement is waiting (Ready to forward to HOD).</span>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs font-bold text-gray-700 block mb-1">
                     Advisor Review Remarks / Directives (Optional if approving, required if declining evidence):

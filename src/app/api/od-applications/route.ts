@@ -125,6 +125,13 @@ export async function GET(request: Request) {
             const toD = durationFromLog ? durationFromLog[2] : (datesMatch ? datesMatch[2] : '2026-09-16')
             const evName = eventFromLog || 'Academic Activity'
 
+            const logDetails = auditLog?.details || ''
+            const singleConsentVerified = logDetails.includes('ParentConsent: verified') ||
+              logDetails.includes('Parent Consent Verified') ||
+              auditLog?.status === 'endorsed_by_advisor' ||
+              auditLog?.status === 'approved_by_hod' ||
+              auditLog?.status === 'approved'
+
             files = [
               {
                 id: `dossier-${deducedReg}`,
@@ -132,7 +139,7 @@ export async function GET(request: Request) {
                 originalName: `Official_Student_Leave_&_Event_Verification_Dossier_${deducedReg}.svg`,
                 fileType: 'image/svg+xml',
                 fileSize: 45200,
-                fileUrl: `/api/od-applications/proof-document?registerNumber=${deducedReg}&type=${encodeURIComponent(rawType)}&reason=${encodeURIComponent(rawReason)}&from=${fromD}&to=${toD}&event=${encodeURIComponent(evName)}`,
+                fileUrl: `/api/od-applications/proof-document?registerNumber=${deducedReg}&type=${encodeURIComponent(rawType)}&reason=${encodeURIComponent(rawReason)}&from=${fromD}&to=${toD}&event=${encodeURIComponent(evName)}&parentConsent=${singleConsentVerified ? 'verified' : 'pending'}`,
                 module: 'attendance_od_proof',
                 relatedId: deducedReg,
                 uploadedByName: `${studentDetails?.name || 'Student'} (${deducedReg})`,
@@ -144,6 +151,13 @@ export async function GET(request: Request) {
         }
       }
 
+      const logDetails = auditLog?.details || ''
+      const isParentConsentVerified = logDetails.includes('ParentConsent: verified') ||
+        logDetails.includes('Parent Consent Verified') ||
+        auditLog?.status === 'endorsed_by_advisor' ||
+        auditLog?.status === 'approved_by_hod' ||
+        auditLog?.status === 'approved'
+
       return NextResponse.json({
         success: true,
         notification: singleNotif,
@@ -151,6 +165,7 @@ export async function GET(request: Request) {
         auditLog,
         files,
         attendanceRate: Number(attendanceRate.toFixed(1)),
+        parentConsentVerified: Boolean(isParentConsentVerified),
       })
     }
 
@@ -274,6 +289,12 @@ export async function GET(request: Request) {
       const proofs = proofMatch ? proofMatch[1].trim() : 'Digital verification'
       const remarks = remarksMatch ? remarksMatch[1].trim() : ''
 
+      const isParentConsentVerified = details.includes('ParentConsent: verified') ||
+        details.includes('Parent Consent Verified') ||
+        log.status === 'endorsed_by_advisor' ||
+        log.status === 'approved_by_hod' ||
+        log.status === 'approved'
+
       const status = log.status || 'pending_advisor_approval'
       let statusLabel = 'Pending Advisor Review'
       let statusBadge = 'pending'
@@ -290,6 +311,10 @@ export async function GET(request: Request) {
       } else if (status === 'rejected_by_hod' || status === 'rejected') {
         statusLabel = 'Declined by HOD'
         statusBadge = 'rejected'
+      } else if (isParentConsentVerified) {
+        statusLabel = 'Parent Confirmed (Awaiting Advisor Endorsement)'
+      } else {
+        statusLabel = 'Pending Advisor Review (Parent Call Required)'
       }
 
       const extractedName =
@@ -315,7 +340,7 @@ export async function GET(request: Request) {
         proofFiles = appFiles
       }
 
-      const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg || targetRegNo || '922525243007'}&name=${encodeURIComponent(extractedName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}&status=${encodeURIComponent(status)}&event=${encodeURIComponent(eventName)}`
+      const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg || targetRegNo || '922525243007'}&name=${encodeURIComponent(extractedName)}&type=${encodeURIComponent(appType)}&reason=${encodeURIComponent(reason || 'Official requisition')}&from=${fromDate}&to=${toDate}&status=${encodeURIComponent(status)}&event=${encodeURIComponent(eventName)}&parentConsent=${isParentConsentVerified ? 'verified' : 'pending'}`
 
       trackedApplications.push({
         id: log.id,
@@ -340,6 +365,7 @@ export async function GET(request: Request) {
         status,
         statusLabel,
         statusBadge,
+        parentConsentVerified: isParentConsentVerified,
         remarks,
         createdAt: log.createdAt,
         dossierUrl,
@@ -374,7 +400,7 @@ export async function GET(request: Request) {
         const toDate = durationMatch ? durationMatch[2] : '2026-09-27'
         const eventName = eventMatch ? eventMatch[1].trim() : 'Academic Activity'
         const studentName = nameMatch ? nameMatch[1].trim() : notif.createdByName || 'Student'
-        const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&from=${fromDate}&to=${toDate}&status=pending`
+        const dossierUrl = `/api/od-applications/proof-document?registerNumber=${deducedReg}&name=${encodeURIComponent(studentName)}&type=${encodeURIComponent(appType)}&from=${fromDate}&to=${toDate}&status=pending&parentConsent=pending`
 
         // Look up student for real parentPhone from DB
         let fallbackStudent: any = studentCache[deducedReg]
@@ -407,8 +433,9 @@ export async function GET(request: Request) {
           proofs: 'Verified Student Requisition',
           files: [],
           status: 'pending_advisor_approval',
-          statusLabel: 'Pending Advisor Review',
+          statusLabel: 'Pending Advisor Review (Parent Call Required)',
           statusBadge: 'pending',
+          parentConsentVerified: false,
           remarks: '',
           createdAt: notif.createdAt,
           dossierUrl,
@@ -449,6 +476,65 @@ export async function PATCH(request: Request) {
     const regUpper = String(registerNumber).trim().toUpperCase()
     const reviewerName = session.name || (session.role === 'hod' ? 'Head of Department' : 'Class Advisor')
 
+    // Handle dedicated parent telephonic consent verification by Advisor
+    if (action === 'verify_parent_consent') {
+      let targetAudit = null
+      if (notificationId) {
+        targetAudit = await prisma.auditLog.findUnique({
+          where: { id: notificationId },
+        }).catch(() => null)
+      }
+      if (!targetAudit) {
+        targetAudit = await prisma.auditLog.findFirst({
+          where: {
+            userName: { contains: regUpper },
+            action: 'od_application_submitted',
+          },
+          orderBy: { createdAt: 'desc' },
+        }).catch(() => null)
+      }
+
+      if (targetAudit) {
+        const existingDetails = targetAudit.details || ''
+        const updatedDetails = existingDetails.includes('ParentConsent: verified')
+          ? existingDetails
+          : `${existingDetails} | ParentConsent: verified | [Parent Telephonic Consent Confirmed by Class Advisor ${reviewerName} on ${new Date().toLocaleDateString('en-IN')}${remarks ? `. Remarks: "${remarks}"` : ''}]`
+
+        await prisma.auditLog.update({
+          where: { id: targetAudit.id },
+          data: {
+            details: updatedDetails,
+          },
+        }).catch(() => {})
+      }
+
+      const notifTitle = `📞 [Parent Consent Verified] Parent Telephonic Confirmation Confirmed`
+      const notifMsg = `Class Advisor ${reviewerName} has verified telephonic confirmation with your parent/guardian for "${eventName || 'your OD/Leave request'}". Application is now waiting for Advisor endorsement.`
+
+      await prisma.notification.create({
+        data: {
+          title: notifTitle,
+          message: notifMsg,
+          target: 'student',
+          createdByName: reviewerName,
+          status: 'published',
+        },
+      }).catch(() => {})
+
+      dispatchWebPushNotification({
+        title: notifTitle,
+        message: notifMsg,
+        targetRegNo: regUpper,
+        url: '/dashboard/od-applications',
+      }).catch(() => {})
+
+      return NextResponse.json({
+        success: true,
+        message: 'Parent telephonic consent verified successfully! Advisor endorsement is now waiting.',
+        parentConsentVerified: true,
+      })
+    }
+
     let newStatus = 'pending_advisor_approval'
     let statusLabel = 'Under Review'
 
@@ -484,11 +570,15 @@ export async function PATCH(request: Request) {
     }
 
     if (targetAudit) {
+      const existingDetails = targetAudit.details || ''
+      const parentTag = (action === 'endorse' && !existingDetails.includes('ParentConsent: verified'))
+        ? ' | ParentConsent: verified'
+        : ''
       await prisma.auditLog.update({
         where: { id: targetAudit.id },
         data: {
           status: newStatus,
-          details: `${targetAudit.details || ''} | [${statusLabel} by ${reviewerName} at ${new Date().toLocaleDateString('en-IN')}${remarks ? `. Remarks: "${remarks}"` : ''}]`,
+          details: `${existingDetails}${parentTag} | [${statusLabel} by ${reviewerName} at ${new Date().toLocaleDateString('en-IN')}${remarks ? `. Remarks: "${remarks}"` : ''}]`,
         },
       }).catch(() => {})
     }
