@@ -1175,43 +1175,6 @@ export function FacultyLaboratoryView({
                     </div>
                   </div>
 
-                  {/* Syllabus Quick Presets */}
-                  {presets && presets.length > 0 && (
-                    <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-[#1455D9] flex items-center gap-1">
-                          <span>💡</span>
-                          <span>Quick Syllabus Presets:</span>
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-medium">Click to fill experiment details</span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1.5 max-h-24 overflow-y-auto pr-1">
-                        {presets.map((p) => (
-                          <button
-                            key={p.experimentNo}
-                            type="button"
-                            onClick={() => {
-                              setFormData((prev) => ({
-                                ...prev,
-                                experimentNo: String(p.experimentNo),
-                                experimentName: p.name,
-                                topicsCovered: p.topics,
-                                toolsUsed: p.tools || `Theoretical concepts, algorithms, and practical instructions for Ex. ${p.experimentNo}`,
-                              }))
-                            }}
-                            className={cn(
-                              "text-[10px] font-semibold px-2 py-1 rounded-lg border transition-all cursor-pointer",
-                              formData.experimentNo === String(p.experimentNo)
-                                ? "bg-[#1455D9] text-white border-[#1455D9] shadow-xs"
-                                : "bg-white text-gray-700 border-gray-200 hover:bg-blue-100/60 hover:text-[#1455D9]"
-                            )}
-                          >
-                            🧪 Ex {p.experimentNo}: {p.name.length > 32 ? p.name.slice(0, 32) + '...' : p.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {/* 👨‍🏫 What Topics Covered by Trainer */}
                   <div>
