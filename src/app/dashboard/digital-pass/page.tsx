@@ -16,11 +16,11 @@ export default async function DigitalPassPage() {
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
-  const studentName = user?.name || session.name || 'Student'
-  const registerNumber = student?.registerNumber || userReg || '922521104045'
+  const studentName = user?.name || session.name || 'Logeshwaran G'
+  const registerNumber = student?.registerNumber || userReg || '922525243103'
   const department = student?.department || 'Artificial Intelligence & Data Science'
-  const year = student?.year || 3
-  const section = student?.section || 'A'
+  const year = student?.year || 2
+  const section = student?.section || 'B'
 
   return (
     <PortalLayout role={session.role as any} userName={studentName}>

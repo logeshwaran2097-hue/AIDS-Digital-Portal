@@ -51,6 +51,7 @@ const SUBJECTS = [
 
 // Sample student dataset for allocation
 const SAMPLE_STUDENTS = [
+  { name: 'Logeshwaran G', registerNumber: '922525243103', year: 2, section: 'B' },
   { name: 'Logeshwaran S', registerNumber: '922521104045', year: 3, section: 'A' },
   { name: 'Abishek M', registerNumber: '922521104001', year: 3, section: 'A' },
   { name: 'Ananya R', registerNumber: '922521104006', year: 3, section: 'A' },
@@ -95,7 +96,7 @@ const SAMPLE_STUDENTS = [
 
 export default function LabSeatAllocatorView({
   isFacultyMode = true,
-  currentStudentReg = '922521104045'
+  currentStudentReg = '922525243103'
 }: {
   isFacultyMode?: boolean
   currentStudentReg?: string

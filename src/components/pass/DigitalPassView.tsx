@@ -98,11 +98,11 @@ const HOSTEL_BLOCKS = [
 ]
 
 export default function DigitalPassView({
-  studentName = 'Logeshwaran S',
-  registerNumber = '922521104045',
+  studentName = 'Logeshwaran G',
+  registerNumber = '922525243103',
   department = 'Artificial Intelligence & Data Science',
-  year = 3,
-  section = 'A',
+  year = 2,
+  section = 'B',
   role = 'student'
 }: DigitalPassViewProps) {
   const [activeTab, setActiveTab] = useState<'bus' | 'hostel' | 'mess'>('bus')

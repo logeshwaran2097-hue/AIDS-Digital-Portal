@@ -154,8 +154,8 @@ const INITIAL_MARKSHEETS: MarksheetItem[] = [
 ]
 
 export default function GPACalculatorMarksheetView({
-  studentName = 'Logeshwaran S',
-  registerNumber = '922521104045'
+  studentName = 'Logeshwaran G',
+  registerNumber = '922525243103'
 }: {
   studentName?: string
   registerNumber?: string

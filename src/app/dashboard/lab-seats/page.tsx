@@ -14,8 +14,8 @@ export default async function StudentLabSeatsPage() {
     (userReg ? await prisma.student.findUnique({ where: { registerNumber: userReg } }).catch(() => null) : null)
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
-  const studentName = user?.name || session.name || 'Student'
-  const registerNumber = student?.registerNumber || userReg || '922521104045'
+  const studentName = user?.name || session.name || 'Logeshwaran G'
+  const registerNumber = student?.registerNumber || userReg || '922525243103'
 
   return (
     <PortalLayout role={session.role as any} userName={studentName}>
