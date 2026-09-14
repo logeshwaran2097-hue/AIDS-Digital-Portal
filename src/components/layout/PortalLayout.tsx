@@ -174,12 +174,6 @@ export function PortalLayout({
       const currentPerm = getNotificationPermissionStatus()
       setPushPermission(currentPerm)
 
-      // Auto-request permission by default if undecided
-      if (currentPerm === 'default' && 'Notification' in window) {
-        requestNotificationPermission().then((perm) => {
-          setPushPermission(perm)
-        }).catch(() => {})
-      }
 
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch((err) => {
