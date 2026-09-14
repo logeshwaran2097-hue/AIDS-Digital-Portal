@@ -1045,81 +1045,130 @@ export function ODApplicationsDashboardView({
 
                   {/* 4. Official Lifecycle Stepper */}
                   <div className="bg-white rounded-2xl p-3.5 border border-gray-200/80 space-y-2">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
-                      Application Lifecycle &amp; Authorization Pipeline
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                      {/* Step 1 */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-wider block">
+                        Live Progress Tracker &amp; Authorization Pipeline (5 Stages)
+                      </span>
+                      <span className="text-[10px] font-bold text-gray-400 hidden sm:inline">
+                        Anna Univ R2021 Statutory Flow
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                      {/* Step 1: Student Requisition */}
                       <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <div>
-                          <span className="font-bold text-emerald-950 block text-[11px]">1. Student Requisition</span>
-                          <span className="text-[10px] text-emerald-700">Submitted with proofs</span>
+                        <div className="min-w-0">
+                          <span className="font-bold text-emerald-950 block text-[11px] truncate">1. Requisition</span>
+                          <span className="text-[10px] text-emerald-700 truncate block">Submitted with proofs</span>
                         </div>
                       </div>
 
-                      {/* Step 2 */}
+                      {/* Step 2: Parent Confirmation */}
                       <div
                         className={cn(
-                          'p-2.5 rounded-xl border flex items-center gap-2',
-                          isAdvisorPending
-                            ? 'bg-amber-50 border-amber-300 ring-1 ring-amber-400/40'
-                            : isRejected && app.status === 'rejected_by_advisor'
-                            ? 'bg-rose-50 border-rose-200 text-rose-800'
-                            : 'bg-emerald-50 border-emerald-200'
+                          'p-2.5 rounded-xl border flex items-center gap-2 transition-all',
+                          app.parentConsentVerified || isHODPending || isSanctioned
+                            ? 'bg-emerald-50 border-emerald-200'
+                            : isRejected && !app.parentConsentVerified
+                            ? 'bg-rose-50 border-rose-200'
+                            : 'bg-amber-50 border-amber-300 ring-1 ring-amber-400/40'
                         )}
                       >
-                        {isAdvisorPending ? (
-                          <Clock className="w-4 h-4 text-amber-600 animate-pulse shrink-0" />
-                        ) : isRejected && app.status === 'rejected_by_advisor' ? (
+                        {app.parentConsentVerified || isHODPending || isSanctioned ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : isRejected && !app.parentConsentVerified ? (
                           <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
                         ) : (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <Phone className="w-4 h-4 text-amber-600 animate-pulse shrink-0" />
                         )}
-                        <div>
-                          <span className="font-bold text-gray-900 block text-[11px]">2. Advisor Review</span>
-                          <span className="text-[10px] text-gray-600">
-                            {isAdvisorPending
-                              ? (app.parentConsentVerified ? 'Parent Confirmed · Awaiting Endorsement' : 'Awaiting Parent Call Verification')
-                              : isRejected && app.status === 'rejected_by_advisor'
-                              ? 'Declined by Advisor'
-                              : 'Endorsed by Advisor'}
+                        <div className="min-w-0">
+                          <span className="font-bold text-gray-900 block text-[11px] truncate">2. Parent Consent</span>
+                          <span className="text-[10px] text-gray-600 truncate block">
+                            {app.parentConsentVerified || isHODPending || isSanctioned
+                              ? 'Telephonically Verified'
+                              : isRejected
+                              ? 'Declined / Unverified'
+                              : 'Awaiting Advisor Call'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Step 3 */}
+                      {/* Step 3: Advisor Review & Endorsement */}
                       <div
                         className={cn(
-                          'p-2.5 rounded-xl border flex items-center gap-2',
-                          isHODPending
-                            ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/40'
-                            : isSanctioned
+                          'p-2.5 rounded-xl border flex items-center gap-2 transition-all',
+                          isHODPending || isSanctioned
                             ? 'bg-emerald-50 border-emerald-200'
+                            : isRejected && app.status === 'rejected_by_advisor'
+                            ? 'bg-rose-50 border-rose-200 text-rose-800'
+                            : isAdvisorPending && app.parentConsentVerified
+                            ? 'bg-blue-50 border-blue-300 ring-1 ring-blue-400/40'
+                            : 'bg-gray-50 border-gray-200 opacity-70'
+                        )}
+                      >
+                        {isHODPending || isSanctioned ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : isRejected && app.status === 'rejected_by_advisor' ? (
+                          <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                        ) : isAdvisorPending && app.parentConsentVerified ? (
+                          <Clock className="w-4 h-4 text-blue-600 animate-pulse shrink-0" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <span className="font-bold text-gray-900 block text-[11px] truncate">3. Advisor Review</span>
+                          <span className="text-[10px] text-gray-600 truncate block">
+                            {isHODPending || isSanctioned
+                              ? 'Endorsed & Forwarded'
+                              : isRejected && app.status === 'rejected_by_advisor'
+                              ? 'Declined by Advisor'
+                              : isAdvisorPending && app.parentConsentVerified
+                              ? 'Approval Waiting'
+                              : 'Waiting Parent Call'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Step 4: HOD Authorization */}
+                      <div
+                        className={cn(
+                          'p-2.5 rounded-xl border flex items-center gap-2 transition-all',
+                          isSanctioned
+                            ? 'bg-emerald-50 border-emerald-200'
+                            : isHODPending
+                            ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/40'
                             : isRejected && app.status === 'rejected_by_hod'
                             ? 'bg-rose-50 border-rose-200'
                             : 'bg-gray-50 border-gray-200 opacity-60'
                         )}
                       >
-                        {isHODPending ? (
-                          <Building className="w-4 h-4 text-indigo-600 shrink-0" />
-                        ) : isSanctioned ? (
+                        {isSanctioned ? (
                           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : isHODPending ? (
+                          <Building className="w-4 h-4 text-indigo-600 animate-pulse shrink-0" />
+                        ) : isRejected && app.status === 'rejected_by_hod' ? (
+                          <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
                         ) : (
                           <Clock className="w-4 h-4 text-gray-400 shrink-0" />
                         )}
-                        <div>
-                          <span className="font-bold text-gray-900 block text-[11px]">3. HOD Authorization</span>
-                          <span className="text-[10px] text-gray-600">
-                            {isSanctioned ? 'Sanction Granted' : isHODPending ? 'Awaiting Sanction' : 'Pending Advisor'}
+                        <div className="min-w-0">
+                          <span className="font-bold text-gray-900 block text-[11px] truncate">4. HOD Sanction</span>
+                          <span className="text-[10px] text-gray-600 truncate block">
+                            {isSanctioned
+                              ? 'Officially Sanctioned'
+                              : isHODPending
+                              ? 'Awaiting Sanction'
+                              : isRejected && app.status === 'rejected_by_hod'
+                              ? 'Declined by HOD'
+                              : 'Pending Advisor'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Step 4 */}
+                      {/* Step 5: Roll Call Sync */}
                       <div
                         className={cn(
-                          'p-2.5 rounded-xl border flex items-center gap-2',
+                          'p-2.5 rounded-xl border flex items-center gap-2 transition-all',
                           isSanctioned
                             ? 'bg-emerald-50 border-emerald-200'
                             : 'bg-gray-50 border-gray-200 opacity-60'
@@ -1130,10 +1179,10 @@ export function ODApplicationsDashboardView({
                         ) : (
                           <Clock className="w-4 h-4 text-gray-400 shrink-0" />
                         )}
-                        <div>
-                          <span className="font-bold text-gray-900 block text-[11px]">4. Roll Call Sync</span>
-                          <span className="text-[10px] text-gray-600">
-                            {isSanctioned ? 'OD Attendance Credited' : 'Pending Sanction'}
+                        <div className="min-w-0">
+                          <span className="font-bold text-gray-900 block text-[11px] truncate">5. Roll Call Sync</span>
+                          <span className="text-[10px] text-gray-600 truncate block">
+                            {isSanctioned ? 'OD Attendance Credited' : 'On HOD Sanction'}
                           </span>
                         </div>
                       </div>

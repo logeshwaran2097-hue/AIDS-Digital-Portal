@@ -636,6 +636,148 @@ export function AdvisorODReviewModal({
             </p>
           </div>
 
+          {/* Track Progress Lifecycle Stepper (Including Parent Confirmation) */}
+          <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-wider block">
+                Track Progress &amp; Authorization Pipeline (5 Stages)
+              </span>
+              <span className="text-[10px] font-bold text-gray-400 hidden sm:inline">
+                Anna University Statutory Flow
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+              {/* Stage 1: Student Requisition */}
+              <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="min-w-0">
+                  <span className="font-bold text-emerald-950 block text-[11px] truncate">1. Requisition</span>
+                  <span className="text-[10px] text-emerald-700 truncate block">Submitted</span>
+                </div>
+              </div>
+
+              {/* Stage 2: Parent Confirmation */}
+              <div
+                className={cn(
+                  'p-2 rounded-xl border flex items-center gap-2 transition-all',
+                  parentConsentVerified || endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' || application?.status === 'approved_by_hod'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : endorsementDone === 'rejected'
+                    ? 'bg-rose-50 border-rose-200'
+                    : 'bg-amber-50 border-amber-300 ring-1 ring-amber-400/40'
+                )}
+              >
+                {parentConsentVerified || endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' || application?.status === 'approved_by_hod' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : endorsementDone === 'rejected' ? (
+                  <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                ) : (
+                  <Phone className="w-4 h-4 text-amber-600 animate-pulse shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <span className="font-bold text-gray-900 block text-[11px] truncate">2. Parent Call</span>
+                  <span className="text-[10px] text-gray-600 truncate block">
+                    {parentConsentVerified || endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' || application?.status === 'approved_by_hod'
+                      ? 'Confirmed'
+                      : 'Call Pending'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stage 3: Advisor Review & Endorsement */}
+              <div
+                className={cn(
+                  'p-2 rounded-xl border flex items-center gap-2 transition-all',
+                  endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' || application?.status === 'approved_by_hod'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : endorsementDone === 'rejected' || application?.status === 'rejected_by_advisor'
+                    ? 'bg-rose-50 border-rose-200'
+                    : parentConsentVerified
+                    ? 'bg-blue-50 border-blue-300 ring-1 ring-blue-400/40'
+                    : 'bg-gray-50 border-gray-200 opacity-60'
+                )}
+              >
+                {endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' || application?.status === 'approved_by_hod' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : endorsementDone === 'rejected' || application?.status === 'rejected_by_advisor' ? (
+                  <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                ) : parentConsentVerified ? (
+                  <Clock className="w-4 h-4 text-blue-600 animate-pulse shrink-0" />
+                ) : (
+                  <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <span className="font-bold text-gray-900 block text-[11px] truncate">3. Advisor</span>
+                  <span className="text-[10px] text-gray-600 truncate block">
+                    {endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' || application?.status === 'approved_by_hod'
+                      ? 'Endorsed'
+                      : endorsementDone === 'rejected'
+                      ? 'Declined'
+                      : parentConsentVerified
+                      ? 'Awaiting Approval'
+                      : 'Waiting Call'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stage 4: HOD Authorization */}
+              <div
+                className={cn(
+                  'p-2 rounded-xl border flex items-center gap-2 transition-all',
+                  application?.status === 'approved_by_hod' || application?.status === 'approved'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor'
+                    ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-400/40'
+                    : application?.status === 'rejected_by_hod'
+                    ? 'bg-rose-50 border-rose-200'
+                    : 'bg-gray-50 border-gray-200 opacity-60'
+                )}
+              >
+                {application?.status === 'approved_by_hod' || application?.status === 'approved' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor' ? (
+                  <Building className="w-4 h-4 text-indigo-600 animate-pulse shrink-0" />
+                ) : (
+                  <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <span className="font-bold text-gray-900 block text-[11px] truncate">4. HOD Sanction</span>
+                  <span className="text-[10px] text-gray-600 truncate block">
+                    {application?.status === 'approved_by_hod' || application?.status === 'approved'
+                      ? 'Sanctioned'
+                      : endorsementDone === 'endorsed' || application?.status === 'endorsed_by_advisor'
+                      ? 'Awaiting HOD'
+                      : 'Pending'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Stage 5: Roll Call Sync */}
+              <div
+                className={cn(
+                  'p-2 rounded-xl border flex items-center gap-2 transition-all',
+                  application?.status === 'approved_by_hod' || application?.status === 'approved'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : 'bg-gray-50 border-gray-200 opacity-60'
+                )}
+              >
+                {application?.status === 'approved_by_hod' || application?.status === 'approved' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <span className="font-bold text-gray-900 block text-[11px] truncate">5. Attendance</span>
+                  <span className="text-[10px] text-gray-600 truncate block">
+                    {application?.status === 'approved_by_hod' || application?.status === 'approved'
+                      ? 'Credited'
+                      : 'On Sanction'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Student Profile Card (Clean, Attendance Rate Removed) */}
           <div className="p-4 bg-gradient-to-r from-blue-50/50 via-indigo-50/20 to-slate-50 rounded-2xl border border-blue-100 shadow-2xs">
             <div className="flex items-center gap-3.5">
