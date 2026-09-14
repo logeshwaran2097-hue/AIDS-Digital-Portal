@@ -59,7 +59,9 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    try { reg.update(); } catch(e) {}
+                  }).catch(function() {});
                 });
               }
             `,

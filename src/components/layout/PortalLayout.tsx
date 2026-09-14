@@ -176,7 +176,9 @@ export function PortalLayout({
 
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch((err) => {
+        navigator.serviceWorker.register('/sw.js').then((reg) => {
+          try { reg.update() } catch (e) {}
+        }).catch((err) => {
           console.debug('ServiceWorker registration note:', err)
         })
       }
