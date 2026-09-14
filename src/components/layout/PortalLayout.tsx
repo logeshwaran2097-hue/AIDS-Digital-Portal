@@ -499,24 +499,6 @@ export function PortalLayout({
       return false
     }
 
-    // If faculty is not a class advisor, hide the Class Students link
-    if (role === 'faculty' && !isFacultyAdvisor && (
-      item.href.includes('/faculty-dashboard/students')
-    )) {
-      return false
-    }
-    // If faculty is a class advisor, they have no allocated teaching subjects or laboratory practicals:
-    // Hide "My Subjects", "Laboratory", "Resources", and "Question Papers"
-    if (role === 'faculty' && isFacultyAdvisor) {
-      if (
-        item.href.includes('/faculty-dashboard/subjects') ||
-        item.href.includes('/faculty-dashboard/laboratory') ||
-        item.href.includes('/faculty-dashboard/resources') ||
-        item.href.includes('/faculty-dashboard/question-papers')
-      ) {
-        return false
-      }
-    }
     return true
   })
   
