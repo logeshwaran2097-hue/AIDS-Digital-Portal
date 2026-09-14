@@ -1242,37 +1242,6 @@ export function FacultyLaboratoryView({
                       </div>
                     </div>
 
-                    {/* Quick Preset Buttons for Instant Selection */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quick Fill:</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const str = parseInt(classStrength, 10) || 58
-                          updateCompletedRange('1', String(str))
-                        }}
-                        className="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 transition-colors cursor-pointer"
-                      >
-                        ✨ All {classStrength} Completed (Roll 1 - {classStrength})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => updateCompletedRange('1', '30')}
-                        className="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-colors cursor-pointer"
-                      >
-                        🎯 Batch 1 (Roll 1 - 30)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const str = parseInt(classStrength, 10) || 58
-                          updateCompletedRange('31', String(str))
-                        }}
-                        className="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-colors cursor-pointer"
-                      >
-                        🎯 Batch 2 (Roll 31 - {classStrength})
-                      </button>
-                    </div>
 
                     {/* Completed Students Container */}
                     <div className="p-3 bg-white rounded-xl border border-emerald-200 shadow-2xs space-y-2">
