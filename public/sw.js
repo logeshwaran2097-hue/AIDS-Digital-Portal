@@ -147,3 +147,10 @@ self.addEventListener('fetch', (event) => {
       })
   )
 })
+
+// Listen for SKIP_WAITING message from client to instantly activate new version
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
