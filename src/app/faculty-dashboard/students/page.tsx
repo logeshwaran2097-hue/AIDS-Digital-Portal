@@ -49,11 +49,12 @@ export default async function FacultyStudentsPage() {
 
   const cookieStore = cookies()
   const rawLoginRole = cookieStore.get('portal_login_role')?.value || (session.isAdvisor ? 'advisor' : 'faculty')
-  const isAdvisor = rawLoginRole === 'advisor' && resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
-
-  if (!isAdvisor) {
-    redirect('/faculty-dashboard')
-  }
+  const isAdvisor =
+    rawLoginRole === 'advisor'
+      ? resolveFacultyAdvisorStatus(session, faculty, rawLoginRole)
+      : Boolean(faculty?.advisorYear && faculty?.advisorSec) ||
+        faculty?.facultyType === 'advisor' ||
+        faculty?.facultyType === 'both'
 
   // Collect exclusively the faculty's assigned classes / cohorts:
   // Key format: `${year}_${section || 'ALL'}`
