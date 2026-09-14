@@ -1175,21 +1175,46 @@ export function PortalLayout({
                     </div>
 
                     {/* Real-Time Live Notification Status Banner */}
-                    <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50/90 via-slate-50 to-blue-50/90 border-b border-blue-100 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-2 h-2 rounded-full shrink-0 bg-emerald-500 ring-2 ring-emerald-200 animate-pulse" />
-                        <span className="text-[11px] font-black text-[#071A41] truncate">
-                          Live Real-Time Alerts Active
-                        </span>
+                    <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50/90 via-slate-50 to-blue-50/90 border-b border-blue-100 flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={cn(
+                            "w-2 h-2 rounded-full shrink-0 ring-2 animate-pulse",
+                            pushPermission === 'granted' ? "bg-emerald-500 ring-emerald-200" : "bg-amber-500 ring-amber-200"
+                          )} />
+                          <span className="text-[11px] font-black text-[#071A41] truncate">
+                            {pushPermission === 'granted'
+                              ? 'Notifications Allowed & Active'
+                              : pushPermission === 'denied'
+                              ? 'Notifications Blocked by Browser'
+                              : 'Real-Time Alerts Available'}
+                          </span>
+                        </div>
+
+                        {pushPermission === 'default' && (
+                          <button
+                            type="button"
+                            onClick={handleEnablePush}
+                            className="px-2.5 py-1 rounded-lg bg-[#1557C0] hover:bg-[#0e44b5] text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
+                          >
+                            <span>🔔</span>
+                            <span>Allow Alerts</span>
+                          </button>
+                        )}
                       </div>
 
-                      {pushPermission !== 'granted' && (
-                        <button
-                          onClick={handleEnablePush}
-                          className="px-2.5 py-1 rounded-lg bg-[#1557C0] hover:bg-[#0e44b5] text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer"
-                        >
-                          Enable Browser Push
-                        </button>
+                      {pushPermission === 'denied' && (
+                        <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 leading-normal space-y-1.5 font-sans">
+                          <p className="font-bold text-amber-950 flex items-center gap-1">
+                            <span>🔒</span>
+                            <span>How to Trust &amp; Allow this Website:</span>
+                          </p>
+                          <ol className="list-decimal list-inside text-[10px] space-y-1 text-amber-900 font-medium">
+                            <li>Click the <strong>Lock / Permissions icon (🔒)</strong> left of the URL in your browser address bar.</li>
+                            <li>Change <strong>Notifications</strong> to <strong>Allow</strong>.</li>
+                            <li>Reload the page to receive real-time updates.</li>
+                          </ol>
+                        </div>
                       )}
                     </div>
 
