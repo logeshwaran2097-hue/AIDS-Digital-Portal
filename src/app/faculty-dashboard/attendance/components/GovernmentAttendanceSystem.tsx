@@ -191,12 +191,18 @@ export function GovernmentAttendanceSystem({
   const [allPeriodOptions, setAllPeriodOptions] = useState<string[]>(DEFAULT_INSTITUTIONAL_PERIODS)
   const [hasAssignedPeriods, setHasAssignedPeriods] = useState(false)
   const [classOptions, setClassOptions] = useState<ClassOption[]>(INITIAL_CLASS_OPTIONS)
+  const [allocatedClasses, setAllocatedClasses] = useState<ClassOption[]>([])
+  const [hasAllocatedClasses, setHasAllocatedClasses] = useState(false)
+  const [allClassOptions, setAllClassOptions] = useState<ClassOption[]>([])
   const [isAdvisor, setIsAdvisor] = useState(isAdvisorServer)
   const [advisorClass, setAdvisorClass] = useState<ClassOption | null>(null)
   const [advisorClasses, setAdvisorClasses] = useState<ClassOption[]>([])
 
-  // Strictly filter to ONLY allocated classes for Class Advisors
+  // Strictly prioritize allocated classes allocated by Admin
   const displayedClassOptions = useMemo(() => {
+    if (allocatedClasses.length > 0) {
+      return allocatedClasses
+    }
     if (mode === 'morning' || effectiveLoginRole === 'advisor') {
       if (advisorClasses.length > 0) {
         return advisorClasses
@@ -206,7 +212,7 @@ export function GovernmentAttendanceSystem({
       }
     }
     return classOptions
-  }, [mode, effectiveLoginRole, advisorClasses, advisorClass, classOptions])
+  }, [allocatedClasses, mode, effectiveLoginRole, advisorClasses, advisorClass, classOptions])
 
   // Session fields
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
@@ -299,6 +305,8 @@ export function GovernmentAttendanceSystem({
           setHasAssignedPeriods(Boolean(data.hasAssignedPeriods))
 
           if (data.classOptions?.length > 0) setClassOptions(data.classOptions)
+          if (data.allClassOptions?.length > 0) setAllClassOptions(data.allClassOptions)
+
           const userIsAdvisor = Boolean(data.isAdvisor)
           setIsAdvisor(userIsAdvisor)
           if (!userIsAdvisor) {
@@ -323,12 +331,18 @@ export function GovernmentAttendanceSystem({
                 }))
               : [ac]
             setAdvisorClasses(classesList)
+          }
 
-            if (mode === 'morning' || effectiveLoginRole === 'advisor') {
-              setSelectedClass(ac)
-            } else if (data.classOptions?.length > 0) {
-              setSelectedClass(data.classOptions[0])
-            }
+          const allocatedList: ClassOption[] = (data.allocatedClasses?.length > 0)
+            ? data.allocatedClasses
+            : (data.advisorClasses?.length > 0)
+            ? data.advisorClasses
+            : (data.advisorClass ? [data.advisorClass] : [])
+
+          if (allocatedList.length > 0) {
+            setAllocatedClasses(allocatedList)
+            setHasAllocatedClasses(true)
+            setSelectedClass(allocatedList[0])
           } else if (data.classOptions?.length > 0) {
             setSelectedClass(data.classOptions[0])
           }
@@ -862,33 +876,61 @@ export function GovernmentAttendanceSystem({
               <label className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
                 <GraduationCap className="w-3.5 h-3.5 text-[#1455D9]" /> Class / Section
               </label>
-              {(mode === 'morning' || effectiveLoginRole === 'advisor') && (
+              {hasAllocatedClasses ? (
+                <span className="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  Allocated by Admin
+                </span>
+              ) : (mode === 'morning' || effectiveLoginRole === 'advisor') ? (
                 <span className="text-[9px] font-extrabold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                   Allocated Section Only
                 </span>
-              )}
+              ) : null}
             </div>
             <select
               value={selectedClass ? `${selectedClass.year}-${selectedClass.section}-${selectedClass.semester}` : ''}
               onChange={(e) => {
-                const opt = displayedClassOptions.find(
+                const allAvailable = [...displayedClassOptions, ...(allClassOptions || [])]
+                const opt = allAvailable.find(
                   (c) => `${c.year}-${c.section}-${c.semester}` === e.target.value
                 )
                 setSelectedClass(opt || null)
                 setDataLoaded(false)
               }}
-              disabled={displayedClassOptions.length <= 1}
+              disabled={displayedClassOptions.length <= 1 && allClassOptions.length === 0}
               className={cn(
-                "w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9]/20 focus:bg-white transition-all",
-                displayedClassOptions.length <= 1 && "cursor-default bg-gray-100/80 font-bold"
+                "w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9]/20 focus:bg-white transition-all cursor-pointer",
+                displayedClassOptions.length <= 1 && allClassOptions.length === 0 && "cursor-default bg-gray-100/80 font-bold"
               )}
             >
-              {displayedClassOptions.length === 0 && <option value="">No classes found</option>}
-              {displayedClassOptions.map((c) => (
-                <option key={`${c.year}-${c.section}-${c.semester}`} value={`${c.year}-${c.section}-${c.semester}`}>
-                  {c.label}
-                </option>
-              ))}
+              {displayedClassOptions.length === 0 && <option value="">No classes allocated</option>}
+              {hasAllocatedClasses ? (
+                <>
+                  <optgroup label="Allocated Class(es) (By Admin)">
+                    {displayedClassOptions.map((c) => (
+                      <option key={`${c.year}-${c.section}-${c.semester}`} value={`${c.year}-${c.section}-${c.semester}`}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {allClassOptions.filter((ac) => !displayedClassOptions.some((dc) => dc.year === ac.year && dc.section === ac.section && dc.semester === ac.semester)).length > 0 && (
+                    <optgroup label="Other Department Classes">
+                      {allClassOptions
+                        .filter((ac) => !displayedClassOptions.some((dc) => dc.year === ac.year && dc.section === ac.section && dc.semester === ac.semester))
+                        .map((c) => (
+                          <option key={`${c.year}-${c.section}-${c.semester}`} value={`${c.year}-${c.section}-${c.semester}`}>
+                            {c.label}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                </>
+              ) : (
+                displayedClassOptions.map((c) => (
+                  <option key={`${c.year}-${c.section}-${c.semester}`} value={`${c.year}-${c.section}-${c.semester}`}>
+                    {c.label}
+                  </option>
+                ))
+              )}
             </select>
           </div>
 
@@ -969,11 +1011,34 @@ export function GovernmentAttendanceSystem({
                 }}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9]/20 focus:bg-white transition-all cursor-pointer"
               >
-                {hourOptions.map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
+                {hasAssignedPeriods ? (
+                  <>
+                    <optgroup label="Allocated Period(s) (By Admin)">
+                      {hourOptions.map((h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      ))}
+                    </optgroup>
+                    {allPeriodOptions.filter((ap) => !hourOptions.includes(ap)).length > 0 && (
+                      <optgroup label="Other Institutional Periods">
+                        {allPeriodOptions
+                          .filter((ap) => !hourOptions.includes(ap))
+                          .map((h) => (
+                            <option key={h} value={h}>
+                              {h}
+                            </option>
+                          ))}
+                      </optgroup>
+                    )}
+                  </>
+                ) : (
+                  hourOptions.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
           )}

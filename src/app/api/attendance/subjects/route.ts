@@ -19,46 +19,53 @@ const INSTITUTIONAL_PERIODS = [
 
 
 function parsePeriods(classPeriod: string | null | undefined, classTime: string | null | undefined): string[] {
-  if (!classPeriod || !classPeriod.trim()) return []
-
-  // Split by semicolon, pipe, or comma to extract all period entries
-  const rawParts = classPeriod.split(/[,;|]/).map((p) => p.trim()).filter(Boolean)
   const cleanedPeriods: string[] = []
 
-  for (const part of rawParts) {
-    // Strip day prefix like "Mon: " or "Tue: "
-    const clean = part.replace(/^[A-Za-z]{3}\s*:\s*/, '').trim()
-    if (clean && !cleanedPeriods.includes(clean) && !clean.toLowerCase().includes('lab')) {
-      cleanedPeriods.push(clean)
+  if (classPeriod && classPeriod.trim()) {
+    // Split by semicolon, pipe, or newline first, then handle comma separated period numbers
+    const parts = classPeriod.split(/[;\n|]/).map((p) => p.trim()).filter(Boolean)
+    for (const part of parts) {
+      // Strip day prefix like "Mon: " or "Thu: "
+      const withoutDay = part.replace(/^[A-Za-z]{3}\s*:\s*/, '').trim()
+      // Split by comma for multiple periods on the same day: "Period 2, Period 8"
+      const subPeriods = withoutDay.split(',').map((s) => s.trim()).filter(Boolean)
+      for (const p of subPeriods) {
+        if (!p.toLowerCase().includes('lab')) {
+          const matched = INSTITUTIONAL_PERIODS.find(
+            (ip) =>
+              ip.name.toLowerCase() === p.toLowerCase() ||
+              ip.id.toLowerCase() === p.toLowerCase() ||
+              ip.name.replace(/\s+/g, '').toLowerCase() === p.replace(/\s+/g, '').toLowerCase()
+          )
+          const formatted = matched ? `${matched.name} (${matched.time})` : p
+          if (!cleanedPeriods.includes(formatted)) {
+            cleanedPeriods.push(formatted)
+          }
+        }
+      }
     }
   }
 
-  const times = classTime
-    ? classTime.split(/[,;|]/).map((t) => t.trim().replace(/^[A-Za-z]{3}\s*:\s*/, '')).filter(Boolean)
-    : []
-
-  return cleanedPeriods.map((rawP, idx) => {
-    if (rawP.includes('(') && rawP.includes(')')) {
-      return rawP
+  // Also parse from classTime if classPeriod was sparse or missing
+  if (classTime && classTime.trim()) {
+    for (const ip of INSTITUTIONAL_PERIODS) {
+      if (!ip.id.includes('LAB') && classTime.includes(ip.time)) {
+        const formatted = `${ip.name} (${ip.time})`
+        if (!cleanedPeriods.includes(formatted)) {
+          cleanedPeriods.push(formatted)
+        }
+      }
     }
+  }
 
-    const matched = INSTITUTIONAL_PERIODS.find(
-      (ip) =>
-        ip.name.toLowerCase() === rawP.toLowerCase() ||
-        ip.id.toLowerCase() === rawP.toLowerCase() ||
-        ip.name.replace(/\s+/g, '').toLowerCase() === rawP.replace(/\s+/g, '').toLowerCase()
-    )
-
-    if (matched) {
-      return `${matched.name} (${matched.time})`
-    }
-
-    if (times[idx]) {
-      return `${rawP} (${times[idx]})`
-    }
-
-    return rawP
+  // Sort periods chronologically by period number: Period 1, Period 2, etc.
+  cleanedPeriods.sort((a, b) => {
+    const numA = parseInt(a.match(/Period\s*(\d+)/i)?.[1] || '99', 10)
+    const numB = parseInt(b.match(/Period\s*(\d+)/i)?.[1] || '99', 10)
+    return numA - numB
   })
+
+  return cleanedPeriods
 }
 
 // GET: Return subjects and periods assigned to the logged-in faculty + class advisor info
@@ -187,6 +194,23 @@ export async function GET() {
       ]
     }
 
+    let allocatedClasses: { year: number; section: string; semester: number; label: string }[] = []
+
+    if (advisorClasses && advisorClasses.length > 0) {
+      allocatedClasses = advisorClasses
+    } else if (advisorClass) {
+      allocatedClasses = [advisorClass]
+    } else if (faculty?.advisorYear && faculty?.advisorSec) {
+      allocatedClasses = [{
+        year: faculty.advisorYear,
+        section: faculty.advisorSec,
+        semester: faculty.advisorSem || (faculty.advisorYear * 2 - 1),
+        label: faculty.advisorBatch || `Year ${faculty.advisorYear} - Section ${faculty.advisorSec} (Sem ${faculty.advisorSem || (faculty.advisorYear * 2 - 1)})`,
+      }]
+    }
+
+    const hasAllocatedClasses = allocatedClasses.length > 0
+
     return NextResponse.json({
       success: true,
       subjects: resolvedSubjects.map((s) => ({
@@ -205,7 +229,10 @@ export async function GET() {
       hourOptions,
       hasAssignedPeriods,
       allPeriodOptions: allInstitutionalPeriodOptions,
-      classOptions,
+      classOptions: hasAllocatedClasses ? allocatedClasses : classOptions,
+      allocatedClasses,
+      hasAllocatedClasses,
+      allClassOptions: classOptions,
       isAdvisor,
       advisorClass,
       advisorClasses,
