@@ -99,6 +99,23 @@ const nextConfig = {
         ],
       },
       {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+      {
         source: '/:path*.apk',
         headers: [
           {
@@ -139,16 +156,6 @@ const nextConfig = {
     ]
   },
   async rewrites() {
-    // When running on Vercel (frontend), proxy all backend API traffic directly to Render backend (except download-apk)
-    const backendUrl = (process.env.RENDER_BACKEND_URL || 'https://aids-digital-portal.onrender.com').replace(/\/$/, '');
-    if (process.env.VERCEL && backendUrl) {
-      return [
-        {
-          source: '/api/((?!download-apk).*)',
-          destination: `${backendUrl}/api/$1`,
-        },
-      ];
-    }
     return [];
   },
   webpack: (config, { isServer }) => {

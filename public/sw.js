@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v9'
+const CACHE_NAME = 'vsb-aids-portal-v10'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -26,11 +26,17 @@ self.addEventListener('message', (event) => {
   }
 })
 
-// Install event - caching shell assets
+// Install event - caching shell assets resiliently
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS)
+    caches.open(CACHE_NAME).then(async (cache) => {
+      await Promise.allSettled(
+        STATIC_ASSETS.map((asset) =>
+          cache.add(asset).catch((err) => {
+            console.debug('[SW] Asset precache note:', asset, err)
+          })
+        )
+      )
     }).then(() => self.skipWaiting())
   )
 })

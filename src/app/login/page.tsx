@@ -59,24 +59,45 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
+      try {
+        // Clear any old suppression flag so the Install App button is never hidden in browser
+        localStorage.removeItem('pwa_installed')
+        localStorage.removeItem('pwa_install_dismissed')
+      } catch {}
+
       const standalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as any).standalone === true
       setIsAppInstalled(standalone)
+
+      const onAppInstalled = () => {
+        const isStandalone =
+          window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as any).standalone === true
+        setIsAppInstalled(isStandalone)
+      }
+      window.addEventListener('appinstalled', onAppInstalled)
+      return () => window.removeEventListener('appinstalled', onAppInstalled)
     }
   }, [])
 
-  const handleDirectInstall = () => {
+  const handleDirectInstall = async () => {
     if (typeof window !== 'undefined') {
       if ((window as any).__triggerPwaInstall) {
-        ; (window as any).__triggerPwaInstall()
+        ;(window as any).__triggerPwaInstall()
+      } else if ((window as any).__pwaInstallPrompt) {
+        try {
+          await (window as any).__pwaInstallPrompt.prompt()
+        } catch {
+          if ((window as any).__openAppDownloader) {
+            ;(window as any).__openAppDownloader()
+          }
+        }
       } else if ((window as any).__openAppDownloader) {
-        ; (window as any).__openAppDownloader()
+        ;(window as any).__openAppDownloader()
       } else {
         setShowDownloader(true)
       }
-    } else {
-      setShowDownloader(true)
     }
   }
 
@@ -888,8 +909,8 @@ export default function LoginPage() {
             <span>Autonomous NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
           </div>
 
-          {/* Dedicated Install App / Download Button for Laptop & Desktop */}
-          {!isAppInstalled && (
+          {/* Dedicated Install App / Download Button */}
+          {!isAppInstalled ? (
             <button
               type="button"
               onClick={handleDirectInstall}
@@ -897,10 +918,23 @@ export default function LoginPage() {
                 "inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#1455D9] via-[#0f44b0] to-[#071A41] text-white text-[10px] sm:text-xs font-black shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-cyan-400/40",
                 animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
               )}
-              title="Install Web App on PC/Laptop or Download APK"
+              title="Install Web App directly from Chrome"
             >
               <Download className="w-3 h-3 text-[#FACC15] animate-bounce" />
               <span>Install App</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDirectInstall}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-[10px] sm:text-xs font-black shadow-sm transition-all duration-300 cursor-pointer border border-emerald-400/40",
+                animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+              )}
+              title="App Installed"
+            >
+              <CheckCircle2 className="w-3 h-3 text-emerald-300" />
+              <span>App Installed</span>
             </button>
           )}
         </div>

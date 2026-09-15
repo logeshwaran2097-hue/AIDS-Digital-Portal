@@ -19,13 +19,13 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Digital POrtal Of AI&DS - V.S.B. Engineering College',
+  title: 'Digital Portal of AI&DS - V.S.B. Engineering College',
   description: 'V.S.B. Engineering College - Department of Artificial Intelligence & Data Science Digital Portal, Karur, Tamil Nadu, India',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Digital POrtal Of AI&DS',
+    title: 'Digital Portal of AI&DS',
   },
   icons: {
     icon: [
@@ -51,13 +51,24 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="application-name" content="Digital POrtal Of AI&DS" />
-        <meta name="apple-mobile-web-app-title" content="Digital POrtal Of AI&DS" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
-        <link rel="manifest" href="/manifest.json?v=2" />
+        <meta name="application-name" content="Digital Portal of AI&DS" />
+        <meta name="apple-mobile-web-app-title" content="Digital Portal of AI&DS" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              window.__pwaInstallPrompt = null;
+              window.addEventListener('beforeinstallprompt', function(e) {
+                e.preventDefault();
+                window.__pwaInstallPrompt = e;
+                window.dispatchEvent(new CustomEvent('pwa-prompt-captured'));
+              });
+              window.addEventListener('appinstalled', function() {
+                window.__pwaInstallPrompt = null;
+                try {
+                  localStorage.setItem('pwa_installed', 'true');
+                } catch(e) {}
+              });
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').then(function(reg) {

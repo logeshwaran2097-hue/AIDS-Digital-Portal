@@ -137,29 +137,48 @@ export function PortalLayout({
 
     // Check if already opened in standalone installed mode
     const standalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true
-    if (standalone) {
+    if (standalone || localStorage.getItem('pwa_installed') === 'true') {
       setIsAppInstalled(true)
       return
+    }
+
+    if ((window as any).__pwaInstallPrompt) {
+      deferredInstallPrompt.current = (window as any).__pwaInstallPrompt
+      setCanInstall(true)
     }
 
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault()
       deferredInstallPrompt.current = e
+      ;(window as any).__pwaInstallPrompt = e
       setCanInstall(true)
+    }
+
+    const handlePromptCaptured = () => {
+      if ((window as any).__pwaInstallPrompt) {
+        deferredInstallPrompt.current = (window as any).__pwaInstallPrompt
+        setCanInstall(true)
+      }
     }
 
     const handleAppInstalled = () => {
       deferredInstallPrompt.current = null
+      ;(window as any).__pwaInstallPrompt = null
       setCanInstall(false)
       setIsAppInstalled(true)
+      try {
+        localStorage.setItem('pwa_installed', 'true')
+      } catch {}
       playNotificationChime()
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('pwa-prompt-captured', handlePromptCaptured)
     window.addEventListener('appinstalled', handleAppInstalled)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('pwa-prompt-captured', handlePromptCaptured)
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
