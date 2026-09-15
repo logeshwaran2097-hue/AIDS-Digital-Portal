@@ -34,13 +34,13 @@ export function PWAInstall() {
   const triggerApkDownload = () => {
     try {
       const a = document.createElement('a')
-      a.href = '/api/download-apk'
+      a.href = '/Digital-Portal-of-AI-and-DS.apk'
       a.download = 'Digital-Portal-of-AI-and-DS.apk'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
     } catch {
-      window.location.href = '/api/download-apk'
+      window.location.href = '/Digital-Portal-of-AI-and-DS.apk'
     }
   }
 

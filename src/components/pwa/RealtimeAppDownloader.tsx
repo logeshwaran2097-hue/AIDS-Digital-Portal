@@ -50,14 +50,16 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
     // 2. Direct Standalone Native Android APK Download
     try {
       const a = document.createElement('a')
-      a.href = '/api/download-apk'
+      a.href = '/Digital-Portal-of-AI-and-DS.apk'
       a.download = 'Digital-Portal-of-AI-and-DS.apk'
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
 
       setInstalled(true)
-    } catch {}
+    } catch {
+      window.location.href = '/Digital-Portal-of-AI-and-DS.apk'
+    }
 
     setInstalling(false)
   }

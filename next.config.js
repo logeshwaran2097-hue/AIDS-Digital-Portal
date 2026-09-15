@@ -139,13 +139,13 @@ const nextConfig = {
     ]
   },
   async rewrites() {
-    // When running on Vercel (frontend), proxy all backend API traffic directly to Render backend
+    // When running on Vercel (frontend), proxy all backend API traffic directly to Render backend (except download-apk)
     const backendUrl = (process.env.RENDER_BACKEND_URL || 'https://aids-digital-portal.onrender.com').replace(/\/$/, '');
     if (process.env.VERCEL && backendUrl) {
       return [
         {
-          source: '/api/:path*',
-          destination: `${backendUrl}/api/:path*`,
+          source: '/api/((?!download-apk).*)',
+          destination: `${backendUrl}/api/$1`,
         },
       ];
     }
