@@ -138,6 +138,19 @@ const nextConfig = {
       },
     ]
   },
+  async rewrites() {
+    // When running on Vercel (frontend), proxy all backend API traffic directly to Render backend
+    const backendUrl = (process.env.RENDER_BACKEND_URL || 'https://aids-digital-portal.onrender.com').replace(/\/$/, '');
+    if (process.env.VERCEL && backendUrl) {
+      return [
+        {
+          source: '/api/:path*',
+          destination: `${backendUrl}/api/:path*`,
+        },
+      ];
+    }
+    return [];
+  },
   webpack: (config, { isServer }) => {
     // Ensure '@/' alias resolves correctly on all platforms (Linux/Render)
     config.resolve.alias = {
