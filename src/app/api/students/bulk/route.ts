@@ -56,8 +56,8 @@ export async function POST(request: Request) {
     let updatedCount = 0
     const errors: string[] = []
 
-    // Process in batches of 50 for optimal database performance
-    const chunkSize = 50
+    // Process in safe batches of 10 to stay safely within PostgreSQL connection limits
+    const chunkSize = 10
     for (let i = 0; i < students.length; i += chunkSize) {
       const chunk: BulkStudentInput[] = students.slice(i, i + chunkSize)
 

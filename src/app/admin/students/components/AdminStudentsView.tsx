@@ -21,6 +21,7 @@ import {
   Sparkles,
   UserCheck,
   AlertTriangle,
+  AlertCircle,
   RotateCcw,
   Clock,
   Check,
@@ -178,6 +179,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [addFormError, setAddFormError] = useState<string | null>(null)
+  const [editFormError, setEditFormError] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -195,6 +198,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     busDetails: '',
     hostelBlock: '',
     roomNo: '',
+    address: '',
     year: 1,
     semester: 1,
     batch: '',
@@ -240,23 +244,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const handleExportPDF = () => {
     generateAndDownloadPDF({
       title: 'DEPARTMENT OF AI & DS — OFFICIAL STUDENT ROSTER',
-      subtitle: 'V.S.B. Engineering College · Autonomous Institution · Academic Year 2025-2026',
-      author: 'Office of the Super Administrator',
-      category: 'Official Enrolled Student Records',
+      subtitle: `V.S.B. Engineering College · Master Student Directory (${students.length} Registered Candidates)`,
+      author: 'Department Directorate',
+      category: 'Official Student Directory',
       sections: [
         {
-          heading: '1. STUDENT ENROLLMENT SUMMARY',
+          heading: '1. ENROLLMENT OVERVIEW',
           body: [
-            `Total Enrolled Students: ${students.length} Registered Candidates`,
-            `Department: Artificial Intelligence & Data Science (AI & DS)`,
-            `Active Academic Regulations: Anna University Regulation 2021 (Autonomous)`,
+            `Total Candidates Enrolled: ${students.length}`,
+            `Department: Artificial Intelligence & Data Science`,
+            `Active Cadre: ${students.filter((s) => s.status.toLowerCase() === 'active').length}`,
+            `Day Scholars: ${students.filter((s) => !s.residencyStatus || s.residencyStatus.toLowerCase().includes('day')).length}`,
+            `Hostellers: ${students.filter((s) => s.residencyStatus?.toLowerCase().includes('hostel')).length}`,
           ],
         },
         {
-          heading: '2. ENROLLED STUDENTS BATCH LIST',
-          body: filteredStudents.map(
+          heading: '2. ENROLLED STUDENTS BATCH ROSTER',
+          body: students.map(
             (s, idx) =>
-              `${idx + 1}. [${s.registerNumber}] ${s.name} — Year ${s.year}, Sem ${s.semester}, Sec ${s.section} (${s.status.toUpperCase()})`
+              `${idx + 1}. [${s.registerNumber}] ${s.name} — Year ${s.year}, Sem ${s.semester}, Sec ${s.section} · Contact: ${s.phone || s.email || 'N/A'} · Status: ${s.status.toUpperCase()}`
           ),
         },
       ],
@@ -267,8 +273,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   // Handle Add Student Submit with Real Database Save
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setAddFormError(null)
+
     if (!formData.registerNumber.trim() || !formData.name.trim() || !formData.password.trim()) {
-      alert('Please fill in Register Number, Full Name, and Temporary Password.')
+      setAddFormError('Please fill in Register Number, Full Name, and Temporary Password.')
       return
     }
 
@@ -297,6 +305,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         setStudents([result.student, ...students])
         fetchStudents()
         setIsAddModalOpen(false)
+        setAddFormError(null)
         setFormData({
           registerNumber: '',
           name: '',
@@ -318,16 +327,21 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           busDetails: '',
           hostelBlock: '',
           roomNo: '',
+          address: '',
           cgpa: '',
           attendance: '',
         })
-        toast.success('Student registered successfully in database!')
+        toast.success(result.message || 'Student registered successfully in database!')
       } else {
-        toast.error(result.message || 'Failed to add student')
+        const message = result.message || 'Failed to register student candidate.'
+        setAddFormError(message)
+        toast.error(message, { duration: 6000 })
       }
     } catch (err) {
       console.error(err)
-      toast.error('Network error adding student. Please try again.')
+      const errorMsg = 'Database connection timed out or is temporarily busy. Please try submitting again.'
+      setAddFormError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -337,6 +351,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedStudent) return
+    setEditFormError(null)
 
     setIsLoading(true)
     try {
@@ -384,13 +399,18 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           )
         )
         setIsEditModalOpen(false)
-        toast.success('Student record updated in database!')
+        setEditFormError(null)
+        toast.success(result.message || 'Student record updated in database!')
       } else {
-        toast.error(result.message || 'Failed to update student')
+        const message = result.message || 'Failed to update student record.'
+        setEditFormError(message)
+        toast.error(message, { duration: 6000 })
       }
     } catch (err) {
       console.error(err)
-      toast.error('Network error updating student.')
+      const errorMsg = 'Network error updating student. Please try again.'
+      setEditFormError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsLoading(false)
     }
@@ -467,6 +487,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 busDetails: '',
                 hostelBlock: '',
                 roomNo: '',
+                address: '',
                 year: 1,
                 semester: 1,
                 batch: '',
@@ -476,6 +497,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 cgpa: '',
                 attendance: '',
               })
+              setAddFormError(null)
               setIsAddModalOpen(true)
             }}
             className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] text-xs font-black flex items-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105"
@@ -921,6 +943,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 busDetails: s.busDetails || '',
                                 hostelBlock: s.hostelBlock || '',
                                 roomNo: s.roomNo || '',
+                                address: s.address || '',
                                 year: s.year || 1,
                                 semester: s.semester || 1,
                                 batch: s.batch || '',
@@ -931,6 +954,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 attendance: s.attendance || '',
                                 password: '',
                               })
+                              setEditFormError(null)
                               setIsEditModalOpen(true)
                             }}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
@@ -1206,6 +1230,23 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </button>
             </div>
 
+            {addFormError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl flex items-start gap-2.5 text-xs">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="flex-1 leading-relaxed">
+                  <span className="font-bold text-rose-900 block mb-0.5">Registration Notice</span>
+                  <span>{addFormError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAddFormError(null)}
+                  className="text-rose-400 hover:text-rose-700 p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             <form onSubmit={handleAddSubmit} autoComplete="off" className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -1464,6 +1505,23 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {editFormError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl flex items-start gap-2.5 text-xs">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="flex-1 leading-relaxed">
+                  <span className="font-bold text-rose-900 block mb-0.5">Update Notice</span>
+                  <span>{editFormError}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditFormError(null)}
+                  className="text-rose-400 hover:text-rose-700 p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
 
             <form onSubmit={handleEditSubmit} autoComplete="off" className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">

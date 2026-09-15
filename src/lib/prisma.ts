@@ -11,30 +11,30 @@ if (!process.env.DIRECT_URL || process.env.DIRECT_URL.startsWith('file:') || pro
 }
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+  basePrisma?: PrismaClient
+  prisma?: PrismaClient
 }
 
 // Compute optimized connection pooling parameters for PostgreSQL (Supabase / Render)
 function getOptimizedDatabaseUrl(): string {
   const url = process.env.DATABASE_URL || DEFAULT_POSTGRES_URL
 
-  // Ensure high-concurrency pool limits and connection timeouts are tuned
   try {
     const parsed = new URL(url)
-    // Connection limit of 15 allows parallel queries (e.g. Promise.all) within requests
-    // to execute concurrently without queuing behind a single connection bottleneck
+    // Connection limit of 10 matches Supabase free/standard tier safely without slot exhaustion
     if (!parsed.searchParams.has('connection_limit')) {
-      parsed.searchParams.set('connection_limit', '15')
+      parsed.searchParams.set('connection_limit', '10')
     }
+    // Pool timeout of 30s allows queued requests to smoothly wait rather than erroring out
     if (!parsed.searchParams.has('pool_timeout')) {
-      parsed.searchParams.set('pool_timeout', '20')
+      parsed.searchParams.set('pool_timeout', '30')
     }
     if (!parsed.searchParams.has('connect_timeout')) {
-      parsed.searchParams.set('connect_timeout', '10')
+      parsed.searchParams.set('connect_timeout', '15')
     }
-    // Cache up to 150 prepared SQL statements to eliminate query planning overhead on PostgreSQL
+    // Cache up to 200 prepared SQL statements to eliminate query planning overhead on PostgreSQL
     if (!parsed.searchParams.has('statement_cache_size')) {
-      parsed.searchParams.set('statement_cache_size', '150')
+      parsed.searchParams.set('statement_cache_size', '200')
     }
     return parsed.toString()
   } catch {
@@ -45,47 +45,52 @@ function getOptimizedDatabaseUrl(): string {
 const optimizedUrl = getOptimizedDatabaseUrl()
 
 const basePrisma =
-  globalForPrisma.prisma ??
+  globalForPrisma.basePrisma ??
   new PrismaClient({
     datasources: { db: { url: optimizedUrl } },
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   })
 
-// Eager non-blocking connection warmup to avoid cold-start latency spikes
-if (typeof window === 'undefined') {
-  basePrisma.$connect().catch(() => {
-    // Non-blocking warmup silently connects in background
-  })
+if (!globalForPrisma.basePrisma) {
+  globalForPrisma.basePrisma = basePrisma
+  // Eager non-blocking connection warmup
+  if (typeof window === 'undefined') {
+    basePrisma.$connect().catch(() => {})
+  }
 }
 
-export const prisma = basePrisma.$extends({
-  query: {
-    $allOperations({ model, operation, args, query }) {
-      const executeWithRetry = async (attempt = 1): Promise<any> => {
-        try {
-          return await query(args)
-        } catch (error) {
-          const msg = String((error as any)?.message || error || '')
-          const isTransient =
-            msg.includes('closed the connection') ||
-            msg.includes('Connection refused') ||
-            msg.includes('Connection timed out') ||
-            msg.includes("Can't reach database server")
+export const prisma =
+  globalForPrisma.prisma ??
+  (basePrisma.$extends({
+    query: {
+      $allOperations({ model, operation, args, query }) {
+        const executeWithRetry = async (attempt = 1): Promise<any> => {
+          try {
+            return await query(args)
+          } catch (error) {
+            const msg = String((error as any)?.message || error || '')
+            const isTransient =
+              msg.includes('closed the connection') ||
+              msg.includes('Connection refused') ||
+              msg.includes('Connection timed out') ||
+              msg.includes("Can't reach database server") ||
+              msg.includes('Timed out fetching a new connection') ||
+              msg.includes('connection pool') ||
+              msg.includes('remaining connection slots are reserved')
 
-          if (isTransient && attempt <= 2) {
-            console.warn(`[Prisma Retry] Reconnecting on transient error ${model}.${operation} (attempt ${attempt}):`, msg)
-            await new Promise((r) => setTimeout(r, 500 * attempt))
-            return executeWithRetry(attempt + 1)
+            if (isTransient && attempt <= 3) {
+              console.warn(`[Prisma Retry] Reconnecting on transient error ${model}.${operation} (attempt ${attempt}):`, msg)
+              await new Promise((r) => setTimeout(r, 300 * attempt))
+              return executeWithRetry(attempt + 1)
+            }
+            throw error
           }
-          throw error
         }
-      }
-      return executeWithRetry()
+        return executeWithRetry()
+      },
     },
-  },
-}) as unknown as PrismaClient
+  }) as unknown as PrismaClient)
 
-// Cache basePrisma on globalThis in both dev and production serverless containers
-globalForPrisma.prisma = basePrisma
+globalForPrisma.prisma = prisma
 
 export default prisma

@@ -76,7 +76,51 @@ export async function GET(request: Request) {
   }
 }
 
+function formatDatabaseError(error: any, fallbackMessage: string, regNumber?: string): string {
+  if (!error) return fallbackMessage
+  const code = error?.code
+  const msg = String(error?.message || '')
+
+  if (code === 'P2002') {
+    const target = Array.isArray(error?.meta?.target)
+      ? error.meta.target.join(', ')
+      : String(error?.meta?.target || '')
+    if (target.includes('registerNumber') || msg.includes('registerNumber')) {
+      return regNumber
+        ? `Register Number "${regNumber}" is already registered in the system. Please verify or use a different register number.`
+        : 'This Register Number is already registered in the system. Please use a unique register number.'
+    }
+    if (target.includes('email') || msg.includes('email')) {
+      return 'The email address is already registered to another user account. Please use a unique email address.'
+    }
+    return 'A student record with these unique details already exists in the system.'
+  }
+
+  if (
+    code === 'P2024' ||
+    msg.includes('Timed out fetching a new connection') ||
+    msg.includes('connection pool') ||
+    msg.includes('Connection timed out') ||
+    msg.includes('remaining connection slots are reserved')
+  ) {
+    return 'The database connection timed out during high activity. Your form input is safely preserved—please submit again.'
+  }
+
+  if (msg.includes("Can't reach database server") || msg.includes('Connection refused') || msg.includes('closed the connection')) {
+    return 'Database service is temporarily busy. Please check your network and try again in a few moments.'
+  }
+
+  const clean = msg
+    .replace(/PrismaClient\w+Error:\s*/gi, '')
+    .replace(/Invalid `.*?` invocation:\s*/gi, '')
+    .replace(/(\r\n|\n|\r)/gm, ' ')
+    .trim()
+
+  return clean && clean.length > 0 && clean.length < 160 ? clean : fallbackMessage
+}
+
 export async function POST(request: Request) {
+  let data: any = {}
   try {
     const session = await getSession()
     if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
@@ -86,7 +130,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const data = await request.json()
+    data = await request.json()
     const {
       registerNumber,
       name,
@@ -123,8 +167,8 @@ export async function POST(request: Request) {
 
     const regUpper = registerNumber.trim().toUpperCase()
 
-    // 1. Find existing student by registerNumber or existing user by email
-    let existingStudent = await prisma.student.findFirst({
+    // 1. Check if a student with this Register Number already exists in the database
+    const existingStudent = await prisma.student.findFirst({
       where: {
         OR: [
           { registerNumber: regUpper },
@@ -134,126 +178,135 @@ export async function POST(request: Request) {
       },
     })
 
+    if (existingStudent) {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: existingStudent.userId },
+        select: { name: true, email: true },
+      }).catch(() => null)
+
+      const studentName = existingUser?.name ? ` for student "${existingUser.name}"` : ''
+      const classInfo = ` (Year ${existingStudent.year}, Section ${existingStudent.section})`
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Register Number "${regUpper}" is already registered in the database${studentName}${classInfo}. Please verify the register number or edit the existing record.`,
+        },
+        { status: 409 }
+      )
+    }
+
     const isEmailCustom = Boolean(email?.trim())
     const finalEmail = isEmailCustom
       ? email.trim().toLowerCase()
       : `${regUpper.toLowerCase()}@student.vsb.edu.in`
 
+    // Validate personal email uniqueness if custom
+    if (isEmailCustom) {
+      if (!finalEmail.endsWith('@gmail.com') && !finalEmail.endsWith('@student.vsb.edu.in')) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'Personal email address must end with @gmail.com or @student.vsb.edu.in.',
+          },
+          { status: 400 }
+        )
+      }
+
+      const existingUserWithEmail = await prisma.user.findUnique({
+        where: { email: finalEmail },
+        select: { name: true, role: true },
+      }).catch(() => null)
+
+      if (existingUserWithEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Email address "${finalEmail}" is already registered to ${existingUserWithEmail.name || 'another account'}. Please provide a unique personal email.`,
+          },
+          { status: 409 }
+        )
+      }
+    }
+
     // Hash admin-typed temporary password
     const initialPassword = password.trim()
     const passwordHash = await bcrypt.hash(initialPassword, 10)
 
-    let existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: finalEmail },
-          { email: `${regUpper.toLowerCase()}@student.vsb.edu.in` },
-          ...(existingStudent ? [{ id: existingStudent.userId }] : []),
-        ],
+    // Upsert User with explicit Name and Password
+    const user = await prisma.user.upsert({
+      where: { email: finalEmail },
+      update: {
+        name: name.trim(),
+        phone: phone ? phone.trim() : null,
+        role: 'student',
+        status: status || 'active',
+        passwordHash,
+        emailVerified: isEmailCustom,
+        mustChangePassword: true,
+      },
+      create: {
+        email: finalEmail,
+        name: name.trim(),
+        phone: phone ? phone.trim() : null,
+        role: 'student',
+        status: status || 'active',
+        passwordHash,
+        emailVerified: isEmailCustom,
+        mustChangePassword: true,
       },
     })
 
-    let user: any = null
+    // Create Student record or attach to existing orphaned user
+    const studentByUserId = await prisma.student.findUnique({
+      where: { userId: user.id },
+    })
 
-    // Upsert User with explicit Name and Password
-    if (existingUser) {
-      user = await prisma.user.update({
-        where: { id: existingUser.id },
-        data: {
-          name: name.trim(),
-          email: finalEmail,
-          phone: phone ? phone.trim() : existingUser.phone,
-          role: 'student',
-          status: status || 'active',
-          passwordHash,
-          emailVerified: isEmailCustom,
-          mustChangePassword: true,
-        },
-      })
-    } else {
-      user = await prisma.user.create({
-        data: {
-          email: finalEmail,
-          name: name.trim(),
-          phone: phone ? phone.trim() : null,
-          role: 'student',
-          status: status || 'active',
-          passwordHash,
-          emailVerified: isEmailCustom,
-          mustChangePassword: true,
-        },
-      })
-    }
-
-    // Upsert Student with proper userId and registerNumber
     let student: any = null
-    if (existingStudent) {
+    if (studentByUserId) {
       student = await prisma.student.update({
-        where: { id: existingStudent.id },
+        where: { id: studentByUserId.id },
         data: {
-          userId: user.id,
           registerNumber: regUpper,
-          dateOfBirth: parseSafeDateOfBirth(dateOfBirth, existingStudent.dateOfBirth),
-          department: department || existingStudent.department,
-          year: Number(year) || existingStudent.year,
-          semester: Number(semester) || existingStudent.semester,
-          batch: batch ? String(batch).trim() : (existingStudent as any).batch,
-          section: section || existingStudent.section,
-          advisorName: advisorName ? String(advisorName).trim() : (existingStudent as any).advisorName,
-          parentPhone: parentPhone ? String(parentPhone).trim() : (existingStudent as any).parentPhone,
-          bloodGroup: bloodGroup !== undefined ? bloodGroup : (existingStudent as any).bloodGroup,
-          residencyStatus: residencyStatus !== undefined ? residencyStatus : (existingStudent as any).residencyStatus,
-          cgpa: cgpa !== undefined && cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : (existingStudent as any).cgpa,
-          attendance: attendance !== undefined && attendance !== '' ? String(attendance) : (existingStudent as any).attendance,
+          department: department || studentByUserId.department,
+          year: Number(year) || studentByUserId.year,
+          semester: Number(semester) || studentByUserId.semester,
+          batch: batch ? String(batch).trim() : (studentByUserId as any).batch,
+          section: section || studentByUserId.section,
+          advisorName: advisorName ? String(advisorName).trim() : (studentByUserId as any).advisorName,
+          parentPhone: parentPhone ? String(parentPhone).trim() : (studentByUserId as any).parentPhone,
+          dateOfBirth: parseSafeDateOfBirth(dateOfBirth, studentByUserId.dateOfBirth),
+          bloodGroup: bloodGroup !== undefined ? bloodGroup : (studentByUserId as any).bloodGroup,
+          residencyStatus: residencyStatus !== undefined ? residencyStatus : (studentByUserId as any).residencyStatus,
+          cgpa: cgpa !== undefined && cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : (studentByUserId as any).cgpa,
+          attendance: attendance !== undefined && attendance !== '' ? String(attendance) : (studentByUserId as any).attendance,
         } as any,
       })
     } else {
-      // Check if orphaned student with this userId exists
-      const studentByUserId = await prisma.student.findUnique({
-        where: { userId: user.id },
+      student = await prisma.student.create({
+        data: {
+          userId: user.id,
+          registerNumber: regUpper,
+          dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('2004-01-01')),
+          department: department || 'Artificial Intelligence & Data Science',
+          year: Number(year) || 1,
+          semester: Number(semester) || 1,
+          batch: batch ? String(batch).trim() : null,
+          section: section || 'A',
+          advisorName: advisorName ? String(advisorName).trim() : null,
+          parentPhone: parentPhone ? String(parentPhone).trim() : null,
+          bloodGroup: bloodGroup || null,
+          residencyStatus: residencyStatus || null,
+          busNo: busNo ? String(busNo).trim() : null,
+          boardingPoint: boardingPoint ? String(boardingPoint).trim() : null,
+          busDetails: busDetails ? String(busDetails).trim() : null,
+          hostelBlock: hostelBlock ? String(hostelBlock).trim() : null,
+          roomNo: roomNo ? String(roomNo).trim() : null,
+          address: address ? String(address).trim() : null,
+          cgpa: cgpa ? parseFloat(String(cgpa)) : null,
+          attendance: attendance ? String(attendance) : null,
+        } as any,
       })
-
-      if (studentByUserId) {
-        student = await prisma.student.update({
-          where: { id: studentByUserId.id },
-          data: {
-            registerNumber: regUpper,
-            department: department || studentByUserId.department,
-            year: Number(year) || studentByUserId.year,
-            semester: Number(semester) || studentByUserId.semester,
-            batch: batch ? String(batch).trim() : (studentByUserId as any).batch,
-            section: section || studentByUserId.section,
-            advisorName: advisorName ? String(advisorName).trim() : (studentByUserId as any).advisorName,
-            parentPhone: parentPhone ? String(parentPhone).trim() : (studentByUserId as any).parentPhone,
-            dateOfBirth: parseSafeDateOfBirth(dateOfBirth, studentByUserId.dateOfBirth),
-          } as any,
-        })
-      } else {
-        student = await prisma.student.create({
-          data: {
-            userId: user.id,
-            registerNumber: regUpper,
-            dateOfBirth: parseSafeDateOfBirth(dateOfBirth, new Date('2004-01-01')),
-            department: department || 'Artificial Intelligence & Data Science',
-            year: Number(year) || 1,
-            semester: Number(semester) || 1,
-            batch: batch ? String(batch).trim() : null,
-            section: section || 'A',
-            advisorName: advisorName ? String(advisorName).trim() : null,
-            parentPhone: parentPhone ? String(parentPhone).trim() : null,
-            bloodGroup,
-            residencyStatus,
-            busNo: busNo ? String(busNo).trim() : null,
-            boardingPoint: boardingPoint ? String(boardingPoint).trim() : null,
-            busDetails: busDetails ? String(busDetails).trim() : null,
-            hostelBlock: hostelBlock ? String(hostelBlock).trim() : null,
-            roomNo: roomNo ? String(roomNo).trim() : null,
-            address: address ? String(address).trim() : null,
-            cgpa: cgpa ? parseFloat(String(cgpa)) : null,
-            attendance: attendance ? String(attendance) : null,
-          } as any,
-        })
-      }
     }
 
     // Broadcast real-time enrollment notification
@@ -274,7 +327,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Student registered successfully in database',
+      message: `Student "${name.trim()}" (${regUpper}) registered successfully in database`,
       student: {
         id: student.id,
         userId: user.id,
@@ -309,18 +362,21 @@ export async function POST(request: Request) {
         phone: user.phone || '',
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating student:', error)
+    const friendlyMessage = formatDatabaseError(error, 'Failed to create student record. Please try again.', data?.registerNumber)
+    const isConflict = error?.code === 'P2002'
     return NextResponse.json(
-      { success: false, message: 'Failed to create student: ' + String(error) },
-      { status: 400 }
+      { success: false, message: friendlyMessage },
+      { status: isConflict ? 409 : 400 }
     )
   }
 }
 
 export async function PUT(request: Request) {
+  let data: any = {}
   try {
-    const data = await request.json()
+    data = await request.json()
     const {
       id,
       userId: passedUserId,
@@ -383,6 +439,21 @@ export async function PUT(request: Request) {
 
     // If student record exists, update both Student and User
     if (student) {
+      if (regUpper && regUpper !== student.registerNumber) {
+        const clash = await prisma.student.findUnique({
+          where: { registerNumber: regUpper },
+        }).catch(() => null)
+        if (clash && clash.id !== student.id) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Register Number "${regUpper}" is already assigned to another student in the system.`,
+            },
+            { status: 409 }
+          )
+        }
+      }
+
       const updatedStudent = await prisma.student.update({
         where: { id: student.id },
         data: {
@@ -569,9 +640,10 @@ export async function PUT(request: Request) {
         phone: user.phone || '',
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update student error:', error)
-    return NextResponse.json({ success: false, message: 'Failed to update student: ' + String(error) }, { status: 400 })
+    const friendlyMessage = formatDatabaseError(error, 'Failed to update student record. Please try again.', data?.registerNumber)
+    return NextResponse.json({ success: false, message: friendlyMessage }, { status: error?.code === 'P2002' ? 409 : 400 })
   }
 }
 
@@ -670,10 +742,11 @@ export async function DELETE(request: Request) {
       success: true,
       message: 'Student record instantly deleted from database',
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete student error:', error)
+    const friendlyMessage = formatDatabaseError(error, 'Failed to delete student record. Please try again.')
     return NextResponse.json(
-      { success: false, message: 'Failed to delete student: ' + String(error) },
+      { success: false, message: friendlyMessage },
       { status: 400 }
     )
   }
