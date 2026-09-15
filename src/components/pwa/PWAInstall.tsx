@@ -34,17 +34,6 @@ export function PWAInstall() {
   const [showHowToInstallHelper, setShowHowToInstallHelper] = useState(false)
   const [showApkTroubleshoot, setShowApkTroubleshoot] = useState(false)
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null)
-  const pathname = usePathname()
-  const [isInstalled, setIsInstalled] = useState(false)
-  const [isIOS, setIsIOS] = useState(false)
-  const [showIOSGuide, setShowIOSGuide] = useState(false)
-  const [showMobileApkPrompt, setShowMobileApkPrompt] = useState(false)
-  const [installing, setInstalling] = useState(false)
-  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [showHowToInstallHelper, setShowHowToInstallHelper] = useState(false)
-  const [showApkTroubleshoot, setShowApkTroubleshoot] = useState(false)
-  const promptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
   const triggerApkDownload = () => {
     try {
