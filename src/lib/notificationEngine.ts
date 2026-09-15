@@ -467,7 +467,7 @@ export async function subscribeUserToPush(
       const convertedKey = urlBase64ToUint8Array(vapidPublicKey)
       subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: convertedKey,
+        applicationServerKey: convertedKey as unknown as BufferSource,
       })
     }
 
