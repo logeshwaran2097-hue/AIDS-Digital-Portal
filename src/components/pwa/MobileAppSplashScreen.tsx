@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
@@ -196,7 +196,7 @@ export function MobileAppSplashScreen() {
       <header className="relative z-10 w-full pt-8 sm:pt-12 px-6 flex flex-col items-center text-center">
         <div className="stage-1 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/70 backdrop-blur-md border border-[#1557C0]/15 text-xs sm:text-sm font-bold text-[#071A41] shadow-xs">
           <ShieldCheck className="w-4 h-4 text-[#E7B93E] animate-pulse" />
-          <span>Autonomous ┬╖ NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
+          <span>Autonomous NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
         </div>
       </header>
 
@@ -250,7 +250,7 @@ export function MobileAppSplashScreen() {
           <div className="stage-3">
             <div className="inline-flex items-center gap-2 px-5 py-1.5 rounded-full bg-[#1557C0]/10 text-[#1557C0] text-xs sm:text-sm font-extrabold tracking-widest uppercase border border-[#1557C0]/20 shadow-xs">
               <GraduationCap className="w-4 h-4 text-[#E7B93E]" />
-              <span>Autonomous Institution ┬╖ Karur</span>
+              <span>Autonomous Institution Karur</span>
             </div>
           </div>
 
@@ -285,7 +285,7 @@ export function MobileAppSplashScreen() {
           <span className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
             <span className="w-2 h-2 rounded-full bg-emerald-500 -ml-4.5" />
-            <span className="font-extrabold text-[#071A41]">System Ready ┬╖ Online</span>
+            <span className="font-extrabold text-[#071A41]">System Ready Online</span>
           </span>
           <span className="font-mono font-black text-[#1557C0] bg-white/80 px-2.5 py-0.5 rounded-full border border-blue-100 text-xs shadow-xs">
             100%

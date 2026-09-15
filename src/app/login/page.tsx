@@ -885,7 +885,7 @@ export default function LoginPage() {
             animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}>
             <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
-            <span>Autonomous - NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
+            <span>Autonomous NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
           </div>
 
           {/* Dedicated Install App / Download Button for Laptop & Desktop */}
@@ -962,7 +962,7 @@ export default function LoginPage() {
           )}>
             <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3.5 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
               <GraduationCap className="w-3.5 h-3.5 text-[#E7B93E]" />
-              <span>AUTONOMOUS INSTITUTION - KARUR</span>
+              <span>AUTONOMOUS INSTITUTION KARUR</span>
             </p>
           </div>
 
