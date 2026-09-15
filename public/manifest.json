@@ -73,21 +73,5 @@
         }
       ]
     }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Student Portal Login & Dashboard on Mobile"
-    },
-    {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1280x800",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "AI&DS Department Digital Portal Desktop View"
-    }
   ]
 }

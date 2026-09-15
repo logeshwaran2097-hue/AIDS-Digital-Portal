@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, CheckCircle, Download, ExternalLink, Sparkles, AlertTriangle } from 'lucide-react'
 import Image from 'next/image'
+import { toast } from '@/components/ui/Toast'
 
 interface RealtimeAppDownloaderProps {
   isOpen: boolean
@@ -15,6 +16,8 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
   const [originHost, setOriginHost] = useState('aids-digital-portal.vercel.app')
   const [showApkHelp, setShowApkHelp] = useState(false)
   const [showBrowserPromptHelp, setShowBrowserPromptHelp] = useState(false)
+  const [showInstallOverlay, setShowInstallOverlay] = useState(false)
+  const [installProgress, setInstallProgress] = useState(0)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -29,6 +32,22 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
 
   const handleInstantInstall = async () => {
     setInstalling(true)
+    setShowInstallOverlay(true)
+    setInstallProgress(0)
+    // Simulate progress for UI feedback
+    const interval = setInterval(() => {
+      setInstallProgress(prev => {
+        const next = Math.min(prev + Math.random() * 15 + 5, 100)
+        if (next >= 100) {
+          clearInterval(interval)
+          setTimeout(() => {
+            setShowInstallOverlay(false)
+            setInstalling(false)
+          }, 800)
+        }
+        return next
+      })
+    }, 300)
 
     // Try native browser prompt first
     if (typeof window !== 'undefined' && (window as any).__pwaInstallPrompt) {
@@ -38,23 +57,44 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
         const { outcome } = await prompt.userChoice
         if (outcome === 'accepted') {
           setInstalled(true)
-          setInstalling(false)
-          setTimeout(() => {
-            onClose()
-          }, 1500)
+          toast.success('App installed successfully!')
+          setShowBrowserPromptHelp(false)
+          // allow overlay to finish its progress animation
           return
+        } else {
+          setShowBrowserPromptHelp(true)
         }
       } catch (e) {
         console.warn('Native prompt error:', e)
+        setShowBrowserPromptHelp(true)
       }
     } else {
       setShowBrowserPromptHelp(true)
     }
-
+    // If we reach here, hide overlay (install may have failed)
+    clearInterval(interval)
+    setShowInstallOverlay(false)
     setInstalling(false)
   }
 
   const handleApkDownload = () => {
+    setInstalling(true)
+    setShowInstallOverlay(true)
+    setInstallProgress(0)
+    const interval = setInterval(() => {
+      setInstallProgress(prev => {
+        const next = Math.min(prev + Math.random() * 20 + 10, 100)
+        if (next >= 100) {
+          clearInterval(interval)
+          setTimeout(() => {
+            setShowInstallOverlay(false)
+            setInstalling(false)
+            toast.success('APK downloaded successfully!')
+          }, 800)
+        }
+        return next
+      })
+    }, 250)
     try {
       const a = document.createElement('a')
       a.href = '/api/download-apk'
@@ -69,7 +109,23 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
   }
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+    <>
+      {showInstallOverlay && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-white/95 backdrop-blur-sm">
+          <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-xl shadow-xl border border-gray-200">
+            <Image src="/icon-192.png" alt="App Icon" width={64} height={64} className="rounded-lg" />
+            <h3 className="text-lg font-semibold text-gray-800">Installing Digital Portal AI&amp;DS</h3>
+            <p className="text-sm text-gray-600">Version <span className="font-medium">v1.2.0</span></p>
+            <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${installProgress}%` }} />
+            </div>
+            {installProgress >= 100 && (
+              <p className="mt-2 text-green-600 font-medium">Installation Complete ✅</p>
+            )}
+          </div>
+        </div>
+      )}
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="relative w-full max-w-[430px] bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-150 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
         
         {/* Close button */}
@@ -202,5 +258,6 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
 
       </div>
     </div>
+    </>
   )
 }

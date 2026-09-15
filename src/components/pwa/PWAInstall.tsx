@@ -27,6 +27,19 @@ export function PWAInstall() {
   const [showIOSGuide, setShowIOSGuide] = useState(false)
   const [showMobileApkPrompt, setShowMobileApkPrompt] = useState(false)
   const [installing, setInstalling] = useState(false)
+  const [showInstallOverlay, setShowInstallOverlay] = useState(false)
+  const [installProgress, setInstallProgress] = useState(0)
+  const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [showHowToInstallHelper, setShowHowToInstallHelper] = useState(false)
+  const [showApkTroubleshoot, setShowApkTroubleshoot] = useState(false)
+  const promptRef = useRef<BeforeInstallPromptEvent | null>(null)
+  const pathname = usePathname()
+  const [isInstalled, setIsInstalled] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
+  const [showIOSGuide, setShowIOSGuide] = useState(false)
+  const [showMobileApkPrompt, setShowMobileApkPrompt] = useState(false)
+  const [installing, setInstalling] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showHowToInstallHelper, setShowHowToInstallHelper] = useState(false)
@@ -196,15 +209,32 @@ export function PWAInstall() {
   }, [])
 
   const handleInstall = async () => {
-    if (isIOS) { 
+    if (isIOS) {
       setShowIOSGuide(true)
-      return 
+      return
     }
 
     // If native PWA browser prompt is available, ask natively
     const prompt = promptRef.current || (typeof window !== 'undefined' ? window.__pwaInstallPrompt : null)
     if (prompt) {
       setInstalling(true)
+      setShowInstallOverlay(true)
+      setInstallProgress(0)
+      // Simulate progress – real browsers don't expose install progress, so we fake it for UX
+      const interval = setInterval(() => {
+        setInstallProgress((prev) => {
+          const next = Math.min(prev + Math.random() * 15 + 5, 100)
+          if (next >= 100) {
+            clearInterval(interval)
+            setTimeout(() => {
+              setShowInstallOverlay(false)
+              setInstalling(false)
+            }, 800)
+          }
+          return next
+        })
+      }, 300)
+
       try {
         await prompt.prompt()
         const { outcome } = await prompt.userChoice
@@ -215,8 +245,7 @@ export function PWAInstall() {
           try {
             localStorage.setItem('pwa_installed', 'true')
           } catch {}
-          toast.success('App installed to your device successfully!')
-          setInstalling(false)
+          toast.success('App installed successfully to your home screen!')
           setShowMobileApkPrompt(false)
           return
         } else if (outcome === 'dismissed') {
@@ -227,6 +256,8 @@ export function PWAInstall() {
       } catch (e) {
         console.warn(e)
       }
+      // Ensure overlay is hidden if something went wrong
+      setShowInstallOverlay(false)
       setInstalling(false)
     } else {
       setShowHowToInstallHelper(true)
@@ -235,12 +266,26 @@ export function PWAInstall() {
 
   const handleDirectDownload = () => {
     setInstalling(true)
+    setShowInstallOverlay(true)
+    setInstallProgress(0)
+    // Simulate download progress similar to install overlay
+    const interval = setInterval(() => {
+      setInstallProgress((prev) => {
+        const next = Math.min(prev + Math.random() * 20 + 10, 100)
+        if (next >= 100) {
+          clearInterval(interval)
+          setTimeout(() => {
+            setShowInstallOverlay(false)
+            setInstalling(false)
+          }, 800)
+        }
+        return next
+      })
+    }, 250)
+
     triggerApkDownload()
     toast.success('Downloading Official VSB AI&DS APK (3.92 MB)...')
     setShowApkTroubleshoot(true)
-    setTimeout(() => {
-      setInstalling(false)
-    }, 1500)
   }
 
   const handleDismissMobileApkPrompt = () => {
@@ -252,6 +297,23 @@ export function PWAInstall() {
   }
 
   if (isInstalled) return null
+
+    // Render full‑screen install overlay when an install or download is in progress
+    {showInstallOverlay && (
+      <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-white/95 backdrop-blur-sm">
+        <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-xl shadow-xl border border-gray-200">
+          <Image src="/icon-192.png" alt="App Icon" width={64} height={64} className="rounded-lg" />
+          <h3 className="text-lg font-semibold text-gray-800">Installing Digital Portal AI&amp;DS</h3>
+          <p className="text-sm text-gray-600">Version <span className="font-medium">v1.2.0</span></p>
+          <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${installProgress}%` }} />
+          </div>
+          {installProgress >= 100 && (
+            <p className="mt-2 text-green-600 font-medium">Installation Complete ✅</p>
+          )}
+        </div>
+      </div>
+    )}
 
   return (
     <>
