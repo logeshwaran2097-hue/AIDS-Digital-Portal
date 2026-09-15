@@ -352,64 +352,28 @@ export function PWAInstall() {
               </button>
             </div>
 
-            {/* Option 1: 1-Click Instant App (Recommended) */}
+            {/* Standalone APK Download - Primary Option */}
             <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50/40 to-white border border-blue-200/80 shadow-xs space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider bg-blue-600 text-white px-2 py-0.5 rounded-full shadow-xs">
-                  ⚡ 1-Click Install · Recommended
-                </span>
-                <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Real App
-                </span>
-              </div>
-              <p className="text-xs text-slate-700 font-medium leading-relaxed">
-                Installs directly into your Android <strong>App Drawer &amp; Home Screen</strong>. Zero "App not installed" errors!
-              </p>
-
-              <button
-                type="button"
-                onClick={handleInstall}
-                disabled={installing}
-                className="w-full py-3 px-4 bg-gradient-to-r from-[#1455D9] via-[#1043aa] to-[#071A41] text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/25 hover:brightness-110 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-4 h-4 text-cyan-300" />
-                <span>{installing ? 'Installing…' : '⚡ 1-Click Instant Install'}</span>
-              </button>
-
-              {showHowToInstallHelper && (
-                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 space-y-1 animate-in fade-in">
-                  <p className="font-bold flex items-center gap-1 text-amber-800">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                    How to install in Chrome / Browser:
-                  </p>
-                  <p className="leading-snug">
-                    Tap the <strong>3-dots menu (⋮)</strong> at top-right corner of Chrome → Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Option 2: Standalone APK Download */}
-            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">
-                  📦 Standalone Android APK
+                <span className="text-xs font-black text-[#071A41]">
+                  📦 Android APK
                 </span>
                 <span className="text-[10px] text-slate-500 font-bold">
                   3.92 MB
                 </span>
               </div>
-              <p className="text-[11px] text-slate-600 leading-tight">
-                Download the raw Android package file directly to your phone.
+              <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                Download the official Android package file directly to your phone.
               </p>
+              
               <button
                 type="button"
                 onClick={handleDirectDownload}
                 disabled={installing}
-                className="w-full py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold rounded-xl active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                className="w-full py-3 px-4 bg-gradient-to-r from-[#1455D9] via-[#1043aa] to-[#071A41] text-white text-xs font-black rounded-xl shadow-md shadow-blue-500/25 hover:brightness-110 active:scale-98 transition-all cursor-pointer flex items-center justify-center gap-2"
               >
-                <Download className="w-3.5 h-3.5 text-blue-600" />
-                <span>Download APK (3.92 MB)</span>
+                <Download className="w-4 h-4 text-cyan-300" />
+                <span>{installing ? 'Downloading...' : 'Download APK (3.92 MB)'}</span>
               </button>
             </div>
 
