@@ -450,15 +450,6 @@ export function StudentProfileView({
 
           <div className="flex items-center flex-wrap gap-2 self-stretch md:self-auto justify-end">
             <button
-              onClick={() => setIsOnboardingOpen(true)}
-              type="button"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-[#071A41] text-xs font-black flex items-center gap-1.5 transition-all shadow-md shrink-0 cursor-pointer hover:scale-102"
-              title="Review & Update Onboarding Records"
-            >
-              <ShieldCheck className="w-4 h-4 text-[#071A41]" />
-              <span>Onboarding Details</span>
-            </button>
-            <button
               onClick={() => handleOpenEdit('personal')}
               type="button"
               className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 shadow-xs cursor-pointer hover:scale-102"
