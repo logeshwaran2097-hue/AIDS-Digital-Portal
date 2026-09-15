@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/Toast'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { PWAInstall } from '@/components/pwa/PWAInstall'
 import { VersionUpdateNotifier } from '@/components/pwa/VersionUpdateNotifier'
+import { MobileAppSplashScreen } from '@/components/pwa/MobileAppSplashScreen'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -70,6 +71,7 @@ export default function RootLayout({
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider>
+          <MobileAppSplashScreen />
           <PWAInstall />
           <VersionUpdateNotifier />
           {children}
