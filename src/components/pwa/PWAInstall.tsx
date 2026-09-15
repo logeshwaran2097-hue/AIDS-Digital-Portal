@@ -273,11 +273,16 @@ export function PWAInstall() {
                   />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-black text-[#071A41] leading-tight truncate">
-                    Digital POrtal Of AI&amp;DS
-                  </h3>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h3 className="text-sm font-black text-[#071A41] leading-tight truncate">
+                      Digital POrtal Of AI&amp;DS
+                    </h3>
+                    <span className="px-1.5 py-0.5 rounded bg-blue-100 text-[#1455D9] font-black text-[9px]">
+                      v1.2.0
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                    Official Mobile Application
+                    Official Mobile Application · v1.2.0
                   </p>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md mt-0.5 border border-emerald-200">
                     <ShieldCheck className="w-3 h-3 text-emerald-600" />

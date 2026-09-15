@@ -95,11 +95,16 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
           </div>
 
           <div className="space-y-0.5 min-w-0">
-            <h2 className="text-base font-bold text-slate-900 leading-snug tracking-tight">
-              Install Digital POrtal Of AI&amp;DS
-            </h2>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h2 className="text-base font-bold text-slate-900 leading-snug tracking-tight">
+                Install Digital POrtal Of AI&amp;DS
+              </h2>
+              <span className="px-1.5 py-0.5 rounded bg-blue-100 text-[#1455D9] font-black text-[10px]">
+                v1.2.0
+              </span>
+            </div>
             <p className="text-xs text-slate-500 font-medium truncate">
-              {originHost}
+              {originHost} · Official Release v1.2.0
             </p>
           </div>
         </div>

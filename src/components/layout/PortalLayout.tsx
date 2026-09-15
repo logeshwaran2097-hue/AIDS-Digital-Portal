@@ -833,7 +833,12 @@ export function PortalLayout({
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-black text-white leading-tight tracking-wide">Digital POrtal Of AI&amp;DS</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-sm font-black text-white leading-tight tracking-wide">Digital POrtal Of AI&amp;DS</p>
+                <span className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider">
+                  v1.2.0
+                </span>
+              </div>
               <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
             </div>
           </div>
@@ -1002,13 +1007,19 @@ export function PortalLayout({
 
 
 
-        {/* Drawer Footer with Logout */}
-        <div className="p-3 border-t border-white/10 bg-white/5">
+        {/* Drawer Footer with Version & Logout */}
+        <div className="p-3 border-t border-white/10 bg-white/5 space-y-2">
+          <div className="px-1 flex items-center justify-between text-[11px] text-white/50 font-medium">
+            <span>AI&amp;DS Portal</span>
+            <span className="font-bold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
+              v1.2.0 (Latest)
+            </span>
+          </div>
           <button
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
             disabled={isLoggingOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
@@ -1368,6 +1379,16 @@ export function PortalLayout({
                   </div>
                 </>
               )}
+            </div>
+
+            {/* Official Version Badge */}
+            <div
+              title="Official Release Version v1.2.0"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 text-[#1455D9] text-xs font-black shadow-2xs select-none"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+              <span>v1.2.0</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
             </div>
 
             {/* Vision & Mission Quick Access */}

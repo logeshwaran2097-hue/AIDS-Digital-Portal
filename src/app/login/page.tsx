@@ -978,10 +978,13 @@ export default function LoginPage() {
             animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             {/* PRESTIGIOUS ROYAL SAPPHIRE & GOLD APP TITLE BADGE */}
-            <div className="inline-flex items-center gap-2.5 px-6 py-2 rounded-2xl bg-gradient-to-r from-[#1455D9] via-[#1E60E6] to-[#0F44B8] text-white shadow-[0_10px_25px_-3px_rgba(20,85,217,0.4)] border-2 border-[#E7B93E] hover:scale-105 transition-all duration-300">
+            <div className="inline-flex items-center gap-2 sm:gap-2.5 px-4 sm:px-6 py-2 rounded-2xl bg-gradient-to-r from-[#1455D9] via-[#1E60E6] to-[#0F44B8] text-white shadow-[0_10px_25px_-3px_rgba(20,85,217,0.4)] border-2 border-[#E7B93E] hover:scale-105 transition-all duration-300 flex-wrap justify-center">
               <Cpu className="w-5 h-5 text-[#FFF3B8] animate-pulse shrink-0" />
               <span className="text-base sm:text-2xl font-black tracking-wider text-white drop-shadow-sm">
                 Digital POrtal Of AI&amp;DS
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-[#22C7E8] text-[#071A3D] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
+                v1.2.0
               </span>
               <Sparkles className="w-4 h-4 text-[#F4C430] shrink-0" />
             </div>
