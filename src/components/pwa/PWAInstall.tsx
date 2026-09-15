@@ -215,7 +215,7 @@ export function PWAInstall() {
           try {
             localStorage.setItem('pwa_installed', 'true')
           } catch {}
-          toast.success('App installed successfully to your home screen!')
+          toast.success('App installed to your device successfully!')
           setInstalling(false)
           setShowMobileApkPrompt(false)
           return
