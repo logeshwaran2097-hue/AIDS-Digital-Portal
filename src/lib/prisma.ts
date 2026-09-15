@@ -21,20 +21,20 @@ function getOptimizedDatabaseUrl(): string {
   // Ensure high-concurrency pool limits and connection timeouts are tuned
   try {
     const parsed = new URL(url)
-    // Connection limit of 10 allows parallel queries (e.g. Promise.all) within requests
+    // Connection limit of 15 allows parallel queries (e.g. Promise.all) within requests
     // to execute concurrently without queuing behind a single connection bottleneck
     if (!parsed.searchParams.has('connection_limit')) {
-      parsed.searchParams.set('connection_limit', '10')
+      parsed.searchParams.set('connection_limit', '15')
     }
     if (!parsed.searchParams.has('pool_timeout')) {
-      parsed.searchParams.set('pool_timeout', '15')
+      parsed.searchParams.set('pool_timeout', '20')
     }
     if (!parsed.searchParams.has('connect_timeout')) {
       parsed.searchParams.set('connect_timeout', '10')
     }
-    // Cache up to 100 prepared SQL statements to eliminate query planning overhead on PostgreSQL
+    // Cache up to 150 prepared SQL statements to eliminate query planning overhead on PostgreSQL
     if (!parsed.searchParams.has('statement_cache_size')) {
-      parsed.searchParams.set('statement_cache_size', '100')
+      parsed.searchParams.set('statement_cache_size', '150')
     }
     return parsed.toString()
   } catch {
@@ -50,6 +50,13 @@ const basePrisma =
     datasources: { db: { url: optimizedUrl } },
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   })
+
+// Eager non-blocking connection warmup to avoid cold-start latency spikes
+if (typeof window === 'undefined') {
+  basePrisma.$connect().catch(() => {
+    // Non-blocking warmup silently connects in background
+  })
+}
 
 export const prisma = basePrisma.$extends({
   query: {
