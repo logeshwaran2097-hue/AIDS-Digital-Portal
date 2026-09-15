@@ -9,7 +9,7 @@ const LOCAL_STORAGE_VERSION_KEY = 'vsb_portal_app_version'
 
 export function VersionUpdateNotifier() {
   const [hasUpdate, setHasUpdate] = useState(false)
-  const [latestVersion, setLatestVersion] = useState<string>('1.2.0')
+  const [latestVersion, setLatestVersion] = useState<string>('2.0.0')
   const [releaseHighlights, setReleaseHighlights] = useState<string[]>([
     'Performance improvements and bug fixes',
   ])
@@ -17,7 +17,6 @@ export function VersionUpdateNotifier() {
   const [isDismissed, setIsDismissed] = useState(false)
   
   const waitingWorkerRef = useRef<ServiceWorker | null>(null)
-  const hasTriggeredRef = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -30,7 +29,7 @@ export function VersionUpdateNotifier() {
         })
         if (!res.ok) return
         const data = await res.json()
-        const serverVer = data.version || '1.2.0'
+        const serverVer = data.version || '2.0.0'
         setLatestVersion(serverVer)
         
         if (data.releaseHighlights && Array.isArray(data.releaseHighlights)) {
@@ -39,15 +38,11 @@ export function VersionUpdateNotifier() {
 
         const storedVer = localStorage.getItem(LOCAL_STORAGE_VERSION_KEY)
 
-        if (!hasTriggeredRef.current) {
-          hasTriggeredRef.current = true
-          if (!storedVer || storedVer !== serverVer) {
-            try {
-              localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, serverVer)
-            } catch {}
-            return
-          }
-        } else if (storedVer && storedVer !== serverVer) {
+        if (!storedVer) {
+          try {
+            localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, serverVer)
+          } catch {}
+        } else if (storedVer !== serverVer) {
           setHasUpdate(true)
           try {
             playNotificationChime()

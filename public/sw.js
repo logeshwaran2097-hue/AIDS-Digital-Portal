@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v8'
+const CACHE_NAME = 'vsb-aids-portal-v9'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -18,6 +18,13 @@ const STATIC_ASSETS = [
   '/sounds/marimba.wav',
   '/sounds/zen.wav'
 ]
+
+// Listen for skip waiting message from app updater
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
 
 // Install event - caching shell assets
 self.addEventListener('install', (event) => {
