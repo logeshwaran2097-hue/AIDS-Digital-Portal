@@ -115,7 +115,7 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
           <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-xl shadow-xl border border-gray-200">
             <Image src="/icon-192.png" alt="App Icon" width={64} height={64} className="rounded-lg" />
             <h3 className="text-lg font-semibold text-gray-800">Installing Digital Portal AI&amp;DS</h3>
-            <p className="text-sm text-gray-600">Version <span className="font-medium">v1.2.0</span></p>
+            <p className="text-sm text-gray-600">Version <span className="font-medium">v2.0.0</span></p>
             <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
               <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${installProgress}%` }} />
             </div>
@@ -156,11 +156,11 @@ export function RealtimeAppDownloader({ isOpen, onClose }: RealtimeAppDownloader
                 Install Digital POrtal Of AI&amp;DS
               </h2>
               <span className="px-1.5 py-0.5 rounded bg-blue-100 text-[#1455D9] font-black text-[10px]">
-                v1.2.0
+                v2.0.0
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium truncate">
-              {originHost} · Official Release v1.2.0
+              {originHost} · Official Release v2.0.0
             </p>
           </div>
         </div>

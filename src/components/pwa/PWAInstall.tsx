@@ -293,7 +293,7 @@ export function PWAInstall() {
         <div className="flex flex-col items-center space-y-4 p-6 bg-white rounded-xl shadow-xl border border-gray-200">
           <Image src="/icon-192.png" alt="App Icon" width={64} height={64} className="rounded-lg" />
           <h3 className="text-lg font-semibold text-gray-800">Installing Digital Portal AI&amp;DS</h3>
-          <p className="text-sm text-gray-600">Version <span className="font-medium">v1.2.0</span></p>
+          <p className="text-sm text-gray-600">Version <span className="font-medium">v2.0.0</span></p>
           <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${installProgress}%` }} />
           </div>
@@ -329,11 +329,11 @@ export function PWAInstall() {
                       Digital POrtal Of AI&amp;DS
                     </h3>
                     <span className="px-1.5 py-0.5 rounded bg-blue-100 text-[#1455D9] font-black text-[9px]">
-                      v1.2.0
+                      v2.0.0
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
-                    Official Mobile Application · v1.2.0
+                    Official Mobile Application · v2.0.0
                   </p>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md mt-0.5 border border-emerald-200">
                     <ShieldCheck className="w-3 h-3 text-emerald-600" />
