@@ -24,7 +24,7 @@ export default async function HODStudentsPage() {
   // Fetch all students, users, faculties, morning attendance sessions, and student attendance records
   const db = prisma as any
   const [students, studentUsers, faculties, facultyUsers, sessions, allRecords] = await Promise.all([
-    prisma.student.findMany({ orderBy: [{ year: 'asc' }, { section: 'asc' }, { registerNumber: 'asc' }] }).catch(() => []),
+    prisma.student.findMany({ orderBy: { registerNumber: 'asc' } }).catch(() => []),
     prisma.user.findMany({ where: { role: 'student' }, select: { id: true, name: true, email: true, phone: true } }).catch(() => []),
     prisma.faculty.findMany({ where: { advisorYear: { not: null }, advisorSec: { not: null } } }).catch(() => []),
     prisma.user.findMany({ where: { role: 'faculty' }, select: { id: true, name: true, email: true } }).catch(() => []),

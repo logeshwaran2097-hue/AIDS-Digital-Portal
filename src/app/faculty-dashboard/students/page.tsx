@@ -167,11 +167,7 @@ export default async function FacultyStudentsPage() {
 
     studentsFromDb = await prisma.student.findMany({
       where: { OR: orConditions },
-      orderBy: [
-        { year: 'asc' },
-        { section: 'asc' },
-        { registerNumber: 'asc' },
-      ],
+      orderBy: { registerNumber: 'asc' },
     }).catch(() => [])
   }
 
