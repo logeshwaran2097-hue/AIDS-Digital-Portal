@@ -60,6 +60,13 @@ html, body {
   }
 }
 
+/* PWA Desktop Window Controls Overlay & Standalone top-right clearance */
+@media (display-mode: window-controls-overlay) {
+  .portal-top-header {
+    padding-right: max(140px, env(titlebar-area-width, 140px)) !important;
+  }
+}
+
 /* Prevent unwanted mobile zooming when tapping text inputs on iOS/Android WebViews */
 @media screen and (max-width: 640px) {
   input, select, textarea {

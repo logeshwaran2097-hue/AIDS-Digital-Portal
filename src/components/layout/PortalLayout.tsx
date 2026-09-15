@@ -1048,7 +1048,7 @@ export function PortalLayout({
 
       {/* Main Top Header */}
       <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs lg:pl-72">
-        <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="portal-top-header flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Hamburger Menu & Brand on Mobile */}
           <div className="flex items-center gap-3">
             <button
