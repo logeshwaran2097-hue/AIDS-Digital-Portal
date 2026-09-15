@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 // Default PostgreSQL fallback connection for serverless / production if unset
-const DEFAULT_POSTGRES_URL = 'postgresql://aifactorytwin_user:JxcJgNvRKl3rZDnLCXtBJ0kKu1Q3KLXd@dpg-da16l6dbedkc73c6dqug-a.oregon-postgres.render.com:5432/vsb_aids_portal?sslmode=require'
+const DEFAULT_POSTGRES_URL = 'postgresql://postgres:dfghjkhgc4657689@db.hiqwsermiypdnnkuzihw.supabase.co:5432/postgres?sslmode=require'
 
 if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:') || process.env.DATABASE_URL.includes('[YOUR-PASSWORD]')) {
   process.env.DATABASE_URL = DEFAULT_POSTGRES_URL
