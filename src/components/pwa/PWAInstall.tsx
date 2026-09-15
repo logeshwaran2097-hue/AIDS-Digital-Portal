@@ -100,12 +100,27 @@ export function PWAInstall() {
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true
 
-    if (isStandalone) {
+    if (isStandalone || localStorage.getItem('pwa_installed') === 'true') {
       setIsInstalled(true)
       try {
         localStorage.setItem('pwa_installed', 'true')
+        window.dispatchEvent(new Event('pwa-installed-event'))
       } catch {}
       return
+    }
+
+    if ('getInstalledRelatedApps' in navigator) {
+      try {
+        ;(navigator as any).getInstalledRelatedApps().then((apps: any[]) => {
+          if (apps && apps.length > 0) {
+            setIsInstalled(true)
+            try {
+              localStorage.setItem('pwa_installed', 'true')
+              window.dispatchEvent(new Event('pwa-installed-event'))
+            } catch {}
+          }
+        }).catch(() => {})
+      } catch {}
     }
 
     // Pick up prompt if already caught by layout's early script
@@ -134,6 +149,7 @@ export function PWAInstall() {
       setShowIOSGuide(false)
       try {
         localStorage.setItem('pwa_installed', 'true')
+        window.dispatchEvent(new Event('pwa-installed-event'))
       } catch {}
       toast.success('Digital Portal of AI&DS installed successfully!')
     }

@@ -59,25 +59,72 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      try {
-        // Clear any old suppression flag so the Install App button is never hidden in browser
-        localStorage.removeItem('pwa_installed')
-        localStorage.removeItem('pwa_install_dismissed')
-      } catch {}
-
-      const standalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true
-      setIsAppInstalled(standalone)
-
-      const onAppInstalled = () => {
+      const checkInstalled = async () => {
+        // 1. Check standalone mode (PWA installed and launched from home screen / desktop shortcut)
         const isStandalone =
           window.matchMedia('(display-mode: standalone)').matches ||
-          (window.navigator as any).standalone === true
-        setIsAppInstalled(isStandalone)
+          (window.navigator as any).standalone === true ||
+          document.referrer.includes('android-app://') ||
+          (window as any).Capacitor?.isNativePlatform()
+
+        // 2. Check local persistence flag
+        let isFlaggedInstalled = false
+        try {
+          isFlaggedInstalled = localStorage.getItem('pwa_installed') === 'true'
+        } catch {}
+
+        if (isStandalone || isFlaggedInstalled) {
+          setIsAppInstalled(true)
+          return
+        }
+
+        // 3. Official Chrome API to check if PWA/App is already installed on user's device
+        if ('getInstalledRelatedApps' in navigator) {
+          try {
+            const relatedApps = await (navigator as any).getInstalledRelatedApps()
+            if (relatedApps && relatedApps.length > 0) {
+              setIsAppInstalled(true)
+              try {
+                localStorage.setItem('pwa_installed', 'true')
+              } catch {}
+              return
+            }
+          } catch {}
+        }
       }
+
+      checkInstalled()
+
+      const onAppInstalled = () => {
+        setIsAppInstalled(true)
+        try {
+          localStorage.setItem('pwa_installed', 'true')
+        } catch {}
+      }
+
       window.addEventListener('appinstalled', onAppInstalled)
-      return () => window.removeEventListener('appinstalled', onAppInstalled)
+      window.addEventListener('pwa-installed-event', onAppInstalled)
+
+      const matchMediaStandalone = window.matchMedia('(display-mode: standalone)')
+      const onDisplayChange = (e: MediaQueryListEvent) => {
+        if (e.matches) {
+          setIsAppInstalled(true)
+          try {
+            localStorage.setItem('pwa_installed', 'true')
+          } catch {}
+        }
+      }
+      try {
+        matchMediaStandalone.addEventListener('change', onDisplayChange)
+      } catch {}
+
+      return () => {
+        window.removeEventListener('appinstalled', onAppInstalled)
+        window.removeEventListener('pwa-installed-event', onAppInstalled)
+        try {
+          matchMediaStandalone.removeEventListener('change', onDisplayChange)
+        } catch {}
+      }
     }
   }, [])
 
@@ -909,8 +956,8 @@ export default function LoginPage() {
             <span>Autonomous NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
           </div>
 
-          {/* Dedicated Install App / Download Button */}
-          {!isAppInstalled ? (
+          {/* Dedicated Install App / Download Button - Only shown if NOT installed */}
+          {!isAppInstalled && (
             <button
               type="button"
               onClick={handleDirectInstall}
@@ -922,19 +969,6 @@ export default function LoginPage() {
             >
               <Download className="w-3 h-3 text-[#FACC15] animate-bounce" />
               <span>Install App</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleDirectInstall}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-[10px] sm:text-xs font-black shadow-sm transition-all duration-300 cursor-pointer border border-emerald-400/40",
-                animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-              )}
-              title="App Installed"
-            >
-              <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-              <span>App Installed</span>
             </button>
           )}
         </div>
