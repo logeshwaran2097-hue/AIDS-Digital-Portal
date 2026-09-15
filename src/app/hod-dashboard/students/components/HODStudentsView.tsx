@@ -100,7 +100,7 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
         presentDays: s.presentDays ?? 0,
         absentDays: s.absentDays ?? 0,
       }
-    })
+    }).sort((a, b) => a.registerNumber.localeCompare(b.registerNumber, undefined, { numeric: true }))
   }, [departmentClasses, initialStudents])
 
   // 10 Department Class Pills for Attendance View

@@ -235,7 +235,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       statusFilter === 'ALL' || student.status.toLowerCase() === statusFilter.toLowerCase()
 
     return matchesSearch && matchesYear && matchesSem && matchesSection && matchesStatus
-  })
+  }).sort((a, b) => a.registerNumber.localeCompare(b.registerNumber, undefined, { numeric: true }))
 
   const getSemCount = (semNumber: number) => {
     return students.filter((s) => s.semester === semNumber).length

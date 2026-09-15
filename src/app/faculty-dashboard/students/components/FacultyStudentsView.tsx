@@ -179,7 +179,7 @@ export function FacultyStudentsView({
 
     // Sorting
     return list.sort((a, b) => {
-      if (sortBy === 'regAsc') return a.registerNumber.localeCompare(b.registerNumber)
+      if (sortBy === 'regAsc') return a.registerNumber.localeCompare(b.registerNumber, undefined, { numeric: true })
       if (sortBy === 'nameAsc') return a.name.localeCompare(b.name)
       if (sortBy === 'attDesc') return b.attendance - a.attendance
       if (sortBy === 'attAsc') return a.attendance - b.attendance
