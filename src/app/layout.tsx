@@ -53,8 +53,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="application-name" content="Digital POrtal Of AI&DS" />
         <meta name="apple-mobile-web-app-title" content="Digital POrtal Of AI&DS" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+        <link rel="manifest" href="/manifest.json?v=2" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
