@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v7'
+const CACHE_NAME = 'vsb-aids-portal-v8'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -11,7 +11,12 @@ const STATIC_ASSETS = [
   '/shortcut-icon-96.png',
   '/apple-touch-icon.png',
   '/screenshot-desktop.png',
-  '/screenshot-mobile.png'
+  '/screenshot-mobile.png',
+  '/sounds/quantum.wav',
+  '/sounds/bloom.wav',
+  '/sounds/cyber.wav',
+  '/sounds/marimba.wav',
+  '/sounds/zen.wav'
 ]
 
 // Install event - caching shell assets
@@ -88,6 +93,8 @@ self.addEventListener('push', (event) => {
     icon: iconUrl,
     badge: badgeUrl,
     vibrate: [200, 100, 200, 100, 200],
+    sound: origin + '/sounds/quantum.wav',
+    silent: false,
     timestamp: Date.now(),
     data: data.data || { url: '/dashboard/notifications' },
     tag: notifTag,

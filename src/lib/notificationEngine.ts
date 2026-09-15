@@ -54,47 +54,95 @@ export function setSavedSoundTheme(theme: NotificationSoundType) {
   } catch {}
 }
 
+// Shared AudioContext Singleton & User Interaction Unlock for Installed PWA / Apps
+let sharedAudioContext: AudioContext | null = null
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+  if (!AudioContextClass) return null
+  if (!sharedAudioContext || sharedAudioContext.state === 'closed') {
+    sharedAudioContext = new AudioContextClass()
+  }
+  return sharedAudioContext
+}
+
+// Global user interaction listener to automatically unlock audio in installed app / PWA mode
+if (typeof window !== 'undefined') {
+  const unlockAudioOnGesture = () => {
+    try {
+      const ctx = getAudioContext()
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().catch(() => {})
+      }
+    } catch {}
+  }
+  window.addEventListener('pointerdown', unlockAudioOnGesture, { passive: true })
+  window.addEventListener('click', unlockAudioOnGesture, { passive: true })
+  window.addEventListener('keydown', unlockAudioOnGesture, { passive: true })
+  window.addEventListener('touchstart', unlockAudioOnGesture, { passive: true })
+}
+
 /**
- * High-Fidelity Acoustic & Harmonic Web Audio Synthesizer
- * Produces signature, unmistakable, bespoke audio notifications
+ * High-Fidelity Dual-Engine Notification Audio System
+ * Uses HTML5 Audio with pre-rendered studio WAVs + Web Audio Synthesizer fallback
+ * 100% audible in browsers, mobile phones, and installed standalone apps
  */
 export function playNotificationChime(soundType?: NotificationSoundType) {
   try {
     if (typeof window === 'undefined') return
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
-    if (!AudioContextClass) return
+    const theme = soundType || getSavedSoundTheme()
 
-    const ctx = new AudioContextClass()
+    // ── 1. Primary Engine: High-Reliability HTML5 Audio ──
+    // Works reliably in installed standalone apps, PWA windows, and mobile devices
+    try {
+      const soundFileUrl = theme === 'custom'
+        ? (getCustomSoundUrl() || '/sounds/quantum.wav')
+        : `/sounds/${theme}.wav`
+
+      const audio = new Audio(soundFileUrl)
+      audio.volume = 1.0
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.debug('HTML5 audio play blocked, falling back to Web Audio Synthesizer:', err)
+          playWebAudioSynthesizer(theme)
+        })
+        return
+      }
+    } catch (e) {
+      console.debug('HTML5 audio instantiation error, falling back:', e)
+    }
+
+    // ── 2. Secondary Engine: Web Audio Synthesizer ──
+    playWebAudioSynthesizer(theme)
+  } catch (err) {
+    console.debug('Notification audio chime error:', err)
+  }
+}
+
+function playWebAudioSynthesizer(theme: NotificationSoundType) {
+  try {
+    const ctx = getAudioContext()
+    if (!ctx) return
+
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {})
     }
 
-    const theme = soundType || getSavedSoundTheme()
-    const now = ctx.currentTime
+    const now = Math.max(ctx.currentTime, 0.05) + 0.02
 
-    if (theme === 'custom') {
-      const customUrl = getCustomSoundUrl()
-      if (customUrl) {
-        const audio = new Audio(customUrl)
-        audio.play().catch((e) => console.debug('Custom audio play failed:', e))
-      } else {
-        // Fallback to quantum if custom url is missing
-        playNotificationChime('quantum')
-      }
-      return
-    }
-
-    // Studio-grade Master Chain: Dynamics Compressor + High-Shelf / Low-Cut EQ
+    // Studio-grade Master Chain: Dynamics Compressor + Master Gain (Higher, audible volume)
     const compressor = ctx.createDynamicsCompressor()
-    compressor.threshold.setValueAtTime(-20, now)
+    compressor.threshold.setValueAtTime(-12, now)
     compressor.knee.setValueAtTime(24, now)
-    compressor.ratio.setValueAtTime(8, now)
+    compressor.ratio.setValueAtTime(4, now)
     compressor.attack.setValueAtTime(0.002, now)
     compressor.release.setValueAtTime(0.2, now)
     compressor.connect(ctx.destination)
 
     const masterGain = ctx.createGain()
-    masterGain.gain.setValueAtTime(0.45, now)
+    masterGain.gain.setValueAtTime(0.85, now)
     masterGain.connect(compressor)
 
     // Spatial Panner Helper
@@ -109,7 +157,7 @@ export function playNotificationChime(soundType?: NotificationSoundType) {
     }
 
     // Sub-Bass Body Generator (tactile acoustic punch)
-    const playSubBody = (freq: number = 95, duration: number = 0.16, gainLevel: number = 0.3) => {
+    const playSubBody = (freq: number = 95, duration: number = 0.16, gainLevel: number = 0.5) => {
       const osc = ctx.createOscillator()
       const gain = ctx.createGain()
       const filter = ctx.createBiquadFilter()
@@ -144,12 +192,11 @@ export function playNotificationChime(soundType?: NotificationSoundType) {
     ) => {
       const dest = createPanner(pan)
 
-      // Primary Glass/Crystal Fundamental (Sine with soft attack)
+      // Primary Glass/Crystal Fundamental
       const osc1 = ctx.createOscillator()
       const gain1 = ctx.createGain()
       osc1.type = 'sine'
       osc1.frequency.setValueAtTime(freq, startTime)
-      // Micro pitch-bend for organic humanized feel
       osc1.frequency.exponentialRampToValueAtTime(freq * 1.008, startTime + 0.03)
       osc1.frequency.exponentialRampToValueAtTime(freq, startTime + duration)
 
@@ -162,7 +209,7 @@ export function playNotificationChime(soundType?: NotificationSoundType) {
       osc1.start(startTime)
       osc1.stop(startTime + duration + 0.05)
 
-      // Shimmer Overtone (Triangle harmonic)
+      // Shimmer Overtone
       const osc2 = ctx.createOscillator()
       const gain2 = ctx.createGain()
       const filter2 = ctx.createBiquadFilter()
@@ -175,7 +222,7 @@ export function playNotificationChime(soundType?: NotificationSoundType) {
       osc2.frequency.setValueAtTime(freq * 2.01, startTime)
 
       gain2.gain.setValueAtTime(0.0001, startTime)
-      gain2.gain.linearRampToValueAtTime(gainLevel * 0.35 * brightness, startTime + 0.01)
+      gain2.gain.linearRampToValueAtTime(gainLevel * 0.45 * brightness, startTime + 0.01)
       gain2.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * 0.7)
 
       osc2.connect(filter2)
@@ -192,7 +239,7 @@ export function playNotificationChime(soundType?: NotificationSoundType) {
         osc3.frequency.setValueAtTime(freq * 4.04, startTime)
 
         gain3.gain.setValueAtTime(0.0001, startTime)
-        gain3.gain.linearRampToValueAtTime(gainLevel * 0.15 * brightness, startTime + 0.008)
+        gain3.gain.linearRampToValueAtTime(gainLevel * 0.25 * brightness, startTime + 0.008)
         gain3.gain.exponentialRampToValueAtTime(0.0001, startTime + duration * 0.45)
 
         osc3.connect(gain3)
@@ -203,53 +250,37 @@ export function playNotificationChime(soundType?: NotificationSoundType) {
     }
 
     if (theme === 'quantum') {
-      // 🌟 SIGNATURE UNIQUE "Quantum Prism" - Spatial Holographic Chime
-      playSubBody(115, 0.18, 0.28)
-      // Spatial Pentatonic Chord Cascade with Glass Sparkle
-      playCrystalVoice(659.25, now, 0.55, 0.45, -0.3, 1.0)       // E5
-      playCrystalVoice(830.61, now + 0.06, 0.65, 0.50, 0.25, 1.1)  // G#5
-      playCrystalVoice(987.77, now + 0.12, 0.75, 0.55, -0.15, 1.2) // B5
-      playCrystalVoice(1318.51, now + 0.18, 0.95, 0.60, 0.35, 1.3) // E6 (Climax Sparkle)
-      playCrystalVoice(1661.22, now + 0.23, 1.10, 0.40, 0.0, 1.4)  // G#6 (Ethereal Tail)
-
-      // Ambient Echo Refraction
-      setTimeout(() => {
-        try {
-          if (ctx.state !== 'closed') {
-            playCrystalVoice(1318.51, ctx.currentTime, 0.4, 0.15, -0.2, 0.8)
-            playCrystalVoice(1661.22, ctx.currentTime + 0.05, 0.5, 0.12, 0.2, 0.9)
-          }
-        } catch {}
-      }, 260)
+      playSubBody(115, 0.18, 0.4)
+      playCrystalVoice(659.25, now, 0.55, 0.6, -0.3, 1.0)
+      playCrystalVoice(830.61, now + 0.06, 0.65, 0.65, 0.25, 1.1)
+      playCrystalVoice(987.77, now + 0.12, 0.75, 0.7, -0.15, 1.2)
+      playCrystalVoice(1318.51, now + 0.18, 0.95, 0.75, 0.35, 1.3)
+      playCrystalVoice(1661.22, now + 0.23, 1.10, 0.5, 0.0, 1.4)
     } else if (theme === 'bloom') {
-      // 🌸 "Neural Bloom" - Warm Futuristic Harmonic Swell
-      playSubBody(90, 0.25, 0.35)
-      playCrystalVoice(523.25, now, 0.65, 0.4, -0.2, 0.7)        // C5
-      playCrystalVoice(659.25, now + 0.07, 0.75, 0.48, 0.1, 0.9)  // E5
-      playCrystalVoice(783.99, now + 0.14, 0.85, 0.55, -0.1, 1.1) // G5
-      playCrystalVoice(1046.50, now + 0.21, 1.15, 0.6, 0.3, 1.3)  // C6
+      playSubBody(90, 0.25, 0.45)
+      playCrystalVoice(523.25, now, 0.65, 0.55, -0.2, 0.7)
+      playCrystalVoice(659.25, now + 0.07, 0.75, 0.6, 0.1, 0.9)
+      playCrystalVoice(783.99, now + 0.14, 0.85, 0.7, -0.1, 1.1)
+      playCrystalVoice(1046.50, now + 0.21, 1.15, 0.75, 0.3, 1.3)
     } else if (theme === 'cyber') {
-      // ⚡ "Cyber Pulse" - Sleek Tech Double-Pulse
-      playSubBody(140, 0.12, 0.4)
-      playCrystalVoice(932.33, now, 0.25, 0.55, -0.3, 1.2)        // Bb5
-      playCrystalVoice(1396.91, now + 0.09, 0.55, 0.65, 0.3, 1.5) // F6
-      playCrystalVoice(1864.66, now + 0.13, 0.7, 0.45, 0.0, 1.6)  // Bb6
+      playSubBody(140, 0.12, 0.5)
+      playCrystalVoice(932.33, now, 0.25, 0.65, -0.3, 1.2)
+      playCrystalVoice(1396.91, now + 0.09, 0.55, 0.75, 0.3, 1.5)
+      playCrystalVoice(1864.66, now + 0.13, 0.7, 0.6, 0.0, 1.6)
     } else if (theme === 'marimba') {
-      // 🪵 "Glass Marimba" - Organic Warmth & Wooden Crystal Resonance
-      playSubBody(100, 0.15, 0.3)
-      playCrystalVoice(587.33, now, 0.45, 0.55, -0.15, 0.5)       // D5
-      playCrystalVoice(739.99, now + 0.05, 0.5, 0.52, 0.15, 0.6)  // F#5
-      playCrystalVoice(880.00, now + 0.10, 0.6, 0.58, -0.2, 0.7)  // A5
-      playCrystalVoice(1174.66, now + 0.15, 0.8, 0.6, 0.2, 0.8)   // D6
+      playSubBody(100, 0.15, 0.4)
+      playCrystalVoice(587.33, now, 0.45, 0.65, -0.15, 0.5)
+      playCrystalVoice(739.99, now + 0.05, 0.5, 0.65, 0.15, 0.6)
+      playCrystalVoice(880.00, now + 0.10, 0.6, 0.7, -0.2, 0.7)
+      playCrystalVoice(1174.66, now + 0.15, 0.8, 0.75, 0.2, 0.8)
     } else if (theme === 'zen') {
-      // 🌊 "Zen Ripple" - Peaceful Harmonic Water Droplet
-      playSubBody(80, 0.3, 0.2)
-      playCrystalVoice(440.00, now, 0.85, 0.35, -0.1, 0.5)        // A4
-      playCrystalVoice(659.25, now + 0.12, 1.05, 0.45, 0.1, 0.7)  // E5
-      playCrystalVoice(880.00, now + 0.24, 1.3, 0.4, 0.0, 0.8)    // A5
+      playSubBody(80, 0.3, 0.35)
+      playCrystalVoice(440.00, now, 0.85, 0.5, -0.1, 0.5)
+      playCrystalVoice(659.25, now + 0.12, 1.05, 0.6, 0.1, 0.7)
+      playCrystalVoice(880.00, now + 0.24, 1.3, 0.55, 0.0, 0.8)
     }
   } catch (err) {
-    console.debug('Notification audio chime error:', err)
+    console.debug('Web audio synth error:', err)
   }
 }
 
