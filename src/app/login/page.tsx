@@ -60,9 +60,70 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = React.useState(false)
   const [otpCooldown, setOtpCooldown] = React.useState(0)
   const [loading, setLoading] = React.useState(false)
+  const [checkingExistingSession, setCheckingExistingSession] = React.useState(true)
+  const [existingUser, setExistingUser] = React.useState<{ name: string; role: string } | null>(null)
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Check for active existing session so mobile users never get logged out when switching apps
+      const checkActiveSession = async () => {
+        try {
+          const urlParams = new URLSearchParams(window.location.search)
+          if (
+            urlParams.get('logout') === 'true' ||
+            urlParams.get('logged_out') === 'true' ||
+            urlParams.get('updated') === 'true'
+          ) {
+            setCheckingExistingSession(false)
+            try {
+              localStorage.removeItem('portal_user_session')
+              localStorage.removeItem('portal_login_role')
+            } catch {}
+            return
+          }
+
+          const res = await fetch('/api/auth/me', {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' },
+          })
+          if (res.ok) {
+            const data = await res.json()
+            if (data.success && data.user) {
+              setExistingUser({ name: data.user.name, role: data.user.role })
+              try {
+                localStorage.setItem(
+                  'portal_user_session',
+                  JSON.stringify({
+                    role: data.user.role,
+                    name: data.user.name,
+                  })
+                )
+              } catch {}
+
+              const role = data.user.role
+              const isAdvisor = data.user.isAdvisor || (data.user as any)?.facultyType === 'advisor'
+              const targetUrl =
+                role === 'admin' || role === 'super_admin'
+                  ? '/admin'
+                  : role === 'hod'
+                  ? '/hod-dashboard'
+                  : role === 'faculty'
+                  ? isAdvisor
+                    ? '/faculty-dashboard/attendance?mode=morning&role=advisor'
+                    : '/faculty-dashboard'
+                  : '/dashboard'
+
+              setTimeout(() => {
+                window.location.replace(targetUrl)
+              }, 400)
+              return
+            }
+          }
+        } catch {}
+        setCheckingExistingSession(false)
+      }
+
+      checkActiveSession()
       const checkInstalled = async () => {
         // 1. Check standalone mode (PWA installed and launched from home screen / desktop shortcut)
         const isStandalone =
@@ -412,7 +473,15 @@ export default function LoginPage() {
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('portal_login_role', effectiveLoginRole)
-        document.cookie = `portal_login_role=${effectiveLoginRole}; path=/; max-age=604800; SameSite=Lax`
+        localStorage.setItem(
+          'portal_user_session',
+          JSON.stringify({
+            role: effectiveLoginRole,
+            name: data.user?.name || '',
+            id: data.user?.id || '',
+          })
+        )
+        document.cookie = `portal_login_role=${effectiveLoginRole}; path=/; max-age=2592000; SameSite=Lax`
         sessionStorage.setItem('vsb_faculty_is_advisor', String(isAdvisorSession))
 
         if (selectedRole === 'student' && !data.user?.mustChangePassword) {
@@ -868,6 +937,40 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (existingUser) {
+    return (
+      <div
+        className="min-h-screen w-full flex flex-col items-center justify-center bg-[#071A41] text-white px-4 relative overflow-hidden select-none"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
+      >
+        <div className="flex flex-col items-center text-center space-y-4 max-w-sm relative z-10 animate-in fade-in zoom-in-95 duration-300">
+          <div className="w-20 h-20 rounded-2xl bg-white/10 p-2 shadow-2xl border border-amber-400/40 flex items-center justify-center animate-pulse">
+            <Image
+              src="/college-emblem.png"
+              alt="VSB Portal"
+              width={64}
+              height={64}
+              className="object-contain drop-shadow-md"
+              priority
+            />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[11px] font-black uppercase tracking-widest text-[#E7B93E] bg-[#E7B93E]/10 px-3 py-0.5 rounded-full border border-[#E7B93E]/20">
+              Active Session Detected
+            </span>
+            <h2 className="text-xl font-black text-white tracking-tight">Welcome Back</h2>
+            <p className="text-sm font-bold text-cyan-300">{existingUser.name}</p>
+            <p className="text-xs text-slate-300 font-medium">Resuming your portal dashboard...</p>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-950/60 px-4 py-2 rounded-full border border-emerald-500/30">
+            <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+            <span>Opening {existingUser.role.toUpperCase()} Portal...</span>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

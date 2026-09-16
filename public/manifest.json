@@ -1,9 +1,9 @@
 {
-  "id": "/login",
+  "id": "/",
   "name": "Digital Portal of AI&DS",
   "short_name": "Digital Portal",
   "description": "V.S.B. Engineering College - Department of Artificial Intelligence & Data Science Digital Portal, Karur, Tamil Nadu",
-  "start_url": "/login",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

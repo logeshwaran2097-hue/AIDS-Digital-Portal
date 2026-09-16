@@ -253,24 +253,24 @@ export function VersionUpdateNotifier() {
       setDownloadedMb(4.2)
       setCurrentStageIdx(4)
 
-      // Stage 5: Finalization & Clean Reload
+      // Stage 5: Finalization & Clean Session Reset for Fresh Release
       try {
         localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, latestVersion)
         sessionStorage.setItem('portal_just_updated', 'true')
+        localStorage.removeItem('portal_user_session')
+        localStorage.removeItem('portal_login_role')
+        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
       } catch {}
+
+      document.cookie = 'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
+      document.cookie = 'portal_login_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
 
       await new Promise((r) => setTimeout(r, 600))
 
-      if (isRedirectNeeded) {
-        window.location.href = OFFICIAL_PRODUCTION_URL
-        return
-      }
-
-      const targetUrl = new URL(window.location.href)
-      targetUrl.searchParams.set('updated', String(Date.now()))
-      window.location.href = targetUrl.toString()
+      const targetDomain = isRedirectNeeded ? OFFICIAL_PRODUCTION_URL : window.location.origin
+      window.location.href = `${targetDomain}/login?updated=true&v=${latestVersion}`
     } catch {
-      window.location.reload()
+      window.location.href = '/login?updated=true'
     }
   }
 

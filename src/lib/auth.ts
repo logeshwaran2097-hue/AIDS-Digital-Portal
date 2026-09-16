@@ -10,7 +10,7 @@ const JWT_SECRET = new TextEncoder().encode(
 )
 const JWT_FALLBACK_SECRET = new TextEncoder().encode(DEFAULT_SECRET)
 
-const JWT_EXPIRY = '7d'
+const JWT_EXPIRY = '30d'
 const OTP_EXPIRY_MINUTES = parseInt(process.env.OTP_EXPIRY_MINUTES || '5')
 const OTP_MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS || '3')
 const OTP_RESEND_COOLDOWN = parseInt(process.env.OTP_RESEND_COOLDOWN_SECONDS || '60')
@@ -116,7 +116,7 @@ export async function setAuthCookie(token: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 30, // 30 days
     path: '/',
   })
 }

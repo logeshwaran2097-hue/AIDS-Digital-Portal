@@ -8,6 +8,11 @@ export default async function Home() {
   }
   if (session.role === 'admin') redirect('/admin')
   if (session.role === 'hod') redirect('/hod-dashboard')
-  if (session.role === 'faculty') redirect('/faculty-dashboard')
+  if (session.role === 'faculty') {
+    if (session.isAdvisor || session.facultyType === 'advisor') {
+      redirect('/faculty-dashboard/attendance?mode=morning&role=advisor')
+    }
+    redirect('/faculty-dashboard')
+  }
   redirect('/dashboard')
 }
