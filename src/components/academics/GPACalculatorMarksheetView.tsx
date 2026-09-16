@@ -185,11 +185,6 @@ export default function GPACalculatorMarksheetView({
     }
   }, [gradingSystem])
 
-  // Default initial grade for subject row
-  const defaultGradeKey = useMemo(() => {
-    return gradingSystem === 'absolute_ii_year' ? 'A' : 'A'
-  }, [gradingSystem])
-
   // Subject rows for GPA calculator (real presets from curriculum)
   const [subjects, setSubjects] = useState<SubjectGradeRow[]>(() => {
     const preset = AI_DS_SEMESTER_PRESETS[selectedSemester] || AI_DS_SEMESTER_PRESETS[3] || []
@@ -199,7 +194,7 @@ export default function GPACalculatorMarksheetView({
       name: item.name,
       credits: item.credits,
       courseType: item.courseType,
-      grade: defaultGradeKey
+      grade: ''
     }))
   })
 
@@ -269,9 +264,15 @@ export default function GPACalculatorMarksheetView({
       name: item.name,
       credits: item.credits,
       courseType: item.courseType,
-      grade: defaultGradeKey
+      grade: ''
     })))
     toast.success(`Loaded Regulation 2023 curriculum for Semester ${sem}!`)
+  }
+
+  // Clear all course grades
+  const handleClearGrades = () => {
+    setSubjects(prev => prev.map(s => ({ ...s, grade: '' })))
+    toast.success('Course grades cleared. Select your grades to calculate SGPA.')
   }
 
   // Load Slide 13 Example
@@ -301,7 +302,7 @@ export default function GPACalculatorMarksheetView({
     const newId = `custom-${Date.now()}`
     setSubjects(prev => [
       ...prev,
-      { id: newId, code: 'AD3099', name: 'Professional Elective / Special Course', credits: 3, courseType: 'Theory', grade: defaultGradeKey }
+      { id: newId, code: 'AD3099', name: 'Professional Elective / Special Course', credits: 3, courseType: 'Theory', grade: '' }
     ])
     toast.success('Custom elective added to calculator!')
   }
@@ -321,22 +322,32 @@ export default function GPACalculatorMarksheetView({
     }))
   }
 
-  // Live SGPA Calculations (Slide 13: sum(Ci * Gi) / sum(Ci))
-  const { totalWeightedPoints, currentSemesterCredits, calculatedSemesterGPA } = useMemo(() => {
+  // Live SGPA Calculations: sum(Ci * Gi) / sum(Ci)
+  const { totalWeightedPoints, currentSemesterCredits, gradedSemesterCredits, calculatedSemesterGPA, gradedCoursesCount, totalCoursesCount, hasAnyGrade } = useMemo(() => {
     let sumCiGi = 0
     let sumCi = 0
+    let gradedCredits = 0
+    let gradedCount = 0
 
     subjects.forEach(s => {
-      const pt = currentGradePoints[s.grade] ?? 0
-      sumCiGi += pt * s.credits
       sumCi += s.credits
+      if (s.grade && currentGradePoints[s.grade] !== undefined) {
+        const pt = currentGradePoints[s.grade]
+        sumCiGi += pt * s.credits
+        gradedCredits += s.credits
+        gradedCount++
+      }
     })
 
-    const sgpa = sumCi > 0 ? parseFloat((sumCiGi / sumCi).toFixed(2)) : 0
+    const sgpa = gradedCredits > 0 ? parseFloat((sumCiGi / gradedCredits).toFixed(2)) : 0
     return {
       totalWeightedPoints: parseFloat(sumCiGi.toFixed(2)),
       currentSemesterCredits: sumCi,
-      calculatedSemesterGPA: sgpa
+      gradedSemesterCredits: gradedCredits,
+      calculatedSemesterGPA: sgpa,
+      gradedCoursesCount: gradedCount,
+      totalCoursesCount: subjects.length,
+      hasAnyGrade: gradedCount > 0
     }
   }, [subjects, currentGradePoints])
 
@@ -697,8 +708,8 @@ export default function GPACalculatorMarksheetView({
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div>
-                    <h4 className="font-bold text-slate-800 text-sm">Example &amp; Semester Course Work Table</h4>
-                    <p className="text-xs text-slate-500">Auto-calculated column C<sub>i</sub> &times; G<sub>i</sub></p>
+                    <h4 className="font-bold text-slate-800 text-sm">Semester Course Work Table</h4>
+                    <p className="text-xs text-slate-500">Select course grades to calculate real credit-weighted semester SGPA</p>
                   </div>
 
                   {/* Semester selector */}
@@ -732,13 +743,14 @@ export default function GPACalculatorMarksheetView({
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {subjects.map((subj) => {
-                        const pt = currentGradePoints[subj.grade] ?? 0
-                        const ciGi = pt * subj.credits
+                        const hasGrade = Boolean(subj.grade && currentGradePoints[subj.grade] !== undefined)
+                        const pt = hasGrade ? currentGradePoints[subj.grade] : null
+                        const ciGi = hasGrade && pt !== null ? (pt * subj.credits) : null
                         return (
                           <tr key={subj.id} className="hover:bg-slate-50/70 transition-colors">
                             <td className="py-3 px-4">
                               <span className="font-bold text-slate-800 block">{subj.name}</span>
-                              <span className="text-slate-400 font-mono text-[10px]">{subj.code}</span>
+                              <span className="text-slate-400 font-mono text-[10px]">{subj.code} · {subj.courseType}</span>
                             </td>
                             <td className="py-3 px-4 text-center">
                               <input
@@ -755,17 +767,20 @@ export default function GPACalculatorMarksheetView({
                               <select
                                 value={subj.grade}
                                 onChange={(e) => handleUpdateSubject(subj.id, 'grade', e.target.value)}
-                                className="w-full p-1.5 rounded-lg border border-slate-200 font-bold text-xs text-blue-700 bg-white"
+                                className={`w-full p-1.5 rounded-lg border font-bold text-xs bg-white transition-colors ${
+                                  subj.grade ? 'border-blue-300 text-blue-700 bg-blue-50/30' : 'border-slate-200 text-slate-400'
+                                }`}
                               >
+                                <option value="">— Select Grade —</option>
                                 {gradeOptions.map((opt) => (
-                                  <option key={opt.grade} value={opt.grade}>
+                                  <option key={opt.grade} value={opt.grade} className="text-slate-800 font-medium">
                                     {opt.label}
                                   </option>
                                 ))}
                               </select>
                             </td>
                             <td className="py-3 px-4 text-center font-mono font-bold text-slate-800 text-sm">
-                              {ciGi}
+                              {ciGi !== null ? ciGi : <span className="text-slate-300 font-normal">—</span>}
                             </td>
                             <td className="py-3 px-3 text-center">
                               <button
@@ -780,7 +795,7 @@ export default function GPACalculatorMarksheetView({
                         )
                       })}
 
-                      {/* Total Row matching Slide 13 Total */}
+                      {/* Total Row */}
                       <tr className="bg-slate-100/80 font-bold text-slate-900 border-t-2 border-slate-300">
                         <td className="py-3 px-4 font-black uppercase text-xs">Total</td>
                         <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
@@ -788,7 +803,7 @@ export default function GPACalculatorMarksheetView({
                         </td>
                         <td className="py-3 px-4 text-center text-slate-400 text-[11px]">—</td>
                         <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
-                          {totalWeightedPoints}
+                          {hasAnyGrade ? totalWeightedPoints : '—'}
                         </td>
                         <td className="py-3 px-3"></td>
                       </tr>
@@ -796,45 +811,70 @@ export default function GPACalculatorMarksheetView({
                   </table>
                 </div>
 
-                {/* Step-by-Step Fraction Display matching Slide 13 */}
-                <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-serif">
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-slate-800 text-sm">Calculation:</span>
-                    <span className="font-bold text-base text-slate-900">SGPA =</span>
-                    <div className="inline-flex flex-col items-center text-sm font-bold">
-                      <span className="border-b-2 border-slate-800 px-3 pb-0.5 text-blue-800">{totalWeightedPoints}</span>
-                      <span className="pt-0.5 text-slate-800">{currentSemesterCredits}</span>
+                {/* Step-by-Step Fraction Display */}
+                {hasAnyGrade ? (
+                  <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-serif">
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-slate-800 text-sm">Calculation:</span>
+                      <span className="font-bold text-base text-slate-900">SGPA =</span>
+                      <div className="inline-flex flex-col items-center text-sm font-bold">
+                        <span className="border-b-2 border-slate-800 px-3 pb-0.5 text-blue-800">{totalWeightedPoints}</span>
+                        <span className="pt-0.5 text-slate-800">{gradedSemesterCredits}</span>
+                      </div>
+                      <span className="font-bold text-base text-slate-900">=</span>
+                      <span className="text-xl font-black text-blue-800">{calculatedSemesterGPA.toFixed(2)}</span>
                     </div>
-                    <span className="font-bold text-base text-slate-900">=</span>
-                    <span className="text-xl font-black text-blue-800">{calculatedSemesterGPA.toFixed(2)}</span>
+
+                    <div className="font-sans">
+                      <span className="text-xs text-slate-500 font-bold block">
+                        {gradedCoursesCount === totalCoursesCount ? 'Final Semester Result:' : `Interim Result (${gradedCoursesCount}/${totalCoursesCount} Graded):`}
+                      </span>
+                      <strong className="text-base font-black text-blue-900">SGPA = {calculatedSemesterGPA.toFixed(2)}</strong>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500 font-medium">
+                    Select your course grade in the table above to compute your real SGPA.
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleAddSubject}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Add Custom Course</span>
+                    </button>
+                    {hasAnyGrade && (
+                      <button
+                        onClick={handleClearGrades}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 font-semibold text-xs transition-colors cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Clear Grades</span>
+                      </button>
+                    )}
                   </div>
 
-                  <div className="font-sans">
-                    <span className="text-xs text-slate-500 font-bold block">Final Result:</span>
-                    <strong className="text-base font-black text-blue-900">SGPA = {calculatedSemesterGPA.toFixed(2)}</strong>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
                   <button
-                    onClick={handleAddSubject}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Add Custom Course</span>
-                  </button>
-
-                  <button
+                    disabled={!hasAnyGrade}
                     onClick={() => {
+                      if (!hasAnyGrade) return
                       setSemesterGPAs(prev => ({
                         ...prev,
                         [selectedSemester]: { gpa: calculatedSemesterGPA, credits: currentSemesterCredits }
                       }))
                       toast.success(`Saved Sem ${selectedSemester} SGPA (${calculatedSemesterGPA.toFixed(2)}) to your real Cumulative CGPA records!`)
                     }}
-                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                    className={`px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                      hasAnyGrade
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md cursor-pointer'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                    }`}
                   >
-                    <CheckCircle2 className="w-4 h-4 text-white" />
+                    <CheckCircle2 className="w-4 h-4" />
                     <span>Save to CGPA Tracker</span>
                   </button>
                 </div>
@@ -845,10 +885,10 @@ export default function GPACalculatorMarksheetView({
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl space-y-4">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-cyan-200 block">
-                  COMPUTED SGPA
+                  SEMESTER SGPA
                 </span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-black">{calculatedSemesterGPA.toFixed(2)}</span>
+                  <span className="text-5xl font-black">{hasAnyGrade ? calculatedSemesterGPA.toFixed(2) : '—'}</span>
                   <span className="text-lg font-bold text-cyan-200">/ 10.0</span>
                 </div>
 
@@ -859,12 +899,18 @@ export default function GPACalculatorMarksheetView({
                   </div>
                   <div className="flex justify-between">
                     <span>Total Credit-Points (&sum;C<sub>i</sub>G<sub>i</sub>):</span>
-                    <strong className="text-white font-mono">{totalWeightedPoints} Points</strong>
+                    <strong className="text-white font-mono">{hasAnyGrade ? `${totalWeightedPoints} Points` : '—'}</strong>
                   </div>
                   <div className="flex justify-between">
                     <span>Academic Honors:</span>
                     <strong className="text-white font-bold">
-                      {calculatedSemesterGPA >= 8.5 ? 'First Class with Distinction' : calculatedSemesterGPA >= 6.5 ? 'First Class' : 'Second Class'}
+                      {!hasAnyGrade
+                        ? 'Awaiting Grade Input'
+                        : calculatedSemesterGPA >= 8.5
+                        ? 'First Class with Distinction'
+                        : calculatedSemesterGPA >= 6.5
+                        ? 'First Class'
+                        : 'Second Class'}
                     </strong>
                   </div>
                 </div>
