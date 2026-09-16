@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v10'
+const CACHE_NAME = 'vsb-aids-portal-v11'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -159,7 +159,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return
 
   const url = new URL(event.request.url)
-  if (url.pathname.startsWith('/api/')) return
+  if (url.pathname.startsWith('/api/') || !url.protocol.startsWith('http')) return
 
   event.respondWith(
     fetch(event.request)
@@ -167,17 +167,24 @@ self.addEventListener('fetch', (event) => {
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone()
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache)
-          })
+            cache.put(event.request, responseToCache).catch(() => {})
+          }).catch(() => {})
         }
         return response
       })
-      .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse
-          if (event.request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('/login')
-          }
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request)
+        if (cachedResponse) return cachedResponse
+
+        if (event.request.headers.get('accept')?.includes('text/html')) {
+          const loginFallback = await caches.match('/login')
+          if (loginFallback) return loginFallback
+        }
+
+        return new Response('Network request failed', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: new Headers({ 'Content-Type': 'text/plain' })
         })
       })
   )

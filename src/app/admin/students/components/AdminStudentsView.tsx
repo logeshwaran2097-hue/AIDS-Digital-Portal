@@ -42,6 +42,7 @@ import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { playNotificationChime } from '@/lib/notificationEngine'
 import { toast } from '@/components/ui/Toast'
 import { BulkImportModal } from './BulkImportModal'
+import { cn } from '@/lib/utils'
 
 export interface StudentRecord {
   id: string
