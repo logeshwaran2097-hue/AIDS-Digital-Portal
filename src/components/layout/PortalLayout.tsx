@@ -45,6 +45,7 @@ import {
 import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationClassifier'
 import { NotificationDetailModal, NotificationDetailData } from '@/components/notifications/NotificationDetailModal'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
+import { APP_VERSION, APP_VERSION_LABEL } from '@/lib/version'
 
 export interface NavItem {
   label: string
@@ -857,7 +858,7 @@ export function PortalLayout({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
                 <span className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider">
-                  v2.0.0
+                  {APP_VERSION_LABEL}
                 </span>
               </div>
               <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
@@ -1033,7 +1034,7 @@ export function PortalLayout({
           <div className="px-1 flex items-center justify-between text-[11px] text-white/50 font-medium">
             <span>AI&amp;DS Portal</span>
             <span className="font-bold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
-              v2.0.0 (Latest)
+              {APP_VERSION_LABEL} (Latest)
             </span>
           </div>
           <button
@@ -1404,11 +1405,11 @@ export function PortalLayout({
 
             {/* Official Version Badge */}
             <div
-              title="Official Release Version v2.0.0"
+              title={`Official Release Version ${APP_VERSION_LABEL}`}
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 text-[#1455D9] text-xs font-black shadow-2xs select-none"
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
-              <span>v2.0.0</span>
+              <span>{APP_VERSION_LABEL}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
             </div>
 

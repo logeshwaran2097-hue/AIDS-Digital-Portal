@@ -40,6 +40,7 @@ import {
 } from 'lucide-react'
 import { RealtimeAppDownloader } from '@/components/pwa/RealtimeAppDownloader'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
+import { APP_VERSION_LABEL } from '@/lib/version'
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'advisor' | 'hod' | 'admin'>('student')
@@ -1052,7 +1053,7 @@ export default function LoginPage() {
                 Digital POrtal Of AI&amp;DS
               </span>
               <span className="px-2 py-0.5 rounded-md bg-[#22C7E8] text-[#071A3D] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
-                v2.0.0
+                {APP_VERSION_LABEL}
               </span>
               <Sparkles className="w-4 h-4 text-[#F4C430] shrink-0" />
             </div>

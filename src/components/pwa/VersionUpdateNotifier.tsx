@@ -4,15 +4,14 @@ import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { RefreshCw, Download } from 'lucide-react'
 import { playNotificationChime } from '@/lib/notificationEngine'
+import { APP_VERSION, APP_RELEASE_HIGHLIGHTS } from '@/lib/version'
 
 const LOCAL_STORAGE_VERSION_KEY = 'vsb_portal_app_version'
 
 export function VersionUpdateNotifier() {
   const [hasUpdate, setHasUpdate] = useState(false)
-  const [latestVersion, setLatestVersion] = useState<string>('2.0.0')
-  const [releaseHighlights, setReleaseHighlights] = useState<string[]>([
-    'Performance improvements and bug fixes',
-  ])
+  const [latestVersion, setLatestVersion] = useState<string>(APP_VERSION)
+  const [releaseHighlights, setReleaseHighlights] = useState<string[]>(APP_RELEASE_HIGHLIGHTS)
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
   
@@ -29,7 +28,7 @@ export function VersionUpdateNotifier() {
         })
         if (!res.ok) return
         const data = await res.json()
-        const serverVer = data.version || '2.0.0'
+        const serverVer = data.version || APP_VERSION
         setLatestVersion(serverVer)
         
         if (data.releaseHighlights && Array.isArray(data.releaseHighlights)) {
