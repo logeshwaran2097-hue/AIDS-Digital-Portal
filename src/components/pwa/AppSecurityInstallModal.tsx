@@ -215,7 +215,7 @@ export function AppSecurityInstallModal({
                     <Check className={`w-4 h-4 ${scanStep >= 3 ? 'text-emerald-600 font-bold' : 'text-slate-300'}`} />
                     <span>Data Privacy &amp; Encryption</span>
                   </span>
-                  <span className="text-[11px] font-bold text-slate-900">256-Bit SSL Secured</span>
+                  <span className="text-[11px] font-bold text-slate-900">TLS 1.3 (256-Bit AES)</span>
                 </div>
 
                 <div className="flex items-center justify-between text-slate-700">

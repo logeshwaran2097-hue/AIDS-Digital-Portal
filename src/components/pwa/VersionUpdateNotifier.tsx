@@ -449,7 +449,7 @@ export function VersionUpdateNotifier() {
 
             <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-400">
               <Lock className="w-3.5 h-3.5 text-[#01875f]" />
-              <span>Verified by Google Play Protect · SSL 256-Bit</span>
+              <span>Verified by Google Play Protect · TLS 1.3 (256-Bit AES)</span>
             </div>
           </div>
         )}
