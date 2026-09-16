@@ -528,6 +528,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </button>
           <button
             onClick={() => {
+              const defaultYear = yearFilter !== 'ALL' ? Number(yearFilter) : 1
+              const defaultSem = semFilter !== 'ALL' ? Number(semFilter) : ((defaultYear - 1) * 2 + 1)
               setFormData({
                 registerNumber: '',
                 name: '',
@@ -544,10 +546,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 hostelBlock: '',
                 roomNo: '',
                 address: '',
-                year: 1,
-                semester: 1,
+                year: defaultYear,
+                semester: defaultSem,
                 batch: '',
-                section: 'A',
+                section: sectionFilter !== 'ALL' ? sectionFilter : 'A',
                 advisorName: '',
                 status: 'active',
                 cgpa: '',
@@ -1595,7 +1597,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   <label className="block font-bold text-[#071A3D] mb-1">Year *</label>
                   <select
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const newYear = Number(e.target.value)
+                      const validSems = allSemesters.filter((s) => s.year === newYear).map((s) => s.sem)
+                      setFormData({
+                        ...formData,
+                        year: newYear,
+                        semester: validSems.includes(formData.semester) ? formData.semester : validSems[0],
+                      })
+                    }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
                     <option value={1}>Year 1</option>
@@ -1611,11 +1621,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                      <option key={sem} value={sem}>
-                        Sem {sem}
-                      </option>
-                    ))}
+                    {allSemesters
+                      .filter((s) => s.year === formData.year)
+                      .map((s) => (
+                        <option key={s.sem} value={s.sem}>
+                          {s.label} ({s.sem % 2 === 1 ? 'Odd' : 'Even'})
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div>
@@ -1985,30 +1997,40 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
               <div className="grid grid-cols-4 gap-2 sm:gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
-                  <select
-                    value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                      <option key={sem} value={sem}>
-                        Sem {sem}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Year</label>
                   <select
                     value={formData.year}
-                    onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const newYear = Number(e.target.value)
+                      const validSems = allSemesters.filter((s) => s.year === newYear).map((s) => s.sem)
+                      setFormData({
+                        ...formData,
+                        year: newYear,
+                        semester: validSems.includes(formData.semester) ? formData.semester : validSems[0],
+                      })
+                    }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                   >
                     <option value={1}>Year 1</option>
                     <option value={2}>Year 2</option>
                     <option value={3}>Year 3</option>
                     <option value={4}>Year 4</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
+                  <select
+                    value={formData.semester}
+                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
+                  >
+                    {allSemesters
+                      .filter((s) => s.year === formData.year)
+                      .map((s) => (
+                        <option key={s.sem} value={s.sem}>
+                          {s.label} ({s.sem % 2 === 1 ? 'Odd' : 'Even'})
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div>

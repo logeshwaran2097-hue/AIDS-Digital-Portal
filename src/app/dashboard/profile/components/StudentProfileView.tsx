@@ -1354,14 +1354,16 @@ export function StudentProfileView({
                         onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
                         className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
                       >
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => {
-                          const sYear = Math.ceil(s / 2)
-                          return (
-                            <option key={s} value={s}>
-                              Semester {s} (Year {sYear} {s % 2 === 1 ? 'Odd' : 'Even'})
-                            </option>
-                          )
-                        })}
+                        {[1, 2, 3, 4, 5, 6, 7, 8]
+                          .filter((s) => Math.ceil(s / 2) === formData.year)
+                          .map((s) => {
+                            const sYear = Math.ceil(s / 2)
+                            return (
+                              <option key={s} value={s}>
+                                Semester {s} (Year {sYear} {s % 2 === 1 ? 'Odd' : 'Even'})
+                              </option>
+                            )
+                          })}
                       </select>
                     </div>
 
