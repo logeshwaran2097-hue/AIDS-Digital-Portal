@@ -41,6 +41,7 @@ import {
 import { RealtimeAppDownloader } from '@/components/pwa/RealtimeAppDownloader'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 import { APP_VERSION_LABEL } from '@/lib/version'
+import { triggerPortalUpdateCheck } from '@/components/pwa/VersionUpdateNotifier'
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'advisor' | 'hod' | 'admin'>('student')
@@ -1052,9 +1053,14 @@ export default function LoginPage() {
               <span className="text-base sm:text-2xl font-black tracking-wider text-white drop-shadow-sm">
                 Digital POrtal Of AI&amp;DS
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-[#22C7E8] text-[#071A3D] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
+              <button
+                type="button"
+                onClick={triggerPortalUpdateCheck}
+                title="Check for Portal Updates"
+                className="px-2 py-0.5 rounded-md bg-[#22C7E8] hover:bg-[#1ab8d7] text-[#071A3D] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs cursor-pointer active:scale-95 transition-transform"
+              >
                 {APP_VERSION_LABEL}
-              </span>
+              </button>
               <Sparkles className="w-4 h-4 text-[#F4C430] shrink-0" />
             </div>
 

@@ -46,6 +46,7 @@ import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationCl
 import { NotificationDetailModal, NotificationDetailData } from '@/components/notifications/NotificationDetailModal'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 import { APP_VERSION, APP_VERSION_LABEL } from '@/lib/version'
+import { triggerPortalUpdateCheck } from '@/components/pwa/VersionUpdateNotifier'
 
 export interface NavItem {
   label: string
@@ -857,9 +858,14 @@ export function PortalLayout({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
-                <span className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider">
+                <button
+                  type="button"
+                  onClick={triggerPortalUpdateCheck}
+                  title="Tap to check for real-time app updates"
+                  className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 hover:bg-cyan-400/30 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider cursor-pointer active:scale-95 transition-transform"
+                >
                   {APP_VERSION_LABEL}
-                </span>
+                </button>
               </div>
               <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
             </div>
@@ -1033,9 +1039,14 @@ export function PortalLayout({
         <div className="p-3 border-t border-white/10 bg-white/5 space-y-2">
           <div className="px-1 flex items-center justify-between text-[11px] text-white/50 font-medium">
             <span>AI&amp;DS Portal</span>
-            <span className="font-bold text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
-              {APP_VERSION_LABEL} (Latest)
-            </span>
+            <button
+              type="button"
+              onClick={triggerPortalUpdateCheck}
+              title="Check for Portal Updates"
+              className="font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/25 px-2 py-0.5 rounded-md border border-cyan-500/20 cursor-pointer active:scale-95 transition-all text-[10px]"
+            >
+              {APP_VERSION_LABEL} · Check Update
+            </button>
           </div>
           <button
             type="button"
@@ -1403,15 +1414,17 @@ export function PortalLayout({
               )}
             </div>
 
-            {/* Official Version Badge */}
-            <div
-              title={`Official Release Version ${APP_VERSION_LABEL}`}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 text-[#1455D9] text-xs font-black shadow-2xs select-none"
+            {/* Official Version Badge - Interactive Manual Update Check */}
+            <button
+              type="button"
+              onClick={triggerPortalUpdateCheck}
+              title={`Official Release Version ${APP_VERSION_LABEL} · Click to check for updates`}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 hover:from-blue-100 hover:to-indigo-100 text-[#1455D9] text-xs font-black shadow-2xs cursor-pointer transition-all active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
               <span>{APP_VERSION_LABEL}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
-            </div>
+            </button>
 
             {/* Vision & Mission Quick Access */}
             <button
