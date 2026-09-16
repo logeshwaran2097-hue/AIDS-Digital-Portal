@@ -278,7 +278,7 @@ export default function GPACalculatorMarksheetView({
   const handleLoadSlide13Example = () => {
     setGradingSystem('absolute_ii_year')
     setSubjects(SLIDE_13_EXAMPLE_COURSES)
-    toast.success('Loaded Slide 13 Example: Total Credits=15, Points=126, SGPA=8.40!', { icon: '📊' })
+    toast.success('Loaded Official Example: Total Credits=15, Points=126, SGPA=8.40!', { icon: '📊' })
   }
 
   // Load Slide 14 Example
@@ -293,7 +293,7 @@ export default function GPACalculatorMarksheetView({
       7: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[7] },
       8: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[8] }
     })
-    toast.success('Loaded Slide 14 Example: Sem 1(20@8.50), Sem 2(22@8.80), Sem 3(21@9.10) => CGPA = 8.81!', { icon: '🎓' })
+    toast.success('Loaded Official Example: Sem 1(20@8.50), Sem 2(22@8.80), Sem 3(21@9.10) => CGPA = 8.81!', { icon: '🎓' })
   }
 
   // Add custom subject
@@ -566,7 +566,7 @@ export default function GPACalculatorMarksheetView({
             }`}
           >
             <Calculator className="w-4 h-4 text-blue-600" />
-            <span>SGPA Calculation (Slide 13)</span>
+            <span>SGPA Calculation</span>
           </button>
 
           <button
@@ -578,7 +578,7 @@ export default function GPACalculatorMarksheetView({
             }`}
           >
             <TrendingUp className="w-4 h-4 text-emerald-600" />
-            <span>CGPA Calculation (Slide 14)</span>
+            <span>CGPA Calculation</span>
           </button>
 
           <button
@@ -590,7 +590,7 @@ export default function GPACalculatorMarksheetView({
             }`}
           >
             <Percent className="w-4 h-4 text-amber-500" />
-            <span>R2023 Exam Marks (Slides 8–12)</span>
+            <span>R2023 Exam Marks</span>
           </button>
 
           <button
@@ -629,7 +629,7 @@ export default function GPACalculatorMarksheetView({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">
-                  Slide 13 / 16 Formula
+                  Official Formula
                 </span>
                 <h3 className="font-black text-slate-900 text-lg tracking-tight">SGPA (Semester Grade Point Average)</h3>
               </div>
@@ -662,7 +662,7 @@ export default function GPACalculatorMarksheetView({
                 className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
               >
                 <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Load Slide 13 Example (SGPA = 8.40)</span>
+                <span>Load Example (SGPA = 8.40)</span>
               </button>
 
               {/* Grading Scheme Toggle */}
@@ -698,7 +698,7 @@ export default function GPACalculatorMarksheetView({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm">Example &amp; Semester Course Work Table</h4>
-                    <p className="text-xs text-slate-500">Auto-calculated column C<sub>i</sub> &times; G<sub>i</sub> matching Slide 13 layout</p>
+                    <p className="text-xs text-slate-500">Auto-calculated column C<sub>i</sub> &times; G<sub>i</sub></p>
                   </div>
 
                   {/* Semester selector */}
@@ -845,7 +845,7 @@ export default function GPACalculatorMarksheetView({
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl space-y-4">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-cyan-200 block">
-                  SLIDE 13 COMPUTED SGPA
+                  COMPUTED SGPA
                 </span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-black">{calculatedSemesterGPA.toFixed(2)}</span>
@@ -875,7 +875,7 @@ export default function GPACalculatorMarksheetView({
                 <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                   <Award className="w-4 h-4 text-blue-600" />
                   <span>
-                    {gradingSystem === 'absolute_ii_year' ? 'II Year Absolute Scale (Slide 11)' : 'III/IV Year Relative Scale (Slide 11)'}
+                    {gradingSystem === 'absolute_ii_year' ? 'II Year Absolute Scale' : 'III/IV Year Relative Scale'}
                   </span>
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -911,7 +911,7 @@ export default function GPACalculatorMarksheetView({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold">
-                  Slide 14 / 16 Formula
+                  Official Formula
                 </span>
                 <h3 className="font-black text-slate-900 text-lg tracking-tight">CGPA (Cumulative Grade Point Average)</h3>
               </div>
@@ -957,7 +957,7 @@ export default function GPACalculatorMarksheetView({
                 className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
               >
                 <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Load Slide 14 Example (CGPA = 8.81)</span>
+                <span>Load Example (CGPA = 8.81)</span>
               </button>
 
               <button
@@ -977,7 +977,7 @@ export default function GPACalculatorMarksheetView({
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm">Semester-by-Semester Cumulative Records</h4>
-                    <p className="text-xs text-slate-500">Enter real semester SGPA scores below or load Slide 14 example</p>
+                    <p className="text-xs text-slate-500">Enter real semester SGPA scores below or load example</p>
                   </div>
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200">
                     {totalCompletedSemesters} Completed / 8
@@ -1108,7 +1108,7 @@ export default function GPACalculatorMarksheetView({
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-xl space-y-4">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-200 block">
-                  SLIDE 14 CUMULATIVE CGPA
+                  CUMULATIVE CGPA
                 </span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-5xl font-black">{currentCGPA > 0 ? currentCGPA.toFixed(2) : '—'}</span>
@@ -1184,7 +1184,7 @@ export default function GPACalculatorMarksheetView({
             <div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold mb-1">
                 <Percent className="w-3.5 h-3.5 text-amber-600" />
-                <span>R2023 Exact Examination Formula (Slides 8–12)</span>
+                <span>R2023 Exact Examination Formula</span>
               </div>
               <h3 className="font-extrabold text-slate-900 text-lg">Continuous Assessment &amp; Final Grade Awarding</h3>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -1196,12 +1196,12 @@ export default function GPACalculatorMarksheetView({
               onClick={() => {
                 setCourseCategory('Theory')
                 setTheoryInputs({ test1: 76, test2: 80, assign1: 90, assign2: 90, external: 90 })
-                toast.success('Loaded Slide 10 Example: Test1=76, Test2=80, Assign1=90, Assign2=90, External=90 => 87 (A+)')
+                toast.success('Loaded Official Example: Test1=76, Test2=80, Assign1=90, Assign2=90, External=90 => 87 (A+)')
               }}
               className="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Load Slide 10 Example (Total=87 &rarr; A+)</span>
+              <span>Load Example (Total=87 &rarr; A+)</span>
             </button>
           </div>
 
@@ -1589,7 +1589,7 @@ export default function GPACalculatorMarksheetView({
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider block">Slide 8 / 16</span>
+                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider block">Official Matrix</span>
                 <h3 className="text-lg font-black text-slate-900">Assessment Methods - R2023 (Apportionment of Marks)</h3>
               </div>
               <span className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold">
@@ -1638,7 +1638,7 @@ export default function GPACalculatorMarksheetView({
           {/* Slide 11: Absolute vs Relative Grading Systems */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
             <div>
-              <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider block">Slide 11 / 16</span>
+              <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider block">Autonomous Grading Norms</span>
               <h3 className="text-lg font-black text-slate-900">Official Grading Systems (R2023)</h3>
               <p className="text-xs text-slate-500 mt-0.5">
                 Absolute Grading applies to II Year; Relative Grading applies to III and IV Year students.
