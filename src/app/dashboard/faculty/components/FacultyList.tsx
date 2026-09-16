@@ -186,10 +186,10 @@ Thank you!`
         }
       } else {
         // 1. Exact Year and Section match in Faculty record
-        if (student?.year && student?.section) {
+        if (student?.year) {
           if (
             d.advisorYear === student.year &&
-            d.advisorSec?.trim().toUpperCase() === student.section.trim().toUpperCase()
+            (!d.advisorSec || d.advisorSec.trim().toUpperCase() === 'ALL' || (student.section && d.advisorSec?.trim().toUpperCase() === student.section.trim().toUpperCase()))
           ) {
             isAdvisorForStudent = true
           }

@@ -335,7 +335,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
         const isAdvisorRecord =
           f.facultyType === 'advisor' ||
           f.facultyType === 'both' ||
-          Boolean(f.advisorBatch || (f.advisorYear && f.advisorSec))
+          Boolean(f.advisorBatch || f.advisorYear)
 
         if (targetRole === 'advisor' && isAdvisorRecord) {
           user = cand
@@ -402,7 +402,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
     faculty.facultyType === 'advisor' ||
     faculty.facultyType === 'both' ||
     faculty.advisorBatch ||
-    (faculty.advisorYear && faculty.advisorSec)
+    faculty.advisorYear
   )
 
   // Strictly respect targetRole requested during login:
@@ -442,7 +442,7 @@ export function resolveFacultyAdvisorStatus(
       faculty?.facultyType === 'advisor' ||
       faculty?.facultyType === 'both' ||
       faculty?.advisorBatch ||
-      (faculty?.advisorYear && faculty?.advisorSec) ||
+      faculty?.advisorYear ||
       session.isAdvisor
     )
   }

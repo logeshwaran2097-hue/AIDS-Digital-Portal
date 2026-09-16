@@ -79,21 +79,61 @@ async function fetchStudentDataDirect(userId: string) {
       }
     }
 
-    if (!student) {
-      student = {
-        id: 'student-pending',
-        userId: userId,
-        registerNumber: user?.email ? user.email.split('@')[0].toUpperCase() : '',
-        dateOfBirth: null,
-        department: 'Artificial Intelligence & Data Science',
-        year: 1,
-        semester: 1,
-        section: 'A',
-        batch: '',
-        advisorName: null,
-        parentPhone: null,
+    // Dynamic Advisor Resolution:
+    // If student has no recorded advisorName, deduce it automatically from Faculty or ClassAdvisor allocation
+    if ((!student.advisorName || student.advisorName.trim() === '') && student.year) {
+      const studentSec = (student.section || 'A').toUpperCase()
+      const matchingFaculty = await prisma.faculty.findFirst({
+        where: {
+          advisorYear: student.year,
+          OR: [
+            { advisorSec: studentSec },
+            { advisorSec: student.section },
+            { advisorSec: null },
+            { advisorSec: '' },
+            { advisorSec: 'ALL' },
+          ],
+        },
+      }).catch(() => null)
+
+      if (matchingFaculty) {
+        const u = await prisma.user.findUnique({ where: { id: matchingFaculty.userId } }).catch(() => null)
+        if (u?.name) {
+          student.advisorName = u.name
+          if (student.id && student.id !== 'student-pending') {
+            prisma.student.update({
+              where: { id: student.id },
+              data: { advisorName: u.name },
+            }).catch(() => {})
+          }
+        }
+      }
+
+      if (!student.advisorName || student.advisorName.trim() === '') {
+        const matchingAdvisor = await prisma.classAdvisor.findFirst({
+          where: {
+            year: student.year,
+            OR: [
+              { section: studentSec },
+              { section: student.section },
+              { section: 'ALL' },
+            ],
+          },
+          orderBy: { updatedAt: 'desc' },
+        }).catch(() => null)
+
+        if (matchingAdvisor?.facultyName) {
+          student.advisorName = matchingAdvisor.facultyName
+          if (student.id && student.id !== 'student-pending') {
+            prisma.student.update({
+              where: { id: student.id },
+              data: { advisorName: matchingAdvisor.facultyName },
+            }).catch(() => {})
+          }
+        }
       }
     }
+
 
     const [
       [announcements, events, resources, achievements, questionPapers, projects, faculty, notifications],

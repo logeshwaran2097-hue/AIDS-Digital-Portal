@@ -21,21 +21,57 @@ export async function GET(request: Request) {
     if (semester && semester !== 'ALL') where.semester = Number(semester)
     if (section && section !== 'ALL') where.section = section
 
-    const students = await prisma.student.findMany({
-      where,
-      orderBy: { registerNumber: 'asc' },
-    })
+    const [students, advisors] = await Promise.all([
+      prisma.student.findMany({
+        where,
+        orderBy: { registerNumber: 'asc' },
+      }),
+      prisma.faculty.findMany({
+        where: {
+          advisorYear: { not: null },
+        },
+      }).catch(() => []),
+    ])
 
     const userIds = students.map((s) => s.userId)
+    const facultyUserIds = advisors.map((a) => a.userId)
+    const allUserIds = Array.from(new Set([...userIds, ...facultyUserIds]))
+
     const users = await prisma.user.findMany({
-      where: { id: { in: userIds } },
+      where: { id: { in: allUserIds } },
     })
     const userMap = new Map(users.map((u) => [u.id, u]))
+
+    const advisorMap = new Map<string, string>()
+    advisors.forEach((a) => {
+      const u = userMap.get(a.userId)
+      const name = u?.name || a.facultyId
+      if (a.advisorYear) {
+        if (a.advisorSec && a.advisorSec !== 'ALL') {
+          advisorMap.set(`${a.advisorYear}-${a.advisorSec.toUpperCase()}`, name)
+        }
+        if (!advisorMap.has(`${a.advisorYear}-ALL`)) {
+          advisorMap.set(`${a.advisorYear}-ALL`, name)
+        }
+      }
+    })
+
+    const studentsToBackfill: string[] = []
 
     const result = students.map((s) => {
       const u = userMap.get(s.userId)
       const rawEmail = u?.email || ''
       const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
+      const secKey = (s.section || 'A').toUpperCase()
+      const resolvedAdvisor =
+        (s as any).advisorName ||
+        advisorMap.get(`${s.year}-${secKey}`) ||
+        advisorMap.get(`${s.year}-ALL`) ||
+        ''
+
+      if (!(s as any).advisorName && resolvedAdvisor) {
+        studentsToBackfill.push(s.id)
+      }
 
       return {
         id: s.id,
@@ -51,7 +87,7 @@ export async function GET(request: Request) {
         semester: s.semester,
         batch: (s as any).batch || '',
         section: s.section,
-        advisorName: (s as any).advisorName || '',
+        advisorName: resolvedAdvisor,
         status: u?.status || 'active',
         bloodGroup: (s as any).bloodGroup,
         residencyStatus: (s as any).residencyStatus,

@@ -154,7 +154,7 @@ export default async function FacultyStudentsPage() {
 
   const assignedClassesList = Array.from(assignedClassesMap.values())
 
-  // Query ONLY students belonging to the assigned classes/years
+  // Query students: If classes are specifically assigned, query those; otherwise fallback to all department students
   let studentsFromDb: any[] = []
   if (assignedClassesList.length > 0) {
     const orConditions = assignedClassesList.map((ac) => {
@@ -169,22 +169,35 @@ export default async function FacultyStudentsPage() {
       where: { OR: orConditions },
       orderBy: { registerNumber: 'asc' },
     }).catch(() => [])
+  } else {
+    studentsFromDb = await prisma.student.findMany({
+      orderBy: { registerNumber: 'asc' },
+    }).catch(() => [])
   }
 
-  // Derive unique assigned years & sections strictly from the faculty's assigned scope
-  const assignedYears = Array.from(new Set(assignedClassesList.map((ac) => ac.year))).sort((a, b) => a - b)
+  // Derive unique assigned years & sections strictly from the faculty's assigned scope (or all available)
+  const assignedYears =
+    assignedClassesList.length > 0
+      ? Array.from(new Set(assignedClassesList.map((ac) => ac.year))).sort((a, b) => a - b)
+      : Array.from(new Set(studentsFromDb.map((s) => s.year))).sort((a, b) => a - b)
 
   const assignedSectionsSet = new Set<string>()
-  for (const ac of assignedClassesList) {
-    if (ac.section) {
-      assignedSectionsSet.add(ac.section)
-    } else {
-      studentsFromDb
-        .filter((s) => s.year === ac.year)
-        .forEach((s) => {
-          if (s.section) assignedSectionsSet.add(s.section)
-        })
+  if (assignedClassesList.length > 0) {
+    for (const ac of assignedClassesList) {
+      if (ac.section) {
+        assignedSectionsSet.add(ac.section)
+      } else {
+        studentsFromDb
+          .filter((s) => s.year === ac.year)
+          .forEach((s) => {
+            if (s.section) assignedSectionsSet.add(s.section)
+          })
+      }
     }
+  } else {
+    studentsFromDb.forEach((s) => {
+      if (s.section) assignedSectionsSet.add(s.section)
+    })
   }
   const assignedSections = Array.from(assignedSectionsSet).sort()
 

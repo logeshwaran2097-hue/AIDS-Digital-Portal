@@ -63,6 +63,43 @@ export default async function StudentProfilePage() {
     section: 'A',
   }
 
+  let resolvedAdvisorName = (finalStudent as any).advisorName || null
+  if (!resolvedAdvisorName && finalStudent.year) {
+    const studentSec = ((finalStudent as any).section || 'A').toUpperCase()
+    const matchedFac = await prisma.faculty.findFirst({
+      where: {
+        advisorYear: finalStudent.year,
+        OR: [
+          { advisorSec: studentSec },
+          { advisorSec: (finalStudent as any).section },
+          { advisorSec: null },
+          { advisorSec: '' },
+          { advisorSec: 'ALL' },
+        ],
+      },
+    }).catch(() => null)
+
+    if (matchedFac) {
+      const u = await prisma.user.findUnique({ where: { id: matchedFac.userId } }).catch(() => null)
+      resolvedAdvisorName = u?.name || null
+    }
+
+    if (!resolvedAdvisorName) {
+      const matchedAdv = await prisma.classAdvisor.findFirst({
+        where: {
+          year: finalStudent.year,
+          OR: [
+            { section: studentSec },
+            { section: (finalStudent as any).section },
+            { section: 'ALL' },
+          ],
+        },
+        orderBy: { updatedAt: 'desc' },
+      }).catch(() => null)
+      resolvedAdvisorName = matchedAdv?.facultyName || null
+    }
+  }
+
   return (
     <PortalLayout
       role="student"
@@ -75,7 +112,7 @@ export default async function StudentProfilePage() {
           user={finalUser as any}
           student={{
             ...finalStudent,
-            advisorName: (finalStudent as any).advisorName || null,
+            advisorName: resolvedAdvisorName,
             batch: (finalStudent as any).batch || null,
             parentPhone: (finalStudent as any).parentPhone || null,
             isParentWhatsapp: (finalStudent as any).isParentWhatsapp ?? false,

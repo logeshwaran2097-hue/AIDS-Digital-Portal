@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       result.faculty?.facultyType === 'advisor' ||
       result.faculty?.facultyType === 'both' ||
       result.faculty?.advisorBatch ||
-      (result.faculty?.advisorYear && result.faculty?.advisorSec)
+      result.faculty?.advisorYear
     )
 
     // Only set advisor mode if explicitly logging in as advisor and has advisor privileges

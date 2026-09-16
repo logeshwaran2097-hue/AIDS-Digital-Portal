@@ -283,6 +283,12 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 <span className="rounded-xl bg-white/15 px-3 py-1 font-semibold border border-white/10">
                   Section {data.student.section}
                 </span>
+                {(data.student as any).advisorName && (
+                  <span className="rounded-xl bg-[#F4C430]/20 text-[#F4C430] px-3 py-1 font-bold border border-[#F4C430]/30 shadow-xs flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#F4C430] animate-pulse" />
+                    <span>Advisor:</span> {(data.student as any).advisorName}
+                  </span>
+                )}
               </div>
             </div>
           </div>

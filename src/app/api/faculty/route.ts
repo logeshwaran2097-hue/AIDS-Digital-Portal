@@ -247,14 +247,60 @@ export async function POST(request: Request) {
     }
 
     // Broadcast real-time notification for Department Directorate & Students
-    const isAdvisorRole = facultyType === 'advisor' || facultyType === 'both'
-    const isAdvNotification = isAdvisorRole && cleanAdvisorYear && cleanAdvisorSec
+    const isAdvisorRole = facultyType === 'advisor' || facultyType === 'both' || Boolean(cleanAdvisorYear)
+    const isAdvNotification = isAdvisorRole && cleanAdvisorYear
+
+    // AUTOMATIC STUDENT ADVISOR SYNCHRONIZATION:
+    // When a faculty member is appointed as an advisor for a year/section:
+    // Automatically assign this advisor name to all enrolled students of that cohort!
+    if (cleanAdvisorYear) {
+      const studentWhere: any = { year: cleanAdvisorYear }
+      if (cleanAdvisorSec && cleanAdvisorSec !== 'ALL') {
+        studentWhere.section = cleanAdvisorSec
+      }
+
+      await prisma.student.updateMany({
+        where: studentWhere,
+        data: {
+          advisorName: finalName,
+        },
+      }).catch((err) => console.error('Failed to sync advisor to students:', err))
+
+      // Upsert into ClassAdvisor table for official record keeping
+      const semNumber = cleanAdvisorSem || (cleanAdvisorYear * 2 - 1)
+      const secValue = (cleanAdvisorSec && cleanAdvisorSec !== 'ALL') ? cleanAdvisorSec : 'A'
+      const academicYear = '2025-2026'
+
+      await prisma.classAdvisor.upsert({
+        where: {
+          year_section_semester_academicYear: {
+            year: cleanAdvisorYear,
+            section: secValue,
+            semester: semNumber,
+            academicYear,
+          },
+        },
+        update: {
+          facultyId: fid,
+          facultyName: finalName,
+        },
+        create: {
+          facultyId: fid,
+          facultyName: finalName,
+          year: cleanAdvisorYear,
+          section: secValue,
+          semester: semNumber,
+          academicYear,
+        },
+      }).catch((err) => console.error('Failed to upsert ClassAdvisor:', err))
+    }
+
     await prisma.notification.create({
       data: {
         title: `👨‍🏫 Faculty Directorate: ${name.trim()}`,
         message: `${designation} appointed. ${
           isAdvNotification
-            ? `Assigned as Class Advisor for Year ${cleanAdvisorYear} (Sec ${cleanAdvisorSec}).`
+            ? `Assigned as Class Advisor for Year ${cleanAdvisorYear}${cleanAdvisorSec ? ` (Sec ${cleanAdvisorSec})` : ''}.`
             : facultyType === 'subject_handler'
             ? `Course Instructor for Theory Curricula.`
             : facultyType === 'lab_faculty'
@@ -270,6 +316,8 @@ export async function POST(request: Request) {
     }).catch(() => {})
 
     invalidateCache('faculty')
+    invalidateCache('students')
+    invalidateCache('student_data')
 
     return NextResponse.json({
       success: true,
@@ -345,6 +393,9 @@ export async function DELETE(request: Request) {
 
     if (faculty) {
       const userId = faculty.userId
+      if (faculty.facultyId) {
+        await prisma.classAdvisor.deleteMany({ where: { facultyId: faculty.facultyId } }).catch(() => null)
+      }
       await prisma.faculty.delete({ where: { id: faculty.id } }).catch(() => null)
       await prisma.user.delete({ where: { id: userId } }).catch(() => null)
     } else {
@@ -352,6 +403,8 @@ export async function DELETE(request: Request) {
     }
 
     invalidateCache('faculty')
+    invalidateCache('students')
+    invalidateCache('student_data')
 
     return NextResponse.json({
       success: true,
