@@ -853,7 +853,7 @@ export function PortalLayout({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-sm font-black text-white leading-tight tracking-wide">Digital POrtal Of AI&amp;DS</p>
+                <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
                 <span className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider">
                   v2.0.0
                 </span>
@@ -1207,7 +1207,7 @@ export function PortalLayout({
               </div>
             )}
 
-            <Link href={role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
+            <Link href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
               <div className="w-8 h-8 rounded-full p-[2px] bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] to-[#EC4899] shadow-[0_0_10px_rgba(0,245,255,0.4)] flex items-center justify-center shrink-0">
                 <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-amber-300/80">
                   <Image
@@ -1219,7 +1219,7 @@ export function PortalLayout({
                   />
                 </div>
               </div>
-              <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital POrtal Of AI&amp;DS</span>
+              <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital Portal of AI&amp;DS</span>
             </Link>
           </div>
 
@@ -1468,7 +1468,7 @@ export function PortalLayout({
 
       {/* Main Content Area */}
       <main className="lg:pl-72 pb-28 lg:pb-8 min-h-[calc(100vh-64px)]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">{children}</div>
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">{children}</div>
       </main>
 
       {/* Mobile Bottom 5-Tab Navigation Bar */}

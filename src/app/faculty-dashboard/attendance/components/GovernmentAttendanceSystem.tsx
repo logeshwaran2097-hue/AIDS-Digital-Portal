@@ -1523,7 +1523,7 @@ export function GovernmentAttendanceSystem({
         {/* ── TABLE VIEW (Full Register for Desktop / Tablet) ───────────────── */}
         {!loading && students.length > 0 && viewMode === 'table' && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[780px] text-left text-xs">
               <thead className="bg-[#071A3D] text-white">
                 <tr>
                   <th className="py-3 px-4 font-bold w-[70px]">#</th>

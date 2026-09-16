@@ -559,7 +559,7 @@ export function StudentAttendanceView({
 
           {stats.subjectBreakdown.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
+              <table className="w-full min-w-[620px] text-xs text-left">
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-400 uppercase text-[10px] font-bold">
                     <th className="py-2.5 font-bold">Course Code &amp; Name</th>
@@ -897,7 +897,7 @@ export function StudentAttendanceView({
           ) : (
             /* Flat Table View Option */
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
+              <table className="w-full min-w-[600px] text-xs text-left">
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-400 uppercase text-[10px] font-bold">
                     <th className="py-2.5 font-bold">Date</th>

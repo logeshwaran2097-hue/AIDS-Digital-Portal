@@ -2423,7 +2423,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       {/* ========================================================= */}
       {activeTab === 'advisors' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
-          <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px] text-left border-collapse text-xs">
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
               <tr>
                 <th className="px-4 py-3.5">#</th>
@@ -2555,6 +2556,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -2563,7 +2565,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       {/* ========================================================= */}
       {activeTab === 'faculty' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
-          <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] text-left border-collapse text-xs">
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
               <tr>
                 <th className="px-4 py-3.5">#</th>
@@ -2803,6 +2806,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -2811,7 +2815,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       {/* ========================================================= */}
       {activeTab === 'labs' && (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden animate-fade-in">
-          <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[820px] text-left border-collapse text-xs">
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
               <tr>
                 <th className="px-4 py-3.5">#</th>
@@ -2964,6 +2969,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -2971,10 +2977,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       {/* FULL-SCREEN CLASS DOSSIER MODAL */}
       {/* ========================================================================= */}
       {selectedAdvisorDossier && (
-        <div className="fixed inset-0 z-50 bg-[#071A3D]/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-scale-up border border-gray-100">
+        <div className="fixed inset-0 z-50 bg-[#071A3D]/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[94vh] sm:max-h-[90vh] shadow-2xl flex flex-col overflow-hidden animate-scale-up border border-gray-100">
             {/* Dossier Header Banner */}
-            <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white p-6 shrink-0 relative">
+            <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white p-4 sm:p-6 shrink-0 relative">
               <button
                 onClick={() => setSelectedAdvisorDossier(null)}
                 className="absolute top-5 right-5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
@@ -2993,7 +2999,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     </span>
                   </div>
 
-                  <h2 className="text-2xl font-black">
+                  <h2 className="text-xl sm:text-2xl font-black">
                     Class Details &amp; Mentorship Record
                   </h2>
 
@@ -3024,8 +3030,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </div>
 
               {/* Class KPI Metric Chips */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 mt-4 sm:mt-5">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/10">
                   <span className="text-[10px] font-bold text-gray-300 uppercase block">Total Students</span>
                   <p className="text-xl font-black text-white mt-0.5">{classStudents.length} Enrolled</p>
                 </div>
@@ -3040,11 +3046,11 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                     })()}
                   </p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/10">
                   <span className="text-[10px] font-bold text-gray-300 uppercase block">Semester Labs &amp; Courses</span>
                   <p className="text-xl font-black text-[#F4C430] mt-0.5">{DEFAULT_SUBJECT_HANDLERS.length} Allocated</p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 border border-white/10">
                   <span className="text-[10px] font-bold text-gray-300 uppercase block">Attendance Defaulters</span>
                   <p className="text-xl font-black text-rose-400 mt-0.5">
                     {classStudents.filter((s) => s.attendancePercent !== null && (s.attendancePercent as number) < 75).length} Critical
@@ -3103,7 +3109,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   </div>
 
                   <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <table className="w-full text-left border-collapse">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[660px] text-left border-collapse">
                       <thead>
                         <tr className="bg-gray-50 border-b border-gray-200 text-[#071A3D] font-bold">
                           <th className="p-3">#</th>
@@ -3165,6 +3172,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -3220,7 +3228,8 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                   </div>
 
                   <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <table className="w-full text-left border-collapse">
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[560px] text-left border-collapse">
                       <thead>
                         <tr className="bg-gray-50 border-b border-gray-200 text-[#071A3D] font-bold">
                           <th className="p-3">Register No</th>
@@ -3259,6 +3268,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         )}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </div>
               )}

@@ -824,7 +824,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       ) : (
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full min-w-[880px] text-left text-xs">
               <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
                 <tr>
                   <th className="px-4 py-3.5">#</th>
@@ -1119,7 +1119,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
                         {/* Diff Comparison Table */}
                         <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden text-xs">
-                          <table className="w-full text-left border-collapse">
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-[480px] text-left border-collapse">
                             <thead>
                               <tr className="bg-gray-50 border-b border-gray-200 text-gray-500 font-bold text-[11px]">
                                 <th className="p-3">Profile Field</th>
@@ -1161,6 +1162,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                                 ))}
                             </tbody>
                           </table>
+                          </div>
                         </div>
 
                         {/* Admin Action Controls */}

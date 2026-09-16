@@ -777,7 +777,7 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
 
                   {/* Attendance Table */}
                   <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left border-collapse">
+                    <table className="w-full min-w-[700px] text-xs text-left border-collapse">
                       <thead className="bg-[#071A3D]/95 border-b border-slate-800 text-slate-400 uppercase text-[10.5px] font-bold tracking-wider select-none">
                         <tr>
                           <th className="py-4 px-6 text-left font-bold tracking-wider">REG NO</th>
@@ -886,7 +886,7 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                 </div>
               ) : viewMode === 'table' ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
+                  <table className="w-full min-w-[850px] text-xs text-left">
                     <thead className="bg-[#071A3D] text-white">
                       <tr>
                         <th className="py-3.5 px-3 font-bold text-center w-12">#</th>

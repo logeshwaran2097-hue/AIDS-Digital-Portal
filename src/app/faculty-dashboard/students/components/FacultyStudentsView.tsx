@@ -712,7 +712,7 @@ export function FacultyStudentsView({
         <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden bg-white">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
+              <table className="w-full min-w-[840px] text-xs text-left">
                 <thead className="bg-[#f8fafd] border-b border-gray-200 text-gray-500 uppercase text-[10px] font-bold">
                   <tr>
                     <th className="py-3.5 px-5">Student Particulars</th>
