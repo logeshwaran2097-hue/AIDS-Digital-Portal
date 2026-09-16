@@ -10,49 +10,72 @@ export const fetchCache = 'force-no-store'
 export default async function AdminStudentsPage() {
   const session = await requireRoleSession(['admin'])
 
-  const dbStudents = await prisma.student.findMany({
-    orderBy: { registerNumber: 'asc' },
-  }).catch(() => [])
+  const [joinedRows, adminUser] = await Promise.all([
+    prisma.$queryRaw<any[]>`
+      SELECT 
+        s.id,
+        s."userId",
+        s."registerNumber",
+        s."dateOfBirth",
+        s.department,
+        s.year,
+        s.semester,
+        s.section,
+        s.batch,
+        s."advisorName",
+        s."parentPhone",
+        s."isParentWhatsapp",
+        s."bloodGroup",
+        s."residencyStatus",
+        s."hostelBlock",
+        s."roomNo",
+        s."busNo",
+        s."boardingPoint",
+        s.address,
+        s."busDetails",
+        s.cgpa,
+        s.attendance,
+        u.name as user_name,
+        u.email as user_email,
+        u.phone as user_phone,
+        u.status as user_status
+      FROM "Student" s
+      LEFT JOIN "User" u ON s."userId" = u.id
+      ORDER BY s."registerNumber" ASC
+    `.catch(() => []),
+    prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+  ])
 
-  const userIds = dbStudents.map((s) => s.userId)
-  const dbUsers = await prisma.user.findMany({
-    where: { id: { in: userIds } },
-  }).catch(() => [])
-
-  const userMap = new Map(dbUsers.map((u) => [u.id, u]))
-
-  const studentsList: StudentRecord[] = dbStudents.map((s) => {
-    const user = userMap.get(s.userId)
-    const rawEmail = user?.email || ''
+  const studentsList: StudentRecord[] = joinedRows.map((s) => {
+    const rawEmail = s.user_email || ''
+    const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
     return {
       id: s.id,
       userId: s.userId,
       registerNumber: s.registerNumber,
-      name: user?.name || s.registerNumber,
-      email: rawEmail,
-      phone: user?.phone || '',
-      parentPhone: (s as any).parentPhone || '',
-      dateOfBirth: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,
+      name: s.user_name || s.registerNumber,
+      email: cleanEmail,
+      phone: s.user_phone || '',
+      parentPhone: s.parentPhone || '',
+      dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth).toISOString().split('T')[0] : null,
       year: s.year,
       semester: s.semester,
-      batch: (s as any).batch || '',
+      batch: s.batch || '',
       section: s.section,
-      advisorName: (s as any).advisorName || '',
-      status: user?.status || 'active',
-      bloodGroup: (s as any).bloodGroup || null,
-      residencyStatus: (s as any).residencyStatus || null,
+      advisorName: s.advisorName || '',
+      status: s.user_status || 'active',
+      bloodGroup: s.bloodGroup || null,
+      residencyStatus: s.residencyStatus || null,
       busNo: s.busNo || null,
       boardingPoint: s.boardingPoint || null,
       busDetails: s.busDetails || null,
       hostelBlock: s.hostelBlock || null,
       roomNo: s.roomNo || null,
       address: s.address || null,
-      cgpa: (s as any).cgpa ? String((s as any).cgpa) : null,
-      attendance: (s as any).attendance ? String((s as any).attendance) : null,
+      cgpa: s.cgpa ? String(s.cgpa) : null,
+      attendance: s.attendance ? String(s.attendance) : null,
     }
   })
-
-  const adminUser = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
   return (
     <PortalLayout role="admin" userName={adminUser?.name || session.name || 'Administrator'}>

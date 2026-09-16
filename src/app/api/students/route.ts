@@ -21,6 +21,77 @@ export async function GET(request: Request) {
     if (semester && semester !== 'ALL') where.semester = Number(semester)
     if (section && section !== 'ALL') where.section = section
 
+    const isUnfiltered = (!year || year === 'ALL') && (!semester || semester === 'ALL') && (!section || section === 'ALL')
+
+    if (isUnfiltered) {
+      const rows = await prisma.$queryRaw<any[]>`
+        SELECT 
+          s.id,
+          s."userId",
+          s."registerNumber",
+          s."dateOfBirth",
+          s.department,
+          s.year,
+          s.semester,
+          s.section,
+          s.batch,
+          s."advisorName",
+          s."parentPhone",
+          s."isParentWhatsapp",
+          s."bloodGroup",
+          s."residencyStatus",
+          s."hostelBlock",
+          s."roomNo",
+          s."busNo",
+          s."boardingPoint",
+          s.address,
+          s."busDetails",
+          s.cgpa,
+          s.attendance,
+          u.name as user_name,
+          u.email as user_email,
+          u.phone as user_phone,
+          u.status as user_status
+        FROM "Student" s
+        LEFT JOIN "User" u ON s."userId" = u.id
+        ORDER BY s."registerNumber" ASC
+      `
+
+      const result = rows.map((s) => {
+        const rawEmail = s.user_email || ''
+        const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
+        return {
+          id: s.id,
+          userId: s.userId,
+          registerNumber: s.registerNumber,
+          name: s.user_name || s.registerNumber,
+          email: cleanEmail,
+          phone: s.user_phone || '',
+          parentPhone: s.parentPhone || '',
+          dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth).toISOString().split('T')[0] : null,
+          department: s.department || 'Artificial Intelligence & Data Science',
+          year: s.year,
+          semester: s.semester,
+          batch: s.batch || '',
+          section: s.section,
+          advisorName: s.advisorName || '',
+          status: s.user_status || 'active',
+          bloodGroup: s.bloodGroup,
+          residencyStatus: s.residencyStatus,
+          busNo: s.busNo || null,
+          boardingPoint: s.boardingPoint || null,
+          busDetails: s.busDetails || null,
+          hostelBlock: s.hostelBlock || null,
+          roomNo: s.roomNo || null,
+          address: s.address || null,
+          cgpa: s.cgpa,
+          attendance: s.attendance,
+        }
+      })
+
+      return NextResponse.json({ success: true, students: result })
+    }
+
     const [students, advisors] = await Promise.all([
       prisma.student.findMany({
         where,
@@ -137,9 +208,12 @@ function formatDatabaseError(error: any, fallbackMessage: string, regNumber?: st
     msg.includes('Timed out fetching a new connection') ||
     msg.includes('connection pool') ||
     msg.includes('Connection timed out') ||
-    msg.includes('remaining connection slots are reserved')
+    msg.includes('remaining connection slots are reserved') ||
+    msg.includes('EMAXCONNSESSION') ||
+    msg.includes('max clients reached') ||
+    msg.includes('pool_size')
   ) {
-    return 'The database connection timed out during high activity. Your form input is safely preserved—please submit again.'
+    return 'The database connection pool is temporarily busy. Your form input is safely preserved—please submit again.'
   }
 
   if (msg.includes("Can't reach database server") || msg.includes('Connection refused') || msg.includes('closed the connection')) {
@@ -490,47 +564,48 @@ export async function PUT(request: Request) {
         }
       }
 
-      const updatedStudent = await prisma.student.update({
-        where: { id: student.id },
-        data: {
-          ...(regUpper ? { registerNumber: regUpper } : {}),
-          ...(department ? { department: department.trim() } : {}),
-          ...(year !== undefined ? { year: Number(year) } : {}),
-          ...(semester !== undefined ? { semester: Number(semester) } : {}),
-          ...(batch !== undefined ? { batch: String(batch).trim() } : {}),
-          ...(section !== undefined ? { section: section.trim() } : {}),
-          ...(advisorName !== undefined ? { advisorName: String(advisorName).trim() } : {}),
-          ...(parentPhone !== undefined ? { parentPhone: parentPhone ? String(parentPhone).trim() : null } : {}),
-          ...(dateOfBirth !== undefined ? { dateOfBirth: parseSafeDateOfBirth(dateOfBirth) } : {}),
-          ...(bloodGroup !== undefined ? { bloodGroup } : {}),
-          ...(residencyStatus !== undefined ? { residencyStatus } : {}),
-          ...(data.hostelBlock !== undefined ? { hostelBlock: data.hostelBlock } : {}),
-          ...(data.roomNo !== undefined ? { roomNo: data.roomNo } : {}),
-          ...(data.busNo !== undefined ? { busNo: data.busNo } : {}),
-          ...(data.boardingPoint !== undefined ? { boardingPoint: data.boardingPoint } : {}),
-          ...(data.address !== undefined ? { address: data.address } : {}),
-          ...(data.busDetails !== undefined ? { busDetails: data.busDetails } : {}),
-          ...(cgpa !== undefined ? { cgpa: cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : null } : {}),
-          ...(attendance !== undefined ? { attendance: attendance !== '' ? String(attendance) : null } : {}),
-        } as any,
-      })
-
       const targetEmail = isEmailCustom
         ? email.trim().toLowerCase()
         : `${(regUpper || student.registerNumber).toLowerCase()}@student.vsb.edu.in`
 
-      const updatedUser = await prisma.user.update({
-        where: { id: student.userId },
-        data: {
-          ...(name ? { name: name.trim() } : {}),
-          email: targetEmail,
-          emailVerified: isEmailCustom,
-          ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
-          ...(data.profileImage !== undefined ? { profileImage: data.profileImage } : {}),
-          ...(status ? { status } : {}),
-          ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
-        },
-      })
+      const [updatedStudent, updatedUser] = await prisma.$transaction([
+        prisma.student.update({
+          where: { id: student.id },
+          data: {
+            ...(regUpper ? { registerNumber: regUpper } : {}),
+            ...(department ? { department: department.trim() } : {}),
+            ...(year !== undefined ? { year: Number(year) } : {}),
+            ...(semester !== undefined ? { semester: Number(semester) } : {}),
+            ...(batch !== undefined ? { batch: String(batch).trim() } : {}),
+            ...(section !== undefined ? { section: section.trim() } : {}),
+            ...(advisorName !== undefined ? { advisorName: String(advisorName).trim() } : {}),
+            ...(parentPhone !== undefined ? { parentPhone: parentPhone ? String(parentPhone).trim() : null } : {}),
+            ...(dateOfBirth !== undefined ? { dateOfBirth: parseSafeDateOfBirth(dateOfBirth) } : {}),
+            ...(bloodGroup !== undefined ? { bloodGroup } : {}),
+            ...(residencyStatus !== undefined ? { residencyStatus } : {}),
+            ...(data.hostelBlock !== undefined ? { hostelBlock: data.hostelBlock } : {}),
+            ...(data.roomNo !== undefined ? { roomNo: data.roomNo } : {}),
+            ...(data.busNo !== undefined ? { busNo: data.busNo } : {}),
+            ...(data.boardingPoint !== undefined ? { boardingPoint: data.boardingPoint } : {}),
+            ...(data.address !== undefined ? { address: data.address } : {}),
+            ...(data.busDetails !== undefined ? { busDetails: data.busDetails } : {}),
+            ...(cgpa !== undefined ? { cgpa: cgpa !== '' && cgpa !== null && !isNaN(parseFloat(String(cgpa))) ? parseFloat(String(cgpa)) : null } : {}),
+            ...(attendance !== undefined ? { attendance: attendance !== '' ? String(attendance) : null } : {}),
+          } as any,
+        }),
+        prisma.user.update({
+          where: { id: student.userId },
+          data: {
+            ...(name ? { name: name.trim() } : {}),
+            email: targetEmail,
+            emailVerified: isEmailCustom,
+            ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
+            ...(data.profileImage !== undefined ? { profileImage: data.profileImage } : {}),
+            ...(status ? { status } : {}),
+            ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
+          },
+        }),
+      ])
 
       revalidatePath('/admin/students')
       revalidatePath('/admin/dashboard')

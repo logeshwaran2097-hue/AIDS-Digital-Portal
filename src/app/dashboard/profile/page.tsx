@@ -9,8 +9,10 @@ export const dynamic = 'force-dynamic'
 export default async function StudentProfilePage() {
   const session = await requireRoleSession(['student'])
 
-  let user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
-  let student = await prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null)
+  let [user, student] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
+    prisma.student.findUnique({ where: { userId: session.userId } }).catch(() => null),
+  ])
 
   if (!student && session.registerNumber) {
     student = await prisma.student.findUnique({ where: { registerNumber: session.registerNumber.trim().toUpperCase() } }).catch(() => null)

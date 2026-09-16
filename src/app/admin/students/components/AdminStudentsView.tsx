@@ -135,8 +135,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   useEffect(() => {
     if (initialStudents && initialStudents.length > 0) {
       setStudents(initialStudents)
+    } else {
+      fetchStudents()
     }
-    fetchStudents()
     fetchProfileRequests()
 
     const interval = setInterval(() => {
@@ -371,23 +372,59 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     }
   }
 
-  // Handle Edit Student Submit with Real Database Save
+  // Handle Edit Student Submit with Real Database Save & 0ms Optimistic Feedback
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedStudent) return
     setEditFormError(null)
 
-    setIsLoading(true)
-    try {
-      let cleanDob = formData.dateOfBirth ? formData.dateOfBirth.trim() : ''
-      if (cleanDob.includes('-')) {
-        const parts = cleanDob.replace(/^\+/, '').split('-')
-        if (parts[0] && parts[0].length > 4) {
-          parts[0] = parts[0].slice(-4)
-          cleanDob = parts.join('-')
-        }
+    let cleanDob = formData.dateOfBirth ? formData.dateOfBirth.trim() : ''
+    if (cleanDob.includes('-')) {
+      const parts = cleanDob.replace(/^\+/, '').split('-')
+      if (parts[0] && parts[0].length > 4) {
+        parts[0] = parts[0].slice(-4)
+        cleanDob = parts.join('-')
       }
+    }
 
+    const previousStudents = [...students]
+    const optimisticUpdated: StudentRecord = {
+      ...selectedStudent,
+      registerNumber: formData.registerNumber,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      parentPhone: formData.parentPhone,
+      dateOfBirth: formData.dateOfBirth,
+      year: Number(formData.year),
+      semester: Number(formData.semester),
+      batch: formData.batch,
+      section: formData.section,
+      advisorName: formData.advisorName,
+      status: formData.status,
+      bloodGroup: formData.bloodGroup || null,
+      residencyStatus: formData.residencyStatus || null,
+      busNo: formData.busNo || null,
+      boardingPoint: formData.boardingPoint || null,
+      busDetails: formData.busDetails || null,
+      hostelBlock: formData.hostelBlock || null,
+      roomNo: formData.roomNo || null,
+      address: formData.address || null,
+      cgpa: formData.cgpa ? String(formData.cgpa) : null,
+      attendance: formData.attendance ? String(formData.attendance) : null,
+    }
+
+    // Instant 0ms visual feedback
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.id === selectedStudent.id || s.registerNumber === selectedStudent.registerNumber
+          ? optimisticUpdated
+          : s
+      )
+    )
+    setIsEditModalOpen(false)
+
+    try {
       const res = await fetch('/api/students', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -400,43 +437,32 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       const result = await res.json()
 
       if (result.success) {
-        const updated = result.student || {
-          ...selectedStudent,
-          registerNumber: formData.registerNumber,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          parentPhone: formData.parentPhone,
-          dateOfBirth: formData.dateOfBirth,
-          year: Number(formData.year),
-          semester: Number(formData.semester),
-          batch: formData.batch,
-          section: formData.section,
-          advisorName: formData.advisorName,
-          status: formData.status,
-        }
-        setStudents(
-          students.map((s) =>
-            s.id === selectedStudent.id || s.registerNumber === selectedStudent.registerNumber
-              ? { ...s, ...updated }
-              : s
+        const serverUpdated = result.student
+        if (serverUpdated) {
+          setStudents((prev) =>
+            prev.map((s) =>
+              s.id === selectedStudent.id || s.registerNumber === selectedStudent.registerNumber
+                ? { ...s, ...serverUpdated }
+                : s
+            )
           )
-        )
-        setIsEditModalOpen(false)
-        setEditFormError(null)
+        }
         toast.success(result.message || 'Student record updated in database!')
       } else {
+        // Revert on error
+        setStudents(previousStudents)
+        setIsEditModalOpen(true)
         const message = result.message || 'Failed to update student record.'
         setEditFormError(message)
         toast.error(message, { duration: 6000 })
       }
     } catch (err) {
       console.error(err)
+      setStudents(previousStudents)
+      setIsEditModalOpen(true)
       const errorMsg = 'Network error updating student. Please try again.'
       setEditFormError(errorMsg)
       toast.error(errorMsg)
-    } finally {
-      setIsLoading(false)
     }
   }
 
