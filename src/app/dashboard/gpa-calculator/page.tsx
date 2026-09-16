@@ -22,6 +22,9 @@ export default async function GPACalculatorPage() {
       <GPACalculatorMarksheetView
         studentName={studentName}
         registerNumber={registerNumber}
+        studentYear={student?.year || 2}
+        currentSemester={student?.semester || 3}
+        initialCgpa={student?.cgpa ?? null}
       />
     </PortalLayout>
   )

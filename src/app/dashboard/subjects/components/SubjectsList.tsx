@@ -61,20 +61,52 @@ export default function SubjectsList({ subjects }: { subjects: Subject[] }) {
                     )}
                   </div>
 
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-[#1455D9] font-bold">
-                    <span className="flex items-center gap-1.5">
-                      <BookOpen className="h-4 w-4 text-[#1455D9]" /> Study Notes &amp; Lab Manuals
-                    </span>
-                    <span className="group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                      Explore <ArrowRight className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+                    <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-[#1455D9] font-bold">
+                      <span className="flex items-center gap-1.5">
+                        <BookOpen className="h-4 w-4 text-[#1455D9]" /> Study Notes &amp; Lab Manuals
+                      </span>
+                      <span className="group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                        Explore <ArrowRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+
+                    <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500">
+                      <span className="inline-flex items-center gap-1 text-slate-600 font-medium">
+                        <Sparkles className="w-3 h-3 text-amber-500" /> R2023 CO Assessment
+                      </span>
+                      <Link
+                        href="/dashboard/gpa-calculator"
+                        className="text-amber-700 hover:text-amber-800 font-bold hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Calculate Marks &rarr;
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Bottom Banner for R2023 Assessment Matrix */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 sm:p-5 border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+              R23
+            </div>
+            <div>
+              <strong className="text-slate-900 block font-bold">R2023 Assessment Methods: Theory (40/60) · Lab (60/40) · Theory cum Lab (50/50)</strong>
+              <span className="text-slate-600 text-[11px]">Continuous internal assessments are weighted and converted into your final course grade automatically.</span>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/gpa-calculator"
+            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shrink-0 transition-colors shadow-sm"
+          >
+            Open Marks &amp; SGPA Calculator
+          </Link>
         </div>
-      )}
     </div>
   )
 }

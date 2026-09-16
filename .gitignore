@@ -21,11 +21,10 @@
 *.log
 build_output*.txt
 errors.txt
+*.db
 *.db-journal
 *.db-shm
 *.db-wal
-prisma/dev.db-shm
-prisma/dev.db-wal
 *.apk
 *.zip
 

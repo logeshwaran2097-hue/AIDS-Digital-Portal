@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
+import QRCode from 'qrcode'
 import {
   Bus,
   Home,
@@ -21,7 +22,9 @@ import {
   Lock,
   XCircle,
   ArrowRight,
-  FileText
+  FileText,
+  ExternalLink,
+  Check
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -177,6 +180,17 @@ export default function DigitalPassView({
   const [parentConfirmed, setParentConfirmed] = useState(false)
   const [wardenConfirmed, setWardenConfirmed] = useState(false)
 
+  // Unique Individual Pass Record Number & Scannable QR Codes
+  const [passRecordNumber, setPassRecordNumber] = useState<string>(() => {
+    const regDigits = registerNumber ? registerNumber.slice(-4) : '2401'
+    return `VSB/AI&DS/GP-2026-${regDigits}`
+  })
+  const [gateQrUrl, setGateQrUrl] = useState<string>('')
+  const [busQrUrl, setBusQrUrl] = useState<string>('')
+  const [sanctionTimestamp, setSanctionTimestamp] = useState<string>(() => {
+    return new Date().toLocaleDateString('en-GB') + ', ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+  })
+
   const isHostelCertificateGenerated = activeMode === 'hostel' && parentConfirmed && wardenConfirmed
   const currentRoute = BUS_ROUTES[selectedRouteIndex]
   const currentHostel = HOSTEL_BLOCKS[selectedHostelIndex]
@@ -188,6 +202,102 @@ export default function DigitalPassView({
     month: 'short',
     year: 'numeric'
   })
+
+  // Modal state for full-screen QR scanning
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
+
+  // Dynamic QR Code generation for physical smartphone scanning
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Smart Origin: If on localhost, use the live public Cloudflare tunnel so phones can scan & resolve it!
+    let publicOrigin = window.location.origin
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      publicOrigin = 'https://regards-compromise-boc-micro.trycloudflare.com'
+    }
+
+    // Persist pass record to server API so phone gets full authentic details
+    fetch('/api/pass', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: passRecordNumber,
+        name: studentName,
+        reg: registerNumber,
+        dept: department,
+        year: String(year),
+        sec: section,
+        hostel: currentHostel.name,
+        room: roomNo,
+        category: passType.replace('_', ' ').toUpperCase(),
+        purpose: outingPurpose,
+        curfew: `${expectedReturn} (Max: ${currentHostel.curfew})`,
+        parent: parentPhone,
+        warden: currentHostel.warden,
+        time: sanctionTimestamp,
+        status: 'SANCTIONED & ACTIVE'
+      })
+    }).catch(() => {})
+
+    // 1. Generate Hostel Gate Pass verification URL & QR code (compact, high-contrast, huge dots)
+    const hostelVerifyUrl = `${publicOrigin}/verify-pass?id=${encodeURIComponent(passRecordNumber)}&reg=${encodeURIComponent(registerNumber)}`
+
+    QRCode.toDataURL(hostelVerifyUrl, {
+      width: 450,
+      margin: 2,
+      color: {
+        dark: '#000000', // Pure black for 100% camera sensor contrast
+        light: '#FFFFFF'
+      },
+      errorCorrectionLevel: 'L' // Lowest density = biggest, chunkiest dots = instant camera recognition
+    }).then(url => {
+      setGateQrUrl(url)
+    }).catch(err => {
+      console.error('Failed to generate gate pass QR code:', err)
+    })
+
+    // 2. Generate College Bus Pass verification URL & QR code
+    const busVerifyUrl = `${publicOrigin}/verify-pass?id=${encodeURIComponent(`VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`)}&reg=${encodeURIComponent(registerNumber)}`
+
+    QRCode.toDataURL(busVerifyUrl, {
+      width: 450,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      errorCorrectionLevel: 'L'
+    }).then(url => {
+      setBusQrUrl(url)
+    }).catch(err => {
+      console.error('Failed to generate bus QR code:', err)
+    })
+  }, [
+    passRecordNumber,
+    sanctionTimestamp,
+    studentName,
+    registerNumber,
+    department,
+    year,
+    section,
+    currentHostel.name,
+    currentHostel.warden,
+    currentHostel.curfew,
+    roomNo,
+    passType,
+    outingPurpose,
+    expectedReturn,
+    parentPhone,
+    currentRoute.busNo,
+    currentRoute.routeNo,
+    currentRoute.via,
+    currentRoute.morningArrival,
+    currentRoute.eveningDeparture,
+    currentRoute.contact,
+    currentRoute.driver,
+    boardingStop,
+    issueDate
+  ])
 
   const handlePrint = () => {
     if (activeMode === 'hostel' && !isHostelCertificateGenerated) {
@@ -205,16 +315,19 @@ export default function DigitalPassView({
     }
 
     const passTypeTitle = activeMode === 'college_bus' ? 'College Bus Transportation Slip' : 'Hostel Resident & Gate Outing Pass'
-    const passNo = `PASS #${registerNumber.slice(-4)}-${activeMode === 'college_bus' ? 'BUS' : 'HOSTEL'}`
+    const passNo = activeMode === 'college_bus' ? `PASS #${registerNumber.slice(-4)}-BUS` : passRecordNumber
+    const verifyUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify-pass?id=${encodeURIComponent(passNo)}` : ''
+
     const content = `
 ============================================================
        V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)
          OFFICIAL DIGITAL TRANSPORTATION SLIP
 ============================================================
 PASS TYPE      : ${passTypeTitle}
-PASS NUMBER    : ${passNo}
+INDIVIDUAL REC : ${passNo}
 ISSUED DATE    : ${issueDate}
 ACADEMIC YEAR  : 2026-27
+SANCTION TIME  : ${sanctionTimestamp}
 
 STUDENT PARTICULARS:
 - Name         : ${studentName}
@@ -238,6 +351,7 @@ ${activeMode === 'college_bus' ? `COLLEGE BUS ONBOARDING PARTICULARS:
 SECURITY & VERIFICATION:
 - Authentication: Cryptographically Signed (SHA256 Token)
 - Verification  : Mobile QR Verification Active at Gate / Bus Boarding
+- Online Verify : ${verifyUrl}
 - Institution   : V.S.B. Engineering College Transport & Security Desk
 ============================================================
 `
@@ -265,8 +379,12 @@ SECURITY & VERIFICATION:
       toast.error('Parent confirmation is required before warden sanction!', { icon: '⚠️' })
       return
     }
+    const uniqueSerial = `VSB/AI&DS/GP-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`
+    const timeNow = new Date().toLocaleDateString('en-GB') + ', ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
+    setPassRecordNumber(uniqueSerial)
+    setSanctionTimestamp(timeNow)
     setWardenConfirmed(true)
-    toast.success('🎉 Hostel Warden has sanctioned your Gate Pass! Official Certificate generated.', { icon: '🛡️' })
+    toast.success(`🎉 Gate Pass Sanctioned! Individual Record No: ${uniqueSerial}`, { icon: '🛡️', duration: 5000 })
   }
 
   const handleResetWorkflow = () => {
@@ -279,8 +397,10 @@ SECURITY & VERIFICATION:
     if (e) e.preventDefault()
     setParentConfirmed(false)
     setWardenConfirmed(false)
+    const newSerial = `VSB/AI&DS/GP-${new Date().getFullYear()}-${String(Math.floor(1000 + Math.random() * 9000))}`
+    setPassRecordNumber(newSerial)
     setApplicationTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }))
-    toast.success('New Gate Pass application submitted! Awaiting parent telephonic confirmation.', { icon: '📋' })
+    toast.success(`New Gate Pass application submitted! Req #${newSerial.split('-').pop()}`, { icon: '📋' })
   }
 
   // Ensure currentRoute.stops includes boardingStop
@@ -556,32 +676,42 @@ SECURITY & VERIFICATION:
                 {/* Bottom Security QR & Stamps */}
                 <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 bg-slate-900 rounded-xl p-1.5 flex items-center justify-center shrink-0 shadow-md">
-                      <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-current">
-                        <rect x="10" y="10" width="25" height="25" fill="#fff" />
-                        <rect x="15" y="15" width="15" height="15" fill="#000" />
-                        <rect x="65" y="10" width="25" height="25" fill="#fff" />
-                        <rect x="70" y="15" width="15" height="15" fill="#000" />
-                        <rect x="10" y="65" width="25" height="25" fill="#fff" />
-                        <rect x="15" y="70" width="15" height="15" fill="#000" />
-                        <rect x="40" y="20" width="10" height="10" fill="#fff" />
-                        <rect x="40" y="40" width="20" height="20" fill="#fff" />
-                        <rect x="70" y="50" width="15" height="10" fill="#fff" />
-                        <rect x="45" y="70" width="15" height="15" fill="#fff" />
-                        <rect x="70" y="75" width="10" height="10" fill="#fff" />
-                      </svg>
-                    </div>
+                    {busQrUrl ? (
+                      <div className="relative group shrink-0">
+                        <img
+                          src={busQrUrl}
+                          alt="College Bus Pass QR Code"
+                          className="w-24 h-24 rounded-2xl border-2 border-blue-400/40 p-1.5 bg-white shadow-md"
+                        />
+                        <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-1 shadow-md">
+                          <QrCode className="w-3 h-3" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-xs">
+                        Generating QR...
+                      </div>
+                    )}
                     <div className="space-y-1">
-                      <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Cryptographically Signed Slip</span>
+                      <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <ShieldCheck className="w-4 h-4 text-blue-600" />
+                        <span>Real Scannable Bus QR Code</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">VERIFIED</span>
                       </div>
                       <p className="text-[10px] text-slate-500 max-w-xs leading-tight">
-                        Security personnel &amp; bus conductors scan this QR code directly via mobile scanner to verify live registration in the central institutional database.
+                        Security personnel &amp; bus conductors scan this QR code with <strong>any phone camera</strong> to verify boarding credentials instantly.
                       </p>
-                      <p className="text-[9px] font-mono text-slate-400">
-                        Token Hash: SHA256:{registerNumber.slice(0, 6)}...BUS-VERIFIED
-                      </p>
+                      <div className="flex items-center gap-2 pt-1">
+                        <a
+                          href={`/verify-pass?id=${encodeURIComponent(`VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&hostel=${encodeURIComponent(`College Bus #${currentRoute.busNo} (${currentRoute.routeNo})`)}&room=${encodeURIComponent(boardingStop)}&category=${encodeURIComponent('COLLEGE BUS COMMUTER PASS')}&purpose=${encodeURIComponent(`Regular Commute • ${currentRoute.via}`)}&curfew=${encodeURIComponent(`Arrival ${currentRoute.morningArrival} | Departure ${currentRoute.eveningDeparture}`)}&parent=${encodeURIComponent(currentRoute.contact)}&warden=${encodeURIComponent(currentRoute.driver)}&time=${encodeURIComponent(issueDate)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-all shadow-2xs"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          <span>Preview Scanned Mobile View</span>
+                        </a>
+                      </div>
                     </div>
                   </div>
 
@@ -820,18 +950,50 @@ SECURITY & VERIFICATION:
                       </div>
                     </div>
 
-                    {/* Pass Title */}
-                    <div className="flex items-center justify-between">
+                    {/* Pass Title & Official Sanction Record Banner */}
+                    <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                       <div>
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
-                          OFFICIAL DIGITAL GATE PASS
-                        </span>
-                        <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+                            OFFICIAL SANCTION RECORD
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold">
+                            <CheckCircle2 className="w-3 h-3" />
+                            SANCTIONED &amp; ACTIVE
+                          </span>
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                           Hostel Resident &amp; Gate Outing Pass
                         </h2>
+                        <div className="flex flex-wrap items-center gap-2.5 mt-2">
+                          <div className="text-xs font-mono font-bold text-emerald-950 bg-white px-3 py-1 rounded-xl border border-emerald-300 shadow-2xs">
+                            REC NO: <span className="text-emerald-700 font-extrabold">{passRecordNumber}</span>
+                          </div>
+                          <span className="text-[11px] text-emerald-800 font-medium">
+                            Sanction Time: <strong>{sanctionTimestamp}</strong>
+                          </span>
+                        </div>
                       </div>
-                      <div className="px-3 py-1 rounded-xl bg-slate-100 text-slate-700 font-mono text-xs font-bold">
-                        PASS #{registerNumber.slice(-4)}-HOSTEL
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(passRecordNumber)
+                            toast.success(`Copied Record Number: ${passRecordNumber}`)
+                          }}
+                          className="px-3 py-2 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 text-xs font-bold transition-all border border-emerald-300 flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Copy Rec #</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePrint}
+                          className="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Print Slip</span>
+                        </button>
                       </div>
                     </div>
 
@@ -847,11 +1009,11 @@ SECURITY & VERIFICATION:
                       </div>
                       <div>
                         <span className="text-slate-400 block text-[10px] uppercase font-semibold">Department</span>
-                        <strong className="text-slate-800 font-bold block mt-0.5">AI &amp; DS</strong>
+                        <strong className="text-slate-800 font-bold block mt-0.5">AI &amp; DS • Yr {year}-{section}</strong>
                       </div>
                       <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-semibold">Year &amp; Sec</span>
-                        <strong className="text-slate-800 font-bold block mt-0.5">Year {year} • Sec {section}</strong>
+                        <span className="text-slate-400 block text-[10px] uppercase font-semibold">Unique Record #</span>
+                        <strong className="text-emerald-700 font-bold font-mono truncate block mt-0.5">{passRecordNumber}</strong>
                       </div>
                     </div>
 
@@ -912,46 +1074,133 @@ SECURITY & VERIFICATION:
                       </div>
                     </div>
 
-                    {/* Bottom Security QR & Stamps */}
+                    {/* Bottom Security QR & Verification Section */}
                     <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-20 h-20 bg-slate-900 rounded-xl p-1.5 flex items-center justify-center shrink-0 shadow-md">
-                          <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-current">
-                            <rect x="10" y="10" width="25" height="25" fill="#fff" />
-                            <rect x="15" y="15" width="15" height="15" fill="#000" />
-                            <rect x="65" y="10" width="25" height="25" fill="#fff" />
-                            <rect x="70" y="15" width="15" height="15" fill="#000" />
-                            <rect x="10" y="65" width="25" height="25" fill="#fff" />
-                            <rect x="15" y="70" width="15" height="15" fill="#000" />
-                            <rect x="40" y="20" width="10" height="10" fill="#fff" />
-                            <rect x="40" y="40" width="20" height="20" fill="#fff" />
-                            <rect x="70" y="50" width="15" height="10" fill="#fff" />
-                            <rect x="45" y="70" width="15" height="15" fill="#fff" />
-                            <rect x="70" y="75" width="10" height="10" fill="#fff" />
-                          </svg>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
-                            <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Cryptographically Signed Pass</span>
+                        {gateQrUrl ? (
+                          <div 
+                            onClick={() => setIsQrModalOpen(true)}
+                            className="cursor-pointer group relative shrink-0"
+                            title="Click to Enlarge QR Code"
+                          >
+                            <img
+                              src={gateQrUrl}
+                              alt="Official Gate Pass Scannable QR Code"
+                              className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl border-2 border-slate-900/20 p-2 bg-white shadow-md group-hover:scale-105 transition-transform"
+                            />
+                            <span className="absolute bottom-1 right-1 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">
+                              🔍 Click
+                            </span>
                           </div>
-                          <p className="text-[10px] text-slate-500 max-w-xs leading-tight">
-                            Security personnel &amp; gate guards scan this QR code directly via mobile reader to verify live gate authorization in the central database.
+                        ) : (
+                          <div className="w-32 h-32 bg-slate-900 rounded-2xl flex items-center justify-center text-white text-xs">
+                            Generating QR...
+                          </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                            <span>Real Scannable QR Code</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">100% VERIFIED</span>
+                          </div>
+                          <p className="text-[11px] text-slate-600 max-w-sm leading-tight">
+                            Point <strong>any smartphone camera</strong> directly at this QR code. It will instantly pop up the verified student details page.
                           </p>
-                          <p className="text-[9px] font-mono text-slate-400">
-                            Token Hash: SHA256:{registerNumber.slice(0, 6)}...HOSTEL-AUTH
-                          </p>
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setIsQrModalOpen(true)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
+                              <span>Enlarge QR Code</span>
+                            </button>
+                            <a
+                              href={`/verify-pass?id=${encodeURIComponent(passRecordNumber)}&reg=${encodeURIComponent(registerNumber)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              <span>Preview Scanned Mobile View</span>
+                            </a>
+                            <button
+                              type="button"
+                              onClick={handleDownloadSlip}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200 cursor-pointer"
+                            >
+                              <Download className="w-3.5 h-3.5 text-slate-500" />
+                              <span>Download Slip Token</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <div className="w-16 h-16 rounded-full border-2 border-dashed border-blue-400/80 flex flex-col items-center justify-center p-1 text-[8px] font-bold text-blue-900 leading-tight uppercase transform -rotate-12 bg-blue-50/50">
-                          <span>VSB SEAL</span>
-                          <span className="text-[7px] text-blue-600 font-mono">{issueDate}</span>
-                          <span>VERIFIED</span>
+                        <div className="w-18 h-18 rounded-full border-2 border-dashed border-emerald-500/80 flex flex-col items-center justify-center p-1 text-[8px] font-bold text-emerald-900 leading-tight uppercase transform -rotate-12 bg-emerald-50/70 shadow-2xs">
+                          <span>VSB CHIEF</span>
+                          <span className="text-[7px] text-emerald-700 font-mono">SEAL &amp; SIGN</span>
+                          <span className="text-[6.5px] text-slate-500">{sanctionTimestamp.split(',')[0]}</span>
+                          <span className="text-emerald-800 font-black">APPROVED</span>
                         </div>
                       </div>
                     </div>
+
+                    {/* Full-screen QR Modal for Effortless Scanning */}
+                    {isQrModalOpen && (
+                      <div 
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+                        onClick={() => setIsQrModalOpen(false)}
+                      >
+                        <div 
+                          className="bg-white rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl border border-slate-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                            <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                              Scan with Phone Camera
+                            </span>
+                            <button 
+                              type="button"
+                              onClick={() => setIsQrModalOpen(false)}
+                              className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
+                            >
+                              <XCircle className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          <div className="bg-white p-4 rounded-2xl border-2 border-slate-900 inline-block shadow-inner mx-auto">
+                            <img
+                              src={gateQrUrl}
+                              alt="Large High Contrast Pass QR Code"
+                              className="w-64 h-64 mx-auto"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="font-mono text-xs font-bold text-emerald-900 bg-emerald-50 px-3 py-1 rounded-lg inline-block border border-emerald-200">
+                              {passRecordNumber}
+                            </div>
+                            <p className="text-xs text-slate-500">
+                              Hold your mobile phone camera 10–20 cm away from the screen to scan.
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`/verify-pass?id=${encodeURIComponent(passRecordNumber)}&reg=${encodeURIComponent(registerNumber)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 shadow-xs"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                              <span>Open Verification Page Directly</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1032,8 +1281,8 @@ SECURITY & VERIFICATION:
                         <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                         Mandatory Gate Pass Verification Pipeline
                       </span>
-                      <span className="text-[11px] font-mono text-slate-400">
-                        Req #{registerNumber.slice(-4)}-GATE
+                      <span className="text-[11px] font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        Record #{passRecordNumber}
                       </span>
                     </div>
 
