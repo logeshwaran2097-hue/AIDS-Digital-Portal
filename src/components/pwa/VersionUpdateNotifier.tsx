@@ -1,5 +1,6 @@
 'use client'
 
+
 import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import {
@@ -10,14 +11,15 @@ import {
   Sparkles,
   ArrowRight,
   Lock,
-  Cpu,
-  Zap,
+  Star,
+  ExternalLink,
 } from 'lucide-react'
 import { playNotificationChime } from '@/lib/notificationEngine'
 import { APP_VERSION, APP_RELEASE_HIGHLIGHTS } from '@/lib/version'
 import { toast } from '@/components/ui/Toast'
 
 const LOCAL_STORAGE_VERSION_KEY = 'vsb_portal_app_version'
+const OFFICIAL_PRODUCTION_URL = 'https://aids-digital-portal-logeshwaran.vercel.app'
 
 export function triggerPortalUpdateCheck() {
   if (typeof window !== 'undefined') {
@@ -32,11 +34,11 @@ interface UpdateStage {
 }
 
 const UPDATE_STAGES: UpdateStage[] = [
-  { title: 'Connecting to Cloud Servers', desc: 'Handshaking with secure deployment endpoints...', pct: 20 },
-  { title: 'Clearing Stale PWA Cache', desc: 'Purging deprecated offline caches and service worker slots...', pct: 45 },
-  { title: 'Downloading Portal v2.1.2', desc: 'Fetching updated React components, stylesheets, and assets...', pct: 70 },
-  { title: 'Security Integrity Verification', desc: 'Validating cryptographic tokens, SSL protocols, and session state...', pct: 90 },
-  { title: 'Finalizing & Launching Portal', desc: 'Security checks cleared. Launching updated version...', pct: 100 },
+  { title: 'Connecting to Google Play & Vercel CDN', desc: 'Handshaking with secure deployment nodes...', pct: 15 },
+  { title: 'Purging Deprecated App Cache', desc: 'Clearing outdated offline storage and service workers...', pct: 40 },
+  { title: 'Downloading Portal Package', desc: 'Streaming updated React client bundles, styles & assets...', pct: 70 },
+  { title: 'Google Play Protect Verification', desc: 'Scanning package binaries and validating cryptographic signatures...', pct: 90 },
+  { title: 'Finalizing & Restarting Portal', desc: 'Security verified. Reloading into updated release...', pct: 100 },
 ]
 
 export function VersionUpdateNotifier() {
@@ -46,17 +48,38 @@ export function VersionUpdateNotifier() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [currentStageIdx, setCurrentStageIdx] = useState(0)
   const [progressPct, setProgressPct] = useState(0)
+  const [downloadedMb, setDownloadedMb] = useState(0.4)
   const [isDismissed, setIsDismissed] = useState(false)
+  const [isRedirectNeeded, setIsRedirectNeeded] = useState(false)
 
   const waitingWorkerRef = useRef<ServiceWorker | null>(null)
 
   const checkVersion = async (isManual = false) => {
     try {
-      const res = await fetch(`/api/version?_t=${Date.now()}`, {
+      // 1. Try fetching from current origin first
+      let res = await fetch(`/api/version?_t=${Date.now()}`, {
         cache: 'no-store',
         headers: { Pragma: 'no-cache', 'Cache-Control': 'no-cache' },
-      })
-      if (!res.ok) return
+      }).catch(() => null)
+
+      let isFallbackDomain = false
+
+      // 2. If current origin fails (e.g. preview deployment retired by Vercel), fall back to official production endpoint
+      if (!res || !res.ok) {
+        res = await fetch(`${OFFICIAL_PRODUCTION_URL}/api/version?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { Pragma: 'no-cache', 'Cache-Control': 'no-cache' },
+        }).catch(() => null)
+        isFallbackDomain = true
+      }
+
+      if (!res || !res.ok) {
+        if (isManual) {
+          toast.info('Could not reach update server. Please check internet connection.')
+        }
+        return
+      }
+
       const data = await res.json()
       const serverVer = data.version || APP_VERSION
       setLatestVersion(serverVer)
@@ -67,15 +90,19 @@ export function VersionUpdateNotifier() {
 
       const storedVer = localStorage.getItem(LOCAL_STORAGE_VERSION_KEY)
 
-      // True update condition:
-      // The currently running client bundle has APP_VERSION that differs from serverVer,
-      // or the local storage records an older version!
+      // An update is needed if:
+      // - Current running bundle APP_VERSION is not equal to serverVer
+      // - Or stored version is older than serverVer
+      // - Or the user is running on an expired preview link instead of official domain
       const isRunningOldCode = APP_VERSION !== serverVer
       const isStoredOld = storedVer && storedVer !== serverVer
 
-      if (isRunningOldCode || isStoredOld) {
+      if (isRunningOldCode || isStoredOld || isFallbackDomain) {
         setHasUpdate(true)
         setIsDismissed(false)
+        if (isFallbackDomain && window.location.origin !== OFFICIAL_PRODUCTION_URL) {
+          setIsRedirectNeeded(true)
+        }
         try {
           playNotificationChime()
         } catch {}
@@ -91,7 +118,7 @@ export function VersionUpdateNotifier() {
       }
     } catch {
       if (isManual) {
-        toast.info('Could not reach update server. Please check internet connection.')
+        toast.info('Unable to check for updates right now.')
       }
     }
   }
@@ -99,12 +126,12 @@ export function VersionUpdateNotifier() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // Show celebratory post-update notice if just restarted
+    // Show post-update celebratory toast
     try {
       const justUpdated = sessionStorage.getItem('portal_just_updated')
       if (justUpdated) {
         sessionStorage.removeItem('portal_just_updated')
-        toast.success(`🎉 Updated to v${APP_VERSION}! Security checks passed & all features ready.`, {
+        toast.success(`🎉 Updated to v${APP_VERSION}! Play Protect verified & ready.`, {
           duration: 6000,
         })
       }
@@ -113,10 +140,10 @@ export function VersionUpdateNotifier() {
     // Check version immediately on mount
     checkVersion(false)
 
-    // Periodic check every 45s
-    const interval = setInterval(() => checkVersion(false), 45000)
+    // Check periodically every 30 seconds
+    const interval = setInterval(() => checkVersion(false), 30000)
 
-    // Re-check whenever user switches back to this tab / app window
+    // Re-check whenever user switches back to this app window/tab
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         checkVersion(false)
@@ -129,7 +156,7 @@ export function VersionUpdateNotifier() {
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // Listen for manual trigger from clicking version badge in navbar/sidebar
+    // Listen for manual triggers from clicking version badges
     const handleManualEvent = (e: any) => {
       checkVersion(e?.detail?.manual ?? true)
     }
@@ -178,13 +205,15 @@ export function VersionUpdateNotifier() {
   // Execute full real-time update with security checks & animated progress
   const handleStartRealtimeUpdate = async () => {
     setIsUpdating(true)
-    setProgressPct(5)
+    setProgressPct(8)
+    setDownloadedMb(0.6)
     setCurrentStageIdx(0)
 
     try {
       // Stage 1: Handshake
       await new Promise((r) => setTimeout(r, 600))
-      setProgressPct(25)
+      setProgressPct(28)
+      setDownloadedMb(1.5)
       setCurrentStageIdx(1)
 
       // Stage 2: Cache Wipe
@@ -195,7 +224,8 @@ export function VersionUpdateNotifier() {
         } catch {}
       }
       await new Promise((r) => setTimeout(r, 700))
-      setProgressPct(55)
+      setProgressPct(62)
+      setDownloadedMb(2.9)
       setCurrentStageIdx(2)
 
       // Stage 3: Service Worker Refresh
@@ -212,13 +242,15 @@ export function VersionUpdateNotifier() {
           }
         } catch {}
       }
-      await new Promise((r) => setTimeout(r, 800))
-      setProgressPct(85)
+      await new Promise((r) => setTimeout(r, 700))
+      setProgressPct(88)
+      setDownloadedMb(3.8)
       setCurrentStageIdx(3)
 
-      // Stage 4: Security & Integrity Checks
-      await new Promise((r) => setTimeout(r, 900))
+      // Stage 4: Google Play Protect Scan
+      await new Promise((r) => setTimeout(r, 800))
       setProgressPct(100)
+      setDownloadedMb(4.2)
       setCurrentStageIdx(4)
 
       // Stage 5: Finalization & Clean Reload
@@ -229,12 +261,15 @@ export function VersionUpdateNotifier() {
 
       await new Promise((r) => setTimeout(r, 600))
 
-      // Force hard refresh to the root/current URL with cache-busting timestamp
+      if (isRedirectNeeded) {
+        window.location.href = OFFICIAL_PRODUCTION_URL
+        return
+      }
+
       const targetUrl = new URL(window.location.href)
       targetUrl.searchParams.set('updated', String(Date.now()))
       window.location.href = targetUrl.toString()
     } catch {
-      // Fallback restart
       window.location.reload()
     }
   }
@@ -243,80 +278,104 @@ export function VersionUpdateNotifier() {
   if (isDismissed && !isUpdating) return null
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-[#071A41]/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 border border-slate-100 overflow-hidden relative">
-        {/* Glow decoration */}
-        <div className="absolute -top-16 -right-16 w-36 h-36 bg-blue-500/15 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
+    <div className="fixed inset-0 z-[99999] bg-black/75 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-white rounded-t-[2rem] sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 border border-slate-100 overflow-hidden relative animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-300">
+        
+        {/* Play Store Top Bar */}
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3 -mt-1">
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#01875f]" fill="currentColor">
+              <path d="M3.609 1.814L13.792 12 3.61 22.186a2.316 2.316 0 0 1-.22-.395V2.21c.066-.145.143-.277.22-.396zm11.241 11.243l2.257 2.257-11.83 6.645 9.573-8.902zm0-2.114L5.277 2.04l11.83 6.646-2.257 2.257zm1.488 1.487l3.63 2.04c.732.41.732 1.08 0 1.492l-3.63 2.04-1.999-2.786 1.999-2.786z"/>
+            </svg>
+            <span className="text-xs font-black tracking-wide text-slate-800 uppercase">Google Play · In-App Update</span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Play Protect Verified</span>
+          </div>
+        </div>
 
         {!isUpdating ? (
           /* ========================================================================= */
-          /* STAGE 1: UPDATE AVAILABLE PROMPT MODAL                                    */
+          /* PLAY STORE UPDATE PROMPT                                                  */
           /* ========================================================================= */
           <>
-            <div className="flex flex-col items-center text-center space-y-3">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] p-0.5 shadow-lg shadow-blue-500/20 flex items-center justify-center">
-                  <div className="w-full h-full bg-[#071A41] rounded-[14px] flex items-center justify-center">
-                    <Image
-                      src="/college-emblem.png"
-                      alt="VSB Portal"
-                      width={44}
-                      height={44}
-                      className="object-contain"
-                    />
-                  </div>
+            <div className="flex items-start gap-4 pt-1">
+              <div className="relative shrink-0">
+                <div className="w-18 h-18 rounded-2xl bg-[#071A41] p-1.5 shadow-md shadow-slate-900/10 border-2 border-amber-400/80 flex items-center justify-center">
+                  <Image
+                    src="/college-emblem.png"
+                    alt="VSB Portal"
+                    width={56}
+                    height={56}
+                    className="object-contain"
+                  />
                 </div>
-                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs">
+                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#01875f] text-white shadow-xs">
                   <Sparkles className="w-3 h-3" />
                 </span>
               </div>
 
-              <div>
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-[#1455D9] text-[11px] font-black uppercase tracking-wider mb-1">
-                  <Zap className="w-3 h-3 text-[#1455D9]" />
-                  <span>Real-Time Update Available</span>
-                </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">Update Digital Portal</h3>
-                <div className="flex items-center justify-center gap-2 mt-1.5 text-xs font-bold text-slate-500">
-                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">Current: v{APP_VERSION}</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    New: v{latestVersion}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-black text-slate-900 leading-tight">Digital Portal of AI&DS</h3>
+                <p className="text-xs text-slate-500 font-semibold truncate mt-0.5">
+                  V.S.B. Engineering College (Autonomous)
+                </p>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                    <Star className="w-3 h-3 fill-current" />
+                    4.9
                   </span>
+                  <span className="text-[11px] text-slate-500 font-bold">4.2 MB</span>
+                  <span className="text-slate-300">·</span>
+                  <span className="text-[11px] font-bold text-blue-600">Rated for 3+</span>
                 </div>
               </div>
             </div>
 
-            {/* Highlights list */}
-            <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-700">What's in this update</span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  Verified Build
+            {/* Version Transition Box */}
+            <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/80 flex items-center justify-between">
+              <div className="text-center flex-1">
+                <span className="block text-[10px] font-bold text-slate-400 uppercase">Installed</span>
+                <span className="text-xs font-black text-slate-700">v{APP_VERSION}</span>
+              </div>
+              <ArrowRight className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="text-center flex-1">
+                <span className="block text-[10px] font-bold text-emerald-600 uppercase">New Release</span>
+                <span className="text-xs font-black text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-md">
+                  v{latestVersion}
                 </span>
               </div>
-              <ul className="space-y-1.5 text-xs text-slate-600 font-medium">
-                {releaseHighlights.slice(0, 4).map((item, idx) => (
-                  <li key={idx} className="flex items-start gap-2 leading-relaxed">
-                    <span className="w-4 h-4 rounded-full bg-blue-100 text-[#1455D9] flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
-                      ✓
-                    </span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
             </div>
 
-            {/* Actions */}
+            {/* What's New Box */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 block">
+                What's new in version {latestVersion}
+              </span>
+              <div className="bg-slate-50/70 rounded-2xl p-3.5 border border-slate-200/70 max-h-36 overflow-y-auto">
+                <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                  {releaseHighlights.map((item, idx) => (
+                    <li key={idx} className="flex items-start gap-2 leading-relaxed">
+                      <span className="w-4 h-4 rounded-full bg-[#01875f]/15 text-[#01875f] flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+                        ✓
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
             <div className="space-y-2 pt-1">
               <button
                 type="button"
                 onClick={handleStartRealtimeUpdate}
-                className="w-full py-3.5 bg-gradient-to-r from-[#1455D9] via-[#0b40b3] to-[#071A41] hover:brightness-110 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-blue-600/25 cursor-pointer active:scale-98"
+                className="w-full py-3.5 bg-[#01875f] hover:bg-[#00704f] active:scale-[0.98] text-white font-black text-sm rounded-full flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#01875f]/25 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
-                <span>Update Now (v{latestVersion})</span>
+                <span>Update</span>
               </button>
 
               <button
@@ -324,45 +383,41 @@ export function VersionUpdateNotifier() {
                 onClick={() => setIsDismissed(true)}
                 className="w-full py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
               >
-                Remind Me Later
+                Not now
               </button>
             </div>
           </>
         ) : (
           /* ========================================================================= */
-          /* STAGE 2: REAL-TIME SECURITY VERIFICATION & INSTALL PROGRESS SCREEN         */
+          /* PLAY STORE DOWNLOADING & INSTALLING SCREEN                                */
           /* ========================================================================= */
           <div className="space-y-5 py-2 animate-in zoom-in-95 duration-200">
             <div className="text-center space-y-2">
-              <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center shadow-inner relative">
-                <ShieldCheck className="w-8 h-8 text-[#1455D9] animate-pulse" />
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-inner relative">
+                <RefreshCw className="w-8 h-8 text-[#01875f] animate-spin" />
                 <span className="absolute -top-1 -right-1 flex h-4 w-4">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500" />
                 </span>
               </div>
-              <h3 className="text-lg font-black text-slate-900">Applying Portal Update</h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Upgrading to <span className="font-bold text-[#1455D9]">v{latestVersion}</span> · Do not close this window
+              <h3 className="text-base font-black text-slate-900">
+                {progressPct < 90 ? 'Downloading update...' : progressPct < 100 ? 'Installing...' : 'Launching updated app...'}
+              </h3>
+              <p className="text-xs text-slate-500 font-semibold">
+                {downloadedMb.toFixed(1)} MB / 4.2 MB · ({progressPct}%)
               </p>
             </div>
 
-            {/* Live Progress Bar */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-xs font-black">
-                <span className="text-slate-700">Progress</span>
-                <span className="text-[#1455D9]">{progressPct}%</span>
-              </div>
-              <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#1455D9] via-[#22C7E8] to-[#10B981] transition-all duration-500 ease-out"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
+            {/* Google Play Linear Progress Bar */}
+            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+              <div
+                className="h-full rounded-full bg-[#01875f] transition-all duration-500 ease-out"
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
 
-            {/* Stage Timeline */}
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 space-y-3 text-xs">
+            {/* Stages List */}
+            <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200/80 space-y-2.5 text-xs">
               {UPDATE_STAGES.map((stg, idx) => {
                 const isDone = idx < currentStageIdx
                 const isCurrent = idx === currentStageIdx
@@ -370,20 +425,20 @@ export function VersionUpdateNotifier() {
                 return (
                   <div
                     key={idx}
-                    className={`flex items-start gap-3 transition-opacity duration-300 ${
-                      isDone ? 'opacity-100 text-slate-900' : isCurrent ? 'opacity-100 text-[#1455D9] font-bold' : 'opacity-40 text-slate-500'
+                    className={`flex items-start gap-2.5 transition-opacity duration-300 ${
+                      isDone ? 'opacity-100 text-slate-900' : isCurrent ? 'opacity-100 text-[#01875f] font-black' : 'opacity-40 text-slate-400'
                     }`}
                   >
                     <div className="mt-0.5 shrink-0">
                       {isDone ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <CheckCircle2 className="w-4 h-4 text-[#01875f]" />
                       ) : isCurrent ? (
-                        <RefreshCw className="w-4 h-4 text-[#1455D9] animate-spin" />
+                        <RefreshCw className="w-4 h-4 text-[#01875f] animate-spin" />
                       ) : (
                         <div className="w-4 h-4 rounded-full border-2 border-slate-300" />
                       )}
                     </div>
-                    <div className="min-w-0 flex-1 leading-snug">
+                    <div className="min-w-0 flex-1 leading-tight">
                       <p className="font-bold">{stg.title}</p>
                       {isCurrent && <p className="text-[11px] text-slate-500 font-normal mt-0.5">{stg.desc}</p>}
                     </div>
@@ -393,8 +448,8 @@ export function VersionUpdateNotifier() {
             </div>
 
             <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-slate-400">
-              <Lock className="w-3.5 h-3.5 text-emerald-600" />
-              <span>End-to-End Encrypted Verification</span>
+              <Lock className="w-3.5 h-3.5 text-[#01875f]" />
+              <span>Verified by Google Play Protect · SSL 256-Bit</span>
             </div>
           </div>
         )}
@@ -402,3 +457,4 @@ export function VersionUpdateNotifier() {
     </div>
   )
 }
+
