@@ -114,8 +114,8 @@ interface StudentInClass {
   name: string
   email: string
   phone: string
-  attendancePercent: number
-  cgpa: number
+  attendancePercent: number | null
+  cgpa: number | null
   status: 'active' | 'warning' | 'critical'
 }
 
@@ -855,17 +855,37 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.students) && data.students.length > 0) {
-          const mapped: StudentInClass[] = data.students.map((s: any, idx: number) => {
-            const att = 90 + ((idx * 3) % 9) - ((idx % 5 === 0) ? 18 : 0)
+          const mapped: StudentInClass[] = data.students.map((s: any) => {
+            let attVal: number | null = null
+            if (s.attendance !== null && s.attendance !== undefined && s.attendance !== '') {
+              const parsed = parseFloat(String(s.attendance).replace('%', ''))
+              if (!isNaN(parsed) && parsed >= 0) {
+                attVal = parsed
+              }
+            }
+
+            let cgpaVal: number | null = null
+            if (s.cgpa !== null && s.cgpa !== undefined && s.cgpa !== '') {
+              const parsed = parseFloat(String(s.cgpa))
+              if (!isNaN(parsed) && parsed >= 0) {
+                cgpaVal = parsed
+              }
+            }
+
+            const status: 'active' | 'warning' | 'critical' =
+              attVal !== null
+                ? (attVal < 75 ? 'critical' : attVal < 85 ? 'warning' : 'active')
+                : 'active'
+
             return {
               id: s.id,
               registerNumber: s.registerNumber,
               name: s.name,
               email: s.email,
-              phone: s.phone || '+91 98765 43210',
-              attendancePercent: Math.min(100, Math.max(68, att)),
-              cgpa: Number((7.5 + ((idx * 0.17) % 2.3)).toFixed(2)),
-              status: att < 75 ? 'critical' : att < 85 ? 'warning' : 'active',
+              phone: s.phone || '',
+              attendancePercent: attVal,
+              cgpa: cgpaVal,
+              status,
             }
           })
           setClassStudents(mapped)
@@ -1088,7 +1108,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
             `Assigned Class: ${selectedAdvisorDossier.advisorBatch || 'Year 2, Sem 3, Sec A'}`,
             `Advisor Email: ${selectedAdvisorDossier.email} | Phone: ${selectedAdvisorDossier.phone || 'N/A'}`,
             `Total Enrolled Students: ${classStudents.length} Students`,
-            `Class Average Attendance: ${(classStudents.reduce((acc, s) => acc + s.attendancePercent, 0) / (classStudents.length || 1)).toFixed(1)}%`,
+            (() => {
+              const recorded = classStudents.filter((s) => s.attendancePercent !== null)
+              if (recorded.length === 0) return 'Class Average Attendance: Not Recorded'
+              const avg = recorded.reduce((acc, s) => acc + (s.attendancePercent || 0), 0) / recorded.length
+              return `Class Average Attendance: ${avg.toFixed(1)}%`
+            })(),
           ],
         },
         {
@@ -1101,7 +1126,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
           heading: '3. STUDENT ROLL & ATTENDANCE STANDING',
           body: classStudents.map(
             (s, idx) =>
-              `${idx + 1}. ${s.registerNumber} - ${s.name} | Attendance: ${s.attendancePercent}% | CGPA: ${s.cgpa} | Status: ${s.status.toUpperCase()}`
+              `${idx + 1}. ${s.registerNumber} - ${s.name} | Attendance: ${s.attendancePercent !== null ? `${s.attendancePercent}%` : 'N/A'} | CGPA: ${s.cgpa !== null ? s.cgpa.toFixed(2) : 'N/A'} | Status: ${s.status.toUpperCase()}`
           ),
         },
       ],
@@ -3007,9 +3032,12 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
                   <span className="text-[10px] font-bold text-gray-300 uppercase block">Class Avg Attendance</span>
                   <p className="text-xl font-black text-[#22C7E8] mt-0.5">
-                    {classStudents.length > 0
-                      ? (classStudents.reduce((acc, s) => acc + s.attendancePercent, 0) / classStudents.length).toFixed(1)
-                      : '94.2'}%
+                    {(() => {
+                      const recorded = classStudents.filter((s) => s.attendancePercent !== null)
+                      if (recorded.length === 0) return '—'
+                      const avg = recorded.reduce((acc, s) => acc + (s.attendancePercent || 0), 0) / recorded.length
+                      return `${avg.toFixed(1)}%`
+                    })()}
                   </p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
@@ -3019,7 +3047,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                 <div className="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10">
                   <span className="text-[10px] font-bold text-gray-300 uppercase block">Attendance Defaulters</span>
                   <p className="text-xl font-black text-rose-400 mt-0.5">
-                    {classStudents.filter((s) => s.attendancePercent < 75).length} Critical
+                    {classStudents.filter((s) => s.attendancePercent !== null && (s.attendancePercent as number) < 75).length} Critical
                   </p>
                 </div>
               </div>
@@ -3030,7 +3058,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               {[
                 { id: 'students', label: '1. Student Roll Roster', icon: <Users className="w-3.5 h-3.5" />, count: classStudents.length },
                 { id: 'handlers', label: '2. Semester Labs & Handlers', icon: <FlaskConical className="w-3.5 h-3.5" />, count: DEFAULT_SUBJECT_HANDLERS.length },
-                { id: 'attendance', label: '3. Defaulters Watch (<75%)', icon: <AlertTriangle className="w-3.5 h-3.5" />, count: classStudents.filter((s) => s.attendancePercent < 75).length },
+                { id: 'attendance', label: '3. Defaulters Watch (<75%)', icon: <AlertTriangle className="w-3.5 h-3.5" />, count: classStudents.filter((s) => s.attendancePercent !== null && (s.attendancePercent as number) < 75).length },
                 { id: 'notices', label: '4. Class Notices & Broadcasts', icon: <MessageSquare className="w-3.5 h-3.5" /> },
               ].map((t) => (
                 <button
@@ -3095,24 +3123,30 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                             <td className="p-3 font-bold text-[#071A3D]">{s.name}</td>
                             <td className="p-3 text-gray-600">{s.email}</td>
                             <td className="p-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-16 bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                                  <div
-                                    className={cn(
-                                      'h-full rounded-full',
-                                      s.attendancePercent >= 85
-                                        ? 'bg-green-500'
-                                        : s.attendancePercent >= 75
-                                        ? 'bg-amber-500'
-                                        : 'bg-red-500'
-                                    )}
-                                    style={{ width: `${s.attendancePercent}%` }}
-                                  />
+                              {s.attendancePercent !== null ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-16 bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                                    <div
+                                      className={cn(
+                                        'h-full rounded-full',
+                                        s.attendancePercent >= 85
+                                          ? 'bg-green-500'
+                                          : s.attendancePercent >= 75
+                                          ? 'bg-amber-500'
+                                          : 'bg-red-500'
+                                      )}
+                                      style={{ width: `${Math.min(100, Math.max(0, s.attendancePercent))}%` }}
+                                    />
+                                  </div>
+                                  <span className="font-mono font-bold">{s.attendancePercent}%</span>
                                 </div>
-                                <span className="font-mono font-bold">{s.attendancePercent}%</span>
-                              </div>
+                              ) : (
+                                <span className="text-gray-400 font-mono">—</span>
+                              )}
                             </td>
-                            <td className="p-3 font-mono font-bold text-gray-800">{s.cgpa}</td>
+                            <td className="p-3 font-mono font-bold text-gray-800">
+                              {s.cgpa !== null ? s.cgpa.toFixed(2) : <span className="text-gray-400 font-mono">—</span>}
+                            </td>
                             <td className="p-3 text-right">
                               <span
                                 className={cn(
@@ -3197,22 +3231,32 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {classStudents.filter((s) => s.attendancePercent < 75).map((s) => (
-                          <tr key={s.id} className="bg-red-50/30">
-                            <td className="p-3 font-mono font-bold text-red-600">{s.registerNumber}</td>
-                            <td className="p-3 font-bold text-[#071A3D]">{s.name}</td>
-                            <td className="p-3 text-gray-600">{s.email} · {s.phone}</td>
-                            <td className="p-3 font-mono font-black text-red-600">{s.attendancePercent}%</td>
-                            <td className="p-3 text-right">
-                              <button
-                                onClick={() => alert(`Counseling reminder dispatched to ${s.name} (${s.email}) and Parent.`)}
-                                className="px-3 py-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs cursor-pointer shadow-xs"
-                              >
-                                Send Notice
-                              </button>
+                        {classStudents.filter((s) => s.attendancePercent !== null && (s.attendancePercent as number) < 75).length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="p-8 text-center text-gray-400 font-medium">
+                              No attendance defaulters (&lt;75%) recorded in this class roster.
                             </td>
                           </tr>
-                        ))}
+                        ) : (
+                          classStudents
+                            .filter((s) => s.attendancePercent !== null && (s.attendancePercent as number) < 75)
+                            .map((s) => (
+                              <tr key={s.id} className="bg-red-50/30">
+                                <td className="p-3 font-mono font-bold text-red-600">{s.registerNumber}</td>
+                                <td className="p-3 font-bold text-[#071A3D]">{s.name}</td>
+                                <td className="p-3 text-gray-600">{s.email}{s.phone ? ` · ${s.phone}` : ''}</td>
+                                <td className="p-3 font-mono font-black text-red-600">{s.attendancePercent}%</td>
+                                <td className="p-3 text-right">
+                                  <button
+                                    onClick={() => alert(`Counseling reminder dispatched to ${s.name} (${s.email}) and Parent.`)}
+                                    className="px-3 py-1 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs cursor-pointer shadow-xs"
+                                  >
+                                    Send Notice
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                        )}
                       </tbody>
                     </table>
                   </div>
