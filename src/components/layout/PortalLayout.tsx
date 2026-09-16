@@ -26,6 +26,8 @@ import {
   ShieldCheck,
   ChevronDown,
   Target,
+  Users,
+  School,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/ai/FloatingChatbot'
@@ -830,7 +832,7 @@ export function PortalLayout({
       {/* Slide-out Navigation Drawer / Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#051330] via-[#071A3D] to-[#040D21] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-blue-500/20 shadow-2xl',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#051330] via-[#071A3D] to-[#040D21] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-blue-500/20 shadow-2xl pb-safe',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
@@ -1473,9 +1475,11 @@ export function PortalLayout({
 
       {/* Mobile Bottom 5-Tab Navigation Bar */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 grid grid-cols-5 py-2 px-1 pb-safe shadow-lg"
+        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/90 grid grid-cols-5 py-1.5 px-1 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.06)] select-none"
         aria-label="Bottom mobile navigation"
+        style={{ touchAction: 'manipulation' }}
       >
+        {/* Tab 1: Home */}
         <Link
           href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'}
           prefetch={true}
@@ -1483,7 +1487,7 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
             (activePath || pathname) === '/dashboard' || (activePath || pathname) === '/faculty-dashboard' || (activePath || pathname) === '/hod-dashboard' || (activePath || pathname) === '/admin/dashboard'
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
@@ -1492,56 +1496,64 @@ export function PortalLayout({
           <Home className="h-5 w-5" />
           <span className="truncate max-w-[64px]">Home</span>
         </Link>
+
+        {/* Tab 2: Role-Tailored Navigation (Students for Admin, Subjects for Faculty/Student, OD Proofs for HOD) */}
         <Link
-          href={role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects'}
+          href={role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects'}
           prefetch={true}
-          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
-          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
-          onClick={() => handleNavClick(role === 'admin' ? '/admin/academics' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
+          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
+          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
+          onClick={() => handleNavClick(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors relative',
-            (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
+            (activePath || pathname).includes('students') || (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
               ? 'text-[#1455D9]'
               : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <div className="relative">
-            {role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
-            {getMenuNotificationCount(role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'hod' ? 'OD Proofs' : 'Courses') > 0 && (
+            {role === 'admin' ? <Users className="h-5 w-5" /> : role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+            {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 0 && (
               <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
-                {getMenuNotificationCount(role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'hod' ? 'OD Proofs' : 'Courses') > 9 ? '9+' : getMenuNotificationCount(role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'hod' ? 'OD Proofs' : 'Courses')}
+                {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses')}
               </span>
             )}
           </div>
-          <span className="truncate max-w-[64px]">{role === 'hod' ? 'OD Proofs' : 'Courses'}</span>
+          <span className="truncate max-w-[64px]">{role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses'}</span>
         </Link>
+
+        {/* Tab 3: Role-Tailored Navigation (Faculty for Admin, Students for Faculty, Projects for Student/HOD) */}
         <Link
-          href={role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects'}
+          href={role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects'}
           prefetch={true}
-          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects') } catch {} }}
-          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects') } catch {} }}
-          onClick={() => handleNavClick(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects')}
+          onMouseEnter={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
+          onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
+          onClick={() => handleNavClick(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors relative',
-            (activePath || pathname).includes('projects') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
+            (activePath || pathname).includes('faculty') || (activePath || pathname).includes('projects') || ((activePath || pathname).includes('students') && role === 'faculty')
+              ? 'text-[#1455D9]'
+              : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <div className="relative">
-            <FolderOpen className="h-5 w-5" />
-            {getMenuNotificationCount(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects', 'Projects') > 0 && (
+            {role === 'admin' ? <School className="h-5 w-5" /> : role === 'faculty' ? <Users className="h-5 w-5" /> : <FolderOpen className="h-5 w-5" />}
+            {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 0 && (
               <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
-                {getMenuNotificationCount(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects', 'Projects') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/projects' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/projects' : '/dashboard/projects', 'Projects')}
+                {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects')}
               </span>
             )}
           </div>
-          <span className="truncate max-w-[64px]">Projects</span>
+          <span className="truncate max-w-[64px]">{role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects'}</span>
         </Link>
+
+        {/* Tab 4: Alerts / Notifications */}
         <Link
           href={notificationsHref}
           prefetch={true}
           onClick={() => handleNavClick(notificationsHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
             (activePath || pathname).includes('notifications') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
@@ -1555,6 +1567,8 @@ export function PortalLayout({
           </div>
           <span className="truncate max-w-[64px]">Alerts</span>
         </Link>
+
+        {/* Tab 5: Profile */}
         <Link
           href={profileHref}
           prefetch={true}
@@ -1562,7 +1576,7 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(profileHref) } catch {} }}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-semibold transition-colors',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors',
             (activePath || pathname).includes('profile') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >

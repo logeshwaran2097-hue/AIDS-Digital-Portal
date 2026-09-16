@@ -33,6 +33,10 @@ import {
   FileSpreadsheet,
   Bus,
   Building,
+  LayoutGrid,
+  List,
+  Copy,
+  PhoneCall,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { playNotificationChime } from '@/lib/notificationEngine'
@@ -74,6 +78,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [sectionFilter, setSectionFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [isLoading, setIsLoading] = useState(false)
+
+  // Mobile / Desktop View Mode: Defaults to 'cards' on mobile screens, 'table' on desktop
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards')
+  const [copiedReg, setCopiedReg] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setViewMode('table')
+    }
+  }, [])
+
+  const handleCopyReg = (reg: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(reg)
+      setCopiedReg(reg)
+      toast.success(`Copied "${reg}" to clipboard`)
+      setTimeout(() => setCopiedReg(null), 2000)
+    }
+  }
 
   // Main Tab Navigation: 'directory' | 'requests'
   const [activeMainTab, setActiveMainTab] = useState<'directory' | 'requests'>('directory')
@@ -444,6 +467,38 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     }
   }
 
+  const openEditModal = (s: StudentRecord) => {
+    const cleanEmail = s.email || ''
+    setSelectedStudent(s)
+    setFormData({
+      registerNumber: s.registerNumber || '',
+      name: s.name || '',
+      email: cleanEmail,
+      phone: s.phone || '',
+      parentPhone: s.parentPhone || '',
+      dateOfBirth: s.dateOfBirth || '',
+      bloodGroup: s.bloodGroup || '',
+      residencyStatus: s.residencyStatus || '',
+      busNo: s.busNo || '',
+      boardingPoint: s.boardingPoint || '',
+      busDetails: s.busDetails || '',
+      hostelBlock: s.hostelBlock || '',
+      roomNo: s.roomNo || '',
+      address: s.address || '',
+      year: s.year || 1,
+      semester: s.semester || 1,
+      batch: s.batch || '',
+      section: s.section || 'A',
+      advisorName: s.advisorName || '',
+      status: s.status || 'active',
+      cgpa: s.cgpa || '',
+      attendance: s.attendance || '',
+      password: '',
+    })
+    setEditFormError(null)
+    setIsEditModalOpen(true)
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
       {/* Header Banner */}
@@ -803,10 +858,42 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           <span className="text-xs text-gray-500 font-bold px-2 py-1 bg-gray-50 rounded-lg border border-gray-200 whitespace-nowrap">
             Showing {filteredStudents.length} of {students.length}
           </span>
+
+          {/* View Mode Toggle: Cards vs Table */}
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200">
+            <button
+              type="button"
+              onClick={() => setViewMode('cards')}
+              className={cn(
+                'px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
+                viewMode === 'cards'
+                  ? 'bg-white text-[#1455D9] shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900'
+              )}
+              title="Mobile Cards View"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
+                viewMode === 'table'
+                  ? 'bg-white text-[#1455D9] shadow-xs'
+                  : 'text-gray-500 hover:text-gray-900'
+              )}
+              title="Desktop Table View"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Table</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Students Data Table / Empty State */}
+      {/* Students Data Display: Cards or Table / Empty State */}
       {students.length === 0 ? (
         <div className="bg-white rounded-3xl border border-dashed border-gray-300 p-12 text-center shadow-xs">
           <GraduationCap className="w-12 h-12 text-blue-300 mx-auto mb-3" />
@@ -821,7 +908,178 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             <Plus className="w-4 h-4" /> + Register Student Candidate
           </button>
         </div>
+      ) : filteredStudents.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-gray-200 p-10 text-center text-gray-400">
+          No matching student records found for the selected filters.
+        </div>
+      ) : viewMode === 'cards' ? (
+        /* Mobile & Tablet Card View */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+          {filteredStudents.map((s, idx) => (
+            <Card
+              key={s.id}
+              className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
+            >
+              <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                {/* Card Top: Avatar, Name, Reg Number, Status */}
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0">
+                      {s.name.charAt(0) || 'S'}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-[#071A3D] text-sm truncate leading-snug">
+                        {s.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-xs font-black text-[#1455D9]">
+                          {s.registerNumber}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyReg(s.registerNumber)}
+                          className="p-1 rounded-md text-gray-400 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                          title="Copy Register Number"
+                        >
+                          {copiedReg === s.registerNumber ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 rounded-full text-[10px] font-black uppercase shrink-0',
+                      s.status.toLowerCase() === 'active'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-gray-100 text-gray-600'
+                    )}
+                  >
+                    {s.status}
+                  </span>
+                </div>
+
+                {/* Cohort Badges: Year, Sem, Section, Batch */}
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <span className="px-2 py-0.5 rounded-lg bg-purple-50 text-purple-700 font-bold border border-purple-200">
+                    Yr {s.year} / Sem {s.semester}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-[#1455D9] font-bold border border-blue-200">
+                    Sec {s.section}
+                  </span>
+                  {s.batch && (
+                    <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                      {s.batch}
+                    </span>
+                  )}
+                  {s.cgpa && (
+                    <span className="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 font-mono">
+                      CGPA {s.cgpa}
+                    </span>
+                  )}
+                </div>
+
+                {/* Class Advisor Highlight */}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs flex items-center justify-between gap-2">
+                  <span className="text-gray-500 text-[11px] font-medium flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5 text-[#1455D9]" />
+                    Advisor:
+                  </span>
+                  <span className="font-bold text-[#071A3D] truncate text-[11.5px]">
+                    {s.advisorName || 'Not Assigned'}
+                  </span>
+                </div>
+
+                {/* Residency / Transit Details */}
+                {s.residencyStatus && (
+                  <div className="text-[11px] text-gray-600 flex items-center gap-1.5 px-1">
+                    {s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock ? (
+                      <span className="flex items-center gap-1 text-amber-800 font-medium">
+                        <Building className="w-3.5 h-3.5 text-amber-600" />
+                        {s.hostelBlock ? `Block ${s.hostelBlock}${s.roomNo ? ` · Rm ${s.roomNo}` : ''}` : 'Campus Hostel'}
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-blue-700 font-medium truncate">
+                        <Bus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        {s.busNo ? `Bus #${s.busNo}${s.boardingPoint ? ` (${s.boardingPoint})` : ''}` : (s.boardingPoint || 'Day Scholar')}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Direct Contact Links */}
+                <div className="pt-2 border-t border-gray-100 flex flex-col gap-1 text-xs text-gray-600">
+                  {s.phone && (
+                    <a
+                      href={`tel:${s.phone}`}
+                      className="flex items-center gap-2 text-slate-700 hover:text-[#1455D9] transition-colors py-0.5"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="font-mono font-semibold text-[11px]">{s.phone}</span>
+                      <span className="text-[10px] text-gray-400 font-normal">(Student)</span>
+                    </a>
+                  )}
+                  {s.parentPhone && (
+                    <a
+                      href={`tel:${s.parentPhone}`}
+                      className="flex items-center gap-2 text-slate-700 hover:text-[#1455D9] transition-colors py-0.5"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span className="font-mono font-semibold text-[11px]">{s.parentPhone}</span>
+                      <span className="text-[10px] text-gray-400 font-normal">(Parent)</span>
+                    </a>
+                  )}
+                  {s.email && !s.email.endsWith('@student.vsb.edu.in') && (
+                    <a
+                      href={`mailto:${s.email}`}
+                      className="flex items-center gap-2 text-slate-700 hover:text-[#1455D9] transition-colors py-0.5 truncate"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span className="truncate text-[11px] font-medium">{s.email}</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* Touch Action Buttons Row */}
+                <div className="pt-2 border-t border-gray-100 grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedStudent(s)
+                      setIsViewModalOpen(true)
+                    }}
+                    className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-[#071A3D] hover:text-[#1455D9] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Dossier</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(s)}
+                    className="py-2 px-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(s.id, s.name, s.registerNumber)}
+                    className="py-2 px-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
+        /* Desktop Table View */
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-left text-xs">
@@ -926,37 +1184,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => {
-                              const cleanEmail = s.email || ''
-                              setSelectedStudent(s)
-                              setFormData({
-                                registerNumber: s.registerNumber || '',
-                                name: s.name || '',
-                                email: cleanEmail,
-                                phone: s.phone || '',
-                                parentPhone: s.parentPhone || '',
-                                dateOfBirth: s.dateOfBirth || '',
-                                bloodGroup: s.bloodGroup || '',
-                                residencyStatus: s.residencyStatus || '',
-                                busNo: s.busNo || '',
-                                boardingPoint: s.boardingPoint || '',
-                                busDetails: s.busDetails || '',
-                                hostelBlock: s.hostelBlock || '',
-                                roomNo: s.roomNo || '',
-                                address: s.address || '',
-                                year: s.year || 1,
-                                semester: s.semester || 1,
-                                batch: s.batch || '',
-                                section: s.section || 'A',
-                                advisorName: s.advisorName || '',
-                                status: s.status || 'active',
-                                cgpa: s.cgpa || '',
-                                attendance: s.attendance || '',
-                                password: '',
-                              })
-                              setEditFormError(null)
-                              setIsEditModalOpen(true)
-                            }}
+                            onClick={() => openEditModal(s)}
                             className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
                             title="Edit Record"
                           >
@@ -1217,8 +1445,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
       {/* MODAL: ADD STUDENT */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Register Real Student Candidate</h3>
@@ -1493,8 +1721,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
       {/* MODAL: EDIT STUDENT */}
       {isEditModalOpen && selectedStudent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#071A3D]">Edit Student Record</h3>
@@ -1856,8 +2084,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
       {/* MODAL: VIEW STUDENT DOSSIER */}
       {isViewModalOpen && selectedStudent && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 animate-scale-up">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">

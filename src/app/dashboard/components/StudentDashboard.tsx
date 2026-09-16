@@ -252,10 +252,10 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       />
 
       {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-4 sm:p-8 text-white shadow-2xl border border-white/10">
         <div className="absolute -right-10 -bottom-10 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(34,199,232,0.25)_0%,_transparent_70%)] pointer-events-none" />
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center gap-3.5 sm:gap-5">
             {currentUser.profileImage ? (
               <img
                 src={currentUser.profileImage}
