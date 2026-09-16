@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { Download, X, Share, PlusSquare, MoreVertical, Smartphone, ExternalLink, CheckCircle2, ShieldCheck } from 'lucide-react'
 import Image from 'next/image'
 import { RealtimeAppDownloader } from './RealtimeAppDownloader'
+import { AppSecurityInstallModal } from './AppSecurityInstallModal'
 import { toast } from '@/components/ui/Toast'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -16,6 +17,7 @@ declare global {
     __pwaInstallPrompt?: BeforeInstallPromptEvent | null
     __triggerPwaInstall?: () => void
     __openAppDownloader?: () => void
+    __openAppSecurityInstallModal?: () => void
   }
 }
 
@@ -26,6 +28,7 @@ export function PWAInstall() {
   const [showIOSGuide, setShowIOSGuide] = useState(false)
   const [showChromeGuide, setShowChromeGuide] = useState(false)
   const [isDownloaderOpen, setIsDownloaderOpen] = useState(false)
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false)
   const promptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
   // Primary install handler triggered by user clicking "Install App"
@@ -167,12 +170,17 @@ export function PWAInstall() {
       setIsDownloaderOpen(true)
     }
 
+    window.__openAppSecurityInstallModal = () => {
+      setIsSecurityModalOpen(true)
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
       window.removeEventListener('pwa-prompt-captured', onPromptCaptured)
       window.removeEventListener('appinstalled', onAppInstalled)
       window.__triggerPwaInstall = undefined
       window.__openAppDownloader = undefined
+      window.__openAppSecurityInstallModal = undefined
     }
   }, [handleInstall])
 
@@ -309,6 +317,13 @@ export function PWAInstall() {
       <RealtimeAppDownloader
         isOpen={isDownloaderOpen}
         onClose={() => setIsDownloaderOpen(false)}
+      />
+
+      {/* Play Store & Apple Security Verification Install Modal */}
+      <AppSecurityInstallModal
+        isOpen={isSecurityModalOpen}
+        onClose={() => setIsSecurityModalOpen(false)}
+        onProceedInstall={handleInstall}
       />
     </>
   )

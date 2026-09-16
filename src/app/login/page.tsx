@@ -39,6 +39,7 @@ import {
   Target,
 } from 'lucide-react'
 import { RealtimeAppDownloader } from '@/components/pwa/RealtimeAppDownloader'
+import { AppSecurityInstallModal } from '@/components/pwa/AppSecurityInstallModal'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 import { APP_VERSION_LABEL } from '@/lib/version'
 import { triggerPortalUpdateCheck } from '@/components/pwa/VersionUpdateNotifier'
@@ -46,6 +47,7 @@ import { triggerPortalUpdateCheck } from '@/components/pwa/VersionUpdateNotifier
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = React.useState<'student' | 'faculty' | 'advisor' | 'hod' | 'admin'>('student')
   const [showDownloader, setShowDownloader] = React.useState(false)
+  const [showSecurityInstallModal, setShowSecurityInstallModal] = React.useState(false)
   const [showVisionModal, setShowVisionModal] = React.useState(false)
   const [isAppInstalled, setIsAppInstalled] = React.useState(false)
   const [registerNumber, setRegisterNumber] = React.useState('')
@@ -130,24 +132,8 @@ export default function LoginPage() {
     }
   }, [])
 
-  const handleDirectInstall = async () => {
-    if (typeof window !== 'undefined') {
-      if ((window as any).__triggerPwaInstall) {
-        ;(window as any).__triggerPwaInstall()
-      } else if ((window as any).__pwaInstallPrompt) {
-        try {
-          await (window as any).__pwaInstallPrompt.prompt()
-        } catch {
-          if ((window as any).__openAppDownloader) {
-            ;(window as any).__openAppDownloader()
-          }
-        }
-      } else if ((window as any).__openAppDownloader) {
-        ;(window as any).__openAppDownloader()
-      } else {
-        setShowDownloader(true)
-      }
-    }
+  const handleDirectInstall = () => {
+    setShowSecurityInstallModal(true)
   }
 
   // LUXURY AUTHENTICATION ANIMATION STATES
@@ -2886,6 +2872,12 @@ export default function LoginPage() {
           </div>
         </div>
       )}
+
+      {/* Play Store & Apple Security Verification Install Modal */}
+      <AppSecurityInstallModal
+        isOpen={showSecurityInstallModal}
+        onClose={() => setShowSecurityInstallModal(false)}
+      />
 
       {/* Real-Time App Downloader Modal */}
       <RealtimeAppDownloader

@@ -187,9 +187,13 @@ export function PortalLayout({
     }
   }, [])
 
-  const handleDirectInstall = async () => {
-    if (typeof window !== 'undefined' && (window as any).__triggerPwaInstall) {
-      ;(window as any).__triggerPwaInstall()
+  const handleDirectInstall = () => {
+    if (typeof window !== 'undefined') {
+      if ((window as any).__openAppSecurityInstallModal) {
+        ;(window as any).__openAppSecurityInstallModal()
+      } else if ((window as any).__triggerPwaInstall) {
+        ;(window as any).__triggerPwaInstall()
+      }
     }
   }
 
