@@ -19,7 +19,9 @@ import {
   Lock,
   Printer,
   Sparkles,
-  Check
+  Check,
+  Bus,
+  MapPin
 } from 'lucide-react'
 
 function VerifyPassContent() {
@@ -27,7 +29,7 @@ function VerifyPassContent() {
 
   const passId = searchParams.get('id') || 'VSB/AI&DS/GP-2026-0847'
   
-  const [details, setDetails] = useState({
+  const [details, setDetails] = useState<any>({
     name: searchParams.get('name') || 'Logeshwaran G',
     reg: searchParams.get('reg') || '922525243103',
     dept: searchParams.get('dept') || 'Artificial Intelligence & Data Science',
@@ -49,26 +51,26 @@ function VerifyPassContent() {
       .then(res => res.json())
       .then(res => {
         if (res?.success && res?.data) {
-          setDetails(prev => ({
+          setDetails((prev: any) => ({
             ...prev,
+            ...res.data,
             name: res.data.name || prev.name,
             reg: res.data.reg || prev.reg,
             dept: res.data.dept || prev.dept,
             year: res.data.year || prev.year,
             sec: res.data.sec || prev.sec,
-            hostel: res.data.hostel || prev.hostel,
-            room: res.data.room || prev.room,
-            category: res.data.category || prev.category,
-            purpose: res.data.purpose || prev.purpose,
-            curfew: res.data.curfew || prev.curfew,
-            parent: res.data.parent || prev.parent,
-            warden: res.data.warden || prev.warden,
             time: res.data.time || prev.time
           }))
         }
       })
       .catch(() => {})
   }, [passId])
+
+  const isBusPass =
+    searchParams.get('type') === 'bus' ||
+    passId.toUpperCase().includes('BUS') ||
+    details?.type === 'bus' ||
+    Boolean(searchParams.get('busNo'))
 
   const studentName = details.name
   const registerNumber = details.reg
@@ -84,7 +86,22 @@ function VerifyPassContent() {
   const warden = details.warden
   const sanctionTime = details.time
 
+  // Bus specific properties
+  const busNo = searchParams.get('busNo') || details?.busNo || '5'
+  const routeNo = searchParams.get('routeNo') || details?.routeNo || 'Route 05'
+  const routeName = searchParams.get('routeName') || details?.routeName || 'Namakkal Central ↔ VSB Campus'
+  const via = searchParams.get('via') || details?.via || 'Namakkal Bus Stand → Mohanur → Vkl / Vangal → VSB'
+  const boardingStop = searchParams.get('stop') || searchParams.get('boardingStop') || details?.boardingStop || 'Vkl (08:05 AM)'
+  const busRegNo = searchParams.get('busReg') || searchParams.get('busRegNo') || details?.busRegNo || 'TN 28 EX 7712'
+  const morningArrival = searchParams.get('morningArrival') || details?.morningArrival || '08:30 AM'
+  const eveningDeparture = searchParams.get('eveningDeparture') || details?.eveningDeparture || '05:00 PM'
+  const incharge = searchParams.get('incharge') || details?.incharge || 'Dr. S. Karthikeyan (Faculty Bus Incharge)'
+  const inchargePhone = searchParams.get('inchargePhone') || details?.inchargePhone || '+91 94435 67812'
+  const driver = searchParams.get('driver') || details?.driver || 'Mr. P. Subramanian (Driver)'
+  const driverPhone = searchParams.get('driverPhone') || details?.driverPhone || '+91 98429 88912'
+
   const [gateActionStatus, setGateActionStatus] = useState<'pending' | 'exited' | 'returned'>('pending')
+  const [boardingVerified, setBoardingVerified] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
 
   useEffect(() => {
@@ -100,16 +117,28 @@ function VerifyPassContent() {
       <div className="max-w-xl w-full space-y-4">
         
         {/* Verification Success Header Pill */}
-        <div className="flex items-center justify-center gap-2 py-1.5 px-4 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-bold shadow-lg shadow-emerald-500/10 mx-auto w-fit animate-pulse">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span>OFFICIAL V.S.B. GATE PASS · CRYPTOGRAPHICALLY AUTHENTICATED</span>
+        <div className={`flex items-center justify-center gap-2 py-1.5 px-4 rounded-full border text-xs font-bold shadow-lg mx-auto w-fit animate-pulse ${
+          isBusPass
+            ? 'bg-blue-500/20 border-blue-400/40 text-cyan-300 shadow-blue-500/10'
+            : 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300 shadow-emerald-500/10'
+        }`}>
+          <ShieldCheck className="w-4 h-4 text-cyan-400" />
+          <span>
+            {isBusPass
+              ? 'OFFICIAL V.S.B. TRANSPORTATION PASS · CRYPTOGRAPHICALLY AUTHENTICATED'
+              : 'OFFICIAL V.S.B. GATE PASS · CRYPTOGRAPHICALLY AUTHENTICATED'}
+          </span>
         </div>
 
         {/* Main Certificate Card */}
         <div className="bg-white text-slate-800 rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
           
           {/* Top Bar with Hologram Strip */}
-          <div className="h-3 w-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-700" />
+          <div className={`h-3 w-full ${
+            isBusPass
+              ? 'bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-700'
+              : 'bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-700'
+          }`} />
 
           <div className="p-6 sm:p-7 space-y-5">
             {/* Institution Header */}
@@ -123,14 +152,20 @@ function VerifyPassContent() {
                     V.S.B. ENGINEERING COLLEGE
                   </h1>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    Autonomous • Affiliated to Anna University • Central Security
+                    {isBusPass
+                      ? 'Autonomous • Affiliated to Anna University • Central Transport Desk'
+                      : 'Autonomous • Affiliated to Anna University • Central Security'}
                   </p>
                 </div>
               </div>
 
               <div className="text-right shrink-0">
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-[10px] font-black text-emerald-700">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-black ${
+                  isBusPass
+                    ? 'bg-blue-50 border-blue-300 text-blue-800'
+                    : 'bg-emerald-50 border-emerald-300 text-emerald-700'
+                }`}>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
                   VALID PASS
                 </span>
                 <p className="text-[10px] text-slate-400 font-mono mt-1">Status: Active</p>
@@ -138,18 +173,22 @@ function VerifyPassContent() {
             </div>
 
             {/* Pass Record Number Banner */}
-            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className={`border rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+              isBusPass
+                ? 'bg-gradient-to-r from-blue-50 via-indigo-50 to-blue-50 border-blue-200'
+                : 'bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-emerald-200'
+            }`}>
               <div>
-                <span className="text-[10px] uppercase font-bold text-emerald-800 tracking-wider block">
-                  Official Sanction Record Number
+                <span className="text-[10px] uppercase font-bold text-slate-600 tracking-wider block">
+                  {isBusPass ? 'Official Transport Record Number' : 'Official Sanction Record Number'}
                 </span>
                 <strong className="text-base sm:text-lg font-black font-mono text-[#071A3D] tracking-wide">
                   {passId}
                 </strong>
               </div>
               <div className="text-left sm:text-right">
-                <span className="text-[10px] text-slate-500 block">Sanctioned Date &amp; Time</span>
-                <span className="text-xs font-mono font-bold text-emerald-900">{sanctionTime}</span>
+                <span className="text-[10px] text-slate-500 block">Academic Year / Sanction Time</span>
+                <span className="text-xs font-mono font-bold text-slate-800">{sanctionTime}</span>
               </div>
             </div>
 
@@ -172,50 +211,131 @@ function VerifyPassContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 text-xs">
-                <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Hostel &amp; Room</span>
-                  <strong className="text-slate-800 font-bold block mt-0.5">{hostel}</strong>
-                  <span className="text-[11px] text-slate-600 font-mono">{roomNo}</span>
-                </div>
+              {/* MODE SPECIFIC DETAILS */}
+              {isBusPass ? (
+                /* ======================== COLLEGE BUS DETAILS ======================== */
+                <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                  <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bus className="w-4 h-4 text-blue-600" />
+                        <strong className="text-sm font-black text-blue-950">
+                          {routeNo}: {routeName}
+                        </strong>
+                      </div>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 font-mono">
+                        Bus #{busNo}
+                      </span>
+                    </div>
 
-                <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Outing Category</span>
-                  <strong className="text-blue-900 font-bold capitalize block mt-0.5">{category}</strong>
-                  <span className="text-[11px] text-red-600 font-bold">Curfew: {curfew}</span>
-                </div>
-              </div>
-            </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                      <div className="flex items-start gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-[10px] text-slate-400 block font-semibold">Boarding Stop</span>
+                          <strong className="text-slate-800 text-xs">{boardingStop}</strong>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-semibold">Vehicle Number</span>
+                        <strong className="font-mono text-slate-800 text-xs">{busRegNo}</strong>
+                      </div>
+                    </div>
 
-            {/* Approved Outing Details */}
-            <div className="space-y-2 text-xs">
-              <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3.5 space-y-1">
-                <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">
-                  Authorized Purpose of Outing
-                </span>
-                <p className="font-semibold text-slate-800 text-xs sm:text-sm">
-                  {purpose}
-                </p>
-              </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100 text-slate-600">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Morning Arrival</span>
+                        <strong className="text-slate-800 font-bold">{morningArrival}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block">Evening Departure</span>
+                        <strong className="text-slate-800 font-bold">{eveningDeparture}</strong>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Dual Confirmation Badges */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <div>
-                    <span className="text-[10px] text-emerald-800 font-bold block">Parent Consent Recorded</span>
-                    <span className="text-[11px] text-emerald-950 font-mono font-medium">{parentPhone}</span>
+                  {/* Route Crew Contacts: Incharge and Driver */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="bg-emerald-50/80 border border-emerald-200 p-2.5 rounded-xl flex items-center justify-between gap-2">
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[9px] text-emerald-800 uppercase font-black block">Faculty Bus Incharge</span>
+                        <strong className="text-emerald-950 font-bold text-xs truncate block">{incharge}</strong>
+                      </div>
+                      <a
+                        href={`tel:${inchargePhone}`}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold text-[10px] transition-colors shrink-0"
+                        title={`Call ${incharge}`}
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>Call</span>
+                      </a>
+                    </div>
+
+                    <div className="bg-blue-50/80 border border-blue-200 p-2.5 rounded-xl flex items-center justify-between gap-2">
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[9px] text-blue-800 uppercase font-black block">Bus Driver</span>
+                        <strong className="text-blue-950 font-bold text-xs truncate block">{driver}</strong>
+                      </div>
+                      <a
+                        href={`tel:${driverPhone}`}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-mono font-bold text-[10px] transition-colors shrink-0"
+                        title={`Call ${driver}`}
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>Call</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
+              ) : (
+                /* ======================== HOSTELLER DETAILS ======================== */
+                <>
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 text-xs">
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Hostel &amp; Room</span>
+                      <strong className="text-slate-800 font-bold block mt-0.5">{hostel}</strong>
+                      <span className="text-[11px] text-slate-600 font-mono">{roomNo}</span>
+                    </div>
 
-                <div className="bg-blue-50 border border-blue-200 p-2.5 rounded-xl flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
-                  <div>
-                    <span className="text-[10px] text-blue-800 font-bold block">Hostel Warden Authorized</span>
-                    <span className="text-[11px] text-blue-950 font-medium truncate block">{warden}</span>
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Outing Category</span>
+                      <strong className="text-blue-900 font-bold capitalize block mt-0.5">{category}</strong>
+                      <span className="text-[11px] text-red-600 font-bold">Curfew: {curfew}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
+
+                  {/* Approved Outing Details */}
+                  <div className="space-y-2 text-xs">
+                    <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">
+                        Authorized Purpose of Outing
+                      </span>
+                      <p className="font-semibold text-slate-800 text-xs sm:text-sm">
+                        {purpose}
+                      </p>
+                    </div>
+
+                    {/* Dual Confirmation Badges */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-emerald-800 font-bold block">Parent Consent Recorded</span>
+                          <span className="text-[11px] text-emerald-950 font-mono font-medium">{parentPhone}</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-blue-50 border border-blue-200 p-2.5 rounded-xl flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+                        <div>
+                          <span className="text-[10px] text-blue-800 font-bold block">Hostel Warden Authorized</span>
+                          <span className="text-[11px] text-blue-950 font-medium truncate block">{warden}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Live Security Gate Clearance Actions */}
@@ -223,45 +343,72 @@ function VerifyPassContent() {
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
                   <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                  <span>Main Campus Security Checkpoint</span>
+                  <span>{isBusPass ? 'College Bus Boarding Checkpoint' : 'Main Campus Security Checkpoint'}</span>
                 </div>
                 <span className="text-[10px] font-mono text-slate-400">Live Clock: {currentTime}</span>
               </div>
 
-              {gateActionStatus === 'pending' && (
+              {isBusPass ? (
                 <div className="space-y-2">
                   <p className="text-xs text-slate-300">
-                    Security Guard Instruction: Verify student ID card against the photo/name above before logging departure.
+                    Conductor / Incharge Verification: Check student boarding stop ({boardingStop}) and confirm Bus #{busNo}.
                   </p>
-                  <button
-                    onClick={() => setGateActionStatus('exited')}
-                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Check className="w-4 h-4" />
-                    <span>Log Gate Departure (Allow Student Out)</span>
-                  </button>
+                  {!boardingVerified ? (
+                    <button
+                      onClick={() => setBoardingVerified(true)}
+                      className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <Check className="w-4 h-4" />
+                      <span>Verify &amp; Approve Boarding (Bus Conductor)</span>
+                    </button>
+                  ) : (
+                    <div className="p-3 bg-emerald-900/60 border border-emerald-500/60 rounded-xl text-xs text-emerald-200 flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <div>
+                        <strong>✓ Boarding Verified at {currentTime}</strong>
+                        <p className="text-[11px] text-emerald-300">Authorized for Bus #{busNo} • {boardingStop}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              ) : (
+                <>
+                  {gateActionStatus === 'pending' && (
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-300">
+                        Security Guard Instruction: Verify student ID card against the photo/name above before logging departure.
+                      </p>
+                      <button
+                        onClick={() => setGateActionStatus('exited')}
+                        className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-xs text-white shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Log Gate Departure (Allow Student Out)</span>
+                      </button>
+                    </div>
+                  )}
 
-              {gateActionStatus === 'exited' && (
-                <div className="space-y-2">
-                  <div className="p-3 bg-emerald-900/50 border border-emerald-500/50 rounded-xl text-xs text-emerald-200">
-                    <strong>✓ Student Departed Campus</strong> at {currentTime}. Scheduled return before {curfew}.
-                  </div>
-                  <button
-                    onClick={() => setGateActionStatus('returned')}
-                    className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Home className="w-4 h-4" />
-                    <span>Log Gate Return (Student Back on Campus)</span>
-                  </button>
-                </div>
-              )}
+                  {gateActionStatus === 'exited' && (
+                    <div className="space-y-2">
+                      <div className="p-3 bg-emerald-900/50 border border-emerald-500/50 rounded-xl text-xs text-emerald-200">
+                        <strong>✓ Student Departed Campus</strong> at {currentTime}. Scheduled return before {curfew}.
+                      </div>
+                      <button
+                        onClick={() => setGateActionStatus('returned')}
+                        className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-xs text-white transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        <Home className="w-4 h-4" />
+                        <span>Log Gate Return (Student Back on Campus)</span>
+                      </button>
+                    </div>
+                  )}
 
-              {gateActionStatus === 'returned' && (
-                <div className="p-3 bg-blue-950/80 border border-blue-500/50 rounded-xl text-xs text-blue-200">
-                  <strong>✓ Student Safely Returned to Hostel</strong> at {currentTime}. Pass closed and archived.
-                </div>
+                  {gateActionStatus === 'returned' && (
+                    <div className="p-3 bg-blue-950/80 border border-blue-500/50 rounded-xl text-xs text-blue-200">
+                      <strong>✓ Student Safely Returned to Hostel</strong> at {currentTime}. Pass closed and archived.
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -272,8 +419,8 @@ function VerifyPassContent() {
                 <span>SHA256 Token: {registerNumber.slice(0, 4)}...{passId.slice(-4)}-VALID</span>
               </div>
 
-              <div className="text-right font-bold text-emerald-700">
-                <span>V.S.B. SECURITY SEALED</span>
+              <div className="text-right font-bold text-blue-700">
+                <span>{isBusPass ? 'V.S.B. TRANSPORT CONTROL SEALED' : 'V.S.B. SECURITY SEALED'}</span>
               </div>
             </div>
           </div>
@@ -281,7 +428,9 @@ function VerifyPassContent() {
 
         {/* Footer Note */}
         <p className="text-center text-[11px] text-slate-400 max-w-sm mx-auto leading-relaxed">
-          This digital outpass verification record is generated by the V.S.B. Engineering College AI&amp;DS Digital Administration System. Unauthorized duplication or tampering is strictly prohibited.
+          {isBusPass
+            ? 'This digital transportation pass verification record is generated by the V.S.B. Engineering College AI&DS Digital Administration System. Unauthorized duplication or tampering is strictly prohibited.'
+            : 'This digital outpass verification record is generated by the V.S.B. Engineering College AI&DS Digital Administration System. Unauthorized duplication or tampering is strictly prohibited.'}
         </p>
       </div>
     </div>
@@ -294,7 +443,7 @@ export default function VerifyPassPage() {
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-4">
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs text-slate-400">Verifying Digital Gate Pass with V.S.B. Central Server...</p>
+          <p className="text-xs text-slate-400">Verifying Digital Pass with V.S.B. Central Server...</p>
         </div>
       </div>
     }>

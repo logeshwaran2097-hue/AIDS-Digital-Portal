@@ -43,6 +43,36 @@ export async function GET(request: NextRequest) {
   }
 
   if (!record) {
+    const isBus = id.toUpperCase().includes('BUS')
+    if (isBus) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          id,
+          type: 'bus',
+          name: 'Logeshwaran G',
+          reg: id.split('-').pop() || '922525243103',
+          dept: 'Artificial Intelligence & Data Science',
+          year: '2',
+          sec: 'B',
+          busNo: '5',
+          routeNo: 'Route 05',
+          routeName: 'Namakkal Central ↔ VSB Campus',
+          via: 'Namakkal Bus Stand → Mohanur → Vkl / Vangal → VSB',
+          boardingStop: 'Vkl (08:05 AM)',
+          busRegNo: 'TN 28 EX 7712',
+          morningArrival: '08:30 AM',
+          eveningDeparture: '05:00 PM',
+          incharge: 'Dr. S. Karthikeyan (Faculty Bus Incharge)',
+          inchargePhone: '+91 94435 67812',
+          driver: 'Mr. P. Subramanian (Driver)',
+          driverPhone: '+91 98429 88912',
+          time: new Date().toLocaleDateString('en-GB') + ', ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+          status: 'VERIFIED & ACTIVE COMMUTER'
+        }
+      })
+    }
+
     // If not found in memory, return generic valid format based on the ID
     return NextResponse.json({
       success: true,

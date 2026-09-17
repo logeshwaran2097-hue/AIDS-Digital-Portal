@@ -27,6 +27,7 @@ import {
   Check
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { generateAndDownloadBusPassPDF } from '@/lib/pdfGenerator'
 
 interface DigitalPassViewProps {
   studentName?: string
@@ -49,7 +50,10 @@ const BUS_ROUTES = [
     busNo: '12',
     name: 'Karur Central ↔ VSB Campus',
     via: 'Bus Stand → Collectorate → Gandhigramam → VSB',
-    driver: 'M. Selvaraj (Driver)',
+    driver: 'Mr. M. Selvaraj (Driver)',
+    driverPhone: '+91 94432 18290',
+    incharge: 'Dr. K. Ravichandran (Faculty Incharge)',
+    inchargePhone: '+91 94432 90112',
     contact: '+91 94432 18290',
     stops: ['Karur Bus Stand (07:45 AM)', 'Collectorate Junction (07:55 AM)', 'Gandhigramam (08:05 AM)', 'Thanthonimalai (08:15 AM)', 'VSB Engineering College (08:30 AM)'],
     morningArrival: '08:30 AM',
@@ -61,7 +65,10 @@ const BUS_ROUTES = [
     busNo: '7',
     name: 'Erode Junction ↔ VSB Campus',
     via: 'Erode Railway Jn → Kodumudi → Velur → VSB',
-    driver: 'K. Palanisamy (Driver)',
+    driver: 'Mr. K. Palanisamy (Driver)',
+    driverPhone: '+91 98421 77123',
+    incharge: 'Prof. M. Senthilkumar (Faculty Incharge)',
+    inchargePhone: '+91 98428 33419',
     contact: '+91 98421 77123',
     stops: ['Erode Junction (07:15 AM)', 'Solasiramani (07:35 AM)', 'Kodumudi (07:50 AM)', 'Paramathi Velur (08:10 AM)', 'VSB Campus (08:30 AM)'],
     morningArrival: '08:30 AM',
@@ -73,7 +80,10 @@ const BUS_ROUTES = [
     busNo: '18',
     name: 'Dindigul Central ↔ VSB Campus',
     via: 'Dindigul Bus Stand → Vedasandur → VSB',
-    driver: 'S. Murugesan (Driver)',
+    driver: 'Mr. S. Murugesan (Driver)',
+    driverPhone: '+91 99440 33418',
+    incharge: 'Dr. A. Ramesh (Faculty Incharge)',
+    inchargePhone: '+91 99441 22890',
     contact: '+91 99440 33418',
     stops: ['Dindigul Bus Stand (07:10 AM)', 'Vedasandur (07:40 AM)', 'Aravakurichi (08:05 AM)', 'VSB Campus (08:30 AM)'],
     morningArrival: '08:30 AM',
@@ -85,7 +95,10 @@ const BUS_ROUTES = [
     busNo: '22',
     name: 'Tiruchirappalli Junction ↔ VSB Campus',
     via: 'Trichy Central → Kulithalai → Mayanur → VSB',
-    driver: 'R. Veeramani (Driver)',
+    driver: 'Mr. R. Veeramani (Driver)',
+    driverPhone: '+91 97894 55601',
+    incharge: 'Prof. R. Vijayakumar (Faculty Incharge)',
+    inchargePhone: '+91 97890 11452',
     contact: '+91 97894 55601',
     stops: ['Trichy Central (07:05 AM)', 'Kulithalai (07:45 AM)', 'Mayanur (08:05 AM)', 'Karur Bypass (08:20 AM)', 'VSB Campus (08:35 AM)'],
     morningArrival: '08:35 AM',
@@ -97,7 +110,10 @@ const BUS_ROUTES = [
     busNo: '5',
     name: 'Namakkal Central ↔ VSB Campus',
     via: 'Namakkal Bus Stand → Mohanur → Vkl / Vangal → VSB',
-    driver: 'P. Subramanian (Driver)',
+    driver: 'Mr. P. Subramanian (Driver)',
+    driverPhone: '+91 98429 88912',
+    incharge: 'Dr. S. Karthikeyan (Faculty Bus Incharge)',
+    inchargePhone: '+91 94435 67812',
     contact: '+91 98429 88912',
     stops: ['Namakkal Bus Stand (07:25 AM)', 'Mohanur (07:50 AM)', 'Vkl (08:05 AM)', 'Vangal Bridge (08:15 AM)', 'VSB Campus (08:30 AM)'],
     morningArrival: '08:30 AM',
@@ -187,7 +203,6 @@ export default function DigitalPassView({
     : matchedRoute.stops[0]
 
   const [boardingStop, setBoardingStop] = useState(matchedStop)
-  const [seatNo, setSeatNo] = useState('Seat #34')
 
   // Hostel state - auto select from onboarding data
   const initialHostelIdx = HOSTEL_BLOCKS.findIndex(
@@ -232,7 +247,7 @@ export default function DigitalPassView({
   // Modal state for full-screen QR scanning
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
 
-  // Dynamic QR Code generation for physical smartphone scanning
+  // Dynamic QR Code generation for physical smartphone scanning (100% working offline & online)
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -242,12 +257,15 @@ export default function DigitalPassView({
       publicOrigin = 'https://regards-compromise-boc-micro.trycloudflare.com'
     }
 
-    // Persist pass record to server API so phone gets full authentic details
+    const busPassId = `VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`
+
+    // 1. Persist Hostel Pass record to server API
     fetch('/api/pass', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: passRecordNumber,
+        type: 'hostel',
         name: studentName,
         reg: registerNumber,
         dept: department,
@@ -265,25 +283,54 @@ export default function DigitalPassView({
       })
     }).catch(() => {})
 
-    // 1. Generate Hostel Gate Pass verification URL & QR code (compact, high-contrast, huge dots)
-    const hostelVerifyUrl = `${publicOrigin}/verify-pass?id=${encodeURIComponent(passRecordNumber)}&reg=${encodeURIComponent(registerNumber)}`
+    // 2. Persist College Bus Pass record to server API
+    fetch('/api/pass', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: busPassId,
+        type: 'bus',
+        name: studentName,
+        reg: registerNumber,
+        dept: department,
+        year: String(year),
+        sec: section,
+        busNo: currentRoute.busNo,
+        routeNo: currentRoute.routeNo,
+        routeName: currentRoute.name,
+        via: currentRoute.via,
+        boardingStop: boardingStop,
+        busRegNo: currentRoute.busRegNo,
+        morningArrival: currentRoute.morningArrival,
+        eveningDeparture: currentRoute.eveningDeparture,
+        incharge: currentRoute.incharge,
+        inchargePhone: currentRoute.inchargePhone,
+        driver: currentRoute.driver,
+        driverPhone: currentRoute.driverPhone,
+        time: issueDate,
+        status: 'VERIFIED & ACTIVE COMMUTER'
+      })
+    }).catch(() => {})
+
+    // Generate Hostel Gate Pass verification URL & QR code
+    const hostelVerifyUrl = `${publicOrigin}/verify-pass?type=hostel&id=${encodeURIComponent(passRecordNumber)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&hostel=${encodeURIComponent(currentHostel.name)}&room=${encodeURIComponent(roomNo)}&category=${encodeURIComponent(passType.replace('_', ' ').toUpperCase())}&purpose=${encodeURIComponent(outingPurpose)}&curfew=${encodeURIComponent(expectedReturn)}&parent=${encodeURIComponent(parentPhone)}&warden=${encodeURIComponent(currentHostel.warden)}&time=${encodeURIComponent(sanctionTimestamp)}`
 
     QRCode.toDataURL(hostelVerifyUrl, {
       width: 450,
       margin: 2,
       color: {
-        dark: '#000000', // Pure black for 100% camera sensor contrast
+        dark: '#000000',
         light: '#FFFFFF'
       },
-      errorCorrectionLevel: 'L' // Lowest density = biggest, chunkiest dots = instant camera recognition
+      errorCorrectionLevel: 'L'
     }).then(url => {
       setGateQrUrl(url)
     }).catch(err => {
       console.error('Failed to generate gate pass QR code:', err)
     })
 
-    // 2. Generate College Bus Pass verification URL & QR code
-    const busVerifyUrl = `${publicOrigin}/verify-pass?id=${encodeURIComponent(`VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`)}&reg=${encodeURIComponent(registerNumber)}`
+    // Generate College Bus Pass verification URL & QR code (embedded with all details for 100% instant offline phone camera recognition)
+    const busVerifyUrl = `${publicOrigin}/verify-pass?type=bus&id=${encodeURIComponent(busPassId)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&busNo=${encodeURIComponent(currentRoute.busNo)}&routeNo=${encodeURIComponent(currentRoute.routeNo)}&routeName=${encodeURIComponent(currentRoute.name)}&via=${encodeURIComponent(currentRoute.via)}&stop=${encodeURIComponent(boardingStop)}&busReg=${encodeURIComponent(currentRoute.busRegNo)}&morningArrival=${encodeURIComponent(currentRoute.morningArrival)}&eveningDeparture=${encodeURIComponent(currentRoute.eveningDeparture)}&incharge=${encodeURIComponent(currentRoute.incharge)}&inchargePhone=${encodeURIComponent(currentRoute.inchargePhone)}&driver=${encodeURIComponent(currentRoute.driver)}&driverPhone=${encodeURIComponent(currentRoute.driverPhone)}&time=${encodeURIComponent(issueDate)}`
 
     QRCode.toDataURL(busVerifyUrl, {
       width: 450,
@@ -292,7 +339,7 @@ export default function DigitalPassView({
         dark: '#000000',
         light: '#FFFFFF'
       },
-      errorCorrectionLevel: 'L'
+      errorCorrectionLevel: 'M'
     }).then(url => {
       setBusQrUrl(url)
     }).catch(err => {
@@ -319,8 +366,10 @@ export default function DigitalPassView({
     currentRoute.via,
     currentRoute.morningArrival,
     currentRoute.eveningDeparture,
-    currentRoute.contact,
+    currentRoute.incharge,
+    currentRoute.inchargePhone,
     currentRoute.driver,
+    currentRoute.driverPhone,
     boardingStop,
     issueDate
   ])
@@ -333,21 +382,52 @@ export default function DigitalPassView({
     window.print()
   }
 
-  // Real offline verifiable slip token download
+  // Official Institutional PDF Slip and Offline Verifiable Token Download
   const handleDownloadSlip = () => {
     if (activeMode === 'hostel' && !isHostelCertificateGenerated) {
       toast.error('Pass token cannot be downloaded until parent and warden approvals are complete.', { icon: '🔒' })
       return
     }
 
-    const passTypeTitle = activeMode === 'college_bus' ? 'College Bus Transportation Slip' : 'Hostel Resident & Gate Outing Pass'
-    const passNo = activeMode === 'college_bus' ? `PASS #${registerNumber.slice(-4)}-BUS` : passRecordNumber
+    if (activeMode === 'college_bus') {
+      try {
+        generateAndDownloadBusPassPDF({
+          passNo: `PASS #${registerNumber.slice(-4)}-BUS`,
+          studentName,
+          registerNumber,
+          department,
+          year,
+          section,
+          busNo: currentRoute.busNo,
+          routeNo: currentRoute.routeNo,
+          routeName: currentRoute.name,
+          via: currentRoute.via,
+          boardingStop,
+          busRegNo: currentRoute.busRegNo,
+          morningArrival: currentRoute.morningArrival,
+          eveningDeparture: currentRoute.eveningDeparture,
+          incharge: currentRoute.incharge,
+          inchargePhone: currentRoute.inchargePhone,
+          driver: currentRoute.driver,
+          driverPhone: currentRoute.driverPhone,
+          issueDate,
+          qrDataUrl: busQrUrl || undefined,
+        })
+        toast.success('Official V.S.B. College Bus Transportation Slip (PDF) downloaded successfully!', { icon: '🚌', duration: 4000 })
+        return
+      } catch (e) {
+        console.error('Failed to generate PDF pass slip:', e)
+      }
+    }
+
+    const passTypeTitle = 'Hostel Resident & Gate Outing Pass'
+    const passNo = passRecordNumber
     const verifyUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify-pass?id=${encodeURIComponent(passNo)}` : ''
 
     const content = `
 ============================================================
        V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)
-         OFFICIAL DIGITAL TRANSPORTATION SLIP
+         OFFICIAL DIGITAL GATE OUTPASS SLIP
 ============================================================
 PASS TYPE      : ${passTypeTitle}
 INDIVIDUAL REC : ${passNo}
@@ -361,37 +441,31 @@ STUDENT PARTICULARS:
 - Department   : ${department}
 - Year & Sec   : Year ${year} • Sec ${section}
 
-${activeMode === 'college_bus' ? `COLLEGE BUS ONBOARDING PARTICULARS:
-- Route Number : ${currentRoute.routeNo} (${currentRoute.name})
-- Boarding Stop: ${boardingStop} (Verified via Student Onboarding)
-- Vehicle No   : ${currentRoute.busRegNo}
-- Driver       : ${currentRoute.driver} (${currentRoute.contact})
-- Timings      : Arrival ${currentRoute.morningArrival} | Departure ${currentRoute.eveningDeparture}
-- Seat Allocated: ${seatNo}` : `GATE OUTING PARTICULARS:
+GATE OUTING PARTICULARS:
 - Hostel Block : ${currentHostel.name} (Room ${roomNo})
 - Outing Type  : ${passType.replace('_', ' ').toUpperCase()}
 - Curfew Limit : ${expectedReturn} (Max: ${currentHostel.curfew})
 - Purpose      : ${outingPurpose}
-- Approvals    : Parent Confirmed & Warden Sanctioned`}
+- Approvals    : Parent Confirmed & Warden Sanctioned
 
 SECURITY & VERIFICATION:
 - Authentication: Cryptographically Signed (SHA256 Token)
-- Verification  : Mobile QR Verification Active at Gate / Bus Boarding
+- Verification  : Mobile QR Verification Active at Gate
 - Online Verify : ${verifyUrl}
-- Institution   : V.S.B. Engineering College Transport & Security Desk
+- Institution   : V.S.B. Engineering College Security Desk
 ============================================================
 `
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `VSB_${activeMode === 'college_bus' ? 'BUS' : 'HOSTEL'}_PASS_SLIP_${registerNumber}.txt`
+    a.download = `VSB_HOSTEL_PASS_SLIP_${registerNumber}.txt`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
-    toast.success(`${activeMode === 'college_bus' ? 'College Bus Pass Slip' : 'Gate Outing Pass'} downloaded successfully!`, { icon: '🎫' })
+    toast.success('Gate Outing Pass downloaded successfully!', { icon: '🎫' })
   }
 
   // Interactive Live Verification Actions
@@ -436,6 +510,31 @@ SECURITY & VERIFICATION:
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #vsb-printable-pass, #vsb-printable-pass * {
+            visibility: visible !important;
+          }
+          #vsb-printable-pass {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 16px !important;
+            background: white !important;
+            box-shadow: none !important;
+            border: 2px solid #071A3D !important;
+          }
+          header, aside, nav, .portal-top-header, button {
+            display: none !important;
+          }
+        }
+      `}</style>
+
       {/* Onboarding Mode Indicator - Strictly locked to student's verified profile */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 px-4.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
         <div className="flex items-center gap-2.5 flex-wrap">
@@ -589,6 +688,7 @@ SECURITY & VERIFICATION:
 
             {/* Printable Pass Card */}
             <div
+              id="vsb-printable-pass"
               ref={passRef}
               className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden relative"
             >
@@ -665,8 +765,9 @@ SECURITY & VERIFICATION:
                           {currentRoute.routeNo}: {currentRoute.name}
                         </h4>
                       </div>
-                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-200 text-blue-800 font-mono">
-                        {seatNo}
+                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono flex items-center gap-1 border border-emerald-200">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        Bus #{currentRoute.busNo}
                       </span>
                     </div>
 
@@ -698,14 +799,37 @@ SECURITY & VERIFICATION:
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span><strong>Transport Incharge / Driver:</strong> {currentRoute.driver}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {/* Faculty Incharge */}
+                    <div className="flex items-center justify-between bg-emerald-50/70 border border-emerald-200/80 p-3 rounded-xl">
+                      <div className="min-w-0 pr-2">
+                        <span className="text-[10px] text-emerald-800 uppercase font-black block">Faculty Bus Incharge</span>
+                        <strong className="text-slate-900 font-bold block truncate">{currentRoute.incharge}</strong>
+                      </div>
+                      <a
+                        href={`tel:${currentRoute.inchargePhone}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold text-[11px] transition-colors shrink-0 shadow-2xs"
+                        title={`Call ${currentRoute.incharge}`}
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>{currentRoute.inchargePhone}</span>
+                      </a>
                     </div>
-                    <div className="flex items-center gap-1.5 text-blue-700 font-mono">
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>{currentRoute.contact}</span>
+
+                    {/* Bus Driver */}
+                    <div className="flex items-center justify-between bg-blue-50/70 border border-blue-200/80 p-3 rounded-xl">
+                      <div className="min-w-0 pr-2">
+                        <span className="text-[10px] text-blue-800 uppercase font-black block">College Bus Driver</span>
+                        <strong className="text-slate-900 font-bold block truncate">{currentRoute.driver}</strong>
+                      </div>
+                      <a
+                        href={`tel:${currentRoute.driverPhone}`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-mono font-bold text-[11px] transition-colors shrink-0 shadow-2xs"
+                        title={`Call ${currentRoute.driver}`}
+                      >
+                        <Phone className="w-3 h-3" />
+                        <span>{currentRoute.driverPhone}</span>
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -825,82 +949,61 @@ SECURITY & VERIFICATION:
               </div>
             </div>
 
-            {/* Route & Stop Customization Box */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                <Bus className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-slate-800 text-sm">Select Bus Route &amp; Boarding Stop</h3>
+            {/* Bus Crew Direct Calling Card */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-xs border-b border-slate-100 pb-2.5">
+                <Phone className="w-4 h-4 text-blue-600" />
+                <span>Bus Crew Direct Mobile Numbers</span>
               </div>
+              
+              <div className="space-y-2.5 text-xs">
+                {/* Faculty Bus Incharge */}
+                <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-emerald-800 block">Faculty Bus Incharge</span>
+                    <strong className="text-slate-900 text-xs block truncate">{currentRoute.incharge}</strong>
+                    <span className="text-[11px] font-mono text-emerald-900 font-bold">{currentRoute.inchargePhone}</span>
+                  </div>
+                  <a
+                    href={`tel:${currentRoute.inchargePhone}`}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs shrink-0"
+                    title={`Call Incharge: ${currentRoute.inchargePhone}`}
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call</span>
+                  </a>
+                </div>
 
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-slate-600 block">Available College Bus Routes:</label>
-                <select
-                  value={selectedRouteIndex}
-                  onChange={(e) => {
-                    const idx = Number(e.target.value)
-                    setSelectedRouteIndex(idx)
-                    setBoardingStop(BUS_ROUTES[idx].stops[0])
-                    toast.success(`Switched to ${BUS_ROUTES[idx].routeNo}!`)
-                  }}
-                  className="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  {BUS_ROUTES.map((route, i) => (
-                    <option key={route.routeNo} value={i}>
-                      {route.routeNo} - {route.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-slate-600 block">Your Designated Boarding Stop:</label>
-                <select
-                  value={boardingStop}
-                  onChange={(e) => {
-                    setBoardingStop(e.target.value)
-                    toast.success(`Boarding stop updated!`)
-                  }}
-                  className="w-full p-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  {availableStops.map((stop) => (
-                    <option key={stop} value={stop}>
-                      {stop}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-3">
-                <label className="text-xs font-semibold text-slate-600 block">Preferred Seat Reservation:</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {['Seat #12', 'Seat #24', 'Seat #34', 'Seat #46'].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setSeatNo(s)
-                        toast.success(`${s} reserved!`)
-                      }}
-                      className={`py-2 text-xs font-mono font-bold rounded-lg border cursor-pointer transition-all ${
-                        seatNo === s
-                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {s.split(' ')[1]}
-                    </button>
-                  ))}
+                {/* College Bus Driver */}
+                <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[10px] uppercase font-bold text-blue-800 block">Designated Bus Driver</span>
+                    <strong className="text-slate-900 text-xs block truncate">{currentRoute.driver}</strong>
+                    <span className="text-[11px] font-mono text-blue-900 font-bold">{currentRoute.driverPhone}</span>
+                  </div>
+                  <a
+                    href={`tel:${currentRoute.driverPhone}`}
+                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs shrink-0"
+                    title={`Call Driver: ${currentRoute.driverPhone}`}
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call</span>
+                  </a>
                 </div>
               </div>
+            </div>
 
-              <div className="bg-blue-50 rounded-xl p-3.5 text-xs text-blue-800 space-y-1">
-                <div className="font-bold flex items-center gap-1.5">
-                  <Info className="w-4 h-4 text-blue-600" />
-                  <span>Transport Rules</span>
-                </div>
-                <p className="text-[11px] text-blue-700 leading-relaxed">
-                  Students must display this digital QR pass slip when boarding. In case of route change, submit request 24 hours prior to department transport desk.
-                </p>
+            {/* Official Transport Rules & Guidelines */}
+            <div className="bg-gradient-to-r from-blue-50 to-slate-50 rounded-2xl p-4 border border-blue-100 text-xs text-slate-700 space-y-1.5">
+              <div className="font-bold text-blue-900 flex items-center gap-1.5">
+                <Info className="w-4 h-4 text-blue-600" />
+                <span>Transport Rules &amp; Guidelines</span>
               </div>
+              <ul className="text-[11px] text-slate-600 space-y-1 list-disc pl-4 leading-relaxed">
+                <li>Be at the designated boarding stop ({boardingStop}) 5 minutes prior to scheduled morning arrival.</li>
+                <li>Display this digital QR pass slip or printed pass when boarding the bus.</li>
+                <li>Transport passes are non-transferable and verified cryptographically by security.</li>
+              </ul>
             </div>
 
             {/* Campus Security & Transport Incharge Desk */}

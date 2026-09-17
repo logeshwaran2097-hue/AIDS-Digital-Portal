@@ -1684,3 +1684,420 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   doc.save(downloadName)
 }
 
+export interface BusPassPDFData {
+  passNo: string
+  studentName: string
+  registerNumber: string
+  department: string
+  year: number | string
+  section: string
+  busNo: string
+  routeNo: string
+  routeName: string
+  via: string
+  boardingStop: string
+  busRegNo: string
+  morningArrival: string
+  eveningDeparture: string
+  incharge: string
+  inchargePhone: string
+  driver: string
+  driverPhone: string
+  issueDate: string
+  qrDataUrl?: string
+}
+
+export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  })
+
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const marginX = 14
+  const contentW = pageWidth - marginX * 2
+
+  // 1. Dual Luxury Security Borders
+  doc.setDrawColor(21, 87, 192) // Sapphire Navy
+  doc.setLineWidth(0.8)
+  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+
+  doc.setDrawColor(231, 185, 62) // Gold
+  doc.setLineWidth(0.4)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+
+  // 2. Official Academic Letterhead
+  doc.setFillColor(250, 252, 255)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
+
+  const logoX = marginX + 3
+  const logoY = marginX + 3
+  const logoSize = 24
+
+  // Circular Gold Ring Base for Emblem
+  doc.setFillColor(255, 255, 255)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+  doc.setDrawColor(231, 185, 62)
+  doc.setLineWidth(0.6)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
+
+  try {
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4)
+  } catch (e) {
+    console.error('Failed to embed logo in PDF:', e)
+  }
+
+  const headerCenterX = marginX + logoSize + (contentW - logoSize) / 2
+
+  // Master Title
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(15)
+  doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', headerCenterX, marginX + 6.5, { align: 'center' })
+
+  // Autonomous Badge Pill
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(headerCenterX - 24, marginX + 8.5, 48, 4.2, 1, 1, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION', headerCenterX, marginX + 11.5, { align: 'center' })
+
+  // Department
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9.5)
+  doc.setTextColor(21, 87, 192)
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', headerCenterX, marginX + 17.5, { align: 'center' })
+
+  // Affiliation
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.8)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', headerCenterX, marginX + 22.5, { align: 'center' })
+
+  // NAAC & NBA
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Accredited by NAAC with "A" Grade · NBA Accredited Programs · ISO 9001:2015 Certified', headerCenterX, marginX + 27, { align: 'center' })
+
+  // Decorative Beam
+  const beamY = marginX + 34
+  doc.setFillColor(21, 87, 192)
+  doc.rect(marginX, beamY, contentW, 1.4, 'F')
+  doc.setFillColor(231, 185, 62)
+  doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
+
+  // Document Title Banner
+  let curY = beamY + 7
+  doc.setFillColor(7, 26, 61)
+  doc.roundedRect(marginX, curY, contentW, 10.5, 2, 2, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(255, 255, 255)
+  doc.text('OFFICIAL COLLEGE BUS TRANSPORTATION PASS & BOARDING SLIP', marginX + contentW / 2, curY + 6.8, { align: 'center' })
+
+  // Meta bar: Pass No & Academic Year
+  curY += 14
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text(`PASS SERIAL: ${data.passNo}`, marginX, curY)
+  doc.text(`ACADEMIC YEAR: 2026 - 2027`, marginX + contentW / 2, curY, { align: 'center' })
+  doc.text(`DATE OF ISSUE: ${data.issueDate}`, marginX + contentW, curY, { align: 'right' })
+
+  // Section 1: Student Particulars Table
+  curY += 5
+  doc.setFillColor(243, 247, 254)
+  doc.roundedRect(marginX, curY, contentW, 26, 2, 2, 'F')
+  doc.setDrawColor(215, 228, 245)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, 26, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(21, 87, 192)
+  doc.text('1. STUDENT IDENTIFICATION & VERIFIED ONBOARDING PARTICULARS', marginX + 4, curY + 5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(75, 85, 105)
+
+  // Row 1
+  doc.text('Student Name:', marginX + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.studentName, marginX + 32, curY + 11)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Register Number:', marginX + contentW / 2 + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.registerNumber, marginX + contentW / 2 + 36, curY + 11)
+
+  // Row 2
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Department:', marginX + 4, curY + 17)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.department, marginX + 32, curY + 17)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Year & Section:', marginX + contentW / 2 + 4, curY + 17)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(`Year ${data.year} • Section ${data.section}`, marginX + contentW / 2 + 36, curY + 17)
+
+  // Row 3
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Category:', marginX + 4, curY + 23)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(14, 116, 144) // Cyan / Teal
+  doc.text('Verified Day Scholar (College Bus Commuter)', marginX + 32, curY + 23)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Pass Status:', marginX + contentW / 2 + 4, curY + 23)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(16, 185, 129) // Emerald
+  doc.text('ACTIVE & SANCTIONED', marginX + contentW / 2 + 36, curY + 23)
+
+  // Section 2: Transportation & Route Details Table
+  curY += 31
+  doc.setFillColor(243, 247, 254)
+  doc.roundedRect(marginX, curY, contentW, 42, 2, 2, 'F')
+  doc.setDrawColor(215, 228, 245)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, 42, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(21, 87, 192)
+  doc.text('2. ALLOCATED TRANSPORTATION & ROUTE DETAILS', marginX + 4, curY + 5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(75, 85, 105)
+
+  // Row 1
+  doc.text('Allocated Bus Number:', marginX + 4, curY + 12)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(`BUS #${data.busNo}`, marginX + 42, curY + 12)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Vehicle Registration:', marginX + contentW / 2 + 4, curY + 12)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.busRegNo, marginX + contentW / 2 + 38, curY + 12)
+
+  // Row 2
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Allocated Route:', marginX + 4, curY + 18)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(`${data.routeNo}: ${data.routeName}`, marginX + 42, curY + 18)
+
+  // Row 3
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Designated Boarding Stop:', marginX + 4, curY + 24)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(21, 87, 192)
+  doc.text(data.boardingStop, marginX + 42, curY + 24)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Morning College Arrival:', marginX + contentW / 2 + 4, curY + 24)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.morningArrival, marginX + contentW / 2 + 38, curY + 24)
+
+  // Row 4
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Evening Campus Departure:', marginX + 4, curY + 30)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.eveningDeparture, marginX + 42, curY + 30)
+
+  // Row 5: Via Route
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Via Route:', marginX + 4, curY + 36)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.via, marginX + 42, curY + 36)
+
+  // Section 3: Route Crew Contacts (Separated Incharge and Driver)
+  curY += 47
+  doc.setFillColor(254, 252, 245)
+  doc.roundedRect(marginX, curY, contentW, 26, 2, 2, 'F')
+  doc.setDrawColor(245, 230, 195)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, 26, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(180, 83, 9) // Amber/Gold
+  doc.text('3. ROUTE CREW & ESSENTIAL COMMUNICATIONS', marginX + 4, curY + 5)
+
+  // Row 1
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(8)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Faculty Bus Incharge:', marginX + 4, curY + 12)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.incharge, marginX + 38, curY + 12)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Incharge Contact:', marginX + contentW / 2 + 4, curY + 12)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(21, 87, 192)
+  doc.text(data.inchargePhone, marginX + contentW / 2 + 34, curY + 12)
+
+  // Row 2
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Designated Bus Driver:', marginX + 4, curY + 18)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.driver, marginX + 38, curY + 18)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Driver Contact:', marginX + contentW / 2 + 4, curY + 18)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(21, 87, 192)
+  doc.text(data.driverPhone, marginX + contentW / 2 + 34, curY + 18)
+
+  // Row 3: Security & Transport Control Room
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Transport Control Room:', marginX + 4, curY + 23.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text('04324-290008 (Direct)', marginX + 38, curY + 23.5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Main Gate Security:', marginX + contentW / 2 + 4, curY + 23.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text('04324-290001 (24x7)', marginX + contentW / 2 + 34, curY + 23.5)
+
+  // Section 4: Security QR Code and Institutional Rules
+  curY += 31
+  const qrBoxW = 44
+  const qrBoxH = 44
+
+  // QR Code Mount
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(marginX, curY, qrBoxW, qrBoxH, 2, 2, 'F')
+  doc.setDrawColor(21, 87, 192)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(marginX, curY, qrBoxW, qrBoxH, 2, 2, 'S')
+
+  if (data.qrDataUrl) {
+    try {
+      doc.addImage(data.qrDataUrl, 'PNG', marginX + 2, curY + 2, qrBoxW - 4, qrBoxH - 9)
+    } catch (e) {
+      console.error('Failed to embed QR code in PDF:', e)
+    }
+  }
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.2)
+  doc.setTextColor(21, 87, 192)
+  doc.text('SCAN TO VERIFY AUTHENTICITY', marginX + qrBoxW / 2, curY + qrBoxH - 3, { align: 'center' })
+
+  // Rules & Regulations Box (Right of QR Code)
+  const rulesX = marginX + qrBoxW + 4
+  const rulesW = contentW - qrBoxW - 4
+
+  doc.setFillColor(248, 250, 252)
+  doc.roundedRect(rulesX, curY, rulesW, qrBoxH, 2, 2, 'F')
+  doc.setDrawColor(226, 232, 240)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(rulesX, curY, rulesW, qrBoxH, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('INSTITUTIONAL TRANSPORTATION REGULATIONS:', rulesX + 4, curY + 5)
+
+  const rules = [
+    '1. This transport pass is strictly non-transferable and valid for Academic Year 2026-27.',
+    '2. Students must be present at the designated stop at least 5 minutes prior to bus arrival.',
+    '3. Display of this digital QR slip or physical pass to the conductor/incharge is mandatory upon boarding.',
+    '4. Discipline and decorum must be maintained at all times inside the college transportation vehicle.',
+    '5. In case of route or boarding stop alteration, submit application to the Transport Desk 24 hours prior.'
+  ]
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.5)
+  doc.setTextColor(71, 85, 105)
+  let ruleY = curY + 11
+  rules.forEach(r => {
+    doc.text(r, rulesX + 4, ruleY)
+    ruleY += 6.2
+  })
+
+  // Section 5: Signatures & Validation Seals
+  curY += qrBoxH + 12
+  const sigColW = contentW / 3
+
+  // Col 1: Student
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('_____________________________', marginX + 6, curY + 8)
+  doc.text('Signature of the Student', marginX + 6, curY + 13)
+
+  // Col 2: Faculty Incharge
+  doc.text('_____________________________', marginX + sigColW + 6, curY + 8)
+  doc.text('Faculty Bus Incharge', marginX + sigColW + 6, curY + 13)
+
+  // Col 3: Principal & Seal
+  doc.text('_____________________________', marginX + sigColW * 2 + 6, curY + 8)
+  doc.text('Principal / Transport Convener', marginX + sigColW * 2 + 6, curY + 13)
+
+  // Circular Institutional Seal Mark
+  doc.setDrawColor(21, 87, 192)
+  doc.setLineWidth(0.5)
+  const sealX = marginX + contentW - 18
+  const sealY = curY + 6
+  doc.circle(sealX, sealY, 9, 'S')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5)
+  doc.setTextColor(21, 87, 192)
+  doc.text('V.S.B. ENGG', sealX, sealY - 3, { align: 'center' })
+  doc.text('TRANSPORT', sealX, sealY, { align: 'center' })
+  doc.text('OFFICIAL SEAL', sealX, sealY + 3, { align: 'center' })
+
+  // Footer compliance text
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(140, 155, 175)
+  doc.text(
+    'This official transportation credential is cryptographically authenticated and generated from the V.S.B. Digital Portal AI&DS Administration System. Compliant with Anna University Institutional Transportation Standards.',
+    pageWidth / 2,
+    pageHeight - 6,
+    { align: 'center' }
+  )
+
+  const downloadName = `VSB_College_Bus_Pass_Slip_${data.registerNumber}.pdf`
+  doc.save(downloadName)
+}
+
+
