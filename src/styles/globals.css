@@ -1030,3 +1030,96 @@ html.dark textarea::placeholder {
   border: 1px solid rgba(244, 63, 94, 0.35);
   box-shadow: 0 2px 6px rgba(244, 63, 94, 0.12);
 }
+
+/* =========================================================
+   ✨ BESPOKE ULTRA-LUXURY GLASSMORPHISM & SPECULAR TOKENS
+   ========================================================= */
+
+.lux-glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px -5px rgba(7, 26, 61, 0.05), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+html.dark .lux-glass-card,
+html.midnight .lux-glass-card {
+  background: rgba(7, 14, 30, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.lux-glass-header {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+html.dark .lux-glass-header,
+html.midnight .lux-glass-header {
+  background: rgba(5, 12, 28, 0.85);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.lux-gold-foil-text {
+  background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 40%, #AA820A 75%, #F3E5AB 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+}
+
+.lux-sapphire-card {
+  background: radial-gradient(ellipse at 20% 0%, #0D2D6C 0%, #071A3D 50%, #030A1A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 40px -15px rgba(3, 10, 26, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+.lux-button-primary {
+  background: linear-gradient(135deg, #1E66E8 0%, #1455D9 50%, #0D40A8 100%);
+  box-shadow: 0 4px 14px 0 rgba(20, 85, 217, 0.39), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lux-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px 0 rgba(20, 85, 217, 0.48), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+}
+
+.lux-button-primary:active {
+  transform: translateY(0px);
+}
+
+.lux-specular-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.lux-specular-sweep::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.08) 45%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.08) 55%,
+    transparent 60%
+  );
+  transform: rotate(25deg) translateY(-100%);
+  transition: transform 0.75s ease-in-out;
+  pointer-events: none;
+}
+
+.lux-specular-sweep:hover::after {
+  transform: rotate(25deg) translateY(100%);
+}

@@ -1304,19 +1304,19 @@ export default function LoginPage() {
                 className={cn(
                   'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-0.5 text-xs font-bold transition-all duration-300 cursor-pointer border shadow-xs',
                   selectedRole === role.id
-                    ? 'bg-gradient-to-b from-[#1557C0] via-[#0D3B82] to-[#071A41] text-white border-cyan-400/40 shadow-[0_10px_20px_-3px_rgba(21,87,192,0.4)] scale-[1.03]'
+                    ? 'bg-gradient-to-b from-[#1E66E8] via-[#0E3A94] to-[#071A3D] text-white border-[#D4AF37]/70 shadow-[0_10px_22px_-3px_rgba(212,175,55,0.35)] scale-[1.04]'
                     : 'bg-white/80 hover:bg-white text-[#071A41] hover:border-slate-300 border-slate-200/80 hover:scale-[1.01]'
                 )}
               >
                 {selectedRole === role.id && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center shadow-md">
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#D4AF37] text-[#071A41] flex items-center justify-center shadow-md">
                     <Check className="w-2 h-2 stroke-[3.5]" />
                   </span>
                 )}
                 <span className="text-lg sm:text-xl drop-shadow-xs">{role.icon}</span>
                 <span className="text-[9px] sm:text-[10px] font-black truncate">{role.label}</span>
                 {selectedRole === role.id && (
-                  <span className="w-4 h-0.5 bg-[#E7B93E] rounded-full mt-0.5 animate-pulse" />
+                  <span className="w-5 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent rounded-full mt-0.5 animate-pulse" />
                 )}
               </button>
             ))}

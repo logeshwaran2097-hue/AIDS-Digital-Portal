@@ -280,77 +280,78 @@ export function StudentAttendanceView({
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
+      <div className="lux-sapphire-card relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white border border-[#D4AF37]/30 shadow-lux-sapphire flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="absolute -right-16 -top-16 w-64 h-64 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#D4AF37] text-[#030712] text-[10px] font-black uppercase tracking-wider shadow-lux-gold">
               Biometric Attendance Sync
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Anna University 75% Rule</span>
+            <span className="text-xs text-blue-200 font-medium">· Anna University 75% Rule</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Student Attendance &amp; Leave Log</h1>
-          <p className="text-xs sm:text-sm text-gray-300 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Student Attendance &amp; Leave Log</h1>
+          <p className="text-xs sm:text-sm text-blue-100/85 mt-1 font-medium">
             {user.name} ({student.registerNumber}) · Year {student.year} · Semester {student.semester} (Section {student.section})
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 relative z-10">
           <button
             onClick={() => setShowODModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer active:scale-95"
           >
-            <Plus className="w-4 h-4" /> Apply On-Duty / Leave
+            <Plus className="w-4 h-4 text-[#D4AF37]" /> Apply On-Duty / Leave
           </button>
           <button
             onClick={handleDownloadReport}
-            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md shrink-0 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3d37a] to-[#c59c27] text-[#030712] text-xs font-black flex items-center gap-1.5 transition-all shadow-lux-gold shrink-0 cursor-pointer active:scale-95"
           >
-            <Download className="w-4 h-4" /> Download Report (PDF)
+            <Download className="w-4 h-4 text-[#030712]" /> Download Report (PDF)
           </button>
         </div>
       </div>
 
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-5 rounded-3xl border border-blue-200/80 shadow-xs bg-gradient-to-br from-blue-50/60 to-white flex items-center justify-between">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-blue-500/20 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Overall Attendance</p>
-            <p className="text-3xl font-black text-[#1455D9] mt-1">{stats.percentage.toFixed(1)}%</p>
-            <p className={cn("text-[10px] font-bold mt-0.5", isCompliant ? "text-green-700" : "text-red-700")}>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Overall Attendance</p>
+            <p className="text-3xl font-black text-[#1E66E8] mt-1">{stats.percentage.toFixed(1)}%</p>
+            <p className={cn("text-[10px] font-bold mt-0.5", isCompliant ? "text-emerald-500" : "text-rose-500")}>
               {stats.totalSessions > 0 ? (isCompliant ? 'Compliant (>75% Req)' : 'Attendance Shortage (<75%)') : 'Term Enrolled'}
             </p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black text-base shadow-md">
-            <Percent className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0E3A94] to-[#1E66E8] text-white flex items-center justify-center font-black text-base shadow-lux-sapphire border border-white/20">
+            <Percent className="w-6 h-6 text-[#D4AF37]" />
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-xs">
-          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Conducted Sessions</p>
-          <p className="text-3xl font-black text-[#071A3D] mt-1">{stats.totalSessions} Sessions</p>
-          <p className="text-[10px] text-gray-400 mt-0.5">{stats.totalSessions > 0 ? 'Total Logged by Staff' : 'Term Started'}</p>
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-white/10 shadow-xs">
+          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Conducted Sessions</p>
+          <p className="text-3xl font-black text-[#071A3D] dark:text-white mt-1">{stats.totalSessions} <span className="text-sm font-semibold text-slate-400">Sessions</span></p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{stats.totalSessions > 0 ? 'Total Logged by Staff' : 'Term Started'}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-green-200/80 shadow-xs bg-green-50/20">
-          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Present &amp; OD</p>
-          <p className="text-3xl font-black text-green-600 mt-1">{stats.presentSessions} Sessions</p>
-          <p className="text-[10px] text-green-700 font-medium mt-0.5">
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-emerald-500/20 shadow-xs">
+          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Present &amp; OD</p>
+          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{stats.presentSessions} <span className="text-sm font-semibold text-emerald-600/70">Sessions</span></p>
+          <p className="text-[10px] text-emerald-600/80 font-medium mt-0.5">
             {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Regular + ${stats.odSessions} OD` : 'Regular Present'}
           </p>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl border border-red-200/80 shadow-xs bg-red-50/20">
-          <p className="text-[10px] text-red-700 font-bold uppercase tracking-wider">Absenteeism</p>
-          <p className="text-3xl font-black text-red-600 mt-1">{stats.absentSessions} Sessions</p>
-          <p className="text-[10px] text-red-700 font-medium mt-0.5">
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-rose-500/20 shadow-xs">
+          <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">Absenteeism</p>
+          <p className="text-3xl font-black text-rose-600 dark:text-rose-400 mt-1">{stats.absentSessions} <span className="text-sm font-semibold text-rose-600/70">Sessions</span></p>
+          <p className="text-[10px] text-rose-600/80 font-medium mt-0.5">
             {stats.totalSessions > 0 ? `${stats.absentSessions} Unexcused` : 'Zero Absences'}
           </p>
         </div>
       </div>
 
       {/* ── On-Duty & Leave Application Tracker ── */}
-      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
-        <CardContent className="p-6 space-y-4">
+      <div className="lux-glass-card rounded-3xl border border-white/10 shadow-xs overflow-hidden">
+        <div className="p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1455D9] shadow-2xs shrink-0">
@@ -538,12 +539,12 @@ export function StudentAttendanceView({
               </button>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Course-Wise Attendance Table */}
-      <Card className="rounded-3xl border-gray-200 shadow-xs">
-        <CardContent className="p-6 space-y-4">
+      <div className="lux-glass-card rounded-3xl border border-white/10 shadow-xs">
+        <div className="p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
             <div>
               <h3 className="font-black text-base text-[#071A3D]">Subject-Wise Attendance Register</h3>
@@ -608,12 +609,12 @@ export function StudentAttendanceView({
               No subjects registered in the current curriculum.
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Date-Wise Attendance History Log */}
-      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
-        <CardContent className="p-5 sm:p-7 space-y-6">
+      <div className="lux-glass-card rounded-3xl border border-white/10 shadow-xs overflow-hidden">
+        <div className="p-5 sm:p-7 space-y-6">
           {/* Header & Controls */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100">
             <div>
@@ -939,8 +940,8 @@ export function StudentAttendanceView({
               </table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Dynamic Proof-Based On-Duty (OD) / Leave Modal */}
       <ApplyODPermissionModal

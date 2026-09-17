@@ -965,18 +965,17 @@ export function PortalLayout({
           aria-hidden="true"
         />
       )}
-
-      {/* Slide-out Navigation Drawer / Sidebar */}
+      {/* Slide-out Navigation Drawer / Sidebar (Executive Obsidian Crystal Panel) */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#0B132B] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-slate-800 shadow-xl pb-safe select-none',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#040A18] via-[#071328] to-[#020610] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-white/10 shadow-[8px_0_32px_rgba(0,0,0,0.5)] pb-safe select-none backdrop-blur-3xl',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Drawer Header with Official Emblem */}
-        <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full p-1 bg-white/10 ring-1 ring-white/15 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-full p-1 bg-gradient-to-tr from-[#D4AF37] to-[#1E66E8] ring-1 ring-white/20 flex items-center justify-center shrink-0 shadow-md">
               <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
                 <Image
                   src="/college-emblem.png"
@@ -995,7 +994,7 @@ export function PortalLayout({
                   type="button"
                   onClick={triggerPortalUpdateCheck}
                   title="Check for real-time app updates"
-                  className="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/15 text-slate-300 text-[10px] font-semibold tracking-wide cursor-pointer transition-colors"
+                  className="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/15 text-slate-300 text-[10px] font-semibold tracking-wide cursor-pointer transition-colors border border-white/10"
                 >
                   {APP_VERSION_LABEL}
                 </button>
@@ -1018,13 +1017,13 @@ export function PortalLayout({
           href={profileHref}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'p-3 mx-3 my-2.5 rounded-xl border transition-colors flex items-center gap-3 shrink-0 cursor-pointer',
+            'p-3 mx-3 my-2.5 rounded-2xl border transition-all duration-200 flex items-center gap-3 shrink-0 cursor-pointer shadow-xs',
             (activePath || pathname) === profileHref
-              ? 'bg-white/10 border-white/20 text-white'
-              : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.07] hover:border-white/10'
+              ? 'bg-gradient-to-r from-white/15 to-white/10 border-white/25 text-white shadow-md'
+              : 'bg-white/[0.04] border-white/10 hover:bg-white/[0.08] hover:border-white/20'
           )}
         >
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-800 text-slate-200 border border-white/15 flex items-center justify-center font-bold text-sm shrink-0">
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900 text-white border border-[#D4AF37]/50 flex items-center justify-center font-bold text-sm shrink-0 shadow-inner">
             {avatarImage && !avatarError ? (
               <img
                 src={avatarImage}
@@ -1120,14 +1119,14 @@ export function PortalLayout({
                 }}
                 onClick={() => handleNavClick(item.href)}
                 className={cn(
-                  'flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-colors duration-150 cursor-pointer group',
+                  'flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-all duration-200 cursor-pointer group relative',
                   isActive
-                    ? 'bg-white/10 text-white font-semibold ring-1 ring-white/15'
-                    : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-200'
+                    ? 'bg-gradient-to-r from-[#1455D9]/40 via-[#1E66E8]/20 to-transparent text-white font-bold border-l-2 border-[#D4AF37] pl-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]'
+                    : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-100 hover:translate-x-0.5'
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200')}>
+                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-[#F3E5AB]' : 'text-slate-400 group-hover:text-slate-200')}>
                     {item.icon}
                     {notifCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0B132B]" />
@@ -1142,7 +1141,7 @@ export function PortalLayout({
                       className={cn(
                         'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold tracking-tight',
                         isActive
-                          ? 'bg-white text-slate-900'
+                          ? 'bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-slate-900 font-black'
                           : 'bg-rose-500/90 text-white'
                       )}
                       title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
@@ -1165,10 +1164,8 @@ export function PortalLayout({
           })}
         </nav>
 
-
-
         {/* Drawer Footer with Version & Logout */}
-        <div className="p-3 border-t border-slate-800/80 bg-slate-900/40 space-y-2">
+        <div className="p-3 border-t border-white/10 bg-black/20 space-y-2">
           <div className="px-1 flex items-center justify-between text-[11px] text-slate-400 font-medium">
             <span>AI&amp;DS Portal</span>
             <button
@@ -1193,7 +1190,7 @@ export function PortalLayout({
       </aside>
 
       {/* Main Top Header */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 lg:pl-72">
+      <header className="sticky top-0 z-30 lux-glass-header lg:pl-72 shadow-[0_4px_24px_rgba(7,26,61,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all">
         {/* Real-time Push Notification Permission Banner for Mobile & Desktop */}
         {pushPermission === 'default' && !isPermissionBannerDismissed && (
           <div className="bg-slate-900 text-white px-4 py-2 border-b border-slate-800 shadow-xs flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
@@ -1300,10 +1297,10 @@ export function PortalLayout({
                   type="button"
                   onClick={() => setIsMenuNotifOpen((prev) => !prev)}
                   className={cn(
-                    'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer',
+                    'flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all duration-200 cursor-pointer shadow-xs',
                     isMenuNotifOpen
-                      ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700 border-slate-200/80'
+                      ? 'bg-gradient-to-r from-[#071A3D] via-[#0E3A94] to-[#071A3D] text-white border-[#D4AF37]/50 shadow-lux-gold'
+                      : 'bg-white/80 hover:bg-white text-slate-700 border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md'
                   )}
                   title="Click to view menus with unread updates"
                   aria-expanded={isMenuNotifOpen}
@@ -1640,7 +1637,7 @@ export function PortalLayout({
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
-              className="flex items-center gap-2.5 p-1 pr-3 rounded-full hover:bg-slate-100 transition-colors border border-slate-200/80 bg-white group"
+              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full lux-glass-card hover:border-[#D4AF37]/50 transition-all duration-300 shadow-xs hover:shadow-md group cursor-pointer"
             >
               <div className="w-7 h-7 rounded-full overflow-hidden bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
                 {avatarImage && !avatarError ? (
@@ -1686,7 +1683,7 @@ export function PortalLayout({
 
       {/* Mobile Bottom 5-Tab Navigation Bar */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/90 grid grid-cols-5 py-1.5 px-1 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.06)] select-none"
+        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/90 dark:bg-[#070E1E]/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-white/10 grid grid-cols-5 py-2 px-1 pb-safe shadow-[0_-6px_25px_rgba(7,26,61,0.08)] select-none"
         aria-label="Bottom mobile navigation"
         style={{ touchAction: 'manipulation' }}
       >

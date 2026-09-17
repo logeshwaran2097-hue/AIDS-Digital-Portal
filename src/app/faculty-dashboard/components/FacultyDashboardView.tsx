@@ -171,30 +171,33 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           }
         }}
       />
-      {/* Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
-        <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
+      {/* Executive Faculty Hero Welcome Banner */}
+      <div className="relative overflow-hidden rounded-3xl lux-sapphire-card p-6 sm:p-8 text-white shadow-2xl border border-white/15">
+        <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0 ring-4 ring-white/10">
-              {(data?.user?.name || 'Faculty Member').replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
+            <div className="relative shrink-0">
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#1E66E8] opacity-75 blur-xs" />
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#06163A]/90 backdrop-blur-md text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-2xl border-2 border-[#D4AF37]/80">
+                {(data?.user?.name || 'Faculty Member').replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
+              </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className={cn(
-                  "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs",
+                  "px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs",
                   data?.faculty?.facultyType === 'lab_faculty'
                     ? "bg-[#22C7E8] text-[#051330]"
-                    : "bg-[#F4C430] text-[#071A3D]"
+                    : "bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-[#071A3D] border border-[#D4AF37]"
                 )}>
                   {isClassAdvisor ? 'Class Advisor' : data?.faculty?.facultyType === 'lab_faculty' ? 'Lab Handler' : 'Faculty Member'}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Department of AI &amp; DS
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight text-white">{data?.user?.name || 'Faculty Member'}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black mt-1.5 tracking-tight text-white">{data?.user?.name || 'Faculty Member'}</h1>
               <p className="text-xs sm:text-sm text-slate-300 font-mono mt-0.5">
                 {data?.faculty?.designation || 'Faculty'} {data?.faculty?.qualification ? `· ${data.faculty.qualification}` : ''} {data?.faculty?.facultyId ? `· ID: ${data.faculty.facultyId}` : ''}
               </p>
@@ -204,58 +207,51 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           <div className="flex items-center gap-2.5">
             <Link
               href="/faculty-dashboard/attendance"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#22C7E8] to-[#0EA5E9] hover:brightness-105 text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-[0_4px_16px_rgba(34,199,232,0.35)] shrink-0 hover:scale-102 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#1E66E8] via-[#1455D9] to-[#0D40A8] hover:brightness-110 text-white text-xs font-black flex items-center gap-2 transition-all shadow-lg hover:shadow-cyan-500/20 shrink-0 hover:scale-[1.02] active:scale-[0.98] cursor-pointer border border-white/20"
             >
-              <UserCheck className="w-4 h-4" /> Mark Daily Attendance
+              <UserCheck className="w-4 h-4 text-[#F3E5AB]" />
+              <span>Mark Daily Attendance</span>
             </Link>
           </div>
         </div>
 
         {/* Academic KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/15">
-          <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
+          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
             {isClassAdvisor && data.totalSubjects === 0 ? (
               <>
                 <p className="text-[10px] text-slate-300 uppercase font-bold">Class Advisory Scope</p>
-                <p className="text-xl font-black text-[#F4C430] mt-0.5">
+                <p className="text-xl font-black text-[#F3E5AB] mt-0.5">
                   {data.faculty?.advisorBatch || (data.faculty?.advisorYear ? `Year ${data.faculty.advisorYear} · Sec ${data.faculty.advisorSec || 'B'}` : 'Year 2 · Sec B')}
                 </p>
-                <p className="text-[10px] text-slate-300">Class Advisor In-Charge</p>
+                <p className="text-[10px] text-slate-400">Class Advisor In-Charge</p>
               </>
             ) : (
               <>
                 <p className="text-[10px] text-slate-300 uppercase font-bold">Allocated Courses</p>
-                <p className="text-xl font-black text-[#F4C430] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
-                <p className="text-[10px] text-slate-300">Curriculum &amp; Labs</p>
+                <p className="text-xl font-black text-[#F3E5AB] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
+                <p className="text-[10px] text-slate-400">Curriculum &amp; Labs</p>
               </>
             )}
           </div>
 
-          <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Enrolled Students</p>
+          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
+            <p className="text-[10px] text-slate-300 uppercase font-bold">Enrolled Students</p>
             <p className="text-xl font-black text-emerald-300 mt-0.5">{data.totalStudents} Student{data.totalStudents === 1 ? '' : 's'}</p>
-            <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || (data.faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Sessions' : 'Class Advisor Scope')}</p>
+            <p className="text-[10px] text-slate-400">{data.faculty?.advisorBatch || (data.faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Sessions' : 'Class Advisor Scope')}</p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Batch Attendance Avg</p>
-            <p className="text-xl font-black text-[#22C7E8] mt-0.5">{data.attendanceAvg || '—'}</p>
-            <p className="text-[10px] text-emerald-300">Recorded Sessions</p>
+          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
+            <p className="text-[10px] text-slate-300 uppercase font-bold">Curriculum Files</p>
+            <p className="text-xl font-black text-cyan-300 mt-0.5">{data.resourcesCount + data.questionPapersCount} Uploads</p>
+            <p className="text-[10px] text-slate-400">Notes &amp; Question Papers</p>
           </div>
 
-          {isClassAdvisor ? (
-            <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-              <p className="text-[10px] text-gray-300 uppercase font-bold">Class Advisor Scope</p>
-              <p className="text-xl font-black text-amber-300 mt-0.5">{data.totalStudents} Students</p>
-              <p className="text-[10px] text-amber-200">Advisory Jurisdiction</p>
-            </div>
-          ) : (
-            <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
-              <p className="text-[10px] text-gray-300 uppercase font-bold">Faculty Status</p>
-              <p className="text-xl font-black text-emerald-300 mt-0.5">Active</p>
-              <p className="text-[10px] text-emerald-200">Department Faculty</p>
-            </div>
-          )}
+          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
+            <p className="text-[10px] text-slate-300 uppercase font-bold">Term Attendance Average</p>
+            <p className="text-xl font-black text-[#F3E5AB] mt-0.5">{data.attendanceAvg || '0.0%'}</p>
+            <p className="text-[10px] text-slate-400">Conducted Sessions</p>
+          </div>
         </div>
       </div>
 
@@ -274,18 +270,19 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             <Link
               key={item.label}
               href={item.href}
-              className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-gray-200 bg-white text-[#071A3D] hover:shadow-md transition-all duration-200 group text-center space-y-2 hover:border-[#1455D9]/40"
+              className="flex flex-col items-center justify-center p-3.5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 text-[#071A3D] dark:text-white hover:shadow-xl transition-all duration-300 group text-center space-y-2 lux-specular-sweep hover:-translate-y-1"
             >
-              <div className={cn('p-2.5 rounded-xl transition-transform group-hover:scale-110 duration-200 border', item.bg)}>
+              <div className={cn('p-2.5 rounded-xl transition-transform group-hover:scale-110 duration-200 border shadow-xs', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-[11px] font-bold text-gray-700 group-hover:text-[#1455D9] transition-colors line-clamp-1">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-[#1455D9] transition-colors line-clamp-1">
                 {item.label}
               </span>
             </Link>
           ))}
         </div>
       </section>
+
 
       {/* Main Grid: Allocated Courses & Today's Schedule */}
       <div className="grid gap-6 lg:grid-cols-3">

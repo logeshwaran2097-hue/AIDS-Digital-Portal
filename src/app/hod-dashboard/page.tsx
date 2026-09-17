@@ -85,125 +85,130 @@ export default async function HODDashboardPage() {
           }}
         />
 
-        {/* HOD Executive Hero Banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 sm:p-8 text-white shadow-xl">
-          <div className="absolute right-0 top-0 w-96 h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#F4C430]/20 via-transparent to-transparent pointer-events-none" />
+        {/* HOD Executive Directorate Hero Banner */}
+        <div className="relative overflow-hidden rounded-3xl lux-sapphire-card p-6 sm:p-8 text-white shadow-2xl border border-white/15">
+          <div className="absolute right-0 top-0 w-96 h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#D4AF37]/20 via-transparent to-transparent pointer-events-none" />
           <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
-              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-[#F4C430] flex items-center justify-center text-2xl sm:text-3xl font-extrabold text-[#F4C430] shrink-0 shadow-lg">
-                {displayName.charAt(0) || 'H'}
+              <div className="relative shrink-0">
+                <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#1E66E8] opacity-80 blur-xs" />
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-[#06163A]/90 backdrop-blur-md border-2 border-[#D4AF37] flex items-center justify-center text-2xl sm:text-3xl font-black text-[#F3E5AB] shadow-2xl">
+                  {displayName.charAt(0) || 'H'}
+                </div>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs sm:text-sm text-gray-300 font-medium">Department Portal ·</span>
-                  <span className="text-xs sm:text-sm font-bold text-[#F4C430]">Head of Department</span>
+                  <span className="text-xs sm:text-sm text-slate-300 font-medium">Department Governance ·</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-[#071A3D] border border-[#D4AF37] shadow-xs">
+                    Head of Department
+                  </span>
                 </div>
-                <h1 className="text-xl sm:text-3xl font-black text-white truncate mt-1">
+                <h1 className="text-2xl sm:text-3xl font-black text-white truncate mt-1.5 tracking-tight">
                   {displayName}
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-300 mt-1">
-                  Department of Artificial Intelligence &amp; Data Science · V.S.B. Engineering College
+                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
+                  Department of Artificial Intelligence &amp; Data Science · V.S.B. Engineering College (Autonomous)
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 text-center">
-                <p className="text-[10px] text-gray-300 uppercase tracking-wider font-bold">Academic Year</p>
-                <p className="text-base font-black text-[#F4C430]">2025-26</p>
+              <div className="px-4 py-2 rounded-2xl bg-black/40 backdrop-blur-md border border-[#D4AF37]/40 text-center shadow-inner">
+                <p className="text-[10px] text-slate-300 uppercase tracking-wider font-bold">Academic Session</p>
+                <p className="text-base font-black text-[#F3E5AB]">2025-26</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Executive Stats Cards */}
+        {/* Executive Stats Cards (3D Sculpted Glass) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(20,85,217,0.12)] hover:border-blue-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 hover:border-blue-300/80 dark:hover:border-blue-500/30 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Students</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#1455D9] to-[#2563EB] text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Students</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#1455D9] to-[#2563EB] text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-110 transition-transform">
                 <Users className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-[#071A3D]">{studentCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Active Enrolled</p>
+            <p className="text-3xl font-black text-[#071A3D] dark:text-white font-mono tracking-tight">{studentCount}</p>
+            <p className="text-[11px] text-blue-600 dark:text-blue-300 font-semibold mt-1">Active Enrolled Scholars</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(147,51,234,0.12)] hover:border-purple-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 hover:border-purple-300/80 dark:hover:border-purple-500/30 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Faculty Staff</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Faculty Staff</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-purple-500/20 group-hover:scale-110 transition-transform">
                 <GraduationCap className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-[#071A3D]">{facultyCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Teaching Members</p>
+            <p className="text-3xl font-black text-[#071A3D] dark:text-white font-mono tracking-tight">{facultyCount}</p>
+            <p className="text-[11px] text-purple-600 dark:text-purple-300 font-semibold mt-1">Teaching &amp; Lab Faculty</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(245,158,11,0.12)] hover:border-amber-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 hover:border-amber-300/80 dark:hover:border-amber-500/30 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Subjects</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-white flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Subjects</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-[#071A3D] flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-110 transition-transform">
                 <BookOpen className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-[#071A3D]">{subjectCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Curriculum Courses</p>
+            <p className="text-3xl font-black text-[#071A3D] dark:text-white font-mono tracking-tight">{subjectCount}</p>
+            <p className="text-[11px] text-amber-700 dark:text-amber-300 font-semibold mt-1">Curricular Syllabi</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(6,182,212,0.12)] hover:border-cyan-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 hover:border-cyan-300/80 dark:hover:border-cyan-500/30 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Student Projects</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-teal-400 text-white flex items-center justify-center shadow-md shadow-cyan-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Student Projects</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-teal-400 text-white flex items-center justify-center shadow-md shadow-cyan-500/20 group-hover:scale-110 transition-transform">
                 <FolderOpen className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-[#071A3D]">{projectCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Ongoing &amp; Final Year</p>
+            <p className="text-3xl font-black text-[#071A3D] dark:text-white font-mono tracking-tight">{projectCount}</p>
+            <p className="text-[11px] text-cyan-700 dark:text-cyan-300 font-semibold mt-1">Phase I, II &amp; Mini</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(20,85,217,0.12)] hover:border-blue-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 hover:border-blue-300/80 dark:hover:border-blue-500/30 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Study Resources</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Study Resources</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-110 transition-transform">
                 <Database className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-[#071A3D]">{resourceCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Notes &amp; Manuals</p>
+            <p className="text-3xl font-black text-[#071A3D] dark:text-white font-mono tracking-tight">{resourceCount}</p>
+            <p className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold mt-1">Notes &amp; Lab Manuals</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(16,185,129,0.12)] hover:border-emerald-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 hover:border-emerald-300/80 dark:hover:border-emerald-500/30 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Question Papers</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Question Papers</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-110 transition-transform">
                 <FileQuestion className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-[#071A3D]">{questionPaperCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Internal &amp; University</p>
+            <p className="text-3xl font-black text-[#071A3D] dark:text-white font-mono tracking-tight">{questionPaperCount}</p>
+            <p className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold mt-1">Autonomous Exam Sets</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(244,63,94,0.12)] hover:border-rose-200/90 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 hover:border-rose-300/80 dark:hover:border-rose-500/30 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Upcoming Events</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-md shadow-rose-500/20 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Upcoming Events</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-md shadow-rose-500/20 group-hover:scale-110 transition-transform">
                 <CalendarDays className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-[#071A3D]">{upcomingEvents}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Workshops &amp; Seminars</p>
+            <p className="text-3xl font-black text-[#071A3D] dark:text-white font-mono tracking-tight">{upcomingEvents}</p>
+            <p className="text-[11px] text-rose-700 dark:text-rose-300 font-semibold mt-1">Department Schedules</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 border border-amber-200/90 shadow-[0_4px_20px_-2px_rgba(245,158,11,0.08)] hover:shadow-[0_12px_28px_-4px_rgba(245,158,11,0.15)] hover:border-amber-300 hover:-translate-y-1 transition-all duration-300 group">
+          <div className="p-5 rounded-2xl lux-glass-card border border-amber-300/90 dark:border-amber-600/40 bg-gradient-to-br from-amber-500/10 via-transparent to-amber-500/5 hover:-translate-y-1 transition-all duration-300 group lux-specular-sweep shadow-sm hover:shadow-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-amber-900 uppercase tracking-wider">Pending Approvals</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/25 group-hover:scale-105 transition-transform">
+              <span className="text-xs font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider">Pending Approvals</span>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/25 group-hover:scale-110 transition-transform">
                 <AlertCircle className="w-5 h-5" />
               </div>
             </div>
-            <p className="text-3xl font-black text-amber-900">{totalPending}</p>
-            <p className="text-[11px] text-amber-700 font-bold mt-1">Requires HOD Sign-off</p>
+            <p className="text-3xl font-black text-amber-900 dark:text-amber-200 font-mono tracking-tight">{totalPending}</p>
+            <p className="text-[11px] text-amber-700 dark:text-amber-300 font-bold mt-1">Requires HOD Sign-off</p>
           </div>
         </div>
 

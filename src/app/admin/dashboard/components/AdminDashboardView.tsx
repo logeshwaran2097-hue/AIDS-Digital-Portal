@@ -141,86 +141,90 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pt-1">
-      {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Super Admin Command Center
-            </span>
-            <span className="text-xs text-gray-300 font-medium">· Root System Jurisdiction</span>
+      {/* Super Admin Executive Command Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl lux-sapphire-card p-6 sm:p-8 text-white shadow-2xl border border-white/15">
+        <div className="absolute right-0 top-0 w-96 h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#D4AF37]/20 via-transparent to-transparent pointer-events-none" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-3 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-[#071A3D] border border-[#D4AF37] shadow-xs">
+                Super Administrator Command Center
+              </span>
+              <span className="text-xs text-slate-300 font-medium">· Root Institutional Jurisdiction</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">System Administration &amp; Infrastructure</h1>
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 font-medium">
+              {data.user.name} ({data.user.email}) · Complete centralized control of users, databases, logs &amp; security
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">System Administration &amp; Infrastructure</h1>
-          <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            {data.user.name} ({data.user.email}) · Complete centralized control of users, databases, logs &amp; security
-          </p>
-        </div>
 
-        <div className="flex items-center flex-wrap gap-2.5 shrink-0">
-          <button
-            onClick={handleDownloadSystemReport}
-            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
-          >
-            <Download className="w-4 h-4" /> Export System Audit (PDF)
-          </button>
+          <div className="flex items-center flex-wrap gap-2.5 shrink-0">
+            <button
+              onClick={handleDownloadSystemReport}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#F3E5AB] via-[#D4AF37] to-[#AA820A] text-[#071A3D] text-xs font-black flex items-center gap-2 transition-all shadow-lg hover:shadow-amber-500/30 cursor-pointer hover:scale-[1.03] active:scale-[0.98] shrink-0 border border-[#F3E5AB]"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export System Audit (PDF)</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* System Infrastructure Health Strip - Clickable boxes */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* System Infrastructure Health Strip - Clickable Luxury Complications */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
         <div
           onClick={() => router.push('/admin/settings')}
-          className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs flex items-center gap-3 cursor-pointer hover:shadow-md hover:border-[#1455D9] transition-all hover:scale-[1.02]"
+          className="lux-glass-card p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs flex items-center gap-3.5 cursor-pointer hover:shadow-lg hover:border-[#1455D9] transition-all hover:scale-[1.02] lux-specular-sweep"
           title="Click to view App System Settings"
         >
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1455D9] flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-blue-500/15 text-[#1455D9] dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0">
             <Server className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-gray-400 font-bold uppercase">App Runtime</p>
-            <p className="text-sm font-bold text-[#071A3D]">Next.js 14.2.5</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">App Runtime</p>
+            <p className="text-sm font-bold text-[#071A3D] dark:text-white font-mono">Next.js 14.2</p>
           </div>
         </div>
 
         <div
           onClick={() => router.push('/admin/activity-logs')}
-          className="bg-white p-4 rounded-2xl border border-green-200/80 shadow-xs flex items-center gap-3 bg-green-50/20 cursor-pointer hover:shadow-md hover:border-green-500 transition-all hover:scale-[1.02]"
+          className="lux-glass-card p-4 rounded-2xl border border-emerald-300/80 dark:border-emerald-700/40 shadow-xs flex items-center gap-3.5 cursor-pointer hover:shadow-lg hover:border-emerald-500 transition-all hover:scale-[1.02] lux-specular-sweep"
           title="Click to inspect live Database Audit Logs"
         >
-          <div className="w-10 h-10 rounded-xl bg-green-100 text-green-700 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
             <Database className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-green-700 font-bold uppercase">Database Status</p>
-            <p className="text-sm font-bold text-green-700">Healthy &amp; Synced</p>
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Database Status</p>
+            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">Healthy &amp; Synced</p>
           </div>
         </div>
 
         <div
           onClick={() => router.push('/admin/roles')}
-          className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs flex items-center gap-3 bg-purple-50/20 cursor-pointer hover:shadow-md hover:border-purple-500 transition-all hover:scale-[1.02]"
+          className="lux-glass-card p-4 rounded-2xl border border-purple-300/80 dark:border-purple-700/40 shadow-xs flex items-center gap-3.5 cursor-pointer hover:shadow-lg hover:border-purple-500 transition-all hover:scale-[1.02] lux-specular-sweep"
           title="Click to manage RBAC Security & Roles"
         >
-          <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-purple-700 font-bold uppercase">Security Seal</p>
-            <p className="text-sm font-bold text-purple-700">JWT Encrypted</p>
+            <p className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">Security Seal</p>
+            <p className="text-sm font-bold text-purple-700 dark:text-purple-300">JWT Encrypted</p>
           </div>
         </div>
 
         <div
           onClick={handleDownloadSystemReport}
-          className="bg-white p-4 rounded-2xl border border-amber-200/80 shadow-xs flex items-center gap-3 bg-amber-50/20 cursor-pointer hover:shadow-md hover:border-amber-500 transition-all hover:scale-[1.02]"
+          className="lux-glass-card p-4 rounded-2xl border border-amber-300/80 dark:border-amber-700/40 shadow-xs flex items-center gap-3.5 cursor-pointer hover:shadow-lg hover:border-amber-500 transition-all hover:scale-[1.02] lux-specular-sweep"
           title="Click to Export Audit Report PDF"
         >
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
             <Cpu className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-amber-700 font-bold uppercase">PDF Vector Engine</p>
-            <p className="text-sm font-bold text-amber-700">Online &amp; Active</p>
+            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">PDF Vector Engine</p>
+            <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Active &amp; Ready</p>
           </div>
         </div>
       </div>
@@ -229,10 +233,10 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-black text-[#071A3D]">Centralized Administrative Directory</h2>
-            <p className="text-xs text-gray-500 font-medium">Real-time live database counts connected to PostgreSQL &amp; Prisma</p>
+            <h2 className="text-xl font-black text-[#071A3D] dark:text-white tracking-tight">Centralized Administrative Directory</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Real-time live database counts connected to PostgreSQL &amp; Prisma</p>
           </div>
-          <span className="text-xs text-gray-400 font-mono font-bold">12 Primary Modules</span>
+          <span className="text-xs text-slate-400 font-mono font-bold">12 Primary Modules</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -248,26 +252,26 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
                   handleTileNavigation(tile.href)
                 }
               }}
-              className="bg-white p-5 rounded-3xl border border-gray-200 hover:border-[#1455D9] transition-all duration-200 hover:shadow-md group flex flex-col justify-between cursor-pointer active:scale-[0.98] select-none"
+              className="lux-glass-card p-5 rounded-3xl border border-slate-200/80 dark:border-white/10 hover:border-blue-300 dark:hover:border-blue-500/40 transition-all duration-300 hover:shadow-xl group flex flex-col justify-between cursor-pointer active:scale-[0.98] select-none lux-specular-sweep hover:-translate-y-1"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className={cn('w-10 h-10 rounded-2xl text-white flex items-center justify-center shadow-xs', tile.color)}>
+                  <div className={cn('w-11 h-11 rounded-2xl text-white flex items-center justify-center shadow-md', tile.color)}>
                     {tile.icon}
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
+                    <h3 className="font-bold text-sm text-[#071A3D] dark:text-white group-hover:text-[#1455D9] dark:group-hover:text-cyan-300 transition-colors">
                       {tile.title}
                     </h3>
-                    <p className="text-[11px] text-gray-400 font-medium">{tile.desc}</p>
+                    <p className="text-[11px] text-slate-400 font-medium">{tile.desc}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-black px-2.5 py-1 rounded-xl bg-gray-50 border border-gray-200 text-[#071A3D] group-hover:bg-blue-50 group-hover:text-[#1455D9] group-hover:border-blue-200 transition-colors">
+                <span className="text-xs font-mono font-black px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[#071A3D] dark:text-slate-200 group-hover:bg-blue-50 group-hover:text-[#1455D9] group-hover:border-blue-200 transition-colors">
                   {tile.count}
                 </span>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs font-bold text-[#1455D9]">
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs font-bold text-[#1455D9] dark:text-cyan-400">
                 <Link
                   href={tile.href}
                   prefetch={true}
@@ -278,7 +282,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
                 >
                   <span>Manage Module</span>
                 </Link>
-                <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1.5 transition-transform" />
               </div>
             </div>
           ))}

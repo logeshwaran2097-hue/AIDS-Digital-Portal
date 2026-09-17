@@ -191,10 +191,11 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
   return (
     <div className="space-y-6">
       {/* Visual Analytics Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
+      <div className="lux-sapphire-card relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white border border-[#D4AF37]/30 shadow-lux-sapphire flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="absolute -right-20 -top-20 w-72 h-72 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
+        <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider shadow-xs">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#D4AF37] text-[#030712] text-[10px] font-black uppercase tracking-wider shadow-lux-gold">
               Advisor Attendance Intelligence
             </span>
             <span className="text-xs text-blue-200 font-medium">· Morning Roll-Call Verified</span>
@@ -208,14 +209,14 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
         </div>
 
         {/* Action Controls & Filters */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 relative z-10">
           <button
             onClick={handleExportPDF}
             disabled={isExporting}
-            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e5b726] text-[#071A3D] text-xs font-black flex items-center gap-2 shadow-md transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3d37a] to-[#c59c27] text-[#030712] text-xs font-black flex items-center gap-2 shadow-lux-gold transition-all cursor-pointer active:scale-95 disabled:opacity-50"
             title="Download Official Advisor Morning Attendance PDF Report"
           >
-            <Download className="w-4 h-4 text-[#071A3D]" />
+            <Download className="w-4 h-4 text-[#030712]" />
             <span>{isExporting ? 'Generating PDF...' : 'Export Advisor Report (PDF)'}</span>
           </button>
 
@@ -234,7 +235,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
             className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold flex items-center justify-center transition-all cursor-pointer text-white shadow-xs disabled:opacity-50"
             title="Sync Latest Advisor Attendance"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#F4C430]' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#D4AF37]' : ''}`} />
           </button>
 
           {/* Enrolled vs All Toggle Pill */}
@@ -243,7 +244,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
               onClick={() => setShowOnlyEnrolled(true)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 showOnlyEnrolled
-                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  ? 'bg-[#D4AF37] text-[#030712] shadow-sm font-black'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
               title="Display only classes with students enrolled by admin"
@@ -254,7 +255,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
               onClick={() => setShowOnlyEnrolled(false)}
               className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 !showOnlyEnrolled
-                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  ? 'bg-[#D4AF37] text-[#030712] shadow-sm font-black'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
               title="Display all 10 academic sections"
@@ -269,7 +270,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
               onClick={() => setYearFilter('ALL')}
               className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === 'ALL'
-                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  ? 'bg-[#D4AF37] text-[#030712] shadow-sm font-black'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -279,7 +280,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
               onClick={() => setYearFilter('2')}
               className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === '2'
-                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  ? 'bg-[#D4AF37] text-[#030712] shadow-sm font-black'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -289,7 +290,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
               onClick={() => setYearFilter('3')}
               className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === '3'
-                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  ? 'bg-[#D4AF37] text-[#030712] shadow-sm font-black'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -299,7 +300,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
               onClick={() => setYearFilter('4')}
               className={`px-2 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                 yearFilter === '4'
-                  ? 'bg-[#F4C430] text-[#071A3D] shadow-sm'
+                  ? 'bg-[#D4AF37] text-[#030712] shadow-sm font-black'
                   : 'text-white/80 hover:text-white hover:bg-white/10'
               }`}
             >
@@ -310,31 +311,31 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       </div>
 
       {/* KPI Highlights Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="lux-glass-card lux-specular-sweep p-4 rounded-2xl border border-slate-200/80 dark:border-white/10 shadow-xs">
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Enrolled</p>
-          <p className="text-2xl font-black text-[#071A3D] mt-0.5">{summary.totalEnrolled}</p>
+          <p className="text-2xl font-black text-[#071A3D] dark:text-white mt-0.5">{summary.totalEnrolled}</p>
           <p className="text-[11px] text-slate-500 font-medium mt-1">Students across active classes</p>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-blue-200/80 shadow-xs bg-blue-50/20">
-          <p className="text-[10px] text-blue-700 font-bold uppercase tracking-wider">No. of Presents</p>
-          <p className="text-2xl font-black text-[#1455D9] mt-0.5">{summary.totalPresent}</p>
-          <p className="text-[11px] text-blue-600 font-medium mt-1">{summary.avgPct}% Department Average</p>
+        <div className="lux-glass-card lux-specular-sweep p-4 rounded-2xl border border-blue-500/20 shadow-xs">
+          <p className="text-[10px] text-[#1E66E8] font-bold uppercase tracking-wider">No. of Presents</p>
+          <p className="text-2xl font-black text-[#1E66E8] mt-0.5">{summary.totalPresent}</p>
+          <p className="text-[11px] text-[#1E66E8]/80 font-medium mt-1">{summary.avgPct}% Department Average</p>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-rose-200/80 shadow-xs bg-rose-50/20">
-          <p className="text-[10px] text-rose-700 font-bold uppercase tracking-wider">No. of Absentees</p>
-          <p className="text-2xl font-black text-rose-700 mt-0.5">{summary.totalAbsent}</p>
-          <p className="text-[11px] text-rose-600 font-medium mt-1">Leave, OD &amp; Absent Today</p>
+        <div className="lux-glass-card lux-specular-sweep p-4 rounded-2xl border border-rose-500/20 shadow-xs">
+          <p className="text-[10px] text-rose-500 font-bold uppercase tracking-wider">No. of Absentees</p>
+          <p className="text-2xl font-black text-rose-500 mt-0.5">{summary.totalAbsent}</p>
+          <p className="text-[11px] text-rose-500/80 font-medium mt-1">Leave, OD &amp; Absent Today</p>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-emerald-200/80 shadow-xs bg-emerald-50/20">
-          <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Top Performing Class</p>
-          <p className="text-xl font-black text-emerald-700 mt-0.5 truncate">
+        <div className="lux-glass-card lux-specular-sweep p-4 rounded-2xl border border-emerald-500/20 shadow-xs">
+          <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Top Performing Class</p>
+          <p className="text-xl font-black text-emerald-500 mt-0.5 truncate">
             {summary.topClass && summary.topClass.totalStudents > 0 ? `${summary.topClass.className}` : 'N/A'}
           </p>
-          <p className="text-[11px] text-emerald-600 font-medium mt-1">
+          <p className="text-[11px] text-emerald-500/80 font-medium mt-1">
             {summary.topClass && summary.topClass.totalStudents > 0 ? `${summary.topClass.attendancePct}% Attendance` : 'Awaiting Submissions'}
           </p>
         </div>
@@ -345,7 +346,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
         {/* ========================================================================= */}
         {/* 1. CLASS-WISE AVERAGE BAR CHART (HARMONIZED WITH DASHBOARD LIGHT THEME) */}
         {/* ========================================================================= */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-[0_4px_25px_-4px_rgba(7,26,61,0.06)] space-y-6">
+        <div className="lux-glass-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -462,7 +463,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
         {/* ========================================================================= */}
         {/* 2. CLASS BREAKDOWN TABLE (HARMONIZED WITH DASHBOARD LIGHT THEME) */}
         {/* ========================================================================= */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-[0_4px_25px_-4px_rgba(7,26,61,0.06)] space-y-5">
+        <div className="lux-glass-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xs space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
