@@ -811,9 +811,7 @@ export default function LoginPage() {
           boardingPoint: onboardingForm.residency === 'Day Scholar' ? onboardingForm.boardingPoint : undefined,
           busDetails: onboardingForm.residency === 'Day Scholar'
             ? `${onboardingForm.dayScholarTransport} · ${onboardingForm.dayScholarTransport === 'College Bus' ? `Bus ${onboardingForm.busNo} · ` : onboardingForm.dayScholarTransport === 'Out Bus' ? `${onboardingForm.outBusTransportService} · ` : ''}${onboardingForm.boardingPoint}`
-            : onboardingForm.residency === 'Hostel'
-              ? `${onboardingForm.hostelBlock} · Room ${onboardingForm.roomNo}`
-              : undefined,
+            : undefined,
           profileImage: passportPhotoPreview || undefined,
           newPassword: onboardingForm.newPassword,
           correctionRemarks: onboardingForm.hasCorrectionRequest ? onboardingForm.correctionRemarks : undefined,

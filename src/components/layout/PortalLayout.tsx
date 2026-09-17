@@ -45,6 +45,7 @@ import {
 } from '@/lib/notificationEngine'
 import { categorizeNotification, getMenuCategoryKey } from '@/lib/notificationClassifier'
 import { NotificationDetailModal, NotificationDetailData } from '@/components/notifications/NotificationDetailModal'
+import { toast } from '@/components/ui/Toast'
 import { VisionMissionModal } from '@/components/about/VisionMissionModal'
 import { APP_VERSION, APP_VERSION_LABEL } from '@/lib/version'
 import { triggerPortalUpdateCheck } from '@/components/pwa/VersionUpdateNotifier'

@@ -286,12 +286,30 @@ export async function POST(request: NextRequest) {
             ...(isParentWhatsapp !== undefined ? { isParentWhatsapp: Boolean(isParentWhatsapp) } : {}),
             ...(bloodGroup !== undefined && bloodGroup !== '' ? { bloodGroup } : {}),
             ...(residencyStatus !== undefined && residencyStatus !== '' ? { residencyStatus } : {}),
-            ...(hostelBlock !== undefined ? { hostelBlock } : {}),
-            ...(roomNo !== undefined ? { roomNo } : {}),
-            ...(busNo !== undefined ? { busNo } : {}),
-            ...(boardingPoint !== undefined ? { boardingPoint } : {}),
+            ...(residencyStatus && residencyStatus.toLowerCase().includes('hostel')
+              ? {
+                  hostelBlock: hostelBlock !== undefined ? hostelBlock : studentRec.hostelBlock,
+                  roomNo: roomNo !== undefined ? roomNo : studentRec.roomNo,
+                  busNo: null,
+                  boardingPoint: null,
+                  busDetails: null,
+                }
+              : residencyStatus && (residencyStatus.toLowerCase().includes('day scholar') || residencyStatus.toLowerCase().includes('dayscholar'))
+              ? {
+                  hostelBlock: null,
+                  roomNo: null,
+                  busNo: busNo !== undefined ? busNo : studentRec.busNo,
+                  boardingPoint: boardingPoint !== undefined ? boardingPoint : studentRec.boardingPoint,
+                  busDetails: busDetails !== undefined && busDetails !== '' ? busDetails.trim() : studentRec.busDetails,
+                }
+              : {
+                  ...(hostelBlock !== undefined ? { hostelBlock } : {}),
+                  ...(roomNo !== undefined ? { roomNo } : {}),
+                  ...(busNo !== undefined ? { busNo } : {}),
+                  ...(boardingPoint !== undefined ? { boardingPoint } : {}),
+                  ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
+                }),
             ...(address !== undefined && address !== '' ? { address: address.trim() } : {}),
-            ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
             ...(advisorName !== undefined && advisorName !== '' ? { advisorName: advisorName.trim() } : {}),
           } as any,
         }).catch((err) => console.warn('Student update warning:', err))

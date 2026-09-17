@@ -1242,35 +1242,44 @@ export function FacultyStudentsView({
                     </span>
                   </div>
 
-                  {selectedStudent.residencyStatus?.toLowerCase().includes('hostel') || selectedStudent.hostelBlock ? (
-                    <>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">Hostel Block</span>
-                        <span className="font-bold text-[#071A3D]">{selectedStudent.hostelBlock ? `Block ${selectedStudent.hostelBlock}` : 'Campus Hostel'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">Room Number</span>
-                        <span className="font-bold text-[#071A3D] font-mono">{selectedStudent.roomNo ? `Room ${selectedStudent.roomNo}` : 'Assigned Room'}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">College Bus Route</span>
-                        <span className="font-bold text-[#071A3D]">{selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">Boarding Point</span>
-                        <span className="font-bold text-[#071A3D]">{selectedStudent.boardingPoint || 'Main Bus Stop'}</span>
-                      </div>
-                      {selectedStudent.busDetails && (
-                        <div className="col-span-full">
-                          <span className="text-gray-400 text-[10px] block">Transit Details</span>
-                          <span className="font-medium text-[#071A3D]">{selectedStudent.busDetails}</span>
+                  {(() => {
+                    const resStatus = (selectedStudent.residencyStatus || '').toLowerCase().trim()
+                    const isHosteller = resStatus.includes('hostel') || (!resStatus && Boolean(selectedStudent.hostelBlock || selectedStudent.roomNo))
+
+                    if (isHosteller) {
+                      return (
+                        <>
+                          <div>
+                            <span className="text-gray-400 text-[10px] block">Hostel Block</span>
+                            <span className="font-bold text-[#071A3D]">{selectedStudent.hostelBlock ? `Block ${selectedStudent.hostelBlock}` : 'Campus Hostel'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400 text-[10px] block">Room Number</span>
+                            <span className="font-bold text-[#071A3D] font-mono">{selectedStudent.roomNo ? `Room ${selectedStudent.roomNo}` : 'Assigned Room'}</span>
+                          </div>
+                        </>
+                      )
+                    }
+
+                    return (
+                      <>
+                        <div>
+                          <span className="text-gray-400 text-[10px] block">College Bus Route</span>
+                          <span className="font-bold text-[#071A3D]">{selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit'}</span>
                         </div>
-                      )}
-                    </>
-                  )}
+                        <div>
+                          <span className="text-gray-400 text-[10px] block">Boarding Point</span>
+                          <span className="font-bold text-[#071A3D]">{selectedStudent.boardingPoint || 'Main Bus Stop'}</span>
+                        </div>
+                        {selectedStudent.busDetails && (
+                          <div className="col-span-full">
+                            <span className="text-gray-400 text-[10px] block">Transit Details</span>
+                            <span className="font-medium text-[#071A3D]">{selectedStudent.busDetails}</span>
+                          </div>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               </div>
 

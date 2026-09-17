@@ -388,6 +388,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     }
 
     const previousStudents = [...students]
+    const isHostelForm = (formData.residencyStatus || '').toLowerCase().includes('hostel')
+    const isDayForm = (formData.residencyStatus || '').toLowerCase().includes('day scholar')
     const optimisticUpdated: StudentRecord = {
       ...selectedStudent,
       registerNumber: formData.registerNumber,
@@ -404,11 +406,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       status: formData.status,
       bloodGroup: formData.bloodGroup || null,
       residencyStatus: formData.residencyStatus || null,
-      busNo: formData.busNo || null,
-      boardingPoint: formData.boardingPoint || null,
-      busDetails: formData.busDetails || null,
-      hostelBlock: formData.hostelBlock || null,
-      roomNo: formData.roomNo || null,
+      busNo: isHostelForm ? null : (formData.busNo || null),
+      boardingPoint: isHostelForm ? null : (formData.boardingPoint || null),
+      busDetails: isHostelForm ? null : (formData.busDetails || null),
+      hostelBlock: isDayForm ? null : (formData.hostelBlock || null),
+      roomNo: isDayForm ? null : (formData.roomNo || null),
       address: formData.address || null,
       cgpa: formData.cgpa ? String(formData.cgpa) : null,
       attendance: formData.attendance ? String(formData.attendance) : null,
@@ -431,6 +433,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         body: JSON.stringify({
           id: selectedStudent.id,
           ...formData,
+          busNo: isHostelForm ? null : (formData.busNo || null),
+          boardingPoint: isHostelForm ? null : (formData.boardingPoint || null),
+          busDetails: isHostelForm ? null : (formData.busDetails || null),
+          hostelBlock: isDayForm ? null : (formData.hostelBlock || null),
+          roomNo: isDayForm ? null : (formData.roomNo || null),
           dateOfBirth: cleanDob,
         }),
       })
@@ -497,6 +504,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const openEditModal = (s: StudentRecord) => {
     const cleanEmail = s.email || ''
     setSelectedStudent(s)
+    const isHostel = (s.residencyStatus || '').toLowerCase().includes('hostel')
+    const isDay = (s.residencyStatus || '').toLowerCase().includes('day scholar') || (s.residencyStatus || '').toLowerCase().includes('dayscholar')
     setFormData({
       registerNumber: s.registerNumber || '',
       name: s.name || '',
@@ -506,11 +515,11 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       dateOfBirth: s.dateOfBirth || '',
       bloodGroup: s.bloodGroup || '',
       residencyStatus: s.residencyStatus || '',
-      busNo: s.busNo || '',
-      boardingPoint: s.boardingPoint || '',
-      busDetails: s.busDetails || '',
-      hostelBlock: s.hostelBlock || '',
-      roomNo: s.roomNo || '',
+      busNo: isHostel ? '' : (s.busNo || ''),
+      boardingPoint: isHostel ? '' : (s.boardingPoint || ''),
+      busDetails: isHostel ? '' : (s.busDetails || ''),
+      hostelBlock: isDay ? '' : (s.hostelBlock || ''),
+      roomNo: isDay ? '' : (s.roomNo || ''),
       address: s.address || '',
       year: s.year || 1,
       semester: s.semester || 1,
@@ -1913,8 +1922,18 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Residency Status</label>
                 <select
-                  value={formData.residencyStatus}
-                  onChange={(e) => setFormData({ ...formData, residencyStatus: e.target.value })}
+                  value={formData.residencyStatus?.toLowerCase().includes('hostel') ? 'Hosteller' : (formData.residencyStatus || '')}
+                  onChange={(e) => {
+                    const newRes = e.target.value
+                    const isH = newRes.toLowerCase().includes('hostel')
+                    const isD = newRes.toLowerCase().includes('day scholar')
+                    setFormData({
+                      ...formData,
+                      residencyStatus: newRes,
+                      ...(isH ? { busNo: '', boardingPoint: '', busDetails: '' } : {}),
+                      ...(isD ? { hostelBlock: '', roomNo: '' } : {}),
+                    })
+                  }}
                   className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                 >
                   <option value="">Select Residency Status</option>
@@ -1925,7 +1944,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </div>
 
               {/* Day Scholar: Bus Transit Fields */}
-              {formData.residencyStatus === 'Day Scholar' && (
+              {(formData.residencyStatus?.toLowerCase().includes('day scholar') || (!formData.residencyStatus && (formData.busNo || formData.boardingPoint))) && (
                 <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-3">
                   <div className="flex items-center gap-1.5 font-bold text-[#1455D9] text-xs">
                     <Bus className="w-4 h-4 text-[#1455D9]" />
@@ -1967,7 +1986,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               )}
 
               {/* Hosteller: Hostel Accommodation Fields */}
-              {formData.residencyStatus === 'Hosteller' && (
+              {(formData.residencyStatus?.toLowerCase().includes('hostel') || (!formData.residencyStatus && (formData.hostelBlock || formData.roomNo))) && (
                 <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-3">
                   <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
                     <Building className="w-4 h-4 text-amber-700" />
@@ -2218,69 +2237,80 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   </div>
                 )}
 
-                {/* College Transit / Bus Route Details */}
-                {(selectedStudent.busNo || selectedStudent.boardingPoint || selectedStudent.busDetails || (selectedStudent.residencyStatus && selectedStudent.residencyStatus.toLowerCase().includes('day scholar'))) && (
-                  <div className="p-3 bg-gradient-to-br from-blue-50/90 to-indigo-50/70 border border-blue-200/80 rounded-2xl space-y-2 text-xs shadow-xs">
-                    <div className="flex items-center justify-between border-b border-blue-100/80 pb-1.5">
-                      <div className="flex items-center gap-1.5 font-black text-[#1455D9]">
-                        <Bus className="w-4 h-4 text-[#1455D9]" />
-                        <span className="text-[12px] tracking-tight">College Transit &amp; Bus Details</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                        Day Scholar
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 pt-0.5 text-gray-700">
-                      <div>
-                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus Route / No.</span>
-                        <span className="font-black text-[#071A3D] text-[13px]">
-                          {selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit Bus'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Boarding Point</span>
-                        <span className="font-black text-[#071A3D] text-[13px]">
-                          {selectedStudent.boardingPoint || 'Main Bus Stop'}
-                        </span>
-                      </div>
-                    </div>
-                    {selectedStudent.busDetails && (
-                      <div className="pt-1.5 border-t border-blue-100/70 text-gray-600 text-[11px]">
-                        <span className="text-gray-400 text-[10px] block font-medium">Transit Route Summary</span>
-                        <span className="font-semibold text-[#071A3D]">{selectedStudent.busDetails}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Residency-Specific Transit or Hostel Details (Strictly Mutually Exclusive) */}
+                {(() => {
+                  const resStatus = (selectedStudent.residencyStatus || '').toLowerCase().trim()
+                  const isHosteller = resStatus.includes('hostel') || (!resStatus && Boolean(selectedStudent.hostelBlock || selectedStudent.roomNo))
+                  const isDayScholar = !isHosteller && (resStatus.includes('day scholar') || resStatus.includes('dayscholar') || Boolean(selectedStudent.busNo || selectedStudent.boardingPoint || selectedStudent.busDetails))
 
-                {/* Hostel Accommodation Details */}
-                {(selectedStudent.hostelBlock || selectedStudent.roomNo || (selectedStudent.residencyStatus && selectedStudent.residencyStatus.toLowerCase().includes('hostel'))) && (
-                  <div className="p-3 bg-gradient-to-br from-amber-50/90 to-orange-50/70 border border-amber-200/80 rounded-2xl space-y-2 text-xs shadow-xs">
-                    <div className="flex items-center justify-between border-b border-amber-100/80 pb-1.5">
-                      <div className="flex items-center gap-1.5 font-black text-amber-900">
-                        <Building className="w-4 h-4 text-amber-700" />
-                        <span className="text-[12px] tracking-tight">Campus Hostel Accommodation</span>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                        Hosteller
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 pt-0.5 text-gray-700">
-                      <div>
-                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Hostel Block</span>
-                        <span className="font-black text-[#071A3D] text-[13px]">
-                          {selectedStudent.hostelBlock ? `Block ${selectedStudent.hostelBlock}` : 'Campus Hostel'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Room Number</span>
-                        <span className="font-black text-[#071A3D] text-[13px] font-mono">
-                          {selectedStudent.roomNo ? `Room ${selectedStudent.roomNo}` : 'Assigned Room'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  return (
+                    <>
+                      {/* College Transit / Bus Route Details: Strictly for Day Scholars */}
+                      {isDayScholar && !isHosteller && (
+                        <div className="p-3 bg-gradient-to-br from-blue-50/90 to-indigo-50/70 border border-blue-200/80 rounded-2xl space-y-2 text-xs shadow-xs">
+                          <div className="flex items-center justify-between border-b border-blue-100/80 pb-1.5">
+                            <div className="flex items-center gap-1.5 font-black text-[#1455D9]">
+                              <Bus className="w-4 h-4 text-[#1455D9]" />
+                              <span className="text-[12px] tracking-tight">College Transit &amp; Bus Details</span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                              Day Scholar
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 pt-0.5 text-gray-700">
+                            <div>
+                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus Route / No.</span>
+                              <span className="font-black text-[#071A3D] text-[13px]">
+                                {selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit Bus'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Boarding Point</span>
+                              <span className="font-black text-[#071A3D] text-[13px]">
+                                {selectedStudent.boardingPoint || 'Main Bus Stop'}
+                              </span>
+                            </div>
+                          </div>
+                          {selectedStudent.busDetails && (
+                            <div className="pt-1.5 border-t border-blue-100/70 text-gray-600 text-[11px]">
+                              <span className="text-gray-400 text-[10px] block font-medium">Transit Route Summary</span>
+                              <span className="font-semibold text-[#071A3D]">{selectedStudent.busDetails}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Hostel Accommodation Details: Strictly for Hostellers */}
+                      {isHosteller && (
+                        <div className="p-3 bg-gradient-to-br from-amber-50/90 to-orange-50/70 border border-amber-200/80 rounded-2xl space-y-2 text-xs shadow-xs">
+                          <div className="flex items-center justify-between border-b border-amber-100/80 pb-1.5">
+                            <div className="flex items-center gap-1.5 font-black text-amber-900">
+                              <Building className="w-4 h-4 text-amber-700" />
+                              <span className="text-[12px] tracking-tight">Campus Hostel Accommodation</span>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              Hosteller
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 pt-0.5 text-gray-700">
+                            <div>
+                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Hostel Block</span>
+                              <span className="font-black text-[#071A3D] text-[13px]">
+                                {selectedStudent.hostelBlock ? `Block ${selectedStudent.hostelBlock}` : 'Campus Hostel'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Room Number</span>
+                              <span className="font-black text-[#071A3D] text-[13px] font-mono">
+                                {selectedStudent.roomNo ? `Room ${selectedStudent.roomNo}` : 'Assigned Room'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
                 {selectedStudent.cgpa && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <span className="text-gray-500 font-mono text-xs">CGPA:</span>

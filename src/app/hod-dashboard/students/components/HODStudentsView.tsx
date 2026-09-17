@@ -1215,43 +1215,53 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                   <span className="font-semibold text-gray-800">{activeStudentModal.residencyStatus || 'Day Scholar'}</span>
                 </div>
 
-                {(activeStudentModal.busNo || activeStudentModal.boardingPoint || (activeStudentModal.residencyStatus && activeStudentModal.residencyStatus.toLowerCase().includes('day scholar'))) && (
-                  <div className="p-2.5 bg-blue-50/80 border border-blue-200/80 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex items-center gap-1.5 font-bold text-[#1455D9]">
-                      <Bus className="w-3.5 h-3.5 text-[#1455D9]" />
-                      <span>College Transit / Bus Details</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px]">
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">Bus Route / No.</span>
-                        <span className="font-bold text-[#071A3D]">{activeStudentModal.busNo ? `Bus #${activeStudentModal.busNo}` : 'College Transit'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">Boarding Point</span>
-                        <span className="font-bold text-[#071A3D]">{activeStudentModal.boardingPoint || 'Main Bus Stop'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {(() => {
+                  const resStatus = (activeStudentModal.residencyStatus || '').toLowerCase().trim()
+                  const isHosteller = resStatus.includes('hostel') || (!resStatus && Boolean(activeStudentModal.hostelBlock || activeStudentModal.roomNo))
+                  const isDayScholar = !isHosteller && (resStatus.includes('day scholar') || resStatus.includes('dayscholar') || Boolean(activeStudentModal.busNo || activeStudentModal.boardingPoint))
 
-                {(activeStudentModal.hostelBlock || activeStudentModal.roomNo || (activeStudentModal.residencyStatus && activeStudentModal.residencyStatus.toLowerCase().includes('hostel'))) && (
-                  <div className="p-2.5 bg-amber-50/80 border border-amber-200/80 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                      <Home className="w-3.5 h-3.5 text-amber-700" />
-                      <span>Campus Hostel Accommodation</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px]">
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">Hostel Block</span>
-                        <span className="font-bold text-[#071A3D]">{activeStudentModal.hostelBlock ? `Block ${activeStudentModal.hostelBlock}` : 'Campus Hostel'}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400 text-[10px] block">Room Number</span>
-                        <span className="font-bold text-[#071A3D] font-mono">{activeStudentModal.roomNo ? `Room ${activeStudentModal.roomNo}` : 'Assigned Room'}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  return (
+                    <>
+                      {isDayScholar && !isHosteller && (
+                        <div className="p-2.5 bg-blue-50/80 border border-blue-200/80 rounded-xl space-y-1.5 text-xs">
+                          <div className="flex items-center gap-1.5 font-bold text-[#1455D9]">
+                            <Bus className="w-3.5 h-3.5 text-[#1455D9]" />
+                            <span>College Transit / Bus Details</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px]">
+                            <div>
+                              <span className="text-gray-400 text-[10px] block">Bus Route / No.</span>
+                              <span className="font-bold text-[#071A3D]">{activeStudentModal.busNo ? `Bus #${activeStudentModal.busNo}` : 'College Transit'}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 text-[10px] block">Boarding Point</span>
+                              <span className="font-bold text-[#071A3D]">{activeStudentModal.boardingPoint || 'Main Bus Stop'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {isHosteller && (
+                        <div className="p-2.5 bg-amber-50/80 border border-amber-200/80 rounded-xl space-y-1.5 text-xs">
+                          <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                            <Home className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Campus Hostel Accommodation</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px]">
+                            <div>
+                              <span className="text-gray-400 text-[10px] block">Hostel Block</span>
+                              <span className="font-bold text-[#071A3D]">{activeStudentModal.hostelBlock ? `Block ${activeStudentModal.hostelBlock}` : 'Campus Hostel'}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-400 text-[10px] block">Room Number</span>
+                              <span className="font-bold text-[#071A3D] font-mono">{activeStudentModal.roomNo ? `Room ${activeStudentModal.roomNo}` : 'Assigned Room'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
 
                 {activeStudentModal.cgpa && (
                   <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
