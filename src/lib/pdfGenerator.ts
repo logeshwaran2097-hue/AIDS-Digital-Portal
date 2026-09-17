@@ -2100,4 +2100,447 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.save(downloadName)
 }
 
+export interface HostelGatePassPDFData {
+  passRecordNumber: string
+  studentName: string
+  registerNumber: string
+  department: string
+  year: number | string
+  section: string
+  hostelBlock: string
+  roomNo: string
+  passType: string
+  purpose: string
+  destination?: string
+  departureTime?: string
+  curfewLimit: string
+  parentPhone: string
+  parentConfirmed?: boolean
+  wardenName: string
+  wardenContact: string
+  sanctionTimestamp: string
+  issueDate: string
+  qrDataUrl?: string
+}
+
+export function generateAndDownloadHostelGatePassPDF(data: HostelGatePassPDFData) {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  })
+
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const marginX = 14
+  const contentW = pageWidth - marginX * 2
+
+  // 1. Dual Security Borders (Deep Navy & Rich Gold)
+  doc.setDrawColor(7, 26, 61) // Deep Royal Navy
+  doc.setLineWidth(0.8)
+  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+
+  doc.setDrawColor(231, 185, 62) // Gold
+  doc.setLineWidth(0.4)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+
+  // 2. Official Academic Letterhead
+  doc.setFillColor(250, 252, 255)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
+
+  const logoX = marginX + 3
+  const logoY = marginX + 3
+  const logoSize = 24
+
+  // Circular Gold Ring Base for Emblem
+  doc.setFillColor(255, 255, 255)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+  doc.setDrawColor(231, 185, 62)
+  doc.setLineWidth(0.6)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
+
+  try {
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4)
+  } catch (e) {
+    console.error('Failed to embed logo in PDF:', e)
+  }
+
+  const headerCenterX = marginX + logoSize + (contentW - logoSize) / 2
+
+  // Master Title
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(15)
+  doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', headerCenterX, marginX + 6.5, { align: 'center' })
+
+  // Autonomous Badge Pill
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(headerCenterX - 24, marginX + 8.5, 48, 4.2, 1, 1, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION', headerCenterX, marginX + 11.5, { align: 'center' })
+
+  // Department
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9.5)
+  doc.setTextColor(13, 90, 66) // Deep Emerald Teal
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', headerCenterX, marginX + 17.5, { align: 'center' })
+
+  // Affiliation
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.8)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', headerCenterX, marginX + 22.5, { align: 'center' })
+
+  // NAAC & NBA
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Accredited by NAAC with "A" Grade · NBA Accredited Programs · ISO 9001:2015 Certified', headerCenterX, marginX + 27, { align: 'center' })
+
+  // Decorative Beam
+  const beamY = marginX + 34
+  doc.setFillColor(13, 90, 66) // Deep Emerald Beam
+  doc.rect(marginX, beamY, contentW, 1.4, 'F')
+  doc.setFillColor(231, 185, 62) // Gold Underline
+  doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
+
+  // Document Title Banner
+  let curY = beamY + 6.5
+  doc.setFillColor(7, 26, 61)
+  doc.roundedRect(marginX, curY, contentW, 10.5, 2, 2, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(255, 255, 255)
+  doc.text('OFFICIAL HOSTEL RESIDENT GATE PASS & OUTPASS SLIP', marginX + contentW / 2, curY + 6.8, { align: 'center' })
+
+  // Meta bar: Pass Record No, Academic Year, Sanction Timestamp
+  curY += 13.5
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(`RECORD NO: ${data.passRecordNumber}`, marginX, curY)
+  doc.text(`ACADEMIC YEAR: 2026 - 2027`, marginX + contentW / 2, curY, { align: 'center' })
+  doc.setTextColor(13, 90, 66)
+  doc.text(`SANCTIONED: ${data.sanctionTimestamp}`, marginX + contentW, curY, { align: 'right' })
+
+  // Section 1: Student Identification & Hostel Particulars
+  curY += 4.5
+  const sec1H = 26
+  doc.setFillColor(240, 253, 244) // Mint/Emerald Tint
+  doc.roundedRect(marginX, curY, contentW, sec1H, 2, 2, 'F')
+  doc.setDrawColor(187, 247, 208)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, sec1H, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(13, 90, 66)
+  doc.text('1. STUDENT IDENTIFICATION & HOSTEL RESIDENCY PARTICULARS', marginX + 4, curY + 5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.8)
+  doc.setTextColor(75, 85, 105)
+
+  // Row 1
+  doc.text('Student Full Name:', marginX + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.studentName, marginX + 34, curY + 11)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Register Number:', marginX + contentW / 2 + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.registerNumber, marginX + contentW / 2 + 36, curY + 11)
+
+  // Row 2
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Department:', marginX + 4, curY + 16.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.department, marginX + 34, curY + 16.5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Year & Section:', marginX + contentW / 2 + 4, curY + 16.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(`Year ${data.year} • Section ${data.section}`, marginX + contentW / 2 + 36, curY + 16.5)
+
+  // Row 3
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Hostel & Room:', marginX + 4, curY + 22)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(13, 90, 66)
+  doc.text(`${data.hostelBlock}  ·  ${data.roomNo}`, marginX + 34, curY + 22)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Pass Status:', marginX + contentW / 2 + 4, curY + 22)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(16, 185, 129)
+  doc.text('SANCTIONED & DIGITALLY VERIFIED', marginX + contentW / 2 + 36, curY + 22)
+
+  // Section 2: Outpass Movement Schedule & Curfew Specifications
+  curY += sec1H + 3.5
+  const sec2H = 26
+  doc.setFillColor(248, 250, 252)
+  doc.roundedRect(marginX, curY, contentW, sec2H, 2, 2, 'F')
+  doc.setDrawColor(226, 232, 240)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, sec2H, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(21, 87, 192)
+  doc.text('2. OUTPASS MOVEMENT SCHEDULE & CURFEW SPECIFICATIONS', marginX + 4, curY + 5)
+
+  // Row 1
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.8)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Outing Category:', marginX + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text((data.passType || 'Day Outing').replace('_', ' ').toUpperCase(), marginX + 34, curY + 11)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Destination / Place:', marginX + contentW / 2 + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.destination || 'Karur Central / Local', marginX + contentW / 2 + 36, curY + 11)
+
+  // Row 2
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Departure Out-Time:', marginX + 4, curY + 16.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.departureTime || 'Today, Permitted Out-Time', marginX + 34, curY + 16.5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Mandatory Return Curfew:', marginX + contentW / 2 + 4, curY + 16.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(185, 28, 28) // Urgent Red Curfew
+  doc.text(data.curfewLimit, marginX + contentW / 2 + 36, curY + 16.5)
+
+  // Row 3
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Authorized Purpose:', marginX + 4, curY + 22)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.purpose, marginX + 34, curY + 22)
+
+  // Section 3: Parental Consent & Warden Authorization
+  curY += sec2H + 3.5
+  const sec3H = 21
+  doc.setFillColor(254, 252, 245)
+  doc.roundedRect(marginX, curY, contentW, sec3H, 2, 2, 'F')
+  doc.setDrawColor(245, 230, 195)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, sec3H, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(180, 83, 9) // Amber/Gold
+  doc.text('3. PARENTAL CONSENT & WARDEN SANCTION RECORDS', marginX + 4, curY + 5)
+
+  // Row 1
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.8)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Parent Contact Phone:', marginX + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.parentPhone, marginX + 38, curY + 11)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Parent Verification Status:', marginX + contentW / 2 + 4, curY + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(16, 185, 129)
+  doc.text('Telephonically Confirmed & Consent Recorded', marginX + contentW / 2 + 40, curY + 11)
+
+  // Row 2
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Sanctioning Warden:', marginX + 4, curY + 16.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(7, 26, 61)
+  doc.text(data.wardenName, marginX + 38, curY + 16.5)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(75, 85, 105)
+  doc.text('Warden Office Phone:', marginX + contentW / 2 + 4, curY + 16.5)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(13, 90, 66)
+  doc.text(data.wardenContact, marginX + contentW / 2 + 40, curY + 16.5)
+
+  // Section 4: Campus Main Gate Movement Log (Security Desk Check)
+  curY += sec3H + 3.5
+  const sec4H = 24
+  doc.setFillColor(241, 245, 249)
+  doc.roundedRect(marginX, curY, contentW, sec4H, 2, 2, 'F')
+  doc.setDrawColor(203, 213, 225)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, sec4H, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(51, 65, 85)
+  doc.text('4. CAMPUS MAIN GATE SECURITY DESK MOVEMENT LOG', marginX + 4, curY + 5)
+
+  // Gate Exit Sub-box
+  const gateColW = (contentW - 6) / 2
+  doc.setDrawColor(203, 213, 225)
+  doc.line(marginX + gateColW + 3, curY + 2, marginX + gateColW + 3, curY + sec4H - 2)
+
+  // Left: Gate Exit (Out)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.2)
+  doc.setTextColor(185, 28, 28)
+  doc.text('GATE DEPARTURE (OUT):', marginX + 4, curY + 10)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Date & Out-Time:  _____ / _____ / 2026   ____:____  AM / PM', marginX + 4, curY + 15)
+  doc.text('Security Officer Sign:  ___________________________________', marginX + 4, curY + 20)
+
+  // Right: Gate Entry (In)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.2)
+  doc.setTextColor(16, 185, 129)
+  doc.text('GATE ARRIVAL (IN):', marginX + gateColW + 8, curY + 10)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Date & In-Time:   _____ / _____ / 2026   ____:____  AM / PM', marginX + gateColW + 8, curY + 15)
+  doc.text('Security Officer Sign:  ___________________________________', marginX + gateColW + 8, curY + 20)
+
+  // Section 5: Scannable QR Code and Mandatory Hostel Rules
+  curY += sec4H + 4
+  const qrBoxW = 44
+  const qrBoxH = 43
+
+  // QR Code Mount
+  doc.setFillColor(255, 255, 255)
+  doc.roundedRect(marginX, curY, qrBoxW, qrBoxH, 2, 2, 'F')
+  doc.setDrawColor(13, 90, 66)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(marginX, curY, qrBoxW, qrBoxH, 2, 2, 'S')
+
+  if (data.qrDataUrl) {
+    try {
+      doc.addImage(data.qrDataUrl, 'PNG', marginX + 2, curY + 2, qrBoxW - 4, qrBoxH - 9)
+    } catch (e) {
+      console.error('Failed to embed QR code in PDF:', e)
+    }
+  }
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6)
+  doc.setTextColor(13, 90, 66)
+  doc.text('SCAN TO VERIFY AUTHENTICITY', marginX + qrBoxW / 2, curY + qrBoxH - 3, { align: 'center' })
+
+  // Regulations Box (Right of QR Code)
+  const rulesX = marginX + qrBoxW + 4
+  const rulesW = contentW - qrBoxW - 4
+
+  doc.setFillColor(248, 250, 252)
+  doc.roundedRect(rulesX, curY, rulesW, qrBoxH, 2, 2, 'F')
+  doc.setDrawColor(226, 232, 240)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(rulesX, curY, rulesW, qrBoxH, 2, 2, 'S')
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('MANDATORY HOSTEL INMATE CODE & OUTING REGULATIONS:', rulesX + 4, curY + 5)
+
+  const hostelRules = [
+    '1. The student must carry this official Gate Pass Slip along with their College RFID ID Card at all times.',
+    '2. Pass must be produced to the Security Officer at the Main Gate during departure and return.',
+    '3. Adherence to curfew (Boys: 06:30 PM / Girls: 06:00 PM) is mandatory. Late arrival attracts disciplinary action.',
+    '4. Student must remain contactable on their registered mobile number throughout the entire outing period.',
+    '5. For Home Leave, parent confirmation of safe arrival at home must be communicated to the Hostel Warden.'
+  ]
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.4)
+  doc.setTextColor(71, 85, 105)
+  let ruleY = curY + 11
+  hostelRules.forEach(r => {
+    doc.text(r, rulesX + 4, ruleY)
+    ruleY += 6.2
+  })
+
+  // Section 6: Signatures & Validation Seals
+  curY += qrBoxH + 11
+  const sigColW = contentW / 3
+
+  // Col 1: Student
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('_____________________________', marginX + 6, curY + 7)
+  doc.text('Signature of the Student', marginX + 6, curY + 11.5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(100, 115, 135)
+  doc.text('(I undertake to return before curfew)', marginX + 6, curY + 15)
+
+  // Col 2: Hostel Warden
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('_____________________________', marginX + sigColW + 6, curY + 7)
+  doc.text('Hostel Warden / Deputy Warden', marginX + sigColW + 6, curY + 11.5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(16, 185, 129)
+  doc.text('✓ Digitally Sanctioned & Recorded', marginX + sigColW + 6, curY + 15)
+
+  // Col 3: Chief Warden / Principal
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('_____________________________', marginX + sigColW * 2 + 6, curY + 7)
+  doc.text('Chief Warden / Administrative Dean', marginX + sigColW * 2 + 6, curY + 11.5)
+
+  // Circular Institutional Seal Mark
+  doc.setDrawColor(13, 90, 66)
+  doc.setLineWidth(0.5)
+  const sealX = marginX + contentW - 17
+  const sealY = curY + 6
+  doc.circle(sealX, sealY, 9, 'S')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5)
+  doc.setTextColor(13, 90, 66)
+  doc.text('VSB HOSTEL', sealX, sealY - 3, { align: 'center' })
+  doc.text('SANCTIONED', sealX, sealY, { align: 'center' })
+  doc.text('OFFICIAL SEAL', sealX, sealY + 3, { align: 'center' })
+
+  // Footer compliance text
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(140, 155, 175)
+  doc.text(
+    'This official gate pass credential is cryptographically authenticated and generated from the V.S.B. Digital Portal AI&DS Administration System. Compliant with Anna University Autonomous Regulations.',
+    pageWidth / 2,
+    pageHeight - 5.5,
+    { align: 'center' }
+  )
+
+  const downloadName = `VSB_Hostel_Gate_Pass_${data.registerNumber}.pdf`
+  doc.save(downloadName)
+}
+
 

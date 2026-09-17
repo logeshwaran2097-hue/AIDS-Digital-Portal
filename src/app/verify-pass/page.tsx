@@ -21,8 +21,10 @@ import {
   Sparkles,
   Check,
   Bus,
-  MapPin
+  MapPin,
+  Download
 } from 'lucide-react'
+import { generateAndDownloadHostelGatePassPDF } from '@/lib/pdfGenerator'
 
 function VerifyPassContent() {
   const searchParams = useSearchParams()
@@ -39,6 +41,8 @@ function VerifyPassContent() {
     room: searchParams.get('room') || 'Room 204',
     category: (searchParams.get('category') || 'Day Outing').replace('_', ' '),
     purpose: searchParams.get('purpose') || 'Library & Project Component Sourcing',
+    destination: searchParams.get('destination') || searchParams.get('dest') || 'Karur Central / Tech Hub',
+    departure: searchParams.get('departure') || searchParams.get('outTime') || 'Today, 02:30 PM',
     curfew: searchParams.get('curfew') || '06:15 PM Today (Max: 06:30 PM)',
     parent: searchParams.get('parent') || '+91 94432 55890',
     warden: searchParams.get('warden') || 'Dr. K. Ravikumar',
@@ -59,6 +63,8 @@ function VerifyPassContent() {
             dept: res.data.dept || prev.dept,
             year: res.data.year || prev.year,
             sec: res.data.sec || prev.sec,
+            destination: res.data.destination || prev.destination,
+            departure: res.data.departureTime || res.data.departure || prev.departure,
             time: res.data.time || prev.time
           }))
         }
@@ -81,6 +87,8 @@ function VerifyPassContent() {
   const roomNo = details.room
   const category = details.category
   const purpose = details.purpose
+  const destination = details.destination || 'Karur Central / Tech Hub'
+  const departure = details.departure || 'Today, 02:30 PM'
   const curfew = details.curfew
   const parentPhone = details.parent
   const warden = details.warden
@@ -290,17 +298,23 @@ function VerifyPassContent() {
               ) : (
                 /* ======================== HOSTELLER DETAILS ======================== */
                 <>
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/60 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-slate-200/60 text-xs">
                     <div className="bg-white p-2.5 rounded-xl border border-slate-100">
                       <span className="text-[10px] text-slate-400 uppercase font-semibold block">Hostel &amp; Room</span>
-                      <strong className="text-slate-800 font-bold block mt-0.5">{hostel}</strong>
+                      <strong className="text-slate-800 font-bold block mt-0.5 truncate">{hostel}</strong>
                       <span className="text-[11px] text-slate-600 font-mono">{roomNo}</span>
                     </div>
 
                     <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Outing Category</span>
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Category &amp; Dest</span>
                       <strong className="text-blue-900 font-bold capitalize block mt-0.5">{category}</strong>
-                      <span className="text-[11px] text-red-600 font-bold">Curfew: {curfew}</span>
+                      <span className="text-[11px] text-slate-600 font-medium truncate block">{destination}</span>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-100">
+                      <span className="text-[10px] text-slate-400 uppercase font-semibold block">Timing &amp; Curfew</span>
+                      <strong className="text-slate-800 font-bold block mt-0.5">{departure}</strong>
+                      <span className="text-[11px] text-red-600 font-bold truncate block">Curfew: {curfew}</span>
                     </div>
                   </div>
 
@@ -410,6 +424,56 @@ function VerifyPassContent() {
                   )}
                 </>
               )}
+            </div>
+
+            {/* Quick Document Action Buttons */}
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => {
+                  if (isBusPass) {
+                    window.print()
+                  } else {
+                    try {
+                      generateAndDownloadHostelGatePassPDF({
+                        passRecordNumber: passId,
+                        studentName,
+                        registerNumber,
+                        department,
+                        year,
+                        section,
+                        hostelBlock: hostel,
+                        roomNo,
+                        passType: category,
+                        purpose,
+                        destination,
+                        departureTime: departure,
+                        curfewLimit: curfew,
+                        parentPhone,
+                        parentConfirmed: true,
+                        wardenName: warden,
+                        wardenContact: '+91 94861 22340',
+                        sanctionTimestamp: sanctionTime,
+                        issueDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+                      })
+                    } catch (e) {
+                      window.print()
+                    }
+                  }
+                }}
+                className="flex-1 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-600" />
+                <span>Download Pass PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border border-slate-200"
+              >
+                <Printer className="w-3.5 h-3.5 text-slate-600" />
+                <span>Print</span>
+              </button>
             </div>
 
             {/* Official Seal and Validation Stamp */}

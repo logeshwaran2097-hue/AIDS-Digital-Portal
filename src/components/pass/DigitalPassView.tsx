@@ -27,7 +27,7 @@ import {
   Check
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { generateAndDownloadBusPassPDF } from '@/lib/pdfGenerator'
+import { generateAndDownloadBusPassPDF, generateAndDownloadHostelGatePassPDF } from '@/lib/pdfGenerator'
 
 interface DigitalPassViewProps {
   studentName?: string
@@ -212,6 +212,8 @@ export default function DigitalPassView({
   const [roomNo, setRoomNo] = useState(initialRoomNo || 'Room 204')
   const [passType, setPassType] = useState<'day_outing' | 'home_leave' | 'emergency'>('day_outing')
   const [outingPurpose, setOutingPurpose] = useState('Library & Project Component Sourcing')
+  const [destination, setDestination] = useState('Karur Central / Tech Hub')
+  const [departureTime, setDepartureTime] = useState('Today, 02:30 PM')
   const [expectedReturn, setExpectedReturn] = useState('06:15 PM Today')
   const [parentPhone, setParentPhone] = useState('+91 94432 55890')
   const [applicationTime, setApplicationTime] = useState('Today, 02:45 PM')
@@ -224,7 +226,7 @@ export default function DigitalPassView({
   // Unique Individual Pass Record Number & Scannable QR Codes
   const [passRecordNumber, setPassRecordNumber] = useState<string>(() => {
     const regDigits = registerNumber ? registerNumber.slice(-4) : '2401'
-    return `VSB/AI&DS/GP-2026-${regDigits}`
+    return `VSB/AI&DS/HGP-2026-${regDigits}`
   })
   const [gateQrUrl, setGateQrUrl] = useState<string>('')
   const [busQrUrl, setBusQrUrl] = useState<string>('')
@@ -275,6 +277,8 @@ export default function DigitalPassView({
         room: roomNo,
         category: passType.replace('_', ' ').toUpperCase(),
         purpose: outingPurpose,
+        destination: destination,
+        departureTime: departureTime,
         curfew: `${expectedReturn} (Max: ${currentHostel.curfew})`,
         parent: parentPhone,
         warden: currentHostel.warden,
@@ -313,7 +317,7 @@ export default function DigitalPassView({
     }).catch(() => {})
 
     // Generate Hostel Gate Pass verification URL & QR code
-    const hostelVerifyUrl = `${publicOrigin}/verify-pass?type=hostel&id=${encodeURIComponent(passRecordNumber)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&hostel=${encodeURIComponent(currentHostel.name)}&room=${encodeURIComponent(roomNo)}&category=${encodeURIComponent(passType.replace('_', ' ').toUpperCase())}&purpose=${encodeURIComponent(outingPurpose)}&curfew=${encodeURIComponent(expectedReturn)}&parent=${encodeURIComponent(parentPhone)}&warden=${encodeURIComponent(currentHostel.warden)}&time=${encodeURIComponent(sanctionTimestamp)}`
+    const hostelVerifyUrl = `${publicOrigin}/verify-pass?type=hostel&id=${encodeURIComponent(passRecordNumber)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&hostel=${encodeURIComponent(currentHostel.name)}&room=${encodeURIComponent(roomNo)}&category=${encodeURIComponent(passType.replace('_', ' ').toUpperCase())}&purpose=${encodeURIComponent(outingPurpose)}&destination=${encodeURIComponent(destination)}&departure=${encodeURIComponent(departureTime)}&curfew=${encodeURIComponent(expectedReturn)}&parent=${encodeURIComponent(parentPhone)}&warden=${encodeURIComponent(currentHostel.warden)}&time=${encodeURIComponent(sanctionTimestamp)}`
 
     QRCode.toDataURL(hostelVerifyUrl, {
       width: 450,
@@ -359,6 +363,8 @@ export default function DigitalPassView({
     roomNo,
     passType,
     outingPurpose,
+    destination,
+    departureTime,
     expectedReturn,
     parentPhone,
     currentRoute.busNo,
@@ -420,52 +426,35 @@ export default function DigitalPassView({
       }
     }
 
-    const passTypeTitle = 'Hostel Resident & Gate Outing Pass'
-    const passNo = passRecordNumber
-    const verifyUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify-pass?id=${encodeURIComponent(passNo)}` : ''
-
-    const content = `
-============================================================
-       V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)
-         OFFICIAL DIGITAL GATE OUTPASS SLIP
-============================================================
-PASS TYPE      : ${passTypeTitle}
-INDIVIDUAL REC : ${passNo}
-ISSUED DATE    : ${issueDate}
-ACADEMIC YEAR  : 2026-27
-SANCTION TIME  : ${sanctionTimestamp}
-
-STUDENT PARTICULARS:
-- Name         : ${studentName}
-- Register No  : ${registerNumber}
-- Department   : ${department}
-- Year & Sec   : Year ${year} • Sec ${section}
-
-GATE OUTING PARTICULARS:
-- Hostel Block : ${currentHostel.name} (Room ${roomNo})
-- Outing Type  : ${passType.replace('_', ' ').toUpperCase()}
-- Curfew Limit : ${expectedReturn} (Max: ${currentHostel.curfew})
-- Purpose      : ${outingPurpose}
-- Approvals    : Parent Confirmed & Warden Sanctioned
-
-SECURITY & VERIFICATION:
-- Authentication: Cryptographically Signed (SHA256 Token)
-- Verification  : Mobile QR Verification Active at Gate
-- Online Verify : ${verifyUrl}
-- Institution   : V.S.B. Engineering College Security Desk
-============================================================
-`
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `VSB_HOSTEL_PASS_SLIP_${registerNumber}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    toast.success('Gate Outing Pass downloaded successfully!', { icon: '🎫' })
+    try {
+      generateAndDownloadHostelGatePassPDF({
+        passRecordNumber,
+        studentName,
+        registerNumber,
+        department,
+        year,
+        section,
+        hostelBlock: currentHostel.name,
+        roomNo,
+        passType: passType.replace('_', ' ').toUpperCase(),
+        purpose: outingPurpose,
+        destination,
+        departureTime,
+        curfewLimit: `${expectedReturn} (Strict Gate Curfew: ${currentHostel.curfew})`,
+        parentPhone,
+        parentConfirmed,
+        wardenName: currentHostel.warden,
+        wardenContact: currentHostel.contact,
+        sanctionTimestamp,
+        issueDate,
+        qrDataUrl: gateQrUrl || undefined,
+      })
+      toast.success('Official V.S.B. Hostel Gate Outpass Slip (PDF) downloaded successfully!', { icon: '🛡️', duration: 4000 })
+      return
+    } catch (e) {
+      console.error('Failed to generate Hostel Gate Pass PDF:', e)
+      toast.error('Failed to generate PDF pass slip. Please use Print Slip.', { icon: '⚠️' })
+    }
   }
 
   // Interactive Live Verification Actions
@@ -1059,55 +1048,64 @@ SECURITY & VERIFICATION:
                 </div>
 
                 <div
+                  id="vsb-printable-pass"
                   ref={passRef}
                   className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden relative"
                 >
-                  <div className="h-3 w-full bg-gradient-to-r from-emerald-600 via-teal-400 to-emerald-800" />
+                  <div className="h-3 w-full bg-gradient-to-r from-[#071A3D] via-[#0D5A42] to-[#E7B93E]" />
 
                   <div className="p-6 sm:p-7 space-y-6">
-                    {/* College Header */}
+                    {/* Official Academic Letterhead */}
                     <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5">
                       <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-2xl bg-[#071A3D] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 ring-4 ring-emerald-50">
+                        <div className="w-13 h-13 rounded-2xl bg-[#071A3D] text-white flex items-center justify-center font-black text-xl shadow-md shrink-0 ring-4 ring-emerald-50">
                           VSB
                         </div>
                         <div>
-                          <h3 className="font-extrabold text-[#071A3D] text-sm sm:text-base leading-snug">
-                            V.S.B. ENGINEERING COLLEGE
-                          </h3>
-                          <p className="text-[11px] text-slate-500 font-medium">
-                            An Autonomous Institution • Affiliated to Anna University • Accredited by NAAC &amp; NBA
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-extrabold text-[#071A3D] text-base leading-snug">
+                              V.S.B. ENGINEERING COLLEGE
+                            </h3>
+                            <span className="text-[10px] font-extrabold bg-[#E7B93E]/20 text-[#071A3D] px-2 py-0.5 rounded border border-[#E7B93E]/40 uppercase">
+                              Autonomous
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-emerald-800">
+                            Department of Artificial Intelligence &amp; Data Science
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-medium">
+                            Approved by AICTE • Affiliated to Anna University • Accredited by NAAC ('A' Grade) &amp; NBA
                           </p>
                         </div>
                       </div>
 
                       <div className="text-right shrink-0">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          AUTHENTICATED &amp; SANCTIONED
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-[10px] font-black text-emerald-800 shadow-xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          SANCTIONED &amp; VALID
                         </span>
                         <p className="text-[10px] text-slate-400 mt-1 font-mono">Academic Year 2026-27</p>
                       </div>
                     </div>
 
-                    {/* Pass Title & Official Sanction Record Banner */}
+                    {/* Official Document Banner */}
                     <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
-                            OFFICIAL SANCTION RECORD
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">
+                            OFFICIAL GATE OUTPASS SLIP
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold">
-                            <CheckCircle2 className="w-3 h-3" />
-                            SANCTIONED &amp; ACTIVE
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-bold">
+                            <ShieldCheck className="w-3 h-3" />
+                            DIGITALLY VERIFIED
                           </span>
                         </div>
                         <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                          Hostel Resident &amp; Gate Outing Pass
+                          Hostel Resident Gate Outpass &amp; Leave Permit
                         </h2>
                         <div className="flex flex-wrap items-center gap-2.5 mt-2">
                           <div className="text-xs font-mono font-bold text-emerald-950 bg-white px-3 py-1 rounded-xl border border-emerald-300 shadow-2xs">
-                            REC NO: <span className="text-emerald-700 font-extrabold">{passRecordNumber}</span>
+                            SERIAL REC: <span className="text-emerald-700 font-extrabold">{passRecordNumber}</span>
                           </div>
                           <span className="text-[11px] text-emerald-800 font-medium">
                             Sanction Time: <strong>{sanctionTimestamp}</strong>
@@ -1117,105 +1115,157 @@ SECURITY & VERIFICATION:
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(passRecordNumber)
-                            toast.success(`Copied Record Number: ${passRecordNumber}`)
-                          }}
-                          className="px-3 py-2 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 text-xs font-bold transition-all border border-emerald-300 flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                          onClick={handleDownloadSlip}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                          title="Download Official Institutional PDF Slip"
                         >
-                          <FileText className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>Copy Rec #</span>
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Download PDF Slip</span>
                         </button>
                         <button
                           type="button"
                           onClick={handlePrint}
-                          className="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                          className="px-3 py-2 rounded-xl bg-white hover:bg-emerald-100 text-emerald-900 text-xs font-bold transition-all border border-emerald-300 flex items-center gap-1.5 shadow-2xs cursor-pointer"
                         >
                           <Printer className="w-3.5 h-3.5" />
-                          <span>Print Slip</span>
+                          <span>Print</span>
                         </button>
                       </div>
                     </div>
 
-                    {/* Student Identification Profile Card */}
-                    <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-                      <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-semibold">Student Name</span>
-                        <strong className="text-slate-800 font-bold text-sm truncate block mt-0.5">{studentName}</strong>
+                    {/* Section 1: Student Identification Profile Card */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">
+                        <span>1. Student Particulars</span>
+                        <span className="text-emerald-700 font-mono">Resident Hosteller</span>
                       </div>
-                      <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-semibold">Register No</span>
-                        <strong className="text-slate-800 font-bold text-sm font-mono block mt-0.5">{registerNumber}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-semibold">Department</span>
-                        <strong className="text-slate-800 font-bold block mt-0.5">AI &amp; DS • Yr {year}-{section}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block text-[10px] uppercase font-semibold">Unique Record #</span>
-                        <strong className="text-emerald-700 font-bold font-mono truncate block mt-0.5">{passRecordNumber}</strong>
+                      <div className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Student Name</span>
+                          <strong className="text-slate-800 font-bold text-sm truncate block mt-0.5">{studentName}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Register Number</span>
+                          <strong className="text-slate-800 font-bold text-sm font-mono block mt-0.5">{registerNumber}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Department &amp; Class</span>
+                          <strong className="text-slate-800 font-bold block mt-0.5">AI &amp; DS • Yr {year} ({section})</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] uppercase font-semibold">Hostel Block &amp; Room</span>
+                          <strong className="text-emerald-800 font-bold block truncate mt-0.5">
+                            {currentHostel.name} • {roomNo}
+                          </strong>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Dynamic Hostel Outing Card Body */}
-                    <div className="space-y-4">
+                    {/* Section 2: Outpass Movement & Curfew Schedule */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">
+                        <span>2. Outpass Schedule &amp; Curfew Limits</span>
+                        <span className="text-red-600 font-bold">Strict Gate In-Time</span>
+                      </div>
                       <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-4 sm:p-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Home className="w-5 h-5 text-emerald-600" />
-                            <h4 className="font-bold text-emerald-950 text-sm">{currentHostel.name}</h4>
-                          </div>
-                          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-mono">
-                            {roomNo}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-emerald-100">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                           <div>
-                            <span className="text-emerald-600 font-medium block text-[11px]">Pass Category:</span>
-                            <strong className="text-slate-800 capitalize font-bold mt-0.5 block">
+                            <span className="text-emerald-700 font-medium block text-[11px]">Pass Category:</span>
+                            <strong className="text-slate-800 capitalize font-bold mt-0.5 block text-xs sm:text-sm">
                               {passType.replace('_', ' ')}
                             </strong>
                           </div>
                           <div>
-                            <span className="text-emerald-600 font-medium block text-[11px]">Gate Return Curfew:</span>
-                            <strong className="text-red-700 font-bold mt-0.5 block">
-                              {expectedReturn} (Max: {currentHostel.curfew})
+                            <span className="text-emerald-700 font-medium block text-[11px]">Destination / Place:</span>
+                            <strong className="text-slate-800 font-bold mt-0.5 block text-xs sm:text-sm truncate">
+                              {destination || 'Karur Central / Local'}
+                            </strong>
+                          </div>
+                          <div>
+                            <span className="text-emerald-700 font-medium block text-[11px]">Permitted Out-Time:</span>
+                            <strong className="text-slate-800 font-bold mt-0.5 block text-xs sm:text-sm">
+                              {departureTime || 'Today, 02:30 PM'}
                             </strong>
                           </div>
                         </div>
 
-                        <div className="text-xs pt-2 border-t border-emerald-100">
-                          <span className="text-emerald-600 font-medium block text-[11px]">Approved Purpose of Outing:</span>
-                          <p className="text-slate-800 font-medium mt-0.5">{outingPurpose}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2.5 border-t border-emerald-100">
+                          <div>
+                            <span className="text-emerald-700 font-medium block text-[11px]">Mandatory Gate Return Curfew:</span>
+                            <strong className="text-red-700 font-black text-sm block mt-0.5">
+                              {expectedReturn} (Max: {currentHostel.curfew})
+                            </strong>
+                          </div>
+                          <div>
+                            <span className="text-emerald-700 font-medium block text-[11px]">Authorized Purpose:</span>
+                            <p className="text-slate-800 font-semibold mt-0.5 truncate">{outingPurpose}</p>
+                          </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 pt-2 text-xs">
-                          <span className="inline-flex items-center gap-1.5 text-emerald-700 font-bold bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+                        <div className="flex flex-wrap items-center gap-2 pt-2 text-xs border-t border-emerald-100">
+                          <span className="inline-flex items-center gap-1.5 text-emerald-800 font-bold bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            Parent Telephonic Consent Confirmed
+                            Parent Consent Telephonically Confirmed ({parentPhone})
                           </span>
-                          <span className="inline-flex items-center gap-1.5 text-blue-700 font-bold bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs">
+                          <span className="inline-flex items-center gap-1.5 text-blue-800 font-bold bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs">
                             <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                            Hostel Warden Sanctioned
+                            Hostel Warden Sanctioned ({currentHostel.warden})
                           </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-slate-400" />
-                          <span><strong>Hostel Warden:</strong> {currentHostel.warden}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-emerald-700 font-mono">
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>{currentHostel.contact}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Bottom Security QR & Verification Section */}
-                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    {/* Section 3: Campus Main Gate Movement Log (Security Desk Check) */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider px-1">
+                        <span>3. Campus Main Gate Security Movement Log</span>
+                        <span className="text-slate-400 font-mono">Terminal Checkpoint</span>
+                      </div>
+                      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        {/* Out Check */}
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                              Gate Departure (Out)
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400">Terminal Log</span>
+                          </div>
+                          <div className="text-[11px] text-slate-600 space-y-1">
+                            <div className="flex justify-between">
+                              <span>Out Date &amp; Time:</span>
+                              <strong className="font-mono text-slate-800">{departureTime || 'Today, 02:30 PM'}</strong>
+                            </div>
+                            <div className="flex justify-between pt-1 border-t border-slate-100">
+                              <span>Security Guard Sign:</span>
+                              <span className="font-mono text-emerald-700 font-bold">✓ Logged at Gate</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* In Check */}
+                        <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                              Gate Arrival (In)
+                            </span>
+                            <span className="text-[10px] font-mono text-slate-400">Curfew: {currentHostel.curfew}</span>
+                          </div>
+                          <div className="text-[11px] text-slate-600 space-y-1">
+                            <div className="flex justify-between">
+                              <span>In Date &amp; Time:</span>
+                              <strong className="font-mono text-slate-800">Pending Return</strong>
+                            </div>
+                            <div className="flex justify-between pt-1 border-t border-slate-100">
+                              <span>Return Status:</span>
+                              <span className="font-mono text-blue-700 font-bold">Awaiting In-Scan</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 4: Bottom Security QR & Verification Section */}
+                    <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-5">
                       <div className="flex items-center gap-4">
                         {gateQrUrl ? (
                           <div 
@@ -1244,7 +1294,7 @@ SECURITY & VERIFICATION:
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">100% VERIFIED</span>
                           </div>
                           <p className="text-[11px] text-slate-600 max-w-sm leading-tight">
-                            Point <strong>any smartphone camera</strong> directly at this QR code. It will instantly pop up the verified student details page.
+                            Point <strong>any smartphone camera</strong> directly at this QR code. It will instantly pop up the verified student details page for campus security verification.
                           </p>
                           <div className="flex flex-wrap items-center gap-2 pt-1">
                             <button
@@ -1262,26 +1312,30 @@ SECURITY & VERIFICATION:
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
-                              <span>Preview Scanned Mobile View</span>
+                              <span>Preview Mobile Scan</span>
                             </a>
                             <button
                               type="button"
                               onClick={handleDownloadSlip}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200 cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-all border border-emerald-300 cursor-pointer"
                             >
-                              <Download className="w-3.5 h-3.5 text-slate-500" />
-                              <span>Download Slip Token</span>
+                              <Download className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Download PDF Slip</span>
                             </button>
                           </div>
                         </div>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <div className="w-18 h-18 rounded-full border-2 border-dashed border-emerald-500/80 flex flex-col items-center justify-center p-1 text-[8px] font-bold text-emerald-900 leading-tight uppercase transform -rotate-12 bg-emerald-50/70 shadow-2xs">
-                          <span>VSB CHIEF</span>
-                          <span className="text-[7px] text-emerald-700 font-mono">SEAL &amp; SIGN</span>
-                          <span className="text-[6.5px] text-slate-500">{sanctionTimestamp.split(',')[0]}</span>
-                          <span className="text-emerald-800 font-black">APPROVED</span>
+                      {/* Official Signatures & Seal */}
+                      <div className="flex items-center gap-4 shrink-0">
+                        <div className="text-center">
+                          <div className="w-20 h-20 rounded-full border-2 border-dashed border-emerald-600 flex flex-col items-center justify-center p-1 text-[8px] font-bold text-emerald-900 leading-tight uppercase transform -rotate-12 bg-emerald-50 shadow-2xs">
+                            <span>VSB HOSTEL</span>
+                            <span className="text-[7px] text-emerald-700 font-mono">SEAL &amp; SIGN</span>
+                            <span className="text-[6.5px] text-slate-500">{sanctionTimestamp.split(',')[0]}</span>
+                            <span className="text-emerald-800 font-black">APPROVED</span>
+                          </div>
+                          <span className="text-[9px] font-mono text-slate-400 block mt-1">Hostel Stamp</span>
                         </div>
                       </div>
                     </div>
@@ -1603,7 +1657,30 @@ SECURITY & VERIFICATION:
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 block mb-1">Expected Return:</label>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">Destination / City:</label>
+                    <input
+                      type="text"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800"
+                      placeholder="e.g. Karur Central"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">Permitted Departure:</label>
+                    <input
+                      type="text"
+                      value={departureTime}
+                      onChange={(e) => setDepartureTime(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800"
+                      placeholder="e.g. Today, 02:30 PM"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-600 block mb-1">Expected Return Curfew:</label>
                     <input
                       type="text"
                       value={expectedReturn}
@@ -1638,7 +1715,7 @@ SECURITY & VERIFICATION:
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-600 block">Parent Phone Number (For Call Verification):</label>
+                  <label className="text-xs font-semibold text-slate-600 block">Parent Phone (For Call Verification):</label>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
                     <input
@@ -1652,14 +1729,38 @@ SECURITY & VERIFICATION:
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-slate-600 block">Purpose / Destination:</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-600 block">Purpose of Outing:</label>
+                    <span className="text-[10px] text-slate-400">Official Reason</span>
+                  </div>
                   <input
                     type="text"
                     value={outingPurpose}
                     onChange={(e) => setOutingPurpose(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 text-xs text-slate-800"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 text-xs text-slate-800 font-medium"
                     placeholder="Reason for outing..."
                   />
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {[
+                      'Library & Project Component Sourcing',
+                      'Textbooks & Stationery Purchase',
+                      'Medical Checkup / Pharmacy Visit',
+                      'Weekend Home Visit (Parent Permission)'
+                    ].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setOutingPurpose(preset)}
+                        className={`text-[10px] px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                          outingPurpose === preset
+                            ? 'bg-emerald-100 text-emerald-900 border-emerald-300 font-bold'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {preset.split('(')[0].trim()}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <button
@@ -1667,7 +1768,7 @@ SECURITY & VERIFICATION:
                   className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/30 transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
-                  <span>Submit Gate Pass Application</span>
+                  <span>Update &amp; Re-apply Gate Pass</span>
                 </button>
               </form>
 

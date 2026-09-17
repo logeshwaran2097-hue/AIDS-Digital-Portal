@@ -3,16 +3,16 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.2.1'
+export const APP_VERSION = '2.3.0'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-17'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'Automatic Mobile App Updated Notification: Dispatches real Android status bar alert when new release is installed',
-  'Manual Update Verification Alert: Tap version badge to trigger live system notification',
-  'Real Android App Notifications for Version Updates: System alerts appear in notification drawer when new releases are detected',
-  'Dual-channel Notification Delivery: Background ServiceWorker bridge + in-app high-visibility floating toast cards',
+  'Official Institutional Hostel Gate Pass: Complete format redesign with academic letterhead, Autonomous crest, and NAAC/NBA compliance',
+  'High-Resolution Gate Pass PDF Slip: Tamper-proof downloadable PDF pass slip with dual security borders, scannable QR verification, and seals',
+  'Campus Main Gate Security Movement Log: Security checkpoint tracking for departure out-time and arrival in-time',
+  'Requisition Form & Print Optimization: Added destination tracking, departure scheduling, quick reason presets, and seamless A4 print slip layout',
 ]
 
 
