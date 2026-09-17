@@ -89,21 +89,11 @@ export function VersionUpdateNotifier() {
         setReleaseHighlights(data.releaseHighlights)
       }
 
-      const storedVer = localStorage.getItem(LOCAL_STORAGE_VERSION_KEY)
+      // Only trigger an update if server has a different/newer release than currently running client bundle
+      const isRunningOldCode = Boolean(serverVer && serverVer !== APP_VERSION)
 
-      // An update is needed if:
-      // - Current running bundle APP_VERSION is not equal to serverVer
-      // - Or stored version is older than serverVer
-      // - Or the user is running on an expired preview link instead of official domain
-      const isRunningOldCode = APP_VERSION !== serverVer
-      const isStoredOld = storedVer && storedVer !== serverVer
-
-      if (isRunningOldCode || isStoredOld || isFallbackDomain) {
+      if (isRunningOldCode) {
         setHasUpdate(true)
-        setIsDismissed(false)
-        if (isFallbackDomain && window.location.origin !== OFFICIAL_PRODUCTION_URL) {
-          setIsRedirectNeeded(true)
-        }
         if (!hasPlayedUpdateChimeRef.current) {
           hasPlayedUpdateChimeRef.current = true
 
@@ -126,11 +116,12 @@ export function VersionUpdateNotifier() {
           } catch {}
         }
       } else {
-        if (!storedVer) {
-          try {
-            localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, serverVer)
-          } catch {}
-        }
+        // Current client bundle is already up to date with server
+        setHasUpdate(false)
+        try {
+          localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, serverVer)
+        } catch {}
+
         if (isManual) {
           setShowReleaseNotes(true)
           toast.success(`You are on the latest release (v${APP_VERSION})!`)
@@ -316,24 +307,16 @@ export function VersionUpdateNotifier() {
       setDownloadedMb(4.2)
       setCurrentStageIdx(4)
 
-      // Stage 5: Finalization & Clean Session Reset for Fresh Release
+      // Stage 5: Finalization & Refresh (Preserves active login session)
       try {
         localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, latestVersion)
         sessionStorage.setItem('portal_just_updated', 'true')
-        localStorage.removeItem('portal_user_session')
-        localStorage.removeItem('portal_login_role')
-        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
       } catch {}
 
-      document.cookie = 'auth-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
-      document.cookie = 'portal_login_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0;'
-
       await new Promise((r) => setTimeout(r, 600))
-
-      const targetDomain = isRedirectNeeded ? OFFICIAL_PRODUCTION_URL : window.location.origin
-      window.location.href = `${targetDomain}/login?updated=true&v=${latestVersion}`
+      window.location.reload()
     } catch {
-      window.location.href = '/login?updated=true'
+      window.location.reload()
     }
   }
 
