@@ -13,6 +13,7 @@ import {
   Lock,
   Star,
   ExternalLink,
+  X,
 } from 'lucide-react'
 import { playNotificationChime, dispatchNativeNotification } from '@/lib/notificationEngine'
 import { APP_VERSION, APP_RELEASE_HIGHLIGHTS } from '@/lib/version'
@@ -51,6 +52,7 @@ export function VersionUpdateNotifier() {
   const [downloadedMb, setDownloadedMb] = useState(0.4)
   const [isDismissed, setIsDismissed] = useState(false)
   const [isRedirectNeeded, setIsRedirectNeeded] = useState(false)
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false)
 
   const waitingWorkerRef = useRef<ServiceWorker | null>(null)
   const hasPlayedUpdateChimeRef = useRef(false)
@@ -130,12 +132,13 @@ export function VersionUpdateNotifier() {
           } catch {}
         }
         if (isManual) {
-          toast.success(`You are on the latest version (v${APP_VERSION})!`)
+          setShowReleaseNotes(true)
+          toast.success(`You are on the latest release (v${APP_VERSION})!`)
           // Dispatch real system notification to Android status bar
           dispatchNativeNotification({
             id: `manual-verified-${APP_VERSION}`,
             title: `✅ Digital Portal Up to Date (v${APP_VERSION})`,
-            message: `Your mobile app is running the verified release with active bus pass and live alerts.`,
+            message: `Running latest release v${APP_VERSION}. Viewing release notes.`,
             createdByName: 'VSB Release Center',
             link: window.location.pathname,
           })
@@ -332,6 +335,103 @@ export function VersionUpdateNotifier() {
     } catch {
       window.location.href = '/login?updated=true'
     }
+  }
+
+  if (showReleaseNotes) {
+    return (
+      <div className="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+        <div className="w-full max-w-md bg-white rounded-t-[2rem] sm:rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 border border-slate-100 overflow-hidden relative animate-in slide-in-from-bottom-6 sm:zoom-in-95 duration-300">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 -mt-1">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-blue-600" />
+              <span className="text-xs font-black tracking-wide text-slate-800 uppercase">Version Information</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Up to Date</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowReleaseNotes(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Close modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4 pt-1">
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-[#071A41] p-1.5 shadow-md shadow-slate-900/10 border-2 border-amber-400/80 flex items-center justify-center">
+                <Image
+                  src="/college-emblem.png"
+                  alt="VSB Portal"
+                  width={52}
+                  height={52}
+                  className="object-contain"
+                />
+              </div>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-lg font-black text-slate-900 leading-tight">Digital Portal of AI&DS</h3>
+              <p className="text-xs text-slate-500 font-semibold truncate mt-0.5">
+                V.S.B. Engineering College (Autonomous)
+              </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 text-xs font-black text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">
+                  v{APP_VERSION}
+                </span>
+                <span className="text-[11px] font-semibold text-slate-500">Release: 2026-09-17</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Highlights */}
+          <div className="space-y-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 block">
+              What's new in v{APP_VERSION}
+            </span>
+            <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/70 max-h-56 overflow-y-auto">
+              <ul className="space-y-2.5 text-xs text-slate-600 font-medium">
+                {releaseHighlights.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
+                    <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">
+                      ✓
+                    </span>
+                    <span className="text-slate-700">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setShowReleaseNotes(false)
+                checkVersion(true)
+              }}
+              className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Check for Updates Again</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowReleaseNotes(false)}
+              className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!hasUpdate && !isUpdating) return null
