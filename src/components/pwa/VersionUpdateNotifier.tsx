@@ -131,6 +131,14 @@ export function VersionUpdateNotifier() {
         }
         if (isManual) {
           toast.success(`You are on the latest version (v${APP_VERSION})!`)
+          // Dispatch real system notification to Android status bar
+          dispatchNativeNotification({
+            id: `manual-verified-${APP_VERSION}`,
+            title: `✅ Digital Portal Up to Date (v${APP_VERSION})`,
+            message: `Your mobile app is running the verified release with active bus pass and live alerts.`,
+            createdByName: 'VSB Release Center',
+            link: window.location.pathname,
+          })
         }
       }
     } catch {
@@ -143,14 +151,32 @@ export function VersionUpdateNotifier() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // Show post-update celebratory toast
+    // Show post-update celebratory real mobile notification & in-app toast
     try {
-      const justUpdated = sessionStorage.getItem('portal_just_updated')
-      if (justUpdated) {
+      const urlParams = new URLSearchParams(window.location.search)
+      const isUpdatedParam = urlParams.get('updated') === 'true'
+      const justUpdated = sessionStorage.getItem('portal_just_updated') || isUpdatedParam
+      const lastNotifiedVer = localStorage.getItem('last_notified_app_version')
+
+      if (justUpdated || (lastNotifiedVer && lastNotifiedVer !== APP_VERSION)) {
         sessionStorage.removeItem('portal_just_updated')
+        localStorage.setItem('last_notified_app_version', APP_VERSION)
+        localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, APP_VERSION)
+
+        // Real Android System Notification in phone status bar / lock screen
+        dispatchNativeNotification({
+          id: `app-updated-${APP_VERSION}`,
+          title: `🎉 App Updated to v${APP_VERSION}`,
+          message: `Digital Portal of AI&DS successfully updated! Bus pass QR code & direct contacts active.`,
+          createdByName: 'VSB Release Center',
+          link: window.location.pathname,
+        })
+
         toast.success(`🎉 Updated to v${APP_VERSION}! Play Protect verified & ready.`, {
           duration: 6000,
         })
+      } else if (!lastNotifiedVer) {
+        localStorage.setItem('last_notified_app_version', APP_VERSION)
       }
     } catch {}
 
