@@ -12,6 +12,7 @@ import {
   Percent,
   Plus,
   Sparkles,
+  BookOpen,
   Info,
   ShieldCheck,
   FileText,
@@ -311,41 +312,83 @@ export function StudentAttendanceView({
         </div>
       </div>
 
-      {/* KPI Cards Row */}
+      {/* KPI Chronometer Complications */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-blue-500/20 shadow-xs flex items-center justify-between">
-          <div>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Overall Attendance</p>
-            <p className="text-3xl font-black text-[#1E66E8] mt-1">{stats.percentage.toFixed(1)}%</p>
-            <p className={cn("text-[10px] font-bold mt-0.5", isCompliant ? "text-emerald-500" : "text-rose-500")}>
-              {stats.totalSessions > 0 ? (isCompliant ? 'Compliant (>75% Req)' : 'Attendance Shortage (<75%)') : 'Term Enrolled'}
+        {/* Overall Attendance Gauge */}
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-blue-500/25 dark:border-blue-400/30 flex items-center justify-between relative overflow-hidden group">
+          <div className="absolute right-0 bottom-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1E66E8] animate-ping" />
+              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider">Overall Attendance</p>
+            </div>
+            <p className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-[#0E3A94] dark:text-cyan-400 mt-1">
+              {stats.percentage.toFixed(1)}<span className="text-xl font-sans text-slate-400 font-bold">%</span>
             </p>
+            <div className="mt-1">
+              <span className={cn(
+                "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                stats.totalSessions > 0
+                  ? (isCompliant
+                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20")
+                  : "bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20"
+              )}>
+                {stats.totalSessions > 0 ? (isCompliant ? '✓ Safe Margin (>75%)' : '⚠ Shortage (<75%)') : 'Term Enrolled'}
+              </span>
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0E3A94] to-[#1E66E8] text-white flex items-center justify-center font-black text-base shadow-lux-sapphire border border-white/20">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0E3A94] to-[#1E66E8] text-white flex items-center justify-center font-black text-base shadow-lux-sapphire border border-white/20 shrink-0 group-hover:scale-105 transition-transform">
             <Percent className="w-6 h-6 text-[#D4AF37]" />
           </div>
         </div>
 
-        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-white/10 shadow-xs">
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Conducted Sessions</p>
-          <p className="text-3xl font-black text-[#071A3D] dark:text-white mt-1">{stats.totalSessions} <span className="text-sm font-semibold text-slate-400">Sessions</span></p>
-          <p className="text-[10px] text-slate-400 mt-0.5">{stats.totalSessions > 0 ? 'Total Logged by Staff' : 'Term Started'}</p>
+        {/* Conducted Sessions */}
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-slate-200/90 dark:border-white/10 flex items-center justify-between group">
+          <div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider">Conducted Sessions</p>
+            <p className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-[#071A3D] dark:text-white mt-1">
+              {stats.totalSessions} <span className="text-xs font-sans font-semibold text-slate-400">Hrs</span>
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-1">
+              {stats.totalSessions > 0 ? 'Official Faculty Register' : 'Term Roll Active'}
+            </p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-base border border-slate-200/80 dark:border-white/15 shrink-0 group-hover:scale-105 transition-transform">
+            <Clock className="w-5 h-5 text-slate-500 dark:text-slate-300" />
+          </div>
         </div>
 
-        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-emerald-500/20 shadow-xs">
-          <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Present &amp; OD</p>
-          <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{stats.presentSessions} <span className="text-sm font-semibold text-emerald-600/70">Sessions</span></p>
-          <p className="text-[10px] text-emerald-600/80 font-medium mt-0.5">
-            {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Regular + ${stats.odSessions} OD` : 'Regular Present'}
-          </p>
+        {/* Present & OD */}
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-emerald-500/25 dark:border-emerald-400/30 flex items-center justify-between group">
+          <div>
+            <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-extrabold uppercase tracking-wider">Present &amp; OD</p>
+            <p className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400 mt-1">
+              {stats.presentSessions} <span className="text-xs font-sans font-semibold text-emerald-600/70">Hrs</span>
+            </p>
+            <p className="text-[10px] text-emerald-700/90 dark:text-emerald-400/80 font-semibold mt-1">
+              {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Reg + ${stats.odSessions} OD` : 'Full Attendance'}
+            </p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-base border border-emerald-500/25 shrink-0 group-hover:scale-105 transition-transform">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          </div>
         </div>
 
-        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-rose-500/20 shadow-xs">
-          <p className="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">Absenteeism</p>
-          <p className="text-3xl font-black text-rose-600 dark:text-rose-400 mt-1">{stats.absentSessions} <span className="text-sm font-semibold text-rose-600/70">Sessions</span></p>
-          <p className="text-[10px] text-rose-600/80 font-medium mt-0.5">
-            {stats.totalSessions > 0 ? `${stats.absentSessions} Unexcused` : 'Zero Absences'}
-          </p>
+        {/* Absenteeism */}
+        <div className="lux-glass-card lux-specular-sweep p-5 rounded-3xl border border-rose-500/25 dark:border-rose-400/30 flex items-center justify-between group">
+          <div>
+            <p className="text-[10px] text-rose-700 dark:text-rose-400 font-extrabold uppercase tracking-wider">Absenteeism</p>
+            <p className="text-3xl sm:text-4xl font-black font-mono tracking-tight text-rose-600 dark:text-rose-400 mt-1">
+              {stats.absentSessions} <span className="text-xs font-sans font-semibold text-rose-600/70">Hrs</span>
+            </p>
+            <p className="text-[10px] text-rose-700/90 dark:text-rose-400/80 font-semibold mt-1">
+              {stats.totalSessions > 0 ? `${stats.absentSessions} Unexcused` : 'Clean Attendance'}
+            </p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center font-black text-base border border-rose-500/25 shrink-0 group-hover:scale-105 transition-transform">
+            <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+          </div>
         </div>
       </div>
 
@@ -525,17 +568,22 @@ export function StudentAttendanceView({
               })}
             </div>
           ) : (
-            <div className="py-8 text-center text-xs text-gray-500 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 space-y-2">
-              <CalendarDays className="w-8 h-8 text-gray-300 mx-auto" />
-              <p className="font-bold text-gray-700">No On-Duty or Leave Applications Submitted Yet</p>
-              <p className="text-[11px] text-gray-400 max-w-sm mx-auto">
-                When you apply for On-Duty (OD) or leave, you can track class advisor endorsement and HOD sanction status right here in real-time.
-              </p>
+            <div className="py-10 px-4 text-center rounded-2xl border border-slate-200/80 dark:border-white/10 bg-gradient-to-b from-white/80 via-slate-50/50 to-blue-50/20 dark:from-slate-900/40 dark:to-slate-950/60 space-y-3 relative overflow-hidden">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#0E3A94]/15 to-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#1455D9] dark:text-[#D4AF37] flex items-center justify-center mx-auto shadow-xs">
+                <ShieldCheck className="w-7 h-7 text-[#1E66E8]" />
+              </div>
+              <div className="space-y-1">
+                <p className="font-black text-sm text-[#071A3D] dark:text-white">Institutional OD &amp; Leave Ledger Ready</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                  Submit event permissions, symposiums, hackathons, sports exemptions, or medical leave. Your submissions undergo live Class Advisor verification and HOD executive sanction.
+                </p>
+              </div>
               <button
                 onClick={() => setShowODModal(true)}
-                className="mt-2 px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] border border-blue-200 text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3d37a] to-[#c59c27] text-[#030712] text-xs font-black inline-flex items-center gap-2 transition-all shadow-lux-gold cursor-pointer hover:scale-105 active:scale-95"
               >
-                <Plus className="w-3.5 h-3.5" /> Submit Permission Request
+                <Plus className="w-4 h-4 text-[#030712]" />
+                <span>Submit Permission Request</span>
               </button>
             </div>
           )}
@@ -605,8 +653,14 @@ export function StudentAttendanceView({
               </table>
             </div>
           ) : (
-            <div className="py-8 text-center text-xs text-gray-400">
-              No subjects registered in the current curriculum.
+            <div className="py-10 px-4 text-center rounded-2xl border border-slate-200/80 dark:border-white/10 bg-gradient-to-b from-white/80 via-slate-50/50 to-blue-50/20 dark:from-slate-900/40 dark:to-slate-950/60 space-y-2">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-[#1455D9] dark:text-cyan-400 border border-blue-500/20 flex items-center justify-center mx-auto shadow-2xs">
+                <BookOpen className="w-6 h-6" />
+              </div>
+              <p className="font-black text-sm text-[#071A3D] dark:text-white">Curriculum Matrix Synchronized</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                Academic Year 2025-2026 courses active. Individual subject lecture attendance will populate automatically as faculty handlers submit period roll-calls.
+              </p>
             </div>
           )}
         </div>

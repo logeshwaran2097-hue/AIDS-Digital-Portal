@@ -29,6 +29,8 @@ import {
   Users,
   School,
   Bus,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/ai/FloatingChatbot'
@@ -950,13 +952,91 @@ export function PortalLayout({
     window.location.href = '/login'
   }
 
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('portal_theme')
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      const shouldDark = savedTheme === 'dark' || (!savedTheme && document.documentElement.classList.contains('dark'))
+      if (shouldDark) {
+        setIsDarkMode(true)
+        document.documentElement.classList.add('dark')
+      } else {
+        setIsDarkMode(false)
+        document.documentElement.classList.remove('dark')
+      }
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    const nextDark = !isDarkMode
+    setIsDarkMode(nextDark)
+    if (nextDark) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('portal_theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('portal_theme', 'light')
+    }
+  }
+
+  const getNavCategory = (href: string, label: string): string => {
+    const l = href.toLowerCase()
+    if (
+      l.endsWith('/dashboard') ||
+      l === '/admin' ||
+      l.includes('attendance') ||
+      l.includes('gpa') ||
+      l.includes('subject') ||
+      l.includes('mark') ||
+      l.includes('academic') ||
+      l.includes('curriculum')
+    ) {
+      return 'ACADEMICS & CURRICULUM'
+    }
+    if (
+      l.includes('od-') ||
+      l.includes('proof') ||
+      l.includes('pass') ||
+      l.includes('leave') ||
+      l.includes('student')
+    ) {
+      return 'STUDENT AFFAIRS & PASSES'
+    }
+    if (
+      l.includes('ai') ||
+      l.includes('study') ||
+      l.includes('question') ||
+      l.includes('project') ||
+      l.includes('resource') ||
+      l.includes('file')
+    ) {
+      return 'LEARNING & RESEARCH'
+    }
+    if (
+      l.includes('faculty') ||
+      l.includes('event') ||
+      l.includes('announcement') ||
+      l.includes('achievement') ||
+      l.includes('hod') ||
+      l.includes('admins') ||
+      l.includes('roles') ||
+      l.includes('report') ||
+      l.includes('log')
+    ) {
+      return 'INSTITUTION & DIRECTORY'
+    }
+    return 'ACCOUNT & PREFERENCES'
+  }
+
   const handleNavClick = (href: string) => {
     setIsDrawerOpen(false)
     setActivePath(href)
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafd] text-[#071A3D] relative">
+    <div className="min-h-screen lux-ambient-canvas text-[#071A3D] dark:text-slate-100 relative transition-colors duration-300">
       {/* Mobile Drawer Overlay */}
       {isDrawerOpen && (
         <div
@@ -1062,7 +1142,7 @@ export function PortalLayout({
           aria-label="Main navigation"
           style={{ scrollbarWidth: 'thin' }}
         >
-          {resolvedNavItems.map((item) => {
+          {resolvedNavItems.map((item, index) => {
             const current = activePath || pathname
             const exactMatchExists = resolvedNavItems.some((i) => i.href === current)
             const isRootDashboard =
@@ -1101,65 +1181,69 @@ export function PortalLayout({
             const displayLabel = meta?.label || item.label
             const notifCount = getMenuNotificationCount(item.href, displayLabel)
 
+            const currentCategory = getNavCategory(item.href, displayLabel)
+            const prevCategory = index > 0 ? getNavCategory(resolvedNavItems[index - 1].href, resolvedNavItems[index - 1].label) : null
+            const showCategoryHeader = currentCategory !== prevCategory
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                data-active={isActive ? 'true' : 'false'}
-                onMouseEnter={() => {
-                  try {
-                    router.prefetch(item.href)
-                  } catch {}
-                }}
-                onMouseDown={() => {
-                  try {
-                    router.prefetch(item.href)
-                  } catch {}
-                }}
-                onClick={() => handleNavClick(item.href)}
-                className={cn(
-                  'flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-all duration-200 cursor-pointer group relative',
-                  isActive
-                    ? 'bg-gradient-to-r from-[#1455D9]/40 via-[#1E66E8]/20 to-transparent text-white font-bold border-l-2 border-[#D4AF37] pl-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]'
-                    : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-100 hover:translate-x-0.5'
+              <React.Fragment key={item.href}>
+                {showCategoryHeader && (
+                  <div className={cn("pt-3.5 pb-1 px-2.5 flex items-center gap-2 select-none", index === 0 && "pt-1")}>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/90 font-mono">
+                      {currentCategory}
+                    </span>
+                    <span className="flex-1 h-px bg-white/10" />
+                  </div>
                 )}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-[#F3E5AB]' : 'text-slate-400 group-hover:text-slate-200')}>
-                    {item.icon}
-                    {notifCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0B132B]" />
-                    )}
-                  </span>
-                  <span className="truncate">{displayLabel}</span>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                  {notifCount > 0 && (
-                    <span
-                      className={cn(
-                        'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold tracking-tight',
-                        isActive
-                          ? 'bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-slate-900 font-black'
-                          : 'bg-rose-500/90 text-white'
+                <Link
+                  href={item.href}
+                  prefetch={true}
+                  data-active={isActive ? 'true' : 'false'}
+                  onMouseEnter={() => {
+                    try {
+                      router.prefetch(item.href)
+                    } catch {}
+                  }}
+                  onMouseDown={() => {
+                    try {
+                      router.prefetch(item.href)
+                    } catch {}
+                  }}
+                  onClick={() => handleNavClick(item.href)}
+                  className={cn(
+                    'flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-all duration-200 cursor-pointer group relative',
+                    isActive
+                      ? 'bg-gradient-to-r from-[#1455D9]/40 via-[#1E66E8]/20 to-transparent text-white font-bold border-l-2 border-[#D4AF37] pl-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]'
+                      : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-100 hover:translate-x-0.5'
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={cn('shrink-0 text-base relative', isActive ? 'text-[#F3E5AB]' : 'text-slate-400 group-hover:text-slate-200')}>
+                      {item.icon}
+                      {notifCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0B132B]" />
                       )}
-                      title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
-                    >
-                      {notifCount > 99 ? '99+' : notifCount}
                     </span>
-                  )}
+                    <span className="truncate">{displayLabel}</span>
+                  </div>
 
-                  {meta?.badgeText && (
-                    <span
-                      className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-white/90 shrink-0"
-                      style={{ backgroundColor: meta.badgeColor || '#2563EB' }}
-                    >
-                      {meta.badgeText}
-                    </span>
-                  )}
-                </div>
-              </Link>
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                    {notifCount > 0 && (
+                      <span
+                        className={cn(
+                          'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold tracking-tight',
+                          isActive
+                            ? 'bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-slate-900 font-black'
+                            : 'bg-rose-500/90 text-white'
+                        )}
+                        title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
+                      >
+                        {notifCount > 99 ? '99+' : notifCount}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              </React.Fragment>
             )
           })}
         </nav>
@@ -1628,10 +1712,24 @@ export function PortalLayout({
               type="button"
               onClick={() => setShowVisionModal(true)}
               title="View Department Vision & Mission"
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
             >
-              <Target className="w-3.5 h-3.5 text-slate-500" />
+              <Target className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               <span>Vision &amp; Mission</span>
+            </button>
+
+            {/* 1-Click Luxury Theme Switcher (Ivory Studio / Midnight Centurion) */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={isDarkMode ? 'Switch to Ivory Studio Mode' : 'Switch to Midnight Centurion Mode'}
+              className="p-2 rounded-xl border border-slate-200/80 dark:border-white/15 bg-white/80 dark:bg-white/10 hover:border-[#D4AF37]/60 text-slate-700 dark:text-amber-300 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+            >
+              {isDarkMode ? (
+                <Sun className="w-4 h-4 text-[#D4AF37] animate-in spin-in-180 duration-300" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
             </button>
 
             {/* Profile Avatar & Name */}
