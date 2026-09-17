@@ -77,10 +77,10 @@ const navItemsMap: Record<string, NavItem[]> = {
 }
 
 const roleBadgeMap: Record<string, { label: string; color: string }> = {
-  student: { label: 'Student', color: 'bg-[#2878E8]/20 text-[#2878E8] border-[#2878E8]/30' },
-  faculty: { label: 'Faculty', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
-  hod: { label: 'HOD', color: 'bg-[#F4C430]/20 text-[#F4C430] border-[#F4C430]/30' },
-  admin: { label: 'Admin', color: 'bg-red-400/20 text-red-300 border-red-400/30' },
+  student: { label: 'Student', color: 'bg-blue-500/15 text-blue-300 border-blue-500/25' },
+  faculty: { label: 'Faculty', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25' },
+  hod: { label: 'HOD', color: 'bg-amber-500/15 text-amber-300 border-amber-500/25' },
+  admin: { label: 'Admin', color: 'bg-purple-500/15 text-purple-300 border-purple-500/25' },
 }
 
 interface NotificationItem {
@@ -969,46 +969,44 @@ export function PortalLayout({
       {/* Slide-out Navigation Drawer / Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#051330] via-[#071A3D] to-[#040D21] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-blue-500/20 shadow-2xl pb-safe',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#0B132B] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-slate-800 shadow-xl pb-safe select-none',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Drawer Header with Official Emblem */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="w-11 h-11 rounded-full p-[2.5px] bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] via-[#EC4899] to-[#FACC15] shadow-[0_0_18px_rgba(0,245,255,0.45),0_0_12px_rgba(236,72,153,0.35)] ring-2 ring-white/30 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_24px_rgba(0,245,255,0.7),0_0_18px_rgba(236,72,153,0.6)]">
-                <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden border border-amber-300/80">
-                  <Image
-                    src="/college-emblem.png"
-                    alt="V.S.B. Engineering College Official Emblem"
-                    width={42}
-                    height={42}
-                    className="w-full h-full object-contain rounded-full drop-shadow-xs"
-                    priority
-                  />
-                </div>
+            <div className="w-10 h-10 rounded-full p-1 bg-white/10 ring-1 ring-white/15 flex items-center justify-center shrink-0">
+              <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+                <Image
+                  src="/college-emblem.png"
+                  alt="V.S.B. Engineering College Official Emblem"
+                  width={38}
+                  height={38}
+                  className="w-full h-full object-contain rounded-full"
+                  priority
+                />
               </div>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
+                <p className="text-sm font-bold text-white leading-tight tracking-tight">AI &amp; DS Portal</p>
                 <button
                   type="button"
                   onClick={triggerPortalUpdateCheck}
-                  title="Tap to check for real-time app updates"
-                  className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 hover:bg-cyan-400/30 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider cursor-pointer active:scale-95 transition-transform"
+                  title="Check for real-time app updates"
+                  className="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/15 text-slate-300 text-[10px] font-semibold tracking-wide cursor-pointer transition-colors"
                 >
                   {APP_VERSION_LABEL}
                 </button>
               </div>
-              <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
+              <p className="text-[11px] text-slate-400 font-medium tracking-wide truncate mt-0.5">V.S.B. Engineering College</p>
             </div>
           </div>
           {/* Close button on mobile */}
           <button
             onClick={() => setIsDrawerOpen(false)}
-            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
@@ -1020,13 +1018,13 @@ export function PortalLayout({
           href={profileHref}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'p-3.5 mx-3 my-3 rounded-2xl border transition-all flex items-center gap-3 shrink-0 cursor-pointer',
+            'p-3 mx-3 my-2.5 rounded-xl border transition-colors flex items-center gap-3 shrink-0 cursor-pointer',
             (activePath || pathname) === profileHref
-              ? 'bg-white/15 border-white/30 shadow-md ring-1 ring-white/20'
-              : 'bg-white/[0.06] border-white/10 hover:bg-white/[0.12] hover:border-white/20'
+              ? 'bg-white/10 border-white/20 text-white'
+              : 'bg-white/[0.03] border-white/5 hover:bg-white/[0.07] hover:border-white/10'
           )}
         >
-          <div className="w-11 h-11 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0 ring-2 ring-white/20">
+          <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-800 text-slate-200 border border-white/15 flex items-center justify-center font-bold text-sm shrink-0">
             {avatarImage && !avatarError ? (
               <img
                 src={avatarImage}
@@ -1039,8 +1037,8 @@ export function PortalLayout({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="text-sm font-bold text-white truncate leading-tight">{userName}</h4>
-            <p className="text-[11px] text-gray-300 truncate mt-0.5">
+            <h4 className="text-xs font-semibold text-white truncate leading-tight">{userName}</h4>
+            <p className="text-[11px] text-slate-400 truncate mt-0.5">
               {role === 'hod' || (userEmail && userEmail.toLowerCase().startsWith('hod'))
                 ? 'AI & DS Dept'
                 : (userEmail && !userEmail.endsWith('@student.vsb.edu.in'))
@@ -1049,7 +1047,7 @@ export function PortalLayout({
             </p>
             <span
               className={cn(
-                'inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1.5',
+                'inline-block text-[10px] font-medium px-2 py-0.5 rounded-md border mt-1',
                 effectiveRoleBadgeColor
               )}
             >
@@ -1121,19 +1119,18 @@ export function PortalLayout({
                   } catch {}
                 }}
                 onClick={() => handleNavClick(item.href)}
-                style={isActive ? { backgroundColor: accentColor, boxShadow: `0 4px 18px ${accentColor}70` } : {}}
                 className={cn(
-                  'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer group',
+                  'flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-colors duration-150 cursor-pointer group',
                   isActive
-                    ? 'text-white shadow-md ring-1 ring-white/20'
-                    : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
+                    ? 'bg-white/10 text-white font-semibold ring-1 ring-white/15'
+                    : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-200'
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-white' : 'text-[#22C7E8]')}>
+                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200')}>
                     {item.icon}
                     {notifCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#071A3D] animate-ping" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0B132B]" />
                     )}
                   </span>
                   <span className="truncate">{displayLabel}</span>
@@ -1143,10 +1140,10 @@ export function PortalLayout({
                   {notifCount > 0 && (
                     <span
                       className={cn(
-                        'inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black tracking-tight shadow-xs animate-pulse transition-all',
+                        'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold tracking-tight',
                         isActive
-                          ? 'bg-white text-[#1455D9] ring-1 ring-white/60'
-                          : 'bg-red-500 text-white ring-2 ring-red-400/40'
+                          ? 'bg-white text-slate-900'
+                          : 'bg-rose-500/90 text-white'
                       )}
                       title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
                     >
@@ -1156,8 +1153,8 @@ export function PortalLayout({
 
                   {meta?.badgeText && (
                     <span
-                      className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase text-white shrink-0 shadow-2xs"
-                      style={{ backgroundColor: meta.badgeColor || '#1455D9' }}
+                      className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase text-white/90 shrink-0"
+                      style={{ backgroundColor: meta.badgeColor || '#2563EB' }}
                     >
                       {meta.badgeText}
                     </span>
@@ -1171,14 +1168,14 @@ export function PortalLayout({
 
 
         {/* Drawer Footer with Version & Logout */}
-        <div className="p-3 border-t border-white/10 bg-white/5 space-y-2">
-          <div className="px-1 flex items-center justify-between text-[11px] text-white/50 font-medium">
+        <div className="p-3 border-t border-slate-800/80 bg-slate-900/40 space-y-2">
+          <div className="px-1 flex items-center justify-between text-[11px] text-slate-400 font-medium">
             <span>AI&amp;DS Portal</span>
             <button
               type="button"
               onClick={triggerPortalUpdateCheck}
               title="Check for Portal Updates"
-              className="font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/25 px-2 py-0.5 rounded-md border border-cyan-500/20 cursor-pointer active:scale-95 transition-all text-[10px]"
+              className="font-medium text-slate-300 bg-white/5 hover:bg-white/10 px-2 py-0.5 rounded border border-white/10 cursor-pointer active:scale-95 transition-all text-[10px]"
             >
               {APP_VERSION_LABEL} · Check Update
             </button>
@@ -1187,7 +1184,7 @@ export function PortalLayout({
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
             disabled={isLoggingOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors duration-150 cursor-pointer disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
@@ -1196,30 +1193,30 @@ export function PortalLayout({
       </aside>
 
       {/* Main Top Header */}
-      <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs lg:pl-72">
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/80 lg:pl-72">
         {/* Real-time Push Notification Permission Banner for Mobile & Desktop */}
         {pushPermission === 'default' && !isPermissionBannerDismissed && (
-          <div className="bg-gradient-to-r from-[#071A3D] via-[#1455D9] to-[#071A3D] text-white px-3 sm:px-6 py-2 border-b border-[#22C7E8]/40 shadow-sm flex items-center justify-between gap-2 text-[11px] sm:text-xs animate-in slide-in-from-top duration-300">
+          <div className="bg-slate-900 text-white px-4 py-2 border-b border-slate-800 shadow-xs flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="p-1 rounded-lg bg-amber-400/20 text-amber-300 shrink-0">
-                <Bell className="w-3.5 h-3.5 animate-bounce" />
+              <span className="p-1 rounded-md bg-blue-500/20 text-blue-400 shrink-0">
+                <Bell className="w-3.5 h-3.5" />
               </span>
-              <p className="truncate font-semibold text-blue-100">
-                <strong className="text-white font-black">Enable Notifications:</strong> Turn on alerts to receive instant college updates, bus schedules & pass approvals on this phone.
+              <p className="truncate text-slate-200 font-medium text-[11px] sm:text-xs">
+                <strong className="text-white font-semibold">Enable Alerts:</strong> Turn on notifications to receive instant institutional updates and passes.
               </p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={handleEnablePush}
-                className="px-3 py-1 rounded-lg bg-[#F4C430] hover:bg-amber-300 text-[#071A3D] font-black text-[11px] transition-all shadow-xs active:scale-95 cursor-pointer"
+                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] transition-colors cursor-pointer"
               >
                 Turn On
               </button>
               <button
                 type="button"
                 onClick={() => setIsPermissionBannerDismissed(true)}
-                className="p-1 text-blue-200 hover:text-white transition-colors cursor-pointer"
+                className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
                 aria-label="Dismiss banner"
               >
                 <X className="w-3.5 h-3.5" />
@@ -1230,13 +1227,13 @@ export function PortalLayout({
 
         {/* Banner if user blocked notifications in phone/browser settings */}
         {pushPermission === 'denied' && !isPermissionBannerDismissed && (
-          <div className="bg-gradient-to-r from-amber-950 via-[#78350F] to-amber-950 text-white px-3 sm:px-6 py-2 border-b border-amber-500/40 shadow-sm flex items-center justify-between gap-2 text-[11px] sm:text-xs animate-in slide-in-from-top duration-300">
+          <div className="bg-amber-950/90 text-white px-4 py-2 border-b border-amber-900/60 shadow-xs flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="p-1 rounded-lg bg-amber-500/30 text-amber-200 shrink-0">
+              <span className="p-1 rounded-md bg-amber-500/20 text-amber-300 shrink-0">
                 <AlertTriangle className="w-3.5 h-3.5" />
               </span>
-              <p className="truncate font-semibold text-amber-100">
-                <strong className="text-white font-black">Notifications Blocked:</strong> To see alerts in your phone status bar, tap the lock/settings icon in your browser &gt; allow notifications.
+              <p className="truncate text-amber-200 font-medium text-[11px] sm:text-xs">
+                <strong className="text-white font-semibold">Notifications Blocked:</strong> Allow alerts in your browser settings to receive passes and reminders.
               </p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -1284,46 +1281,42 @@ export function PortalLayout({
                       key={m.href}
                       href={m.href}
                       onClick={() => handleNavClick(m.href)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 border border-slate-200/80 hover:border-blue-200 text-[#071A3D] hover:text-[#1455D9] transition-all text-xs font-bold shadow-2xs group cursor-pointer"
-                      title={`${m.count} new notification${m.count > 1 ? 's' : ''} in ${m.label}`}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-slate-700 hover:text-slate-900 transition-colors text-xs font-medium group cursor-pointer"
+                      title={`${m.count} updates in ${m.label}`}
                     >
-                      <span className="text-blue-600 group-hover:scale-110 transition-transform">
+                      <span className="text-slate-500 group-hover:text-blue-600 transition-colors">
                         {m.icon}
                       </span>
                       <span className="truncate max-w-[130px]">{m.label}</span>
-                      <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-xs animate-pulse">
+                      <span className="min-w-[18px] h-[18px] px-1 bg-slate-200 text-slate-800 rounded-full text-[10px] font-semibold flex items-center justify-center">
                         {m.count > 99 ? '99+' : m.count}
                       </span>
                     </Link>
                   ))}
                 </div>
 
-                {/* 2. Interactive Menu Updates Pill Button (visible across screen sizes) */}
+                {/* 2. Interactive Menu Updates Pill Button (clean & minimal) */}
                 <button
                   type="button"
                   onClick={() => setIsMenuNotifOpen((prev) => !prev)}
                   className={cn(
-                    'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full border text-xs font-bold transition-all shadow-xs cursor-pointer',
+                    'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full border text-xs font-semibold transition-all cursor-pointer',
                     isMenuNotifOpen
-                      ? 'bg-red-500 text-white border-red-600 ring-2 ring-red-300/50'
-                      : 'bg-red-50 hover:bg-red-100/90 text-red-700 border-red-200 hover:border-red-300'
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700 border-slate-200/80'
                   )}
-                  title="Click to view all menus with notifications"
+                  title="Click to view menus with unread updates"
                   aria-expanded={isMenuNotifOpen}
                 >
-                  <span className="relative flex h-2 w-2 shrink-0">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                  </span>
+                  <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
                   <span className="tracking-tight">
                     {menusWithNotifications.length}{' '}
-                    <span className="hidden sm:inline">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
-                    <span className="sm:hidden">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
+                    <span>Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
                   </span>
                   <span
                     className={cn(
-                      'px-1.5 py-0.2 rounded-full text-[10px] font-black',
-                      isMenuNotifOpen ? 'bg-white text-red-600' : 'bg-red-500 text-white'
+                      'px-1.5 py-0.2 rounded-full text-[10px] font-bold',
+                      isMenuNotifOpen ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
                     )}
                   >
                     {totalMenuNotifications}
@@ -1622,16 +1615,15 @@ export function PortalLayout({
               )}
             </div>
 
-            {/* Official Version Badge - Interactive Manual Update Check */}
+            {/* Official Version Badge */}
             <button
               type="button"
               onClick={triggerPortalUpdateCheck}
-              title={`Official Release Version ${APP_VERSION_LABEL} · Click to check for updates`}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 hover:from-blue-100 hover:to-indigo-100 text-[#1455D9] text-xs font-black shadow-2xs cursor-pointer transition-all active:scale-95"
+              title={`Release ${APP_VERSION_LABEL} · Click to check updates`}
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
               <span>{APP_VERSION_LABEL}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
             </button>
 
             {/* Vision & Mission Quick Access */}
@@ -1639,18 +1631,18 @@ export function PortalLayout({
               type="button"
               onClick={() => setShowVisionModal(true)}
               title="View Department Vision & Mission"
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-300/80 bg-amber-50/80 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer hover:scale-102"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
             >
-              <Target className="w-3.5 h-3.5 text-amber-600" />
+              <Target className="w-3.5 h-3.5 text-slate-500" />
               <span>Vision &amp; Mission</span>
             </button>
 
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
-              className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-full hover:bg-slate-100/90 transition-all border border-slate-200/80 bg-white/80 backdrop-blur-xs shadow-2xs hover:shadow-xs group"
+              className="flex items-center gap-2.5 p-1 pr-3 rounded-full hover:bg-slate-100 transition-colors border border-slate-200/80 bg-white group"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-[#1455D9]/25 shrink-0">
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
                 {avatarImage && !avatarError ? (
                   <img
                     src={avatarImage}
@@ -1663,14 +1655,11 @@ export function PortalLayout({
                 )}
               </div>
               <div className="hidden sm:flex flex-col text-left leading-none">
-                <span className="text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">
+                <span className="text-xs font-semibold text-slate-800 max-w-[120px] truncate group-hover:text-blue-600 transition-colors">
                   {userName}
                 </span>
-                <span className={cn(
-                  'text-[9px] font-extrabold mt-0.5',
-                  isLabHandler ? 'text-cyan-600' : isFacultyAdvisor ? 'text-emerald-600' : 'text-slate-600'
-                )}>
-                  {effectiveRoleBadgeLabel.toUpperCase()}
+                <span className="text-[10px] text-slate-400 font-medium mt-0.5 uppercase tracking-wider">
+                  {effectiveRoleBadgeLabel}
                 </span>
               </div>
             </Link>
@@ -1681,9 +1670,9 @@ export function PortalLayout({
               onClick={() => setShowLogoutConfirm(true)}
               disabled={isLoggingOut}
               title="Logout from portal"
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-rose-200/80 bg-rose-50/80 hover:bg-rose-100/90 text-rose-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 shadow-2xs disabled:opacity-50"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
             >
-              <LogOut className="w-4 h-4 text-rose-500" />
+              <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
@@ -1709,10 +1698,10 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
             (activePath || pathname) === '/dashboard' || (activePath || pathname) === '/faculty-dashboard' || (activePath || pathname) === '/hod-dashboard' || (activePath || pathname) === '/admin/dashboard'
-              ? 'text-[#1455D9]'
-              : 'text-gray-500 hover:text-[#071A3D]'
+              ? 'text-blue-600 font-semibold'
+              : 'text-slate-500 hover:text-slate-800'
           )}
         >
           <Home className="h-5 w-5" />
@@ -1727,16 +1716,16 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
             (activePath || pathname).includes('students') || (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
-              ? 'text-[#1455D9]'
-              : 'text-gray-500 hover:text-[#071A3D]'
+              ? 'text-blue-600 font-semibold'
+              : 'text-slate-500 hover:text-slate-800'
           )}
         >
           <div className="relative">
             {role === 'admin' ? <Users className="h-5 w-5" /> : role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
             {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
                 {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses')}
               </span>
             )}
@@ -1752,16 +1741,16 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
             (activePath || pathname).includes('faculty') || (activePath || pathname).includes('projects') || ((activePath || pathname).includes('students') && role === 'faculty')
-              ? 'text-[#1455D9]'
-              : 'text-gray-500 hover:text-[#071A3D]'
+              ? 'text-blue-600 font-semibold'
+              : 'text-slate-500 hover:text-slate-800'
           )}
         >
           <div className="relative">
             {role === 'admin' ? <School className="h-5 w-5" /> : role === 'faculty' ? <Users className="h-5 w-5" /> : <FolderOpen className="h-5 w-5" />}
             {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
                 {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects')}
               </span>
             )}
@@ -1775,14 +1764,14 @@ export function PortalLayout({
           prefetch={true}
           onClick={() => handleNavClick(notificationsHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
-            (activePath || pathname).includes('notifications') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
+            (activePath || pathname).includes('notifications') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
           )}
         >
           <div className="relative">
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -1798,8 +1787,8 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(profileHref) } catch {} }}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors',
-            (activePath || pathname).includes('profile') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors',
+            (activePath || pathname).includes('profile') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
           )}
         >
           <UserIcon className="h-5 w-5" />
