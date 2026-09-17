@@ -164,9 +164,7 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    const isMasterBypass = ['123456', '999999', '000000'].includes(trimmedOtp)
-
-    if (!isMasterBypass && (!otpRecord || !verifyOTP(trimmedOtp, otpRecord.codeHash))) {
+    if (!otpRecord || !verifyOTP(trimmedOtp, otpRecord.codeHash)) {
       return NextResponse.json({ success: false, message: 'Invalid or expired OTP. Please verify OTP first.' }, { status: 400 })
     }
 

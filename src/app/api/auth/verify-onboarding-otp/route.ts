@@ -2,35 +2,32 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP } from '@/lib/utils'
 import { verifyOTPChallenge } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  // 1. Sliding-window rate limit (5 attempts per min per IP)
+  const rateLimitRes = rateLimit(request, 'auth')
+  if (rateLimitRes) return rateLimitRes
+
   try {
     const body = await request.json()
     const { email, otp, challenge } = body
 
-    if (!email || !email.includes('@')) {
+    if (!email || typeof email !== 'string' || !email.includes('@') || email.length > 150) {
       return NextResponse.json({ success: false, message: 'A valid email address is required.' }, { status: 400 })
     }
 
-    if (!otp || typeof otp !== 'string' || otp.trim().length !== 6) {
-      return NextResponse.json({ success: false, message: 'Please enter a 6-digit OTP.' }, { status: 400 })
+    if (!otp || typeof otp !== 'string' || !/^\d{6}$/.test(otp.trim())) {
+      return NextResponse.json({ success: false, message: 'Please enter a valid 6-digit numeric OTP.' }, { status: 400 })
     }
 
     const normalizedEmail = email.trim().toLowerCase()
     const trimmedOtp = otp.trim()
 
-    // 1. Instant Master bypass codes
-    const isMasterBypass = ['123456', '999999', '000000'].includes(trimmedOtp)
-    if (isMasterBypass) {
-      return NextResponse.json({
-        success: true,
-        verified: true,
-        message: 'OTP verified successfully.',
-      })
-    }
+
 
     // 2. Instant HMAC Challenge verification (0ms database-free check)
     const activeChallenge = challenge || request.cookies.get('onboarding-challenge')?.value

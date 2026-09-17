@@ -330,7 +330,7 @@ export function AdminSettingsView() {
 
   // 6b. SMS Gateway Config State
   const [smsProvider, setSmsProvider] = useState<'twilio' | 'fast2sms' | 'custom'>('fast2sms')
-  const [smsApiKey, setSmsApiKey] = useState('XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4')
+  const [smsApiKey, setSmsApiKey] = useState('')
   const [smsSenderId, setSmsSenderId] = useState('TXTIND')
   const [notifyAbsentViaSms, setNotifyAbsentViaSms] = useState(true)
   const [testMobileNumber, setTestMobileNumber] = useState('')
@@ -399,9 +399,7 @@ export function AdminSettingsView() {
 
   // 6c. WhatsApp Gateway Config State (Fast2SMS WhatsApp Cloud API / Meta / Twilio)
   const [whatsappProvider, setWhatsappProvider] = useState<'fast2sms' | 'meta' | 'twilio'>('fast2sms')
-  const [fast2smsWhatsappKey, setFast2smsWhatsappKey] = useState(
-    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
-  )
+  const [fast2smsWhatsappKey, setFast2smsWhatsappKey] = useState('')
   const [fast2smsPhoneNumberId, setFast2smsPhoneNumberId] = useState('1325593377300934')
   const [fast2smsMessageId, setFast2smsMessageId] = useState('31679')
   const [fast2smsTemplateName, setFast2smsTemplateName] = useState('vsb_attendance_alert')

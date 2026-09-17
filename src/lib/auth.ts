@@ -5,10 +5,11 @@ import { prisma } from './prisma'
 import { hashOTP, verifyOTP, generateOTP } from './utils'
 
 const DEFAULT_SECRET = 'your-super-secret-key-change-in-production-min-32-chars'
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || DEFAULT_SECRET
-)
-const JWT_FALLBACK_SECRET = new TextEncoder().encode(DEFAULT_SECRET)
+const secretKey = process.env.NEXTAUTH_SECRET || DEFAULT_SECRET
+if (process.env.NODE_ENV === 'production' && secretKey === DEFAULT_SECRET) {
+  console.warn('[SECURITY WARNING] NEXTAUTH_SECRET is using the default development secret in production. Please set a secure random 32+ character secret.')
+}
+const JWT_SECRET = new TextEncoder().encode(secretKey)
 
 const JWT_EXPIRY = '30d'
 const OTP_EXPIRY_MINUTES = parseInt(process.env.OTP_EXPIRY_MINUTES || '5')
@@ -40,12 +41,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     return payload as unknown as JWTPayload
   } catch {
-    try {
-      const { payload } = await jwtVerify(token, JWT_FALLBACK_SECRET)
-      return payload as unknown as JWTPayload
-    } catch {
-      return null
-    }
+    return null
   }
 }
 
@@ -252,17 +248,6 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
       if (dobFormats.includes(trimmedPassword) || dobFormats.some((f) => f.replace(/[^0-9]/g, '') === rawCleanPass)) {
         isValid = true
       }
-    }
-
-    if (
-      !isValid &&
-      (rawCleanPass === regClean ||
-        trimmedPassword.toLowerCase() === 'welcome123' ||
-        trimmedPassword === 'Welcome@123' ||
-        trimmedPassword === 'Password@123' ||
-        trimmedPassword.toLowerCase() === 'vsb@123')
-    ) {
-      isValid = true
     }
   }
 
@@ -522,15 +507,7 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
     } catch {}
   }
 
-  // Fallback: Check if matching standard admin temporary credentials ('abc123', 'admin123', or facultyId)
-  if (!isValid && (trimmedPassword === 'abc123' || trimmedPassword === 'admin123' || trimmedPassword === hod.facultyId)) {
-    isValid = true
-    const newHash = await bcrypt.hash(trimmedPassword, 10)
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: newHash },
-    }).catch(() => {})
-  }
+
 
   if (!isValid) {
     return { success: false, message: 'Invalid HOD Email, Name, or Password.' }
@@ -661,7 +638,6 @@ export async function sendAdminOTP(email: string) {
   return { 
     success: true, 
     challenge,
-    devOtp: otp,
     message: `OTP sent to your registered security email (${defaultAdminEmail}).` 
   }
 }
@@ -671,11 +647,6 @@ export async function verifyAdminOTP(email: string, otp: string, challenge?: str
   const isChallengeValid = verifyOTPChallenge(challenge, normalizedEmail, otp)
 
   let isOtpValid = isChallengeValid
-
-  // Universal developer / offline bypass support
-  if (!isOtpValid && ['123456', '999999', '000000'].includes(otp.trim())) {
-    isOtpValid = true
-  }
 
   if (!isOtpValid) {
     try {

@@ -1,25 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateHOD } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 import { z } from 'zod'
 
 const loginSchema = z.object({
-  facultyId: z.string().optional(),
-  email: z.string().optional(),
-  name: z.string().optional(),
-  password: z.string().optional(),
-  dateOfBirth: z.string().optional(),
+  facultyId: z.string().trim().max(50).optional(),
+  email: z.string().trim().max(100).optional(),
+  name: z.string().trim().max(100).optional(),
+  password: z.string().min(1, 'Password is required').max(128).optional(),
+  dateOfBirth: z.string().trim().max(30).optional(),
 }).refine((data) => data.facultyId || data.email || data.name, {
   message: 'HOD Email ID, Name, or HOD ID is required',
+}).refine((data) => data.password || data.dateOfBirth, {
+  message: 'Password or Date of Birth is required',
 })
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  // 1. Sliding-window rate limit (5 attempts per min per IP)
+  const rateLimitRes = rateLimit(request, 'auth')
+  if (rateLimitRes) return rateLimitRes
+
   try {
     const body = await request.json()
     const { facultyId, email, name, password, dateOfBirth } = loginSchema.parse(body)
     const identifier = (facultyId || email || name || '').trim()
-    const passwordOrDob = password || dateOfBirth || ''
+    const passwordOrDob = (password || dateOfBirth || '').trim()
 
     const result = await authenticateHOD(identifier, passwordOrDob)
 

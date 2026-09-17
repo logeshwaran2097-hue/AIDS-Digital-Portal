@@ -122,12 +122,9 @@ export async function POST(request: NextRequest) {
       console.warn('[OTP] Email dispatch note:', emailErr)
     }
 
-    const isDev = process.env.NODE_ENV !== 'production' || !process.env.SMTP_PASSWORD
-
     return NextResponse.json({
       success: true,
       message: `Verification code sent to ${normalizedEmail}. Please check your inbox.`,
-      demoOtp: isDev ? otp : undefined,
     })
   } catch (error) {
     console.error('Error sending student email OTP:', error)

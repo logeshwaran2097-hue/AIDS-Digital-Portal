@@ -1,11 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { clearAllDbCache } from '@/lib/dbCache'
+import { getSession } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // 1. Strict admin authentication check
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized. Administrator access required.' }, { status: 401 })
+    }
+
+    // 2. Strict rate limit for admin maintenance actions
+    const rateLimitRes = rateLimit(request, 'strict', session.userId)
+    if (rateLimitRes) return rateLimitRes
+
     const body = await request.json().catch(() => ({}))
     const { target = 'all' } = body
 
@@ -108,9 +120,19 @@ export async function POST(request: Request) {
     // Instantly wipe query cache so fresh data is loaded on the very next render
     clearAllDbCache()
 
+    await prisma.auditLog.create({
+      data: {
+        userName: session.name || 'Admin',
+        action: 'CLEAN_MOCK_DATA',
+        module: 'admin',
+        details: `Cleaned mock data for target: ${target}`,
+        status: 'SUCCESS',
+      },
+    }).catch(() => {})
+
     return NextResponse.json({
       success: true,
-      message: 'All mock/sample data cleared successfully from database. Admin account is preserved.',
+      message: 'Mock/sample data cleared successfully from database. Admin account is preserved.',
       cleared: clearedInfo,
     })
   } catch (error) {
@@ -123,5 +145,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  return POST(new Request('http://localhost', { method: 'POST', body: JSON.stringify({ target: 'all' }) }))
+  return NextResponse.json(
+    { error: 'Method Not Allowed. Destructive actions cannot be triggered via GET requests.' },
+    { status: 405 }
+  )
 }

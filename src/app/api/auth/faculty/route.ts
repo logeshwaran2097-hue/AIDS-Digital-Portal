@@ -1,27 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateFaculty } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 import { z } from 'zod'
 
 const loginSchema = z.object({
-  facultyId: z.string().optional(),
-  email: z.string().optional(),
-  name: z.string().optional(),
-  password: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-  role: z.string().optional(),
-  loginAsRole: z.string().optional(),
+  facultyId: z.string().trim().max(50).optional(),
+  email: z.string().trim().max(100).optional(),
+  name: z.string().trim().max(100).optional(),
+  password: z.string().min(1, 'Password is required').max(128).optional(),
+  dateOfBirth: z.string().trim().max(30).optional(),
+  role: z.string().trim().max(50).optional(),
+  loginAsRole: z.string().trim().max(50).optional(),
 }).refine((data) => data.facultyId || data.email || data.name, {
   message: 'Faculty Email ID or Name is required',
+}).refine((data) => data.password || data.dateOfBirth, {
+  message: 'Password or Date of Birth is required',
 })
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  // 1. Sliding-window rate limit (5 attempts per min per IP)
+  const rateLimitRes = rateLimit(request, 'auth')
+  if (rateLimitRes) return rateLimitRes
+
   try {
     const body = await request.json()
     const { facultyId, email, name, password, dateOfBirth, role, loginAsRole } = loginSchema.parse(body)
     const identifier = (facultyId || email || name || '').trim()
-    const passwordOrDob = password || dateOfBirth || ''
+    const passwordOrDob = (password || dateOfBirth || '').trim()
     const targetRole = (loginAsRole || role || 'faculty') === 'advisor' ? 'advisor' : 'faculty'
 
     const result = await authenticateFaculty(identifier, passwordOrDob, targetRole)

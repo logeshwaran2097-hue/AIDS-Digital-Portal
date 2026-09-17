@@ -1,16 +1,25 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { parseSafeDateOfBirth } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
+import { rateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rateLimitRes = rateLimit(request, 'api')
+    if (rateLimitRes) return rateLimitRes
+
     const { searchParams } = new URL(request.url)
     const year = searchParams.get('year')
     const semester = searchParams.get('semester')
@@ -229,7 +238,7 @@ function formatDatabaseError(error: any, fallbackMessage: string, regNumber?: st
   return clean && clean.length > 0 && clean.length < 160 ? clean : fallbackMessage
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   let data: any = {}
   try {
     const session = await getSession()
@@ -239,6 +248,9 @@ export async function POST(request: Request) {
         { status: 403 }
       )
     }
+
+    const rateLimitRes = rateLimit(request, 'admin', session.userId)
+    if (rateLimitRes) return rateLimitRes
 
     data = await request.json()
     const {
@@ -483,9 +495,20 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   let data: any = {}
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Only administrators and HOD can modify student records.' },
+        { status: 403 }
+      )
+    }
+
+    const rateLimitRes = rateLimit(request, 'admin', session.userId)
+    if (rateLimitRes) return rateLimitRes
+
     data = await request.json()
     const {
       id,
