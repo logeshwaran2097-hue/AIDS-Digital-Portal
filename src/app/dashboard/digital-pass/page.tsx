@@ -23,13 +23,13 @@ export default async function DigitalPassPage() {
   const section = student?.section || 'B'
   const initialHostelBlock = student?.hostelBlock || 'Boys Hostel I'
   const initialRoomNo = student?.roomNo || 'Room 204'
-  const initialResidencyStatus = student?.residencyStatus || 'Hostel'
+  const initialResidencyStatus = student?.residencyStatus || (student?.busNo || student?.busDetails ? 'Day Scholar' : 'Hostel')
   const initialBusNo = student?.busNo || (student?.busDetails ? student.busDetails.match(/bus\s*(\d+)/i)?.[1] : null) || '5'
   const initialBusDetails = student?.busDetails || 'Route 05 - Namakkal Central'
   const initialBoardingPoint = student?.boardingPoint || 'Vkl'
 
   return (
-    <PortalLayout role={session.role as any} userName={studentName}>
+    <PortalLayout role={session.role as any} userName={studentName} residencyStatus={initialResidencyStatus}>
       <DigitalPassView
         studentName={studentName}
         registerNumber={registerNumber}

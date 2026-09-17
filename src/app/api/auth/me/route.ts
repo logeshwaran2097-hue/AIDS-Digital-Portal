@@ -33,6 +33,12 @@ export async function GET() {
               semester: true,
               section: true,
               dateOfBirth: true,
+              residencyStatus: true,
+              busNo: true,
+              busDetails: true,
+              boardingPoint: true,
+              hostelBlock: true,
+              roomNo: true,
             },
           })
         } else if (session.role === 'faculty') {

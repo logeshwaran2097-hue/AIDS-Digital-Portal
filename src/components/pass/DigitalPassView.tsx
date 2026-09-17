@@ -133,13 +133,39 @@ export default function DigitalPassView({
   // If student chose Hostel in onboarding -> only hostel content shows
   // If student chose Day Scholar / College Bus in onboarding -> only college bus content shows
   const detectedMode: 'hostel' | 'college_bus' = (() => {
-    const status = (initialResidencyStatus || '').toLowerCase()
+    const status = (initialResidencyStatus || '').toLowerCase().trim()
     if (status.includes('hostel') || status.includes('hosteller')) return 'hostel'
-    if (status.includes('bus') || status.includes('day scholar') || initialBusNo) return 'college_bus'
-    return 'hostel'
+    if (
+      status.includes('day scholar') ||
+      status.includes('dayscholar') ||
+      status.includes('bus') ||
+      status.includes('college bus') ||
+      initialBusNo ||
+      initialBusDetails
+    ) {
+      return 'college_bus'
+    }
+    return 'college_bus'
   })()
 
   const [activeMode, setActiveMode] = useState<'hostel' | 'college_bus'>(detectedMode)
+
+  // Ensure client-side alignment with verified onboarding storage if present
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const reg = registerNumber || ''
+      const cached = localStorage.getItem(`vsb_student_profile_v2_${reg}`)
+      const residencyDirect = localStorage.getItem('vsb_student_residency')
+      const targetRes = residencyDirect || (cached ? JSON.parse(cached)?.residencyStatus : '') || ''
+      const lower = targetRes.toLowerCase()
+      if (lower.includes('hostel') || lower.includes('hosteller')) {
+        setActiveMode('hostel')
+      } else if (lower.includes('day') || lower.includes('bus') || lower.includes('scholar')) {
+        setActiveMode('college_bus')
+      }
+    } catch {}
+  }, [registerNumber])
   
   // Auto-match bus route from student onboarding records
   const initialBusIdx = BUS_ROUTES.findIndex(r => {
@@ -410,46 +436,57 @@ SECURITY & VERIFICATION:
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
-      {/* Onboarding Mode Indicator & Test Preview Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 px-4 rounded-2xl bg-white border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-2">
-          <div className={`w-2.5 h-2.5 rounded-full ${activeMode === 'hostel' ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500 animate-pulse'}`} />
-          <span className="text-xs font-bold text-slate-800">
-            Onboarding Profile: <span className="text-slate-900 font-extrabold">{activeMode === 'hostel' ? `🏡 Hosteller (${currentHostel.name})` : `🚌 Day Scholar (College Bus #${currentRoute.busNo || '5'})`}</span>
+      {/* Onboarding Mode Indicator - Strictly locked to student's verified profile */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 px-4.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className={`w-3 h-3 rounded-full ${activeMode === 'hostel' ? 'bg-emerald-500 ring-4 ring-emerald-100' : 'bg-blue-600 ring-4 ring-blue-100'}`} />
+          <span className="text-xs font-bold text-slate-700">
+            Verified Onboarding Profile:{' '}
+            <span className="text-slate-950 font-black">
+              {activeMode === 'hostel'
+                ? `🏡 Hostel Resident · ${currentHostel.name} (Room ${roomNo})`
+                : `🚌 Day Scholar · College Bus #${currentRoute.busNo || '5'} (${currentRoute.name})`}
+            </span>
           </span>
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold border border-slate-200">
-            Showing only {activeMode === 'hostel' ? 'Hostel Resident' : 'College Bus Commuter'} Content
+          <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold border ${
+            activeMode === 'hostel'
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              : 'bg-blue-50 text-blue-800 border-blue-200'
+          }`}>
+            {activeMode === 'hostel' ? 'Hostel Resident Only' : 'College Bus Commuter Only'}
           </span>
         </div>
 
-        {/* Live Preview / Toggle for Testing Accounts & Roles */}
-        <div className="flex items-center gap-1.5 text-xs">
-          <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">Switch Onboarding View:</span>
-          <button
-            type="button"
-            onClick={() => setActiveMode('hostel')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeMode === 'hostel'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
-          >
-            <Home className="w-3.5 h-3.5" />
-            <span>Hostel View</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveMode('college_bus')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeMode === 'college_bus'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
-          >
-            <Bus className="w-3.5 h-3.5" />
-            <span>College Bus View</span>
-          </button>
-        </div>
+        {/* Staff/Admin only preview switcher — strictly hidden for regular students */}
+        {(role === 'admin' || role === 'hod') && (
+          <div className="flex items-center gap-1.5 text-xs bg-slate-50 p-1 rounded-xl border border-slate-200">
+            <span className="text-[10px] text-slate-400 font-bold px-1 uppercase">Admin Preview:</span>
+            <button
+              type="button"
+              onClick={() => setActiveMode('hostel')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                activeMode === 'hostel'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-transparent hover:bg-slate-200 text-slate-600'
+              }`}
+            >
+              <Home className="w-3 h-3" />
+              <span>Hostel</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveMode('college_bus')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                activeMode === 'college_bus'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-transparent hover:bg-slate-200 text-slate-600'
+              }`}
+            >
+              <Bus className="w-3 h-3" />
+              <span>Bus</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Header Banner - DYNAMIC BASED ON ONBOARDING MODE */}

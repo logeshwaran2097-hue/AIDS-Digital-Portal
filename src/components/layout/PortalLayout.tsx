@@ -28,6 +28,7 @@ import {
   Target,
   Users,
   School,
+  Bus,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/ai/FloatingChatbot'
@@ -63,6 +64,7 @@ interface PortalLayoutProps {
   navItems?: NavItem[]
   roleBadgeLabel?: string
   isAdvisor?: boolean
+  residencyStatus?: string
   children: React.ReactNode
 }
 
@@ -101,8 +103,38 @@ export function PortalLayout({
   navItems,
   roleBadgeLabel,
   isAdvisor,
+  residencyStatus,
   children,
 }: PortalLayoutProps) {
+  const [studentResidency, setStudentResidency] = useState<string | null>(() => {
+    if (residencyStatus) return residencyStatus
+    if (typeof window === 'undefined') return null
+    try {
+      const direct = localStorage.getItem('vsb_student_residency')
+      if (direct) return direct
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i)
+        if (k && (k.startsWith('vsb_student_profile_') || k.startsWith('portal_profile_'))) {
+          const val = localStorage.getItem(k)
+          if (val) {
+            const parsed = JSON.parse(val)
+            if (parsed?.residencyStatus) return parsed.residencyStatus
+          }
+        }
+      }
+    } catch {}
+    return null
+  })
+
+  useEffect(() => {
+    if (residencyStatus) {
+      setStudentResidency(residencyStatus)
+      try {
+        localStorage.setItem('vsb_student_residency', residencyStatus)
+      } catch {}
+    }
+  }, [residencyStatus])
+
   const [avatarImage, setAvatarImage] = useState<string | null>(userImage || profileImage || null)
   const [avatarError, setAvatarError] = useState(false)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -261,10 +293,19 @@ export function PortalLayout({
     fetch('/api/auth/me')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.success && data?.user?.profileImage && !data.user.profileImage.startsWith('blob:')) {
-          setAvatarImage(data.user.profileImage)
-          setAvatarError(false)
-          localStorage.setItem('user_profile_image', data.user.profileImage)
+        if (data?.success && data?.user) {
+          if (data.user.profileImage && !data.user.profileImage.startsWith('blob:')) {
+            setAvatarImage(data.user.profileImage)
+            setAvatarError(false)
+            localStorage.setItem('user_profile_image', data.user.profileImage)
+          }
+          if (data.user.residencyStatus || data.user.busNo || data.user.busDetails) {
+            const res = data.user.residencyStatus || (data.user.busNo || data.user.busDetails ? 'Day Scholar' : 'Hostel')
+            setStudentResidency(res)
+            try {
+              localStorage.setItem('vsb_student_residency', res)
+            } catch {}
+          }
         }
       })
       .catch(() => {})
@@ -580,20 +621,41 @@ export function PortalLayout({
     roleBadgeLabel ||
     (role === 'faculty' ? (isFacultyAdvisor ? 'Class Advisor' : isLabHandler ? 'Lab Handler' : 'Faculty Member') : roleBadge.label)
 
-  const rawNavItems = navItems || navItemsMap[role] || []
-  const baseNavItems = rawNavItems.filter((item) => {
-    // In faculty portal, strictly remove marked menus: OD & Leave, Proofs, Projects, and Events
-    if (role === 'faculty' && (
-      item.href.includes('/faculty-dashboard/od-applications') ||
-      item.href.includes('/faculty-dashboard/od-proofs') ||
-      item.href.includes('/faculty-dashboard/projects') ||
-      item.href.includes('/faculty-dashboard/events')
-    )) {
-      return false
+  const studentPassItem = useMemo(() => {
+    if (role !== 'student') return null
+    const res = (studentResidency || '').toLowerCase().trim()
+    const isHostel = res.includes('hostel') || res.includes('hosteller')
+    return {
+      label: isHostel ? 'Hostel Gate Pass' : 'College Bus Pass',
+      icon: isHostel ? <Home className="h-4 w-4" /> : <Bus className="h-4 w-4" />,
     }
+  }, [role, studentResidency])
 
-    return true
-  })
+  const rawNavItems = navItems || navItemsMap[role] || []
+  const baseNavItems = rawNavItems
+    .filter((item) => {
+      // In faculty portal, strictly remove marked menus: OD & Leave, Proofs, Projects, and Events
+      if (
+        role === 'faculty' &&
+        (item.href.includes('/faculty-dashboard/od-applications') ||
+          item.href.includes('/faculty-dashboard/od-proofs') ||
+          item.href.includes('/faculty-dashboard/projects') ||
+          item.href.includes('/faculty-dashboard/events'))
+      ) {
+        return false
+      }
+      return true
+    })
+    .map((item) => {
+      if (role === 'student' && item.href === '/dashboard/digital-pass' && studentPassItem) {
+        return {
+          ...item,
+          label: studentPassItem.label,
+          icon: studentPassItem.icon,
+        }
+      }
+      return item
+    })
   
   // Filter nav items based on admin menu preferences
   const resolvedNavItems = baseNavItems.filter((item) => {
