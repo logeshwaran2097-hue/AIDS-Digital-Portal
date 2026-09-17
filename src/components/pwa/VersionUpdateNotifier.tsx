@@ -14,7 +14,7 @@ import {
   Star,
   ExternalLink,
 } from 'lucide-react'
-import { playNotificationChime } from '@/lib/notificationEngine'
+import { playNotificationChime, dispatchNativeNotification } from '@/lib/notificationEngine'
 import { APP_VERSION, APP_RELEASE_HIGHLIGHTS } from '@/lib/version'
 import { toast } from '@/components/ui/Toast'
 
@@ -104,6 +104,21 @@ export function VersionUpdateNotifier() {
         }
         if (!hasPlayedUpdateChimeRef.current) {
           hasPlayedUpdateChimeRef.current = true
+
+          // Dispatch real system notification to Android status bar & lock screen
+          dispatchNativeNotification({
+            id: `version-update-${serverVer}`,
+            title: `🚀 Portal Update Available: v${serverVer}`,
+            message: `A new version of Digital Portal of AI&DS is ready with latest updates. Tap to upgrade.`,
+            createdByName: 'V.S.B. Release Center',
+            link: window.location.pathname,
+          })
+
+          // High-visibility toast
+          toast.info(`🚀 New Release v${serverVer} available! Tap to install update.`, {
+            duration: 8000,
+          })
+
           try {
             playNotificationChime()
           } catch {}
@@ -182,6 +197,20 @@ export function VersionUpdateNotifier() {
               setHasUpdate(true)
               if (!hasPlayedUpdateChimeRef.current) {
                 hasPlayedUpdateChimeRef.current = true
+
+                // Dispatch real system notification to Android status bar
+                dispatchNativeNotification({
+                  id: `worker-update-${Date.now()}`,
+                  title: `🚀 Portal Update Downloaded`,
+                  message: `A new release has been cached and is ready. Tap to reload.`,
+                  createdByName: 'V.S.B. Release Center',
+                  link: window.location.pathname,
+                })
+
+                toast.info(`🚀 Update ready! Tap to reload and activate.`, {
+                  duration: 8000,
+                })
+
                 try {
                   playNotificationChime()
                 } catch {}
