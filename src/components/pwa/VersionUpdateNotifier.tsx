@@ -53,6 +53,7 @@ export function VersionUpdateNotifier() {
   const [isRedirectNeeded, setIsRedirectNeeded] = useState(false)
 
   const waitingWorkerRef = useRef<ServiceWorker | null>(null)
+  const hasPlayedUpdateChimeRef = useRef(false)
 
   const checkVersion = async (isManual = false) => {
     try {
@@ -73,15 +74,13 @@ export function VersionUpdateNotifier() {
         isFallbackDomain = true
       }
 
-      if (!res || !res.ok) {
-        if (isManual) {
-          toast.info('Could not reach update server. Please check internet connection.')
-        }
-        return
-      }
+      if (!res || !res.ok) return
 
       const data = await res.json()
-      const serverVer = data.version || APP_VERSION
+      const serverVer = data.version
+
+      if (!serverVer) return
+
       setLatestVersion(serverVer)
 
       if (data.releaseHighlights && Array.isArray(data.releaseHighlights)) {
@@ -103,9 +102,12 @@ export function VersionUpdateNotifier() {
         if (isFallbackDomain && window.location.origin !== OFFICIAL_PRODUCTION_URL) {
           setIsRedirectNeeded(true)
         }
-        try {
-          playNotificationChime()
-        } catch {}
+        if (!hasPlayedUpdateChimeRef.current) {
+          hasPlayedUpdateChimeRef.current = true
+          try {
+            playNotificationChime()
+          } catch {}
+        }
       } else {
         if (!storedVer) {
           try {
@@ -178,9 +180,12 @@ export function VersionUpdateNotifier() {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               waitingWorkerRef.current = newWorker
               setHasUpdate(true)
-              try {
-                playNotificationChime()
-              } catch {}
+              if (!hasPlayedUpdateChimeRef.current) {
+                hasPlayedUpdateChimeRef.current = true
+                try {
+                  playNotificationChime()
+                } catch {}
+              }
             }
           })
         })

@@ -316,53 +316,75 @@ export function getNotificationPermissionStatus(): NotificationPermission {
 }
 
 // Dispatch native system / mobile push notification
-export async function dispatchNativeNotification(payload: RealtimeNotificationPayload) {
-  if (typeof window === 'undefined') return
-
-  // Play sound & gentle vibration
-  playNotificationChime()
-  triggerDeviceVibration([150, 80, 150])
-
-  if (!('Notification' in window) || Notification.permission !== 'granted') {
-    return
-  }
+export async function dispatchNativeNotification(payload: RealtimeNotificationPayload): Promise<boolean> {
+  if (typeof window === 'undefined') return false
 
   const origin = window.location.origin
   const title = payload.title || 'Digital Portal of AI&DS'
-  const notifTag = payload.id ? `vsb-notif-${payload.id}` : 'vsb-portal-announcements'
+  const notifTag = payload.id ? `vsb-notif-${payload.id}` : `vsb-portal-${Date.now()}`
 
-  const options: any = {
-    body: payload.message,
-    icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
-    badge: origin ? `${origin}/notification-badge.png` : '/notification-badge.png',
-    timestamp: Date.now(),
-    data: { url: payload.link || '/dashboard/notifications', id: payload.id },
-    tag: notifTag,
-    renotify: false,
-  }
+  // Check if native notifications are supported and granted
+  const hasPermission = 'Notification' in window && Notification.permission === 'granted'
 
-  // Try service worker notification first (best for mobile and background tabs)
-  if ('serviceWorker' in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.ready
-      if (registration && registration.showNotification) {
-        await registration.showNotification(title, options)
-        return
+  if (hasPermission) {
+    // 1. Primary Engine for Mobile PWA & Desktop: Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      try {
+        let reg = await navigator.serviceWorker.getRegistration()
+        if (!reg) {
+          reg = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise<any>((_, reject) => setTimeout(() => reject('timeout'), 1500))
+          ])
+        }
+
+        if (reg && reg.showNotification) {
+          await reg.showNotification(title, {
+            body: payload.message,
+            icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
+            badge: origin ? `${origin}/notification-badge.png` : '/notification-badge.png',
+            timestamp: Date.now(),
+            data: { url: payload.link || '/dashboard/notifications', id: payload.id },
+            tag: notifTag,
+            renotify: true,
+          } as any)
+
+          playNotificationChime()
+          triggerDeviceVibration([150, 80, 150])
+          return true
+        }
+      } catch (err) {
+        console.debug('ServiceWorker showNotification note:', err)
       }
-    } catch {}
-  }
-
-  // Fallback to standard Notification API
-  try {
-    const notif = new Notification(title, options)
-    notif.onclick = () => {
-      window.focus()
-      if (payload.link) {
-        window.location.href = payload.link
-      }
-      notif.close()
     }
-  } catch {}
+
+    // 2. Fallback Engine for Desktop browsers: Notification constructor
+    try {
+      const notif = new Notification(title, {
+        body: payload.message,
+        icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
+        tag: notifTag,
+        data: { url: payload.link || '/dashboard/notifications', id: payload.id },
+      })
+
+      playNotificationChime()
+      triggerDeviceVibration([150, 80, 150])
+
+      notif.onclick = () => {
+        window.focus()
+        if (payload.link) {
+          window.location.href = payload.link
+        }
+        notif.close()
+      }
+      return true
+    } catch {
+      // Notification constructor not supported (e.g. mobile Chrome)
+    }
+  }
+
+  // System notification could not be shown natively (e.g., permission not granted yet)
+  return false
 }
 
 /**

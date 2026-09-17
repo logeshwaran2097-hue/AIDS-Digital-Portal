@@ -148,6 +148,7 @@ export function PortalLayout({
   const [activeDetailNotification, setActiveDetailNotification] = useState<NotificationDetailData | null>(null)
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default')
   const [isTestingPush, setIsTestingPush] = useState(false)
+  const [isPermissionBannerDismissed, setIsPermissionBannerDismissed] = useState(false)
   const knownNotificationIds = useRef<Set<string>>(new Set())
   const isInitialSyncDone = useRef<boolean>(false)
 
@@ -372,23 +373,31 @@ export function PortalLayout({
 
             newItems.forEach((n: any) => {
               knownNotificationIds.current.add(n.id)
-              // Trigger audio chime, vibration & mobile push notification
-              dispatchNativeNotification({
-                id: n.id,
-                title: n.title,
-                message: n.message,
-                createdByName: n.createdByName,
-                link: notifLink,
-              })
-              // Show in-app live toast
-              setRealtimeToast({
-                id: n.id,
-                title: n.title,
-                message: n.message,
-                createdByName: n.createdByName,
-                link: notifLink,
-              })
             })
+
+            const latest = newItems[0]
+
+            // 1. Dispatch native system notification (for mobile notification shade / lock screen)
+            dispatchNativeNotification({
+              id: latest.id,
+              title: latest.title,
+              message: latest.message,
+              createdByName: latest.createdByName,
+              link: notifLink,
+            })
+
+            // 2. Guaranteed high-priority in-app floating banner toast at top of screen
+            setRealtimeToast({
+              id: latest.id,
+              title: latest.title,
+              message: latest.message,
+              createdByName: latest.createdByName,
+              link: notifLink,
+            })
+
+            // 3. Audio chime & vibration paired strictly with the visible card
+            playNotificationChime()
+            triggerDeviceVibration([200, 100, 200])
 
             const formattedNew: NotificationItem[] = newItems.map((n: any) => ({
               id: n.id,
@@ -435,11 +444,48 @@ export function PortalLayout({
       if (res.permission === 'granted') {
         playNotificationChime()
         triggerDeviceVibration([200, 100, 200])
+        setRealtimeToast({
+          id: `perm-granted-${Date.now()}`,
+          title: 'Notifications Activated!',
+          message: 'You will now receive real-time college announcements & bus alerts.',
+          createdByName: 'VSB Notification Service',
+          link: '/dashboard/notifications',
+        })
       }
     } catch {
       const perm = await requestNotificationPermission()
       setPushPermission(perm)
     }
+  }
+
+  // Instant interactive notification test for student / user
+  const handleTestNotification = async () => {
+    setIsTestingPush(true)
+    const testItem: RealtimeToastData = {
+      id: `test-${Date.now()}`,
+      title: 'V.S.B. Notification Test Alert',
+      message: 'Verified: Audio chime, phone vibration, and floating notification card are 100% active!',
+      createdByName: 'Security & Transport Desk',
+      link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
+    }
+
+    // 1. Immediately show floating card toast
+    setRealtimeToast(testItem)
+
+    // 2. Play audio chime and vibrate
+    playNotificationChime()
+    triggerDeviceVibration([200, 100, 200])
+
+    // 3. Dispatch native system notification (if allowed)
+    await dispatchNativeNotification({
+      id: testItem.id,
+      title: testItem.title,
+      message: testItem.message,
+      createdByName: testItem.createdByName,
+      link: testItem.link,
+    })
+
+    setTimeout(() => setIsTestingPush(false), 1200)
   }
 
   // Listen for real-time mobile push broadcasts from Service Worker
@@ -1128,6 +1174,36 @@ export function PortalLayout({
 
       {/* Main Top Header */}
       <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs lg:pl-72">
+        {/* Real-time Push Notification Permission Banner for Mobile & Desktop */}
+        {pushPermission === 'default' && !isPermissionBannerDismissed && (
+          <div className="bg-gradient-to-r from-[#071A3D] via-[#1455D9] to-[#071A3D] text-white px-3 sm:px-6 py-2 border-b border-[#22C7E8]/40 shadow-sm flex items-center justify-between gap-2 text-[11px] sm:text-xs animate-in slide-in-from-top duration-300">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="p-1 rounded-lg bg-amber-400/20 text-amber-300 shrink-0">
+                <Bell className="w-3.5 h-3.5 animate-bounce" />
+              </span>
+              <p className="truncate font-semibold text-blue-100">
+                <strong className="text-white font-black">Enable Notifications:</strong> Turn on alerts to receive instant college updates, bus schedules & pass approvals on this phone.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={handleEnablePush}
+                className="px-3 py-1 rounded-lg bg-[#F4C430] hover:bg-amber-300 text-[#071A3D] font-black text-[11px] transition-all shadow-xs active:scale-95 cursor-pointer"
+              >
+                Turn On
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPermissionBannerDismissed(true)}
+                className="p-1 text-blue-200 hover:text-white transition-colors cursor-pointer"
+                aria-label="Dismiss banner"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
         <div className="portal-top-header flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Hamburger Menu & Brand on Mobile */}
           <div className="flex items-center gap-3">
@@ -1377,16 +1453,28 @@ export function PortalLayout({
                           </span>
                         </div>
 
-                        {pushPermission === 'default' && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {pushPermission === 'default' && (
+                            <button
+                              type="button"
+                              onClick={handleEnablePush}
+                              className="px-2.5 py-1 rounded-lg bg-[#1557C0] hover:bg-[#0e44b5] text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
+                            >
+                              <span>🔔</span>
+                              <span>Allow Alerts</span>
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={handleEnablePush}
-                            className="px-2.5 py-1 rounded-lg bg-[#1557C0] hover:bg-[#0e44b5] text-white text-[10px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
+                            onClick={handleTestNotification}
+                            disabled={isTestingPush}
+                            className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1 shrink-0"
+                            title="Test notification audio chime and visual card"
                           >
-                            <span>🔔</span>
-                            <span>Allow Alerts</span>
+                            <span>🔊</span>
+                            <span>{isTestingPush ? 'Testing...' : 'Test Alert'}</span>
                           </button>
-                        )}
+                        </div>
                       </div>
 
                       {pushPermission === 'denied' && (

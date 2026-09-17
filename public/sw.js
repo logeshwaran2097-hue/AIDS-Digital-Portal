@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v2-1-7'
+const CACHE_NAME = 'vsb-aids-portal-v2-1-8'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -101,15 +101,17 @@ self.addEventListener('push', (event) => {
   const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : (origin + '/notification-badge.png')
   const notifTag = data.tag || (data.id ? ('vsb-notif-' + data.id) : 'vsb-portal-announcements')
 
+  const notifTitle = data.title || 'Digital Portal of AI&DS'
+  const notifBody = data.body || data.message || 'New notification from VSB AI&DS Portal'
+  const notifUrl = data.data?.url || data.link || '/dashboard/notifications'
+
   const options = {
-    body: data.body,
+    body: notifBody,
     icon: iconUrl,
     badge: badgeUrl,
     vibrate: [200, 100, 200, 100, 200],
-    sound: origin + '/sounds/quantum.wav',
-    silent: false,
     timestamp: Date.now(),
-    data: data.data || { url: '/dashboard/notifications' },
+    data: { url: notifUrl, id: data.id },
     tag: notifTag,
     renotify: true,
     requireInteraction: false,
@@ -118,7 +120,17 @@ self.addEventListener('push', (event) => {
     ]
   }
 
-  const showNotifPromise = self.registration.showNotification(data.title || 'Digital Portal of AI&DS', options)
+  // Robust showNotification with fallback for mobile devices that reject actions/badge
+  const showNotifPromise = self.registration.showNotification(notifTitle, options)
+    .catch((err) => {
+      console.warn('Primary showNotification failed, attempting fallback:', err)
+      return self.registration.showNotification(notifTitle, {
+        body: notifBody,
+        icon: origin + '/icon-192.png',
+        tag: notifTag,
+        data: { url: notifUrl },
+      })
+    })
 
   // Notify any active clients/tabs in the foreground to refresh their alerts
   const notifyClientsPromise = clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
