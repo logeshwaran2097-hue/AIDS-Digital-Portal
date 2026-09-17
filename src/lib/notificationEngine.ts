@@ -322,19 +322,42 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
   const origin = window.location.origin
   const title = payload.title || 'Digital Portal of AI&DS'
   const notifTag = payload.id ? `vsb-notif-${payload.id}` : `vsb-portal-${Date.now()}`
+  const notifUrl = payload.link || '/dashboard/notifications'
 
-  // Check if native notifications are supported and granted
+  // Check if native notifications are supported and granted by the OS/browser
   const hasPermission = 'Notification' in window && Notification.permission === 'granted'
 
   if (hasPermission) {
-    // 1. Primary Engine for Mobile PWA & Desktop: Service Worker Registration
-    if ('serviceWorker' in navigator) {
+    let shown = false
+
+    // Engine 1: Dedicated Service Worker Controller PostMessage (100% reliable on Android PWA/WebAPK)
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      try {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SHOW_NATIVE_NOTIFICATION',
+          title,
+          options: {
+            body: payload.message,
+            icon: `${origin}/college-emblem.png`,
+            badge: `${origin}/notification-badge.png`,
+            tag: notifTag,
+            data: { url: notifUrl, id: payload.id },
+          }
+        })
+        shown = true
+      } catch (err) {
+        console.debug('[Notification] Controller postMessage note:', err)
+      }
+    }
+
+    // Engine 2: Direct Service Worker Registration showNotification
+    if (!shown && 'serviceWorker' in navigator) {
       try {
         let reg = await navigator.serviceWorker.getRegistration()
         if (!reg) {
           reg = await Promise.race([
             navigator.serviceWorker.ready,
-            new Promise<any>((_, reject) => setTimeout(() => reject('timeout'), 1500))
+            new Promise<any>((_, reject) => setTimeout(() => reject('timeout'), 2000))
           ])
         }
 
@@ -344,47 +367,72 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
             icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
             badge: origin ? `${origin}/notification-badge.png` : '/notification-badge.png',
             timestamp: Date.now(),
-            data: { url: payload.link || '/dashboard/notifications', id: payload.id },
+            data: { url: notifUrl, id: payload.id },
             tag: notifTag,
             renotify: true,
           } as any)
-
-          playNotificationChime()
-          triggerDeviceVibration([150, 80, 150])
-          return true
+          shown = true
         }
       } catch (err) {
-        console.debug('ServiceWorker showNotification note:', err)
+        console.debug('[Notification] ServiceWorker registration showNotification note:', err)
       }
     }
 
-    // 2. Fallback Engine for Desktop browsers: Notification constructor
-    try {
-      const notif = new Notification(title, {
-        body: payload.message,
-        icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
-        tag: notifTag,
-        data: { url: payload.link || '/dashboard/notifications', id: payload.id },
-      })
+    // Engine 3: Desktop browser Notification constructor fallback
+    if (!shown) {
+      try {
+        const notif = new Notification(title, {
+          body: payload.message,
+          icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
+          tag: notifTag,
+          data: { url: notifUrl, id: payload.id },
+        })
 
+        notif.onclick = () => {
+          window.focus()
+          if (payload.link) {
+            window.location.href = payload.link
+          }
+          notif.close()
+        }
+        shown = true
+      } catch {
+        // Notification constructor blocked on mobile Android Chrome
+      }
+    }
+
+    if (shown) {
       playNotificationChime()
       triggerDeviceVibration([150, 80, 150])
-
-      notif.onclick = () => {
-        window.focus()
-        if (payload.link) {
-          window.location.href = payload.link
-        }
-        notif.close()
-      }
       return true
-    } catch {
-      // Notification constructor not supported (e.g. mobile Chrome)
     }
   }
 
-  // System notification could not be shown natively (e.g., permission not granted yet)
+  // System notification could not be shown natively (permission not granted or blocked)
   return false
+}
+
+// Interactive helper to trigger a real Android / Desktop system app notification
+export async function testSystemAppNotification(): Promise<{ success: boolean; permission: NotificationPermission }> {
+  if (typeof window === 'undefined') return { success: false, permission: 'denied' }
+
+  let perm = getNotificationPermissionStatus()
+  if (perm !== 'granted') {
+    perm = await requestNotificationPermission()
+  }
+
+  if (perm === 'granted') {
+    const success = await dispatchNativeNotification({
+      id: `test-${Date.now()}`,
+      title: 'Digital Portal of AI&DS',
+      message: '🔔 Real App Notification Verified! Alerts are active in your phone status bar.',
+      createdByName: 'V.S.B. System Admin',
+      link: '/dashboard/notifications',
+    })
+    return { success, permission: perm }
+  }
+
+  return { success: false, permission: perm }
 }
 
 /**

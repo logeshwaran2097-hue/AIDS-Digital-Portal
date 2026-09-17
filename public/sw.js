@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vsb-aids-portal-v2-1-8'
+const CACHE_NAME = 'vsb-aids-portal-v2-1-9'
 const STATIC_ASSETS = [
   '/',
   '/login',
@@ -19,10 +19,49 @@ const STATIC_ASSETS = [
   '/sounds/zen.wav'
 ]
 
-// Listen for skip waiting message from app updater
+// Listen for messages from client (Skip waiting, Show native notifications)
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (!event.data) return
+
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting()
+  }
+
+  // Real native Android & Desktop system notification dispatcher
+  if (event.data.type === 'SHOW_NATIVE_NOTIFICATION') {
+    const origin = self.location.origin
+    const title = event.data.title || 'Digital Portal of AI&DS'
+    const opts = event.data.options || {}
+    const iconUrl = opts.icon || (origin + '/college-emblem.png')
+    const badgeUrl = opts.badge || (origin + '/notification-badge.png')
+    const notifTag = opts.tag || ('vsb-' + Date.now())
+    const targetUrl = opts.data?.url || '/dashboard/notifications'
+
+    const notifOptions = {
+      body: opts.body || 'New announcement from VSB AI&DS Portal',
+      icon: iconUrl,
+      badge: badgeUrl,
+      vibrate: [200, 100, 200, 100, 200],
+      tag: notifTag,
+      renotify: true,
+      requireInteraction: false,
+      data: { url: targetUrl, id: opts.data?.id },
+      actions: [
+        { action: 'open', title: 'Open Portal' }
+      ]
+    }
+
+    event.waitUntil(
+      self.registration.showNotification(title, notifOptions).catch((err) => {
+        console.warn('[SW] showNotification fallback triggered:', err)
+        return self.registration.showNotification(title, {
+          body: opts.body || 'New announcement from VSB AI&DS Portal',
+          icon: origin + '/icon-192.png',
+          tag: notifTag,
+          data: { url: targetUrl }
+        })
+      })
+    )
   }
 })
 

@@ -377,27 +377,29 @@ export function PortalLayout({
 
             const latest = newItems[0]
 
-            // 1. Dispatch native system notification (for mobile notification shade / lock screen)
+            // 1. Dispatch native system notification (Android status bar / lock screen)
             dispatchNativeNotification({
               id: latest.id,
               title: latest.title,
               message: latest.message,
               createdByName: latest.createdByName,
               link: notifLink,
-            })
+            }).then((dispatched) => {
+              // Always guarantee visual floating card banner on screen
+              setRealtimeToast({
+                id: latest.id,
+                title: latest.title,
+                message: latest.message,
+                createdByName: latest.createdByName,
+                link: notifLink,
+              })
 
-            // 2. Guaranteed high-priority in-app floating banner toast at top of screen
-            setRealtimeToast({
-              id: latest.id,
-              title: latest.title,
-              message: latest.message,
-              createdByName: latest.createdByName,
-              link: notifLink,
+              // If native system dispatch failed (e.g. permission not yet allowed), play chime with visual card
+              if (!dispatched) {
+                playNotificationChime()
+                triggerDeviceVibration([200, 100, 200])
+              }
             })
-
-            // 3. Audio chime & vibration paired strictly with the visible card
-            playNotificationChime()
-            triggerDeviceVibration([200, 100, 200])
 
             const formattedNew: NotificationItem[] = newItems.map((n: any) => ({
               id: n.id,
@@ -442,12 +444,18 @@ export function PortalLayout({
       const res = await subscribeUserToPush(role, derivedRegNo)
       setPushPermission(res.permission)
       if (res.permission === 'granted') {
-        playNotificationChime()
-        triggerDeviceVibration([200, 100, 200])
         setRealtimeToast({
           id: `perm-granted-${Date.now()}`,
           title: 'Notifications Activated!',
-          message: 'You will now receive real-time college announcements & bus alerts.',
+          message: 'Real App Notifications are now active in your phone status bar.',
+          createdByName: 'VSB Notification Service',
+          link: '/dashboard/notifications',
+        })
+        // Immediately fire a real system notification directly to Android status bar / lock screen
+        await dispatchNativeNotification({
+          id: `activated-${Date.now()}`,
+          title: 'Digital Portal of AI&DS',
+          message: '🔔 Real App Notifications are 100% active in your phone status bar!',
           createdByName: 'VSB Notification Service',
           link: '/dashboard/notifications',
         })
@@ -461,29 +469,43 @@ export function PortalLayout({
   // Instant interactive notification test for student / user
   const handleTestNotification = async () => {
     setIsTestingPush(true)
+
+    // Ensure permission is requested
+    let currentPerm = pushPermission
+    if (currentPerm !== 'granted' && typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        currentPerm = await Notification.requestPermission()
+        setPushPermission(currentPerm)
+      } catch {}
+    }
+
     const testItem: RealtimeToastData = {
       id: `test-${Date.now()}`,
-      title: 'V.S.B. Notification Test Alert',
-      message: 'Verified: Audio chime, phone vibration, and floating notification card are 100% active!',
-      createdByName: 'Security & Transport Desk',
+      title: 'Digital Portal of AI&DS',
+      message: '🔔 Real App Notification Verified! Audio chime & Android status bar alert active.',
+      createdByName: 'Transport & Security Desk',
       link: role === 'admin' ? '/admin/notifications' : '/dashboard/notifications',
     }
 
     // 1. Immediately show floating card toast
     setRealtimeToast(testItem)
 
-    // 2. Play audio chime and vibrate
-    playNotificationChime()
-    triggerDeviceVibration([200, 100, 200])
-
-    // 3. Dispatch native system notification (if allowed)
-    await dispatchNativeNotification({
+    // 2. Dispatch REAL native Android system notification
+    const dispatched = await dispatchNativeNotification({
       id: testItem.id,
       title: testItem.title,
       message: testItem.message,
       createdByName: testItem.createdByName,
       link: testItem.link,
     })
+
+    if (!dispatched) {
+      playNotificationChime()
+      triggerDeviceVibration([200, 100, 200])
+      toast.info('Notifications are currently blocked in your phone settings. Tap "Allow Alerts" or check site settings.')
+    } else {
+      toast.success('Real Android notification dispatched to your status bar!')
+    }
 
     setTimeout(() => setIsTestingPush(false), 1200)
   }
@@ -1197,6 +1219,37 @@ export function PortalLayout({
                 type="button"
                 onClick={() => setIsPermissionBannerDismissed(true)}
                 className="p-1 text-blue-200 hover:text-white transition-colors cursor-pointer"
+                aria-label="Dismiss banner"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Banner if user blocked notifications in phone/browser settings */}
+        {pushPermission === 'denied' && !isPermissionBannerDismissed && (
+          <div className="bg-gradient-to-r from-amber-950 via-[#78350F] to-amber-950 text-white px-3 sm:px-6 py-2 border-b border-amber-500/40 shadow-sm flex items-center justify-between gap-2 text-[11px] sm:text-xs animate-in slide-in-from-top duration-300">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="p-1 rounded-lg bg-amber-500/30 text-amber-200 shrink-0">
+                <AlertTriangle className="w-3.5 h-3.5" />
+              </span>
+              <p className="truncate font-semibold text-amber-100">
+                <strong className="text-white font-black">Notifications Blocked:</strong> To see alerts in your phone status bar, tap the lock/settings icon in your browser &gt; allow notifications.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsNotificationOpen(true)}
+                className="px-2.5 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-[10px] transition-all shadow-xs cursor-pointer"
+              >
+                How to Fix
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPermissionBannerDismissed(true)}
+                className="p-1 text-amber-200 hover:text-white transition-colors cursor-pointer"
                 aria-label="Dismiss banner"
               >
                 <X className="w-3.5 h-3.5" />
