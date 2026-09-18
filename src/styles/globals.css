@@ -945,12 +945,14 @@ html.dark textarea::placeholder {
 .lux-gold-text {
   background: linear-gradient(135deg, #FFF6D1 0%, #F4C430 40%, #FFE885 70%, #E5A800 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .lux-cyan-text {
   background: linear-gradient(135deg, #E0FCFF 0%, #22C7E8 50%, #1455D9 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -1145,6 +1147,7 @@ html.midnight .lux-glass-header {
 .lux-gold-foil-text {
   background: linear-gradient(135deg, #FFF0B8 0%, #F3D37A 30%, #D4AF37 55%, #AA820A 80%, #FFF0B8 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   background-size: 200% auto;
 }
