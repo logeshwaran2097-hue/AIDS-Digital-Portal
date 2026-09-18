@@ -57,6 +57,18 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              try {
+                var isStandaloneApp = window.matchMedia('(display-mode: standalone)').matches ||
+                  window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+                  window.matchMedia('(display-mode: minimal-ui)').matches ||
+                  window.matchMedia('(display-mode: fullscreen)').matches ||
+                  window.navigator.standalone === true ||
+                  document.referrer.includes('android-app://') ||
+                  localStorage.getItem('pwa_installed') === 'true';
+                if (isStandaloneApp) {
+                  document.documentElement.classList.add('app-is-installed');
+                }
+              } catch(e) {}
               window.__pwaInstallPrompt = null;
               window.addEventListener('beforeinstallprompt', function(e) {
                 e.preventDefault();
@@ -67,6 +79,7 @@ export default function RootLayout({
                 window.__pwaInstallPrompt = null;
                 try {
                   localStorage.setItem('pwa_installed', 'true');
+                  document.documentElement.classList.add('app-is-installed');
                 } catch(e) {}
               });
               if ('serviceWorker' in navigator) {

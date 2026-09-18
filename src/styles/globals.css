@@ -67,6 +67,15 @@ html, body {
   }
 }
 
+/* Hide install prompts, install buttons & standalone-specific header pill when running as an installed app */
+html.app-is-installed .pwa-hide-when-installed,
+@media all and (display-mode: standalone), (display-mode: window-controls-overlay), (display-mode: minimal-ui), (display-mode: fullscreen) {
+  .pwa-hide-when-installed {
+    display: none !important;
+  }
+}
+
+
 /* Prevent unwanted mobile zooming when tapping text inputs on iOS/Android WebViews */
 @media screen and (max-width: 640px) {
   input, select, textarea {

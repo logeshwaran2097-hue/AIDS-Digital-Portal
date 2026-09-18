@@ -50,6 +50,7 @@ export default function LoginPage() {
   const [showSecurityInstallModal, setShowSecurityInstallModal] = React.useState(false)
   const [showVisionModal, setShowVisionModal] = React.useState(false)
   const [isAppInstalled, setIsAppInstalled] = React.useState(false)
+  const [isStandaloneMode, setIsStandaloneMode] = React.useState(false)
   const [registerNumber, setRegisterNumber] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
@@ -125,20 +126,37 @@ export default function LoginPage() {
 
       checkActiveSession()
       const checkInstalled = async () => {
-        // 1. Check standalone mode (PWA installed and launched from home screen / desktop shortcut)
+        // 1. Check standalone mode (PWA installed and launched from home screen / desktop shortcut / installed app window)
         const isStandalone =
           window.matchMedia('(display-mode: standalone)').matches ||
+          window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+          window.matchMedia('(display-mode: minimal-ui)').matches ||
+          window.matchMedia('(display-mode: fullscreen)').matches ||
           (window.navigator as any).standalone === true ||
           document.referrer.includes('android-app://') ||
-          (window as any).Capacitor?.isNativePlatform()
+          (window as any).Capacitor?.isNativePlatform() ||
+          window.location.search.includes('source=pwa') ||
+          window.location.search.includes('mode=standalone') ||
+          window.location.search.includes('mode=app')
+
+        if (isStandalone) {
+          setIsStandaloneMode(true)
+          setIsAppInstalled(true)
+          try {
+            localStorage.setItem('pwa_installed', 'true')
+          } catch {}
+          return
+        }
 
         // 2. Check local persistence flag
         let isFlaggedInstalled = false
         try {
-          isFlaggedInstalled = localStorage.getItem('pwa_installed') === 'true'
+          isFlaggedInstalled =
+            localStorage.getItem('pwa_installed') === 'true' ||
+            localStorage.getItem('vsb_app_installed') === 'true'
         } catch {}
 
-        if (isStandalone || isFlaggedInstalled) {
+        if (isFlaggedInstalled) {
           setIsAppInstalled(true)
           return
         }
@@ -171,8 +189,10 @@ export default function LoginPage() {
       window.addEventListener('pwa-installed-event', onAppInstalled)
 
       const matchMediaStandalone = window.matchMedia('(display-mode: standalone)')
+      const matchMediaWCO = window.matchMedia('(display-mode: window-controls-overlay)')
       const onDisplayChange = (e: MediaQueryListEvent) => {
         if (e.matches) {
+          setIsStandaloneMode(true)
           setIsAppInstalled(true)
           try {
             localStorage.setItem('pwa_installed', 'true')
@@ -181,6 +201,7 @@ export default function LoginPage() {
       }
       try {
         matchMediaStandalone.addEventListener('change', onDisplayChange)
+        matchMediaWCO.addEventListener('change', onDisplayChange)
       } catch {}
 
       return () => {
@@ -188,6 +209,7 @@ export default function LoginPage() {
         window.removeEventListener('pwa-installed-event', onAppInstalled)
         try {
           matchMediaStandalone.removeEventListener('change', onDisplayChange)
+          matchMediaWCO.removeEventListener('change', onDisplayChange)
         } catch {}
       }
     }
@@ -1038,8 +1060,11 @@ export default function LoginPage() {
       {/* TOP HEADER: Centered Ultra-Luxury Branding */}
       <div className="w-full max-w-lg text-center space-y-1.5 sm:space-y-2.5 relative z-10 pt-1 pb-1">
 
-        {/* Stage 1: Accreditation Top Badge & Laptop Install App Button */}
-        <div className="flex items-center justify-center gap-2.5 flex-wrap">
+        {/* Stage 1: Accreditation Top Badge & Laptop Install App Button (Hidden completely in installed PWA standalone mode) */}
+        <div className={cn(
+          "flex items-center justify-center gap-2.5 flex-wrap pwa-hide-when-installed",
+          isStandaloneMode && "hidden"
+        )}>
           <div className={cn(
             "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-700 ease-out transform",
             animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
@@ -1048,19 +1073,21 @@ export default function LoginPage() {
             <span>Autonomous NBA &amp; NAAC &apos;A&apos; Accredited Institution</span>
           </div>
 
-          {/* Dedicated Install App / Download Button - Always visible */}
-          <button
-            type="button"
-            onClick={handleDirectInstall}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#1455D9] via-[#0f44b0] to-[#071A41] text-white text-[10px] sm:text-xs font-black shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-cyan-400/40",
-              animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-            )}
-            title="Install Web App directly from Chrome"
-          >
-            <Download className="w-3 h-3 text-[#FACC15] animate-bounce" />
-            <span>Install App</span>
-          </button>
+          {/* Dedicated Install App / Download Button - Only shown when app is NOT installed */}
+          {!isAppInstalled && (
+            <button
+              type="button"
+              onClick={handleDirectInstall}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-gradient-to-r from-[#1455D9] via-[#0f44b0] to-[#071A41] text-white text-[10px] sm:text-xs font-black shadow-md shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border border-cyan-400/40 pwa-hide-when-installed",
+                animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+              )}
+              title="Install Web App directly from Chrome"
+            >
+              <Download className="w-3 h-3 text-[#FACC15] animate-bounce" />
+              <span>Install App</span>
+            </button>
+          )}
         </div>
 
         {/* Stage 2: INSTAGRAM-STYLE MODERN SQUIRCLE EMBLEM */}
