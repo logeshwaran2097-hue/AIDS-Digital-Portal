@@ -200,7 +200,7 @@ export const adminCreateStudentSchema = z
     cgpa: z.union([z.number().min(0).max(10), z.string(), z.null()]).optional(),
     attendance: z.union([z.string().max(20), z.number(), z.null()]).optional(),
   })
-  .strict()
+  .passthrough()
 
 // Student self-update schema strictly prevents modifying academic records (cgpa, attendance, year, semester, section, batch, status, registerNumber)
 export const studentSelfUpdateSchema = z
@@ -237,7 +237,7 @@ export const studentSelfUpdateSchema = z
     cgpa: z.union([z.number(), z.string(), z.null()]).optional(),
     attendance: z.union([z.number(), z.string(), z.null()]).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const adminUpdateStudentSchema = studentSelfUpdateSchema
   .extend({
@@ -253,7 +253,7 @@ export const adminUpdateStudentSchema = studentSelfUpdateSchema
     cgpa: z.union([z.number().min(0).max(10), z.string(), z.null()]).optional(),
     attendance: z.union([z.string().max(20), z.number(), z.null()]).optional(),
   })
-  .strict()
+  .passthrough()
 
 // ==========================================
 // 3. Gate Pass Schemas
@@ -682,8 +682,22 @@ export const createFacultySchema = z
     facultyType: z.string().max(50).optional(),
     status: z.string().max(30).optional(),
     labTrainer: z.string().max(100).optional().nullable(),
+    // Client-side allocation fields
+    isClassAdvisor: z.boolean().optional(),
+    hasTheory: z.boolean().optional(),
+    teachingYear: z.union([z.number(), z.string()]).optional().nullable(),
+    teachingSem: z.union([z.number(), z.string()]).optional().nullable(),
+    hasLab: z.boolean().optional(),
+    labSubjectName: z.string().max(150).optional().nullable(),
+    labSubjectCode: z.string().max(50).optional().nullable(),
+    labYear: z.union([z.number(), z.string()]).optional().nullable(),
+    labSem: z.union([z.number(), z.string()]).optional().nullable(),
+    labDay: z.string().max(50).optional().nullable(),
+    labPeriod: z.string().max(50).optional().nullable(),
+    labTime: z.string().max(50).optional().nullable(),
+    allocationType: z.string().max(50).optional().nullable(),
   })
-  .strict()
+  .passthrough()
 
 export const createHodSchema = z
   .object({
@@ -700,7 +714,7 @@ export const createHodSchema = z
     specialization: z.string().max(150).optional(),
     status: z.string().max(30).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const adminAcademicsSchema = z
   .object({
