@@ -755,22 +755,38 @@ html.dark .text-gray-400 {
   color: #64748b !important;
 }
 
-html.midnight input,
-html.midnight select,
-html.midnight textarea,
-html.dark input,
-html.dark select,
-html.dark textarea {
+html.midnight input:not(.login-input),
+html.midnight select:not(.login-input),
+html.midnight textarea:not(.login-input),
+html.dark input:not(.login-input),
+html.dark select:not(.login-input),
+html.dark textarea:not(.login-input) {
   background-color: #0a1b3d !important;
   color: #f1f5f9 !important;
   border-color: #142852 !important;
 }
 
-html.midnight input::placeholder,
-html.midnight textarea::placeholder,
-html.dark input::placeholder,
-html.dark textarea::placeholder {
+html.midnight input:not(.login-input)::placeholder,
+html.midnight textarea:not(.login-input)::placeholder,
+html.dark input:not(.login-input)::placeholder,
+html.dark textarea:not(.login-input)::placeholder {
   color: #64748b !important;
+}
+
+/* Ensure login page inputs always have crisp, clean light styling */
+.login-input,
+.login-card input {
+  background-color: #f8fafc !important;
+  color: #071A41 !important;
+  border-color: #cbd5e1 !important;
+  -webkit-text-fill-color: #071A41 !important;
+}
+
+.login-input:focus,
+.login-card input:focus {
+  background-color: #ffffff !important;
+  border-color: #1557C0 !important;
+  box-shadow: 0 0 0 3px rgba(21, 87, 192, 0.15) !important;
 }
 
 /* =========================================================
