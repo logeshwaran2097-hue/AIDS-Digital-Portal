@@ -672,27 +672,27 @@ export function StudentProfileView({
 
       {/* COMPREHENSIVE EDIT PROFILE MODAL (DIRECT EDIT & SAVE) */}
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden border border-slate-200/80 animate-scale-up my-auto">
+        <div className="fixed inset-0 z-50 bg-[#020817]/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+          <div className="bg-gradient-to-b from-[#0a183d] via-[#071330] to-[#040c20] text-white rounded-3xl max-w-2xl w-full shadow-[0_25px_80px_rgba(0,0,0,0.8),0_0_60px_rgba(20,85,217,0.25)] flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden border border-blue-500/30 animate-scale-up my-auto ring-1 ring-white/10">
             <form onSubmit={handleSaveProfile} className="flex flex-col h-full overflow-hidden">
               
               {/* MODAL HEADER (Pinned / Non-scrolling) */}
-              <div className="p-5 sm:p-6 pb-3.5 border-b border-slate-100 shrink-0 bg-white space-y-3.5">
+              <div className="p-5 sm:p-6 pb-3.5 border-b border-white/10 shrink-0 bg-[#091738]/90 backdrop-blur-md space-y-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-[#1455D9] flex items-center justify-center shadow-xs shrink-0">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1455D9] to-indigo-600 border border-blue-400/40 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
                       <Edit3 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h3 className="text-lg sm:text-xl font-black text-[#071A3D] tracking-tight">
+                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2">
                         Edit Student Profile
                       </h3>
                       <div className="flex items-center gap-2 text-xs mt-0.5">
-                        <span className="font-mono font-bold text-[#1455D9] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                        <span className="font-mono font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-500/30 shadow-inner">
                           {formData.registerNumber}
                         </span>
-                        <span className="text-slate-300">·</span>
-                        <span className="font-semibold text-slate-700 truncate max-w-[200px] sm:max-w-[320px]">
+                        <span className="text-white/30">·</span>
+                        <span className="font-semibold text-slate-200 truncate max-w-[200px] sm:max-w-[320px]">
                           {formData.name}
                         </span>
                       </div>
@@ -701,7 +701,7 @@ export function StudentProfileView({
                   <button
                     type="button"
                     onClick={() => setIsEditOpen(false)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                    className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                     aria-label="Close modal"
                   >
                     <X className="w-5 h-5" />
@@ -709,23 +709,23 @@ export function StudentProfileView({
                 </div>
 
                 {/* Streamlined Synchronous Notice */}
-                <div className="px-3.5 py-2 rounded-xl bg-blue-50/70 border border-blue-100 text-xs text-blue-950 flex items-center gap-2.5">
-                  <Sparkles className="w-4 h-4 text-[#1455D9] shrink-0" />
+                <div className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-950/70 to-indigo-950/50 border border-blue-500/30 text-xs text-blue-200 flex items-center gap-2.5 shadow-inner">
+                  <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
                   <p className="text-[11px] leading-tight">
-                    <span className="font-bold text-blue-900">Instant Sync:</span> Updates save immediately to your profile, student registry &amp; generated documents.
+                    <span className="font-bold text-cyan-300">Instant Sync:</span> Updates save immediately to your profile, student registry &amp; generated documents.
                   </p>
                 </div>
 
                 {/* Modern Segmented Navigation Bar */}
-                <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/90 rounded-2xl">
+                <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#040c1e] rounded-2xl border border-white/10">
                   <button
                     type="button"
                     onClick={() => setActiveTab('personal')}
                     className={cn(
                       'py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5',
                       activeTab === 'personal'
-                        ? 'bg-white text-[#1455D9] shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-gradient-to-r from-[#1455D9] to-blue-600 text-white shadow-md shadow-blue-500/30 border border-blue-400/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                     )}
                   >
                     <User className="w-3.5 h-3.5 shrink-0" />
@@ -737,8 +737,8 @@ export function StudentProfileView({
                     className={cn(
                       'py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5',
                       activeTab === 'academic'
-                        ? 'bg-white text-[#1455D9] shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-gradient-to-r from-[#1455D9] to-blue-600 text-white shadow-md shadow-blue-500/30 border border-blue-400/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                     )}
                   >
                     <GraduationCap className="w-3.5 h-3.5 shrink-0" />
@@ -750,8 +750,8 @@ export function StudentProfileView({
                     className={cn(
                       'py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5',
                       activeTab === 'kpis'
-                        ? 'bg-white text-[#1455D9] shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800'
+                        ? 'bg-gradient-to-r from-[#1455D9] to-blue-600 text-white shadow-md shadow-blue-500/30 border border-blue-400/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
                     )}
                   >
                     <TrendingUp className="w-3.5 h-3.5 shrink-0" />
@@ -761,21 +761,21 @@ export function StudentProfileView({
               </div>
 
               {/* MODAL BODY (Scrollable with smooth custom scrollbar) */}
-              <div className="p-5 sm:p-6 overflow-y-auto space-y-4.5 text-xs flex-1 custom-scrollbar">
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-4.5 text-xs flex-1 custom-scrollbar bg-gradient-to-b from-transparent to-[#020714]/40">
                 {/* TAB 1: PERSONAL & CONTACT */}
                 {activeTab === 'personal' && (
                   <div className="space-y-4 animate-fade-in">
                     {/* Photo Upload in Edit Modal */}
-                    <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-center gap-4">
+                    <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/50 to-indigo-950/30 border border-blue-500/30 flex items-center gap-4 shadow-sm">
                       <div className="relative group shrink-0">
                         {formData.profileImage ? (
                           <img
                             src={formData.profileImage}
                             alt="Preview"
-                            className="w-16 h-16 rounded-2xl object-cover border-2 border-[#1455D9] shadow-sm bg-white"
+                            className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-400/70 shadow-lg shadow-cyan-500/20 bg-[#040c1e]"
                           />
                         ) : (
-                          <div className="w-16 h-16 rounded-2xl bg-white border-2 border-dashed border-blue-300 flex items-center justify-center text-blue-500 font-bold text-lg shadow-inner">
+                          <div className="w-16 h-16 rounded-2xl bg-[#040c1e] border-2 border-dashed border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold text-lg shadow-inner">
                             {formData.name.charAt(0) || 'S'}
                           </div>
                         )}
@@ -791,9 +791,9 @@ export function StudentProfileView({
                         )}
                       </div>
                       <div className="space-y-1">
-                        <p className="font-bold text-[#071A3D] text-xs">Student Passport Photograph</p>
-                        <p className="text-[10px] text-gray-500">Appears on Student Profile &amp; Pre-filled on ID Card PDF</p>
-                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold text-[11px] cursor-pointer shadow-xs transition-all">
+                        <p className="font-bold text-white text-xs">Student Passport Photograph</p>
+                        <p className="text-[10px] text-slate-400">Appears on Student Profile &amp; Pre-filled on ID Card PDF</p>
+                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#1455D9] to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-bold text-[11px] cursor-pointer shadow-md shadow-blue-500/30 transition-all">
                           <Upload className="w-3 h-3" />
                           <span>{formData.profileImage ? 'Change Photo' : 'Upload Photo'}</span>
                           <input
@@ -842,21 +842,21 @@ export function StudentProfileView({
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Full Name</label>
+                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Full Name</label>
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10 font-semibold text-[#071A3D]"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-white shadow-inner"
                       />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block font-bold text-[#071A3D] text-[11px]">Personal Email Address</label>
-                          <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                          <label className="block font-bold text-slate-200 text-[11px]">Personal Email Address</label>
+                          <span className="text-[10px] font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/30 px-1.5 py-0.5 rounded">
                             @gmail.com only
                           </span>
                         </div>
@@ -867,29 +867,29 @@ export function StudentProfileView({
                             const val = e.target.value
                             setFormData({ ...formData, personalEmail: val, email: val })
                           }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10 font-mono text-[#071A3D] text-xs"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-mono text-cyan-200 text-xs shadow-inner"
                           placeholder="e.g. yourname@gmail.com"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Student Contact Number</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Student Contact Number</label>
                         <input
                           type="text"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 text-white shadow-inner"
                           placeholder="+91 98765 43210"
                         />
                       </div>
 
                       <div className="sm:col-span-2">
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Parent / Guardian Mobile</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Parent / Guardian Mobile</label>
                         <input
                           type="text"
                           value={formData.parentPhone || ''}
                           onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10 font-mono"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-mono text-white shadow-inner"
                           placeholder="e.g. 9876543210"
                         />
                         <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
@@ -897,18 +897,18 @@ export function StudentProfileView({
                             type="checkbox"
                             checked={Boolean(formData.isParentWhatsapp)}
                             onChange={(e) => setFormData({ ...formData, isParentWhatsapp: e.target.checked })}
-                            className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"
+                            className="w-3.5 h-3.5 rounded bg-[#061026] border-white/20 text-emerald-500 focus:ring-emerald-500"
                           />
-                          <span className="text-[11px] font-bold text-gray-600">Available on WhatsApp</span>
+                          <span className="text-[11px] font-bold text-emerald-400">Available on WhatsApp</span>
                         </label>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-gray-100">
-                      <label className="block font-bold text-[#071A3D] text-[11px] mb-1.5 flex items-center justify-between">
+                    <div className="pt-2 border-t border-white/10">
+                      <label className="block font-bold text-slate-200 text-[11px] mb-1.5 flex items-center justify-between">
                         <span>Date of Birth (Day / Month / Year)</span>
                         {formData.dateOfBirth && formData.dateOfBirth.includes('-') && (
-                          <span className="text-[10px] font-bold text-[#1455D9] bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                          <span className="text-[10px] font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-500/30">
                             Selected: {formData.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(formData.dateOfBirth.split('-')[1], 10)] || formData.dateOfBirth.split('-')[1]}-{formData.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
                           </span>
                         )}
@@ -923,14 +923,14 @@ export function StudentProfileView({
                               const m = parts[1] || '01'
                               setFormData({ ...formData, dateOfBirth: `${y}-${m}-${e.target.value.padStart(2, '0')}` })
                             }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10 font-semibold text-xs text-gray-800 cursor-pointer shadow-2xs"
+                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
                           >
-                            <option value="">Day</option>
+                            <option value="" className="text-slate-400 bg-[#0a183d]">Day</option>
                             {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
-                              <option key={d} value={d} className="text-gray-800 bg-white">{d}</option>
+                              <option key={d} value={d} className="text-white bg-[#0a183d]">{d}</option>
                             ))}
                           </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                         </div>
 
                         <div className="relative">
@@ -942,9 +942,9 @@ export function StudentProfileView({
                               const d = parts[2] || '01'
                               setFormData({ ...formData, dateOfBirth: `${y}-${e.target.value.padStart(2, '0')}-${d}` })
                             }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10 font-semibold text-xs text-gray-800 cursor-pointer shadow-2xs"
+                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
                           >
-                            <option value="">Month</option>
+                            <option value="" className="text-slate-400 bg-[#0a183d]">Month</option>
                             {[
                               { val: '01', label: '01 - Jan' },
                               { val: '02', label: '02 - Feb' },
@@ -959,10 +959,10 @@ export function StudentProfileView({
                               { val: '11', label: '11 - Nov' },
                               { val: '12', label: '12 - Dec' },
                             ].map((m) => (
-                              <option key={m.val} value={m.val} className="text-gray-800 bg-white">{m.label}</option>
+                              <option key={m.val} value={m.val} className="text-white bg-[#0a183d]">{m.label}</option>
                             ))}
                           </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                         </div>
 
                         <div className="relative">
@@ -974,47 +974,47 @@ export function StudentProfileView({
                               const d = parts[2] || '01'
                               setFormData({ ...formData, dateOfBirth: `${e.target.value}-${m}-${d}` })
                             }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10 font-semibold text-xs text-gray-800 cursor-pointer shadow-2xs"
+                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
                           >
-                            <option value="">Year</option>
+                            <option value="" className="text-slate-400 bg-[#0a183d]">Year</option>
                             {Array.from({ length: 30 }, (_, i) => String(2012 - i)).map((y) => (
-                              <option key={y} value={y} className="text-gray-800 bg-white">{y}</option>
+                              <option key={y} value={y} className="text-white bg-[#0a183d]">{y}</option>
                             ))}
                           </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Blood Group</label>
+                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Blood Group</label>
                       <div className="relative">
                         <select
                           value={formData.bloodGroup}
                           onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                          className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] focus:ring-2 focus:ring-blue-500/10 font-semibold text-xs text-gray-800 cursor-pointer shadow-2xs"
+                          className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
                         >
-                          <option value="" className="text-gray-400 bg-white">Select Blood Group</option>
-                          <option value="O +ve" className="text-gray-800 bg-white">O +ve</option>
-                          <option value="O -ve" className="text-gray-800 bg-white">O -ve</option>
-                          <option value="A +ve" className="text-gray-800 bg-white">A +ve</option>
-                          <option value="A -ve" className="text-gray-800 bg-white">A -ve</option>
-                          <option value="B +ve" className="text-gray-800 bg-white">B +ve</option>
-                          <option value="B -ve" className="text-gray-800 bg-white">B -ve</option>
-                          <option value="AB +ve" className="text-gray-800 bg-white">AB +ve</option>
-                          <option value="AB -ve" className="text-gray-800 bg-white">AB -ve</option>
+                          <option value="" className="text-slate-400 bg-[#0a183d]">Select Blood Group</option>
+                          <option value="O +ve" className="text-white bg-[#0a183d]">O +ve</option>
+                          <option value="O -ve" className="text-white bg-[#0a183d]">O -ve</option>
+                          <option value="A +ve" className="text-white bg-[#0a183d]">A +ve</option>
+                          <option value="A -ve" className="text-white bg-[#0a183d]">A -ve</option>
+                          <option value="B +ve" className="text-white bg-[#0a183d]">B +ve</option>
+                          <option value="B -ve" className="text-white bg-[#0a183d]">B -ve</option>
+                          <option value="AB +ve" className="text-white bg-[#0a183d]">AB +ve</option>
+                          <option value="AB -ve" className="text-white bg-[#0a183d]">AB -ve</option>
                         </select>
-                        <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
+                        <ChevronDown className="w-4 h-4 text-cyan-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
                       </div>
                     </div>
 
                     {/* RESIDENCY & TRANSPORT SETUP */}
-                    <div className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200 space-y-3.5">
+                    <div className="p-4 rounded-2xl bg-[#040c20]/90 border border-white/10 space-y-3.5 shadow-inner">
                       <div className="flex items-center justify-between">
-                        <label className="block font-black text-[#071A3D] text-xs uppercase tracking-wider">
+                        <label className="block font-black text-white text-xs uppercase tracking-wider">
                           Residency &amp; Accommodation
                         </label>
-                        <span className="text-[11px] text-gray-400 font-medium">Select your accommodation</span>
+                        <span className="text-[11px] text-slate-400 font-medium">Select your accommodation</span>
                       </div>
 
                       {/* Radio Type Selector: Day Scholar vs Hosteller */}
@@ -1042,16 +1042,16 @@ export function StudentProfileView({
                           className={cn(
                             'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
                             (formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel')))
-                              ? 'bg-blue-50/80 border-[#1455D9] ring-2 ring-[#1455D9]/20 text-[#071A3D] shadow-xs'
-                              : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                              ? 'bg-gradient-to-br from-blue-900/60 to-indigo-900/50 border-blue-500 ring-2 ring-blue-500/30 text-white shadow-lg shadow-blue-500/20'
+                              : 'bg-[#061026]/70 border-white/10 text-slate-400 hover:border-white/20 hover:text-white'
                           )}
                         >
-                          <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 text-cyan-300 flex items-center justify-center shrink-0">
                             <Bus className="w-4 h-4" />
                           </div>
                           <div>
                             <p className="font-bold text-xs">Day Scholar</p>
-                            <p className="text-[10px] text-gray-500">College Bus / Out Bus</p>
+                            <p className="text-[10px] text-slate-400">College Bus / Out Bus</p>
                           </div>
                         </button>
 
@@ -1077,24 +1077,24 @@ export function StudentProfileView({
                           className={cn(
                             'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
                             (formData.residencyType === 'Hosteller' || formData.residencyStatus?.toLowerCase().includes('hostel'))
-                              ? 'bg-purple-50/80 border-purple-600 ring-2 ring-purple-600/20 text-[#071A3D] shadow-xs'
-                              : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                              ? 'bg-gradient-to-br from-purple-900/60 to-indigo-900/50 border-purple-500 ring-2 ring-purple-500/30 text-white shadow-lg shadow-purple-500/20'
+                              : 'bg-[#061026]/70 border-white/10 text-slate-400 hover:border-white/20 hover:text-white'
                           )}
                         >
-                          <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/30 text-purple-300 flex items-center justify-center shrink-0">
                             <Building className="w-4 h-4" />
                           </div>
                           <div>
                             <p className="font-bold text-xs">Hosteller</p>
-                            <p className="text-[10px] text-gray-500">College Hostel Residence</p>
+                            <p className="text-[10px] text-slate-400">College Hostel Residence</p>
                           </div>
                         </button>
                       </div>
 
                       {/* DAY SCHOLAR SUB-OPTIONS: College Bus User vs Out Bus User */}
                       {(formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
-                        <div className="p-3.5 rounded-2xl bg-white border border-blue-100 space-y-3 shadow-2xs">
-                          <label className="block font-bold text-gray-700 text-[11px]">
+                        <div className="p-3.5 rounded-2xl bg-[#061026]/90 border border-blue-500/25 space-y-3 shadow-inner">
+                          <label className="block font-bold text-blue-200 text-[11px]">
                             Day Scholar Transport Option:
                           </label>
 
@@ -1115,8 +1115,8 @@ export function StudentProfileView({
                               className={cn(
                                 'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
                                 formData.dayScholarType !== 'Out Bus'
-                                  ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
-                                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                                  ? 'bg-[#1455D9] text-white border-blue-400/40 shadow-md shadow-blue-500/30'
+                                  : 'bg-[#040c1e] text-slate-400 border-white/10 hover:border-white/20 hover:text-white'
                               )}
                             >
                               <Bus className="w-4 h-4" /> College Bus User
@@ -1138,8 +1138,8 @@ export function StudentProfileView({
                               className={cn(
                                 'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
                                 formData.dayScholarType === 'Out Bus'
-                                  ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
-                                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                                  ? 'bg-[#1455D9] text-white border-blue-400/40 shadow-md shadow-blue-500/30'
+                                  : 'bg-[#040c1e] text-slate-400 border-white/10 hover:border-white/20 hover:text-white'
                               )}
                             >
                               <Car className="w-4 h-4" /> Out Bus / Own Transport
@@ -1150,7 +1150,7 @@ export function StudentProfileView({
                           {formData.dayScholarType !== 'Out Bus' ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                               <div>
-                                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                <label className="block font-bold text-slate-300 text-[11px] mb-1">
                                   College Bus Route / Bus No.
                                 </label>
                                 <input
@@ -1165,12 +1165,12 @@ export function StudentProfileView({
                                       residencyStatus: `Day Scholar · College Bus ${bNo} · Boarding: ${formData.boardingPoint || 'Main Stop'}`,
                                     })
                                   }}
-                                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] text-xs"
+                                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
                                 />
                               </div>
 
                               <div>
-                                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                <label className="block font-bold text-slate-300 text-[11px] mb-1">
                                   Boarding Point / Stop Name
                                 </label>
                                 <input
@@ -1185,7 +1185,7 @@ export function StudentProfileView({
                                       residencyStatus: `Day Scholar · College Bus ${formData.busNo || 'Bus'} · Boarding: ${pt}`,
                                     })
                                   }}
-                                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] text-xs"
+                                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
                                 />
                               </div>
                             </div>
@@ -1194,7 +1194,7 @@ export function StudentProfileView({
                             <div className="space-y-3 pt-1">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                  <label className="block font-bold text-slate-300 text-[11px] mb-1">
                                     Out Bus Transport Mode
                                   </label>
                                   <div className="relative">
@@ -1208,19 +1208,19 @@ export function StudentProfileView({
                                           residencyStatus: `Day Scholar · Out Bus (${m}) · From: ${formData.boardingPoint || 'Local Stop'}`,
                                         })
                                       }}
-                                      className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] text-xs cursor-pointer shadow-2xs"
+                                      className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white cursor-pointer shadow-inner"
                                     >
-                                      <option value="Public Bus (TNSTC / Private)" className="text-gray-800 bg-white">Public Bus (TNSTC / Private)</option>
-                                      <option value="Own Two-Wheeler / Bike" className="text-gray-800 bg-white">Own Two-Wheeler / Bike</option>
-                                      <option value="Private Van / Auto" className="text-gray-800 bg-white">Private Van / Auto</option>
-                                      <option value="Walking / Nearby Resident" className="text-gray-800 bg-white">Walking / Nearby Resident</option>
+                                      <option value="Public Bus (TNSTC / Private)" className="text-white bg-[#0a183d]">Public Bus (TNSTC / Private)</option>
+                                      <option value="Own Two-Wheeler / Bike" className="text-white bg-[#0a183d]">Own Two-Wheeler / Bike</option>
+                                      <option value="Private Van / Auto" className="text-white bg-[#0a183d]">Private Van / Auto</option>
+                                      <option value="Walking / Nearby Resident" className="text-white bg-[#0a183d]">Walking / Nearby Resident</option>
                                     </select>
-                                    <ChevronDown className="w-4 h-4 text-gray-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
+                                    <ChevronDown className="w-4 h-4 text-cyan-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
                                   </div>
                                 </div>
 
                                 <div>
-                                  <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                  <label className="block font-bold text-slate-300 text-[11px] mb-1">
                                     Starting Location / Stop
                                   </label>
                                   <input
@@ -1235,13 +1235,13 @@ export function StudentProfileView({
                                         residencyStatus: `Day Scholar · Out Bus (${formData.outBusMode || 'Public/Own'}) · From: ${pt}`,
                                       })
                                     }}
-                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] text-xs"
+                                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
                                   />
                                 </div>
                               </div>
 
                               <div>
-                                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                <label className="block font-bold text-slate-300 text-[11px] mb-1">
                                   Residential Address (Optional)
                                 </label>
                                 <input
@@ -1249,7 +1249,7 @@ export function StudentProfileView({
                                   placeholder="Door No, Street Name, Area, City, Pincode"
                                   value={formData.address || ''}
                                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                  className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] text-xs"
+                                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
                                 />
                               </div>
                             </div>
@@ -1259,14 +1259,14 @@ export function StudentProfileView({
 
                       {/* HOSTELLER SUB-OPTIONS */}
                       {(formData.residencyType === 'Hosteller' || (!formData.residencyType && formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
-                        <div className="p-3.5 rounded-2xl bg-white border border-purple-100 space-y-3 shadow-2xs">
-                          <label className="block font-bold text-gray-700 text-[11px]">
+                        <div className="p-3.5 rounded-2xl bg-[#061026]/90 border border-purple-500/25 space-y-3 shadow-inner">
+                          <label className="block font-bold text-purple-200 text-[11px]">
                             Hostel Allocation Details:
                           </label>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                              <label className="block font-bold text-slate-300 text-[11px] mb-1">
                                 Hostel Block
                               </label>
                               <div className="relative">
@@ -1288,21 +1288,21 @@ export function StudentProfileView({
                                       residencyStatus: `Hosteller · ${b} · ${formData.roomNo || 'Room 101'}`,
                                     })
                                   }}
-                                  className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-purple-200 bg-white hover:border-purple-300 focus:outline-none focus:border-purple-600 text-xs font-semibold text-gray-800 cursor-pointer shadow-2xs"
+                                  className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-purple-400/30 bg-[#040c1e] hover:border-purple-400/60 focus:outline-none focus:border-purple-400 text-xs font-semibold text-white cursor-pointer shadow-inner"
                                 >
-                                  <option value="Boys Hostel I" className="text-gray-800 bg-white">Boys Hostel I</option>
-                                  <option value="Boys Hostel II" className="text-gray-800 bg-white">Boys Hostel II</option>
-                                  <option value="Boys Hostel III" className="text-gray-800 bg-white">Boys Hostel III</option>
-                                  <option value="Girls Hostel I" className="text-gray-800 bg-white">Girls Hostel I</option>
-                                  <option value="Girls Hostel II" className="text-gray-800 bg-white">Girls Hostel II</option>
-                                  <option value="Girls Hostel III" className="text-gray-800 bg-white">Girls Hostel III</option>
+                                  <option value="Boys Hostel I" className="text-white bg-[#0a183d]">Boys Hostel I</option>
+                                  <option value="Boys Hostel II" className="text-white bg-[#0a183d]">Boys Hostel II</option>
+                                  <option value="Boys Hostel III" className="text-white bg-[#0a183d]">Boys Hostel III</option>
+                                  <option value="Girls Hostel I" className="text-white bg-[#0a183d]">Girls Hostel I</option>
+                                  <option value="Girls Hostel II" className="text-white bg-[#0a183d]">Girls Hostel II</option>
+                                  <option value="Girls Hostel III" className="text-white bg-[#0a183d]">Girls Hostel III</option>
                                 </select>
                                 <ChevronDown className="w-4 h-4 text-purple-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
                               </div>
                             </div>
 
                             <div>
-                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                              <label className="block font-bold text-slate-300 text-[11px] mb-1">
                                 Room Number
                               </label>
                               <input
@@ -1317,7 +1317,7 @@ export function StudentProfileView({
                                     residencyStatus: `Hosteller · ${formData.hostelBlock || 'Boys Hostel'} · ${r}`,
                                   })
                                 }}
-                                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-purple-600 text-xs"
+                                className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-purple-400/40 focus:outline-none focus:border-purple-400 text-xs text-white shadow-inner"
                               />
                             </div>
                           </div>
@@ -1332,45 +1332,45 @@ export function StudentProfileView({
                   <div className="space-y-4 animate-fade-in">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Register Number</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Register Number</label>
                         <input
                           type="text"
                           value={formData.registerNumber}
                           onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value.toUpperCase() })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-cyan-500/30 bg-[#061026] focus:outline-none focus:border-cyan-400 font-mono font-bold text-cyan-300 shadow-inner"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Degree &amp; Program Name</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Degree &amp; Program Name</label>
                         <input
                           type="text"
                           value={formData.degreeProgram}
                           onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-semibold"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-semibold text-white shadow-inner"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Academic Regulation</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Academic Regulation</label>
                         <input
                           type="text"
                           value={formData.regulation}
                           onChange={(e) => setFormData({ ...formData, regulation: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                           placeholder="R-2021 (Autonomous System)"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Academic Batch</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Academic Batch</label>
                         <input
                           type="text"
                           value={formData.batch}
                           onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                           placeholder="2023 - 2027 (4 Year Program)"
                         />
                       </div>
@@ -1378,7 +1378,7 @@ export function StudentProfileView({
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Year</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Year</label>
                         <div className="relative">
                           <select
                             value={formData.year}
@@ -1390,65 +1390,65 @@ export function StudentProfileView({
                               const newSem = (currentSem >= minS && currentSem <= maxS) ? currentSem : minS
                               setFormData({ ...formData, year: y, semester: newSem })
                             }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-bold text-xs text-gray-800 cursor-pointer shadow-2xs"
+                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-bold text-xs text-white cursor-pointer shadow-inner"
                           >
-                            <option value={1} className="text-gray-800 bg-white">Year 1</option>
-                            <option value={2} className="text-gray-800 bg-white">Year 2</option>
-                            <option value={3} className="text-gray-800 bg-white">Year 3</option>
-                            <option value={4} className="text-gray-800 bg-white">Year 4</option>
+                            <option value={1} className="text-white bg-[#0a183d]">Year 1</option>
+                            <option value={2} className="text-white bg-[#0a183d]">Year 2</option>
+                            <option value={3} className="text-white bg-[#0a183d]">Year 3</option>
+                            <option value={4} className="text-white bg-[#0a183d]">Year 4</option>
                           </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Semester</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Semester</label>
                         <div className="relative">
                           <select
                             value={formData.semester}
                             onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-bold text-xs text-gray-800 cursor-pointer shadow-2xs"
+                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-bold text-xs text-white cursor-pointer shadow-inner"
                           >
                             {[1, 2, 3, 4, 5, 6, 7, 8]
                               .filter((s) => Math.ceil(s / 2) === formData.year)
                               .map((s) => {
                                 const sYear = Math.ceil(s / 2)
                                 return (
-                                  <option key={s} value={s} className="text-gray-800 bg-white">
+                                  <option key={s} value={s} className="text-white bg-[#0a183d]">
                                     Semester {s} (Year {sYear} {s % 2 === 1 ? 'Odd' : 'Even'})
                                   </option>
                                 )
                               })}
                           </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                         </div>
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Section</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Section</label>
                         <div className="relative">
                           <select
                             value={formData.section}
                             onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-bold text-xs text-gray-800 cursor-pointer shadow-2xs"
+                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-bold text-xs text-white cursor-pointer shadow-inner"
                           >
-                            <option value="A" className="text-gray-800 bg-white">Section A</option>
-                            <option value="B" className="text-gray-800 bg-white">Section B</option>
-                            <option value="C" className="text-gray-800 bg-white">Section C</option>
-                            <option value="D" className="text-gray-800 bg-white">Section D</option>
+                            <option value="A" className="text-white bg-[#0a183d]">Section A</option>
+                            <option value="B" className="text-white bg-[#0a183d]">Section B</option>
+                            <option value="C" className="text-white bg-[#0a183d]">Section C</option>
+                            <option value="D" className="text-white bg-[#0a183d]">Section D</option>
                           </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-gray-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Assigned Faculty Advisor</label>
+                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Assigned Faculty Advisor</label>
                       <input
                         type="text"
                         value={formData.advisor}
                         onChange={(e) => setFormData({ ...formData, advisor: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                         placeholder="Dr. S. Karthik (Professor)"
                       />
                     </div>
@@ -1460,23 +1460,23 @@ export function StudentProfileView({
                   <div className="space-y-4 animate-fade-in">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Academic CGPA</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Academic CGPA</label>
                         <input
                           type="text"
                           value={formData.cgpa}
                           onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#F4C430] bg-[#071A3D]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/40 focus:outline-none focus:border-amber-400 font-black text-[#F4C430] bg-[#020614] text-sm tracking-wider shadow-inner"
                           placeholder="8.84 / 10.0"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">CGPA Class / Standing</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">CGPA Class / Standing</label>
                         <input
                           type="text"
                           value={formData.cgpaClass}
                           onChange={(e) => setFormData({ ...formData, cgpaClass: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                           placeholder="First Class with Distinction"
                         />
                       </div>
@@ -1484,23 +1484,23 @@ export function StudentProfileView({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Attendance Record</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Attendance Record</label>
                         <input
                           type="text"
                           value={formData.attendance}
                           onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-bold text-green-700"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/40 focus:outline-none focus:border-emerald-400 font-bold text-emerald-400 bg-[#020614] shadow-inner"
                           placeholder="92.5%"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Attendance Remark</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Attendance Remark</label>
                         <input
                           type="text"
                           value={formData.attendanceRemark}
                           onChange={(e) => setFormData({ ...formData, attendanceRemark: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                           placeholder="Compliant (>75% Req)"
                         />
                       </div>
@@ -1508,23 +1508,23 @@ export function StudentProfileView({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Department Rank</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Department Rank</label>
                         <input
                           type="text"
                           value={formData.rank}
                           onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-bold text-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-cyan-500/40 focus:outline-none focus:border-cyan-400 font-bold text-cyan-300 bg-[#020614] shadow-inner"
                           placeholder="Rank 4 / 68"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Rank Remark / Standing</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Rank Remark / Standing</label>
                         <input
                           type="text"
                           value={formData.rankRemark}
                           onChange={(e) => setFormData({ ...formData, rankRemark: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                           placeholder="Top 6% in Batch"
                         />
                       </div>
@@ -1532,35 +1532,35 @@ export function StudentProfileView({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Arrear Status</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Arrear Status</label>
                         <input
                           type="text"
                           value={formData.arrears}
                           onChange={(e) => setFormData({ ...formData, arrears: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9] font-bold text-emerald-600"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/40 focus:outline-none focus:border-emerald-400 font-bold text-emerald-400 bg-[#020614] shadow-inner"
                           placeholder="0 Arrears"
                         />
                       </div>
 
                       <div>
-                        <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Arrear Status Remark</label>
+                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Arrear Status Remark</label>
                         <input
                           type="text"
                           value={formData.arrearRemark}
                           onChange={(e) => setFormData({ ...formData, arrearRemark: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                           placeholder="All Semesters Cleared"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#071A3D] text-[11px] mb-1">Official Enrollment Status Badge</label>
+                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Official Enrollment Status Badge</label>
                       <input
                         type="text"
                         value={formData.enrollmentStatus}
                         onChange={(e) => setFormData({ ...formData, enrollmentStatus: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:outline-none focus:border-[#1455D9]"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
                         placeholder="Enrolled & Active"
                       />
                     </div>
@@ -1569,24 +1569,24 @@ export function StudentProfileView({
               </div>
 
               {/* MODAL FOOTER (Pinned / Non-scrolling at bottom) */}
-              <div className="px-5 sm:px-6 py-3.5 sm:py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0 rounded-b-3xl">
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 min-w-0">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="truncate hidden sm:inline">Changes save immediately to your profile</span>
+              <div className="px-5 sm:px-6 py-3.5 sm:py-4 bg-[#050f24] border-t border-white/10 flex items-center justify-between gap-3 shrink-0 rounded-b-3xl">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 min-w-0">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="truncate hidden sm:inline">Changes save immediately to official registry</span>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
                     onClick={() => setIsEditOpen(false)}
-                    className="px-4 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 font-semibold cursor-pointer text-xs transition-colors"
+                    className="px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 font-semibold cursor-pointer text-xs transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1455D9] to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold cursor-pointer shadow-md shadow-blue-500/20 flex items-center gap-2 text-xs transition-all active:scale-98 disabled:opacity-50"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#1455D9] via-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold cursor-pointer shadow-lg shadow-blue-500/30 flex items-center gap-2 text-xs transition-all active:scale-98 border border-blue-400/30 disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" /> {loading ? 'Saving...' : 'Save Profile Changes'}
                   </button>

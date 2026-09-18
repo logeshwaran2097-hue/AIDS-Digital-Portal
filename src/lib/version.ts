@@ -3,12 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.2'
+export const APP_VERSION = '2.7.3'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-18'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Ultra-Luxury Royal Sapphire Modal Design: Transformed profile management interface into an executive dark glassmorphic console with midnight navy gradients, cyan chronometer highlights, and metallic sapphire accents.',
   'Hostel Allocation Standardization: Refined residency options to 3 Boys Hostel blocks (I, II, III) and 3 Girls Hostel blocks (I, II, III) with clean labels, removing deprecated block names.',
   'Edit Student Profile Modernization: Redesigned modal with pinned sticky footer, custom select dropdown styling, and sleek segmented tab navigation.',
   'PWA & Version Sync Engine: Resolved recurring update loop and preserved active user sessions upon portal updates.',
