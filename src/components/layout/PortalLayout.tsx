@@ -964,19 +964,19 @@ export function PortalLayout({
     window.location.href = '/login'
   }
 
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(true)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('portal_theme')
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      const shouldDark = savedTheme === 'dark' || (!savedTheme && document.documentElement.classList.contains('dark'))
+      const savedTheme = localStorage.getItem('portal_theme') || localStorage.getItem('vsb-portal-theme')
+      // Default to luxury midnight dark mode unless user explicitly selected 'light'
+      const shouldDark = savedTheme !== 'light'
       if (shouldDark) {
         setIsDarkMode(true)
-        document.documentElement.classList.add('dark')
+        document.documentElement.classList.add('midnight', 'dark')
       } else {
         setIsDarkMode(false)
-        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.remove('midnight', 'dark')
       }
     }
   }, [])
@@ -985,11 +985,13 @@ export function PortalLayout({
     const nextDark = !isDarkMode
     setIsDarkMode(nextDark)
     if (nextDark) {
-      document.documentElement.classList.add('dark')
+      document.documentElement.classList.add('midnight', 'dark')
       localStorage.setItem('portal_theme', 'dark')
+      localStorage.setItem('vsb-portal-theme', 'midnight')
     } else {
-      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.remove('midnight', 'dark')
       localStorage.setItem('portal_theme', 'light')
+      localStorage.setItem('vsb-portal-theme', 'light')
     }
   }
 
@@ -1384,7 +1386,7 @@ export function PortalLayout({
             </div>
           </div>
         )}
-        <div className="portal-top-header flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="portal-top-header w-full max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Hamburger Menu & Brand on Mobile */}
           <div className="flex items-center gap-3">
             <button

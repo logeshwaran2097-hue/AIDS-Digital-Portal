@@ -6,7 +6,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const applySettings = () => {
     try {
       const cachedConfig = localStorage.getItem('vsb-portal-config')
-      let theme = localStorage.getItem('vsb-portal-theme') || 'light'
+      let theme = localStorage.getItem('vsb-portal-theme') || localStorage.getItem('portal_theme') || 'midnight'
       let accent = '#1455D9'
 
       if (cachedConfig) {
@@ -17,8 +17,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      // Apply Theme Mode
-      if (theme === 'dark' || theme === 'midnight') {
+      // Apply Theme Mode (Default to Luxury Midnight Sapphire)
+      if (theme !== 'light') {
         document.documentElement.classList.add('midnight', 'dark')
       } else {
         document.documentElement.classList.remove('midnight', 'dark')

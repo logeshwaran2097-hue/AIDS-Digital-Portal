@@ -3,12 +3,14 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.4'
+export const APP_VERSION = '2.7.5'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-18'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Default Midnight Luxury & Obsidian Theme: Portal boots seamlessly in deep royal midnight sapphire aesthetic, preventing bright canvas flashes.',
+  'Harmonized Widescreen Layouts: Full responsive expansion across widescreen monitors, eliminating narrow column clipping in student attendance and profile registers.',
   'Ultra-Luxury Royal Sapphire Menus Across All Roles: Complete UI/UX redesign of portal navigation sidebars, drawer panels, headers, and mobile docks for Student, Faculty, HOD, and Administrator portals.',
   'Executive Obsidian Glass Sidebar: Deep midnight navy gradients with ambient radial lighting meshes, gold-foil bezel emblem, and live connectivity indicators.',
   'Tactile Nav Items & Jewel Badges: High-contrast royal sapphire active pills with illuminated cyan/gold edge markers, squircle icon badges, and glowing jewel notification counters.',

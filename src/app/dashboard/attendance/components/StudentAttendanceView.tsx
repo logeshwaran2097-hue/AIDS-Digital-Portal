@@ -279,7 +279,7 @@ export function StudentAttendanceView({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+    <div className="space-y-6 animate-fade-in w-full">
       {/* Header Banner */}
       <div className="lux-sapphire-card relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white border border-[#D4AF37]/30 shadow-lux-sapphire flex flex-col sm:flex-row sm:items-center justify-between gap-5">
         <div className="absolute -right-16 -top-16 w-64 h-64 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
