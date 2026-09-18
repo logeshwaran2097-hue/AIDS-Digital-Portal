@@ -3,19 +3,17 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.9'
+export const APP_VERSION = '2.8.0'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-18'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'Ultra-Luxury Royal Sapphire & Imperial Gold UI/UX Elevation: Complete executive redesign of student attendance, KPI chronometers, institutional ledger tracker, and portal header.',
-  'Jewelry-Grade KPI Complication Cards: Cyan, amber, emerald, and ruby radiance glass cards with glowing metric typography, illuminated bezels, and 3D metallic icon medallions.',
-  'Executive Institutional OD & Leave Ledger Plaque: Multi-dimensional sapphire-gold frosted plaque with watermarked emblem, 3-step clearance progress indicator, and gold foil action buttons.',
-  'Course-Wise Curriculum Matrix Table: High-definition glass registers with glowing course capsules, live percentage progress rails, and academic standing capsules.',
-  'Deep Cosmic Ambient Canvas: Royal midnight gradient canvas with multi-layered celestial auroras, eliminating flat dark boxes and creating deep luxury contrast.',
-  'Luminous Portal Header & Action Bevels: High-contrast frosted header with gold-trimmed profile capsule, illuminated version button, and responsive navigation controls.',
-  'Login Page UI/UX Pristine Preservation: Maintained original clean light aesthetic with authentic celestial circular emblem logo.',
+  'Portal Pages Ultra-Luxury Redesign: Complete elevation of student dashboard, chronometer cards, quick access tiles, upcoming events, and announcements with deep sapphire glass and gold foil styling.',
+  'Systemic UI Component Dark Mode Fix: Eliminated bright white cutouts across all pages by upgrading core Card, Badge, and Table components with native dark mode luxury glass.',
+  'High-Performance GPU Hardware Acceleration: Added 60/120fps GPU compositing and optimized backdrop blurs for lightning-fast page loading and silky-smooth scrolling.',
+  'Jewelry-Grade Chronometers & 3D Nav Tiles: Luminous cyan, amber, emerald, and ruby komplikation cards with glowing drop shadows and micro-interactive gold buttons.',
+  'Curriculum Matrix Status Plaque: Replaced empty dark boxes with executive academic roll plaques and real-time biometric ledger integration.',
 ]
 
 

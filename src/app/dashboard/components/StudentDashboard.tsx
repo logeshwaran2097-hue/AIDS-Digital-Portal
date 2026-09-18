@@ -317,12 +317,12 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               href="/dashboard/attendance"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-white/15 to-white/10 hover:from-white/25 hover:to-white/15 border border-white/25 backdrop-blur-md text-xs font-bold text-white flex items-center gap-2 transition-all shadow-lg hover:shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98]"
+              className="lux-button-gold px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
-              <CalendarDays className="w-4 h-4 text-[#F3E5AB]" />
+              <CalendarDays className="w-4 h-4 text-[#071328]" />
               <span>Full Attendance Dossier</span>
             </Link>
           </div>
@@ -331,21 +331,19 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
 
       {/* Live Attendance Health & Chronometer Overview */}
       <section aria-label="Attendance Overview">
-        <div className="lux-glass-card rounded-3xl p-6 sm:p-7 border border-slate-200/80 dark:border-white/10 shadow-xl space-y-6">
+        <div className="lux-glass-card rounded-3xl p-6 sm:p-7 border border-[#D4AF37]/25 dark:border-white/15 shadow-xl space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-200/70 dark:border-white/10">
             <div>
               <div className="flex items-center gap-2">
-                <span className={cn(
-                  "px-3 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider",
-                  att.totalSessions > 0 ? "lux-badge-emerald" : "lux-badge-sapphire"
-                )}>
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-cyan-300 border border-blue-400/30 text-[10px] font-mono font-bold uppercase tracking-wider shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   {att.totalSessions > 0 ? "Biometric Ledger Verified" : "Enrolled Academic Term"}
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">· Semester {data.student.semester} Compliance</span>
               </div>
-              <h2 className="text-xl font-black text-[#071A3D] dark:text-white mt-1.5 flex items-center gap-2.5 tracking-tight">
-                <div className="p-2 rounded-xl bg-gradient-to-tr from-[#1E66E8] to-[#1455D9] text-white shadow-md">
-                  <CalendarDays className="w-5 h-5" />
+              <h2 className="text-xl font-black text-[#071A3D] dark:text-white mt-2 flex items-center gap-2.5 tracking-tight">
+                <div className="p-2 rounded-2xl bg-gradient-to-tr from-[#1748A8] to-[#1455D9] text-white shadow-[0_0_15px_rgba(20,85,217,0.4)] border border-cyan-400/30">
+                  <CalendarDays className="w-5 h-5 text-[#FDE68A]" />
                 </div>
                 <span>Attendance &amp; Academic Health Chronometer</span>
               </h2>
@@ -356,60 +354,99 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 <span className={cn(
                   "px-3.5 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 border shadow-xs transition-all",
                   isEligible
-                    ? "bg-emerald-50/90 text-emerald-800 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                    : "bg-rose-50/90 text-rose-800 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-400/30"
+                    : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-400/30"
                 )}>
-                  {isEligible ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-rose-600" />}
+                  {isEligible ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertTriangle className="w-4 h-4 text-rose-400" />}
                   {isEligible ? "Executive Exam Eligible (>75% Norm)" : "Attendance Condonation Alert (<75%)"}
                 </span>
               ) : (
-                <span className="px-3.5 py-1.5 bg-blue-50/90 text-blue-800 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-xs">
-                  <Sparkles className="w-4 h-4 text-blue-600" />
+                <span className="px-3.5 py-1.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 text-cyan-300 border border-cyan-400/30 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+                  <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
                   <span>Active Term Ingestion</span>
                 </span>
               )}
             </div>
           </div>
 
-          {/* Metric Cards Row - Chronometer Inspired */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-[#0B1E48]/5 via-[#1E66E8]/10 to-transparent border border-blue-200/80 dark:border-blue-500/20 flex items-center justify-between shadow-xs">
-              <div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Cumulative Total</p>
-                <p className="text-3xl font-black text-[#1455D9] dark:text-[#38BDF8] mt-1 font-mono tracking-tight">{att.percentage.toFixed(1)}%</p>
-                <p className="text-[11px] text-blue-700 dark:text-blue-300 font-semibold mt-0.5">
+          {/* Metric Cards Row - Jewelry Chronometer Complications */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {/* Cumulative Total */}
+            <div className="lux-kpi-cyan lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22C7E8] animate-ping" />
+                  <p className="text-[10px] text-cyan-200/80 font-black uppercase tracking-widest">Cumulative Total</p>
+                </div>
+                <p className="text-3xl sm:text-4xl font-black text-white dark:text-cyan-300 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(34,197,232,0.4)]">
+                  {att.percentage.toFixed(1)}%
+                </p>
+                <p className="text-[11px] text-cyan-300/80 font-semibold pt-0.5">
                   {att.totalSessions > 0 ? (att.percentage >= 75 ? `Safe Margin (+${(att.percentage - 75).toFixed(1)}%)` : `Shortage (${(75 - att.percentage).toFixed(1)}%)`) : 'Zero Sessions'}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#0E3A94] to-[#1E66E8] text-white flex items-center justify-center font-black shadow-lg shadow-blue-500/20">
-                <Percent className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1748A8] to-[#1455D9] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(20,85,217,0.5)] border border-cyan-400/40 shrink-0">
+                <Percent className="w-5 h-5 text-[#FDE68A]" />
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-emerald-50/70 to-emerald-100/30 dark:from-emerald-950/20 dark:to-transparent border border-emerald-200/80 dark:border-emerald-700/30 shadow-xs">
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Working Sessions</p>
-              <p className="text-3xl font-black text-emerald-700 dark:text-emerald-400 mt-1 font-mono tracking-tight">{att.totalSessions}</p>
-              <p className="text-[11px] text-emerald-800 dark:text-emerald-300 font-semibold mt-0.5">{att.totalSessions > 0 ? 'Total Institutional Days' : 'Term Started'}</p>
+            {/* Working Sessions */}
+            <div className="lux-kpi-amber lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#F59E0B]" />
+                  <p className="text-[10px] text-amber-200/80 font-black uppercase tracking-widest">Working Sessions</p>
+                </div>
+                <p className="text-3xl sm:text-4xl font-black text-white dark:text-amber-200 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                  {att.totalSessions} <span className="text-sm font-sans text-amber-300/70 font-bold">Hrs</span>
+                </p>
+                <p className="text-[11px] text-amber-300/80 font-semibold pt-0.5">{att.totalSessions > 0 ? 'Total Academic Days' : 'Term Started'}</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#78350F] to-[#D97706] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(217,119,6,0.4)] border border-amber-400/40 shrink-0">
+                <Clock className="w-5 h-5 text-[#FFF0B8]" />
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-cyan-50/70 to-cyan-100/30 dark:from-cyan-950/20 dark:to-transparent border border-cyan-200/80 dark:border-cyan-700/30 shadow-xs">
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Present &amp; OD</p>
-              <p className="text-3xl font-black text-[#0284C7] dark:text-cyan-300 mt-1 font-mono tracking-tight">{att.presentSessions}</p>
-              <p className="text-[11px] text-cyan-800 dark:text-cyan-400 font-semibold mt-0.5">{att.odSessions > 0 ? `+ ${att.odSessions} Authorized OD` : 'Attended Sessions'}</p>
+            {/* Present & OD */}
+            <div className="lux-kpi-emerald lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />
+                  <p className="text-[10px] text-emerald-200/80 font-black uppercase tracking-widest">Present &amp; OD</p>
+                </div>
+                <p className="text-3xl sm:text-4xl font-black text-white dark:text-emerald-300 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]">
+                  {att.presentSessions} <span className="text-sm font-sans text-emerald-300/70 font-bold">Hrs</span>
+                </p>
+                <p className="text-[11px] text-emerald-300/90 font-semibold pt-0.5">{att.odSessions > 0 ? `+ ${att.odSessions} Authorized OD` : 'Attended Sessions'}</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#064E3B] to-[#059669] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(5,150,105,0.4)] border border-emerald-400/40 shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-[#A7F3D0]" />
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-rose-50/70 to-rose-100/30 dark:from-rose-950/20 dark:to-transparent border border-rose-200/80 dark:border-rose-700/30 shadow-xs">
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Absences</p>
-              <p className="text-3xl font-black text-rose-600 dark:text-rose-400 mt-1 font-mono tracking-tight">{att.absentSessions}</p>
-              <p className="text-[11px] text-rose-700 dark:text-rose-300 font-semibold mt-0.5">{att.totalSessions > 0 ? 'Logged Absences' : 'Perfect Record'}</p>
+            {/* Absences */}
+            <div className="lux-kpi-rose lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_#FB7185]" />
+                  <p className="text-[10px] text-rose-200/80 font-black uppercase tracking-widest">Absences</p>
+                </div>
+                <p className="text-3xl sm:text-4xl font-black text-white dark:text-rose-300 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(251,113,133,0.4)]">
+                  {att.absentSessions} <span className="text-sm font-sans text-rose-300/70 font-bold">Hrs</span>
+                </p>
+                <p className="text-[11px] text-rose-300/90 font-semibold pt-0.5">{att.totalSessions > 0 ? 'Logged Absences' : 'Perfect Record'}</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#881337] to-[#E11D48] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(225,29,72,0.4)] border border-rose-400/40 shrink-0">
+                <AlertTriangle className="w-5 h-5 text-[#FECDD3]" />
+              </div>
             </div>
           </div>
 
           {/* Subject-Wise Attendance Progress */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">Curriculum Matrix Progress:</p>
-              <Link href="/dashboard/attendance" className="text-xs text-[#1455D9] dark:text-blue-400 font-bold hover:underline flex items-center gap-1">
+              <p className="text-xs font-black text-slate-600 dark:text-cyan-300 uppercase tracking-wider">Curriculum Matrix Progress:</p>
+              <Link href="/dashboard/attendance" className="text-xs text-[#1455D9] dark:text-cyan-300 font-bold hover:underline flex items-center gap-1">
                 <span>View Complete Breakdown</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -421,9 +458,9 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                   const percent = sub.percent
                   const isSafe = sub.conducted === 0 || percent >= 75
                   return (
-                    <div key={sub.code} className="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/10 space-y-2.5 hover:shadow-md transition-all">
+                    <div key={sub.code} className="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/10 space-y-2.5 hover:shadow-lg dark:hover:border-cyan-400/30 transition-all">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-[#1455D9] dark:text-blue-300 px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 border border-blue-200/60 dark:border-blue-800">
+                        <span className="font-mono text-xs font-black text-[#1455D9] dark:text-cyan-300 px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-800">
                           {sub.code}
                         </span>
                         <span className={cn('text-xs font-black font-mono', isSafe ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')}>
@@ -431,7 +468,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                         </span>
                       </div>
 
-                      <p className="text-xs font-bold text-[#071A3D] dark:text-slate-200 line-clamp-1">{sub.name}</p>
+                      <p className="text-xs font-bold text-[#071A3D] dark:text-white line-clamp-1">{sub.name}</p>
 
                       {/* Progress Bar */}
                       <div className="space-y-1">
@@ -443,7 +480,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium font-mono">
                           <span>{sub.attended} / {sub.conducted} Periods</span>
-                          <span className={isSafe ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
+                          <span className={isSafe ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-rose-600 dark:text-rose-400 font-bold"}>
                             {sub.conducted === 0 ? 'Enrolled' : (isSafe ? '>75% Safe' : '<75% Warning')}
                           </span>
                         </div>
@@ -453,8 +490,12 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 })}
               </div>
             ) : (
-              <div className="p-6 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                No subjects registered for the current semester.
+              <div className="py-8 px-6 text-center rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-[#0A1D42]/60 to-[#051128]/80 space-y-2">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center mx-auto shadow-xs">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <p className="font-black text-sm text-[#071A3D] dark:text-white">Semester Curriculum Roll Active</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Official course periods synchronized with biometric attendance ledger.</p>
               </div>
             )}
           </div>
@@ -463,13 +504,13 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
 
       {/* Luxury Search Bar */}
       <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1455D9] transition-colors pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search subjects, notes, question papers, events, or resources..."
-          className="w-full pl-12 pr-4 py-3.5 lux-glass-card rounded-2xl border border-slate-200/90 dark:border-white/10 text-sm focus:outline-none focus:ring-4 focus:ring-[#1455D9]/20 focus:border-[#1455D9] shadow-sm placeholder:text-slate-400 transition-all text-[#071A3D] dark:text-white"
+          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white/90 dark:bg-gradient-to-r dark:from-[#0E1F46]/80 dark:to-[#081534]/90 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-400 shadow-md placeholder:text-slate-400 transition-all text-[#071A3D] dark:text-white"
         />
       </div>
 
@@ -481,10 +522,10 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
               key={item.label}
               href={item.href}
               className={cn(
-                'flex flex-col items-center justify-center p-4 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 text-[#071A3D] dark:text-white hover:shadow-xl transition-all duration-300 group text-center space-y-2 lux-specular-sweep hover:-translate-y-1'
+                'flex flex-col items-center justify-center p-4 rounded-3xl bg-gradient-to-b from-white/95 to-slate-50/90 dark:from-[#0E2048]/75 dark:via-[#091636]/85 dark:to-[#040D22]/98 border border-slate-200/80 dark:border-white/10 hover:border-cyan-400/40 dark:hover:border-cyan-400/50 text-[#071A3D] dark:text-white shadow-md hover:shadow-xl dark:shadow-[0_12px_32px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_16px_40px_rgba(20,85,217,0.35)] transition-all duration-300 group text-center space-y-2.5 lux-specular-sweep hover:-translate-y-1 cursor-pointer'
               )}
             >
-              <div className={cn('p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300 border shadow-xs', item.bg)}>
+              <div className={cn('p-3 rounded-2xl transition-all group-hover:scale-110 group-hover:rotate-3 duration-300 border shadow-md', item.bg)}>
                 {item.icon}
               </div>
               <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-[#1455D9] dark:group-hover:text-cyan-300 transition-colors line-clamp-1">
@@ -500,44 +541,44 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         {/* Upcoming Events */}
         <section aria-label="Upcoming Events" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-[#1455D9]" />
+            <h2 className="text-base font-bold text-[#071A3D] dark:text-white flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-[#1455D9] dark:text-cyan-400" />
               <span>Upcoming Events</span>
             </h2>
-            <Link href="/dashboard/events" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
+            <Link href="/dashboard/events" className="text-xs font-semibold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1">
               View All <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           {liveEvents.length === 0 ? (
-            <Card className="rounded-2xl border-gray-200">
-              <CardContent className="py-10 text-center text-sm text-gray-500">
+            <Card className="rounded-3xl">
+              <CardContent className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
                 No upcoming events scheduled.
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
               {liveEvents.slice(0, 2).map((e) => (
-                <Card key={e.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
+                <Card key={e.id} className="rounded-3xl hover:shadow-xl transition-all">
                   <CardContent className="p-4 flex items-center justify-between gap-3">
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="role" className="capitalize text-[10px]">
                           {e.category}
                         </Badge>
-                        <span className="text-[11px] text-gray-400 font-medium">{formatDate(e.date)}</span>
+                        <span className="text-[11px] text-slate-400 font-medium">{formatDate(e.date)}</span>
                       </div>
-                      <h3 className="font-bold text-sm text-[#071A3D] truncate">{e.name}</h3>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <h3 className="font-bold text-sm text-[#071A3D] dark:text-white truncate">{e.name}</h3>
+                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-[#1455D9]" /> {e.time}
+                          <Clock className="w-3.5 h-3.5 text-cyan-400" /> {e.time}
                         </span>
                         <span className="flex items-center gap-1 truncate">
-                          <MapPin className="w-3.5 h-3.5 text-red-400" /> {e.venue}
+                          <MapPin className="w-3.5 h-3.5 text-rose-400" /> {e.venue}
                         </span>
                       </div>
                     </div>
-                    <div className="p-3 bg-[#1455D9]/10 text-[#1455D9] rounded-2xl shrink-0 flex flex-col items-center justify-center min-w-[52px]">
+                    <div className="p-3 bg-blue-500/15 text-cyan-300 border border-cyan-400/30 rounded-2xl shrink-0 flex flex-col items-center justify-center min-w-[52px] shadow-xs">
                       <Calendar className="w-5 h-5 mb-0.5" />
                       <span className="text-[10px] font-bold">Event</span>
                     </div>
@@ -551,39 +592,39 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         {/* Latest Announcements */}
         <section aria-label="Latest Announcements" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-[#b8860b]" />
+            <h2 className="text-base font-bold text-[#071A3D] dark:text-white flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-[#D4AF37]" />
               <span>Latest Announcements</span>
             </h2>
-            <Link href="/dashboard/announcements" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
+            <Link href="/dashboard/announcements" className="text-xs font-semibold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1">
               View All <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           {liveAnnouncements.length === 0 ? (
-            <Card className="rounded-2xl border-gray-200">
-              <CardContent className="py-10 text-center text-sm text-gray-500">
+            <Card className="rounded-3xl">
+              <CardContent className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
                 No announcements published yet.
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
               {liveAnnouncements.slice(0, 2).map((a) => (
-                <Card key={a.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
+                <Card key={a.id} className="rounded-3xl hover:shadow-xl transition-all">
                   <CardContent className="p-4 flex items-start justify-between gap-3">
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <Badge variant="info" className="capitalize text-[10px]">
                           {a.category}
                         </Badge>
-                        <span className="text-[11px] text-gray-400">{formatDate(a.createdAt)}</span>
+                        <span className="text-[11px] text-slate-400">{formatDate(a.createdAt)}</span>
                       </div>
-                      <h3 className="font-bold text-sm text-[#071A3D] truncate">{a.title}</h3>
-                      <p className="text-xs text-gray-500 line-clamp-1">{a.content}</p>
+                      <h3 className="font-bold text-sm text-[#071A3D] dark:text-white truncate">{a.title}</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{a.content}</p>
                     </div>
                     <Link
                       href="/dashboard/announcements"
-                      className="p-2 rounded-xl text-gray-400 hover:text-[#1455D9] hover:bg-[#1455D9]/10 transition-colors shrink-0"
+                      className="p-2 rounded-xl text-slate-400 hover:text-cyan-300 hover:bg-white/10 transition-colors shrink-0"
                     >
                       <ArrowRight className="w-4 h-4" />
                     </Link>
@@ -598,35 +639,35 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       {/* Recent Resources Section */}
       <section aria-label="Recent Study Resources" className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
-            <Database className="h-5 w-5 text-[#2878E8]" />
+          <h2 className="text-base font-bold text-[#071A3D] dark:text-white flex items-center gap-2">
+            <Database className="h-5 w-5 text-cyan-400" />
             <span>Recent Study Resources</span>
           </h2>
-          <Link href="/dashboard/resources" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
+          <Link href="/dashboard/resources" className="text-xs font-semibold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1">
             Browse All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
         {data.resources.length === 0 ? (
-          <Card className="rounded-2xl border-gray-200">
-            <CardContent className="py-8 text-center text-sm text-gray-500">
+          <Card className="rounded-3xl">
+            <CardContent className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
               No recent resources uploaded.
             </CardContent>
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data.resources.slice(0, 3).map((r) => (
-              <Card key={r.id} className="rounded-2xl border-gray-200 hover:shadow-md transition-all">
+              <Card key={r.id} className="rounded-3xl hover:shadow-xl transition-all">
                 <CardContent className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#071A3D] truncate">{r.name}</p>
-                    <p className="text-[11px] text-gray-400 uppercase mt-0.5">
+                    <p className="text-xs font-bold text-[#071A3D] dark:text-white truncate">{r.name}</p>
+                    <p className="text-[11px] text-slate-400 uppercase mt-0.5">
                       {r.resourceType?.replace(/_/g, ' ')} · {(r.fileSize / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
                   <Link
                     href="/dashboard/resources"
-                    className="p-2 rounded-xl bg-[#1455D9]/10 text-[#1455D9] hover:bg-[#1455D9] hover:text-white transition-all shrink-0"
+                    className="p-2.5 rounded-xl bg-blue-500/15 text-cyan-300 border border-cyan-400/30 hover:bg-cyan-500 hover:text-[#071A3D] transition-all shrink-0 shadow-xs"
                     title="Download"
                   >
                     <Download className="w-4 h-4" />
