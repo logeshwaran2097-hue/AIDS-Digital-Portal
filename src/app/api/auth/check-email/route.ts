@@ -6,7 +6,7 @@ import { validateBody, checkEmailSchema } from '@/lib/validations/apiValidation'
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 10, 60, 'auth:check-email')
+  const rateLimit = await checkRateLimit(request, 10, 60, 'auth:check-email')
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit)
   }
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 10, 60, 'auth:check-email')
+  const rateLimit = await checkRateLimit(request, 10, 60, 'auth:check-email')
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit)
   }

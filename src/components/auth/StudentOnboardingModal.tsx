@@ -367,13 +367,12 @@ export function StudentOnboardingModal({
       } else {
         const errorMsg = data.message || 'Failed to send OTP'
         toast.error(errorMsg)
-        if (errorMsg.includes('already linked') || errorMsg.includes('already registered')) {
-          setEmailCheckStatus({
-            checking: false,
-            available: false,
-            message: errorMsg,
-          })
-        }
+        // Update emailCheckStatus for any API error so the UI shows feedback
+        setEmailCheckStatus({
+          checking: false,
+          available: false,
+          message: errorMsg,
+        })
       }
     } catch {
       toast.error('Network error sending OTP. Please try again.')
@@ -1319,7 +1318,11 @@ export function StudentOnboardingModal({
                   <div className="mt-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-2 text-xs font-semibold shadow-2xs animate-in fade-in">
                     <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
                     <div className="flex-1">
-                      <p className="font-black text-rose-900 text-xs">Email Already Linked to Another Account</p>
+                      <p className="font-black text-rose-900 text-xs">
+                        {emailCheckStatus.message?.toLowerCase().includes('rate limit') || emailCheckStatus.message?.toLowerCase().includes('try again')
+                          ? 'Too Many Attempts — Please Wait'
+                          : 'Email Already Linked to Another Account'}
+                      </p>
                       <p className="text-[11px] text-rose-700 font-medium leading-snug mt-0.5">
                         {emailCheckStatus.message ||
                           `The email address ${form.email} is already linked to another account. Please use your unique personal or official email.`}
