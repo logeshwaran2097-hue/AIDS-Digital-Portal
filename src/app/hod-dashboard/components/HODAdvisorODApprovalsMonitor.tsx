@@ -127,78 +127,78 @@ export function HODAdvisorODApprovalsMonitor() {
     .slice(0, 5)
 
   return (
-    <div className="lux-glass-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xs space-y-6">
+    <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-[0_4px_25px_-4px_rgba(7,26,61,0.06)] space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight text-[#071A3D] dark:text-white">
+            <h3 className="text-lg sm:text-xl font-black tracking-tight text-[#071A3D]">
               Advisor OD Verification &amp; Student Proofs Monitoring
             </h3>
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
               Institutional Governance
             </span>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-slate-500">
             Monitor Class Advisor endorsements, verify venue GPS telemetry &amp; grant HOD executive sanctions for attendance credit.
           </p>
         </div>
 
         <Link
           href="/hod-dashboard/od-proofs"
-          className="px-4 py-2 bg-gradient-to-r from-[#0E3A94] to-[#1E66E8] hover:from-[#0a2c75] hover:to-[#1752bd] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shrink-0 self-start sm:self-auto shadow-lux-sapphire cursor-pointer active:scale-95"
+          className="px-4 py-2 bg-[#1455D9] hover:bg-[#0e44b5] text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 self-start sm:self-auto shadow-xs"
         >
           <span>Open Full OD Proofs Desk</span>
-          <ArrowRight className="w-4 h-4 text-[#D4AF37]" />
+          <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
 
       {/* Metric Tabs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-        <div className="p-4 rounded-2xl lux-glass-card lux-specular-sweep border border-amber-500/30 flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block">
               Awaiting HOD Sanction
             </span>
-            <span className="text-2xl font-black text-amber-700 dark:text-amber-300 mt-0.5 block">
+            <span className="text-2xl font-black text-amber-950 mt-0.5 block">
               {advisorApprovedCount}
             </span>
-            <span className="text-[11px] text-amber-600/80">Advisor approved &amp; ready</span>
+            <span className="text-[11px] text-amber-800">Advisor approved &amp; ready</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
             <UserCheck className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl lux-glass-card lux-specular-sweep border border-blue-500/30 flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-[#1E66E8] uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-blue-900 uppercase tracking-wider block">
               With Class Advisors
             </span>
-            <span className="text-2xl font-black text-[#1E66E8] mt-0.5 block">
+            <span className="text-2xl font-black text-[#1455D9] mt-0.5 block">
               {pendingAdvisorCount}
             </span>
-            <span className="text-[11px] text-[#1E66E8]/80">Under advisor verification</span>
+            <span className="text-[11px] text-blue-700">Under advisor verification</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[#1E66E8] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center">
             <Clock className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl lux-glass-card lux-specular-sweep border border-emerald-500/30 flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+            <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider block">
               Sanctioned &amp; Credited
             </span>
-            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-300 mt-0.5 block">
+            <span className="text-2xl font-black text-emerald-950 mt-0.5 block">
               {verifiedCount}
             </span>
-            <span className="text-[11px] text-emerald-600/80">Attendance granted</span>
+            <span className="text-[11px] text-emerald-800">Attendance granted</span>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
             <CheckCircle2 className="w-5 h-5" />
           </div>
         </div>

@@ -1063,7 +1063,7 @@ export function PortalLayout({
   }
 
   return (
-    <div className="min-h-screen lux-ambient-canvas text-[#071A3D] dark:text-slate-100 relative transition-colors duration-300">
+    <div className="min-h-screen bg-[#F8FAFD] text-[#071A3D] relative transition-colors duration-300">
       {/* Mobile Drawer Overlay */}
       {isDrawerOpen && (
         <div
@@ -1072,16 +1072,13 @@ export function PortalLayout({
           aria-hidden="true"
         />
       )}
-      {/* Slide-out Navigation Drawer / Sidebar (Executive Obsidian Crystal Panel) */}
+      {/* Slide-out Navigation Drawer / Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#030816] via-[#061226] to-[#02050E] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-white/10 shadow-[10px_0_40px_rgba(0,0,0,0.65)] pb-safe select-none backdrop-blur-2xl overflow-hidden',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#0B132B] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-slate-800 shadow-xl pb-safe select-none',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        {/* Ambient mesh background glows */}
-        <div className="absolute top-0 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-1/4 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none translate-x-1/3" />
 
         {/* Drawer Header with Official Emblem */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02] relative z-10">
@@ -1183,7 +1180,7 @@ export function PortalLayout({
         {/* Navigation Link Items */}
         <nav
           ref={navContainerRef}
-          className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 lux-sidebar-scroll relative z-10"
+          className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 custom-scrollbar relative z-10"
           aria-label="Main navigation"
         >
           {resolvedNavItems.map((item, index) => {
@@ -1337,7 +1334,7 @@ export function PortalLayout({
       </aside>
 
       {/* Main Top Header */}
-      <header className="sticky top-0 z-30 lux-glass-header lg:pl-72 shadow-[0_4px_24px_rgba(7,26,61,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] transition-all">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#08132B]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 lg:pl-72 shadow-xs transition-all">
         {/* Real-time Push Notification Permission Banner for Mobile & Desktop */}
         {pushPermission === 'default' && !isPermissionBannerDismissed && (
           <div className="bg-slate-900 text-white px-4 py-2 border-b border-slate-800 shadow-xs flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
@@ -1500,7 +1497,7 @@ export function PortalLayout({
                         </span>
                       </div>
 
-                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 p-1.5 bg-white dark:bg-[#071328] lux-sidebar-scroll">
+                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 p-1.5 bg-white dark:bg-[#071328] custom-scrollbar">
                         {menusWithNotifications.map((m) => (
                           <Link
                             key={m.href}

@@ -1,0 +1,130 @@
+const sharp = require('sharp');
+const fs = require('fs');
+const path = require('path');
+
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Soft Glow -->
+    <radialGradient id="otpGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1455D9" stop-opacity="0.18" />
+      <stop offset="80%" stop-color="#1455D9" stop-opacity="0.04" />
+      <stop offset="100%" stop-color="#1455D9" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Envelope Body Gradient (VSB Navy to Deep Sapphire) -->
+    <linearGradient id="envGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1557C0" />
+      <stop offset="45%" stop-color="#071A41" />
+      <stop offset="100%" stop-color="#030C1D" />
+    </linearGradient>
+
+    <!-- Golden Shield Gradient -->
+    <linearGradient id="goldShield" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF08A" />
+      <stop offset="30%" stop-color="#FACC15" />
+      <stop offset="70%" stop-color="#EAB308" />
+      <stop offset="100%" stop-color="#CA8A04" />
+    </linearGradient>
+
+    <!-- Cyan Electric Arrow Gradient -->
+    <linearGradient id="cyanArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.2" />
+      <stop offset="50%" stop-color="#22D3EE" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+
+    <!-- Drop Shadow Filter -->
+    <filter id="envelopeShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#071A41" flood-opacity="0.3" />
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#071A41" flood-opacity="0.2" />
+    </filter>
+
+    <!-- Shield Glow Filter -->
+    <filter id="goldShieldGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="#EAB308" flood-opacity="0.6" />
+    </filter>
+
+    <!-- Cyan Sparkle Filter -->
+    <filter id="cyanGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#22D3EE" flood-opacity="0.8" />
+    </filter>
+  </defs>
+
+  <!-- Ambient Blue Halo -->
+  <circle cx="256" cy="256" r="236" fill="url(#otpGlow)" />
+
+  <!-- Security OTP Pin Indicator Dots -->
+  <g id="otpDots">
+    <circle cx="150" cy="116" r="13" fill="#1455D9" />
+    <circle cx="192" cy="116" r="13" fill="#1D4ED8" />
+    <circle cx="234" cy="116" r="13" fill="#2563EB" />
+    <circle cx="278" cy="116" r="13" fill="#06B6D4" />
+    <circle cx="320" cy="116" r="13" fill="#22D3EE" />
+    <circle cx="362" cy="116" r="13" fill="#EAB308" />
+  </g>
+
+  <!-- High-Tech Twinkle Stars -->
+  <path d="M100 155 Q108 155 108 147 Q108 155 116 155 Q108 155 108 163 Q108 155 100 155 Z" fill="#06B6D4" />
+  <path d="M400 165 Q409 165 409 156 Q409 165 418 165 Q409 165 409 174 Q409 165 400 165 Z" fill="#FACC15" />
+  <path d="M75 340 Q83 340 83 332 Q83 340 91 340 Q83 340 83 348 Q83 340 75 340 Z" fill="#38BDF8" />
+  <path d="M420 330 Q428 330 428 322 Q428 330 436 330 Q428 330 428 338 Q428 330 420 330 Z" fill="#FACC15" />
+
+  <!-- Main Security Envelope -->
+  <g filter="url(#envelopeShadow)">
+    <!-- Envelope Body -->
+    <rect x="86" y="174" width="310" height="206" rx="26" fill="url(#envGrad)" stroke="#2563EB" stroke-width="3" />
+
+    <!-- Interior Fold Seams -->
+    <path d="M88 190 L238 296 C248 302 258 302 268 296 L418 190" fill="none" stroke="#38BDF8" stroke-width="4.5" stroke-linecap="round" opacity="0.9" />
+    <path d="M88 368 L212 274" fill="none" stroke="#1D4ED8" stroke-width="3.5" stroke-linecap="round" opacity="0.6" />
+    <path d="M418 368 L294 274" fill="none" stroke="#1D4ED8" stroke-width="3.5" stroke-linecap="round" opacity="0.6" />
+
+    <!-- Top Flap Contour Highlight -->
+    <path d="M102 178 L244 86 C251 81 261 81 268 86 L410 178" fill="none" stroke="#93C5FD" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+  </g>
+
+  <!-- 2-Factor Authentication Golden Shield Badge -->
+  <g filter="url(#goldShieldGlow)">
+    <!-- Shield -->
+    <path d="M256 216 L312 235 C312 286 286 332 256 348 C226 332 200 286 200 235 Z" fill="url(#goldShield)" stroke="#FFFFFF" stroke-width="3.5" />
+    
+    <!-- Shield Rim Detail -->
+    <path d="M256 225 L302 241 C302 282 280 320 256 335 C232 320 210 282 210 241 Z" fill="none" stroke="#FEF08A" stroke-width="1.5" opacity="0.75" />
+
+    <!-- Padlock Shackle -->
+    <path d="M244 268 V256 C244 249.5 249.5 244 256 244 C262.5 244 268 249.5 268 256 V268" fill="none" stroke="#071A41" stroke-width="4.5" stroke-linecap="round" />
+
+    <!-- Padlock Body -->
+    <rect x="238" y="266" width="36" height="30" rx="7" fill="#071A41" stroke="#FACC15" stroke-width="1" />
+
+    <!-- Padlock Keyhole -->
+    <circle cx="256" cy="278" r="3.5" fill="#FACC15" />
+    <path d="M254.5 280 L254 289 H258 L257.5 280 Z" fill="#FACC15" />
+  </g>
+
+  <!-- Speedy OTP Flight Arrow & Laser Tail -->
+  <g transform="translate(356, 236)" filter="url(#cyanGlow)">
+    <!-- Motion Speed Lines -->
+    <path d="M0 32 C32 32 64 22 96 0 C64 16 32 20 0 20 Z" fill="url(#cyanArrow)" opacity="0.85" />
+    <!-- Glowing Arrow Head -->
+    <path d="M52 0 L96 20 L52 40 L68 20 Z" fill="#22D3EE" />
+    <circle cx="94" cy="20" r="3.5" fill="#FFFFFF" />
+  </g>
+</svg>`;
+
+async function main() {
+  const publicDir = path.join(__dirname, '..', 'public');
+  
+  // Write the clean SVG
+  fs.writeFileSync(path.join(publicDir, 'email-otp-icon.svg'), svg, 'utf8');
+  console.log('Wrote public/email-otp-icon.svg');
+
+  // Convert to high-resolution truly transparent PNG
+  await sharp(Buffer.from(svg))
+    .resize(512, 512)
+    .png({ compressionLevel: 9 })
+    .toFile(path.join(publicDir, 'email-otp-icon.png'));
+  console.log('Wrote clean transparent public/email-otp-icon.png');
+}
+
+main().catch(console.error);

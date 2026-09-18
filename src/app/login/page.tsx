@@ -275,24 +275,13 @@ export default function LoginPage() {
   const [correctionSubmitting, setCorrectionSubmitting] = React.useState(false)
   const [correctionSubmitted, setCorrectionSubmitted] = React.useState(false)
 
-  // Deterministic 1-by-1 Staged Appearance Controller
-  const [animStage, setAnimStage] = React.useState(0)
+  // Instant Responsive Stage Controller (Default 9 for instant interactive readiness)
+  const [animStage, setAnimStage] = React.useState(9)
   const router = useRouter()
 
   React.useEffect(() => {
-    // High-speed progressive staged entrance timers (ultra-snappy 300ms total sequence)
-    const timers = [
-      setTimeout(() => setAnimStage(1), 25),  // Stage 1: Accreditation Shield
-      setTimeout(() => setAnimStage(2), 55),  // Stage 2: Picture & Celestial Emblem
-      setTimeout(() => setAnimStage(3), 85),  // Stage 3: College Name
-      setTimeout(() => setAnimStage(4), 115), // Stage 4: Autonomous Karur Tag
-      setTimeout(() => setAnimStage(5), 145), // Stage 5: Golden Light Beam
-      setTimeout(() => setAnimStage(6), 175), // Stage 6: Department Name
-      setTimeout(() => setAnimStage(7), 210), // Stage 7: Digital Portal CPU Badge
-      setTimeout(() => setAnimStage(8), 250), // Stage 8: Luxury Login Card
-      setTimeout(() => setAnimStage(9), 290), // Stage 9: Motto & Footer
-    ]
-    return () => timers.forEach(clearTimeout)
+    // Ensure all stages are fully active with zero delay
+    setAnimStage(9)
   }, [])
 
   React.useEffect(() => {
@@ -947,13 +936,13 @@ export default function LoginPage() {
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
       >
         <div className="flex flex-col items-center text-center space-y-4 max-w-sm relative z-10 animate-in fade-in zoom-in-95 duration-300">
-          <div className="w-20 h-20 rounded-2xl bg-white/10 p-2 shadow-2xl border border-amber-400/40 flex items-center justify-center animate-pulse">
+          <div className="w-24 h-24 rounded-3xl bg-white/10 p-2.5 shadow-2xl border border-amber-400/50 flex items-center justify-center backdrop-blur-md">
             <Image
               src="/college-emblem.png"
-              alt="VSB Portal"
-              width={64}
-              height={64}
-              className="object-contain drop-shadow-md"
+              alt="V.S.B. Engineering College Emblem"
+              width={84}
+              height={84}
+              className="w-full h-full object-contain drop-shadow-md transform hover:scale-105 transition-transform"
               priority
             />
           </div>
@@ -1065,32 +1054,32 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (PICTURE LOGO) */}
+        {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (VSB OFFICIAL LOGO) */}
         <div className={cn(
-          "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-300 ease-out transform",
+          "relative flex items-center justify-center h-28 sm:h-32 my-1 anim-medallion-levitate transition-all duration-300 ease-out transform",
           animStage >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"
         )}>
           {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
           <div 
-            className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-dashed border-[#06B6D4]/50 shadow-[0_0_12px_rgba(6,182,212,0.3)] animate-spin" 
-            style={{ animationDuration: '14s' }} 
+            className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-dashed border-[#06B6D4]/50 shadow-[0_0_15px_rgba(6,182,212,0.35)] animate-spin" 
+            style={{ animationDuration: '16s', willChange: 'transform' }} 
           />
 
           {/* Layer 2: Middle Sapphire-Cyan Glass Orbit Halo */}
-          <div className="absolute w-20 h-20 sm:w-23 sm:h-23 rounded-full border-[1.2px] border-[#1557C0]/30 bg-gradient-to-tr from-cyan-100/30 via-blue-100/15 to-amber-100/25 shadow-[0_0_15px_rgba(21,87,192,0.18)] anim-solar-corona" />
+          <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border-[1.5px] border-[#1557C0]/30 bg-gradient-to-tr from-cyan-100/30 via-blue-100/15 to-amber-100/25 shadow-[0_0_20px_rgba(21,87,192,0.22)] anim-solar-corona" />
           
           {/* Layer 1: Inner Circular Gold Medallion with Specular Sheen */}
-          <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_10px_25px_rgba(7,26,65,0.2),0_0_18px_rgba(231,185,62,0.45)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-300">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_12px_30px_rgba(7,26,65,0.22),0_0_22px_rgba(231,185,62,0.5)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-300 group">
             {/* Specular Liquid Gold Sweep */}
             <div className="anim-gold-sheen" />
 
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1 shadow-inner overflow-hidden relative z-10">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-inner overflow-hidden relative z-10">
               <Image
                 src="/college-emblem.png"
-                alt="V.S.B. Engineering College Logo"
-                width={72}
-                height={72}
-                className="w-full h-full object-contain drop-shadow-xs"
+                alt="V.S.B. Engineering College Official Logo"
+                width={96}
+                height={96}
+                className="w-full h-full object-contain drop-shadow-xs transform group-hover:scale-105 transition-transform duration-300"
                 style={{ imageRendering: '-webkit-optimize-contrast' }}
                 priority
               />
@@ -1098,8 +1087,8 @@ export default function LoginPage() {
           </div>
 
           {/* Sparkling Diamond Glint at Top-Right */}
-          <div className="absolute top-1 right-1/2 translate-x-8 sm:translate-x-9 -translate-y-1 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
-            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] drop-shadow-[0_0_6px_rgba(231,185,62,0.9)]" />
+          <div className="absolute top-1 right-1/2 translate-x-10 sm:translate-x-12 -translate-y-1 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E7B93E] drop-shadow-[0_0_8px_rgba(231,185,62,0.95)]" />
           </div>
         </div>
 
@@ -1695,10 +1684,13 @@ export default function LoginPage() {
                     {/* Official Email OTP Dispatched Card */}
                     <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50/90 to-indigo-50/80 border border-blue-200/90 flex items-center gap-3 shadow-xs">
                       <div className="w-10 h-10 rounded-xl bg-white p-1 border border-blue-200 shadow-sm flex items-center justify-center shrink-0">
-                        <img
+                        <Image
                           src="/email-otp-icon.png"
-                          alt="Email OTP"
+                          alt="Security Email OTP Dispatched"
+                          width={40}
+                          height={40}
                           className="w-full h-full object-contain"
+                          priority
                         />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -2502,7 +2494,13 @@ export default function LoginPage() {
                   <div className="flex items-center justify-between pb-2 border-b border-blue-200">
                     <span className="font-black text-[#071A41] flex items-center gap-2.5 text-xs">
                       <div className="w-8 h-8 rounded-lg bg-white p-1 border border-blue-200 shadow-xs flex items-center justify-center shrink-0">
-                        <img src="/email-otp-icon.png" alt="Email OTP" className="w-full h-full object-contain" />
+                        <Image
+                          src="/email-otp-icon.png"
+                          alt="Email OTP Verification"
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                       <span>Verify Student Email via OTP *</span>
                     </span>

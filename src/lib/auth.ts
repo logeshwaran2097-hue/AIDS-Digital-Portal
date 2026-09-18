@@ -792,15 +792,29 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
   const logoPath = path.join(process.cwd(), 'public', 'logo.png')
   const hasLogo = fs.existsSync(logoPath)
 
-  const attachments = hasLogo
-    ? [
-        {
-          filename: 'vsb-logo.png',
-          path: logoPath,
-          cid: 'vsb_college_logo',
-        },
-      ]
-    : []
+  const otpIconPath = path.join(process.cwd(), 'public', 'email-otp-icon.png')
+  const hasOtpIcon = fs.existsSync(otpIconPath)
+
+  const attachments = [
+    ...(hasLogo
+      ? [
+          {
+            filename: 'vsb-logo.png',
+            path: logoPath,
+            cid: 'vsb_college_logo',
+          },
+        ]
+      : []),
+    ...(hasOtpIcon
+      ? [
+          {
+            filename: 'email-otp-icon.png',
+            path: otpIconPath,
+            cid: 'mail_otp_badge',
+          },
+        ]
+      : []),
+  ]
 
   const officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
 
@@ -858,6 +872,11 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
             <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Use the following 6-digit One-Time Password (OTP) to authenticate this login request:</p>
             
             <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; text-align: center; margin: 16px 0;">
+              ${
+                hasOtpIcon
+                  ? '<div style="margin-bottom: 8px;"><img src="cid:mail_otp_badge" alt="Security Mail OTP" width="44" height="44" style="width: 44px; height: 44px; vertical-align: middle; display: inline-block; object-fit: contain;" /></div>'
+                  : ''
+              }
               <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
             </div>
             
@@ -1000,15 +1019,29 @@ export async function sendStudentVerificationEmail(
   const logoPath = path.join(process.cwd(), 'public', 'logo.png')
   const hasLogo = fs.existsSync(logoPath)
 
-  const attachments = hasLogo
-    ? [
-        {
-          filename: 'vsb-logo.png',
-          path: logoPath,
-          cid: 'vsb_college_logo',
-        },
-      ]
-    : []
+  const otpIconPath = path.join(process.cwd(), 'public', 'email-otp-icon.png')
+  const hasOtpIcon = fs.existsSync(otpIconPath)
+
+  const attachments = [
+    ...(hasLogo
+      ? [
+          {
+            filename: 'vsb-logo.png',
+            path: logoPath,
+            cid: 'vsb_college_logo',
+          },
+        ]
+      : []),
+    ...(hasOtpIcon
+      ? [
+          {
+            filename: 'email-otp-icon.png',
+            path: otpIconPath,
+            cid: 'mail_otp_badge',
+          },
+        ]
+      : []),
+  ]
 
   const officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
 
@@ -1225,6 +1258,11 @@ export async function sendStudentVerificationEmail(
             <p style="margin: 0 0 12px; font-size: 14px; color: #334155;">Please enter the 6-digit One-Time Password (OTP) below into your portal to verify your institutional account and proceed to set your permanent password:</p>
             
             <div style="background: #f0fdf4; border: 2px dashed #16a34a; border-radius: 10px; padding: 18px; text-align: center; margin: 16px 0;">
+              ${
+                hasOtpIcon
+                  ? '<div style="margin-bottom: 8px;"><img src="cid:mail_otp_badge" alt="Security Mail OTP" width="44" height="44" style="width: 44px; height: 44px; vertical-align: middle; display: inline-block; object-fit: contain;" /></div>'
+                  : ''
+              }
               <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
             </div>
             

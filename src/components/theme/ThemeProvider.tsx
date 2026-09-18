@@ -6,7 +6,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const applySettings = () => {
     try {
       const cachedConfig = localStorage.getItem('vsb-portal-config')
-      let theme = localStorage.getItem('vsb-portal-theme') || localStorage.getItem('portal_theme') || 'midnight'
+      let theme = localStorage.getItem('vsb-portal-theme') || 'light'
       let accent = '#1455D9'
 
       if (cachedConfig) {
@@ -17,21 +17,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      // Keep Login page clean and pristine in its original brand theme
-      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
+      // Apply Theme Mode
+      if (theme === 'dark' || theme === 'midnight') {
+        document.documentElement.classList.add('midnight', 'dark')
+      } else {
         document.documentElement.classList.remove('midnight', 'dark')
-        return
       }
-
-      // Apply Theme Mode (Enforce Luxury Midnight Sapphire for Portal)
-      if (theme === 'light') {
-        theme = 'midnight'
-        try {
-          localStorage.setItem('vsb-portal-theme', 'midnight')
-          localStorage.setItem('portal_theme', 'dark')
-        } catch {}
-      }
-      document.documentElement.classList.add('midnight', 'dark')
 
       // Apply Accent Color
       if (accent) {

@@ -538,29 +538,28 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
       {/* Header Banner */}
-      <div className="lux-sapphire-card relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white border border-[#D4AF37]/30 shadow-lux-sapphire flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="absolute -right-20 -top-20 w-72 h-72 bg-radial from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#D4AF37] text-[#030712] text-[10px] font-black uppercase tracking-wider shadow-lux-gold">
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Student Records Administration
             </span>
-            <span className="text-xs text-blue-200 font-medium">· Department of AI &amp; DS</span>
+            <span className="text-xs text-gray-300 font-medium">· Department of AI &amp; DS</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Student Enrollment &amp; Directory</h1>
-          <p className="text-xs sm:text-sm text-blue-100/90 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black">Student Enrollment &amp; Directory</h1>
+          <p className="text-xs sm:text-sm text-gray-300 mt-1">
             {students.length > 0
               ? `Real-time management of ${students.length} enrolled student records`
               : 'Directory is ready for real student entries'}
           </p>
         </div>
 
-        <div className="flex items-center flex-wrap gap-3 shrink-0 relative z-10">
+        <div className="flex items-center flex-wrap gap-3 shrink-0">
           <button
             onClick={handleExportPDF}
-            className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-2 transition-all border border-white/20 shadow-sm cursor-pointer hover:scale-105 active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-2 transition-all border border-white/20 shadow-sm cursor-pointer hover:scale-105"
           >
-            <Download className="w-4 h-4 text-[#D4AF37]" /> Download Student List (PDF)
+            <Download className="w-4 h-4 text-[#F4C430]" /> Download Student List (PDF)
           </button>
           <button
             onClick={() => {
@@ -594,35 +593,35 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               setAddFormError(null)
               setIsAddModalOpen(true)
             }}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#D4AF37] via-[#f3d37a] to-[#c59c27] text-[#030712] text-xs font-black flex items-center gap-2 transition-all shadow-lux-gold cursor-pointer hover:scale-105 active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b224] text-[#071A3D] text-xs font-black flex items-center gap-2 transition-all shadow-md cursor-pointer hover:scale-105"
           >
-            <Plus className="w-4 h-4 text-[#030712]" /> + Add Student
+            <Plus className="w-4 h-4 text-[#071A3D]" /> + Add Student
           </button>
         </div>
       </div>
 
       {/* Primary Top Tab Switcher */}
-      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-white/10 pb-2">
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
         <button
           onClick={() => setActiveMainTab('directory')}
           className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
             activeMainTab === 'directory'
-              ? 'bg-[#0E3A94] text-white shadow-lux-sapphire border border-white/20'
-              : 'bg-white/80 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 border border-gray-200 dark:border-white/10'
+              ? 'bg-[#071A3D] text-white shadow-md'
+              : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
           }`}
         >
-          <GraduationCap className="w-4 h-4 text-[#D4AF37]" /> Enrolled Directory ({students.length})
+          <GraduationCap className="w-4 h-4" /> Enrolled Directory ({students.length})
         </button>
 
         <button
           onClick={() => setActiveMainTab('requests')}
           className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
             activeMainTab === 'requests'
-              ? 'bg-[#0E3A94] text-white shadow-lux-sapphire border border-white/20'
-              : 'bg-white/80 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-gray-100 border border-gray-200 dark:border-white/10'
+              ? 'bg-[#1455D9] text-white shadow-md'
+              : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
           }`}
         >
-          <ShieldAlert className="w-4 h-4 text-[#D4AF37]" /> Profile Edit &amp; Permission Requests
+          <ShieldAlert className="w-4 h-4" /> Profile Edit &amp; Permission Requests
           {profileRequests.filter((r) => r.status === 'pending').length > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[#F4C430] text-[#071A3D] animate-pulse">
               {profileRequests.filter((r) => r.status === 'pending').length} Pending
@@ -634,7 +633,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       {activeMainTab === 'directory' && (
         <div className="space-y-6">
           {/* Two-Step Hierarchical Year -> Semester Academic Navigation */}
-          <div className="lux-glass-card rounded-3xl p-5 border border-white/10 shadow-xs space-y-4">
+          <div className="bg-white rounded-3xl p-5 border border-gray-200 shadow-sm space-y-4">
             {/* STEP 1: Select Academic Year */}
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">

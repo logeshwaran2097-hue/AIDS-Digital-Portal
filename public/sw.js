@@ -1,9 +1,10 @@
-const CACHE_NAME = 'vsb-aids-portal-v2-8-3'
+const CACHE_NAME = 'vsb-aids-portal-v2-8-4'
 const STATIC_ASSETS = [
   '/',
   '/login',
   '/manifest.json',
   '/college-emblem.png',
+  '/email-otp-icon.png',
   '/icon-192.png',
   '/icon-512.png',
   '/maskable-icon-192.png',

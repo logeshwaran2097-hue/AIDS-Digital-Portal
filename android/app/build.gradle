@@ -8,8 +8,8 @@ android {
         applicationId "in.edu.vsb.aidsportal"
         minSdkVersion 22
         targetSdkVersion 34
-        versionCode 6
-        versionName "2.5.0"
+        versionCode 7
+        versionName "2.8.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

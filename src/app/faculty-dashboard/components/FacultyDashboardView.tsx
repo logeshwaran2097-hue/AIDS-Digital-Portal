@@ -94,13 +94,13 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)))
 
   const quickNav = useMemo(() => [
-    { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-gradient-to-br from-emerald-500/25 to-teal-500/15 text-emerald-400 border border-emerald-400/40 shadow-[0_0_15px_rgba(52,211,153,0.35)]' },
-    { label: 'Students', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-gradient-to-br from-purple-500/25 to-indigo-500/15 text-purple-300 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.35)]' },
-    { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-gradient-to-br from-[#2563EB]/25 to-[#1D4ED8]/15 text-cyan-300 border border-cyan-400/40 shadow-[0_0_15px_rgba(37,99,235,0.35)]' },
-    { label: 'Laboratory', href: '/faculty-dashboard/laboratory', icon: <FlaskConical className="w-5 h-5" />, bg: 'bg-gradient-to-br from-cyan-500/25 to-blue-500/15 text-cyan-300 border border-cyan-400/40 shadow-[0_0_15px_rgba(34,211,238,0.35)]' },
-    { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-gradient-to-br from-blue-500/25 to-cyan-500/15 text-blue-300 border border-blue-400/40 shadow-[0_0_15px_rgba(59,130,246,0.35)]' },
-    { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-gradient-to-br from-amber-500/25 to-orange-500/15 text-amber-300 border border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.35)]' },
-    { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-gradient-to-br from-indigo-500/25 to-purple-500/15 text-indigo-300 border border-indigo-400/40 shadow-[0_0_15px_rgba(99,102,241,0.35)]' },
+    { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
+    { label: 'Students', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20 hover:bg-purple-500/20' },
+    { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] border-[#1455D9]/20 hover:bg-[#1455D9]/20' },
+    { label: 'Laboratory', href: '/faculty-dashboard/laboratory', icon: <FlaskConical className="w-5 h-5" />, bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 hover:bg-cyan-500/20' },
+    { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' },
+    { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
+    { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
   ], [])
 
   useEffect(() => {
@@ -171,33 +171,30 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           }
         }}
       />
-      {/* Executive Faculty Hero Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl lux-sapphire-card p-6 sm:p-8 text-white shadow-2xl border border-white/15">
-        <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#D4AF37]/15 via-transparent to-transparent pointer-events-none" />
+      {/* Hero Welcome Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-6 sm:p-8 text-white shadow-2xl border border-white/10">
+        <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="relative shrink-0">
-              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#1E66E8] opacity-75 blur-xs" />
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#06163A]/90 backdrop-blur-md text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-2xl border-2 border-[#D4AF37]/80">
-                {(data?.user?.name || 'Faculty Member').replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
-              </div>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0 ring-4 ring-white/10">
+              {(data?.user?.name || 'Faculty Member').replace(/^(Dr\.|Prof\.|Mr\.|Mrs\.)\s*/, '').charAt(0) || 'F'}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className={cn(
-                  "px-3 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs",
+                  "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs",
                   data?.faculty?.facultyType === 'lab_faculty'
                     ? "bg-[#22C7E8] text-[#051330]"
-                    : "bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-[#071A3D] border border-[#D4AF37]"
+                    : "bg-[#F4C430] text-[#071A3D]"
                 )}>
                   {isClassAdvisor ? 'Class Advisor' : data?.faculty?.facultyType === 'lab_faculty' ? 'Lab Handler' : 'Faculty Member'}
                 </span>
                 <span className="text-xs text-emerald-300 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Department of AI &amp; DS
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Department of AI &amp; DS
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black mt-1.5 tracking-tight text-white">{data?.user?.name || 'Faculty Member'}</h1>
+              <h1 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight text-white">{data?.user?.name || 'Faculty Member'}</h1>
               <p className="text-xs sm:text-sm text-slate-300 font-mono mt-0.5">
                 {data?.faculty?.designation || 'Faculty'} {data?.faculty?.qualification ? `· ${data.faculty.qualification}` : ''} {data?.faculty?.facultyId ? `· ID: ${data.faculty.facultyId}` : ''}
               </p>
@@ -207,51 +204,58 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
           <div className="flex items-center gap-2.5">
             <Link
               href="/faculty-dashboard/attendance"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#1E66E8] via-[#1455D9] to-[#0D40A8] hover:brightness-110 text-white text-xs font-black flex items-center gap-2 transition-all shadow-lg hover:shadow-cyan-500/20 shrink-0 hover:scale-[1.02] active:scale-[0.98] cursor-pointer border border-white/20"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#22C7E8] to-[#0EA5E9] hover:brightness-105 text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-[0_4px_16px_rgba(34,199,232,0.35)] shrink-0 hover:scale-102 cursor-pointer"
             >
-              <UserCheck className="w-4 h-4 text-[#F3E5AB]" />
-              <span>Mark Daily Attendance</span>
+              <UserCheck className="w-4 h-4" /> Mark Daily Attendance
             </Link>
           </div>
         </div>
 
         {/* Academic KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/15">
-          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
+          <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
             {isClassAdvisor && data.totalSubjects === 0 ? (
               <>
                 <p className="text-[10px] text-slate-300 uppercase font-bold">Class Advisory Scope</p>
-                <p className="text-xl font-black text-[#F3E5AB] mt-0.5">
+                <p className="text-xl font-black text-[#F4C430] mt-0.5">
                   {data.faculty?.advisorBatch || (data.faculty?.advisorYear ? `Year ${data.faculty.advisorYear} · Sec ${data.faculty.advisorSec || 'B'}` : 'Year 2 · Sec B')}
                 </p>
-                <p className="text-[10px] text-slate-400">Class Advisor In-Charge</p>
+                <p className="text-[10px] text-slate-300">Class Advisor In-Charge</p>
               </>
             ) : (
               <>
                 <p className="text-[10px] text-slate-300 uppercase font-bold">Allocated Courses</p>
-                <p className="text-xl font-black text-[#F3E5AB] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
-                <p className="text-[10px] text-slate-400">Curriculum &amp; Labs</p>
+                <p className="text-xl font-black text-[#F4C430] mt-0.5">{data.totalSubjects} Subject{data.totalSubjects === 1 ? '' : 's'}</p>
+                <p className="text-[10px] text-slate-300">Curriculum &amp; Labs</p>
               </>
             )}
           </div>
 
-          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
-            <p className="text-[10px] text-slate-300 uppercase font-bold">Enrolled Students</p>
+          <div className="bg-white/[0.08] backdrop-blur-md p-3.5 rounded-2xl border border-white/15 shadow-xs">
+            <p className="text-[10px] text-gray-300 uppercase font-bold">Enrolled Students</p>
             <p className="text-xl font-black text-emerald-300 mt-0.5">{data.totalStudents} Student{data.totalStudents === 1 ? '' : 's'}</p>
-            <p className="text-[10px] text-slate-400">{data.faculty?.advisorBatch || (data.faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Sessions' : 'Class Advisor Scope')}</p>
+            <p className="text-[10px] text-gray-300">{data.faculty?.advisorBatch || (data.faculty?.facultyType === 'lab_faculty' ? 'Practical Lab Sessions' : 'Class Advisor Scope')}</p>
           </div>
 
-          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
-            <p className="text-[10px] text-slate-300 uppercase font-bold">Curriculum Files</p>
-            <p className="text-xl font-black text-cyan-300 mt-0.5">{data.resourcesCount + data.questionPapersCount} Uploads</p>
-            <p className="text-[10px] text-slate-400">Notes &amp; Question Papers</p>
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+            <p className="text-[10px] text-gray-300 uppercase font-bold">Batch Attendance Avg</p>
+            <p className="text-xl font-black text-[#22C7E8] mt-0.5">{data.attendanceAvg || '—'}</p>
+            <p className="text-[10px] text-emerald-300">Recorded Sessions</p>
           </div>
 
-          <div className="bg-black/30 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 shadow-xs">
-            <p className="text-[10px] text-slate-300 uppercase font-bold">Term Attendance Average</p>
-            <p className="text-xl font-black text-[#F3E5AB] mt-0.5">{data.attendanceAvg || '0.0%'}</p>
-            <p className="text-[10px] text-slate-400">Conducted Sessions</p>
-          </div>
+          {isClassAdvisor ? (
+            <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+              <p className="text-[10px] text-gray-300 uppercase font-bold">Class Advisor Scope</p>
+              <p className="text-xl font-black text-amber-300 mt-0.5">{data.totalStudents} Students</p>
+              <p className="text-[10px] text-amber-200">Advisory Jurisdiction</p>
+            </div>
+          ) : (
+            <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+              <p className="text-[10px] text-gray-300 uppercase font-bold">Faculty Status</p>
+              <p className="text-xl font-black text-emerald-300 mt-0.5">Active</p>
+              <p className="text-[10px] text-emerald-200">Department Faculty</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -270,19 +274,18 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             <Link
               key={item.label}
               href={item.href}
-              className="lux-tile-jewel lux-specular-sweep flex flex-col items-center justify-center p-3.5 rounded-2xl group text-center space-y-2 cursor-pointer select-none"
+              className="flex flex-col items-center justify-center p-3.5 rounded-2xl border border-gray-200 bg-white text-[#071A3D] hover:shadow-md transition-all duration-200 group text-center space-y-2 hover:border-[#1455D9]/40"
             >
-              <div className={cn('p-2.5 rounded-xl transition-transform group-hover:scale-110 duration-200 border shadow-md', item.bg)}>
+              <div className={cn('p-2.5 rounded-xl transition-transform group-hover:scale-110 duration-200 border', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-[11px] font-bold text-[#071A3D] group-hover:text-[#1455D9] transition-colors line-clamp-1">
+              <span className="text-[11px] font-bold text-gray-700 group-hover:text-[#1455D9] transition-colors line-clamp-1">
                 {item.label}
               </span>
             </Link>
           ))}
         </div>
       </section>
-
 
       {/* Main Grid: Allocated Courses & Today's Schedule */}
       <div className="grid gap-6 lg:grid-cols-3">

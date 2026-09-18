@@ -12,7 +12,6 @@ import {
   Percent,
   Plus,
   Sparkles,
-  BookOpen,
   Info,
   ShieldCheck,
   FileText,
@@ -279,164 +278,92 @@ export function StudentAttendanceView({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in w-full">
-      {/* Header Banner: Executive Royal Sapphire & Gold Foil Crest */}
-      <div className="lux-sapphire-card relative overflow-hidden rounded-3xl p-6 sm:p-8 text-white border border-[#D4AF37]/50 shadow-[0_20px_50px_rgba(3,10,32,0.85)] flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        {/* Ambient Radial Auroras */}
-        <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-[radial-gradient(circle,_rgba(212,175,55,0.22)_0%,_transparent_70%)] pointer-events-none" />
-        <div className="absolute -left-12 -bottom-12 w-72 h-72 rounded-full bg-[radial-gradient(circle,_rgba(34,197,232,0.25)_0%,_transparent_70%)] pointer-events-none" />
-        
-        {/* Subtle Decorative Geometric Micro-Grid */}
-        <div className="absolute right-12 bottom-3 opacity-15 pointer-events-none hidden md:block">
-          <svg width="140" height="90" viewBox="0 0 140 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 45H50L75 15H120L135 45" stroke="#D4AF37" strokeWidth="1.5" strokeDasharray="3 3" />
-            <circle cx="50" cy="45" r="3" fill="#D4AF37" />
-            <circle cx="75" cy="15" r="3" fill="#22C7E8" />
-            <circle cx="120" cy="15" r="3" fill="#D4AF37" />
-          </svg>
-        </div>
-
-        <div className="relative z-10 space-y-1.5">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#D4AF37]/25 via-[#FDE68A]/20 to-[#D4AF37]/25 text-[#FDE68A] text-[10px] font-black uppercase tracking-wider border border-[#D4AF37]/50 shadow-[0_0_12px_rgba(212,175,55,0.3)]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34D399]" />
+    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Biometric Attendance Sync
             </span>
-            <span className="text-xs text-cyan-200/90 font-semibold tracking-wide">· Anna University 75% Rule Compliance</span>
+            <span className="text-xs text-gray-300 font-medium">· Anna University 75% Rule</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]">
-            Student Attendance &amp; Leave Log
-          </h1>
-          <p className="text-xs sm:text-sm text-blue-100/90 font-medium flex items-center gap-2 flex-wrap pt-0.5">
-            <span className="text-white font-bold">{user.name}</span>
-            <span className="text-[#D4AF37] font-mono font-bold">({student.registerNumber})</span>
-            <span className="text-blue-200">· Year {student.year} · Semester {student.semester}</span>
-            <span className="px-2 py-0.5 rounded-md bg-white/10 border border-white/15 text-[11px] font-semibold">Section {student.section}</span>
+          <h1 className="text-2xl sm:text-3xl font-black">Student Attendance &amp; Leave Log</h1>
+          <p className="text-xs sm:text-sm text-gray-300 mt-1">
+            {user.name} ({student.registerNumber}) · Year {student.year} · Semester {student.semester} (Section {student.section})
           </p>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10 shrink-0">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setShowODModal(true)}
-            className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 hover:border-[#D4AF37]/60 text-white text-xs font-bold flex items-center gap-2 transition-all shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:scale-105 active:scale-95 cursor-pointer backdrop-blur-md"
+            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
           >
-            <Plus className="w-4 h-4 text-[#FDE68A]" />
-            <span>Apply On-Duty / Leave</span>
+            <Plus className="w-4 h-4" /> Apply On-Duty / Leave
           </button>
           <button
             onClick={handleDownloadReport}
-            className="lux-button-gold px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+            className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md shrink-0 cursor-pointer"
           >
-            <Download className="w-4 h-4 text-[#071328]" />
-            <span>Download Report (PDF)</span>
+            <Download className="w-4 h-4" /> Download Report (PDF)
           </button>
         </div>
       </div>
 
-      {/* KPI Chronometer Complications (Jewelry-Grade Radiance) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {/* Overall Attendance Gauge */}
-        <div className="lux-kpi-cyan lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
-          <div className="relative z-10 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#1455D9] shadow-[0_0_8px_#22C7E8] animate-ping" />
-              <p className="text-[10px] text-[#071A3D] font-black uppercase tracking-widest">Overall Attendance</p>
-            </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-cyan-300">
-              {stats.percentage.toFixed(1)}<span className="text-xl font-sans text-[#1455D9] font-bold">%</span>
+      {/* KPI Cards Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white p-5 rounded-3xl border border-blue-200/80 shadow-xs bg-gradient-to-br from-blue-50/60 to-white flex items-center justify-between">
+          <div>
+            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Overall Attendance</p>
+            <p className="text-3xl font-black text-[#1455D9] mt-1">{stats.percentage.toFixed(1)}%</p>
+            <p className={cn("text-[10px] font-bold mt-0.5", isCompliant ? "text-green-700" : "text-red-700")}>
+              {stats.totalSessions > 0 ? (isCompliant ? 'Compliant (>75% Req)' : 'Attendance Shortage (<75%)') : 'Term Enrolled'}
             </p>
-            <div className="pt-1">
-              <span className={cn(
-                "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs",
-                stats.totalSessions > 0
-                  ? (isCompliant
-                      ? "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-400/40"
-                      : "bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-400/40")
-                  : "bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 border-cyan-400/30"
-              )}>
-                {stats.totalSessions > 0 ? (isCompliant ? '✓ Safe Margin (>75%)' : '⚠ Shortage (<75%)') : 'Term Enrolled'}
-              </span>
-            </div>
           </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#1748A8] via-[#1455D9] to-[#0A3C9F] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(20,85,217,0.3)] border border-cyan-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-            <Percent className="w-6 h-6 text-[#FDE68A]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#1455D9] text-white flex items-center justify-center font-black text-base shadow-md">
+            <Percent className="w-6 h-6" />
           </div>
         </div>
 
-        {/* Conducted Sessions */}
-        <div className="lux-kpi-amber lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
-          <div className="relative z-10 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
-              <p className="text-[10px] text-amber-900 font-black uppercase tracking-widest">Conducted Sessions</p>
-            </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-amber-200">
-              {stats.totalSessions} <span className="text-base font-sans font-bold text-amber-700">Hrs</span>
-            </p>
-            <p className="text-[10px] text-amber-800 font-semibold pt-1">
-              {stats.totalSessions > 0 ? 'Official Faculty Register' : 'Term Roll Active'}
-            </p>
-          </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#78350F] to-[#D97706] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(217,119,6,0.3)] border border-amber-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-            <Clock className="w-6 h-6 text-[#FFF0B8]" />
-          </div>
+        <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-xs">
+          <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Conducted Sessions</p>
+          <p className="text-3xl font-black text-[#071A3D] mt-1">{stats.totalSessions} Sessions</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{stats.totalSessions > 0 ? 'Total Logged by Staff' : 'Term Started'}</p>
         </div>
 
-        {/* Present & OD */}
-        <div className="lux-kpi-emerald lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
-          <div className="relative z-10 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#34D399]" />
-              <p className="text-[10px] text-emerald-900 font-black uppercase tracking-widest">Present &amp; OD</p>
-            </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-emerald-300">
-              {stats.presentSessions} <span className="text-base font-sans font-bold text-emerald-700">Hrs</span>
-            </p>
-            <p className="text-[10px] text-emerald-800 font-semibold pt-1">
-              {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Reg + ${stats.odSessions} OD` : 'Full Attendance'}
-            </p>
-          </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#064E3B] to-[#059669] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(5,150,105,0.3)] border border-emerald-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-            <CheckCircle2 className="w-6 h-6 text-[#A7F3D0]" />
-          </div>
+        <div className="bg-white p-5 rounded-3xl border border-green-200/80 shadow-xs bg-green-50/20">
+          <p className="text-[10px] text-green-700 font-bold uppercase tracking-wider">Present &amp; OD</p>
+          <p className="text-3xl font-black text-green-600 mt-1">{stats.presentSessions} Sessions</p>
+          <p className="text-[10px] text-green-700 font-medium mt-0.5">
+            {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Regular + ${stats.odSessions} OD` : 'Regular Present'}
+          </p>
         </div>
 
-        {/* Absenteeism */}
-        <div className="lux-kpi-rose lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
-          <div className="relative z-10 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_#FB7185]" />
-              <p className="text-[10px] text-rose-900 font-black uppercase tracking-widest">Absenteeism</p>
-            </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-rose-300">
-              {stats.absentSessions} <span className="text-base font-sans font-bold text-rose-700">Hrs</span>
-            </p>
-            <p className="text-[10px] text-rose-800 font-semibold pt-1">
-              {stats.totalSessions > 0 ? `${stats.absentSessions} Unexcused` : 'Clean Attendance'}
-            </p>
-          </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#881337] to-[#E11D48] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(225,29,72,0.3)] border border-rose-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-            <XCircle className="w-6 h-6 text-[#FECDD3]" />
-          </div>
+        <div className="bg-white p-5 rounded-3xl border border-red-200/80 shadow-xs bg-red-50/20">
+          <p className="text-[10px] text-red-700 font-bold uppercase tracking-wider">Absenteeism</p>
+          <p className="text-3xl font-black text-red-600 mt-1">{stats.absentSessions} Sessions</p>
+          <p className="text-[10px] text-red-700 font-medium mt-0.5">
+            {stats.totalSessions > 0 ? `${stats.absentSessions} Unexcused` : 'Zero Absences'}
+          </p>
         </div>
       </div>
 
       {/* ── On-Duty & Leave Application Tracker ── */}
-      <div className="lux-glass-card rounded-3xl border border-[#D4AF37]/25 dark:border-white/15 shadow-xl overflow-hidden">
-        <div className="p-6 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-[#1748A8]/40 to-cyan-500/30 border border-cyan-400/40 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(34,197,232,0.3)] shrink-0">
-                <ShieldCheck className="w-6 h-6" />
+      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1455D9] shadow-2xs shrink-0">
+                <ShieldCheck className="w-5 h-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-black text-base sm:text-lg text-[#071A3D] dark:text-white">OD &amp; Leave Application Tracker</h3>
-                  <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border border-cyan-400/30 text-[10px] font-black uppercase tracking-wider shadow-2xs">
-                    Live Institutional Workflow
+                  <h3 className="font-black text-base text-[#071A3D]">OD &amp; Leave Application Tracker</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[10px] font-bold">
+                    Live Status
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                <p className="text-xs text-gray-500">
                   Track clearance workflow: Class Advisor Endorsement → HOD Sanction → Attendance Roll Sync
                 </p>
               </div>
@@ -447,23 +374,23 @@ export function StudentAttendanceView({
                 onClick={fetchTrackedApplications}
                 disabled={loadingTracked}
                 title="Refresh application status"
-                className="p-2.5 px-3.5 rounded-xl border border-white/15 text-slate-600 dark:text-slate-300 hover:text-cyan-300 hover:bg-white/10 transition-all text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="p-2 rounded-xl border border-gray-200 text-gray-600 hover:text-[#1455D9] hover:bg-blue-50 transition-colors text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-2xs"
               >
-                <RefreshCw className={cn("w-3.5 h-3.5", loadingTracked && "animate-spin text-cyan-400")} />
+                <RefreshCw className={cn("w-3.5 h-3.5", loadingTracked && "animate-spin text-[#1455D9]")} />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
               <button
                 onClick={() => setShowODModal(true)}
-                className="lux-button-primary px-4 py-2.5 rounded-xl text-white text-xs font-black flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                className="px-3.5 py-2 rounded-xl bg-[#1455D9] hover:bg-[#0f44b3] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5 text-[#FDE68A]" /> Apply OD / Leave
+                <Plus className="w-3.5 h-3.5" /> Apply OD / Leave
               </button>
             </div>
           </div>
 
           {/* List of Tracked Requests */}
           {loadingTracked && trackedApplications.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+            <div className="py-8 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
               <RefreshCw className="w-4 h-4 animate-spin text-[#1455D9]" />
               <span>Checking your submitted applications...</span>
             </div>
@@ -478,15 +405,15 @@ export function StudentAttendanceView({
                 return (
                   <div
                     key={app.id}
-                    className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-gradient-to-r from-slate-50/70 via-white to-blue-50/20 dark:from-slate-900/60 dark:via-slate-900/80 dark:to-blue-950/20 hover:border-blue-300 dark:hover:border-blue-500/40 transition-all space-y-3.5 shadow-xs"
+                    className="p-4 rounded-2xl border border-gray-200/80 bg-gradient-to-r from-slate-50/50 via-white to-blue-50/20 hover:border-blue-200 transition-all space-y-3"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-800/60 text-[#1455D9] dark:text-cyan-400 text-xs font-black shadow-2xs">
+                        <span className="px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] text-xs font-black shadow-2xs">
                           {app.applicationType}
                         </span>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-semibold bg-slate-100/90 dark:bg-slate-800/80 px-2.5 py-1 rounded-xl border border-slate-200 dark:border-white/10">
-                          <CalendarDays className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                        <div className="flex items-center gap-1.5 text-xs text-gray-600 font-semibold bg-gray-50 px-2.5 py-1 rounded-xl border border-gray-200">
+                          <CalendarDays className="w-3.5 h-3.5 text-gray-400" />
                           <span>
                             {app.fromDate} → {app.toDate} {app.days ? `(${app.days})` : ''}
                           </span>
@@ -496,17 +423,17 @@ export function StudentAttendanceView({
                       <div className="flex items-center gap-2 flex-wrap">
                         <span
                           className={cn(
-                            'px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 border',
-                            isPending && 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/25 text-amber-800 dark:text-amber-300',
-                            isEndorsed && 'bg-blue-500/10 dark:bg-blue-950/40 border-blue-500/25 text-[#1455D9] dark:text-cyan-300',
-                            isApproved && 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/25 text-emerald-800 dark:text-emerald-300',
-                            isDeclined && 'bg-rose-500/10 dark:bg-rose-950/40 border-rose-500/25 text-rose-800 dark:text-rose-300'
+                            'px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5',
+                            isPending && 'bg-amber-50 border border-amber-200 text-amber-800',
+                            isEndorsed && 'bg-blue-50 border border-blue-200 text-[#1455D9]',
+                            isApproved && 'bg-emerald-50 border border-emerald-200 text-emerald-800',
+                            isDeclined && 'bg-red-50 border border-red-200 text-red-800'
                           )}
                         >
-                          {isPending && <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 animate-pulse" />}
-                          {isEndorsed && <CheckCircle2 className="w-3.5 h-3.5 text-[#1455D9] dark:text-cyan-400" />}
-                          {isApproved && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />}
-                          {isDeclined && <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />}
+                          {isPending && <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />}
+                          {isEndorsed && <CheckCircle2 className="w-3.5 h-3.5 text-[#1455D9]" />}
+                          {isApproved && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                          {isDeclined && <XCircle className="w-3.5 h-3.5 text-red-600" />}
                           <span>{app.statusLabel}</span>
                         </span>
 
@@ -520,28 +447,28 @@ export function StudentAttendanceView({
                               registerNumber: student.registerNumber,
                             })
                           }
-                          className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800/90 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all hover:scale-[1.02] cursor-pointer"
+                          className="px-2.5 py-1 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
                           title="View verification slip in popup"
                         >
-                          <Eye className="w-3.5 h-3.5 text-[#1455D9] dark:text-cyan-400" />
+                          <Eye className="w-3.5 h-3.5 text-[#1455D9]" />
                           <span>Verification Slip</span>
                         </button>
                       </div>
                     </div>
 
-                    <div className="bg-white/80 dark:bg-slate-950/50 p-3 sm:p-3.5 rounded-xl border border-slate-200/70 dark:border-white/10 text-xs space-y-1.5">
+                    <div className="bg-white/80 p-3 rounded-xl border border-gray-100 text-xs space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-[#071A3D] dark:text-white">Event / Activity:</span>
-                        <span className="text-slate-700 dark:text-slate-300 font-medium">{app.eventName}</span>
+                        <span className="font-bold text-[#071A3D]">Event / Activity:</span>
+                        <span className="text-gray-700 font-medium">{app.eventName}</span>
                       </div>
                       {app.reason && (
-                        <div className="text-slate-500 dark:text-slate-400 text-[11px] italic">
+                        <div className="text-gray-500 text-[11px] italic">
                           "{app.reason}"
                         </div>
                       )}
                       {app.proofs && (
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 pt-0.5">
-                          <FileText className="w-3.5 h-3.5 text-slate-400" />
+                        <div className="text-[11px] text-gray-500 flex items-center gap-1.5 pt-0.5">
+                          <FileText className="w-3.5 h-3.5 text-gray-400" />
                           <span>Submitted Verification: {app.proofs}</span>
                         </div>
                       )}
@@ -550,26 +477,26 @@ export function StudentAttendanceView({
                     {/* Stage Progress Visualizer */}
                     <div className="pt-1">
                       <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
-                        <div className="p-2 rounded-xl bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-500/25 text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           <span>1. Application Submitted</span>
                         </div>
                         <div
                           className={cn(
                             'p-2 rounded-xl border flex items-center justify-center gap-1',
                             isEndorsed || isApproved
-                              ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/25 text-emerald-800 dark:text-emerald-300'
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                               : isDeclined
-                              ? 'bg-rose-500/10 dark:bg-rose-950/40 border-rose-500/25 text-rose-800 dark:text-rose-300'
-                              : 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/25 text-amber-800 dark:text-amber-300'
+                              ? 'bg-red-50 border-red-200 text-red-800'
+                              : 'bg-amber-50 border-amber-200 text-amber-800'
                           )}
                         >
                           {isEndorsed || isApproved ? (
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           ) : isDeclined ? (
-                            <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                            <XCircle className="w-3 h-3 text-red-600" />
                           ) : (
-                            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                            <Clock className="w-3 h-3 text-amber-600" />
                           )}
                           <span>2. Class Advisor Review</span>
                         </div>
@@ -577,16 +504,16 @@ export function StudentAttendanceView({
                           className={cn(
                             'p-2 rounded-xl border flex items-center justify-center gap-1',
                             isApproved
-                              ? 'bg-emerald-500/10 dark:bg-emerald-950/40 border-emerald-500/25 text-emerald-800 dark:text-emerald-300'
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
                               : isDeclined
-                              ? 'bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-white/10 text-slate-400'
-                              : 'bg-slate-100/80 dark:bg-slate-800/50 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400'
+                              ? 'bg-gray-100 border-gray-200 text-gray-400'
+                              : 'bg-gray-50 border-gray-200 text-gray-500'
                           )}
                         >
                           {isApproved ? (
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                           ) : (
-                            <Clock className="w-3 h-3 text-slate-400" />
+                            <Clock className="w-3 h-3 text-gray-400" />
                           )}
                           <span>3. HOD Sanction &amp; Roll Sync</span>
                         </div>
@@ -597,64 +524,36 @@ export function StudentAttendanceView({
               })}
             </div>
           ) : (
-            <div className="py-12 px-6 text-center rounded-3xl border border-slate-200/90 dark:border-[#D4AF37]/35 bg-white/80 dark:bg-gradient-to-b dark:from-[#0A1A3A]/70 dark:via-[#061228]/85 dark:to-[#020612] relative overflow-hidden shadow-sm space-y-5">
-              {/* Subtle gold watermark glow */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,_rgba(20,85,217,0.06)_0%,_transparent_70%)] pointer-events-none" />
-              <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-gradient-to-tr dark:from-[#1748A8] dark:via-[#0D2D6C] dark:to-[#D4AF37]/40 border-2 border-blue-200 dark:border-[#D4AF37]/60 text-[#1455D9] dark:text-[#FDE68A] flex items-center justify-center mx-auto shadow-sm relative z-10">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-              <div className="space-y-1.5 relative z-10">
-                <p className="font-black text-base sm:text-lg text-[#071A3D] dark:text-white tracking-wide">
-                  Institutional OD &amp; Leave Ledger Synchronized
-                </p>
-                <p className="text-xs text-slate-600 dark:text-blue-200/80 max-w-lg mx-auto leading-relaxed">
-                  Submit official event permissions, symposiums, hackathons, sports exemptions, or medical leave. Your submissions undergo live Class Advisor verification and HOD executive sanction.
-                </p>
-              </div>
-
-              {/* 3-Step Clearance Progression Strip */}
-              <div className="flex items-center justify-center gap-2 max-w-md mx-auto text-[10px] font-bold text-slate-600 dark:text-slate-300 py-1">
-                <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-400/30 text-[#1455D9] dark:text-cyan-300">1. Apply</span>
-                <ChevronRight className="w-3 h-3 text-amber-500 dark:text-[#D4AF37]" />
-                <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-400/30 text-amber-800 dark:text-amber-300">2. Advisor Verify</span>
-                <ChevronRight className="w-3 h-3 text-amber-500 dark:text-[#D4AF37]" />
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-400/30 text-emerald-800 dark:text-emerald-300">3. HOD Sanction</span>
-              </div>
-
-              <div className="pt-2 relative z-10">
-                <button
-                  onClick={() => setShowODModal(true)}
-                  className="lux-button-gold px-5 py-2.5 rounded-2xl text-xs font-black inline-flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                >
-                  <Plus className="w-4 h-4 text-[#071328]" />
-                  <span>Submit Permission Request</span>
-                </button>
-              </div>
+            <div className="py-8 text-center text-xs text-gray-500 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 space-y-2">
+              <CalendarDays className="w-8 h-8 text-gray-300 mx-auto" />
+              <p className="font-bold text-gray-700">No On-Duty or Leave Applications Submitted Yet</p>
+              <p className="text-[11px] text-gray-400 max-w-sm mx-auto">
+                When you apply for On-Duty (OD) or leave, you can track class advisor endorsement and HOD sanction status right here in real-time.
+              </p>
+              <button
+                onClick={() => setShowODModal(true)}
+                className="mt-2 px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] border border-blue-200 text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" /> Submit Permission Request
+              </button>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Course-Wise Attendance Table: Executive Academic Register */}
-      <div className="lux-glass-card rounded-3xl border border-white/15 dark:border-white/10 shadow-xl overflow-hidden">
-        <div className="p-6 sm:p-7 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+      {/* Course-Wise Attendance Table */}
+      <Card className="rounded-3xl border-gray-200 shadow-xs">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
             <div>
-              <div className="flex items-center gap-2.5">
-                <h3 className="font-black text-base sm:text-lg text-[#071A3D] dark:text-white">Subject-Wise Attendance Register</h3>
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 dark:text-cyan-300 border border-blue-400/30 text-[10px] font-black uppercase tracking-wider">
-                  Curriculum Roll
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Class period tracking recorded by course faculty in real-time</p>
+              <h3 className="font-black text-base text-[#071A3D]">Subject-Wise Attendance Register</h3>
+              <p className="text-xs text-gray-400">Class period tracking recorded by course faculty in real-time</p>
             </div>
             <span className={cn(
-              "px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border shadow-xs self-start sm:self-auto",
-              isCompliant
-                ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
-                : "bg-rose-500/20 text-rose-300 border-rose-400/40"
+              "px-3 py-1 rounded-full text-xs font-bold",
+              isCompliant ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
             )}>
-              {stats.totalSessions > 0 ? (isCompliant ? '✓ Good Academic Standing' : '⚠ Below 75% Cut-Off') : 'Semester Enrolled'}
+              {stats.totalSessions > 0 ? (isCompliant ? 'Good Academic Standing' : 'Below 75% Cut-Off') : 'Semester Enrolled'}
             </span>
           </div>
 
@@ -662,48 +561,38 @@ export function StudentAttendanceView({
             <div className="overflow-x-auto">
               <table className="w-full min-w-[620px] text-xs text-left">
                 <thead>
-                  <tr className="border-b border-white/10 text-slate-400 dark:text-slate-400 uppercase text-[10px] font-black tracking-wider bg-white/[0.02]">
-                    <th className="py-3 px-3 font-black">Course Code &amp; Name</th>
-                    <th className="py-3 font-black">Faculty Instructor</th>
-                    <th className="py-3 font-black text-center">Conducted</th>
-                    <th className="py-3 font-black text-center">Attended</th>
-                    <th className="py-3 font-black text-center">Percentage</th>
-                    <th className="py-3 px-3 font-black text-right">Status</th>
+                  <tr className="border-b border-gray-200 text-gray-400 uppercase text-[10px] font-bold">
+                    <th className="py-2.5 font-bold">Course Code &amp; Name</th>
+                    <th className="py-2.5 font-bold">Faculty Instructor</th>
+                    <th className="py-2.5 font-bold text-center">Conducted</th>
+                    <th className="py-2.5 font-bold text-center">Attended</th>
+                    <th className="py-2.5 font-bold text-center">Percentage</th>
+                    <th className="py-2.5 font-bold text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 font-medium">
+                <tbody className="divide-y divide-gray-100 font-medium">
                   {stats.subjectBreakdown.map((s) => {
                     const isSafe = s.conducted === 0 || s.percent >= 75
                     return (
-                      <tr key={s.code} className="hover:bg-blue-500/10 dark:hover:bg-white/[0.04] transition-all group">
-                        <td className="py-3.5 px-3">
-                          <div className="flex items-center gap-2.5">
-                            <span className="font-mono font-bold text-cyan-400 px-2.5 py-1 rounded-xl bg-blue-950/70 border border-cyan-500/30 shadow-xs">
+                      <tr key={s.code} className="hover:bg-gray-50/80 transition-colors">
+                        <td className="py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-[#1455D9] px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200/60">
                               {s.code}
                             </span>
-                            <span className="font-bold text-slate-800 dark:text-white group-hover:text-cyan-300 transition-colors">{s.name}</span>
+                            <span className="font-bold text-[#071A3D]">{s.name}</span>
                           </div>
                         </td>
-                        <td className="py-3.5 text-slate-600 dark:text-slate-300 font-medium">{s.faculty}</td>
-                        <td className="py-3.5 text-center text-slate-600 dark:text-slate-400 font-mono font-bold">{s.conducted} Hrs</td>
-                        <td className="py-3.5 text-center font-bold text-emerald-400 font-mono">{s.attended} Hrs</td>
-                        <td className="py-3.5 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="font-black font-mono text-cyan-300 text-sm">{s.percent.toFixed(1)}%</span>
-                            <div className="w-16 h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
-                              <div
-                                className={cn("h-full rounded-full transition-all", isSafe ? "bg-emerald-400" : "bg-rose-400")}
-                                style={{ width: `${Math.min(s.percent, 100)}%` }}
-                              />
-                            </div>
-                          </div>
+                        <td className="py-3 text-gray-600">{s.faculty}</td>
+                        <td className="py-3 text-center text-gray-500">{s.conducted} Hrs</td>
+                        <td className="py-3 text-center font-bold text-green-700">{s.attended} Hrs</td>
+                        <td className="py-3 text-center">
+                          <span className="font-black text-[#1455D9]">{s.percent.toFixed(1)}%</span>
                         </td>
-                        <td className="py-3.5 px-3 text-right">
+                        <td className="py-3 text-right">
                           <span className={cn(
-                            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs",
-                            isSafe
-                              ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
-                              : "bg-rose-500/20 text-rose-300 border-rose-400/40"
+                            "px-2.5 py-0.5 rounded-full text-[10px] font-bold",
+                            isSafe ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                           )}>
                             {s.conducted === 0 ? 'Enrolled' : (isSafe ? 'Eligible (Safe)' : 'Shortage (<75%)')}
                           </span>
@@ -715,45 +604,37 @@ export function StudentAttendanceView({
               </table>
             </div>
           ) : (
-            <div className="py-12 px-6 text-center rounded-3xl border border-slate-200/90 dark:border-white/10 bg-white/80 dark:bg-gradient-to-b dark:from-blue-950/30 dark:via-slate-900/40 dark:to-[#030816] space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-gradient-to-tr dark:from-[#1748A8]/40 dark:to-cyan-500/30 text-[#1455D9] dark:text-cyan-300 border border-blue-200 dark:border-cyan-400/30 flex items-center justify-center mx-auto shadow-2xs">
-                <BookOpen className="w-7 h-7" />
-              </div>
-              <p className="font-black text-base text-[#071A3D] dark:text-white">Curriculum Matrix Synchronized</p>
-              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-                Academic Year 2025-2026 courses active. Individual subject lecture attendance will populate automatically as faculty handlers submit period roll-calls.
-              </p>
+            <div className="py-8 text-center text-xs text-gray-400">
+              No subjects registered in the current curriculum.
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Date-Wise Attendance History Log: Chronological Digital Ledger */}
-      <div className="lux-glass-card rounded-3xl border border-white/15 dark:border-white/10 shadow-xl overflow-hidden">
-        <div className="p-5 sm:p-7 space-y-6">
+      {/* Date-Wise Attendance History Log */}
+      <Card className="rounded-3xl border-gray-200 shadow-xs overflow-hidden">
+        <CardContent className="p-5 sm:p-7 space-y-6">
           {/* Header & Controls */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100">
             <div>
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-400/30 flex items-center justify-center text-cyan-300 shadow-2xs">
-                  <Calendar className="w-4.5 h-4.5" />
-                </div>
-                <h3 className="font-black text-base sm:text-lg text-[#071A3D] dark:text-white">Date-Wise Attendance History</h3>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-[#1455D9]" />
+                <h3 className="font-black text-base sm:text-lg text-[#071A3D]">Date-Wise Attendance History</h3>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Chronological day-by-day class attendance marked by faculty handlers</p>
+              <p className="text-xs text-gray-400 mt-0.5">Chronological day-by-day class attendance marked by faculty handlers</p>
             </div>
 
             {/* View Switcher & Actions */}
             <div className="flex flex-wrap items-center gap-2">
-              <div className="bg-white/90 dark:bg-slate-900/80 p-1 rounded-2xl border border-slate-200/90 dark:border-white/10 flex items-center gap-1 text-xs font-bold shadow-xs">
+              <div className="bg-gray-100 p-1 rounded-xl flex items-center gap-1 text-xs font-bold">
                 <button
                   type="button"
                   onClick={() => setHistoryViewMode('date_wise')}
                   className={cn(
-                    "px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5",
+                    "px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
                     historyViewMode === 'date_wise'
-                      ? "bg-gradient-to-r from-[#1748A8] to-[#1455D9] text-white shadow-[0_0_12px_rgba(20,85,217,0.4)] border border-cyan-400/30"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-white text-[#071A3D] shadow-xs"
+                      : "text-gray-500 hover:text-[#071A3D]"
                   )}
                 >
                   <Calendar className="w-3.5 h-3.5" />
@@ -763,10 +644,10 @@ export function StudentAttendanceView({
                   type="button"
                   onClick={() => setHistoryViewMode('flat_table')}
                   className={cn(
-                    "px-3.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5",
+                    "px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5",
                     historyViewMode === 'flat_table'
-                      ? "bg-gradient-to-r from-[#1748A8] to-[#1455D9] text-white shadow-[0_0_12px_rgba(20,85,217,0.4)] border border-cyan-400/30"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-white text-[#071A3D] shadow-xs"
+                      : "text-gray-500 hover:text-[#071A3D]"
                   )}
                 >
                   <FileText className="w-3.5 h-3.5" />
@@ -779,14 +660,14 @@ export function StudentAttendanceView({
                   <button
                     type="button"
                     onClick={() => expandAllDates(filteredGroupedHistory.map((g) => g.date))}
-                    className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-[#1455D9] dark:hover:text-cyan-400 hover:bg-blue-50 dark:hover:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+                    className="px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:text-[#1455D9] hover:bg-blue-50 rounded-lg border border-gray-200 transition-colors cursor-pointer"
                   >
                     Expand All
                   </button>
                   <button
                     type="button"
                     onClick={collapseAllDates}
-                    className="px-2.5 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
+                    className="px-2.5 py-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors cursor-pointer"
                   >
                     Collapse All
                   </button>
@@ -796,21 +677,21 @@ export function StudentAttendanceView({
           </div>
 
           {/* Search & Filter Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/80 dark:bg-slate-900/60 p-3 rounded-2xl border border-slate-200/80 dark:border-white/10 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gray-50/70 p-3 rounded-2xl border border-gray-100 text-xs">
             <div className="relative flex-1 max-w-sm">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={historyDateSearch}
                 onChange={(e) => setHistoryDateSearch(e.target.value)}
                 placeholder="Search date (e.g. 2026-09-12), subject, faculty..."
-                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-white/15 text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#1455D9]"
+                className="w-full pl-8 pr-3 py-2 rounded-xl bg-white border border-gray-200 text-xs text-slate-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
             {/* Status Filter */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mr-1 flex items-center gap-1">
+              <span className="text-[11px] font-bold text-gray-400 mr-1 flex items-center gap-1">
                 <Filter className="w-3 h-3" />
                 Filter:
               </span>
@@ -827,8 +708,8 @@ export function StudentAttendanceView({
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer",
                     historyStatusFilter === f.id
-                      ? "bg-[#071A3D] dark:bg-[#1E66E8] text-white shadow-xs"
-                      : "bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5"
+                      ? "bg-[#071A3D] text-white shadow-xs"
+                      : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
                   )}
                 >
                   {f.label}
@@ -850,39 +731,39 @@ export function StudentAttendanceView({
                   return (
                     <div
                       key={group.date}
-                      className="rounded-2xl border border-slate-200/90 dark:border-white/10 bg-white dark:bg-slate-900/70 overflow-hidden transition-all shadow-xs hover:border-blue-300 dark:hover:border-blue-500/40"
+                      className="rounded-2xl border border-gray-200/90 bg-white overflow-hidden transition-all shadow-xs hover:border-blue-200"
                     >
                       {/* Date Header Accordion Bar */}
                       <div
                         onClick={() => toggleDateExpanded(group.date)}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer hover:bg-slate-50/80 dark:hover:bg-white/[0.03] transition-colors gap-3 border-b border-slate-100 dark:border-white/10"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 cursor-pointer hover:bg-slate-50/80 transition-colors gap-3 border-b border-gray-100"
                       >
                         <div className="flex items-center gap-3">
                           <div className={cn(
                             "w-10 h-10 rounded-xl flex flex-col items-center justify-center font-black text-xs shrink-0 ring-2",
-                            isPerfect && "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 ring-emerald-100 dark:ring-emerald-800/40",
-                            hasOD && "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 ring-amber-100 dark:ring-amber-800/40",
-                            hasAbsent && "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 ring-rose-100 dark:ring-rose-800/40"
+                            isPerfect && "bg-emerald-50 text-emerald-700 ring-emerald-100",
+                            hasOD && "bg-amber-50 text-amber-700 ring-amber-100",
+                            hasAbsent && "bg-red-50 text-red-700 ring-red-100"
                           )}>
                             <span className="text-[10px] leading-none uppercase font-bold">
                               {group.date.split('-')[2]}
                             </span>
-                            <span className="text-[9px] leading-none font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                            <span className="text-[9px] leading-none font-semibold text-slate-500 mt-0.5">
                               {new Date(group.date + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short' })}
                             </span>
                           </div>
 
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="font-extrabold text-sm sm:text-base text-[#071A3D] dark:text-white">
+                              <h4 className="font-extrabold text-sm sm:text-base text-[#071A3D]">
                                 {group.formattedDate}
                               </h4>
-                              <span className="text-[11px] font-mono text-slate-400">({group.date})</span>
+                              <span className="text-[11px] font-mono text-gray-400">({group.date})</span>
                             </div>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                              {group.total} Periods Conducted • <strong className="text-emerald-700 dark:text-emerald-400">{group.present} Present</strong>
-                              {group.od > 0 && <> • <strong className="text-amber-700 dark:text-amber-400">{group.od} OD</strong></>}
-                              {group.absent > 0 && <> • <strong className="text-rose-700 dark:text-rose-400">{group.absent} Absent</strong></>}
+                            <p className="text-xs text-gray-500 font-medium mt-0.5">
+                              {group.total} Periods Conducted • <strong className="text-emerald-700">{group.present} Present</strong>
+                              {group.od > 0 && <> • <strong className="text-amber-700">{group.od} OD</strong></>}
+                              {group.absent > 0 && <> • <strong className="text-red-700">{group.absent} Absent</strong></>}
                             </p>
                           </div>
                         </div>
@@ -891,27 +772,27 @@ export function StudentAttendanceView({
                         <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
                           <span
                             className={cn(
-                              "px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5 border",
-                              isPerfect && "bg-emerald-500/10 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-500/25",
-                              hasOD && "bg-amber-500/10 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border-amber-500/25",
-                              hasAbsent && "bg-rose-500/10 dark:bg-rose-950/40 text-rose-900 dark:text-rose-300 border-rose-500/25"
+                              "px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5",
+                              isPerfect && "bg-emerald-50 text-emerald-800 border border-emerald-200",
+                              hasOD && "bg-amber-50 text-amber-900 border border-amber-200",
+                              hasAbsent && "bg-red-50 text-red-900 border border-red-200"
                             )}
                           >
                             {isPerfect && (
                               <>
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                 <span>100% Present</span>
                               </>
                             )}
                             {hasOD && !hasAbsent && (
                               <>
-                                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                                 <span>{group.od} Period OD • {group.pct}%</span>
                               </>
                             )}
                             {hasAbsent && (
                               <>
-                                <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                <XCircle className="w-3.5 h-3.5 text-red-600" />
                                 <span>{group.absent} Absent • {group.pct}% Attended</span>
                               </>
                             )}
@@ -919,13 +800,13 @@ export function StudentAttendanceView({
 
                           <button
                             type="button"
-                            className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
                             aria-label="Toggle Date Periods"
                           >
                             {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-[#071A3D] dark:text-white" />
+                              <ChevronUp className="w-4 h-4 text-[#071A3D]" />
                             ) : (
-                              <ChevronDown className="w-4 h-4 text-slate-400" />
+                              <ChevronDown className="w-4 h-4 text-gray-400" />
                             )}
                           </button>
                         </div>
@@ -933,7 +814,7 @@ export function StudentAttendanceView({
 
                       {/* Expanded Periods List */}
                       {isExpanded && (
-                        <div className="p-4 bg-slate-50/50 dark:bg-slate-950/50 divide-y divide-slate-100 dark:divide-white/5 space-y-2.5">
+                        <div className="p-4 bg-slate-50/40 divide-y divide-gray-100 space-y-2">
                           {group.sessions.map((s) => {
                             const isPresent = s.status === 'P'
                             const isOD = s.status === 'OD'
@@ -942,26 +823,26 @@ export function StudentAttendanceView({
                             return (
                               <div
                                 key={s.id}
-                                className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 px-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 hover:border-blue-300 dark:hover:border-blue-500/40 transition-all gap-2 text-xs shadow-2xs"
+                                className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 px-3 rounded-xl bg-white border border-gray-100 hover:border-blue-200 transition-all gap-2 text-xs"
                               >
                                 <div className="flex items-center gap-3">
-                                  <span className="w-20 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-[#071A3D] dark:text-slate-200 font-mono font-bold text-[11px] text-center shrink-0">
+                                  <span className="w-20 px-2 py-1 rounded-lg bg-gray-100 text-[#071A3D] font-mono font-bold text-[11px] text-center shrink-0">
                                     {s.hour.split(' ')[0]} {s.hour.split(' ')[1]}
                                   </span>
 
                                   <div>
-                                    <div className="font-bold text-[#071A3D] dark:text-white text-xs sm:text-sm">
-                                      <span className="text-blue-600 dark:text-cyan-400 font-mono mr-1.5">{s.subjectCode}</span>
+                                    <div className="font-bold text-[#071A3D] text-xs sm:text-sm">
+                                      <span className="text-blue-700 font-mono mr-1.5">{s.subjectCode}</span>
                                       <span>{s.subjectName}</span>
                                     </div>
-                                    <div className="text-slate-400 dark:text-slate-400 text-[11px] flex items-center gap-2 mt-0.5">
-                                      <span>Faculty: <strong className="text-slate-600 dark:text-slate-300">{s.takenByName}</strong></span>
+                                    <div className="text-gray-400 text-[11px] flex items-center gap-2 mt-0.5">
+                                      <span>Faculty: <strong className="text-gray-600">{s.takenByName}</strong></span>
                                       <span>•</span>
-                                      <span className="font-mono text-slate-500 dark:text-slate-400">{s.hour.includes('(') ? s.hour.substring(s.hour.indexOf('(')) : s.hour}</span>
+                                      <span className="font-mono text-gray-500">{s.hour.includes('(') ? s.hour.substring(s.hour.indexOf('(')) : s.hour}</span>
                                       {s.remarks && (
                                         <>
                                           <span>•</span>
-                                          <span className="text-amber-700 dark:text-amber-400 font-medium italic">Remarks: {s.remarks}</span>
+                                          <span className="text-amber-700 font-medium italic">Remarks: {s.remarks}</span>
                                         </>
                                       )}
                                     </div>
@@ -971,27 +852,27 @@ export function StudentAttendanceView({
                                 <div className="self-end sm:self-center shrink-0">
                                   <span
                                     className={cn(
-                                      "px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 border",
-                                      isPresent && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25",
-                                      isOD && "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25",
-                                      isAbsent && "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"
+                                      "px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1",
+                                      isPresent && "bg-emerald-100 text-emerald-800 border border-emerald-200",
+                                      isOD && "bg-amber-100 text-amber-900 border border-amber-200",
+                                      isAbsent && "bg-red-100 text-red-800 border border-red-200"
                                     )}
                                   >
                                     {isPresent && (
                                       <>
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                                         <span>Present</span>
                                       </>
                                     )}
                                     {isOD && (
                                       <>
-                                        <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                                         <span>On-Duty (OD)</span>
                                       </>
                                     )}
                                     {isAbsent && (
                                       <>
-                                        <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                        <XCircle className="w-3.5 h-3.5 text-red-600" />
                                         <span>Absent</span>
                                       </>
                                     )}
@@ -1007,10 +888,10 @@ export function StudentAttendanceView({
                 })}
               </div>
             ) : (
-              <div className="py-12 text-center text-xs text-slate-400 bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl border border-dashed border-slate-200 dark:border-white/10">
-                <CalendarDays className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
-                <p className="font-bold text-slate-700 dark:text-slate-200 text-sm">No Attendance Matches Found</p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Try clearing your date or status filters above.</p>
+              <div className="py-12 text-center text-xs text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                <CalendarDays className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="font-bold text-gray-600 text-sm">No Attendance Matches Found</p>
+                <p className="text-[11px] text-gray-400 mt-1">Try clearing your date or status filters above.</p>
               </div>
             )
           ) : (
@@ -1018,34 +899,33 @@ export function StudentAttendanceView({
             <div className="overflow-x-auto">
               <table className="w-full min-w-[600px] text-xs text-left">
                 <thead>
-                  <tr className="border-b border-slate-200/80 dark:border-white/10 text-slate-400 dark:text-slate-500 uppercase text-[10px] font-black tracking-wider">
-                    <th className="py-2.5 font-black">Date</th>
-                    <th className="py-2.5 font-black">Subject Code &amp; Name</th>
-                    <th className="py-2.5 font-black">Period / Hour</th>
-                    <th className="py-2.5 font-black">Faculty</th>
-                    <th className="py-2.5 font-black text-right">Status</th>
+                  <tr className="border-b border-gray-200 text-gray-400 uppercase text-[10px] font-bold">
+                    <th className="py-2.5 font-bold">Date</th>
+                    <th className="py-2.5 font-bold">Subject Code &amp; Name</th>
+                    <th className="py-2.5 font-bold">Period / Hour</th>
+                    <th className="py-2.5 font-bold">Faculty</th>
+                    <th className="py-2.5 font-bold text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-medium">
+                <tbody className="divide-y divide-gray-100 font-medium">
                   {stats.history.map((h) => {
                     const isPresent = h.status === 'P'
                     const isOD = h.status === 'OD'
                     const isAbsent = h.status === 'A' || h.status === 'L'
                     return (
-                      <tr key={h.id} className="hover:bg-blue-50/40 dark:hover:bg-white/[0.03] transition-colors">
-                        <td className="py-3 font-mono font-bold text-[#071A3D] dark:text-white">{h.date}</td>
-                        <td className="py-3 text-[#071A3D] dark:text-white font-bold">
-                          <span className="text-[#1455D9] dark:text-cyan-400 mr-1.5 font-mono">{h.subjectCode}</span>
-                          <span>— {h.subjectName}</span>
+                      <tr key={h.id} className="hover:bg-gray-50/80 transition-colors">
+                        <td className="py-3 font-mono font-bold text-[#071A3D]">{h.date}</td>
+                        <td className="py-3 text-[#071A3D] font-bold">
+                          {h.subjectCode} — {h.subjectName}
                         </td>
-                        <td className="py-3 text-slate-600 dark:text-slate-400 font-mono">{h.hour}</td>
-                        <td className="py-3 text-slate-600 dark:text-slate-400">{h.takenByName}</td>
+                        <td className="py-3 text-gray-600">{h.hour}</td>
+                        <td className="py-3 text-gray-600">{h.takenByName}</td>
                         <td className="py-3 text-right">
                           <span className={cn(
-                            "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                            isPresent && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25",
-                            isOD && "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25",
-                            isAbsent && "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25"
+                            "px-2.5 py-0.5 rounded-full text-[10px] font-bold",
+                            isPresent && "bg-green-100 text-green-800",
+                            isOD && "bg-amber-100 text-amber-800",
+                            isAbsent && "bg-red-100 text-red-800"
                           )}>
                             {isPresent && 'Present'}
                             {isOD && 'On-Duty (OD)'}
@@ -1059,8 +939,8 @@ export function StudentAttendanceView({
               </table>
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Dynamic Proof-Based On-Duty (OD) / Leave Modal */}
       <ApplyODPermissionModal
