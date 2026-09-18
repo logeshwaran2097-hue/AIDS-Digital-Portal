@@ -222,14 +222,29 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     }).catch(() => null)
 
     if (student) {
-      user = await prisma.user.findUnique({
-        where: { id: student.userId },
-      }).catch(() => null)
+      if (student.userId) {
+        user = await prisma.user.findUnique({
+          where: { id: student.userId },
+        }).catch(() => null)
+      }
 
       if (!user) {
         user = await prisma.user.findFirst({
-          where: { email: `${student.registerNumber.toLowerCase()}@student.vsb.edu.in` },
+          where: {
+            role: 'student',
+            OR: [
+              { email: `${student.registerNumber.toLowerCase()}@student.vsb.edu.in` },
+              { email: { startsWith: student.registerNumber.toLowerCase() } },
+            ],
+          },
         }).catch(() => null)
+
+        if (user && student.userId !== user.id) {
+          await prisma.student.update({
+            where: { id: student.id },
+            data: { userId: user.id },
+          }).catch(() => {})
+        }
       }
     }
   }
@@ -264,11 +279,33 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
   } catch {}
 
+  // Fallback check against Date of Birth if password matches DOB formats
+  if (!isValid && student?.dateOfBirth) {
+    const dob = new Date(student.dateOfBirth)
+    if (!isNaN(dob.getTime())) {
+      const yyyy = String(dob.getUTCFullYear())
+      const mm = String(dob.getUTCMonth() + 1).padStart(2, '0')
+      const dd = String(dob.getUTCDate()).padStart(2, '0')
+      const cleanInput = trimmedPassword.replace(/\D/g, '')
+      const dobVariants = [
+        `${dd}${mm}${yyyy}`,
+        `${yyyy}${mm}${dd}`,
+        `${dd}-${mm}-${yyyy}`,
+        `${yyyy}-${mm}-${dd}`,
+        `${dd}/${mm}/${yyyy}`,
+        `${yyyy}/${mm}/${dd}`,
+      ]
+      if (dobVariants.includes(trimmedPassword) || (cleanInput.length === 8 && dobVariants.map(v => v.replace(/\D/g, '')).includes(cleanInput))) {
+        isValid = true
+      }
+    }
+  }
+
   if (!isValid) {
     return { success: false, message: 'Invalid Register Number, Email, or Password.' }
   }
 
-  // 5. Handle mustChangePassword (temp password flow set by admin)
+  // 6. Handle mustChangePassword (temp password flow set by admin)
   if (user.mustChangePassword) {
     passwordChangeRequired = true
   }

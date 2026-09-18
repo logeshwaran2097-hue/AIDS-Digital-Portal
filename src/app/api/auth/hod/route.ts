@@ -6,8 +6,8 @@ import { z } from 'zod'
 
 const loginSchema = z
   .object({
-    facultyId: z.string().max(50).optional(),
-    email: z.string().email().optional(),
+    facultyId: z.string().max(100).optional(),
+    email: z.string().max(100).optional(),
     name: z.string().max(100).optional(),
     password: z.string().max(100).optional(),
     dateOfBirth: z.string().max(30).optional(),

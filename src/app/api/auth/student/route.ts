@@ -6,8 +6,8 @@ import { z } from 'zod'
 
 const loginSchema = z
   .object({
-    registerNumber: z.string().max(30).optional(),
-    email: z.string().email().optional(),
+    registerNumber: z.string().max(100).optional(),
+    email: z.string().max(100).optional(),
     password: z.string().max(100).optional(),
     dateOfBirth: z.string().max(30).optional(),
   })
@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     const identifier = (registerNumber || email || '').trim()
     const passwordOrDob = password || dateOfBirth || ''
 
-    // Dual Rate Limit: 5 attempts per 15 min per IP and per account
-    const rateLimit = await checkRateLimit(request, 5, 900, 'auth:student', identifier)
+    // Dual Rate Limit: 15 attempts per 15 min per IP and per account
+    const rateLimit = await checkRateLimit(request, 15, 900, 'auth:student', identifier)
     if (!rateLimit.allowed) {
       return rateLimitResponse(rateLimit)
     }

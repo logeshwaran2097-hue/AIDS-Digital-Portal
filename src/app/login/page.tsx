@@ -368,20 +368,30 @@ export default function LoginPage() {
 
       if (selectedRole === 'student') {
         endpoint = '/api/auth/student'
-        payload = { registerNumber: registerNumber.trim(), email: registerNumber.trim(), password }
+        const raw = registerNumber.trim()
+        payload = {
+          registerNumber: raw,
+          ...(raw.includes('@') ? { email: raw.toLowerCase() } : {}),
+          password,
+        }
       } else if (selectedRole === 'faculty' || selectedRole === 'advisor') {
         endpoint = '/api/auth/faculty'
+        const raw = facultyId.trim()
         payload = {
-          facultyId: facultyId.trim(),
-          email: facultyId.trim(),
-          name: facultyId.trim(),
+          facultyId: raw,
+          ...(raw.includes('@') ? { email: raw.toLowerCase() } : { name: raw }),
           password,
           role: selectedRole,
           loginAsRole: selectedRole,
         }
       } else if (selectedRole === 'hod') {
         endpoint = '/api/auth/hod'
-        payload = { facultyId: facultyId.trim(), email: facultyId.trim(), name: facultyId.trim(), password }
+        const raw = facultyId.trim()
+        payload = {
+          facultyId: raw,
+          ...(raw.includes('@') ? { email: raw.toLowerCase() } : { name: raw }),
+          password,
+        }
       }
 
       const res = await fetch(endpoint, {
