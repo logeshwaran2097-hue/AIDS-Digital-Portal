@@ -79,10 +79,22 @@ const navItemsMap: Record<string, NavItem[]> = {
 }
 
 const roleBadgeMap: Record<string, { label: string; color: string }> = {
-  student: { label: 'Student', color: 'bg-blue-500/15 text-blue-300 border-blue-500/25' },
-  faculty: { label: 'Faculty', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25' },
-  hod: { label: 'HOD', color: 'bg-amber-500/15 text-amber-300 border-amber-500/25' },
-  admin: { label: 'Admin', color: 'bg-purple-500/15 text-purple-300 border-purple-500/25' },
+  student: {
+    label: 'Student Scholar',
+    color: 'bg-gradient-to-r from-blue-600/25 to-cyan-500/20 text-cyan-300 border-cyan-400/35 shadow-[0_0_12px_rgba(34,197,232,0.15)]',
+  },
+  faculty: {
+    label: 'Faculty Member',
+    color: 'bg-gradient-to-r from-emerald-600/25 to-teal-500/20 text-emerald-300 border-emerald-400/35 shadow-[0_0_12px_rgba(52,211,153,0.15)]',
+  },
+  hod: {
+    label: 'Head of Department',
+    color: 'bg-gradient-to-r from-amber-500/30 to-yellow-500/20 text-amber-300 border-amber-400/40 shadow-[0_0_14px_rgba(244,196,48,0.25)]',
+  },
+  admin: {
+    label: 'System Administrator',
+    color: 'bg-gradient-to-r from-purple-600/30 to-indigo-500/20 text-purple-200 border-purple-400/35 shadow-[0_0_14px_rgba(168,85,247,0.2)]',
+  },
 }
 
 interface NotificationItem {
@@ -683,9 +695,9 @@ export function PortalLayout({
   const isLabHandler = roleBadgeLabel === 'Lab Handler' || roleBadgeLabel === 'Lab In-charge'
 
   const effectiveRoleBadgeColor = isLabHandler
-    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+    ? 'bg-gradient-to-r from-cyan-600/25 to-blue-500/20 text-cyan-200 border-cyan-400/40 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
     : isFacultyAdvisor
-    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+    ? 'bg-gradient-to-r from-teal-600/25 to-emerald-500/20 text-teal-200 border-teal-400/40 shadow-[0_0_12px_rgba(45,212,191,0.2)]'
     : roleBadge.color
 
   const effectiveRoleBadgeLabel =
@@ -1010,7 +1022,9 @@ export function PortalLayout({
       l.includes('question') ||
       l.includes('project') ||
       l.includes('resource') ||
-      l.includes('file')
+      l.includes('file') ||
+      l.includes('laboratory') ||
+      l.includes('/lab')
     ) {
       return 'LEARNING & RESEARCH'
     }
@@ -1048,38 +1062,46 @@ export function PortalLayout({
       {/* Slide-out Navigation Drawer / Sidebar (Executive Obsidian Crystal Panel) */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#040A18] via-[#071328] to-[#020610] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-white/10 shadow-[8px_0_32px_rgba(0,0,0,0.5)] pb-safe select-none backdrop-blur-3xl',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#030816] via-[#061226] to-[#02050E] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-white/10 shadow-[10px_0_40px_rgba(0,0,0,0.65)] pb-safe select-none backdrop-blur-2xl relative overflow-hidden',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
+        {/* Ambient mesh background glows */}
+        <div className="absolute top-0 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-1/4 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none translate-x-1/3" />
+
         {/* Drawer Header with Official Emblem */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02] relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full p-1 bg-gradient-to-tr from-[#D4AF37] to-[#1E66E8] ring-1 ring-white/20 flex items-center justify-center shrink-0 shadow-md">
-              <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+            <div className="w-10 h-10 rounded-2xl p-[2px] bg-gradient-to-tr from-[#F4C430] via-[#22C7E8] to-[#1455D9] shadow-[0_0_16px_rgba(244,196,48,0.35)] flex items-center justify-center shrink-0">
+              <div className="w-full h-full rounded-[14px] bg-white p-0.5 flex items-center justify-center overflow-hidden shadow-inner">
                 <Image
                   src="/college-emblem.png"
                   alt="V.S.B. Engineering College Official Emblem"
                   width={38}
                   height={38}
-                  className="w-full h-full object-contain rounded-full"
+                  className="w-full h-full object-contain"
                   priority
                 />
               </div>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-sm font-bold text-white leading-tight tracking-tight">AI &amp; DS Portal</p>
+                <p className="text-sm font-black text-white leading-tight tracking-tight drop-shadow-xs">AI &amp; DS Portal</p>
                 <button
                   type="button"
                   onClick={triggerPortalUpdateCheck}
                   title="Check for real-time app updates"
-                  className="px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/15 text-slate-300 text-[10px] font-semibold tracking-wide cursor-pointer transition-colors border border-white/10"
+                  className="px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold tracking-wide cursor-pointer transition-all border border-cyan-400/30 shadow-xs flex items-center gap-1"
                 >
-                  {APP_VERSION_LABEL}
+                  <Sparkles className="w-2.5 h-2.5 text-cyan-300" />
+                  <span>{APP_VERSION_LABEL}</span>
                 </button>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium tracking-wide truncate mt-0.5">V.S.B. Engineering College</p>
+              <p className="text-[10.5px] text-slate-400 font-medium tracking-wide truncate mt-0.5 flex items-center gap-1">
+                <span>V.S.B. Engineering College</span>
+                <span className="text-[8.5px] px-1 py-0.2 rounded bg-white/10 text-slate-300 font-semibold uppercase">Autonomous</span>
+              </p>
             </div>
           </div>
           {/* Close button on mobile */}
@@ -1092,45 +1114,53 @@ export function PortalLayout({
           </button>
         </div>
 
-        {/* User Mini Profile Card in Drawer */}
+        {/* User VIP Profile Card in Drawer */}
         <Link
           href={profileHref}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'p-3 mx-3 my-2.5 rounded-2xl border transition-all duration-200 flex items-center gap-3 shrink-0 cursor-pointer shadow-xs',
+            'relative overflow-hidden p-3.5 mx-3 my-2.5 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 shrink-0 cursor-pointer shadow-md group z-10',
             (activePath || pathname) === profileHref
-              ? 'bg-gradient-to-r from-white/15 to-white/10 border-white/25 text-white shadow-md'
-              : 'bg-white/[0.04] border-white/10 hover:bg-white/[0.08] hover:border-white/20'
+              ? 'bg-gradient-to-br from-blue-900/40 via-[#0B1A3B]/80 to-[#071328] border-cyan-400/40 shadow-[0_4px_20px_rgba(20,85,217,0.35)]'
+              : 'bg-gradient-to-br from-white/[0.06] via-[#07142E]/70 to-white/[0.02] border-white/10 hover:border-amber-400/40 hover:bg-white/[0.08]'
           )}
         >
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900 text-white border border-[#D4AF37]/50 flex items-center justify-center font-bold text-sm shrink-0 shadow-inner">
-            {avatarImage && !avatarError ? (
-              <img
-                src={avatarImage}
-                alt={userName}
-                className="w-full h-full object-cover"
-                onError={() => setAvatarError(true)}
-              />
-            ) : (
-              userName.charAt(0) || 'U'
-            )}
+          <div className="relative w-10 h-10 rounded-xl p-[2px] bg-gradient-to-tr from-amber-400 via-cyan-400 to-blue-600 shadow-[0_0_12px_rgba(34,197,232,0.3)] shrink-0">
+            <div className="w-full h-full rounded-[10px] overflow-hidden bg-slate-950 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+              {avatarImage && !avatarError ? (
+                <img
+                  src={avatarImage}
+                  alt={userName}
+                  className="w-full h-full object-cover"
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                userName.charAt(0) || 'U'
+              )}
+            </div>
+            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 ring-2 ring-[#071328] shadow-[0_0_8px_rgba(52,211,153,0.9)] flex items-center justify-center" title="Online & Connected">
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
+            </span>
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="text-xs font-semibold text-white truncate leading-tight">{userName}</h4>
-            <p className="text-[11px] text-slate-400 truncate mt-0.5">
+            <h4 className="text-xs sm:text-[13px] font-black text-white group-hover:text-amber-200 transition-colors truncate leading-tight tracking-tight">
+              {userName}
+            </h4>
+            <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
               {role === 'hod' || (userEmail && userEmail.toLowerCase().startsWith('hod'))
-                ? 'AI & DS Dept'
+                ? 'AI & DS Dept · Autonomous'
                 : (userEmail && !userEmail.endsWith('@student.vsb.edu.in'))
                 ? userEmail
-                : 'AI & DS Dept'}
+                : 'AI & DS Dept · Student'}
             </p>
             <span
               className={cn(
-                'inline-block text-[10px] font-medium px-2 py-0.5 rounded-md border mt-1',
+                'inline-flex items-center gap-1 text-[9.5px] font-bold px-2 py-0.5 rounded-md border mt-1.5 uppercase tracking-wider',
                 effectiveRoleBadgeColor
               )}
             >
-              {effectiveRoleBadgeLabel}
+              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+              <span>{effectiveRoleBadgeLabel}</span>
             </span>
           </div>
         </Link>
@@ -1138,9 +1168,8 @@ export function PortalLayout({
         {/* Navigation Link Items */}
         <nav
           ref={navContainerRef}
-          className="flex-1 overflow-y-auto px-3 py-2 space-y-1"
+          className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 lux-sidebar-scroll relative z-10"
           aria-label="Main navigation"
-          style={{ scrollbarWidth: 'thin' }}
         >
           {resolvedNavItems.map((item, index) => {
             const current = activePath || pathname
@@ -1188,11 +1217,12 @@ export function PortalLayout({
             return (
               <React.Fragment key={item.href}>
                 {showCategoryHeader && (
-                  <div className={cn("pt-3.5 pb-1 px-2.5 flex items-center gap-2 select-none", index === 0 && "pt-1")}>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-[#D4AF37]/90 font-mono">
+                  <div className={cn("pt-4 pb-1.5 px-3 flex items-center gap-2 select-none", index === 0 && "pt-1.5")}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-cyan-400 shadow-[0_0_8px_rgba(244,196,48,0.8)] shrink-0" />
+                    <span className="text-[9.5px] font-black uppercase tracking-[0.18em] bg-gradient-to-r from-amber-200 via-amber-100 to-slate-200 bg-clip-text text-transparent">
                       {currentCategory}
                     </span>
-                    <span className="flex-1 h-px bg-white/10" />
+                    <span className="flex-1 h-px bg-gradient-to-r from-amber-400/30 via-white/10 to-transparent" />
                   </div>
                 )}
                 <Link
@@ -1211,36 +1241,50 @@ export function PortalLayout({
                   }}
                   onClick={() => handleNavClick(item.href)}
                   className={cn(
-                    'flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-all duration-200 cursor-pointer group relative',
+                    'relative flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-all duration-200 cursor-pointer group select-none overflow-hidden my-0.5',
                     isActive
-                      ? 'bg-gradient-to-r from-[#1455D9]/40 via-[#1E66E8]/20 to-transparent text-white font-bold border-l-2 border-[#D4AF37] pl-3 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]'
-                      : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-100 hover:translate-x-0.5'
+                      ? 'bg-gradient-to-r from-[#1455D9] via-[#1A5CE5] to-[#0E3A9E] text-white font-bold shadow-[0_4px_20px_rgba(20,85,217,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] border border-cyan-400/30 pl-3.5'
+                      : 'text-slate-300 hover:bg-gradient-to-r hover:from-white/[0.08] hover:via-white/[0.04] hover:to-transparent hover:text-white hover:border hover:border-white/10 hover:translate-x-1'
                   )}
                 >
+                  {/* Glowing active edge indicator */}
+                  {isActive && (
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-gradient-to-b from-amber-300 via-cyan-400 to-blue-400 shadow-[0_0_10px_rgba(34,197,232,0.9)]" />
+                  )}
+
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={cn('shrink-0 text-base relative', isActive ? 'text-[#F3E5AB]' : 'text-slate-400 group-hover:text-slate-200')}>
+                    <span
+                      className={cn(
+                        'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-base transition-all duration-200 relative',
+                        isActive
+                          ? 'bg-white/15 text-amber-300 border border-white/20 shadow-inner drop-shadow-[0_0_8px_rgba(244,196,48,0.5)]'
+                          : 'bg-white/[0.03] text-slate-400 border border-white/5 group-hover:text-cyan-300 group-hover:bg-white/[0.08] group-hover:border-cyan-500/30 group-hover:scale-105'
+                      )}
+                    >
                       {item.icon}
-                      {notifCount > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#0B132B]" />
+                      {notifCount > 0 && !isActive && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#071328] animate-pulse" />
                       )}
                     </span>
-                    <span className="truncate">{displayLabel}</span>
+                    <span className="truncate tracking-tight">{displayLabel}</span>
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                    {notifCount > 0 && (
+                    {notifCount > 0 ? (
                       <span
                         className={cn(
-                          'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-bold tracking-tight',
+                          'inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-black tracking-tight shadow-md transition-transform duration-200 group-hover:scale-105',
                           isActive
-                            ? 'bg-gradient-to-r from-[#F3E5AB] to-[#D4AF37] text-slate-900 font-black'
-                            : 'bg-rose-500/90 text-white'
+                            ? 'bg-gradient-to-r from-amber-300 to-[#F4C430] text-slate-950 shadow-[0_0_10px_rgba(244,196,48,0.6)]'
+                            : 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)] ring-1 ring-white/20'
                         )}
                         title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
                       >
                         {notifCount > 99 ? '99+' : notifCount}
                       </span>
-                    )}
+                    ) : isActive ? (
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_rgba(34,197,232,0.9)] shrink-0" />
+                    ) : null}
                   </div>
                 </Link>
               </React.Fragment>
@@ -1249,26 +1293,30 @@ export function PortalLayout({
         </nav>
 
         {/* Drawer Footer with Version & Logout */}
-        <div className="p-3 border-t border-white/10 bg-black/20 space-y-2">
-          <div className="px-1 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-            <span>AI&amp;DS Portal</span>
+        <div className="p-3.5 border-t border-white/10 bg-gradient-to-t from-black/40 via-black/20 to-transparent space-y-2.5 relative z-10">
+          <div className="px-2 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <span className="text-slate-300 font-semibold tracking-wide">Live Portal</span>
+            </div>
             <button
               type="button"
               onClick={triggerPortalUpdateCheck}
               title="Check for Portal Updates"
-              className="font-medium text-slate-300 bg-white/5 hover:bg-white/10 px-2 py-0.5 rounded border border-white/10 cursor-pointer active:scale-95 transition-all text-[10px]"
+              className="font-mono font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 rounded-md border border-cyan-500/30 cursor-pointer active:scale-95 transition-all text-[10px] flex items-center gap-1 shadow-xs"
             >
-              {APP_VERSION_LABEL} · Check Update
+              <Sparkles className="w-2.5 h-2.5 text-cyan-300" />
+              <span>{APP_VERSION_LABEL}</span>
             </button>
           </div>
           <button
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
             disabled={isLoggingOut}
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors duration-150 cursor-pointer disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-200 border border-rose-500/20 hover:border-rose-500/40 transition-all duration-200 cursor-pointer disabled:opacity-50 shadow-sm"
           >
             <LogOut className="h-4 w-4" />
-            <span>Logout</span>
+            <span>Sign Out Session</span>
           </button>
         </div>
       </aside>
@@ -1341,12 +1389,12 @@ export function PortalLayout({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="relative p-2 rounded-xl text-[#071A3D] hover:bg-gray-100 lg:hidden transition-colors"
+              className="relative p-2.5 rounded-xl text-slate-800 dark:text-slate-100 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10 lg:hidden transition-colors shadow-2xs"
               aria-label="Open Navigation Drawer"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5" />
               {totalMenuNotifications > 0 && (
-                <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-white dark:ring-[#040A18] shadow-md animate-pulse">
                   {totalMenuNotifications > 99 ? '99+' : totalMenuNotifications}
                 </span>
               )}
@@ -1362,42 +1410,42 @@ export function PortalLayout({
                       key={m.href}
                       href={m.href}
                       onClick={() => handleNavClick(m.href)}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-slate-700 hover:text-slate-900 transition-colors text-xs font-medium group cursor-pointer"
+                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-white/5 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-[#1455D9] dark:hover:text-cyan-300 transition-all text-xs font-semibold group cursor-pointer shadow-xs"
                       title={`${m.count} updates in ${m.label}`}
                     >
-                      <span className="text-slate-500 group-hover:text-blue-600 transition-colors">
+                      <span className="text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-cyan-300 transition-colors">
                         {m.icon}
                       </span>
                       <span className="truncate max-w-[130px]">{m.label}</span>
-                      <span className="min-w-[18px] h-[18px] px-1 bg-slate-200 text-slate-800 rounded-full text-[10px] font-semibold flex items-center justify-center">
+                      <span className="min-w-[18px] h-[18px] px-1.5 bg-[#1455D9]/15 dark:bg-cyan-500/20 text-[#1455D9] dark:text-cyan-300 border border-blue-400/20 rounded-full text-[10px] font-bold flex items-center justify-center">
                         {m.count > 99 ? '99+' : m.count}
                       </span>
                     </Link>
                   ))}
                 </div>
 
-                {/* 2. Interactive Menu Updates Pill Button (clean & minimal) */}
+                {/* 2. Interactive Menu Updates Pill Button (Luxury Royal Sapphire) */}
                 <button
                   type="button"
                   onClick={() => setIsMenuNotifOpen((prev) => !prev)}
                   className={cn(
-                    'flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all duration-200 cursor-pointer shadow-xs',
+                    'flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all duration-200 cursor-pointer shadow-xs',
                     isMenuNotifOpen
-                      ? 'bg-gradient-to-r from-[#071A3D] via-[#0E3A94] to-[#071A3D] text-white border-[#D4AF37]/50 shadow-lux-gold'
-                      : 'bg-white/80 hover:bg-white text-slate-700 border-slate-200/90 hover:border-slate-300 shadow-xs hover:shadow-md'
+                      ? 'bg-gradient-to-r from-[#071A3D] via-[#1455D9] to-[#071A3D] text-white border-amber-400/50 shadow-[0_0_16px_rgba(244,196,48,0.3)]'
+                      : 'bg-white/90 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-white/15 hover:border-blue-400 dark:hover:border-cyan-400/40 shadow-xs hover:shadow-md'
                   )}
                   title="Click to view menus with unread updates"
                   aria-expanded={isMenuNotifOpen}
                 >
-                  <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 shrink-0 shadow-[0_0_6px_rgba(34,197,232,0.8)] animate-pulse" />
                   <span className="tracking-tight">
                     {menusWithNotifications.length}{' '}
                     <span>Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
                   </span>
                   <span
                     className={cn(
-                      'px-1.5 py-0.2 rounded-full text-[10px] font-bold',
-                      isMenuNotifOpen ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-800'
+                      'px-2 py-0.5 rounded-full text-[10px] font-black',
+                      isMenuNotifOpen ? 'bg-amber-400 text-slate-950' : 'bg-slate-200 dark:bg-white/15 text-slate-800 dark:text-white'
                     )}
                   >
                     {totalMenuNotifications}
@@ -1419,25 +1467,25 @@ export function PortalLayout({
                       className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
                     />
 
-                    <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 w-auto sm:w-80 rounded-2xl bg-white border border-slate-200 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left flex flex-col font-sans">
-                      <div className="p-3.5 bg-[#071A41] text-white flex items-center justify-between shadow-xs">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-red-500/20 border border-red-400/30 flex items-center justify-center text-red-300">
+                    <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 w-auto sm:w-80 rounded-3xl bg-white dark:bg-[#071328] border border-slate-200 dark:border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left flex flex-col font-sans backdrop-blur-xl">
+                      <div className="p-4 bg-gradient-to-r from-[#071A41] via-[#0D2E73] to-[#071A41] text-white flex items-center justify-between border-b border-white/10 shadow-sm">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-inner">
                             <Bell className="w-4 h-4" />
                           </div>
                           <div>
                             <h4 className="text-xs font-black tracking-wide text-white">Menu Notifications</h4>
-                            <p className="text-[10px] text-blue-200">
-                              {totalMenuNotifications} alert{totalMenuNotifications > 1 ? 's' : ''} across {menusWithNotifications.length} menu{menusWithNotifications.length > 1 ? 's' : ''}
+                            <p className="text-[10px] text-cyan-200 font-medium">
+                              {totalMenuNotifications} update{totalMenuNotifications > 1 ? 's' : ''} across {menusWithNotifications.length} section{menusWithNotifications.length > 1 ? 's' : ''}
                             </p>
                           </div>
                         </div>
-                        <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black">
+                        <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-[#F4C430] text-slate-950 text-[10px] font-black shadow-xs">
                           Active
                         </span>
                       </div>
 
-                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 p-1.5 bg-white" style={{ scrollbarWidth: 'thin' }}>
+                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 p-1.5 bg-white dark:bg-[#071328] lux-sidebar-scroll">
                         {menusWithNotifications.map((m) => (
                           <Link
                             key={m.href}
@@ -1446,33 +1494,33 @@ export function PortalLayout({
                               handleNavClick(m.href)
                               setIsMenuNotifOpen(false)
                             }}
-                            className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
+                            className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group cursor-pointer"
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1455D9] group-hover:bg-[#1455D9] group-hover:text-white transition-colors flex items-center justify-center shrink-0 shadow-2xs">
+                              <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-white/5 text-[#1455D9] dark:text-cyan-300 group-hover:bg-[#1455D9] group-hover:text-white transition-all flex items-center justify-center shrink-0 shadow-2xs border border-blue-100 dark:border-white/10">
                                 {m.icon}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-800 group-hover:text-[#1455D9] truncate">
+                                <p className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#1455D9] dark:group-hover:text-cyan-300 truncate">
                                   {m.label}
                                 </p>
-                                <p className="text-[10px] text-slate-500 truncate">
-                                  Click to open this section
+                                <p className="text-[10px] text-slate-400 truncate">
+                                  Click to navigate
                                 </p>
                               </div>
                             </div>
-                            <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 text-xs font-black shrink-0 shadow-2xs group-hover:bg-red-500 group-hover:text-white group-hover:border-red-500 transition-colors">
+                            <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10px] font-black shrink-0 shadow-xs">
                               {m.count} new
                             </span>
                           </Link>
                         ))}
                       </div>
 
-                      <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <div className="p-3 bg-slate-50 dark:bg-black/30 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs">
                         <Link
                           href={notificationsHref}
                           onClick={() => setIsMenuNotifOpen(false)}
-                          className="text-[11px] font-bold text-[#1455D9] hover:underline inline-flex items-center gap-1"
+                          className="text-[11px] font-bold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1"
                         >
                           <span>All Notifications</span>
                           <ExternalLink className="w-3 h-3" />
@@ -1480,7 +1528,7 @@ export function PortalLayout({
                         <button
                           type="button"
                           onClick={() => setIsMenuNotifOpen(false)}
-                          className="text-[11px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+                          className="text-[11px] font-bold text-slate-400 hover:text-slate-200 cursor-pointer"
                         >
                           Close
                         </button>
@@ -1701,10 +1749,10 @@ export function PortalLayout({
               type="button"
               onClick={triggerPortalUpdateCheck}
               title={`Release ${APP_VERSION_LABEL} · Click to check updates`}
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-400/25 dark:border-white/10 bg-blue-50/80 dark:bg-white/5 hover:bg-blue-100/80 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span>{APP_VERSION_LABEL}</span>
+              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-300" />
+              <span className="font-mono font-bold text-[11px]">{APP_VERSION_LABEL}</span>
             </button>
 
             {/* Vision & Mission Quick Access */}
@@ -1712,9 +1760,9 @@ export function PortalLayout({
               type="button"
               onClick={() => setShowVisionModal(true)}
               title="View Department Vision & Mission"
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
             >
-              <Target className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              <Target className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
               <span>Vision &amp; Mission</span>
             </button>
 
@@ -1723,10 +1771,10 @@ export function PortalLayout({
               type="button"
               onClick={toggleTheme}
               title={isDarkMode ? 'Switch to Ivory Studio Mode' : 'Switch to Midnight Centurion Mode'}
-              className="p-2 rounded-xl border border-slate-200/80 dark:border-white/15 bg-white/80 dark:bg-white/10 hover:border-[#D4AF37]/60 text-slate-700 dark:text-amber-300 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+              className="p-2 rounded-xl border border-amber-400/40 dark:border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/20 text-amber-600 dark:text-amber-300 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               {isDarkMode ? (
-                <Sun className="w-4 h-4 text-[#D4AF37] animate-in spin-in-180 duration-300" />
+                <Sun className="w-4 h-4 text-[#F4C430] animate-in spin-in-180 duration-300" />
               ) : (
                 <Moon className="w-4 h-4 text-slate-700" />
               )}
@@ -1735,25 +1783,28 @@ export function PortalLayout({
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
-              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full lux-glass-card hover:border-[#D4AF37]/50 transition-all duration-300 shadow-xs hover:shadow-md group cursor-pointer"
+              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full lux-glass-card hover:border-amber-400/50 transition-all duration-300 shadow-xs hover:shadow-md group cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                {avatarImage && !avatarError ? (
-                  <img
-                    src={avatarImage}
-                    alt={userName}
-                    className="w-full h-full object-cover"
-                    onError={() => setAvatarError(true)}
-                  />
-                ) : (
-                  userName.charAt(0) || 'U'
-                )}
+              <div className="relative w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-tr from-amber-400 via-cyan-400 to-blue-600 shadow-[0_0_10px_rgba(34,197,232,0.3)] shrink-0">
+                <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 text-white flex items-center justify-center font-bold text-xs">
+                  {avatarImage && !avatarError ? (
+                    <img
+                      src={avatarImage}
+                      alt={userName}
+                      className="w-full h-full object-cover"
+                      onError={() => setAvatarError(true)}
+                    />
+                  ) : (
+                    userName.charAt(0) || 'U'
+                  )}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#040A18] shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
               </div>
               <div className="hidden sm:flex flex-col text-left leading-none">
-                <span className="text-xs font-semibold text-slate-800 max-w-[120px] truncate group-hover:text-blue-600 transition-colors">
+                <span className="text-xs font-bold text-slate-800 dark:text-white max-w-[120px] truncate group-hover:text-blue-600 dark:group-hover:text-cyan-300 transition-colors">
                   {userName}
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium mt-0.5 uppercase tracking-wider">
+                <span className="text-[9.5px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wider">
                   {effectiveRoleBadgeLabel}
                 </span>
               </div>
@@ -1765,10 +1816,10 @@ export function PortalLayout({
               onClick={() => setShowLogoutConfirm(true)}
               disabled={isLoggingOut}
               title="Logout from portal"
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-transparent hover:border-rose-500/20"
             >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Logout</span>
+              <LogOut className="w-4 h-4 text-rose-500" />
+              <span className="hidden sm:inline text-slate-600 dark:text-slate-300 hover:text-rose-400">Logout</span>
             </button>
           </div>
         </div>
@@ -1779,9 +1830,9 @@ export function PortalLayout({
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">{children}</div>
       </main>
 
-      {/* Mobile Bottom 5-Tab Navigation Bar */}
+      {/* Mobile Bottom 5-Tab Navigation Bar (Obsidian Glass Floating Dock) */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/90 dark:bg-[#070E1E]/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-white/10 grid grid-cols-5 py-2 px-1 pb-safe shadow-[0_-6px_25px_rgba(7,26,61,0.08)] select-none"
+        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-gradient-to-t from-[#020612] via-[#050D24]/95 to-[#071328]/90 backdrop-blur-2xl border-t border-white/10 grid grid-cols-5 py-2 px-1 pb-safe shadow-[0_-8px_32px_rgba(0,0,0,0.6)] select-none"
         aria-label="Bottom mobile navigation"
         style={{ touchAction: 'manipulation' }}
       >
@@ -1793,10 +1844,10 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
             (activePath || pathname) === '/dashboard' || (activePath || pathname) === '/faculty-dashboard' || (activePath || pathname) === '/hod-dashboard' || (activePath || pathname) === '/admin/dashboard'
-              ? 'text-blue-600 font-semibold'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
+              : 'text-slate-400 hover:text-slate-200'
           )}
         >
           <Home className="h-5 w-5" />
@@ -1811,16 +1862,16 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
             (activePath || pathname).includes('students') || (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
-              ? 'text-blue-600 font-semibold'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
+              : 'text-slate-400 hover:text-slate-200'
           )}
         >
           <div className="relative">
             {role === 'admin' ? <Users className="h-5 w-5" /> : role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
             {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-[#020612] shadow-xs">
                 {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses')}
               </span>
             )}
@@ -1836,16 +1887,16 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
             (activePath || pathname).includes('faculty') || (activePath || pathname).includes('projects') || ((activePath || pathname).includes('students') && role === 'faculty')
-              ? 'text-blue-600 font-semibold'
-              : 'text-slate-500 hover:text-slate-800'
+              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
+              : 'text-slate-400 hover:text-slate-200'
           )}
         >
           <div className="relative">
             {role === 'admin' ? <School className="h-5 w-5" /> : role === 'faculty' ? <Users className="h-5 w-5" /> : <FolderOpen className="h-5 w-5" />}
             {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-[#020612] shadow-xs">
                 {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects')}
               </span>
             )}
@@ -1859,14 +1910,16 @@ export function PortalLayout({
           prefetch={true}
           onClick={() => handleNavClick(notificationsHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors relative',
-            (activePath || pathname).includes('notifications') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
+            (activePath || pathname).includes('notifications')
+              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
+              : 'text-slate-400 hover:text-slate-200'
           )}
         >
           <div className="relative">
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center ring-2 ring-white shadow-xs">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-[#020612] shadow-xs">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -1882,8 +1935,10 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(profileHref) } catch {} }}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-colors',
-            (activePath || pathname).includes('profile') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800'
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl',
+            (activePath || pathname).includes('profile')
+              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
+              : 'text-slate-400 hover:text-slate-200'
           )}
         >
           <UserIcon className="h-5 w-5" />
@@ -1932,19 +1987,23 @@ export function PortalLayout({
         onClose={() => setIsDownloaderOpen(false)}
       />
 
-      {/* Logout Confirmation Modal */}
+      {/* Logout Confirmation Modal (Luxury Midnight Sapphire Glass) */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3D]/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200 text-center">
-            <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 shadow-inner ring-8 ring-red-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-gradient-to-b from-[#061226] via-[#091B3E] to-[#030919] text-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.85)] border border-white/15 animate-in zoom-in-95 duration-200 text-center relative overflow-hidden">
+            {/* Ambient aura glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-rose-500/15 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto mb-4 shadow-[0_0_24px_rgba(244,63,94,0.3)]">
               <LogOut className="w-8 h-8" />
             </div>
 
-            <h3 className="text-lg sm:text-xl font-black text-[#071A3D] mb-1">
-              Confirm Sign Out
+            <h3 className="text-lg sm:text-xl font-black text-white mb-1.5 tracking-tight">
+              Sign Out of Portal Session
             </h3>
-            <p className="text-xs sm:text-sm text-gray-500 mb-6 leading-relaxed">
-              Are you sure you want to end your current session for <strong className="text-[#071A3D] font-bold">{userName}</strong> ({role.toUpperCase()})?
+            <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
+              Are you sure you want to end your current session for{' '}
+              <strong className="text-amber-300 font-bold">{userName}</strong> ({role.toUpperCase()})?
             </p>
 
             <div className="grid grid-cols-2 gap-3">
@@ -1952,7 +2011,7 @@ export function PortalLayout({
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
                 disabled={isLoggingOut}
-                className="px-4 py-3 rounded-2xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
+                className="px-4 py-3 rounded-xl border border-white/10 text-slate-300 font-bold text-xs hover:bg-white/10 hover:text-white transition-all cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -1960,17 +2019,17 @@ export function PortalLayout({
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="px-4 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-md shadow-red-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-4 py-3 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs transition-all shadow-[0_4px_20px_rgba(244,63,94,0.4)] border border-rose-400/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isLoggingOut ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Signing out...
+                    <span>Signing out...</span>
                   </>
                 ) : (
                   <>
                     <LogOut className="w-4 h-4" />
-                    Yes, Sign Out
+                    <span>Yes, Sign Out</span>
                   </>
                 )}
               </button>

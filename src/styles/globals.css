@@ -1155,3 +1155,28 @@ html.midnight .lux-glass-header {
 .lux-specular-sweep:hover::after {
   transform: rotate(25deg) translateY(100%);
 }
+
+/* ========================================================================= */
+/* 💎 ULTRA-LUXURY ROYAL SAPPHIRE & OBSIDIAN NAVIGATION STYLING */
+/* ========================================================================= */
+.lux-sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+.lux-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lux-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lux-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+.lux-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(34, 197, 232, 0.4);
+}

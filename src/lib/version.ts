@@ -3,19 +3,19 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.3'
+export const APP_VERSION = '2.7.4'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-18'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'Ultra-Luxury Royal Sapphire Modal Design: Transformed profile management interface into an executive dark glassmorphic console with midnight navy gradients, cyan chronometer highlights, and metallic sapphire accents.',
-  'Hostel Allocation Standardization: Refined residency options to 3 Boys Hostel blocks (I, II, III) and 3 Girls Hostel blocks (I, II, III) with clean labels, removing deprecated block names.',
-  'Edit Student Profile Modernization: Redesigned modal with pinned sticky footer, custom select dropdown styling, and sleek segmented tab navigation.',
-  'PWA & Version Sync Engine: Resolved recurring update loop and preserved active user sessions upon portal updates.',
-  'Full-Stack Zero-Trust Access Control: Global Next.js Edge Middleware verifying RBAC authentication on every request with strict HTTP security headers.',
-  'Universal Sliding-Window Rate Limiter: In-memory sliding-window limiter enforcing 429 Retry-After protection across auth, AI, and administrative endpoints.',
-  'Strict Input Validation & Masked Secrets: Reusable Zod schemas guarding student records and profile updates with isolated credentials.',
+  'Ultra-Luxury Royal Sapphire Menus Across All Roles: Complete UI/UX redesign of portal navigation sidebars, drawer panels, headers, and mobile docks for Student, Faculty, HOD, and Administrator portals.',
+  'Executive Obsidian Glass Sidebar: Deep midnight navy gradients with ambient radial lighting meshes, gold-foil bezel emblem, and live connectivity indicators.',
+  'Tactile Nav Items & Jewel Badges: High-contrast royal sapphire active pills with illuminated cyan/gold edge markers, squircle icon badges, and glowing jewel notification counters.',
+  'Illuminated Section Category Dividers: Precision micro-jewel dots with gold-to-slate metallic typography and dual-tone gradient hairline separators.',
+  'Executive VIP Member Cards: High-end profile snippets featuring live status rings, department indicators, and distinctive metallic role badges.',
+  'Luxury Floating Mobile Dock: 5-tab obsidian glass bottom dock with glowing active states and real-time alerts.',
+  'Ultra-Luxury Logout Console: Midnight sapphire glass dialog with glowing rose bezel and tactile confirmation controls.',
 ]
 
 
