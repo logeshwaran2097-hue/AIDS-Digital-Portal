@@ -1692,17 +1692,17 @@ export interface BusPassPDFData {
   year: number | string
   section: string
   busNo: string
-  routeNo: string
-  routeName: string
-  via: string
+  routeNo?: string
+  routeName?: string
+  via?: string
   boardingStop: string
-  busRegNo: string
-  morningArrival: string
-  eveningDeparture: string
-  incharge: string
-  inchargePhone: string
-  driver: string
-  driverPhone: string
+  busRegNo?: string
+  morningArrival?: string
+  eveningDeparture?: string
+  incharge?: string
+  inchargePhone?: string
+  driver?: string
+  driverPhone?: string
   issueDate: string
   qrDataUrl?: string
 }
@@ -1893,10 +1893,10 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
 
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Vehicle Registration:', marginX + contentW / 2 + 4, curY + 12)
+  doc.text('Commuter Category:', marginX + contentW / 2 + 4, curY + 12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(data.busRegNo, marginX + contentW / 2 + 38, curY + 12)
+  doc.text('Day Scholar (College Bus)', marginX + contentW / 2 + 38, curY + 12)
 
   // Row 2
   doc.setFont('helvetica', 'normal')
@@ -1904,7 +1904,7 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.text('Allocated Route:', marginX + 4, curY + 18)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(`${data.routeNo}: ${data.routeName}`, marginX + 42, curY + 18)
+  doc.text(`${data.routeNo || 'Route'}: ${data.routeName || 'College Campus Transit'}`, marginX + 42, curY + 18)
 
   // Row 3
   doc.setFont('helvetica', 'normal')
@@ -1919,7 +1919,7 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.text('Morning College Arrival:', marginX + contentW / 2 + 4, curY + 24)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(data.morningArrival, marginX + contentW / 2 + 38, curY + 24)
+  doc.text(data.morningArrival || '08:30 AM', marginX + contentW / 2 + 38, curY + 24)
 
   // Row 4
   doc.setFont('helvetica', 'normal')
@@ -1927,74 +1927,59 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.text('Evening Campus Departure:', marginX + 4, curY + 30)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(data.eveningDeparture, marginX + 42, curY + 30)
+  doc.text(data.eveningDeparture || '05:00 PM', marginX + 42, curY + 30)
 
-  // Row 5: Via Route
+  // Row 5: Transit Authorization
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Via Route:', marginX + 4, curY + 36)
+  doc.text('Pass Authorization:', marginX + 4, curY + 36)
   doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text(data.via, marginX + 42, curY + 36)
+  doc.setTextColor(16, 185, 129)
+  doc.text('Verified Active Commuter (Academic Year 2026-27)', marginX + 42, curY + 36)
 
-  // Section 3: Route Crew Contacts (Separated Incharge and Driver)
+  // Section 3: Official College Transit Desk & Essential Communications
   curY += 47
-  doc.setFillColor(254, 252, 245)
-  doc.roundedRect(marginX, curY, contentW, 26, 2, 2, 'F')
-  doc.setDrawColor(245, 230, 195)
+  doc.setFillColor(248, 250, 252)
+  doc.roundedRect(marginX, curY, contentW, 24, 2, 2, 'F')
+  doc.setDrawColor(226, 232, 240)
   doc.setLineWidth(0.3)
-  doc.roundedRect(marginX, curY, contentW, 26, 2, 2, 'S')
+  doc.roundedRect(marginX, curY, contentW, 24, 2, 2, 'S')
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8)
-  doc.setTextColor(180, 83, 9) // Amber/Gold
-  doc.text('3. ROUTE CREW & ESSENTIAL COMMUNICATIONS', marginX + 4, curY + 5)
+  doc.setTextColor(21, 87, 192)
+  doc.text('3. INSTITUTIONAL TRANSPORTATION DESK & HELPLINE', marginX + 4, curY + 5)
 
   // Row 1
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(75, 85, 105)
-  doc.text('Faculty Bus Incharge:', marginX + 4, curY + 12)
+  doc.text('Administrative Office:', marginX + 4, curY + 12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(data.incharge, marginX + 38, curY + 12)
+  doc.text('04324-290141', marginX + 38, curY + 12)
 
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Incharge Contact:', marginX + contentW / 2 + 4, curY + 12)
+  doc.text('Transport Division:', marginX + contentW / 2 + 4, curY + 12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(21, 87, 192)
-  doc.text(data.inchargePhone, marginX + contentW / 2 + 34, curY + 12)
+  doc.text('04324-290142', marginX + contentW / 2 + 34, curY + 12)
 
   // Row 2
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Designated Bus Driver:', marginX + 4, curY + 18)
+  doc.text('Official Helpdesk Email:', marginX + 4, curY + 18)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(data.driver, marginX + 38, curY + 18)
+  doc.text('info@vsb.ac.in', marginX + 38, curY + 18)
 
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Driver Contact:', marginX + contentW / 2 + 4, curY + 18)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(21, 87, 192)
-  doc.text(data.driverPhone, marginX + contentW / 2 + 34, curY + 18)
-
-  // Row 3: Security & Transport Control Room
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Transport Control Room:', marginX + 4, curY + 23.5)
+  doc.text('Campus Location:', marginX + contentW / 2 + 4, curY + 18)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text('04324-290008 (Direct)', marginX + 38, curY + 23.5)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Main Gate Security:', marginX + contentW / 2 + 4, curY + 23.5)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('04324-290001 (24x7)', marginX + contentW / 2 + 34, curY + 23.5)
+  doc.text('NH-67, Karur-Coimbatore Highway', marginX + contentW / 2 + 34, curY + 18)
 
   // Section 4: Security QR Code and Institutional Rules
   curY += 31

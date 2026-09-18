@@ -43,6 +43,7 @@ export default async function DigitalPassPage() {
         initialBusNo={initialBusNo}
         initialBusDetails={initialBusDetails}
         initialBoardingPoint={initialBoardingPoint}
+        initialParentPhone={student?.parentPhone || ''}
       />
     </PortalLayout>
   )

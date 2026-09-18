@@ -57,7 +57,7 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
         <label className="font-bold text-gray-700 block mb-1">Full Name</label>
         <input
           type="text"
-          placeholder="e.g. Student Name"
+          placeholder="Your full name"
           required
           className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-bold focus:ring-2 focus:ring-[#1455D9]/20 focus:border-[#1455D9]"
         />
@@ -67,7 +67,7 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
           <label className="font-bold text-gray-700 block mb-1">Reg. Number</label>
           <input
             type="text"
-            placeholder="e.g. Register Number"
+            placeholder="Your register number"
             required
             className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-mono font-bold focus:ring-2 focus:ring-[#1455D9]/20"
           />
@@ -89,7 +89,7 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
         <label className="font-bold text-gray-700 block mb-1">Contact Email</label>
         <input
           type="email"
-          placeholder="e.g. student@vsb.edu.in"
+          placeholder="Your institutional email"
           required
           className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-mono focus:ring-2 focus:ring-[#1455D9]/20"
         />
@@ -109,7 +109,7 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
               type="text"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
-              placeholder="e.g. Team Innovators"
+              placeholder="Enter your team name"
               required
               className="w-full bg-gray-50 border rounded-xl px-3 py-2.5 text-xs font-bold focus:ring-2 focus:ring-[#1455D9]/20 placeholder:text-gray-400"
             />
@@ -141,9 +141,8 @@ function RegistrationForm({ onSubmit, onCancel }: { onSubmit: (e: React.FormEven
                     type="text"
                     value={members[i].regNo}
                     onChange={(e) => updateMember(i, 'regNo', e.target.value)}
-                    placeholder="e.g. 23AD002"
                     required
-                    className="w-full bg-white border rounded-xl px-3 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-[#1455D9]/20 placeholder:text-gray-400"
+                    className="w-full bg-white border rounded-xl px-3 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-[#1455D9]/20"
                   />
                 </div>
                 <div>
@@ -468,7 +467,7 @@ export default function EventsList({ events }: { events: Event[] }) {
                         <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-bold border', style.bg, style.text, style.border)}>
                           {e.category}
                         </span>
-                        <span className="text-[11px] text-gray-400 font-semibold block mt-1">2026 Academic Year</span>
+                        <span className="text-[11px] text-gray-400 font-semibold block mt-1">{dateObj.getFullYear()} Academic Year</span>
                       </div>
                     </div>
                   </div>

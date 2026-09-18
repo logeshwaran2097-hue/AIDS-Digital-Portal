@@ -16,7 +16,7 @@ import { toast } from '@/components/ui/Toast'
 import { cn } from '@/lib/utils'
 
 export function normalizeIndianPhoneNumber(raw: string | null | undefined): string {
-  if (!raw) return '6381366088'
+  if (!raw) return ''
   let num = raw.replace(/\D/g, '')
   if (num.startsWith('91') && num.length >= 12) num = num.slice(2)
   if (num.startsWith('0') && num.length >= 11) num = num.slice(1)
@@ -55,7 +55,7 @@ export function ParentWhatsAppButton({
   allowEdit = true,
   onPhoneChange,
 }: ParentWhatsAppButtonProps) {
-  const [currentPhone, setCurrentPhone] = useState(parentPhone || '6381366088')
+  const [currentPhone, setCurrentPhone] = useState(parentPhone || '')
   const [isEditing, setIsEditing] = useState(false)
   const [tempPhone, setTempPhone] = useState(currentPhone)
   const [isOpenDropdown, setIsOpenDropdown] = useState(false)

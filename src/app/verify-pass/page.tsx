@@ -95,18 +95,13 @@ function VerifyPassContent() {
   const sanctionTime = details.time
 
   // Bus specific properties
-  const busNo = searchParams.get('busNo') || details?.busNo || '5'
-  const routeNo = searchParams.get('routeNo') || details?.routeNo || 'Route 05'
-  const routeName = searchParams.get('routeName') || details?.routeName || 'Namakkal Central ↔ VSB Campus'
-  const via = searchParams.get('via') || details?.via || 'Namakkal Bus Stand → Mohanur → Vkl / Vangal → VSB'
-  const boardingStop = searchParams.get('stop') || searchParams.get('boardingStop') || details?.boardingStop || 'Vkl (08:05 AM)'
-  const busRegNo = searchParams.get('busReg') || searchParams.get('busRegNo') || details?.busRegNo || 'TN 28 EX 7712'
+  const busNo = searchParams.get('busNo') || details?.busNo || ''
+  const routeNo = searchParams.get('routeNo') || details?.routeNo || ''
+  const routeName = searchParams.get('routeName') || details?.routeName || 'College Campus Commuter Route'
+  const via = searchParams.get('via') || details?.via || ''
+  const boardingStop = searchParams.get('stop') || searchParams.get('boardingStop') || details?.boardingStop || 'Designated Stop'
   const morningArrival = searchParams.get('morningArrival') || details?.morningArrival || '08:30 AM'
   const eveningDeparture = searchParams.get('eveningDeparture') || details?.eveningDeparture || '05:00 PM'
-  const incharge = searchParams.get('incharge') || details?.incharge || 'Dr. S. Karthikeyan (Faculty Bus Incharge)'
-  const inchargePhone = searchParams.get('inchargePhone') || details?.inchargePhone || '+91 94435 67812'
-  const driver = searchParams.get('driver') || details?.driver || 'Mr. P. Subramanian (Driver)'
-  const driverPhone = searchParams.get('driverPhone') || details?.driverPhone || '+91 98429 88912'
 
   const [gateActionStatus, setGateActionStatus] = useState<'pending' | 'exited' | 'returned'>('pending')
   const [boardingVerified, setBoardingVerified] = useState(false)
@@ -245,8 +240,8 @@ function VerifyPassContent() {
                         </div>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-400 block font-semibold">Vehicle Number</span>
-                        <strong className="font-mono text-slate-800 text-xs">{busRegNo}</strong>
+                        <span className="text-[10px] text-slate-400 block font-semibold">Commuter Category</span>
+                        <strong className="text-slate-800 text-xs">Day Scholar • College Bus</strong>
                       </div>
                     </div>
 
@@ -262,37 +257,15 @@ function VerifyPassContent() {
                     </div>
                   </div>
 
-                  {/* Route Crew Contacts: Incharge and Driver */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div className="bg-emerald-50/80 border border-emerald-200 p-2.5 rounded-xl flex items-center justify-between gap-2">
-                      <div className="min-w-0 pr-1">
-                        <span className="text-[9px] text-emerald-800 uppercase font-black block">Faculty Bus Incharge</span>
-                        <strong className="text-emerald-950 font-bold text-xs truncate block">{incharge}</strong>
-                      </div>
-                      <a
-                        href={`tel:${inchargePhone}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold text-[10px] transition-colors shrink-0"
-                        title={`Call ${incharge}`}
-                      >
-                        <Phone className="w-3 h-3" />
-                        <span>Call</span>
-                      </a>
+                  {/* Verified Transport Status Banner */}
+                  <div className="bg-blue-50/80 border border-blue-200 p-3 rounded-xl flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-blue-950 font-bold">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Authorized Day Scholar Transit · Verified</span>
                     </div>
-
-                    <div className="bg-blue-50/80 border border-blue-200 p-2.5 rounded-xl flex items-center justify-between gap-2">
-                      <div className="min-w-0 pr-1">
-                        <span className="text-[9px] text-blue-800 uppercase font-black block">Bus Driver</span>
-                        <strong className="text-blue-950 font-bold text-xs truncate block">{driver}</strong>
-                      </div>
-                      <a
-                        href={`tel:${driverPhone}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-mono font-bold text-[10px] transition-colors shrink-0"
-                        title={`Call ${driver}`}
-                      >
-                        <Phone className="w-3 h-3" />
-                        <span>Call</span>
-                      </a>
-                    </div>
+                    <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
+                      ACTIVE &amp; VALID
+                    </span>
                   </div>
                 </div>
               ) : (

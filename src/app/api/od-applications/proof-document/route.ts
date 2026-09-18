@@ -20,7 +20,7 @@ function cleanText(str: string): string {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const registerNumber = (searchParams.get('registerNumber') || '922525243007').replace(/[^a-zA-Z0-9]/g, '')
+  const registerNumber = (searchParams.get('registerNumber') || '').replace(/[^a-zA-Z0-9]/g, '')
   const customType = esc(searchParams.get('type') || 'Personal / Emergency Leave')
   const customReason = esc(searchParams.get('reason') || 'Personal / Family Requisition')
   const rawFrom = searchParams.get('from') || '2026-09-24'
@@ -44,11 +44,11 @@ export async function GET(request: Request) {
     userName = u?.name || null
   }
 
-  const rawStudentName = nameParam || userName || (registerNumber === '922525243007' ? 'Anusuya P' : 'Student')
+  const rawStudentName = nameParam || userName || 'Student'
   const year = student?.year || 2
   const section = student?.section || 'A'
   const department = student?.department || 'B.Tech AI & DS'
-  const parentPhone = parentPhoneParam || student?.parentPhone || '6381366088'
+  const parentPhone = parentPhoneParam || student?.parentPhone || null
   const batch = student?.batch || '25-29'
 
   // Query actual uploaded proof files

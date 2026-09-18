@@ -358,7 +358,7 @@ export async function GET(request: Request) {
         batch: currentStudent?.batch || '2025-2029',
         residencyStatus: currentStudent?.residencyStatus || 'Day Scholar',
         busNo: currentStudent?.busNo || null,
-        parentPhone: currentStudent?.parentPhone || '6381366088',
+        parentPhone: currentStudent?.parentPhone || null,
         attendanceRate: currentAttendance ?? 100.0,
         applicationType: appType,
         fromDate,
@@ -389,7 +389,9 @@ export async function GET(request: Request) {
         if (!isOdRelated) continue
 
         const regMatch = notif.title?.match(/\((9225[0-9]+|[0-9]{12})\)/i) || notif.message?.match(/\((9225[0-9]+|[0-9]{12})\)/i)
-        const deducedReg = targetRegNo || (regMatch ? regMatch[1] : '922525243007')
+        const deducedReg = targetRegNo || (regMatch ? regMatch[1] : null)
+        if (!deducedReg) continue // Skip notifications without a parseable register number
+
 
         const typeMatch =
           notif.title?.match(/\[OD Request\]\s*([^:]+)/i) ||
@@ -416,7 +418,7 @@ export async function GET(request: Request) {
           }).catch(() => null)
           studentCache[deducedReg] = fallbackStudent
         }
-        const realParentPhone = fallbackStudent?.parentPhone || '6381366088'
+        const realParentPhone = fallbackStudent?.parentPhone || null
 
         trackedApplications.push({
           id: notif.id,

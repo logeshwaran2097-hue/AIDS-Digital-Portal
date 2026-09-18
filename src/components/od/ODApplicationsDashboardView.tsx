@@ -2,7 +2,7 @@
 
 // Normalize Indian phone numbers to 10 digits — handles +91/0/11-digit variants
 function normalizeIndianPhone(raw: string | null | undefined): string {
-  if (!raw) return '6381366088'
+  if (!raw) return ''
   let num = raw.replace(/\D/g, '') // strip non-digits
   if (num.startsWith('91') && num.length >= 12) num = num.slice(2)  // strip +91 prefix
   if (num.startsWith('0') && num.length >= 11) num = num.slice(1)   // strip leading 0
@@ -1370,11 +1370,11 @@ export function ODApplicationsDashboardView({
                       <td className="p-3.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <a
-                            href={`tel:${app.parentPhone || '6381366088'}`}
+                            href={`tel:${app.parentPhone || ''}`}
                             className="text-gray-700 font-mono hover:text-[#1455D9] flex items-center gap-1"
                           >
                             <Phone className="w-3 h-3 text-emerald-600" />
-                            <span>{app.parentPhone || '6381366088'}</span>
+                            <span>{app.parentPhone || 'Not provided'}</span>
                           </a>
                           {app.parentConsentVerified ? (
                             <span className="px-1.5 py-0.2 rounded-md text-[9px] bg-emerald-100 text-emerald-800 font-bold border border-emerald-200">
