@@ -65,6 +65,9 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Preserve original login page pristine aesthetic without dark mode interference
+      document.documentElement.classList.remove('midnight', 'dark')
+
       // Check for active existing session so mobile users never get logged out when switching apps
       const checkActiveSession = async () => {
         try {

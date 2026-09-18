@@ -17,7 +17,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      // Apply Theme Mode (Default to Luxury Midnight Sapphire)
+      // Keep Login page clean and pristine in its original brand theme
+      if (typeof window !== 'undefined' && window.location.pathname.startsWith('/login')) {
+        document.documentElement.classList.remove('midnight', 'dark')
+        return
+      }
+
+      // Apply Theme Mode (Default to Luxury Midnight Sapphire for Portal)
       if (theme !== 'light') {
         document.documentElement.classList.add('midnight', 'dark')
       } else {
