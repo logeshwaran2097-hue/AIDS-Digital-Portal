@@ -3,14 +3,22 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from './prisma'
 import { hashOTP, verifyOTP, generateOTP } from './utils'
+import { isSessionTokenRevoked } from './sessionRevocation'
+import crypto from 'crypto'
 
 const DEFAULT_SECRET = 'your-super-secret-key-change-in-production-min-32-chars'
+const isProduction = process.env.NODE_ENV === 'production'
 const JWT_SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || DEFAULT_SECRET
 )
-const JWT_FALLBACK_SECRET = new TextEncoder().encode(DEFAULT_SECRET)
 
-const JWT_EXPIRY = '30d'
+// In production, never fallback to the public default secret string
+const JWT_FALLBACK_SECRET = (!isProduction && process.env.NEXTAUTH_SECRET)
+  ? new TextEncoder().encode(DEFAULT_SECRET)
+  : null
+
+// Standard secure expiration: 7 days
+const JWT_EXPIRY = '7d'
 const OTP_EXPIRY_MINUTES = parseInt(process.env.OTP_EXPIRY_MINUTES || '5')
 const OTP_MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS || '3')
 const OTP_RESEND_COOLDOWN = parseInt(process.env.OTP_RESEND_COOLDOWN_SECONDS || '60')
@@ -24,10 +32,12 @@ export interface JWTPayload {
   facultyId?: string
   isAdvisor?: boolean
   facultyType?: string
+  jti?: string
 }
 
 export async function createToken(payload: JWTPayload): Promise<string> {
-  return new SignJWT({ ...payload })
+  const jti = payload.jti || crypto.randomUUID()
+  return new SignJWT({ ...payload, jti })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(JWT_EXPIRY)
@@ -36,17 +46,33 @@ export async function createToken(payload: JWTPayload): Promise<string> {
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   if (!token) return null
+  let payload: JWTPayload | null = null
+
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    return payload as unknown as JWTPayload
+    const verified = await jwtVerify(token, JWT_SECRET)
+    payload = verified.payload as unknown as JWTPayload
   } catch {
-    try {
-      const { payload } = await jwtVerify(token, JWT_FALLBACK_SECRET)
-      return payload as unknown as JWTPayload
-    } catch {
+    if (JWT_FALLBACK_SECRET) {
+      try {
+        const verified = await jwtVerify(token, JWT_FALLBACK_SECRET)
+        payload = verified.payload as unknown as JWTPayload
+      } catch {
+        return null
+      }
+    } else {
       return null
     }
   }
+
+  if (!payload) return null
+
+  // Check server-side revocation
+  if (payload.jti) {
+    const revoked = await isSessionTokenRevoked(payload.jti)
+    if (revoked) return null
+  }
+
+  return payload
 }
 
 export async function getSession(): Promise<JWTPayload | null> {
@@ -214,8 +240,8 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     }
   }
 
-  if (!student || !user) {
-    return { success: false, message: 'No student record found for this Register Number or Email. Please contact your department administrator.' }
+  if (!student || !user || !user.passwordHash) {
+    return { success: false, message: 'Invalid Register Number, Email, or Password.' }
   }
 
   // 4. Check account status
@@ -223,48 +249,10 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     return { success: false, message: 'Student account is suspended or inactive. Please contact your administrator.' }
   }
 
-  // 5. Verify Password against admin-set bcrypt hash ONLY
-  if (!user.passwordHash) {
-    return { success: false, message: 'Account password not configured. Please contact your department administrator.' }
-  }
-
+  // 5. Verify Password strictly against bcrypt hash
   try {
     isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
   } catch {}
-
-  // Fallback for initial first-time student login before onboarding completion
-  if (!isValid && (user.mustChangePassword || !user.emailVerified)) {
-    const rawCleanPass = trimmedPassword.replace(/[^0-9a-zA-Z]/g, '').toLowerCase()
-    const regClean = (student.registerNumber || '').replace(/[^0-9a-zA-Z]/g, '').toLowerCase()
-
-    if (student.dateOfBirth) {
-      const dob = new Date(student.dateOfBirth)
-      const dd = String(dob.getDate()).padStart(2, '0')
-      const mm = String(dob.getMonth() + 1).padStart(2, '0')
-      const yyyy = String(dob.getFullYear())
-      const dobFormats = [
-        `${dd}${mm}${yyyy}`,
-        `${yyyy}${mm}${dd}`,
-        `${dd}-${mm}-${yyyy}`,
-        `${yyyy}-${mm}-${dd}`,
-        `${dd}/${mm}/${yyyy}`,
-      ]
-      if (dobFormats.includes(trimmedPassword) || dobFormats.some((f) => f.replace(/[^0-9]/g, '') === rawCleanPass)) {
-        isValid = true
-      }
-    }
-
-    if (
-      !isValid &&
-      (rawCleanPass === regClean ||
-        trimmedPassword.toLowerCase() === 'welcome123' ||
-        trimmedPassword === 'Welcome@123' ||
-        trimmedPassword === 'Password@123' ||
-        trimmedPassword.toLowerCase() === 'vsb@123')
-    ) {
-      isValid = true
-    }
-  }
 
   if (!isValid) {
     return { success: false, message: 'Invalid Register Number, Email, or Password.' }
@@ -358,9 +346,9 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
     }
   }
 
-  // No record in DB — reject with clear message (no auto-creation)
-  if (!faculty || !user) {
-    return { success: false, message: 'No faculty record found for this Email or Name. Please contact your department administrator.' }
+  // No record in DB or missing password hash — reject with generic message to prevent account enumeration
+  if (!faculty || !user || !user.passwordHash) {
+    return { success: false, message: 'Invalid Faculty Email, Name, or Password.' }
   }
 
   if (user.status !== 'active') {
@@ -369,11 +357,7 @@ export async function authenticateFaculty(facultyIdOrName: string, passwordInput
 
   const trimmedPassword = passwordInput.trim()
 
-  // Verify Password against admin-set bcrypt hash ONLY
-  if (!user.passwordHash) {
-    return { success: false, message: 'Account password not configured. Please contact your department administrator.' }
-  }
-
+  // Verify Password strictly against bcrypt hash
   let isValid = false
   try {
     isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
@@ -503,9 +487,9 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
     }).catch(() => null)
   }
 
-  // No record in DB — reject with clear message (no auto-creation)
-  if (!hod || !user) {
-    return { success: false, message: 'No HOD record found for this Email or Name. Please contact your department administrator.' }
+  // No record in DB or missing password hash — reject with generic message to prevent enumeration
+  if (!hod || !user || !user.passwordHash) {
+    return { success: false, message: 'Invalid HOD Email, Name, or Password.' }
   }
 
   if (user.status !== 'active') {
@@ -514,23 +498,11 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
 
   const trimmedPassword = passwordInput.trim()
 
-  // Verify Password against admin-set bcrypt hash
+  // Verify Password strictly against bcrypt hash
   let isValid = false
-  if (user.passwordHash) {
-    try {
-      isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
-    } catch {}
-  }
-
-  // Fallback: Check if matching standard admin temporary credentials ('abc123', 'admin123', or facultyId)
-  if (!isValid && (trimmedPassword === 'abc123' || trimmedPassword === 'admin123' || trimmedPassword === hod.facultyId)) {
-    isValid = true
-    const newHash = await bcrypt.hash(trimmedPassword, 10)
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { passwordHash: newHash },
-    }).catch(() => {})
-  }
+  try {
+    isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
+  } catch {}
 
   if (!isValid) {
     return { success: false, message: 'Invalid HOD Email, Name, or Password.' }
@@ -561,8 +533,6 @@ export async function authenticateHOD(facultyIdOrName: string, passwordInput: st
 
   return { success: true, token, user, hod, mustChangePassword: Boolean(user.mustChangePassword) }
 }
-
-import crypto from 'crypto'
 
 export function generateOTPChallenge(email: string, otp: string, expiryMinutes = OTP_EXPIRY_MINUTES): string {
   const secret = process.env.NEXTAUTH_SECRET || 'your-super-secret-key-change-in-production-min-32-chars'
@@ -661,7 +631,6 @@ export async function sendAdminOTP(email: string) {
   return { 
     success: true, 
     challenge,
-    devOtp: otp,
     message: `OTP sent to your registered security email (${defaultAdminEmail}).` 
   }
 }
@@ -672,10 +641,7 @@ export async function verifyAdminOTP(email: string, otp: string, challenge?: str
 
   let isOtpValid = isChallengeValid
 
-  // Universal developer / offline bypass support
-  if (!isOtpValid && ['123456', '999999', '000000'].includes(otp.trim())) {
-    isOtpValid = true
-  }
+  // Developer / offline bypass removed for production security
 
   if (!isOtpValid) {
     try {

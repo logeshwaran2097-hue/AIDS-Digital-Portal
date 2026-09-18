@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateStudent } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 import { z } from 'zod'
 
 const loginSchema = z.object({
@@ -16,6 +17,11 @@ export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 5, 60, 'auth:student')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const body = await request.json()
     const { registerNumber, email, password, dateOfBirth } = loginSchema.parse(body)
@@ -26,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     if (!result.success || !result.user || !result.token) {
       return NextResponse.json(
-        { success: false, message: result.message || 'Authentication failed' },
+        { success: false, message: result.message || 'Invalid Register Number, Email, or Password.' },
         { status: 401 }
       )
     }
@@ -60,7 +66,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
     })
 
@@ -68,13 +74,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: 'Invalid input data', errors: error.errors },
+        { success: false, message: 'Invalid input data' },
         { status: 400 }
       )
     }
     console.error('Student login error:', error)
     return NextResponse.json(
-      { success: false, message: 'Login error: ' + (error instanceof Error ? error.message : String(error)) },
+      { success: false, message: 'An error occurred during authentication.' },
       { status: 500 }
     )
   }

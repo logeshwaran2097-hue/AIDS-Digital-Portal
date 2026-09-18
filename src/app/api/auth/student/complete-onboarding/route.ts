@@ -3,12 +3,18 @@ import { getSession, createToken } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP, parseSafeDateOfBirth } from '@/lib/utils'
 import bcrypt from 'bcryptjs'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 
 import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 5, 60, 'auth:complete-onboarding')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const session = await getSession()
     if (!session || session.role !== 'student') {
@@ -164,9 +170,7 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    const isMasterBypass = ['123456', '999999', '000000'].includes(trimmedOtp)
-
-    if (!isMasterBypass && (!otpRecord || !verifyOTP(trimmedOtp, otpRecord.codeHash))) {
+    if (!otpRecord || !verifyOTP(trimmedOtp, otpRecord.codeHash)) {
       return NextResponse.json({ success: false, message: 'Invalid or expired OTP. Please verify OTP first.' }, { status: 400 })
     }
 
@@ -355,13 +359,13 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
     })
 
     return response
   } catch (error) {
     console.error('Error completing student onboarding:', error)
-    return NextResponse.json({ success: false, message: 'Failed to complete setup: ' + String(error) }, { status: 500 })
+    return NextResponse.json({ success: false, message: 'Failed to complete setup. Please try again.' }, { status: 500 })
   }
 }

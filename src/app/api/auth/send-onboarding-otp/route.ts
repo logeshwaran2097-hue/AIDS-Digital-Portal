@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateOTP, hashOTP } from '@/lib/utils'
 import { prisma } from '@/lib/prisma'
 import { sendStudentVerificationEmail, generateOTPChallenge, checkEmailAvailability } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 3, 120, 'otp:send-onboarding')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const {
       email,
@@ -256,7 +262,6 @@ export async function POST(request: NextRequest) {
       message: `6-digit verification OTP has been sent directly to your email (${trimmedEmail})`,
       challenge,
       emailSent: emailResult?.success ?? true,
-      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     })
 
     response.cookies.set('onboarding-challenge', challenge, {

@@ -5,10 +5,16 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { verifyOTP, parseSafeDateOfBirth } from '@/lib/utils'
 import { invalidateCache } from '@/lib/dbCache'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 5, 60, 'auth:complete-profile')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const session = await getSession()
     const body = await request.json()
@@ -146,48 +152,30 @@ export async function POST(request: NextRequest) {
     // Optional OTP verification if submitted
     const submittedOtp = (emailOtp || body.otp || '').trim()
     if (submittedOtp) {
-      const isMasterBypass = ['123456', '999999', '000000'].includes(submittedOtp)
-      if (!isMasterBypass) {
-        const otpRecord = await prisma.oTP.findFirst({
-          where: {
-            email: normalizedEmail || user.email,
-            expiresAt: { gt: new Date() },
-            used: false,
-          },
-          orderBy: { createdAt: 'desc' },
-        })
-        let isValidChallenge = Boolean(challenge && verifyOTPChallenge(challenge, normalizedEmail || user.email, submittedOtp))
-        if (!isValidChallenge && challenge) {
-          try {
-            const [payloadB64] = challenge.split('.')
-            if (payloadB64) {
-              const raw = Buffer.from(payloadB64, 'base64').toString('utf8')
-              const [cEmail, cOtp, cExp] = raw.split(':')
-              if (
-                cEmail === (normalizedEmail || user.email) &&
-                cOtp === submittedOtp &&
-                (!cExp || Number(cExp) > Date.now())
-              ) {
-                isValidChallenge = true
-              }
-            }
-          } catch {}
-        }
-        const isDbOtpValid = otpRecord
-          ? (verifyOTP(submittedOtp, otpRecord.codeHash) || (await bcrypt.compare(submittedOtp, otpRecord.codeHash).catch(() => false)))
-          : false
-        if (!isValidChallenge && !isDbOtpValid) {
-          return NextResponse.json(
-            { success: false, message: 'Invalid or expired OTP code. Please enter the correct code.' },
-            { status: 400 }
-          )
-        }
-        if (otpRecord) {
-          await prisma.oTP.update({
-            where: { id: otpRecord.id },
-            data: { used: true },
-          }).catch(() => {})
-        }
+      const otpRecord = await prisma.oTP.findFirst({
+        where: {
+          email: normalizedEmail || user.email,
+          expiresAt: { gt: new Date() },
+          used: false,
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+      const isValidChallenge = Boolean(challenge && verifyOTPChallenge(challenge, normalizedEmail || user.email, submittedOtp))
+      const isDbOtpValid = otpRecord
+        ? (verifyOTP(submittedOtp, otpRecord.codeHash) || (await bcrypt.compare(submittedOtp, otpRecord.codeHash).catch(() => false)))
+        : false
+
+      if (!isValidChallenge && !isDbOtpValid) {
+        return NextResponse.json(
+          { success: false, message: 'Invalid or expired OTP code. Please enter the correct code.' },
+          { status: 400 }
+        )
+      }
+      if (otpRecord) {
+        await prisma.oTP.update({
+          where: { id: otpRecord.id },
+          data: { used: true },
+        }).catch(() => {})
       }
     }
 
@@ -449,7 +437,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Complete profile error:', error)
     return NextResponse.json(
-      { success: false, message: 'Failed to complete profile: ' + (error instanceof Error ? error.message : 'Unknown error') },
+      { success: false, message: 'Failed to complete profile. Please try again.' },
       { status: 500 }
     )
   }

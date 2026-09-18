@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, sendStudentVerificationEmail, checkEmailAvailability } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateOTP, hashOTP } from '@/lib/utils'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 3, 120, 'otp:student-send-email')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const session = await getSession()
     if (!session || session.role !== 'student') {
@@ -43,11 +49,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-
-    // Generate 6-digit OTP
+    // Generate random 6-digit OTP, expires in 10 minutes (single-use)
     const otp = generateOTP()
     const codeHash = hashOTP(otp)
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000)
 
     // Save OTP record in database
     await prisma.oTP.create({
@@ -55,6 +60,7 @@ export async function POST(request: NextRequest) {
         email: normalizedEmail,
         codeHash,
         expiresAt,
+        used: false,
       },
     })
 
@@ -122,12 +128,9 @@ export async function POST(request: NextRequest) {
       console.warn('[OTP] Email dispatch note:', emailErr)
     }
 
-    const isDev = process.env.NODE_ENV !== 'production' || !process.env.SMTP_PASSWORD
-
     return NextResponse.json({
       success: true,
       message: `Verification code sent to ${normalizedEmail}. Please check your inbox.`,
-      demoOtp: isDev ? otp : undefined,
     })
   } catch (error) {
     console.error('Error sending student email OTP:', error)

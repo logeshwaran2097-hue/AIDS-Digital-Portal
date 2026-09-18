@@ -251,7 +251,6 @@ export default function LoginPage() {
   const [onboardingLoading, setOnboardingLoading] = React.useState(false)
   const [emailOtpSent, setEmailOtpSent] = React.useState(false)
   const [emailOtpCooldown, setEmailOtpCooldown] = React.useState(0)
-  const [demoOtpCode, setDemoOtpCode] = React.useState<string | null>(null)
   const [isOnboardingVerifyingOtp, setIsOnboardingVerifyingOtp] = React.useState(false)
   const [isOnboardingOtpVerified, setIsOnboardingOtpVerified] = React.useState(false)
   const [onboardingOtpError, setOnboardingOtpError] = React.useState<string | null>(null)
@@ -719,9 +718,6 @@ export default function LoginPage() {
       if (data.challenge) {
         setOnboardingForm((prev) => ({ ...prev, otpChallenge: data.challenge }))
       }
-      if (data.devOtp) {
-        setDemoOtpCode(data.devOtp)
-      }
       toast.success(`6-digit OTP sent to ${onboardingForm.email}! Please check your inbox.`)
     } catch {
       toast.error('Network error sending OTP.')
@@ -746,7 +742,7 @@ export default function LoginPage() {
       toast.error('Please enter a valid personal email address.')
       return
     }
-    if (!emailOtpSent && !demoOtpCode) {
+    if (!emailOtpSent) {
       toast.error('Please click "Send Code" to verify your email via OTP.')
       return
     }
@@ -879,9 +875,6 @@ export default function LoginPage() {
       }
       if (data.challenge) {
         setChallenge(data.challenge)
-      }
-      if (data.devOtp) {
-        setDemoOtpCode(data.devOtp)
       }
       setOtpSent(true)
       toast.success(data.message || 'OTP dispatched to administrator email.')

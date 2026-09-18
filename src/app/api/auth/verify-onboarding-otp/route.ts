@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP } from '@/lib/utils'
 import { verifyOTPChallenge } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 5, 60, 'otp:verify-onboarding')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const body = await request.json()
     const { email, otp, challenge } = body
@@ -22,69 +28,48 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = email.trim().toLowerCase()
     const trimmedOtp = otp.trim()
 
-    // 1. Instant Master bypass codes
-    const isMasterBypass = ['123456', '999999', '000000'].includes(trimmedOtp)
-    if (isMasterBypass) {
-      return NextResponse.json({
+    let isVerified = false
+
+    // 1. HMAC Challenge verification (cryptographically verified)
+    const activeChallenge = challenge || request.cookies.get('onboarding-challenge')?.value
+    if (activeChallenge && verifyOTPChallenge(activeChallenge, normalizedEmail, trimmedOtp)) {
+      isVerified = true
+    }
+
+    // 2. Database OTP verification with single-use marking
+    if (!isVerified) {
+      const otpRecord = await prisma.oTP.findFirst({
+        where: {
+          email: normalizedEmail,
+          expiresAt: { gt: new Date() },
+          used: false,
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+
+      if (otpRecord) {
+        const isValid =
+          verifyOTP(trimmedOtp, otpRecord.codeHash) ||
+          (await bcrypt.compare(trimmedOtp, otpRecord.codeHash).catch(() => false))
+
+        if (isValid) {
+          isVerified = true
+          await prisma.oTP.update({
+            where: { id: otpRecord.id },
+            data: { used: true },
+          }).catch(() => {})
+        }
+      }
+    }
+
+    if (isVerified) {
+      const response = NextResponse.json({
         success: true,
         verified: true,
         message: 'OTP verified successfully.',
       })
-    }
-
-    // 2. Instant HMAC Challenge verification (0ms database-free check)
-    const activeChallenge = challenge || request.cookies.get('onboarding-challenge')?.value
-    if (activeChallenge) {
-      if (verifyOTPChallenge(activeChallenge, normalizedEmail, trimmedOtp)) {
-        return NextResponse.json({
-          success: true,
-          verified: true,
-          message: 'OTP verified successfully.',
-        })
-      }
-      try {
-        const [payloadB64] = activeChallenge.split('.')
-        if (payloadB64) {
-          const raw = Buffer.from(payloadB64, 'base64').toString('utf8')
-          const [cEmail, cOtp, cExp] = raw.split(':')
-          if (
-            cEmail === normalizedEmail &&
-            cOtp === trimmedOtp &&
-            (!cExp || Number(cExp) > Date.now())
-          ) {
-            return NextResponse.json({
-              success: true,
-              verified: true,
-              message: 'OTP verified successfully.',
-            })
-          }
-        }
-      } catch {}
-    }
-
-    // 3. Database OTP verification (Optimized query with selective fields)
-    const otpRecord = await prisma.oTP.findFirst({
-      where: {
-        email: normalizedEmail,
-        expiresAt: { gt: new Date() },
-        used: false,
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { codeHash: true },
-    })
-
-    if (otpRecord) {
-      const isValid =
-        verifyOTP(trimmedOtp, otpRecord.codeHash) ||
-        (await bcrypt.compare(trimmedOtp, otpRecord.codeHash).catch(() => false))
-
-      if (isValid) {
-        return NextResponse.json({
-          success: true,
-          verified: true,
-          message: 'OTP verified successfully.',
-        })
-      }
+      response.cookies.delete('onboarding-challenge')
+      return response
     }
 
     return NextResponse.json(

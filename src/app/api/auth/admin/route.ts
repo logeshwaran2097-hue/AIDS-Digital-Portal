@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendAdminOTP, verifyAdminOTP } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 import { z } from 'zod'
 
 const sendOTPSchema = z.object({
@@ -12,6 +13,11 @@ const verifyOTPSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 5, 60, 'auth:admin')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const body = await request.json()
     
@@ -41,7 +47,7 @@ export async function POST(request: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/',
       })
 
@@ -55,7 +61,7 @@ export async function POST(request: NextRequest) {
 
       if (!result.success) {
         return NextResponse.json(
-          { success: false, message: result.message },
+          { success: false, message: result.message || 'Failed to dispatch OTP.' },
           { status: 401 }
         )
       }
@@ -64,7 +70,6 @@ export async function POST(request: NextRequest) {
         success: true, 
         message: result.message,
         challenge: result.challenge,
-        devOtp: (result as any).devOtp,
       })
 
       if (result.challenge) {
@@ -82,13 +87,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: 'Invalid input data', errors: error.errors },
+        { success: false, message: 'Invalid input data' },
         { status: 400 }
       )
     }
     console.error('Admin auth error:', error)
     return NextResponse.json(
-      { success: false, message: 'An error occurred during authentication' },
+      { success: false, message: 'An error occurred during authentication.' },
       { status: 500 }
     )
   }

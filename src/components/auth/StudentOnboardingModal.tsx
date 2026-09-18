@@ -88,7 +88,6 @@ export function StudentOnboardingModal({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [emailOtpSent, setEmailOtpSent] = useState(false)
   const [emailOtpCooldown, setEmailOtpCooldown] = useState(0)
-  const [demoOtp, setDemoOtp] = useState<string | null>(null)
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false)
   const [otpVerified, setOtpVerified] = useState(false)
   const [otpError, setOtpError] = useState<string | null>(null)
@@ -364,9 +363,6 @@ export function StudentOnboardingModal({
         if (data.challenge) {
           setOtpChallenge(data.challenge)
         }
-        if (data.demoOtp) {
-          setDemoOtp(data.demoOtp)
-        }
         toast.success(`Verification OTP sent to ${form.email.trim()}`)
       } else {
         const errorMsg = data.message || 'Failed to send OTP'
@@ -404,7 +400,7 @@ export function StudentOnboardingModal({
       toast.error('Only @gmail.com personal email addresses are allowed (e.g. yourname@gmail.com).')
       return
     }
-    if (!emailOtpSent && !demoOtp) {
+    if (!emailOtpSent) {
       toast.error('Please click "Send OTP" to receive your verification code.')
       return
     }
@@ -1341,25 +1337,7 @@ export function StudentOnboardingModal({
               </div>
 
 
-              {/* Demo OTP Helper if generated */}
-              {demoOtp && (
-                <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-left flex items-center justify-between text-xs">
-                  <div>
-                    <span className="font-bold text-amber-900 block">Security Code Sent:</span>
-                    <span className="font-mono font-bold text-amber-800 text-sm tracking-wider">{demoOtp}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setForm((prev) => ({ ...prev, emailOtp: demoOtp }))
-                      verifyOtpCode(demoOtp)
-                    }}
-                    className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[11px] cursor-pointer"
-                  >
-                    Auto-Fill OTP
-                  </button>
-                </div>
-              )}
+
 
               {/* OTP Input Section */}
               {emailOtpSent && (

@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP } from '@/lib/utils'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 5, 60, 'otp:student-verify-email')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const session = await getSession()
     if (!session || session.role !== 'student') {
@@ -13,14 +19,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, otp } = await request.json()
-    if (!email || !otp || otp.trim().length !== 6) {
+    if (!email || !otp || typeof otp !== 'string' || otp.trim().length !== 6) {
       return NextResponse.json({ success: false, message: 'Please enter the complete 6-digit OTP.' }, { status: 400 })
     }
 
     const normalizedEmail = email.trim().toLowerCase()
     const trimmedOtp = otp.trim()
 
-    // Find the latest valid OTP for this email
+    // Find the latest valid unused OTP for this email
     const otpRecord = await prisma.oTP.findFirst({
       where: {
         email: normalizedEmail,
@@ -33,6 +39,14 @@ export async function POST(request: NextRequest) {
     if (!otpRecord || !verifyOTP(trimmedOtp, otpRecord.codeHash)) {
       return NextResponse.json({ success: false, message: 'Invalid or expired OTP code.' }, { status: 400 })
     }
+
+    // Mark OTP as used immediately (single-use enforcement)
+    await prisma.oTP.update({
+      where: { id: otpRecord.id },
+      data: { used: true },
+    }).catch((err) => {
+      console.warn('Could not mark student OTP as used:', err)
+    })
 
     return NextResponse.json({
       success: true,

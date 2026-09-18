@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkEmailAvailability } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 10, 60, 'auth:check-email')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const body = await request.json()
     const { email, userId, registerNumber, facultyId } = body || {}
@@ -39,6 +45,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 10, 60, 'auth:check-email')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const email = searchParams.get('email')
