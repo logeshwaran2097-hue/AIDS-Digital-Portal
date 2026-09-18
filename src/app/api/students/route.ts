@@ -675,8 +675,7 @@ export async function PUT(request: Request) {
           where: { id: student.userId },
           data: {
             ...(name ? { name: name.trim() } : {}),
-            email: targetEmail,
-            emailVerified: isEmailCustom,
+            ...(email && email.trim() ? { email: targetEmail, emailVerified: isEmailCustom } : {}),
             ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
             ...(data.profileImage !== undefined ? { profileImage: data.profileImage } : {}),
             ...(isAdmin && status ? { status } : {}),
