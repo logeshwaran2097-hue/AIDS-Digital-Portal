@@ -5,7 +5,7 @@ const passStore: Record<string, any> = {
   'VSB/AI&DS/GP-2026-0847': {
     id: 'VSB/AI&DS/GP-2026-0847',
     name: 'Logeshwaran G',
-    reg: '922525243103',
+    reg: '',
     dept: 'Artificial Intelligence & Data Science',
     year: '2',
     sec: 'B',
@@ -52,8 +52,8 @@ export async function GET(request: NextRequest) {
         data: {
           id,
           type: 'bus',
-          name: 'Logeshwaran G',
-          reg: id.split('-').pop() || '922525243103',
+          name: 'Student Commuter',
+          reg: id.split('-').pop() || '',
           dept: 'Artificial Intelligence & Data Science',
           year: '2',
           sec: 'B',
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       data: {
         id,
         name: 'Student (Verified Hosteller)',
-        reg: id.split('-').pop() || '922525243103',
+        reg: id.split('-').pop() || '',
         dept: 'Artificial Intelligence & Data Science',
         year: '2',
         sec: 'B',

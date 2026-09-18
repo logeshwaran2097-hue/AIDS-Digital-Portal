@@ -141,7 +141,7 @@ interface GPACalculatorMarksheetViewProps {
 
 export default function GPACalculatorMarksheetView({
   studentName = 'Student',
-  registerNumber = '922525243103',
+  registerNumber = '',
   studentYear = 2,
   currentSemester = 3,
   initialCgpa = null

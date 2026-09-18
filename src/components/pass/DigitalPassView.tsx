@@ -132,11 +132,11 @@ const HOSTEL_BLOCKS = [
 ]
 
 export default function DigitalPassView({
-  studentName = 'Logeshwaran G',
-  registerNumber = '922525243103',
+  studentName = '',
+  registerNumber = '',
   department = 'Artificial Intelligence & Data Science',
   year = 2,
-  section = 'B',
+  section = '',
   role = 'student',
   initialHostelBlock,
   initialRoomNo,

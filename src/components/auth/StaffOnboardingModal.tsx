@@ -836,7 +836,6 @@ export function StaffOnboardingModal({
                   <input
                     type="tel"
                     required
-                    placeholder="Enter 10-digit mobile number"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
@@ -924,7 +923,6 @@ export function StaffOnboardingModal({
                     type="text"
                     value={form.cabin}
                     onChange={(e) => setForm({ ...form, cabin: e.target.value })}
-                    placeholder="e.g. Staff Room 204 / AI & DS Wing"
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                   />
                 </div>
@@ -937,7 +935,6 @@ export function StaffOnboardingModal({
                     type="text"
                     value={form.specialization}
                     onChange={(e) => setForm({ ...form, specialization: e.target.value })}
-                    placeholder="e.g. Machine Learning, Computer Vision, Data Science"
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                   />
                 </div>
@@ -952,7 +949,6 @@ export function StaffOnboardingModal({
                         type="text"
                         value={form.qualification}
                         onChange={(e) => setForm({ ...form, qualification: e.target.value })}
-                        placeholder="e.g. M.E. / M.Tech, Ph.D., M.Sc."
                         className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                       />
                     </div>
@@ -967,7 +963,6 @@ export function StaffOnboardingModal({
                         max={50}
                         value={form.experience}
                         onChange={(e) => setForm({ ...form, experience: e.target.value })}
-                        placeholder="e.g. 5"
                         className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
                       />
                     </div>
@@ -1065,7 +1060,6 @@ export function StaffOnboardingModal({
                       type={showNewPassword ? 'text' : 'password'}
                       required
                       minLength={6}
-                      placeholder="Create strong password"
                       value={form.newPassword}
                       onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
@@ -1087,7 +1081,6 @@ export function StaffOnboardingModal({
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
                       minLength={6}
-                      placeholder="Repeat password"
                       value={form.confirmPassword}
                       onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                       className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-8"
@@ -1122,7 +1115,6 @@ export function StaffOnboardingModal({
                   <input
                     type="email"
                     required
-                    placeholder="Enter your personal or official email address"
                     value={form.email}
                     onChange={(e) => {
                       const val = e.target.value
@@ -1262,7 +1254,6 @@ export function StaffOnboardingModal({
                         lastVerifiedOtpRef.current = null
                       }
                     }}
-                    placeholder="000000"
                     disabled={otpVerified}
                     className={cn(
                       'w-full text-center tracking-[0.4em] font-mono font-black text-2xl p-2.5 rounded-xl border bg-white focus:outline-none shadow-inner transition-all',
@@ -1512,7 +1503,6 @@ export function StaffOnboardingModal({
                 <input
                   type="text"
                   required
-                  placeholder="Enter the correct detail"
                   value={requestedValue}
                   onChange={(e) => setRequestedValue(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41]"
@@ -1524,7 +1514,6 @@ export function StaffOnboardingModal({
                 <textarea
                   required
                   rows={3}
-                  placeholder="Provide supporting remarks or appointment reference"
                   value={correctionReason}
                   onChange={(e) => setCorrectionReason(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41]"

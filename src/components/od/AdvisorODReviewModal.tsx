@@ -358,15 +358,15 @@ export function AdvisorODReviewModal({
     return parsed.eventName || 'Academic / Project Work OD'
   }
 
-  const effectiveStudentName = application?.studentName || studentDetails?.name || parsed.studentName || 'Student'
-  const effectiveRegisterNumber = application?.registerNumber || studentDetails?.registerNumber || parsed.registerNumber || '922525243103'
-  const effectiveYear = application?.year || studentDetails?.year || 2
-  const effectiveSemester = application?.semester || studentDetails?.semester || 3
-  const effectiveSection = application?.section || studentDetails?.section || 'B'
-  const effectiveBatch = application?.batch || studentDetails?.batch || '2025–2029'
-  const effectiveBloodGroup = application?.bloodGroup || studentDetails?.bloodGroup || 'O+ve'
-  const effectiveResidency = application?.residencyStatus || studentDetails?.residencyStatus || (studentDetails?.busNo ? `Day Scholar · College Bus ${studentDetails.busNo}` : 'Day Scholar')
-  const effectiveParentPhone = application?.parentPhone || studentDetails?.parentPhone || parsed.parentPhone || '6381366088'
+  const effectiveStudentName = application?.studentName || studentDetails?.name || parsed.studentName || ''
+  const effectiveRegisterNumber = application?.registerNumber || studentDetails?.registerNumber || parsed.registerNumber || ''
+  const effectiveYear = application?.year || studentDetails?.year || ''
+  const effectiveSemester = application?.semester || studentDetails?.semester || ''
+  const effectiveSection = application?.section || studentDetails?.section || ''
+  const effectiveBatch = application?.batch || studentDetails?.batch || ''
+  const effectiveBloodGroup = application?.bloodGroup || studentDetails?.bloodGroup || ''
+  const effectiveResidency = application?.residencyStatus || studentDetails?.residencyStatus || (studentDetails?.busNo ? `Day Scholar · College Bus ${studentDetails.busNo}` : '')
+  const effectiveParentPhone = application?.parentPhone || studentDetails?.parentPhone || parsed.parentPhone || ''
   const effectiveRate = application?.attendanceRate ?? attendanceRate ?? studentDetails?.attendanceRate ?? 92.4
   const isAttendanceCompliant = effectiveRate >= 75.0
 

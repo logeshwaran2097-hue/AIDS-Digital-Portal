@@ -32,8 +32,8 @@ function VerifyPassContent() {
   const passId = searchParams.get('id') || 'VSB/AI&DS/GP-2026-0847'
   
   const [details, setDetails] = useState<any>({
-    name: searchParams.get('name') || 'Logeshwaran G',
-    reg: searchParams.get('reg') || '922525243103',
+    name: searchParams.get('name') || '',
+    reg: searchParams.get('reg') || '',
     dept: searchParams.get('dept') || 'Artificial Intelligence & Data Science',
     year: searchParams.get('year') || '2',
     sec: searchParams.get('sec') || 'B',

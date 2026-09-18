@@ -773,7 +773,6 @@ export function StudentOnboardingModal({
                   <input
                     type="tel"
                     required
-                    placeholder="Enter 10-digit mobile"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -787,7 +786,6 @@ export function StudentOnboardingModal({
                   <input
                     type="tel"
                     required
-                    placeholder="Enter parent / guardian mobile"
                     value={form.parentPhone}
                     onChange={(e) => setForm({ ...form, parentPhone: e.target.value })}
                     className="w-full p-2 rounded-xl border border-gray-300 font-medium text-[#071A41] bg-white focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -982,7 +980,6 @@ export function StudentOnboardingModal({
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Bus 12 / Route 08"
                           value={form.busNo}
                           onChange={(e) => setForm({ ...form, busNo: e.target.value })}
                           className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -995,7 +992,6 @@ export function StudentOnboardingModal({
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Karur Central Bus Stand"
                           value={form.boardingPoint}
                           onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
                           className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -1014,7 +1010,6 @@ export function StudentOnboardingModal({
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Town Hall Stop / Gandhigramam"
                           value={form.boardingPoint}
                           onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
                           className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -1048,7 +1043,6 @@ export function StudentOnboardingModal({
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Thanthonimalai / Velliyanai / Near Campus"
                         value={form.boardingPoint}
                         onChange={(e) => setForm({ ...form, boardingPoint: e.target.value })}
                         className="w-full p-2 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-[#1557C0]"
@@ -1100,7 +1094,6 @@ export function StudentOnboardingModal({
                       <input
                         type="text"
                         required
-                        placeholder="e.g. Room 204 / B-102"
                         value={form.roomNo}
                         onChange={(e) => setForm({ ...form, roomNo: e.target.value })}
                         className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-xs text-[#071A41] focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -1202,7 +1195,6 @@ export function StudentOnboardingModal({
                       required
                       minLength={6}
                       autoComplete="new-password"
-                      placeholder="Create strong password"
                       value={form.newPassword}
                       onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
                       className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-10"
@@ -1225,7 +1217,6 @@ export function StudentOnboardingModal({
                       required
                       minLength={6}
                       autoComplete="new-password"
-                      placeholder="Repeat password"
                       value={form.confirmPassword}
                       onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                       className="w-full p-2.5 sm:p-3 rounded-xl border border-gray-300 bg-white font-medium text-xs sm:text-sm text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none pr-10"
@@ -1266,7 +1257,6 @@ export function StudentOnboardingModal({
                     type="email"
                     required
                     autoComplete="email"
-                    placeholder="Enter your Gmail address (e.g. name@gmail.com)"
                     value={form.email}
                     onChange={(e) => {
                       const val = e.target.value
@@ -1407,7 +1397,6 @@ export function StudentOnboardingModal({
                         lastVerifiedOtpRef.current = null
                       }
                     }}
-                    placeholder="000000"
                     disabled={otpVerified}
                     className={cn(
                       'w-full text-center tracking-[0.4em] font-mono font-black text-2xl p-2.5 rounded-xl border bg-white focus:outline-none shadow-inner transition-all',
@@ -1741,7 +1730,6 @@ export function StudentOnboardingModal({
                   <input
                     type="text"
                     required
-                    placeholder="Enter the correct value"
                     value={requestedValue}
                     onChange={(e) => setRequestedValue(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"
@@ -1755,7 +1743,6 @@ export function StudentOnboardingModal({
                   <textarea
                     rows={2}
                     required
-                    placeholder="Briefly state reason (e.g. as per 10th marksheet, allotment order...)"
                     value={correctionReason}
                     onChange={(e) => setCorrectionReason(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-gray-300 bg-white font-medium text-[#071A41] focus:ring-2 focus:ring-[#1557C0] focus:outline-none"

@@ -1384,7 +1384,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
                 </div>
                 <div className="space-y-3 text-xs sm:text-sm text-slate-600">
                   <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                    <strong className="text-slate-800">Primary Identifier:</strong> Register Number (e.g. 922525243103) · 2-Step OTP Verification
+                    <strong className="text-slate-800">Primary Identifier:</strong> Register Number · 2-Step OTP Verification
                   </div>
                   <ul className="space-y-2.5 text-xs">
                     <li className="flex items-start gap-2">

@@ -16,17 +16,17 @@ export default async function DigitalPassPage() {
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
-  const studentName = user?.name || session.name || 'Logeshwaran G'
-  const registerNumber = student?.registerNumber || userReg || '922525243103'
+  const studentName = user?.name || session.name || ''
+  const registerNumber = student?.registerNumber || userReg || ''
   const department = student?.department || 'Artificial Intelligence & Data Science'
   const year = student?.year || 2
-  const section = student?.section || 'B'
-  const initialHostelBlock = student?.hostelBlock || 'Boys Hostel I'
-  const initialRoomNo = student?.roomNo || 'Room 204'
+  const section = student?.section || ''
+  const initialHostelBlock = student?.hostelBlock || ''
+  const initialRoomNo = student?.roomNo || ''
   const initialResidencyStatus = student?.residencyStatus || (student?.busNo || student?.busDetails ? 'Day Scholar' : 'Hostel')
-  const initialBusNo = student?.busNo || (student?.busDetails ? student.busDetails.match(/bus\s*(\d+)/i)?.[1] : null) || '5'
-  const initialBusDetails = student?.busDetails || 'Route 05 - Namakkal Central'
-  const initialBoardingPoint = student?.boardingPoint || 'Vkl'
+  const initialBusNo = student?.busNo || (student?.busDetails ? student.busDetails.match(/bus\s*(\d+)/i)?.[1] : null) || ''
+  const initialBusDetails = student?.busDetails || ''
+  const initialBoardingPoint = student?.boardingPoint || ''
 
   return (
     <PortalLayout role={session.role as any} userName={studentName} residencyStatus={initialResidencyStatus}>
