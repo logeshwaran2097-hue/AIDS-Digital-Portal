@@ -191,12 +191,12 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           className="lux-tile-jewel p-4 rounded-2xl flex items-center gap-3.5 cursor-pointer shadow-md select-none lux-specular-sweep"
           title="Click to inspect live Database Audit Logs"
         >
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/35 flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0 shadow-xs">
             <Database className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">Database Status</p>
-            <p className="text-sm font-bold text-white">Healthy &amp; Synced</p>
+            <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Database Status</p>
+            <p className="text-sm font-bold text-[#071A3D]">Healthy &amp; Synced</p>
           </div>
         </div>
 
@@ -205,12 +205,12 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           className="lux-tile-jewel p-4 rounded-2xl flex items-center gap-3.5 cursor-pointer shadow-md select-none lux-specular-sweep"
           title="Click to manage RBAC Security & Roles"
         >
-          <div className="w-11 h-11 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-400/35 flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center shrink-0 shadow-xs">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Security Seal</p>
-            <p className="text-sm font-bold text-white">JWT Encrypted</p>
+            <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">Security Seal</p>
+            <p className="text-sm font-bold text-[#071A3D]">JWT Encrypted</p>
           </div>
         </div>
 
@@ -219,12 +219,12 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           className="lux-tile-jewel p-4 rounded-2xl flex items-center gap-3.5 cursor-pointer shadow-md select-none lux-specular-sweep"
           title="Click to Export Audit Report PDF"
         >
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/35 flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center shrink-0 shadow-xs">
             <Cpu className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">PDF Vector Engine</p>
-            <p className="text-sm font-bold text-white">Active &amp; Ready</p>
+            <p className="text-[10px] text-amber-700 font-bold uppercase tracking-wider">PDF Vector Engine</p>
+            <p className="text-sm font-bold text-[#071A3D]">Active &amp; Ready</p>
           </div>
         </div>
       </div>
@@ -233,8 +233,8 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-black text-[#071A3D] dark:text-white tracking-tight">Centralized Administrative Directory</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Real-time live database counts connected to PostgreSQL &amp; Prisma</p>
+            <h2 className="text-xl font-black text-[#071A3D] tracking-tight">Centralized Administrative Directory</h2>
+            <p className="text-xs text-slate-500 font-medium">Real-time live database counts connected to PostgreSQL &amp; Prisma</p>
           </div>
           <span className="text-xs text-slate-400 font-mono font-bold">12 Primary Modules</span>
         </div>
@@ -252,7 +252,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
                   handleTileNavigation(tile.href)
                 }
               }}
-              className="lux-glass-card p-5 rounded-3xl border border-[#D4AF37]/30 hover:border-[#F5CE62]/80 transition-all duration-300 hover:shadow-2xl group flex flex-col justify-between cursor-pointer active:scale-[0.98] select-none lux-specular-sweep hover:-translate-y-1"
+              className="lux-glass-card p-5 rounded-3xl border border-white/80 hover:border-blue-400/50 transition-all duration-300 hover:shadow-xl group flex flex-col justify-between cursor-pointer active:scale-[0.98] select-none lux-specular-sweep hover:-translate-y-1"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -260,18 +260,18 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
                     {tile.icon}
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-white group-hover:text-[#F5CE62] transition-colors drop-shadow-xs">
+                    <h3 className="font-bold text-sm text-[#071A3D] group-hover:text-[#1455D9] transition-colors">
                       {tile.title}
                     </h3>
-                    <p className="text-[11px] text-slate-300 font-medium">{tile.desc}</p>
+                    <p className="text-[11px] text-slate-500 font-medium">{tile.desc}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-black px-2.5 py-1 rounded-xl bg-black/40 border border-[#D4AF37]/40 text-[#F5CE62] group-hover:bg-[#D4AF37]/20 group-hover:border-[#F5CE62] transition-colors shadow-xs">
+                <span className="text-xs font-mono font-black px-2.5 py-1 rounded-xl bg-blue-50/80 border border-blue-200/80 text-[#1455D9] group-hover:bg-blue-100/80 transition-colors shadow-xs">
                   {tile.count}
                 </span>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-bold text-cyan-300 group-hover:text-amber-300">
+              <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#1455D9]">
                 <Link
                   href={tile.href}
                   prefetch={true}

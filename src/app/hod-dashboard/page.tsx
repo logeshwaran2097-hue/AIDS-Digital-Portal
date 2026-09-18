@@ -234,24 +234,24 @@ export default async function HODDashboardPage() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
             {[
-              { label: 'Students', href: '/hod-dashboard/students', icon: <Users className="w-5 h-5" />, desc: 'Student database & batch lists', color: 'bg-blue-500/20 text-cyan-300 border border-blue-400/30' },
-              { label: 'Faculty', href: '/hod-dashboard/faculty', icon: <GraduationCap className="w-5 h-5" />, desc: 'Faculty profiles & workload', color: 'bg-purple-500/20 text-purple-300 border border-purple-400/30' },
-              { label: 'Event Proofs', href: '/hod-dashboard/od-proofs', icon: <ShieldCheck className="w-5 h-5" />, desc: 'Verify geo-tags & certificates', color: 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' },
-              { label: 'Achievements', href: '/hod-dashboard/achievements', icon: <Trophy className="w-5 h-5" />, desc: 'Department honors & awards', color: 'bg-amber-500/20 text-amber-300 border border-amber-400/30' },
-              { label: 'Projects', href: '/hod-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, desc: 'Review student projects', color: 'bg-indigo-500/20 text-indigo-300 border border-indigo-400/30' },
-              { label: 'Reports', href: '/hod-dashboard/reports', icon: <BarChart3 className="w-5 h-5" />, desc: 'Department analytics & PDF', color: 'bg-rose-500/20 text-rose-300 border border-rose-400/30' },
+              { label: 'Students', href: '/hod-dashboard/students', icon: <Users className="w-5 h-5" />, desc: 'Student database & batch lists', color: 'bg-blue-50 text-[#1455D9] border border-blue-200' },
+              { label: 'Faculty', href: '/hod-dashboard/faculty', icon: <GraduationCap className="w-5 h-5" />, desc: 'Faculty profiles & workload', color: 'bg-purple-50 text-purple-700 border border-purple-200' },
+              { label: 'Event Proofs', href: '/hod-dashboard/od-proofs', icon: <ShieldCheck className="w-5 h-5" />, desc: 'Verify geo-tags & certificates', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+              { label: 'Achievements', href: '/hod-dashboard/achievements', icon: <Trophy className="w-5 h-5" />, desc: 'Department honors & awards', color: 'bg-amber-50 text-amber-700 border border-amber-200' },
+              { label: 'Projects', href: '/hod-dashboard/projects', icon: <FolderOpen className="w-5 h-5" />, desc: 'Review student projects', color: 'bg-indigo-50 text-indigo-700 border border-indigo-200' },
+              { label: 'Reports', href: '/hod-dashboard/reports', icon: <BarChart3 className="w-5 h-5" />, desc: 'Department analytics & PDF', color: 'bg-rose-50 text-rose-700 border border-rose-200' },
             ].map((action) => (
               <Link
                 key={action.label}
                 href={action.href}
-                className="p-4 rounded-2xl lux-tile-jewel lux-specular-sweep text-white shadow-md group flex flex-col justify-between cursor-pointer select-none"
+                className="p-4 rounded-2xl lux-tile-jewel lux-specular-sweep text-[#071A3D] shadow-md group flex flex-col justify-between cursor-pointer select-none"
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-all duration-300 ${action.color} shadow-sm group-hover:scale-110`}>
                   {action.icon}
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-white group-hover:text-[#F5CE62] transition-colors drop-shadow-xs">{action.label}</h3>
-                  <p className="text-[11px] text-slate-300 font-medium mt-0.5 line-clamp-1">{action.desc}</p>
+                  <h3 className="text-xs font-bold text-[#071A3D] group-hover:text-[#1455D9] transition-colors">{action.label}</h3>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5 line-clamp-1">{action.desc}</p>
                 </div>
               </Link>
             ))}

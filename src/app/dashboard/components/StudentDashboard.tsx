@@ -331,19 +331,19 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
 
       {/* Live Attendance Health & Chronometer Overview */}
       <section aria-label="Attendance Overview">
-        <div className="lux-glass-card rounded-3xl p-6 sm:p-7 border border-[#D4AF37]/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_35px_rgba(20,85,217,0.25)] space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/10">
+        <div className="lux-glass-card rounded-3xl p-6 sm:p-7 border border-white/80 shadow-[0_16px_40px_rgba(7,26,61,0.06)] space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-200/80">
             <div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/20 text-cyan-200 border border-[#D4AF37]/35 text-[10px] font-mono font-bold uppercase tracking-wider shadow-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200/80 text-[10px] font-mono font-bold uppercase tracking-wider shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1455D9] animate-pulse" />
                   {att.totalSessions > 0 ? "Biometric Ledger Verified" : "Enrolled Academic Term"}
                 </span>
-                <span className="text-xs text-slate-300 font-semibold">· Semester {data.student.semester} Compliance</span>
+                <span className="text-xs text-slate-500 font-semibold">· Semester {data.student.semester} Compliance</span>
               </div>
-              <h2 className="text-xl font-black text-white mt-2 flex items-center gap-2.5 tracking-tight">
-                <div className="p-2 rounded-2xl bg-gradient-to-tr from-[#1748A8] to-[#1455D9] text-white shadow-[0_0_15px_rgba(20,85,217,0.4)] border border-[#D4AF37]/40">
-                  <CalendarDays className="w-5 h-5 text-[#FDE68A]" />
+              <h2 className="text-xl font-black text-[#071A3D] mt-2 flex items-center gap-2.5 tracking-tight">
+                <div className="p-2 rounded-2xl bg-gradient-to-tr from-[#1748A8] to-[#1455D9] text-white shadow-md border border-white/40">
+                  <CalendarDays className="w-5 h-5 text-white" />
                 </div>
                 <span>Attendance &amp; Academic Health Chronometer</span>
               </h2>
@@ -354,15 +354,15 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 <span className={cn(
                   "px-3.5 py-1.5 rounded-2xl text-xs font-bold flex items-center gap-1.5 border shadow-xs transition-all",
                   isEligible
-                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-400/30"
-                    : "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-400/30"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                    : "bg-rose-50 text-rose-700 border-rose-300"
                 )}>
-                  {isEligible ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertTriangle className="w-4 h-4 text-rose-400" />}
+                  {isEligible ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <AlertTriangle className="w-4 h-4 text-rose-600" />}
                   {isEligible ? "Executive Exam Eligible (>75% Norm)" : "Attendance Condonation Alert (<75%)"}
                 </span>
               ) : (
-                <span className="px-3.5 py-1.5 bg-gradient-to-r from-blue-500/15 to-cyan-500/15 text-cyan-300 border border-cyan-400/30 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-2xs">
-                  <Sparkles className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <span className="px-3.5 py-1.5 bg-blue-50 text-[#1455D9] border border-blue-200 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+                  <Sparkles className="w-4 h-4 text-[#1455D9] animate-pulse" />
                   <span>Active Term Ingestion</span>
                 </span>
               )}
@@ -375,18 +375,18 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             <div className="lux-kpi-cyan lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22C7E8] animate-ping" />
-                  <p className="text-[10px] text-cyan-200/80 font-black uppercase tracking-widest">Cumulative Total</p>
+                  <span className="w-2 h-2 rounded-full bg-cyan-500 shadow-[0_0_8px_#22C7E8] animate-ping" />
+                  <p className="text-[10px] text-cyan-800 font-black uppercase tracking-widest">Cumulative Total</p>
                 </div>
-                <p className="text-3xl sm:text-4xl font-black text-white dark:text-cyan-300 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(34,197,232,0.4)]">
+                <p className="text-3xl sm:text-4xl font-black text-[#0284C7] font-mono tracking-tight">
                   {att.percentage.toFixed(1)}%
                 </p>
-                <p className="text-[11px] text-cyan-300/80 font-semibold pt-0.5">
+                <p className="text-[11px] text-cyan-700 font-semibold pt-0.5">
                   {att.totalSessions > 0 ? (att.percentage >= 75 ? `Safe Margin (+${(att.percentage - 75).toFixed(1)}%)` : `Shortage (${(75 - att.percentage).toFixed(1)}%)`) : 'Zero Sessions'}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1748A8] to-[#1455D9] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(20,85,217,0.5)] border border-cyan-400/40 shrink-0">
-                <Percent className="w-5 h-5 text-[#FDE68A]" />
+              <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-[#0284C7] border border-cyan-200 flex items-center justify-center font-black shadow-xs shrink-0">
+                <Percent className="w-5 h-5 text-[#0284C7]" />
               </div>
             </div>
 
@@ -394,16 +394,16 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             <div className="lux-kpi-amber lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#F59E0B]" />
-                  <p className="text-[10px] text-amber-200/80 font-black uppercase tracking-widest">Working Sessions</p>
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
+                  <p className="text-[10px] text-amber-800 font-black uppercase tracking-widest">Working Sessions</p>
                 </div>
-                <p className="text-3xl sm:text-4xl font-black text-white dark:text-amber-200 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(245,158,11,0.3)]">
-                  {att.totalSessions} <span className="text-sm font-sans text-amber-300/70 font-bold">Hrs</span>
+                <p className="text-3xl sm:text-4xl font-black text-[#D97706] font-mono tracking-tight">
+                  {att.totalSessions} <span className="text-sm font-sans text-amber-700/70 font-bold">Hrs</span>
                 </p>
-                <p className="text-[11px] text-amber-300/80 font-semibold pt-0.5">{att.totalSessions > 0 ? 'Total Academic Days' : 'Term Started'}</p>
+                <p className="text-[11px] text-amber-700 font-semibold pt-0.5">{att.totalSessions > 0 ? 'Total Academic Days' : 'Term Started'}</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#78350F] to-[#D97706] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(217,119,6,0.4)] border border-amber-400/40 shrink-0">
-                <Clock className="w-5 h-5 text-[#FFF0B8]" />
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-[#D97706] border border-amber-200 flex items-center justify-center font-black shadow-xs shrink-0">
+                <Clock className="w-5 h-5 text-[#D97706]" />
               </div>
             </div>
 
@@ -411,16 +411,16 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             <div className="lux-kpi-emerald lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />
-                  <p className="text-[10px] text-emerald-200/80 font-black uppercase tracking-widest">Present &amp; OD</p>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#34D399]" />
+                  <p className="text-[10px] text-emerald-800 font-black uppercase tracking-widest">Present &amp; OD</p>
                 </div>
-                <p className="text-3xl sm:text-4xl font-black text-white dark:text-emerald-300 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(52,211,153,0.4)]">
-                  {att.presentSessions} <span className="text-sm font-sans text-emerald-300/70 font-bold">Hrs</span>
+                <p className="text-3xl sm:text-4xl font-black text-[#059669] font-mono tracking-tight">
+                  {att.presentSessions} <span className="text-sm font-sans text-emerald-700/70 font-bold">Hrs</span>
                 </p>
-                <p className="text-[11px] text-emerald-300/90 font-semibold pt-0.5">{att.odSessions > 0 ? `+ ${att.odSessions} Authorized OD` : 'Attended Sessions'}</p>
+                <p className="text-[11px] text-emerald-700 font-semibold pt-0.5">{att.odSessions > 0 ? `+ ${att.odSessions} Authorized OD` : 'Attended Sessions'}</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#064E3B] to-[#059669] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(5,150,105,0.4)] border border-emerald-400/40 shrink-0">
-                <CheckCircle2 className="w-5 h-5 text-[#A7F3D0]" />
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#059669] border border-emerald-200 flex items-center justify-center font-black shadow-xs shrink-0">
+                <CheckCircle2 className="w-5 h-5 text-[#059669]" />
               </div>
             </div>
 
@@ -428,16 +428,16 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             <div className="lux-kpi-rose lux-specular-sweep p-5 rounded-3xl flex items-center justify-between transition-all duration-300">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_#FB7185]" />
-                  <p className="text-[10px] text-rose-200/80 font-black uppercase tracking-widest">Absences</p>
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_#FB7185]" />
+                  <p className="text-[10px] text-rose-800 font-black uppercase tracking-widest">Absences</p>
                 </div>
-                <p className="text-3xl sm:text-4xl font-black text-white dark:text-rose-300 font-mono tracking-tight drop-shadow-[0_0_12px_rgba(251,113,133,0.4)]">
-                  {att.absentSessions} <span className="text-sm font-sans text-rose-300/70 font-bold">Hrs</span>
+                <p className="text-3xl sm:text-4xl font-black text-[#E11D48] font-mono tracking-tight">
+                  {att.absentSessions} <span className="text-sm font-sans text-rose-700/70 font-bold">Hrs</span>
                 </p>
-                <p className="text-[11px] text-rose-300/90 font-semibold pt-0.5">{att.totalSessions > 0 ? 'Logged Absences' : 'Perfect Record'}</p>
+                <p className="text-[11px] text-rose-700 font-semibold pt-0.5">{att.totalSessions > 0 ? 'Logged Absences' : 'Perfect Record'}</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#881337] to-[#E11D48] text-white flex items-center justify-center font-black shadow-[0_0_18px_rgba(225,29,72,0.4)] border border-rose-400/40 shrink-0">
-                <AlertTriangle className="w-5 h-5 text-[#FECDD3]" />
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-[#E11D48] border border-rose-200 flex items-center justify-center font-black shadow-xs shrink-0">
+                <AlertTriangle className="w-5 h-5 text-[#E11D48]" />
               </div>
             </div>
           </div>
@@ -445,8 +445,8 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
           {/* Subject-Wise Attendance Progress */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-black text-slate-600 dark:text-cyan-300 uppercase tracking-wider">Curriculum Matrix Progress:</p>
-              <Link href="/dashboard/attendance" className="text-xs text-[#1455D9] dark:text-cyan-300 font-bold hover:underline flex items-center gap-1">
+              <p className="text-xs font-black text-slate-500 uppercase tracking-wider">Curriculum Matrix Progress:</p>
+              <Link href="/dashboard/attendance" className="text-xs text-[#1455D9] font-bold hover:underline flex items-center gap-1">
                 <span>View Complete Breakdown</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -458,29 +458,29 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                   const percent = sub.percent
                   const isSafe = sub.conducted === 0 || percent >= 75
                   return (
-                    <div key={sub.code} className="p-4 rounded-2xl bg-[#0A1A3A]/85 border border-white/12 space-y-2.5 hover:shadow-lg hover:border-cyan-400/40 transition-all">
+                    <div key={sub.code} className="p-4 rounded-2xl bg-white/80 border border-slate-200/80 space-y-2.5 hover:shadow-lg hover:border-blue-400/50 transition-all">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-cyan-300 px-2.5 py-0.5 rounded-lg bg-blue-950/80 border border-cyan-500/30">
+                        <span className="font-mono text-xs font-black text-[#1455D9] px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
                           {sub.code}
                         </span>
-                        <span className={cn('text-xs font-black font-mono', isSafe ? 'text-emerald-400' : 'text-rose-400')}>
+                        <span className={cn('text-xs font-black font-mono', isSafe ? 'text-emerald-600' : 'text-rose-600')}>
                           {percent.toFixed(1)}%
                         </span>
                       </div>
 
-                      <p className="text-xs font-bold text-white line-clamp-1">{sub.name}</p>
+                      <p className="text-xs font-bold text-[#071A3D] line-clamp-1">{sub.name}</p>
 
                       {/* Progress Bar */}
                       <div className="space-y-1">
-                        <div className="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden p-0.5 border border-white/5">
+                        <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
                           <div
                             className={cn('h-full rounded-full transition-all duration-500', isSafe ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-rose-500 to-red-400')}
                             style={{ width: `${Math.min(100, Math.max(sub.conducted === 0 ? 0 : 5, percent))}%` }}
                           />
                         </div>
-                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium font-mono">
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium font-mono">
                           <span>{sub.attended} / {sub.conducted} Periods</span>
-                          <span className={isSafe ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
+                          <span className={isSafe ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
                             {sub.conducted === 0 ? 'Enrolled' : (isSafe ? '>75% Safe' : '<75% Warning')}
                           </span>
                         </div>
@@ -490,30 +490,30 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 })}
               </div>
             ) : (
-              <div className="py-8 px-6 text-center rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-[#0C2254]/80 via-[#08183E]/90 to-[#040E28]/95 space-y-2 shadow-inner">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1748A8] to-[#0A1E4A] border border-[#D4AF37]/40 text-[#FDE68A] flex items-center justify-center mx-auto shadow-md">
+              <div className="py-8 px-6 text-center rounded-2xl border border-slate-200/80 bg-white/60 space-y-2 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-[#1455D9] flex items-center justify-center mx-auto shadow-sm">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <p className="font-black text-sm text-white flex items-center justify-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22C7E8]" />
+                <p className="font-black text-sm text-[#071A3D] flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
                   <span>Semester Curriculum Roll Active</span>
                 </p>
-                <p className="text-xs text-slate-300 max-w-sm mx-auto">Official course periods synchronized with biometric attendance ledger.</p>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">Official course periods synchronized with biometric attendance ledger.</p>
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Luxury Search Bar - Imperial Royal Sapphire & Gold */}
+      {/* Luxury Search Bar - Translucent White Crystal */}
       <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#F5CE62] group-focus-within:text-[#FFE885] transition-colors pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1455D9] transition-colors pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search subjects, notes, question papers, events, or resources..."
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-[#D4AF37]/35 bg-gradient-to-r from-[#12306C]/90 via-[#0C2254]/95 to-[#07163C]/98 text-sm focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/25 focus:border-[#F5CE62] shadow-[0_12px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(20,85,217,0.25)] placeholder:text-slate-300 transition-all text-white font-medium"
+          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200/90 bg-white/85 backdrop-blur-md text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15 focus:border-[#1455D9] shadow-sm placeholder:text-slate-400 transition-all text-[#071A3D] font-medium"
         />
       </div>
 
@@ -525,12 +525,12 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
               key={item.label}
               href={item.href}
               prefetch={true}
-              className="lux-tile-jewel lux-specular-sweep flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl group text-center space-y-3 cursor-pointer select-none ring-1 ring-white/10"
+              className="lux-tile-jewel lux-specular-sweep flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl group text-center space-y-3 cursor-pointer select-none"
             >
-              <div className={cn('p-3.5 rounded-2xl transition-all group-hover:scale-115 group-hover:rotate-3 duration-300 shadow-md ring-1 ring-white/20', item.bg)}>
+              <div className={cn('p-3.5 rounded-2xl transition-all group-hover:scale-115 group-hover:rotate-3 duration-300 shadow-md ring-1 ring-white/40', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-xs font-black tracking-wide text-white group-hover:text-[#FDE68A] transition-colors line-clamp-1 drop-shadow-sm">
+              <span className="text-xs font-black tracking-wide text-[#071A3D] group-hover:text-[#1455D9] transition-colors line-clamp-1">
                 {item.label}
               </span>
             </Link>
@@ -543,11 +543,11 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         {/* Upcoming Events */}
         <section aria-label="Upcoming Events" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-cyan-400" />
+            <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-[#1455D9]" />
               <span>Upcoming Events</span>
             </h2>
-            <Link href="/dashboard/events" className="text-xs font-semibold text-cyan-300 hover:underline inline-flex items-center gap-1">
+            <Link href="/dashboard/events" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
               View All <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -570,17 +570,17 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                         </Badge>
                         <span className="text-[11px] text-slate-400 font-medium">{formatDate(e.date)}</span>
                       </div>
-                      <h3 className="font-bold text-sm text-white truncate">{e.name}</h3>
-                      <div className="flex items-center gap-3 text-xs text-slate-400">
+                      <h3 className="font-bold text-sm text-[#071A3D] truncate">{e.name}</h3>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 text-cyan-400" /> {e.time}
+                          <Clock className="w-3.5 h-3.5 text-[#1455D9]" /> {e.time}
                         </span>
                         <span className="flex items-center gap-1 truncate">
-                          <MapPin className="w-3.5 h-3.5 text-rose-400" /> {e.venue}
+                          <MapPin className="w-3.5 h-3.5 text-rose-500" /> {e.venue}
                         </span>
                       </div>
                     </div>
-                    <div className="p-3 bg-blue-500/15 text-cyan-300 border border-cyan-400/30 rounded-2xl shrink-0 flex flex-col items-center justify-center min-w-[52px] shadow-xs">
+                    <div className="p-3 bg-blue-50 text-[#1455D9] border border-blue-200 rounded-2xl shrink-0 flex flex-col items-center justify-center min-w-[52px] shadow-xs">
                       <Calendar className="w-5 h-5 mb-0.5" />
                       <span className="text-[10px] font-bold">Event</span>
                     </div>
@@ -594,11 +594,11 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         {/* Latest Announcements */}
         <section aria-label="Latest Announcements" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-[#D4AF37]" />
+            <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-amber-600" />
               <span>Latest Announcements</span>
             </h2>
-            <Link href="/dashboard/announcements" className="text-xs font-semibold text-cyan-300 hover:underline inline-flex items-center gap-1">
+            <Link href="/dashboard/announcements" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
               View All <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -621,12 +621,12 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                         </Badge>
                         <span className="text-[11px] text-slate-400">{formatDate(a.createdAt)}</span>
                       </div>
-                      <h3 className="font-bold text-sm text-white truncate">{a.title}</h3>
-                      <p className="text-xs text-slate-300 line-clamp-1">{a.content}</p>
+                      <h3 className="font-bold text-sm text-[#071A3D] truncate">{a.title}</h3>
+                      <p className="text-xs text-slate-500 line-clamp-1">{a.content}</p>
                     </div>
                     <Link
                       href="/dashboard/announcements"
-                      className="p-2 rounded-xl text-slate-400 hover:text-cyan-300 hover:bg-white/10 transition-colors shrink-0"
+                      className="p-2 rounded-xl text-slate-400 hover:text-[#1455D9] hover:bg-slate-100 transition-colors shrink-0"
                     >
                       <ArrowRight className="w-4 h-4" />
                     </Link>
@@ -641,11 +641,11 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       {/* Recent Resources Section */}
       <section aria-label="Recent Study Resources" className="space-y-4 lux-speed-defer">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Database className="h-5 w-5 text-cyan-400" />
+          <h2 className="text-base font-bold text-[#071A3D] flex items-center gap-2">
+            <Database className="h-5 w-5 text-[#1455D9]" />
             <span>Recent Study Resources</span>
           </h2>
-          <Link href="/dashboard/resources" className="text-xs font-semibold text-cyan-300 hover:underline inline-flex items-center gap-1">
+          <Link href="/dashboard/resources" className="text-xs font-semibold text-[#1455D9] hover:underline inline-flex items-center gap-1">
             Browse All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -662,14 +662,14 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
               <Card key={r.id} className="rounded-3xl hover:shadow-xl transition-all">
                 <CardContent className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-white truncate">{r.name}</p>
+                    <p className="text-xs font-bold text-[#071A3D] truncate">{r.name}</p>
                     <p className="text-[11px] text-slate-400 uppercase mt-0.5">
                       {r.resourceType?.replace(/_/g, ' ')} · {(r.fileSize / (1024 * 1024)).toFixed(2)} MB
                     </p>
                   </div>
                   <Link
                     href="/dashboard/resources"
-                    className="p-2.5 rounded-xl bg-blue-500/15 text-cyan-300 border border-cyan-400/30 hover:bg-cyan-500 hover:text-[#071A3D] transition-all shrink-0 shadow-xs"
+                    className="p-2.5 rounded-xl bg-blue-50 text-[#1455D9] border border-blue-200 hover:bg-[#1455D9] hover:text-white transition-all shrink-0 shadow-xs"
                     title="Download"
                   >
                     <Download className="w-4 h-4" />

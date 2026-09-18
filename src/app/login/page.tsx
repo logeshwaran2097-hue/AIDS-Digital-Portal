@@ -280,17 +280,17 @@ export default function LoginPage() {
   const router = useRouter()
 
   React.useEffect(() => {
-    // Progressive staged entrance timers
+    // High-speed progressive staged entrance timers (ultra-snappy 300ms total sequence)
     const timers = [
-      setTimeout(() => setAnimStage(1), 150),  // Stage 1: Accreditation Shield
-      setTimeout(() => setAnimStage(2), 450),  // Stage 2: Picture & Celestial Emblem
-      setTimeout(() => setAnimStage(3), 750),  // Stage 3: College Name
-      setTimeout(() => setAnimStage(4), 1000), // Stage 4: Autonomous Karur Tag
-      setTimeout(() => setAnimStage(5), 1200), // Stage 5: Golden Light Beam
-      setTimeout(() => setAnimStage(6), 1400), // Stage 6: Department Name
-      setTimeout(() => setAnimStage(7), 1600), // Stage 7: Digital Portal CPU Badge
-      setTimeout(() => setAnimStage(8), 1850), // Stage 8: Luxury Login Card
-      setTimeout(() => setAnimStage(9), 2150), // Stage 9: Motto & Footer
+      setTimeout(() => setAnimStage(1), 25),  // Stage 1: Accreditation Shield
+      setTimeout(() => setAnimStage(2), 55),  // Stage 2: Picture & Celestial Emblem
+      setTimeout(() => setAnimStage(3), 85),  // Stage 3: College Name
+      setTimeout(() => setAnimStage(4), 115), // Stage 4: Autonomous Karur Tag
+      setTimeout(() => setAnimStage(5), 145), // Stage 5: Golden Light Beam
+      setTimeout(() => setAnimStage(6), 175), // Stage 6: Department Name
+      setTimeout(() => setAnimStage(7), 210), // Stage 7: Digital Portal CPU Badge
+      setTimeout(() => setAnimStage(8), 250), // Stage 8: Luxury Login Card
+      setTimeout(() => setAnimStage(9), 290), // Stage 9: Motto & Footer
     ]
     return () => timers.forEach(clearTimeout)
   }, [])
@@ -1041,7 +1041,7 @@ export default function LoginPage() {
         {/* Stage 1: Accreditation Top Badge & Laptop Install App Button */}
         <div className="flex items-center justify-center gap-2.5 flex-wrap">
           <div className={cn(
-            "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-700 ease-out transform",
+            "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-300 ease-out transform",
             animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}>
             <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
@@ -1067,7 +1067,7 @@ export default function LoginPage() {
 
         {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (PICTURE LOGO) */}
         <div className={cn(
-          "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-700 ease-out transform",
+          "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-300 ease-out transform",
           animStage >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"
         )}>
           {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
@@ -1080,7 +1080,7 @@ export default function LoginPage() {
           <div className="absolute w-20 h-20 sm:w-23 sm:h-23 rounded-full border-[1.2px] border-[#1557C0]/30 bg-gradient-to-tr from-cyan-100/30 via-blue-100/15 to-amber-100/25 shadow-[0_0_15px_rgba(21,87,192,0.18)] anim-solar-corona" />
           
           {/* Layer 1: Inner Circular Gold Medallion with Specular Sheen */}
-          <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_10px_25px_rgba(7,26,65,0.2),0_0_18px_rgba(231,185,62,0.45)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-500">
+          <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_10px_25px_rgba(7,26,65,0.2),0_0_18px_rgba(231,185,62,0.45)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-300">
             {/* Specular Liquid Gold Sweep */}
             <div className="anim-gold-sheen" />
 
@@ -1088,9 +1088,10 @@ export default function LoginPage() {
               <Image
                 src="/college-emblem.png"
                 alt="V.S.B. Engineering College Logo"
-                width={70}
-                height={70}
+                width={72}
+                height={72}
                 className="w-full h-full object-contain drop-shadow-xs"
+                style={{ imageRendering: '-webkit-optimize-contrast' }}
                 priority
               />
             </div>
@@ -1106,7 +1107,7 @@ export default function LoginPage() {
         <div className="space-y-1.5 w-full">
           {/* Stage 3: College Master Title */}
           <div className={cn(
-            "transition-all duration-700 ease-out transform",
+            "transition-all duration-300 ease-out transform",
             animStage >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             <h1
@@ -1119,7 +1120,7 @@ export default function LoginPage() {
 
           {/* Stage 4: Autonomous Karur Tag */}
           <div className={cn(
-            "transition-all duration-700 ease-out transform",
+            "transition-all duration-300 ease-out transform",
             animStage >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3.5 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
@@ -1130,20 +1131,20 @@ export default function LoginPage() {
 
           {/* Stage 5: Glowing Golden Light Beam Separator */}
           <div className={cn(
-            "w-36 sm:w-48 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-1 anim-beam-glow transition-all duration-700 ease-out transform origin-center",
+            "w-36 sm:w-48 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-1 anim-beam-glow transition-all duration-300 ease-out transform origin-center",
             animStage >= 5 ? "opacity-80 scale-x-100" : "opacity-0 scale-x-0"
           )} />
 
           {/* Stage 6: Prominent Digital Portal of AI&DS Master Title */}
           <div className={cn(
-            "space-y-2 transition-all duration-700 ease-out transform",
+            "space-y-2 transition-all duration-300 ease-out transform",
             animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             {/* PRESTIGIOUS ROYAL SAPPHIRE & GOLD APP TITLE BADGE */}
             <div className="inline-flex items-center gap-2 sm:gap-2.5 px-4 sm:px-6 py-2 rounded-2xl bg-gradient-to-r from-[#1455D9] via-[#1E60E6] to-[#0F44B8] text-white shadow-[0_10px_25px_-3px_rgba(20,85,217,0.4)] border-2 border-[#E7B93E] hover:scale-105 transition-all duration-300 flex-wrap justify-center">
               <Cpu className="w-5 h-5 text-[#FFF3B8] animate-pulse shrink-0" />
               <span className="text-base sm:text-2xl font-black tracking-wider text-white drop-shadow-sm">
-                Digital POrtal Of AI&amp;DS
+                Digital Portal of AI &amp; DS
               </span>
               <button
                 type="button"
@@ -1266,7 +1267,7 @@ export default function LoginPage() {
       {/* ULTRA-LUXURY LOGIN CARD (STAGE 8) */}
       <div
         className={cn(
-          "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-700 ease-out transform",
+          "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-300 ease-out transform",
           animStage >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none",
           authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-white/95',
           authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
@@ -1690,7 +1691,22 @@ export default function LoginPage() {
                     <span>{loading ? 'Sending OTP...' : 'Send Login OTP'}</span>
                   </button>
                 ) : (
-                  <div className="space-y-2.5 animate-fade-in">
+                  <div className="space-y-3 animate-fade-in">
+                    {/* Official Email OTP Dispatched Card */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50/90 to-indigo-50/80 border border-blue-200/90 flex items-center gap-3 shadow-xs">
+                      <div className="w-10 h-10 rounded-xl bg-white p-1 border border-blue-200 shadow-sm flex items-center justify-center shrink-0">
+                        <img
+                          src="/email-otp-icon.png"
+                          alt="Email OTP"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-black text-[#071A41]">6-Digit Security OTP Dispatched</p>
+                        <p className="text-[10.5px] text-blue-700 font-semibold truncate">Check mailbox: {email}</p>
+                      </div>
+                    </div>
+
                     <div className="space-y-1">
                       <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                         <Key className="w-3.5 h-3.5 text-[#1557C0]" />
@@ -1757,7 +1773,7 @@ export default function LoginPage() {
 
       {/* QUOTE (STAGE 9) */}
       <div className={cn(
-        "text-center space-y-1 relative z-10 pt-2 pb-1 transition-all duration-700 ease-out transform",
+        "text-center space-y-1 relative z-10 pt-2 pb-1 transition-all duration-300 ease-out transform",
         animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         <div className="flex items-center justify-center gap-2">
@@ -1779,7 +1795,7 @@ export default function LoginPage() {
 
       {/* FOOTER (STAGE 9) */}
       <footer className={cn(
-        "w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 px-2 text-center transition-all duration-700 ease-out transform",
+        "w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 px-2 text-center transition-all duration-300 ease-out transform",
         animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         <div className="flex items-center justify-center gap-3">
@@ -2484,11 +2500,13 @@ export default function LoginPage() {
                 {/* 2. Email Verification via OTP */}
                 <div className="p-3 sm:p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-blue-200">
-                    <span className="font-black text-[#071A41] flex items-center gap-2 text-xs">
-                      <img src="/email-otp-icon.png" alt="Email OTP" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
-                      Verify Student Email via OTP *
+                    <span className="font-black text-[#071A41] flex items-center gap-2.5 text-xs">
+                      <div className="w-8 h-8 rounded-lg bg-white p-1 border border-blue-200 shadow-xs flex items-center justify-center shrink-0">
+                        <img src="/email-otp-icon.png" alt="Email OTP" className="w-full h-full object-contain" />
+                      </div>
+                      <span>Verify Student Email via OTP *</span>
                     </span>
-                    <span className="text-[10px] font-bold text-blue-700">Official Communication</span>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-200">Official Communication</span>
                   </div>
 
                   <div>

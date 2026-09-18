@@ -339,26 +339,26 @@ export function StudentAttendanceView({
         <div className="lux-kpi-cyan lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
           <div className="relative z-10 space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22C7E8] animate-ping" />
-              <p className="text-[10px] text-cyan-200/80 font-black uppercase tracking-widest">Overall Attendance</p>
+              <span className="w-2 h-2 rounded-full bg-[#1455D9] shadow-[0_0_8px_#22C7E8] animate-ping" />
+              <p className="text-[10px] text-[#071A3D] font-black uppercase tracking-widest">Overall Attendance</p>
             </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-white dark:text-cyan-300 drop-shadow-[0_0_15px_rgba(34,197,232,0.4)]">
-              {stats.percentage.toFixed(1)}<span className="text-xl font-sans text-cyan-300/70 font-bold">%</span>
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-cyan-300">
+              {stats.percentage.toFixed(1)}<span className="text-xl font-sans text-[#1455D9] font-bold">%</span>
             </p>
             <div className="pt-1">
               <span className={cn(
                 "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs",
                 stats.totalSessions > 0
                   ? (isCompliant
-                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/40"
-                      : "bg-rose-500/20 text-rose-300 border-rose-400/40")
-                  : "bg-cyan-500/20 text-cyan-300 border-cyan-400/30"
+                      ? "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-400/40"
+                      : "bg-rose-500/20 text-rose-800 dark:text-rose-300 border-rose-400/40")
+                  : "bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 border-cyan-400/30"
               )}>
                 {stats.totalSessions > 0 ? (isCompliant ? '✓ Safe Margin (>75%)' : '⚠ Shortage (<75%)') : 'Term Enrolled'}
               </span>
             </div>
           </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#1748A8] via-[#1455D9] to-[#0A3C9F] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(20,85,217,0.5)] border border-cyan-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#1748A8] via-[#1455D9] to-[#0A3C9F] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(20,85,217,0.3)] border border-cyan-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
             <Percent className="w-6 h-6 text-[#FDE68A]" />
           </div>
         </div>
@@ -367,17 +367,17 @@ export function StudentAttendanceView({
         <div className="lux-kpi-amber lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
           <div className="relative z-10 space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#F59E0B]" />
-              <p className="text-[10px] text-amber-200/80 font-black uppercase tracking-widest">Conducted Sessions</p>
+              <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#F59E0B]" />
+              <p className="text-[10px] text-amber-900 font-black uppercase tracking-widest">Conducted Sessions</p>
             </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-white dark:text-amber-200 drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-              {stats.totalSessions} <span className="text-base font-sans font-bold text-amber-300/70">Hrs</span>
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-amber-200">
+              {stats.totalSessions} <span className="text-base font-sans font-bold text-amber-700">Hrs</span>
             </p>
-            <p className="text-[10px] text-amber-300/80 font-semibold pt-1">
+            <p className="text-[10px] text-amber-800 font-semibold pt-1">
               {stats.totalSessions > 0 ? 'Official Faculty Register' : 'Term Roll Active'}
             </p>
           </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#78350F] to-[#D97706] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(217,119,6,0.4)] border border-amber-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#78350F] to-[#D97706] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(217,119,6,0.3)] border border-amber-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
             <Clock className="w-6 h-6 text-[#FFF0B8]" />
           </div>
         </div>
@@ -386,17 +386,17 @@ export function StudentAttendanceView({
         <div className="lux-kpi-emerald lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
           <div className="relative z-10 space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />
-              <p className="text-[10px] text-emerald-200/80 font-black uppercase tracking-widest">Present &amp; OD</p>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#34D399]" />
+              <p className="text-[10px] text-emerald-900 font-black uppercase tracking-widest">Present &amp; OD</p>
             </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-white dark:text-emerald-300 drop-shadow-[0_0_15px_rgba(52,211,153,0.4)]">
-              {stats.presentSessions} <span className="text-base font-sans font-bold text-emerald-300/70">Hrs</span>
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-emerald-300">
+              {stats.presentSessions} <span className="text-base font-sans font-bold text-emerald-700">Hrs</span>
             </p>
-            <p className="text-[10px] text-emerald-300/90 font-semibold pt-1">
+            <p className="text-[10px] text-emerald-800 font-semibold pt-1">
               {stats.odSessions > 0 ? `${stats.presentSessions - stats.odSessions} Reg + ${stats.odSessions} OD` : 'Full Attendance'}
             </p>
           </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#064E3B] to-[#059669] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(5,150,105,0.4)] border border-emerald-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#064E3B] to-[#059669] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(5,150,105,0.3)] border border-emerald-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
             <CheckCircle2 className="w-6 h-6 text-[#A7F3D0]" />
           </div>
         </div>
@@ -405,17 +405,17 @@ export function StudentAttendanceView({
         <div className="lux-kpi-rose lux-specular-sweep p-5 sm:p-6 rounded-3xl flex items-center justify-between relative overflow-hidden group transition-all duration-300">
           <div className="relative z-10 space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_#FB7185]" />
-              <p className="text-[10px] text-rose-200/80 font-black uppercase tracking-widest">Absenteeism</p>
+              <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_#FB7185]" />
+              <p className="text-[10px] text-rose-900 font-black uppercase tracking-widest">Absenteeism</p>
             </div>
-            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-white dark:text-rose-300 drop-shadow-[0_0_15px_rgba(251,113,133,0.4)]">
-              {stats.absentSessions} <span className="text-base font-sans font-bold text-rose-300/70">Hrs</span>
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight text-[#071A3D] dark:text-rose-300">
+              {stats.absentSessions} <span className="text-base font-sans font-bold text-rose-700">Hrs</span>
             </p>
-            <p className="text-[10px] text-rose-300/90 font-semibold pt-1">
+            <p className="text-[10px] text-rose-800 font-semibold pt-1">
               {stats.totalSessions > 0 ? `${stats.absentSessions} Unexcused` : 'Clean Attendance'}
             </p>
           </div>
-          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#881337] to-[#E11D48] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(225,29,72,0.4)] border border-rose-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+          <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#881337] to-[#E11D48] text-white flex items-center justify-center font-black text-base shadow-[0_0_20px_rgba(225,29,72,0.3)] border border-rose-400/40 shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
             <XCircle className="w-6 h-6 text-[#FECDD3]" />
           </div>
         </div>
@@ -597,28 +597,28 @@ export function StudentAttendanceView({
               })}
             </div>
           ) : (
-            <div className="py-12 px-6 text-center rounded-3xl border border-[#D4AF37]/35 bg-gradient-to-b from-[#0A1A3A]/70 via-[#061228]/85 to-[#020612] relative overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.6)] space-y-5">
+            <div className="py-12 px-6 text-center rounded-3xl border border-slate-200/90 dark:border-[#D4AF37]/35 bg-white/80 dark:bg-gradient-to-b dark:from-[#0A1A3A]/70 dark:via-[#061228]/85 dark:to-[#020612] relative overflow-hidden shadow-sm space-y-5">
               {/* Subtle gold watermark glow */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,_rgba(212,175,55,0.14)_0%,_transparent_70%)] pointer-events-none" />
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#1748A8] via-[#0D2D6C] to-[#D4AF37]/40 border-2 border-[#D4AF37]/60 text-[#FDE68A] flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(212,175,55,0.35)] relative z-10">
-                <ShieldCheck className="w-8 h-8 text-[#FDE68A]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,_rgba(20,85,217,0.06)_0%,_transparent_70%)] pointer-events-none" />
+              <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-gradient-to-tr dark:from-[#1748A8] dark:via-[#0D2D6C] dark:to-[#D4AF37]/40 border-2 border-blue-200 dark:border-[#D4AF37]/60 text-[#1455D9] dark:text-[#FDE68A] flex items-center justify-center mx-auto shadow-sm relative z-10">
+                <ShieldCheck className="w-8 h-8" />
               </div>
               <div className="space-y-1.5 relative z-10">
-                <p className="font-black text-base sm:text-lg text-white tracking-wide">
+                <p className="font-black text-base sm:text-lg text-[#071A3D] dark:text-white tracking-wide">
                   Institutional OD &amp; Leave Ledger Synchronized
                 </p>
-                <p className="text-xs text-blue-200/80 max-w-lg mx-auto leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-blue-200/80 max-w-lg mx-auto leading-relaxed">
                   Submit official event permissions, symposiums, hackathons, sports exemptions, or medical leave. Your submissions undergo live Class Advisor verification and HOD executive sanction.
                 </p>
               </div>
 
               {/* 3-Step Clearance Progression Strip */}
-              <div className="flex items-center justify-center gap-2 max-w-md mx-auto text-[10px] font-bold text-slate-300 py-1">
-                <span className="px-2.5 py-1 rounded-lg bg-blue-500/15 border border-blue-400/30 text-cyan-300">1. Apply</span>
-                <ChevronRight className="w-3 h-3 text-[#D4AF37]" />
-                <span className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/30 text-amber-300">2. Advisor Verify</span>
-                <ChevronRight className="w-3 h-3 text-[#D4AF37]" />
-                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-400/30 text-emerald-300">3. HOD Sanction</span>
+              <div className="flex items-center justify-center gap-2 max-w-md mx-auto text-[10px] font-bold text-slate-600 dark:text-slate-300 py-1">
+                <span className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-400/30 text-[#1455D9] dark:text-cyan-300">1. Apply</span>
+                <ChevronRight className="w-3 h-3 text-amber-500 dark:text-[#D4AF37]" />
+                <span className="px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-400/30 text-amber-800 dark:text-amber-300">2. Advisor Verify</span>
+                <ChevronRight className="w-3 h-3 text-amber-500 dark:text-[#D4AF37]" />
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-400/30 text-emerald-800 dark:text-emerald-300">3. HOD Sanction</span>
               </div>
 
               <div className="pt-2 relative z-10">
@@ -715,12 +715,12 @@ export function StudentAttendanceView({
               </table>
             </div>
           ) : (
-            <div className="py-12 px-6 text-center rounded-3xl border border-white/10 bg-gradient-to-b from-blue-950/30 via-slate-900/40 to-[#030816] space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#1748A8]/40 to-cyan-500/30 text-cyan-300 border border-cyan-400/30 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(34,197,232,0.25)]">
+            <div className="py-12 px-6 text-center rounded-3xl border border-slate-200/90 dark:border-white/10 bg-white/80 dark:bg-gradient-to-b dark:from-blue-950/30 dark:via-slate-900/40 dark:to-[#030816] space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-gradient-to-tr dark:from-[#1748A8]/40 dark:to-cyan-500/30 text-[#1455D9] dark:text-cyan-300 border border-blue-200 dark:border-cyan-400/30 flex items-center justify-center mx-auto shadow-2xs">
                 <BookOpen className="w-7 h-7" />
               </div>
               <p className="font-black text-base text-[#071A3D] dark:text-white">Curriculum Matrix Synchronized</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
                 Academic Year 2025-2026 courses active. Individual subject lecture attendance will populate automatically as faculty handlers submit period roll-calls.
               </p>
             </div>
@@ -745,7 +745,7 @@ export function StudentAttendanceView({
 
             {/* View Switcher & Actions */}
             <div className="flex flex-wrap items-center gap-2">
-              <div className="bg-slate-900/80 p-1 rounded-2xl border border-white/10 flex items-center gap-1 text-xs font-bold shadow-xs">
+              <div className="bg-white/90 dark:bg-slate-900/80 p-1 rounded-2xl border border-slate-200/90 dark:border-white/10 flex items-center gap-1 text-xs font-bold shadow-xs">
                 <button
                   type="button"
                   onClick={() => setHistoryViewMode('date_wise')}

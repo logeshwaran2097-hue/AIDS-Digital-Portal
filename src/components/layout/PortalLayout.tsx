@@ -964,33 +964,44 @@ export function PortalLayout({
     window.location.href = '/login'
   }
 
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsDarkMode(true)
-      document.documentElement.classList.add('midnight', 'dark')
-      try {
-        localStorage.setItem('portal_theme', 'dark')
-        localStorage.setItem('vsb-portal-theme', 'midnight')
-      } catch {}
+      const saved = localStorage.getItem('portal_theme')
+      if (saved === 'dark') {
+        setIsDarkMode(true)
+        document.documentElement.classList.add('midnight', 'dark')
+        document.documentElement.classList.remove('light-crystal')
+      } else {
+        setIsDarkMode(false)
+        document.documentElement.classList.remove('midnight', 'dark')
+        document.documentElement.classList.add('light-crystal')
+        try {
+          localStorage.setItem('portal_theme', 'light')
+          localStorage.setItem('vsb-portal-theme', 'light-crystal')
+        } catch {}
+      }
     }
   }, [])
 
   const toggleTheme = () => {
-    setIsDarkMode(true)
-    document.documentElement.classList.add('midnight', 'dark')
-    const current = localStorage.getItem('portal_lux_palette') || 'centurion'
-    const next = current === 'centurion' ? 'azure' : 'centurion'
-    try {
-      localStorage.setItem('portal_lux_palette', next)
-      localStorage.setItem('portal_theme', 'dark')
-      localStorage.setItem('vsb-portal-theme', 'midnight')
-    } catch {}
-    if (next === 'azure') {
-      document.documentElement.classList.add('theme-azure')
+    const nextDark = !isDarkMode
+    setIsDarkMode(nextDark)
+    if (nextDark) {
+      document.documentElement.classList.add('midnight', 'dark')
+      document.documentElement.classList.remove('light-crystal')
+      try {
+        localStorage.setItem('portal_theme', 'dark')
+        localStorage.setItem('vsb-portal-theme', 'midnight')
+      } catch {}
     } else {
-      document.documentElement.classList.remove('theme-azure')
+      document.documentElement.classList.remove('midnight', 'dark')
+      document.documentElement.classList.add('light-crystal')
+      try {
+        localStorage.setItem('portal_theme', 'light')
+        localStorage.setItem('vsb-portal-theme', 'light-crystal')
+      } catch {}
     }
     window.dispatchEvent(new CustomEvent('portal-theme-changed'))
   }
@@ -1753,9 +1764,9 @@ export function PortalLayout({
               type="button"
               onClick={triggerPortalUpdateCheck}
               title={`Release ${APP_VERSION_LABEL} · Click to check updates`}
-              className="hidden lg:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-cyan-400/40 bg-gradient-to-r from-[#0E2F68]/80 to-[#07193C]/90 hover:from-[#1748A8]/90 hover:to-[#0D2D6C]/90 text-cyan-200 text-xs font-semibold transition-all cursor-pointer shadow-[0_4px_16px_rgba(34,197,232,0.25),inset_0_1px_0_rgba(255,255,255,0.25)] hover:scale-105 active:scale-95"
+              className="hidden lg:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-blue-200/90 bg-white/85 hover:bg-white text-[#1455D9] text-xs font-bold transition-all cursor-pointer shadow-[0_2px_10px_rgba(20,85,217,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] hover:scale-105 active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
+              <Sparkles className="w-3.5 h-3.5 text-[#1455D9] animate-pulse" />
               <span className="font-mono font-bold text-[11px] tracking-wide">{APP_VERSION_LABEL}</span>
             </button>
 
@@ -1764,26 +1775,26 @@ export function PortalLayout({
               type="button"
               onClick={() => setShowVisionModal(true)}
               title="View Department Vision & Mission"
-              className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[#D4AF37]/50 bg-gradient-to-r from-[#4A3705]/80 to-[#2A1F02]/90 hover:from-[#6B5008]/80 hover:to-[#3D2C04]/95 text-[#FDE68A] text-xs font-semibold transition-all cursor-pointer shadow-[0_4px_16px_rgba(212,175,55,0.25),inset_0_1px_0_rgba(255,255,255,0.25)] hover:scale-105 active:scale-95"
+              className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-amber-300/90 bg-amber-50/90 hover:bg-amber-100/90 text-amber-900 text-xs font-bold transition-all cursor-pointer shadow-[0_2px_10px_rgba(245,158,11,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] hover:scale-105 active:scale-95"
             >
-              <Target className="w-3.5 h-3.5 text-[#FDE68A]" />
+              <Target className="w-3.5 h-3.5 text-amber-600" />
               <span>Vision &amp; Mission</span>
             </button>
 
-            {/* 1-Click Luxury Theme Switcher (Midnight Centurion / Imperial Azure) */}
+            {/* 1-Click Luxury Theme Switcher (White Crystal / Midnight Centurion) */}
             <button
               type="button"
               onClick={toggleTheme}
-              title="Toggle Executive Luxury Palette (Midnight Centurion / Imperial Azure)"
-              className="p-2 rounded-xl border border-[#D4AF37]/50 bg-gradient-to-br from-[#D4AF37]/25 to-[#AA820A]/15 hover:from-[#D4AF37]/35 hover:to-[#AA820A]/25 text-[#FDE68A] shadow-[0_4px_16px_rgba(212,175,55,0.3),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all cursor-pointer hover:scale-105 active:scale-95"
+              title="Toggle Theme (White Crystal / Midnight Centurion)"
+              className="p-2 rounded-xl border border-slate-200/90 bg-white/85 hover:bg-white text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.9)] transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
-              <Sparkles className="w-4 h-4 text-[#FDE68A] animate-pulse" />
+              <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
             </button>
 
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
-              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full bg-slate-900/90 hover:bg-slate-800/95 border border-[#D4AF37]/40 hover:border-[#D4AF37]/80 transition-all duration-300 shadow-[0_4px_18px_rgba(0,0,0,0.6),0_0_15px_rgba(212,175,55,0.25)] group cursor-pointer hover:scale-[1.02] active:scale-98"
+              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full bg-white/85 hover:bg-white border border-slate-200/90 hover:border-blue-400/60 transition-all duration-300 shadow-[0_2px_12px_rgba(7,26,61,0.06)] group cursor-pointer hover:scale-[1.02] active:scale-98"
             >
               <div className="relative w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-tr from-[#D4AF37] via-cyan-400 to-[#1455D9] shadow-[0_0_10px_rgba(34,197,232,0.3)] shrink-0">
                 <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 text-white flex items-center justify-center font-bold text-xs">
@@ -1798,13 +1809,13 @@ export function PortalLayout({
                     userName.charAt(0) || 'U'
                   )}
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#040A18] shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
               </div>
               <div className="hidden sm:flex flex-col text-left leading-none">
-                <span className="text-xs font-bold text-white max-w-[120px] truncate group-hover:text-cyan-300 transition-colors">
+                <span className="text-xs font-bold text-[#071A3D] max-w-[120px] truncate group-hover:text-[#1455D9] transition-colors">
                   {userName}
                 </span>
-                <span className="text-[9.5px] text-[#FDE68A] font-bold mt-0.5 uppercase tracking-wider">
+                <span className="text-[9.5px] text-[#1455D9] font-bold mt-0.5 uppercase tracking-wider">
                   {effectiveRoleBadgeLabel}
                 </span>
               </div>
@@ -1816,9 +1827,9 @@ export function PortalLayout({
               onClick={() => setShowLogoutConfirm(true)}
               disabled={isLoggingOut}
               title="Logout from portal"
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-rose-200 hover:text-white bg-gradient-to-r from-rose-600/30 to-red-700/20 hover:from-rose-600/40 hover:to-red-700/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-rose-500/40 hover:border-rose-400 shadow-[0_4px_16px_rgba(244,63,94,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-rose-700 hover:text-rose-800 bg-rose-50/90 hover:bg-rose-100/90 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-rose-200/90 shadow-xs hover:scale-105 active:scale-95"
             >
-              <LogOut className="w-4 h-4 text-rose-400" />
+              <LogOut className="w-4 h-4 text-rose-500" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>

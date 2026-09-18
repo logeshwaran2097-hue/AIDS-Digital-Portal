@@ -275,7 +275,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
               <div className={cn('p-2.5 rounded-xl transition-transform group-hover:scale-110 duration-200 border shadow-md', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-[11px] font-bold text-slate-100 group-hover:text-[#F5CE62] transition-colors line-clamp-1 drop-shadow-xs">
+              <span className="text-[11px] font-bold text-[#071A3D] group-hover:text-[#1455D9] transition-colors line-clamp-1">
                 {item.label}
               </span>
             </Link>
