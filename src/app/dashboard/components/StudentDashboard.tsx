@@ -74,14 +74,14 @@ interface DashboardData {
 }
 
 const quickAccess = [
-  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#00D2D3]/15 text-[#00E5FF] hover:bg-[#00D2D3]/25 border-[#00D2D3]/30' },
-  { label: 'Faculty', href: '/dashboard/faculty', icon: <Users className="h-5 w-5" />, bg: 'bg-[#8B5CF6]/15 text-[#C4B5FD] hover:bg-[#8B5CF6]/25 border-[#8B5CF6]/30' },
-  { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-5 w-5" />, bg: 'bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8]/25 border-[#38BDF8]/30' },
-  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-5 w-5" />, bg: 'bg-[#FB923C]/15 text-[#FDBA74] hover:bg-[#FB923C]/25 border-[#FB923C]/30' },
-  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-5 w-5" />, bg: 'bg-[#60A5FA]/15 text-[#93C5FD] hover:bg-[#60A5FA]/25 border-[#60A5FA]/30' },
-  { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#F43F5E]/15 text-[#FB7185] hover:bg-[#F43F5E]/25 border-[#F43F5E]/30' },
-  { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-5 w-5" />, bg: 'bg-[#38BDF8]/15 text-[#7DD3FC] hover:bg-[#38BDF8]/25 border-[#38BDF8]/30' },
-  { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-5 w-5" />, bg: 'bg-[#F59E0B]/15 text-[#FDE68A] hover:bg-[#F59E0B]/25 border-[#F59E0B]/30' },
+  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#00F5FF]/25 via-[#00A8FF]/15 to-transparent text-[#00F5FF] border border-[#00F5FF]/40 shadow-[0_0_15px_rgba(0,245,255,0.4)]' },
+  { label: 'Faculty', href: '/dashboard/faculty', icon: <Users className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#A855F7]/25 via-[#6366F1]/15 to-transparent text-[#C084FC] border border-[#A855F7]/40 shadow-[0_0_15px_rgba(168,85,247,0.4)]' },
+  { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#38BDF8]/25 via-[#0284C7]/15 to-transparent text-[#38BDF8] border border-[#38BDF8]/40 shadow-[0_0_15px_rgba(56,189,248,0.4)]' },
+  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#FB923C]/25 via-[#EA580C]/15 to-transparent text-[#FDBA74] border border-[#FB923C]/40 shadow-[0_0_15px_rgba(251,146,60,0.4)]' },
+  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#60A5FA]/25 via-[#2563EB]/15 to-transparent text-[#93C5FD] border border-[#60A5FA]/40 shadow-[0_0_15px_rgba(96,165,250,0.4)]' },
+  { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#F43F5E]/25 via-[#BE123C]/15 to-transparent text-[#FB7185] border border-[#F43F5E]/40 shadow-[0_0_15px_rgba(244,63,94,0.4)]' },
+  { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#22D3EE]/25 via-[#0891B2]/15 to-transparent text-[#67E8F9] border border-[#22D3EE]/40 shadow-[0_0_15px_rgba(34,211,238,0.4)]' },
+  { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-5 w-5" />, bg: 'bg-gradient-to-br from-[#F59E0B]/30 via-[#D97706]/20 to-transparent text-[#FDE68A] border border-[#F59E0B]/50 shadow-[0_0_18px_rgba(245,158,11,0.5)]' },
 ]
 
 export default function StudentDashboard({ data }: { data: DashboardData }) {
@@ -525,14 +525,12 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
               key={item.label}
               href={item.href}
               prefetch={true}
-              className={cn(
-                'flex flex-col items-center justify-center p-4 rounded-3xl bg-gradient-to-b from-[#14367A]/90 via-[#0D2458]/95 to-[#07163C]/98 border border-[#D4AF37]/30 hover:border-[#F5CE62] text-white shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_20px_rgba(20,85,217,0.25)] hover:shadow-[0_18px_45px_rgba(212,175,55,0.35)] transition-all duration-300 group text-center space-y-2.5 lux-specular-sweep hover:-translate-y-1.5 cursor-pointer'
-              )}
+              className="lux-tile-jewel lux-specular-sweep flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl group text-center space-y-3 cursor-pointer select-none ring-1 ring-white/10"
             >
-              <div className={cn('p-3 rounded-2xl transition-all group-hover:scale-115 group-hover:rotate-3 duration-300 border shadow-md', item.bg)}>
+              <div className={cn('p-3.5 rounded-2xl transition-all group-hover:scale-115 group-hover:rotate-3 duration-300 shadow-md ring-1 ring-white/20', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-xs font-bold text-slate-100 group-hover:text-[#FDE68A] transition-colors line-clamp-1">
+              <span className="text-xs font-black tracking-wide text-white group-hover:text-[#FDE68A] transition-colors line-clamp-1 drop-shadow-sm">
                 {item.label}
               </span>
             </Link>

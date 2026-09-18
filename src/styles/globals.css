@@ -1054,23 +1054,23 @@ html.dark textarea::placeholder {
    ========================================================= */
 
 .lux-ambient-canvas {
-  background-color: #030816;
+  background-color: #02040A;
   background-image: 
-    radial-gradient(ellipse at 15% 12%, rgba(20, 85, 217, 0.42) 0%, rgba(10, 42, 115, 0.18) 45%, transparent 70%),
-    radial-gradient(ellipse at 88% 18%, rgba(212, 175, 55, 0.22) 0%, rgba(160, 125, 20, 0.06) 50%, transparent 70%),
-    radial-gradient(ellipse at 50% 92%, rgba(34, 197, 232, 0.16) 0%, rgba(7, 20, 50, 0.35) 50%, transparent 80%),
-    linear-gradient(180deg, #030816 0%, #051026 50%, #02050E 100%);
+    radial-gradient(ellipse at 15% 10%, rgba(20, 85, 217, 0.28) 0%, rgba(8, 30, 84, 0.12) 45%, transparent 65%),
+    radial-gradient(ellipse at 85% 15%, rgba(212, 175, 55, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 95%, rgba(34, 197, 232, 0.12) 0%, transparent 65%),
+    linear-gradient(180deg, #02040A 0%, #030816 50%, #010308 100%);
   background-attachment: fixed;
 }
 
 html.dark .lux-ambient-canvas,
 html.midnight .lux-ambient-canvas {
-  background-color: #030816;
+  background-color: #02040A;
   background-image: 
-    radial-gradient(ellipse at 15% 12%, rgba(20, 85, 217, 0.42) 0%, rgba(10, 42, 115, 0.18) 45%, transparent 70%),
-    radial-gradient(ellipse at 88% 18%, rgba(212, 175, 55, 0.22) 0%, rgba(160, 125, 20, 0.06) 50%, transparent 70%),
-    radial-gradient(ellipse at 50% 92%, rgba(34, 197, 232, 0.16) 0%, rgba(7, 20, 50, 0.35) 50%, transparent 80%),
-    linear-gradient(180deg, #030816 0%, #051026 50%, #02050E 100%);
+    radial-gradient(ellipse at 15% 10%, rgba(20, 85, 217, 0.28) 0%, rgba(8, 30, 84, 0.12) 45%, transparent 65%),
+    radial-gradient(ellipse at 85% 15%, rgba(212, 175, 55, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 95%, rgba(34, 197, 232, 0.12) 0%, transparent 65%),
+    linear-gradient(180deg, #02040A 0%, #030816 50%, #010308 100%);
   background-attachment: fixed;
 }
 
@@ -1158,36 +1158,65 @@ html.midnight .lux-glass-header {
   box-shadow: 0 25px 50px -12px rgba(2, 6, 20, 0.9), 0 0 40px -5px rgba(212, 175, 55, 0.28), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
 }
 
+/* 👑 REAL LUXURY 3D CHISELED BUTTONS & CHRONOMETER PUSHERS */
 .lux-button-primary {
-  background: linear-gradient(135deg, #2570F5 0%, #1455D9 50%, #0A3C9F 100%);
-  box-shadow: 0 4px 16px 0 rgba(20, 85, 217, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: linear-gradient(180deg, #2D7BFF 0%, #165CE8 45%, #0B40BC 100%);
+  border: 1px solid rgba(147, 197, 253, 0.45);
+  box-shadow: 0 8px 24px -4px rgba(20, 85, 217, 0.6), inset 0 1.5px 1px rgba(255, 255, 255, 0.55), inset 0 -2px 4px rgba(0, 0, 0, 0.45);
+  color: #FFFFFF;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lux-button-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px 0 rgba(20, 85, 217, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
+  transform: translateY(-1.5px) scale(1.02);
+  box-shadow: 0 12px 30px -4px rgba(20, 85, 217, 0.75), 0 0 25px rgba(56, 189, 248, 0.4), inset 0 1.5px 1px rgba(255, 255, 255, 0.7);
+  border-color: rgba(224, 242, 254, 0.7);
 }
 
 .lux-button-primary:active {
-  transform: translateY(0px);
+  transform: translateY(0.5px) scale(0.98);
+  box-shadow: 0 4px 12px rgba(20, 85, 217, 0.5), inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .lux-button-gold {
-  background: linear-gradient(135deg, #FDE68A 0%, #F5CE62 35%, #D4AF37 70%, #B88E18 100%);
-  color: #071328;
+  background: linear-gradient(180deg, #FFF6D1 0%, #F5CE62 30%, #D4AF37 68%, #8E6B04 100%);
+  color: #061226;
   font-weight: 900;
-  box-shadow: 0 4px 18px 0 rgba(212, 175, 55, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(255, 248, 220, 0.85);
+  box-shadow: 0 8px 24px -4px rgba(212, 175, 55, 0.65), 0 0 18px rgba(212, 175, 55, 0.3), inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -2px 4px rgba(115, 87, 6, 0.45);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lux-button-gold:hover {
-  transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 8px 26px 0 rgba(212, 175, 55, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.75);
+  transform: translateY(-1.5px) scale(1.03);
+  box-shadow: 0 12px 32px -4px rgba(212, 175, 55, 0.8), 0 0 30px rgba(245, 206, 98, 0.5), inset 0 1.5px 1px rgba(255, 255, 255, 1);
+  border-color: #FFFFFF;
 }
 
 .lux-button-gold:active {
-  transform: translateY(0px) scale(0.98);
+  transform: translateY(0.5px) scale(0.98);
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.5), inset 0 2px 4px rgba(115, 87, 6, 0.6);
+}
+
+/* 💎 Sculpted 3D Jewel Navigation Buttons */
+.lux-tile-jewel {
+  background: linear-gradient(180deg, rgba(22, 54, 126, 0.92) 0%, rgba(13, 34, 84, 0.96) 55%, rgba(6, 18, 52, 0.99) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.38);
+  box-shadow: 0 14px 35px -6px rgba(0, 0, 0, 0.75), 0 0 20px rgba(20, 85, 217, 0.25), inset 0 1.5px 1px rgba(255, 255, 255, 0.28), inset 0 -2px 3px rgba(0, 0, 0, 0.5);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lux-tile-jewel:hover {
+  transform: translateY(-3px) scale(1.03);
+  border-color: rgba(255, 225, 128, 0.85);
+  box-shadow: 0 20px 45px -6px rgba(0, 0, 0, 0.85), 0 0 32px rgba(212, 175, 55, 0.45), inset 0 1.5px 1px rgba(255, 255, 255, 0.5);
+}
+
+.lux-tile-jewel:active {
+  transform: translateY(1px) scale(0.97);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8), inset 0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 /* Luxury Chronometer Complication Cards */

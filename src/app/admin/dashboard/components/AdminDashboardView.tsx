@@ -188,43 +188,43 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
 
         <div
           onClick={() => router.push('/admin/activity-logs')}
-          className="lux-glass-card p-4 rounded-2xl border border-emerald-300/80 dark:border-emerald-700/40 shadow-xs flex items-center gap-3.5 cursor-pointer hover:shadow-lg hover:border-emerald-500 transition-all hover:scale-[1.02] lux-specular-sweep"
+          className="lux-tile-jewel p-4 rounded-2xl flex items-center gap-3.5 cursor-pointer shadow-md select-none lux-specular-sweep"
           title="Click to inspect live Database Audit Logs"
         >
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-400/35 flex items-center justify-center shrink-0 shadow-sm">
             <Database className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">Database Status</p>
-            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">Healthy &amp; Synced</p>
+            <p className="text-[10px] text-emerald-300 font-bold uppercase tracking-wider">Database Status</p>
+            <p className="text-sm font-bold text-white">Healthy &amp; Synced</p>
           </div>
         </div>
 
         <div
           onClick={() => router.push('/admin/roles')}
-          className="lux-glass-card p-4 rounded-2xl border border-purple-300/80 dark:border-purple-700/40 shadow-xs flex items-center gap-3.5 cursor-pointer hover:shadow-lg hover:border-purple-500 transition-all hover:scale-[1.02] lux-specular-sweep"
+          className="lux-tile-jewel p-4 rounded-2xl flex items-center gap-3.5 cursor-pointer shadow-md select-none lux-specular-sweep"
           title="Click to manage RBAC Security & Roles"
         >
-          <div className="w-11 h-11 rounded-2xl bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-400/35 flex items-center justify-center shrink-0 shadow-sm">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-purple-600 dark:text-purple-400 font-bold uppercase tracking-wider">Security Seal</p>
-            <p className="text-sm font-bold text-purple-700 dark:text-purple-300">JWT Encrypted</p>
+            <p className="text-[10px] text-purple-300 font-bold uppercase tracking-wider">Security Seal</p>
+            <p className="text-sm font-bold text-white">JWT Encrypted</p>
           </div>
         </div>
 
         <div
           onClick={handleDownloadSystemReport}
-          className="lux-glass-card p-4 rounded-2xl border border-amber-300/80 dark:border-amber-700/40 shadow-xs flex items-center gap-3.5 cursor-pointer hover:shadow-lg hover:border-amber-500 transition-all hover:scale-[1.02] lux-specular-sweep"
+          className="lux-tile-jewel p-4 rounded-2xl flex items-center gap-3.5 cursor-pointer shadow-md select-none lux-specular-sweep"
           title="Click to Export Audit Report PDF"
         >
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/35 flex items-center justify-center shrink-0 shadow-sm">
             <Cpu className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">PDF Vector Engine</p>
-            <p className="text-sm font-bold text-amber-700 dark:text-amber-300">Active &amp; Ready</p>
+            <p className="text-[10px] text-amber-300 font-bold uppercase tracking-wider">PDF Vector Engine</p>
+            <p className="text-sm font-bold text-white">Active &amp; Ready</p>
           </div>
         </div>
       </div>
@@ -252,7 +252,7 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
                   handleTileNavigation(tile.href)
                 }
               }}
-              className="lux-glass-card p-5 rounded-3xl border border-slate-200/80 dark:border-white/10 hover:border-blue-300 dark:hover:border-blue-500/40 transition-all duration-300 hover:shadow-xl group flex flex-col justify-between cursor-pointer active:scale-[0.98] select-none lux-specular-sweep hover:-translate-y-1"
+              className="lux-glass-card p-5 rounded-3xl border border-[#D4AF37]/30 hover:border-[#F5CE62]/80 transition-all duration-300 hover:shadow-2xl group flex flex-col justify-between cursor-pointer active:scale-[0.98] select-none lux-specular-sweep hover:-translate-y-1"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -260,18 +260,18 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
                     {tile.icon}
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-[#071A3D] dark:text-white group-hover:text-[#1455D9] dark:group-hover:text-cyan-300 transition-colors">
+                    <h3 className="font-bold text-sm text-white group-hover:text-[#F5CE62] transition-colors drop-shadow-xs">
                       {tile.title}
                     </h3>
-                    <p className="text-[11px] text-slate-400 font-medium">{tile.desc}</p>
+                    <p className="text-[11px] text-slate-300 font-medium">{tile.desc}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono font-black px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-[#071A3D] dark:text-slate-200 group-hover:bg-blue-50 group-hover:text-[#1455D9] group-hover:border-blue-200 transition-colors">
+                <span className="text-xs font-mono font-black px-2.5 py-1 rounded-xl bg-black/40 border border-[#D4AF37]/40 text-[#F5CE62] group-hover:bg-[#D4AF37]/20 group-hover:border-[#F5CE62] transition-colors shadow-xs">
                   {tile.count}
                 </span>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs font-bold text-[#1455D9] dark:text-cyan-400">
+              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs font-bold text-cyan-300 group-hover:text-amber-300">
                 <Link
                   href={tile.href}
                   prefetch={true}

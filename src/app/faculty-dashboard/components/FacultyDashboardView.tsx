@@ -94,13 +94,13 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
         Boolean(data.faculty?.advisorBatch || (data.faculty?.advisorYear && data.faculty?.advisorSec)))
 
   const quickNav = useMemo(() => [
-    { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 hover:bg-emerald-500/20' },
-    { label: 'Students', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-purple-500/10 text-purple-600 border-purple-500/20 hover:bg-purple-500/20' },
-    { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] border-[#1455D9]/20 hover:bg-[#1455D9]/20' },
-    { label: 'Laboratory', href: '/faculty-dashboard/laboratory', icon: <FlaskConical className="w-5 h-5" />, bg: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20 hover:bg-cyan-500/20' },
-    { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' },
-    { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20' },
-    { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20' },
+    { label: 'Mark Attendance', href: '/faculty-dashboard/attendance', icon: <UserCheck className="w-5 h-5" />, bg: 'bg-gradient-to-br from-emerald-500/25 to-teal-500/15 text-emerald-400 border border-emerald-400/40 shadow-[0_0_15px_rgba(52,211,153,0.35)]' },
+    { label: 'Students', href: '/faculty-dashboard/students', icon: <Users className="w-5 h-5" />, bg: 'bg-gradient-to-br from-purple-500/25 to-indigo-500/15 text-purple-300 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.35)]' },
+    { label: 'My Subjects', href: '/faculty-dashboard/subjects', icon: <BookOpen className="w-5 h-5" />, bg: 'bg-gradient-to-br from-[#2563EB]/25 to-[#1D4ED8]/15 text-cyan-300 border border-cyan-400/40 shadow-[0_0_15px_rgba(37,99,235,0.35)]' },
+    { label: 'Laboratory', href: '/faculty-dashboard/laboratory', icon: <FlaskConical className="w-5 h-5" />, bg: 'bg-gradient-to-br from-cyan-500/25 to-blue-500/15 text-cyan-300 border border-cyan-400/40 shadow-[0_0_15px_rgba(34,211,238,0.35)]' },
+    { label: 'Upload Resources', href: '/faculty-dashboard/resources', icon: <Database className="w-5 h-5" />, bg: 'bg-gradient-to-br from-blue-500/25 to-cyan-500/15 text-blue-300 border border-blue-400/40 shadow-[0_0_15px_rgba(59,130,246,0.35)]' },
+    { label: 'Question Papers', href: '/faculty-dashboard/question-papers', icon: <FileQuestion className="w-5 h-5" />, bg: 'bg-gradient-to-br from-amber-500/25 to-orange-500/15 text-amber-300 border border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.35)]' },
+    { label: 'Circular Notices', href: '/faculty-dashboard/announcements', icon: <Megaphone className="w-5 h-5" />, bg: 'bg-gradient-to-br from-indigo-500/25 to-purple-500/15 text-indigo-300 border border-indigo-400/40 shadow-[0_0_15px_rgba(99,102,241,0.35)]' },
   ], [])
 
   useEffect(() => {
@@ -270,12 +270,12 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
             <Link
               key={item.label}
               href={item.href}
-              className="flex flex-col items-center justify-center p-3.5 rounded-2xl lux-glass-card border border-slate-200/80 dark:border-white/10 text-[#071A3D] dark:text-white hover:shadow-xl transition-all duration-300 group text-center space-y-2 lux-specular-sweep hover:-translate-y-1"
+              className="lux-tile-jewel lux-specular-sweep flex flex-col items-center justify-center p-3.5 rounded-2xl group text-center space-y-2 cursor-pointer select-none"
             >
-              <div className={cn('p-2.5 rounded-xl transition-transform group-hover:scale-110 duration-200 border shadow-xs', item.bg)}>
+              <div className={cn('p-2.5 rounded-xl transition-transform group-hover:scale-110 duration-200 border shadow-md', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 group-hover:text-[#1455D9] transition-colors line-clamp-1">
+              <span className="text-[11px] font-bold text-slate-100 group-hover:text-[#F5CE62] transition-colors line-clamp-1 drop-shadow-xs">
                 {item.label}
               </span>
             </Link>
