@@ -31,6 +31,15 @@ export function validateBody<T>(
 }
 
 // ==========================================
+// Reusable field validators
+// ==========================================
+
+export const optionalEmailSchema = z.preprocess(
+  (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val === null ? undefined : val),
+  z.string().trim().email('Invalid email address').optional().nullable()
+)
+
+// ==========================================
 // 1. Authentication & Onboarding Schemas
 // ==========================================
 
@@ -145,7 +154,7 @@ export const studentCompleteOnboardingSchema = z
     phone: z.string().max(20).optional().nullable(),
     parentPhone: z.string().max(20).optional().nullable(),
     dateOfBirth: z.string().max(30).optional().nullable(),
-    email: z.string().email().optional(),
+    email: optionalEmailSchema,
     otp: z.string().max(10).optional(),
     newPassword: z.string().min(6).max(100).optional(),
     skipEmailVerification: z.boolean().optional(),
@@ -168,7 +177,7 @@ export const adminCreateStudentSchema = z
   .object({
     registerNumber: z.string().min(3).max(30),
     name: z.string().min(2).max(100),
-    email: z.string().email().optional(),
+    email: optionalEmailSchema,
     password: z.string().min(4).max(100),
     phone: z.string().max(20).optional().nullable(),
     parentPhone: z.string().max(20).optional().nullable(),
@@ -199,8 +208,8 @@ export const studentSelfUpdateSchema = z
     id: z.string().optional(),
     registerNumber: z.string().max(30).optional(),
     name: z.string().min(2).max(100).optional(),
-    email: z.string().email().optional(),
-    personalEmail: z.string().email().optional(),
+    email: optionalEmailSchema,
+    personalEmail: optionalEmailSchema,
     password: z.string().min(6).max(100).optional(),
     phone: z.string().max(20).optional().nullable(),
     parentPhone: z.string().max(20).optional().nullable(),
@@ -296,7 +305,7 @@ export const createProjectSchema = z
     domain: z.string().max(100).optional(),
     year: z.union([z.number().int().min(1).max(5), z.string()]).optional(),
     guideName: z.string().max(100).optional(),
-    guideEmail: z.string().email().optional().nullable(),
+    guideEmail: optionalEmailSchema,
     teamMembers: z.string().max(500).optional(),
     // Status can only be set by privileged users; if passed, validated strictly
     status: z.enum(['Pending Review', 'Approved & Active', 'Under Review', 'Completed', 'Rejected']).optional(),
@@ -616,7 +625,7 @@ export const completeProfileSchema = z
     phone: z.string().max(20).optional().nullable(),
     parentPhone: z.string().max(20).optional().nullable(),
     isParentWhatsapp: z.boolean().optional(),
-    email: z.string().email().optional(),
+    email: optionalEmailSchema,
     dateOfBirth: z.string().max(30).optional().nullable(),
     department: z.string().max(150).optional(),
     year: z.union([z.number(), z.string()]).optional(),
@@ -653,7 +662,7 @@ export const createFacultySchema = z
   .object({
     facultyId: z.string().max(50).optional(),
     name: z.string().min(2).max(100),
-    email: z.string().email().optional().or(z.literal('')),
+    email: optionalEmailSchema,
     phone: z.string().max(20).optional().nullable(),
     password: z.string().max(100).optional(),
     dateOfBirth: z.string().max(50).optional().nullable(),
@@ -680,7 +689,7 @@ export const createHodSchema = z
   .object({
     facultyId: z.string().max(50).optional(),
     name: z.string().min(2).max(100),
-    email: z.string().email().optional().or(z.literal('')),
+    email: optionalEmailSchema,
     phone: z.string().max(20).optional().nullable(),
     password: z.string().max(100).optional(),
     department: z.string().max(150).optional(),
@@ -713,7 +722,7 @@ export const adminRolesSchema = z
 export const adminProfileSchema = z
   .object({
     name: z.string().min(2).max(100).optional(),
-    email: z.string().email().optional(),
+    email: optionalEmailSchema,
     phone: z.string().max(20).optional().nullable(),
     profileImage: z.string().max(500000).optional().nullable(),
   })
@@ -753,7 +762,7 @@ export const hodSettingsSchema = z
     academicYear: z.string().max(50).optional(),
     departmentCode: z.string().max(30).optional(),
     departmentName: z.string().max(150).optional(),
-    hodContactEmail: z.string().email().optional(),
+    hodContactEmail: optionalEmailSchema,
     smsDefaulters: z.boolean().optional(),
     emailQPUploads: z.boolean().optional(),
     weeklyDigest: z.boolean().optional(),
@@ -801,7 +810,7 @@ export const bulkStudentItemSchema = z
   .object({
     registerNumber: z.string().min(1).max(50),
     name: z.string().min(1).max(100),
-    email: z.string().email().optional().or(z.literal('')),
+    email: optionalEmailSchema,
     password: z.string().max(100).optional(),
     phone: z.string().max(20).optional().nullable(),
     parentPhone: z.string().max(20).optional().nullable(),

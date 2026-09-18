@@ -321,7 +321,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          dateOfBirth: cleanDob,
+          email: formData.email.trim() || undefined,
+          phone: formData.phone.trim() || undefined,
+          parentPhone: ((formData as any).parentPhone || '').trim() || undefined,
+          dateOfBirth: cleanDob || undefined,
         }),
       })
       const result = await res.json()
@@ -433,12 +436,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         body: JSON.stringify({
           id: selectedStudent.id,
           ...formData,
+          email: formData.email.trim() || undefined,
+          phone: formData.phone.trim() || undefined,
+          parentPhone: ((formData as any).parentPhone || '').trim() || undefined,
           busNo: isHostelForm ? null : (formData.busNo || null),
           boardingPoint: isHostelForm ? null : (formData.boardingPoint || null),
           busDetails: isHostelForm ? null : (formData.busDetails || null),
           hostelBlock: isDayForm ? null : (formData.hostelBlock || null),
           roomNo: isDayForm ? null : (formData.roomNo || null),
-          dateOfBirth: cleanDob,
+          dateOfBirth: cleanDob || undefined,
         }),
       })
       const result = await res.json()
