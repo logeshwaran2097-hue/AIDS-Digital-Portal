@@ -205,17 +205,23 @@ export function StudentProfileView({
           if (parsed.parentPhone === '6381366088' && !(initialStudent as any).parentPhone) {
             parsed.parentPhone = ''
           }
-          if (!parsed.profileImage) {
-            parsed.profileImage = null
-            localStorage.removeItem('user_profile_image')
-            window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: null }))
+          if (parsed.profileImage && !parsed.profileImage.startsWith('blob:')) {
+            localStorage.setItem('user_profile_image', parsed.profileImage)
+          } else if (!parsed.profileImage) {
+            // Check if user_profile_image or initialUser has a valid photo
+            const cachedImg = localStorage.getItem('user_profile_image')
+            if (cachedImg && !cachedImg.startsWith('blob:') && cachedImg !== 'null') {
+              parsed.profileImage = cachedImg
+            } else if (initialUser?.profileImage && !initialUser.profileImage.startsWith('blob:')) {
+              parsed.profileImage = initialUser.profileImage
+            }
           }
           setProfile((prev) => ({ ...prev, ...parsed }))
           setFormData((prev) => ({ ...prev, ...parsed }))
         }
       } catch { }
     }
-  }, [regNo, storageKey, verifiedPersonal])
+  }, [regNo, storageKey, verifiedPersonal, initialUser?.profileImage])
 
   // Real-time synchronization when Onboarding is completed or updated
   useEffect(() => {
@@ -254,7 +260,7 @@ export function StudentProfileView({
     const reader = new FileReader()
     reader.onload = (event) => {
       const img = document.createElement('img')
-      img.onload = () => {
+      img.onload = async () => {
         const canvas = document.createElement('canvas')
         const maxDim = 300
         let w = img.width
@@ -277,6 +283,7 @@ export function StudentProfileView({
           ctx.drawImage(img, 0, 0, w, h)
           const base64 = canvas.toDataURL('image/jpeg', 0.85)
           setImageError(false)
+
           setProfile((prev) => {
             const upd = { ...prev, profileImage: base64 }
             if (typeof window !== 'undefined') {
@@ -287,16 +294,24 @@ export function StudentProfileView({
             return upd
           })
           setFormData((prev) => ({ ...prev, profileImage: base64 }))
-          fetch('/api/students', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ registerNumber: profile.registerNumber, profileImage: base64 }),
-          }).catch(() => { })
-          fetch('/api/auth/complete-profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profileImage: base64 }),
-          }).catch(() => { })
+
+          try {
+            const res = await fetch('/api/students', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ registerNumber: profile.registerNumber, profileImage: base64 }),
+            })
+            if (!res.ok) {
+              await fetch('/api/auth/complete-profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profileImage: base64, registerNumber: profile.registerNumber }),
+              }).catch(() => {})
+            }
+          } catch (e) {
+            console.warn('Profile image server sync note:', e)
+          }
+
           toast.success('Passport photograph updated!')
           playNotificationChime()
         }
@@ -392,7 +407,7 @@ export function StudentProfileView({
         if (formData.profileImage) {
           localStorage.setItem('user_profile_image', formData.profileImage)
           window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: formData.profileImage }))
-        } else {
+        } else if (formData.profileImage === null) {
           localStorage.removeItem('user_profile_image')
           window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: null }))
         }

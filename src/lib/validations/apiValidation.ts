@@ -156,7 +156,7 @@ export const studentCompleteOnboardingSchema = z
     roomNo: z.string().max(50).optional().nullable(),
     busNo: z.string().max(50).optional().nullable(),
     boardingPoint: z.string().max(100).optional().nullable(),
-    profileImage: z.string().max(500000).optional().nullable(),
+    profileImage: z.string().max(2000000).optional().nullable(),
   })
   .strict()
 
@@ -197,11 +197,14 @@ export const adminCreateStudentSchema = z
 export const studentSelfUpdateSchema = z
   .object({
     id: z.string().optional(),
+    registerNumber: z.string().max(30).optional(),
     name: z.string().min(2).max(100).optional(),
     email: z.string().email().optional(),
+    personalEmail: z.string().email().optional(),
     password: z.string().min(6).max(100).optional(),
     phone: z.string().max(20).optional().nullable(),
     parentPhone: z.string().max(20).optional().nullable(),
+    isParentWhatsapp: z.boolean().optional(),
     dateOfBirth: z.string().max(30).optional().nullable(),
     bloodGroup: z.string().max(10).optional().nullable(),
     residencyStatus: z.string().max(50).optional().nullable(),
@@ -211,7 +214,19 @@ export const studentSelfUpdateSchema = z
     hostelBlock: z.string().max(50).optional().nullable(),
     roomNo: z.string().max(50).optional().nullable(),
     address: z.string().max(500).optional().nullable(),
-    profileImage: z.string().max(500000).optional().nullable(),
+    profileImage: z.string().max(2000000).optional().nullable(),
+    // Read-only frontend fields allowed in payload but strictly ignored by backend for non-admins
+    department: z.string().max(150).optional(),
+    year: z.union([z.number(), z.string()]).optional(),
+    semester: z.union([z.number(), z.string()]).optional(),
+    section: z.string().max(10).optional(),
+    batch: z.string().max(50).optional().nullable(),
+    advisorName: z.string().max(100).optional().nullable(),
+    degreeProgram: z.string().max(150).optional(),
+    regulation: z.string().max(100).optional(),
+    enrollmentStatus: z.string().max(50).optional(),
+    cgpa: z.union([z.number(), z.string(), z.null()]).optional(),
+    attendance: z.union([z.number(), z.string(), z.null()]).optional(),
   })
   .strict()
 
@@ -619,7 +634,7 @@ export const completeProfileSchema = z
     roomNo: z.string().max(50).optional().nullable(),
     busNo: z.string().max(50).optional().nullable(),
     boardingPoint: z.string().max(100).optional().nullable(),
-    profileImage: z.string().max(500000).optional().nullable(),
+    profileImage: z.string().max(2000000).optional().nullable(),
     address: z.string().max(500).optional().nullable(),
     busDetails: z.string().max(200).optional().nullable(),
     newPassword: z.string().max(100).optional(),

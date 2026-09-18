@@ -119,6 +119,8 @@ export function invalidateCache(tagOrKeyPattern: string): number {
   return invalidatedCount
 }
 
+export const invalidateDbCache = invalidateCache
+
 /**
  * Clears the entire database cache
  */

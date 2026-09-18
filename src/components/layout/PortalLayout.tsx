@@ -248,20 +248,14 @@ export function PortalLayout({
     }
   }, [])
 
-  // Sync profile image from props, localStorage, and /api/auth/me
+  // Sync profile image from props when provided
   useEffect(() => {
     const imgProp = userImage !== undefined ? userImage : profileImage
-    if (imgProp && !imgProp.startsWith('blob:')) {
+    if (imgProp && typeof imgProp === 'string' && !imgProp.startsWith('blob:') && imgProp !== 'null') {
       setAvatarImage(imgProp)
       setAvatarError(false)
       if (typeof window !== 'undefined') {
-        localStorage.setItem('user_profile_image', imgProp as string)
-      }
-    } else if (imgProp === null || imgProp === '') {
-      setAvatarImage(null)
-      setAvatarError(false)
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('user_profile_image')
+        localStorage.setItem('user_profile_image', imgProp)
       }
     }
   }, [userImage, profileImage])
@@ -270,35 +264,31 @@ export function PortalLayout({
     if (typeof window === 'undefined') return
 
     // 1. Initial check in localStorage if avatarImage is still empty
-    if (profileImage === null || userImage === null) {
-      setAvatarImage(null)
+    const cached = localStorage.getItem('user_profile_image')
+    if (cached && !cached.startsWith('blob:') && cached !== 'null') {
+      setAvatarImage(cached)
       setAvatarError(false)
-      localStorage.removeItem('user_profile_image')
-    } else if (!avatarImage) {
-      const cached = localStorage.getItem('user_profile_image')
-      if (cached && !cached.startsWith('blob:') && cached !== 'null') {
-        setAvatarImage(cached)
-      } else {
-        if (cached?.startsWith('blob:') || cached === 'null') {
-          localStorage.removeItem('user_profile_image')
-        }
-        try {
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i)
-            if (key && (key.startsWith('vsb_student_profile_') || key.startsWith('portal_profile_'))) {
-              const item = localStorage.getItem(key)
-              if (item) {
-                const parsed = JSON.parse(item)
-                if (parsed?.profileImage && !parsed.profileImage.startsWith('blob:')) {
-                  setAvatarImage(parsed.profileImage)
-                  localStorage.setItem('user_profile_image', parsed.profileImage)
-                  break
-                }
+    } else {
+      if (cached?.startsWith('blob:') || cached === 'null') {
+        localStorage.removeItem('user_profile_image')
+      }
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key.startsWith('vsb_student_profile_') || key.startsWith('portal_profile_'))) {
+            const item = localStorage.getItem(key)
+            if (item) {
+              const parsed = JSON.parse(item)
+              if (parsed?.profileImage && !parsed.profileImage.startsWith('blob:')) {
+                setAvatarImage(parsed.profileImage)
+                setAvatarError(false)
+                localStorage.setItem('user_profile_image', parsed.profileImage)
+                break
               }
             }
           }
-        } catch {}
-      }
+        }
+      } catch {}
     }
 
     // 2. Fetch fresh user info from /api/auth/me
@@ -310,11 +300,6 @@ export function PortalLayout({
             setAvatarImage(data.user.profileImage)
             setAvatarError(false)
             localStorage.setItem('user_profile_image', data.user.profileImage)
-          } else {
-            // Explicitly clear avatar if user has no photo in database
-            setAvatarImage(null)
-            setAvatarError(false)
-            localStorage.removeItem('user_profile_image')
           }
           if (data.user.residencyStatus || data.user.busNo || data.user.busDetails) {
             const res = data.user.residencyStatus || (data.user.busNo || data.user.busDetails ? 'Day Scholar' : 'Hostel')
@@ -334,7 +319,7 @@ export function PortalLayout({
         setAvatarImage(newImg)
         setAvatarError(false)
         localStorage.setItem('user_profile_image', newImg)
-      } else {
+      } else if (newImg === null) {
         // Explicitly cleared or removed
         setAvatarImage(null)
         setAvatarError(false)
@@ -347,7 +332,7 @@ export function PortalLayout({
         if (e.newValue && !e.newValue.startsWith('blob:') && e.newValue !== 'null') {
           setAvatarImage(e.newValue)
           setAvatarError(false)
-        } else {
+        } else if (e.newValue === null || e.newValue === '') {
           setAvatarImage(null)
           setAvatarError(false)
         }
@@ -361,7 +346,7 @@ export function PortalLayout({
       window.removeEventListener('portal-profile-image-updated', handleProfileUpdate)
       window.removeEventListener('storage', handleStorageChange)
     }
-  }, [avatarImage, profileImage, userImage])
+  }, [])
 
   // Sync real-time notifications from API
   const syncNotifications = async () => {
