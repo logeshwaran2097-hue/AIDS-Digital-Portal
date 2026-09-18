@@ -87,16 +87,17 @@ export function VersionUpdateNotifier() {
         setReleaseHighlights(data.releaseHighlights)
       }
 
-      const storedVer = localStorage.getItem(LOCAL_STORAGE_VERSION_KEY)
+      // Automatically set the current release as default in local storage
+      try {
+        localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, APP_VERSION)
+      } catch {}
 
-      // An update is needed if:
-      // - Current running bundle APP_VERSION is not equal to serverVer
-      // - Or stored version is older than serverVer
-      // - Or the user is running on an expired preview link instead of official domain
+      // An update is ONLY needed if:
+      // - The running code bundle APP_VERSION is actually different from serverVer
+      // - Or if running on a deprecated fallback domain
       const isRunningOldCode = APP_VERSION !== serverVer
-      const isStoredOld = storedVer && storedVer !== serverVer
 
-      if (isRunningOldCode || isStoredOld || isFallbackDomain) {
+      if (isRunningOldCode || (isFallbackDomain && window.location.origin !== OFFICIAL_PRODUCTION_URL)) {
         setHasUpdate(true)
         setIsDismissed(false)
         if (isFallbackDomain && window.location.origin !== OFFICIAL_PRODUCTION_URL) {
@@ -124,11 +125,11 @@ export function VersionUpdateNotifier() {
           } catch {}
         }
       } else {
-        if (!storedVer) {
-          try {
-            localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, serverVer)
-          } catch {}
-        }
+        setHasUpdate(false)
+        setIsDismissed(true)
+        try {
+          localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, serverVer)
+        } catch {}
         if (isManual) {
           toast.success(`You are on the latest version (v${APP_VERSION})!`)
           // Dispatch real system notification to Android status bar
