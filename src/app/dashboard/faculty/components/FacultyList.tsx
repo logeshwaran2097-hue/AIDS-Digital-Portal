@@ -320,8 +320,8 @@ Thank you!`
       </div>
 
       {/* TWO PRIMARY TABS: CLASS ADVISORS vs SUBJECT HANDLERS */}
-      <div className="bg-white/95 backdrop-blur-md p-3.5 rounded-3xl border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/70">
+      <div className="lux-glass-card p-3.5 rounded-3xl border border-white/12 shadow-xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/10">
           <button
             type="button"
             onClick={() => setActiveTab('advisors')}
@@ -329,7 +329,7 @@ Thank you!`
               'px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer',
               activeTab === 'advisors'
                 ? 'bg-gradient-to-r from-[#1455D9] to-[#2563EB] text-white shadow-md shadow-blue-500/20 ring-1 ring-white/20'
-                : 'text-slate-600 hover:text-[#071A3D] hover:bg-white/50'
+                : 'text-slate-300 hover:text-white hover:bg-white/10'
             )}
           >
             <UserCheck className="w-4 h-4" />

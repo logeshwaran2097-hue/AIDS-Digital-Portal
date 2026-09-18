@@ -23,12 +23,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // Apply Theme Mode (Default to Luxury Midnight Sapphire for Portal)
-      if (theme !== 'light') {
-        document.documentElement.classList.add('midnight', 'dark')
-      } else {
-        document.documentElement.classList.remove('midnight', 'dark')
+      // Apply Theme Mode (Enforce Luxury Midnight Sapphire for Portal)
+      if (theme === 'light') {
+        theme = 'midnight'
+        try {
+          localStorage.setItem('vsb-portal-theme', 'midnight')
+          localStorage.setItem('portal_theme', 'dark')
+        } catch {}
       }
+      document.documentElement.classList.add('midnight', 'dark')
 
       // Apply Accent Color
       if (accent) {

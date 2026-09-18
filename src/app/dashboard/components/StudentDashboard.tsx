@@ -74,14 +74,14 @@ interface DashboardData {
 }
 
 const quickAccess = [
-  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#00D2D3]/10 text-[#00a8a9] hover:bg-[#00D2D3]/20 border-[#00D2D3]/20' },
-  { label: 'Faculty', href: '/dashboard/faculty', icon: <Users className="h-5 w-5" />, bg: 'bg-[#6C5CE7]/10 text-[#6C5CE7] hover:bg-[#6C5CE7]/20 border-[#6C5CE7]/20' },
-  { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-5 w-5" />, bg: 'bg-[#1455D9]/10 text-[#1455D9] hover:bg-[#1455D9]/20 border-[#1455D9]/20' },
-  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-5 w-5" />, bg: 'bg-[#FF9F43]/10 text-[#e67e22] hover:bg-[#FF9F43]/20 border-[#FF9F43]/20' },
-  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-5 w-5" />, bg: 'bg-[#2878E8]/10 text-[#2878E8] hover:bg-[#2878E8]/20 border-[#2878E8]/20' },
-  { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#FF6B6B]/10 text-[#ee5253] hover:bg-[#FF6B6B]/20 border-[#FF6B6B]/20' },
-  { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-5 w-5" />, bg: 'bg-[#2878E8]/10 text-[#2878E8] hover:bg-[#2878E8]/20 border-[#2878E8]/20' },
-  { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-5 w-5" />, bg: 'bg-[#F4C430]/15 text-[#b8860b] hover:bg-[#F4C430]/25 border-[#F4C430]/30' },
+  { label: 'Attendance', href: '/dashboard/attendance', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#00D2D3]/15 text-[#00E5FF] hover:bg-[#00D2D3]/25 border-[#00D2D3]/30' },
+  { label: 'Faculty', href: '/dashboard/faculty', icon: <Users className="h-5 w-5" />, bg: 'bg-[#8B5CF6]/15 text-[#C4B5FD] hover:bg-[#8B5CF6]/25 border-[#8B5CF6]/30' },
+  { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-5 w-5" />, bg: 'bg-[#38BDF8]/15 text-[#38BDF8] hover:bg-[#38BDF8]/25 border-[#38BDF8]/30' },
+  { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-5 w-5" />, bg: 'bg-[#FB923C]/15 text-[#FDBA74] hover:bg-[#FB923C]/25 border-[#FB923C]/30' },
+  { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-5 w-5" />, bg: 'bg-[#60A5FA]/15 text-[#93C5FD] hover:bg-[#60A5FA]/25 border-[#60A5FA]/30' },
+  { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#F43F5E]/15 text-[#FB7185] hover:bg-[#F43F5E]/25 border-[#F43F5E]/30' },
+  { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-5 w-5" />, bg: 'bg-[#38BDF8]/15 text-[#7DD3FC] hover:bg-[#38BDF8]/25 border-[#38BDF8]/30' },
+  { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-5 w-5" />, bg: 'bg-[#F59E0B]/15 text-[#FDE68A] hover:bg-[#F59E0B]/25 border-[#F59E0B]/30' },
 ]
 
 export default function StudentDashboard({ data }: { data: DashboardData }) {
@@ -339,9 +339,9 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   {att.totalSessions > 0 ? "Biometric Ledger Verified" : "Enrolled Academic Term"}
                 </span>
-                <span className="text-xs text-slate-400 font-semibold">· Semester {data.student.semester} Compliance</span>
+                <span className="text-xs text-slate-300 font-semibold">· Semester {data.student.semester} Compliance</span>
               </div>
-              <h2 className="text-xl font-black text-[#071A3D] dark:text-white mt-2 flex items-center gap-2.5 tracking-tight">
+              <h2 className="text-xl font-black text-white mt-2 flex items-center gap-2.5 tracking-tight">
                 <div className="p-2 rounded-2xl bg-gradient-to-tr from-[#1748A8] to-[#1455D9] text-white shadow-[0_0_15px_rgba(20,85,217,0.4)] border border-cyan-400/30">
                   <CalendarDays className="w-5 h-5 text-[#FDE68A]" />
                 </div>
@@ -458,21 +458,21 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                   const percent = sub.percent
                   const isSafe = sub.conducted === 0 || percent >= 75
                   return (
-                    <div key={sub.code} className="p-4 rounded-2xl bg-white/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/10 space-y-2.5 hover:shadow-lg dark:hover:border-cyan-400/30 transition-all">
+                    <div key={sub.code} className="p-4 rounded-2xl bg-[#0A1A3A]/85 border border-white/12 space-y-2.5 hover:shadow-lg hover:border-cyan-400/40 transition-all">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-black text-[#1455D9] dark:text-cyan-300 px-2.5 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/70 border border-blue-200/60 dark:border-blue-800">
+                        <span className="font-mono text-xs font-black text-cyan-300 px-2.5 py-0.5 rounded-lg bg-blue-950/80 border border-cyan-500/30">
                           {sub.code}
                         </span>
-                        <span className={cn('text-xs font-black font-mono', isSafe ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400')}>
+                        <span className={cn('text-xs font-black font-mono', isSafe ? 'text-emerald-400' : 'text-rose-400')}>
                           {percent.toFixed(1)}%
                         </span>
                       </div>
 
-                      <p className="text-xs font-bold text-[#071A3D] dark:text-white line-clamp-1">{sub.name}</p>
+                      <p className="text-xs font-bold text-white line-clamp-1">{sub.name}</p>
 
                       {/* Progress Bar */}
                       <div className="space-y-1">
-                        <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden p-0.5">
+                        <div className="w-full bg-slate-800/80 h-2 rounded-full overflow-hidden p-0.5 border border-white/5">
                           <div
                             className={cn('h-full rounded-full transition-all duration-500', isSafe ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-rose-500 to-red-400')}
                             style={{ width: `${Math.min(100, Math.max(sub.conducted === 0 ? 0 : 5, percent))}%` }}
@@ -480,7 +480,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                         </div>
                         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium font-mono">
                           <span>{sub.attended} / {sub.conducted} Periods</span>
-                          <span className={isSafe ? "text-emerald-600 dark:text-emerald-400 font-bold" : "text-rose-600 dark:text-rose-400 font-bold"}>
+                          <span className={isSafe ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
                             {sub.conducted === 0 ? 'Enrolled' : (isSafe ? '>75% Safe' : '<75% Warning')}
                           </span>
                         </div>
@@ -494,8 +494,8 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center mx-auto shadow-xs">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <p className="font-black text-sm text-[#071A3D] dark:text-white">Semester Curriculum Roll Active</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Official course periods synchronized with biometric attendance ledger.</p>
+                <p className="font-black text-sm text-white">Semester Curriculum Roll Active</p>
+                <p className="text-xs text-slate-300 max-w-sm mx-auto">Official course periods synchronized with biometric attendance ledger.</p>
               </div>
             )}
           </div>
@@ -504,13 +504,13 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
 
       {/* Luxury Search Bar */}
       <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/70 group-focus-within:text-cyan-300 transition-colors pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search subjects, notes, question papers, events, or resources..."
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white/90 dark:bg-gradient-to-r dark:from-[#0E1F46]/80 dark:to-[#081534]/90 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/20 focus:border-cyan-400 shadow-md placeholder:text-slate-400 transition-all text-[#071A3D] dark:text-white"
+          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-white/15 bg-gradient-to-r from-[#0E2048]/90 via-[#091636]/95 to-[#040D22]/98 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/25 focus:border-cyan-400 shadow-xl placeholder:text-slate-400 transition-all text-white"
         />
       </div>
 
@@ -521,14 +521,15 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
             <Link
               key={item.label}
               href={item.href}
+              prefetch={true}
               className={cn(
-                'flex flex-col items-center justify-center p-4 rounded-3xl bg-gradient-to-b from-white/95 to-slate-50/90 dark:from-[#0E2048]/75 dark:via-[#091636]/85 dark:to-[#040D22]/98 border border-slate-200/80 dark:border-white/10 hover:border-cyan-400/40 dark:hover:border-cyan-400/50 text-[#071A3D] dark:text-white shadow-md hover:shadow-xl dark:shadow-[0_12px_32px_rgba(0,0,0,0.6)] dark:hover:shadow-[0_16px_40px_rgba(20,85,217,0.35)] transition-all duration-300 group text-center space-y-2.5 lux-specular-sweep hover:-translate-y-1 cursor-pointer'
+                'flex flex-col items-center justify-center p-4 rounded-3xl bg-gradient-to-b from-[#0E2048]/85 via-[#091636]/90 to-[#040D22]/98 border border-white/12 hover:border-cyan-400/50 text-white shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_16px_40px_rgba(20,85,217,0.35)] transition-all duration-300 group text-center space-y-2.5 lux-specular-sweep hover:-translate-y-1 cursor-pointer'
               )}
             >
               <div className={cn('p-3 rounded-2xl transition-all group-hover:scale-110 group-hover:rotate-3 duration-300 border shadow-md', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200 group-hover:text-[#1455D9] dark:group-hover:text-cyan-300 transition-colors line-clamp-1">
+              <span className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 transition-colors line-clamp-1">
                 {item.label}
               </span>
             </Link>
@@ -537,22 +538,22 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       </section>
 
       {/* Split Columns: Events & Announcements */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lux-speed-defer">
         {/* Upcoming Events */}
         <section aria-label="Upcoming Events" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#071A3D] dark:text-white flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-[#1455D9] dark:text-cyan-400" />
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-cyan-400" />
               <span>Upcoming Events</span>
             </h2>
-            <Link href="/dashboard/events" className="text-xs font-semibold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1">
+            <Link href="/dashboard/events" className="text-xs font-semibold text-cyan-300 hover:underline inline-flex items-center gap-1">
               View All <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           {liveEvents.length === 0 ? (
             <Card className="rounded-3xl">
-              <CardContent className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+              <CardContent className="py-10 text-center text-sm text-slate-400">
                 No upcoming events scheduled.
               </CardContent>
             </Card>
@@ -568,8 +569,8 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                         </Badge>
                         <span className="text-[11px] text-slate-400 font-medium">{formatDate(e.date)}</span>
                       </div>
-                      <h3 className="font-bold text-sm text-[#071A3D] dark:text-white truncate">{e.name}</h3>
-                      <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                      <h3 className="font-bold text-sm text-white truncate">{e.name}</h3>
+                      <div className="flex items-center gap-3 text-xs text-slate-400">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5 text-cyan-400" /> {e.time}
                         </span>
@@ -592,18 +593,18 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         {/* Latest Announcements */}
         <section aria-label="Latest Announcements" className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-[#071A3D] dark:text-white flex items-center gap-2">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
               <Megaphone className="h-5 w-5 text-[#D4AF37]" />
               <span>Latest Announcements</span>
             </h2>
-            <Link href="/dashboard/announcements" className="text-xs font-semibold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1">
+            <Link href="/dashboard/announcements" className="text-xs font-semibold text-cyan-300 hover:underline inline-flex items-center gap-1">
               View All <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
           {liveAnnouncements.length === 0 ? (
             <Card className="rounded-3xl">
-              <CardContent className="py-10 text-center text-sm text-slate-500 dark:text-slate-400">
+              <CardContent className="py-10 text-center text-sm text-slate-400">
                 No announcements published yet.
               </CardContent>
             </Card>
@@ -619,8 +620,8 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                         </Badge>
                         <span className="text-[11px] text-slate-400">{formatDate(a.createdAt)}</span>
                       </div>
-                      <h3 className="font-bold text-sm text-[#071A3D] dark:text-white truncate">{a.title}</h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{a.content}</p>
+                      <h3 className="font-bold text-sm text-white truncate">{a.title}</h3>
+                      <p className="text-xs text-slate-300 line-clamp-1">{a.content}</p>
                     </div>
                     <Link
                       href="/dashboard/announcements"
@@ -637,20 +638,20 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
       </div>
 
       {/* Recent Resources Section */}
-      <section aria-label="Recent Study Resources" className="space-y-4">
+      <section aria-label="Recent Study Resources" className="space-y-4 lux-speed-defer">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-[#071A3D] dark:text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Database className="h-5 w-5 text-cyan-400" />
             <span>Recent Study Resources</span>
           </h2>
-          <Link href="/dashboard/resources" className="text-xs font-semibold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1">
+          <Link href="/dashboard/resources" className="text-xs font-semibold text-cyan-300 hover:underline inline-flex items-center gap-1">
             Browse All <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 
         {data.resources.length === 0 ? (
           <Card className="rounded-3xl">
-            <CardContent className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+            <CardContent className="py-8 text-center text-sm text-slate-400">
               No recent resources uploaded.
             </CardContent>
           </Card>
@@ -660,7 +661,7 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
               <Card key={r.id} className="rounded-3xl hover:shadow-xl transition-all">
                 <CardContent className="p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-[#071A3D] dark:text-white truncate">{r.name}</p>
+                    <p className="text-xs font-bold text-white truncate">{r.name}</p>
                     <p className="text-[11px] text-slate-400 uppercase mt-0.5">
                       {r.resourceType?.replace(/_/g, ' ')} · {(r.fileSize / (1024 * 1024)).toFixed(2)} MB
                     </p>

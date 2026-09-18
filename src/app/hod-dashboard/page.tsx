@@ -244,14 +244,14 @@ export default async function HODDashboardPage() {
               <Link
                 key={action.label}
                 href={action.href}
-                className="p-4 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-200/80 hover:border-blue-300/80 shadow-[0_2px_12px_-2px_rgba(7,26,61,0.04)] hover:shadow-[0_10px_24px_-4px_rgba(20,85,217,0.1)] hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+                className="p-4 rounded-2xl lux-glass-card border border-white/12 hover:border-cyan-400/40 text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between cursor-pointer"
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 transition-all duration-300 ${action.color} shadow-2xs`}>
                   {action.icon}
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#071A3D] group-hover:text-[#1455D9] transition-colors">{action.label}</h3>
-                  <p className="text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{action.desc}</p>
+                  <h3 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">{action.label}</h3>
+                  <p className="text-[11px] text-slate-300 font-medium mt-0.5 line-clamp-1">{action.desc}</p>
                 </div>
               </Link>
             ))}

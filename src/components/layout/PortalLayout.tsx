@@ -968,31 +968,31 @@ export function PortalLayout({
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('portal_theme') || localStorage.getItem('vsb-portal-theme')
-      // Default to luxury midnight dark mode unless user explicitly selected 'light'
-      const shouldDark = savedTheme !== 'light'
-      if (shouldDark) {
-        setIsDarkMode(true)
-        document.documentElement.classList.add('midnight', 'dark')
-      } else {
-        setIsDarkMode(false)
-        document.documentElement.classList.remove('midnight', 'dark')
-      }
+      setIsDarkMode(true)
+      document.documentElement.classList.add('midnight', 'dark')
+      try {
+        localStorage.setItem('portal_theme', 'dark')
+        localStorage.setItem('vsb-portal-theme', 'midnight')
+      } catch {}
     }
   }, [])
 
   const toggleTheme = () => {
-    const nextDark = !isDarkMode
-    setIsDarkMode(nextDark)
-    if (nextDark) {
-      document.documentElement.classList.add('midnight', 'dark')
+    setIsDarkMode(true)
+    document.documentElement.classList.add('midnight', 'dark')
+    const current = localStorage.getItem('portal_lux_palette') || 'centurion'
+    const next = current === 'centurion' ? 'azure' : 'centurion'
+    try {
+      localStorage.setItem('portal_lux_palette', next)
       localStorage.setItem('portal_theme', 'dark')
       localStorage.setItem('vsb-portal-theme', 'midnight')
+    } catch {}
+    if (next === 'azure') {
+      document.documentElement.classList.add('theme-azure')
     } else {
-      document.documentElement.classList.remove('midnight', 'dark')
-      localStorage.setItem('portal_theme', 'light')
-      localStorage.setItem('vsb-portal-theme', 'light')
+      document.documentElement.classList.remove('theme-azure')
     }
+    window.dispatchEvent(new CustomEvent('portal-theme-changed'))
   }
 
   const getNavCategory = (href: string, label: string): string => {
@@ -1770,18 +1770,14 @@ export function PortalLayout({
               <span>Vision &amp; Mission</span>
             </button>
 
-            {/* 1-Click Luxury Theme Switcher (Ivory Studio / Midnight Centurion) */}
+            {/* 1-Click Luxury Theme Switcher (Midnight Centurion / Imperial Azure) */}
             <button
               type="button"
               onClick={toggleTheme}
-              title={isDarkMode ? 'Switch to Ivory Studio Mode' : 'Switch to Midnight Centurion Mode'}
+              title="Toggle Executive Luxury Palette (Midnight Centurion / Imperial Azure)"
               className="p-2 rounded-xl border border-[#D4AF37]/50 bg-gradient-to-br from-[#D4AF37]/20 to-[#AA820A]/10 hover:from-[#D4AF37]/30 hover:to-[#AA820A]/20 text-[#FDE68A] shadow-[0_0_15px_rgba(212,175,55,0.25)] transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
-              {isDarkMode ? (
-                <Sun className="w-4 h-4 text-[#FDE68A] animate-in spin-in-180 duration-300" />
-              ) : (
-                <Moon className="w-4 h-4 text-slate-700" />
-              )}
+              <Sparkles className="w-4 h-4 text-[#FDE68A] animate-pulse" />
             </button>
 
             {/* Profile Avatar & Name */}
