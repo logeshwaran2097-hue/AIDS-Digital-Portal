@@ -1048,100 +1048,164 @@ html.dark textarea::placeholder {
 }
 
 /* =========================================================
-   ✨ BESPOKE ULTRA-LUXURY GLASSMORPHISM & SPECULAR TOKENS
+   ✨ BESPOKE ULTRA-LUXURY GLASSMORPHISM & JEWEL TOKENS
    ========================================================= */
 
 .lux-ambient-canvas {
-  background-color: #030712;
+  background-color: #030816;
   background-image: 
-    radial-gradient(at 20% 15%, rgba(14, 58, 148, 0.35) 0px, transparent 55%),
-    radial-gradient(at 80% 20%, rgba(212, 175, 55, 0.12) 0px, transparent 45%),
-    radial-gradient(at 50% 90%, rgba(7, 14, 30, 0.7) 0px, transparent 60%);
+    radial-gradient(ellipse at 15% 12%, rgba(20, 85, 217, 0.42) 0%, rgba(10, 42, 115, 0.18) 45%, transparent 70%),
+    radial-gradient(ellipse at 88% 18%, rgba(212, 175, 55, 0.22) 0%, rgba(160, 125, 20, 0.06) 50%, transparent 70%),
+    radial-gradient(ellipse at 50% 92%, rgba(34, 197, 232, 0.16) 0%, rgba(7, 20, 50, 0.35) 50%, transparent 80%),
+    linear-gradient(180deg, #030816 0%, #051026 50%, #02050E 100%);
   background-attachment: fixed;
 }
 
 html.dark .lux-ambient-canvas,
 html.midnight .lux-ambient-canvas {
-  background-color: #030712;
+  background-color: #030816;
   background-image: 
-    radial-gradient(at 20% 15%, rgba(14, 58, 148, 0.35) 0px, transparent 55%),
-    radial-gradient(at 80% 20%, rgba(212, 175, 55, 0.12) 0px, transparent 45%),
-    radial-gradient(at 50% 90%, rgba(7, 14, 30, 0.7) 0px, transparent 60%);
+    radial-gradient(ellipse at 15% 12%, rgba(20, 85, 217, 0.42) 0%, rgba(10, 42, 115, 0.18) 45%, transparent 70%),
+    radial-gradient(ellipse at 88% 18%, rgba(212, 175, 55, 0.22) 0%, rgba(160, 125, 20, 0.06) 50%, transparent 70%),
+    radial-gradient(ellipse at 50% 92%, rgba(34, 197, 232, 0.16) 0%, rgba(7, 20, 50, 0.35) 50%, transparent 80%),
+    linear-gradient(180deg, #030816 0%, #051026 50%, #02050E 100%);
   background-attachment: fixed;
 }
 
 .lux-glass-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
   border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 8px 24px -4px rgba(14, 58, 148, 0.06), 0 1px 2px rgba(0, 0, 0, 0.02);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 12px 32px -4px rgba(14, 58, 148, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lux-glass-card:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  box-shadow: 0 16px 36px -6px rgba(14, 58, 148, 0.12), 0 2px 8px rgba(0, 0, 0, 0.03);
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 20px 44px -6px rgba(14, 58, 148, 0.15), 0 0 20px rgba(212, 175, 55, 0.15);
 }
 
 html.dark .lux-glass-card,
 html.midnight .lux-glass-card {
-  background: rgba(7, 14, 30, 0.78);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  background: linear-gradient(145deg, rgba(14, 30, 70, 0.72) 0%, rgba(8, 20, 48, 0.85) 55%, rgba(4, 11, 28, 0.94) 100%);
+  backdrop-filter: blur(28px) saturate(210%);
+  -webkit-backdrop-filter: blur(28px) saturate(210%);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) inset, inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 html.dark .lux-glass-card:hover,
 html.midnight .lux-glass-card:hover {
-  border-color: rgba(212, 175, 55, 0.45);
-  box-shadow: 0 20px 48px -8px rgba(14, 58, 148, 0.35);
+  border-color: rgba(212, 175, 55, 0.55);
+  box-shadow: 0 24px 60px -8px rgba(14, 58, 148, 0.45), 0 0 28px rgba(212, 175, 55, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .lux-glass-header {
-  background: rgba(5, 12, 28, 0.88);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+  background: rgba(4, 11, 28, 0.88);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.6), 0 1px 0 0 rgba(212, 175, 55, 0.15);
 }
 
 html.dark .lux-glass-header,
 html.midnight .lux-glass-header {
-  background: rgba(5, 12, 28, 0.88);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.5);
+  background: rgba(4, 11, 28, 0.88);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.6), 0 1px 0 0 rgba(212, 175, 55, 0.15);
 }
 
 .lux-gold-foil-text {
-  background: linear-gradient(135deg, #F3E5AB 0%, #D4AF37 40%, #AA820A 75%, #F3E5AB 100%);
+  background: linear-gradient(135deg, #FFF0B8 0%, #F3D37A 30%, #D4AF37 55%, #AA820A 80%, #FFF0B8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-size: 200% auto;
 }
 
 .lux-sapphire-card {
-  background: radial-gradient(ellipse at 20% 0%, #0D2D6C 0%, #071A3D 50%, #030A1A 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 40px -15px rgba(3, 10, 26, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  background: radial-gradient(circle at 10% 0%, #1748A8 0%, #0D2D6C 40%, #071A3D 75%, #030818 100%);
+  border: 1px solid rgba(212, 175, 55, 0.42);
+  box-shadow: 0 25px 50px -12px rgba(2, 6, 20, 0.85), 0 0 35px -5px rgba(212, 175, 55, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.28);
 }
 
 .lux-button-primary {
-  background: linear-gradient(135deg, #1E66E8 0%, #1455D9 50%, #0D40A8 100%);
-  box-shadow: 0 4px 14px 0 rgba(20, 85, 217, 0.39), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, #2570F5 0%, #1455D9 50%, #0A3C9F 100%);
+  box-shadow: 0 4px 16px 0 rgba(20, 85, 217, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.3);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lux-button-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px 0 rgba(20, 85, 217, 0.48), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px 0 rgba(20, 85, 217, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
 }
 
 .lux-button-primary:active {
   transform: translateY(0px);
+}
+
+.lux-button-gold {
+  background: linear-gradient(135deg, #FDE68A 0%, #F5CE62 35%, #D4AF37 70%, #B88E18 100%);
+  color: #071328;
+  font-weight: 900;
+  box-shadow: 0 4px 18px 0 rgba(212, 175, 55, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lux-button-gold:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 8px 26px 0 rgba(212, 175, 55, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
+}
+
+.lux-button-gold:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* Luxury Chronometer Complication Cards */
+.lux-kpi-cyan {
+  background: linear-gradient(145deg, rgba(8, 38, 88, 0.75) 0%, rgba(5, 22, 54, 0.88) 60%, rgba(3, 12, 32, 0.96) 100%);
+  border: 1px solid rgba(34, 197, 232, 0.35);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(34, 197, 232, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.lux-kpi-cyan:hover {
+  border-color: rgba(34, 197, 232, 0.65);
+  box-shadow: 0 20px 48px -8px rgba(34, 197, 232, 0.35), 0 0 32px rgba(34, 197, 232, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.lux-kpi-amber {
+  background: linear-gradient(145deg, rgba(64, 42, 8, 0.7) 0%, rgba(38, 24, 5, 0.85) 60%, rgba(20, 12, 2, 0.95) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.lux-kpi-amber:hover {
+  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 0 20px 48px -8px rgba(245, 158, 11, 0.35), 0 0 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.lux-kpi-emerald {
+  background: linear-gradient(145deg, rgba(6, 52, 36, 0.7) 0%, rgba(4, 32, 22, 0.85) 60%, rgba(2, 18, 12, 0.95) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(52, 211, 153, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.lux-kpi-emerald:hover {
+  border-color: rgba(52, 211, 153, 0.65);
+  box-shadow: 0 20px 48px -8px rgba(52, 211, 153, 0.35), 0 0 32px rgba(52, 211, 153, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.lux-kpi-rose {
+  background: linear-gradient(145deg, rgba(68, 10, 24, 0.7) 0%, rgba(42, 6, 15, 0.85) 60%, rgba(24, 3, 8, 0.95) 100%);
+  border: 1px solid rgba(251, 113, 133, 0.35);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(251, 113, 133, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.lux-kpi-rose:hover {
+  border-color: rgba(251, 113, 133, 0.65);
+  box-shadow: 0 20px 48px -8px rgba(251, 113, 133, 0.35), 0 0 32px rgba(251, 113, 133, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .lux-specular-sweep {
@@ -1159,13 +1223,13 @@ html.midnight .lux-glass-header {
   background: linear-gradient(
     60deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.08) 45%,
-    rgba(255, 255, 255, 0.18) 50%,
-    rgba(255, 255, 255, 0.08) 55%,
+    rgba(255, 255, 255, 0.1) 45%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.1) 55%,
     transparent 60%
   );
   transform: rotate(25deg) translateY(-100%);
-  transition: transform 0.75s ease-in-out;
+  transition: transform 0.85s ease-in-out;
   pointer-events: none;
 }
 

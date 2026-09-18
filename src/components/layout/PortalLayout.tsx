@@ -1566,15 +1566,15 @@ export function PortalLayout({
               <button
                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                 className={cn(
-                  'relative p-2.5 rounded-full transition-colors flex items-center justify-center',
-                  isNotificationOpen ? 'bg-[#1455D9]/10 text-[#1455D9]' : 'hover:bg-gray-100 text-[#071A3D]'
+                  'relative p-2 rounded-xl transition-all flex items-center justify-center border border-white/10 hover:border-cyan-400/40 cursor-pointer shadow-xs',
+                  isNotificationOpen ? 'bg-blue-600/30 text-cyan-300 border-cyan-400/50 shadow-[0_0_12px_rgba(34,197,232,0.3)]' : 'bg-slate-900/60 text-slate-200 hover:text-white hover:bg-slate-800/80'
                 )}
                 aria-label="Toggle notifications"
                 aria-expanded={isNotificationOpen}
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-4.5 w-4.5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[10px] font-black flex items-center justify-center border-2 border-[#040B1C] shadow-md animate-pulse">
                     {unreadCount}
                   </span>
                 )}
@@ -1753,10 +1753,10 @@ export function PortalLayout({
               type="button"
               onClick={triggerPortalUpdateCheck}
               title={`Release ${APP_VERSION_LABEL} · Click to check updates`}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-blue-400/25 dark:border-white/10 bg-blue-50/80 dark:bg-white/5 hover:bg-blue-100/80 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-cyan-400/30 bg-gradient-to-r from-[#0E2856]/80 to-[#081836]/90 hover:from-[#1748A8]/90 hover:to-[#0D2D6C]/90 text-cyan-200 text-xs font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(34,197,232,0.2)] hover:scale-105 active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-300" />
-              <span className="font-mono font-bold text-[11px]">{APP_VERSION_LABEL}</span>
+              <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-pulse" />
+              <span className="font-mono font-bold text-[11px] tracking-wide">{APP_VERSION_LABEL}</span>
             </button>
 
             {/* Vision & Mission Quick Access */}
@@ -1764,9 +1764,9 @@ export function PortalLayout({
               type="button"
               onClick={() => setShowVisionModal(true)}
               title="View Department Vision & Mission"
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-white/5 hover:bg-slate-50 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#D4AF37]/35 bg-gradient-to-r from-[#3D2C04]/60 to-[#221702]/80 hover:from-[#573F06]/70 hover:to-[#352504]/90 text-[#FDE68A] text-xs font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(212,175,55,0.2)] hover:scale-105 active:scale-95"
             >
-              <Target className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+              <Target className="w-3.5 h-3.5 text-[#FDE68A]" />
               <span>Vision &amp; Mission</span>
             </button>
 
@@ -1775,10 +1775,10 @@ export function PortalLayout({
               type="button"
               onClick={toggleTheme}
               title={isDarkMode ? 'Switch to Ivory Studio Mode' : 'Switch to Midnight Centurion Mode'}
-              className="p-2 rounded-xl border border-amber-400/40 dark:border-amber-400/40 bg-amber-400/10 hover:bg-amber-400/20 text-amber-600 dark:text-amber-300 shadow-xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+              className="p-2 rounded-xl border border-[#D4AF37]/50 bg-gradient-to-br from-[#D4AF37]/20 to-[#AA820A]/10 hover:from-[#D4AF37]/30 hover:to-[#AA820A]/20 text-[#FDE68A] shadow-[0_0_15px_rgba(212,175,55,0.25)] transition-all cursor-pointer hover:scale-105 active:scale-95"
             >
               {isDarkMode ? (
-                <Sun className="w-4 h-4 text-[#F4C430] animate-in spin-in-180 duration-300" />
+                <Sun className="w-4 h-4 text-[#FDE68A] animate-in spin-in-180 duration-300" />
               ) : (
                 <Moon className="w-4 h-4 text-slate-700" />
               )}
@@ -1787,9 +1787,9 @@ export function PortalLayout({
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
-              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full lux-glass-card hover:border-amber-400/50 transition-all duration-300 shadow-xs hover:shadow-md group cursor-pointer"
+              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full bg-slate-900/80 hover:bg-slate-800/90 border border-[#D4AF37]/40 hover:border-[#D4AF37]/80 transition-all duration-300 shadow-[0_4px_16px_rgba(0,0,0,0.5)] hover:shadow-[0_0_20px_rgba(212,175,55,0.25)] group cursor-pointer"
             >
-              <div className="relative w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-tr from-amber-400 via-cyan-400 to-blue-600 shadow-[0_0_10px_rgba(34,197,232,0.3)] shrink-0">
+              <div className="relative w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-tr from-[#D4AF37] via-cyan-400 to-[#1455D9] shadow-[0_0_10px_rgba(34,197,232,0.3)] shrink-0">
                 <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 text-white flex items-center justify-center font-bold text-xs">
                   {avatarImage && !avatarError ? (
                     <img
@@ -1805,10 +1805,10 @@ export function PortalLayout({
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#040A18] shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
               </div>
               <div className="hidden sm:flex flex-col text-left leading-none">
-                <span className="text-xs font-bold text-slate-800 dark:text-white max-w-[120px] truncate group-hover:text-blue-600 dark:group-hover:text-cyan-300 transition-colors">
+                <span className="text-xs font-bold text-slate-800 dark:text-white max-w-[120px] truncate group-hover:text-cyan-300 transition-colors">
                   {userName}
                 </span>
-                <span className="text-[9.5px] text-slate-400 font-semibold mt-0.5 uppercase tracking-wider">
+                <span className="text-[9.5px] text-[#FDE68A] font-bold mt-0.5 uppercase tracking-wider">
                   {effectiveRoleBadgeLabel}
                 </span>
               </div>
@@ -1820,10 +1820,10 @@ export function PortalLayout({
               onClick={() => setShowLogoutConfirm(true)}
               disabled={isLoggingOut}
               title="Logout from portal"
-              className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-transparent hover:border-rose-500/20"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-rose-300 hover:text-rose-100 bg-rose-500/10 hover:bg-rose-500/20 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-rose-500/25 hover:border-rose-500/50 shadow-xs"
             >
-              <LogOut className="w-4 h-4 text-rose-500" />
-              <span className="hidden sm:inline text-slate-600 dark:text-slate-300 hover:text-rose-400">Logout</span>
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
         </div>

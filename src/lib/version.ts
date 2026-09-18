@@ -3,25 +3,19 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.8'
+export const APP_VERSION = '2.7.9'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-18'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'Restored Previous Celestial Circular Emblem Logo: Reinstated the authentic 3-layer circular VSB college emblem with celestial dashed cyan ring and gold medallion across login and portal drawer.',
-  'Login Page UI/UX Restored to Original Aesthetic: Preserved pristine light design, clean slate inputs, and protected against dark mode and autofill color shifts.',
-  'Critical Layout & Page Visibility Fix: Removed conflicting relative position from fixed sidebar so main dashboard and header render properly on screen.',
-  'Tailwind Dark Mode Activation: Explicitly enabled class-based dark mode across all theme variants.',
-  'Default Midnight Luxury & Obsidian Theme: Portal boots seamlessly in deep royal midnight sapphire aesthetic, preventing bright canvas flashes.',
-  'Harmonized Widescreen Layouts: Full responsive expansion across widescreen monitors, eliminating narrow column clipping in student attendance and profile registers.',
-  'Ultra-Luxury Royal Sapphire Menus Across All Roles: Complete UI/UX redesign of portal navigation sidebars, drawer panels, headers, and mobile docks for Student, Faculty, HOD, and Administrator portals.',
-  'Executive Obsidian Glass Sidebar: Deep midnight navy gradients with ambient radial lighting meshes, gold-foil bezel emblem, and live connectivity indicators.',
-  'Tactile Nav Items & Jewel Badges: High-contrast royal sapphire active pills with illuminated cyan/gold edge markers, squircle icon badges, and glowing jewel notification counters.',
-  'Illuminated Section Category Dividers: Precision micro-jewel dots with gold-to-slate metallic typography and dual-tone gradient hairline separators.',
-  'Executive VIP Member Cards: High-end profile snippets featuring live status rings, department indicators, and distinctive metallic role badges.',
-  'Luxury Floating Mobile Dock: 5-tab obsidian glass bottom dock with glowing active states and real-time alerts.',
-  'Ultra-Luxury Logout Console: Midnight sapphire glass dialog with glowing rose bezel and tactile confirmation controls.',
+  'Ultra-Luxury Royal Sapphire & Imperial Gold UI/UX Elevation: Complete executive redesign of student attendance, KPI chronometers, institutional ledger tracker, and portal header.',
+  'Jewelry-Grade KPI Complication Cards: Cyan, amber, emerald, and ruby radiance glass cards with glowing metric typography, illuminated bezels, and 3D metallic icon medallions.',
+  'Executive Institutional OD & Leave Ledger Plaque: Multi-dimensional sapphire-gold frosted plaque with watermarked emblem, 3-step clearance progress indicator, and gold foil action buttons.',
+  'Course-Wise Curriculum Matrix Table: High-definition glass registers with glowing course capsules, live percentage progress rails, and academic standing capsules.',
+  'Deep Cosmic Ambient Canvas: Royal midnight gradient canvas with multi-layered celestial auroras, eliminating flat dark boxes and creating deep luxury contrast.',
+  'Luminous Portal Header & Action Bevels: High-contrast frosted header with gold-trimmed profile capsule, illuminated version button, and responsive navigation controls.',
+  'Login Page UI/UX Pristine Preservation: Maintained original clean light aesthetic with authentic celestial circular emblem logo.',
 ]
 
 
