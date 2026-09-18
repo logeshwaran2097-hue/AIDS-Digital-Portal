@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit, rateLimitResponse, checkApiUsageQuota, quotaExceededResponse } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +13,18 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Unauthorized. Only Administrators and HOD can test SMTP.' },
         { status: 401 }
       )
+    }
+
+    // Rate Limit: 5 test emails per hour per admin
+    const rateLimit = await checkRateLimit(request, 5, 3600, 'email:test', session.userId)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
+    // Check monthly email spending quota
+    const quota = await checkApiUsageQuota('email', 1)
+    if (!quota.allowed) {
+      return quotaExceededResponse('email', quota.hardLimit, quota.period)
     }
 
     const body = await request.json()

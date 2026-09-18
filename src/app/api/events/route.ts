@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { getSession } from '@/lib/auth'
+import { validateBody, createEventSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -37,7 +39,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin or HOD privileges required.' }, { status: 403 })
+    }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(createEventSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const event = await prisma.event.create({
       data: {
         name: body.name,
@@ -46,7 +58,7 @@ export async function POST(request: Request) {
         date: body.date ? new Date(body.date) : new Date(),
         time: body.time || '09:00 AM - 04:30 PM',
         venue: body.venue || 'Main Auditorium',
-        createdByName: body.createdByName || body.organizer || 'Administrator',
+        createdByName: session.name || body.createdByName || body.organizer || 'Administrator',
         registrationInfo: body.targetSemester || body.registrationInfo || 'ALL',
         registrationUrl: body.registrationUrl?.trim() || null,
         status: 'published',
@@ -54,7 +66,7 @@ export async function POST(request: Request) {
       },
     })
 
-    const author = body.createdByName || body.organizer || 'Department Directorate'
+    const author = session.name || body.createdByName || body.organizer || 'Department Directorate'
     
     // Automatically broadcast notification for students
     await prisma.notification.create({
@@ -79,6 +91,11 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin or HOD privileges required.' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const clearAll = searchParams.get('clearAll')

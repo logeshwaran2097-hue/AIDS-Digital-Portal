@@ -6,18 +6,26 @@ import bcrypt from 'bcryptjs'
 import { verifyOTP, parseSafeDateOfBirth } from '@/lib/utils'
 import { invalidateCache } from '@/lib/dbCache'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateBody, completeProfileSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 5, 60, 'auth:complete-profile')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
-
   try {
     const session = await getSession()
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(completeProfileSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
+    const userIdentifier = session?.userId || session?.email || body?.email || body?.registerNumber || ''
+
+    // Dual Rate Limit: 5 attempts per 15 min per IP and per user
+    const rateLimit = await checkRateLimit(request, 5, 900, 'auth:complete-profile', userIdentifier)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
     const {
       userId: bodyUserId,
       registerNumber: bodyRegNumber,
@@ -54,16 +62,25 @@ export async function POST(request: NextRequest) {
     } = body
 
     // 1. Resolve Target User ID & Role
-    let targetUserId = session?.userId || bodyUserId
-    let targetRole = session?.role || bodyRole || 'student'
-    let targetRegNumber = (session?.registerNumber || bodyRegNumber || '').trim().toUpperCase()
-    let targetFacultyId = (session?.facultyId || bodyFacultyId || '').trim().toUpperCase()
+    // If authenticated, target user MUST strictly be the session user (preventing IDOR)
+    let targetUserId = session ? session.userId : bodyUserId
+    let targetRole = session ? session.role : (bodyRole || 'student')
+    let targetRegNumber = (session?.registerNumber || (!session ? bodyRegNumber : '') || '').trim().toUpperCase()
+    let targetFacultyId = (session?.facultyId || (!session ? bodyFacultyId : '') || '').trim().toUpperCase()
+
+    // If unauthenticated, require an OTP or cryptographic challenge
+    if (!session && !emailOtp && !body.otp && !challenge) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required. Active session or verified OTP challenge is required.' },
+        { status: 401 }
+      )
+    }
 
     // 2. Lookup existing user record
     let user = targetUserId ? await prisma.user.findUnique({ where: { id: targetUserId } }) : null
 
-    // If not found by ID, look up by registerNumber (for students)
-    if (!user && targetRegNumber) {
+    // If not found by ID and unauthenticated, look up by registerNumber (for students)
+    if (!user && targetRegNumber && !session) {
       const studentRec = await prisma.student.findUnique({
         where: { registerNumber: targetRegNumber },
       })
@@ -149,9 +166,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Optional OTP verification if submitted
+    // OTP verification (Mandatory if unauthenticated, optional if logged in)
     const submittedOtp = (emailOtp || body.otp || '').trim()
-    if (submittedOtp) {
+    if (!session && !submittedOtp && !challenge) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required. Active session or verified OTP is required.' },
+        { status: 401 }
+      )
+    }
+
+    if (submittedOtp || (!session && challenge)) {
       const otpRecord = await prisma.oTP.findFirst({
         where: {
           email: normalizedEmail || user.email,

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { parseSafeDateOfBirth } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
+import { validateBody, bulkStudentImportSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,15 +39,14 @@ export async function POST(request: Request) {
       )
     }
 
-    const body = await request.json()
-    const { students, defaultPassword = 'Student@123' } = body
-
-    if (!Array.isArray(students) || students.length === 0) {
-      return NextResponse.json(
-        { success: false, message: 'Please provide an array of student records.' },
-        { status: 400 }
-      )
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(bulkStudentImportSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
     }
+    const body = validation.data
+    const fallbackDefault = process.env.DEFAULT_STUDENT_TEMP_PASSWORD || 'Student@123'
+    const { students, defaultPassword = fallbackDefault } = body
 
     // Pre-calculate hash for default password to make 1000 imports fast
     const defaultPasswordHash = await bcrypt.hash(defaultPassword, 10)

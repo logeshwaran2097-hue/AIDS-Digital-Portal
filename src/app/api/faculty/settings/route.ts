@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { validateBody, facultySettingsSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Unauthorized session' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(facultySettingsSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const { action } = body
 
     if (action === 'SAVE_PREFERENCES') {

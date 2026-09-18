@@ -3,30 +3,26 @@ import { prisma } from '@/lib/prisma'
 import { verifyOTP } from '@/lib/utils'
 import { verifyOTPChallenge } from '@/lib/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateBody, verifyOnboardingOtpSchema } from '@/lib/validations/apiValidation'
 import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 5, 60, 'otp:verify-onboarding')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
-
   try {
-    const body = await request.json()
-    const { email, otp, challenge } = body
+    const rawJson = await request.json()
+    const parsed = validateBody(verifyOnboardingOtpSchema, rawJson)
+    if (!parsed.success) return parsed.response
 
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ success: false, message: 'A valid email address is required.' }, { status: 400 })
-    }
-
-    if (!otp || typeof otp !== 'string' || otp.trim().length !== 6) {
-      return NextResponse.json({ success: false, message: 'Please enter a 6-digit OTP.' }, { status: 400 })
-    }
-
+    const { email, otp, challenge } = parsed.data
     const normalizedEmail = email.trim().toLowerCase()
     const trimmedOtp = otp.trim()
+
+    // Dual Rate Limit: 5 verification attempts per 10 min per IP and per email
+    const rateLimit = await checkRateLimit(request, 5, 600, 'otp:verify-onboarding', normalizedEmail)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
 
     let isVerified = false
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit, rateLimitResponse, checkApiUsageQuota, quotaExceededResponse } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,18 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Unauthorized. Only Administrators and HOD can test the gateway.' },
         { status: 401 }
       )
+    }
+
+    // Rate Limit: 10 test SMS operations per hour per admin
+    const rateLimit = await checkRateLimit(request, 10, 3600, 'sms:test', session.userId)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
+    // Check hard monthly spending budget/quota before carrier dispatch
+    const quota = await checkApiUsageQuota('sms', 1)
+    if (!quota.allowed) {
+      return quotaExceededResponse('sms', quota.hardLimit, quota.period)
     }
 
     const body: TestGatewayPayload = await request.json()
@@ -80,7 +93,7 @@ export async function POST(request: NextRequest) {
           apiKey.trim() ||
           process.env.FAST2SMS_WHATSAPP_API_KEY ||
           process.env.FAST2SMS_API_KEY ||
-          'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
+          ''
 
         if (!token) {
           return NextResponse.json({

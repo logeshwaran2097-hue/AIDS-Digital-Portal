@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { extractTextFromFile, parseSyllabusText, ParsedUnit } from '@/lib/syllabusParser'
+import { validateFileBuffer } from '@/lib/fileValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,8 +56,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, message: 'Forbidden. Faculty, HOD, or Admin role required.' }, { status: 403 })
     }
 
     const contentType = request.headers.get('content-type') || ''
@@ -83,12 +84,21 @@ export async function POST(request: Request) {
       sourceFileName = file.name
       sourceFileSize = `${(file.size / 1024).toFixed(1)} KB`
 
-      // Convert file into Buffer
+      // Convert file into Buffer and validate magic bytes and content safety
       const arrayBuffer = await file.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
+      const val = validateFileBuffer(buffer, file.name, {
+        allowedMimeTypes: [
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ],
+      })
+      if (!val.valid) {
+        return NextResponse.json({ success: false, message: val.error }, { status: 400 })
+      }
 
       // Extract raw text
-      const rawText = await extractTextFromFile(buffer, file.type, file.name)
+      const rawText = await extractTextFromFile(buffer, val.detectedMime || file.type, file.name)
       if (!rawText || rawText.trim().length < 15) {
         return NextResponse.json(
           {
@@ -209,8 +219,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, message: 'Forbidden. Faculty, HOD, or Admin role required.' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -294,8 +304,8 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, message: 'Forbidden. Faculty, HOD, or Admin role required.' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)

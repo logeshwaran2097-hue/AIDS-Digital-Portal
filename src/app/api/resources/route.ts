@@ -1,12 +1,21 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { getSession } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateFileBuffer } from '@/lib/fileValidation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 export async function GET(request: Request) {
+  // Search Rate Limit: 30 queries per minute per IP
+  const rateLimit = await checkRateLimit(request, 30, 60, 'resources:search')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const resourceType = searchParams.get('type')
@@ -48,6 +57,20 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Faculty or Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
+    // Upload Rate Limit: 10 uploads per 10 minutes per user/IP
+    const rateLimit = await checkRateLimit(request, 10, 600, 'resources:upload', session.userId)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
     const contentType = request.headers.get('content-type') || ''
     let title = ''
     let description = ''
@@ -59,8 +82,10 @@ export async function POST(request: Request) {
     let fileSize = 1024 * 1024 * 5 // default 5MB
     let fileType = 'application/pdf'
     let fileUrl = ''
-    let uploadedByName = 'Faculty Member'
-    let uploadedById = 'faculty'
+
+    // Identity strictly derived from verified session
+    const uploadedById = session.userId
+    const uploadedByName = session.name || 'Faculty Member'
 
     if (contentType.includes('application/json')) {
       const body = await request.json()
@@ -74,8 +99,6 @@ export async function POST(request: Request) {
       fileSize = body.fileSize ? Number(body.fileSize) : 5242880
       fileType = body.fileType || 'application/pdf'
       fileUrl = body.fileUrl || `/uploads/resources/${fileName}`
-      uploadedByName = body.uploadedByName || 'Faculty Member'
-      uploadedById = body.uploadedById || 'faculty'
     } else {
       const data = await request.formData()
       const file = data.get('file') as File | null
@@ -85,13 +108,16 @@ export async function POST(request: Request) {
       resourceType = (data.get('resourceType') as string) || 'textbook'
       semester = data.get('semester') ? Number(data.get('semester')) : 3
       academicYear = (data.get('academicYear') as string) || '2025-2026'
-      uploadedByName = (data.get('uploadedByName') as string) || 'Faculty Member'
-      uploadedById = (data.get('uploadedById') as string) || 'faculty'
 
-      if (file && typeof file === 'object' && 'name' in file) {
-        fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`
-        fileSize = file.size || 1024 * 1024 * 2
-        fileType = file.type || 'application/pdf'
+      if (file && typeof file === 'object' && 'name' in file && typeof file.arrayBuffer === 'function') {
+        const buf = Buffer.from(await file.arrayBuffer())
+        const val = validateFileBuffer(buf, file.name)
+        if (!val.valid) {
+          return NextResponse.json({ success: false, message: val.error }, { status: 400 })
+        }
+        fileName = val.safeFileName || `${Date.now()}_doc.pdf`
+        fileSize = buf.length
+        fileType = val.detectedMime || 'application/pdf'
         fileUrl = `/uploads/${fileName}`
       } else {
         fileName = `${Date.now()}-${title.replace(/[^a-zA-Z0-9.]/g, '-')}.pdf`
@@ -157,6 +183,14 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Faculty or Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
     const contentType = request.headers.get('content-type') || ''
     let id = ''
     let title = ''
@@ -190,10 +224,15 @@ export async function PUT(request: Request) {
       resourceType = (data.get('resourceType') as string) || 'textbook'
       semester = data.get('semester') ? Number(data.get('semester')) : 3
       const file = data.get('file') as File | null
-      if (file && typeof file === 'object' && 'name' in file) {
-        fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`
-        fileSize = file.size || 1024 * 1024 * 2
-        fileType = file.type || 'application/pdf'
+      if (file && typeof file === 'object' && 'name' in file && typeof file.arrayBuffer === 'function') {
+        const buf = Buffer.from(await file.arrayBuffer())
+        const val = validateFileBuffer(buf, file.name)
+        if (!val.valid) {
+          return NextResponse.json({ success: false, message: val.error }, { status: 400 })
+        }
+        fileName = val.safeFileName || `${Date.now()}_doc.pdf`
+        fileSize = buf.length
+        fileType = val.detectedMime || 'application/pdf'
         fileUrl = `/uploads/${fileName}`
       }
     }
@@ -202,6 +241,19 @@ export async function PUT(request: Request) {
       return NextResponse.json(
         { success: false, message: 'Resource ID and Title are required' },
         { status: 400 }
+      )
+    }
+
+    const existing = await prisma.resource.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'Resource not found' }, { status: 404 })
+    }
+
+    const isPrivileged = session.role === 'admin' || session.role === 'super_admin' || session.role === 'hod'
+    if (!isPrivileged && existing.uploadedById !== session.userId) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden. You do not have permission to modify this resource.' },
+        { status: 403 }
       )
     }
 
@@ -239,6 +291,14 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Faculty or Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     let id = searchParams.get('id')
     if (!id) {
@@ -252,6 +312,19 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         { success: false, message: 'Resource ID is required' },
         { status: 400 }
+      )
+    }
+
+    const existing = await prisma.resource.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'Resource not found' }, { status: 404 })
+    }
+
+    const isPrivileged = session.role === 'admin' || session.role === 'super_admin' || session.role === 'hod'
+    if (!isPrivileged && existing.uploadedById !== session.userId) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden. You do not have permission to delete this resource.' },
+        { status: 403 }
       )
     }
 

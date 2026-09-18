@@ -6,6 +6,7 @@ const nextConfig = {
   swcMinify: true,
   poweredByHeader: false,
   reactStrictMode: true,
+  productionBrowserSourceMaps: false,
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -77,7 +78,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "upgrade-insecure-requests; default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:; font-src 'self' https: data: fonts.gstatic.com; connect-src 'self' https: wss: data: blob:; frame-ancestors 'self';",
+            value: "upgrade-insecure-requests; default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; style-src 'self' https: 'unsafe-inline' fonts.googleapis.com; img-src 'self' https: data: blob:; font-src 'self' https: data: fonts.gstatic.com; connect-src 'self' https: wss: data: blob:; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
           },
         ],
       },
@@ -112,6 +113,23 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Origin',
             value: '*',
+          },
+        ],
+      },
+      {
+        source: '/uploads/:path*',
+        headers: [
+          {
+            key: 'Content-Disposition',
+            value: 'attachment',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'none'; sandbox",
           },
         ],
       },

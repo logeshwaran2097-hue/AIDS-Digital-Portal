@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { getSession } from '@/lib/auth'
+import { validateBody, createAnnouncementSchema, updateAnnouncementSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -37,7 +39,17 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin or HOD role required.' }, { status: 403 })
+    }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(createAnnouncementSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const announcement = await prisma.announcement.create({
       data: {
         title: body.title,
@@ -45,7 +57,7 @@ export async function POST(request: Request) {
         category: body.category || 'Academic',
         target: body.target || 'All Students',
         attachmentUrl: body.attachmentUrl || null,
-        createdByName: body.createdByName || 'Administrator',
+        createdByName: session.name || body.createdByName || 'Administrator',
         isPublished: true,
       },
     })
@@ -54,7 +66,7 @@ export async function POST(request: Request) {
     invalidateCache('announcements')
     invalidateCache('notifications')
 
-    const author = body.createdByName || 'Department Directorate'
+    const author = session.name || body.createdByName || 'Department Directorate'
 
     // Automatically broadcast notification for students
     await prisma.notification.create({
@@ -76,12 +88,18 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const body = await request.json()
-    const { id, title, content, category, target, attachmentUrl } = body
-
-    if (!id) {
-      return NextResponse.json({ success: false, message: 'Missing announcement ID' }, { status: 400 })
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin or HOD role required.' }, { status: 403 })
     }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(updateAnnouncementSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
+    const { id, title, content, category, target, attachmentUrl } = body
 
     const updated = await prisma.announcement.update({
       where: { id },
@@ -106,6 +124,11 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Admin or HOD role required.' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const clearAll = searchParams.get('clearAll')

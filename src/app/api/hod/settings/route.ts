@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { validateBody, hodSettingsSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,7 +60,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(hodSettingsSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
 
     // Validate and merge with defaults
     const updatedSettings = {

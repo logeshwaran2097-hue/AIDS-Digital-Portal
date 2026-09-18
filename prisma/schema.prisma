@@ -668,4 +668,30 @@ model PushSubscription {
   @@index([regNo])
   @@index([role])
 }
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(1)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([expiresAt])
+}
+
+model ApiUsageQuota {
+  id        String   @id @default(cuid())
+  service   String
+  period    String
+  usedCount Int      @default(0)
+  hardLimit Int      @default(1000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([service, period])
+  @@index([service, period])
+}
+
 

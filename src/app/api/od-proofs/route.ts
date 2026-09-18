@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { syncSanctionedODsForStudent } from '@/lib/odSync'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { validateBody, odProofActionSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,17 +20,16 @@ export async function GET(request: Request) {
     const queryRegNo = searchParams.get('registerNumber')
 
     // 1. STUDENT VIEW
-    if (session.role === 'student' || queryRegNo) {
-      const regNo = (queryRegNo || session.registerNumber || '')?.trim().toUpperCase()
+    if (session.role === 'student') {
+      const activeRegNo = (session.registerNumber || '').trim().toUpperCase()
       
       let student = null
-      if (regNo) {
-        student = await prisma.student.findFirst({ where: { registerNumber: regNo } })
+      if (activeRegNo) {
+        student = await prisma.student.findFirst({ where: { registerNumber: activeRegNo } })
       } else if (session.userId) {
         student = await prisma.student.findFirst({ where: { userId: session.userId } })
       }
 
-      const activeRegNo = student?.registerNumber || regNo
       if (!activeRegNo) {
         return NextResponse.json({ success: true, proofs: [], count: 0 })
       }
@@ -197,7 +197,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(odProofActionSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const { action } = body
 
     // Instantly invalidate caches on any mutation so next reads reflect state immediately
@@ -267,6 +272,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
       }
 
+      if (session.role === 'student' && session.registerNumber && existing.registerNumber.toUpperCase() !== session.registerNumber.toUpperCase()) {
+        return NextResponse.json({ success: false, message: 'Forbidden: You cannot upload proofs for another student\'s OD record.' }, { status: 403 })
+      }
+
       const updatedStatus = existing.certificateUrl ? 'under_review' : 'pending_proofs'
       const finalCollege = (collegeName || existing.venueCollege || '').trim()
       const finalAddress = (collegeAddress || geoAddress || '').trim()
@@ -315,6 +324,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
       }
 
+      if (session.role === 'student' && session.registerNumber && existing.registerNumber.toUpperCase() !== session.registerNumber.toUpperCase()) {
+        return NextResponse.json({ success: false, message: 'Forbidden: You cannot upload certificates for another student\'s OD record.' }, { status: 403 })
+      }
+
       const updated = await prisma.oDProof.update({
         where: { id },
         data: {
@@ -345,6 +358,10 @@ export async function POST(request: Request) {
 
     // 4. CLASS ADVISOR: VERIFY & ENDORSE OD ATTENDANCE
     if (action === 'ADVISOR_VERIFY') {
+      if (session.role !== 'faculty' && session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod') {
+        return NextResponse.json({ success: false, message: 'Forbidden: Faculty or Admin role required.' }, { status: 403 })
+      }
+
       const { id, remarks } = body
 
       if (!id) {
@@ -400,6 +417,10 @@ export async function POST(request: Request) {
 
     // 5. HOD: EXECUTIVE SANCTION & FINAL VERIFY
     if (action === 'HOD_APPROVE') {
+      if (session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin') {
+        return NextResponse.json({ success: false, message: 'Forbidden: HOD or Admin authorization required.' }, { status: 403 })
+      }
+
       const { id, remarks } = body
 
       if (!id) {
@@ -459,6 +480,10 @@ export async function POST(request: Request) {
 
     // 5. CLASS ADVISOR / HOD: REQUEST RESUBMISSION
     if (action === 'ADVISOR_REJECT' || action === 'HOD_REJECT') {
+      if (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin') {
+        return NextResponse.json({ success: false, message: 'Forbidden: Faculty or HOD authority required.' }, { status: 403 })
+      }
+
       const { id, remarks } = body
 
       if (!id || !remarks) {

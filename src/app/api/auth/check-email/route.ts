@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkEmailAvailability } from '@/lib/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateBody, checkEmailSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,15 +12,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = await request.json()
-    const { email, userId, registerNumber, facultyId } = body || {}
-
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return NextResponse.json(
-        { available: false, message: 'Please enter a valid email address.' },
-        { status: 400 }
-      )
-    }
+    const rawJson = await request.json()
+    const parsed = validateBody(checkEmailSchema, rawJson)
+    if (!parsed.success) return parsed.response
+    const { email, userId, registerNumber, facultyId } = parsed.data
 
     if (registerNumber && !email.trim().toLowerCase().endsWith('@gmail.com')) {
       return NextResponse.json({

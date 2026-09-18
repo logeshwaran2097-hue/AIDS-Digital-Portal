@@ -3,28 +3,32 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { verifyOTP } from '@/lib/utils'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateBody, studentVerifyEmailOtpSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 5, 60, 'otp:student-verify-email')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
-
   try {
     const session = await getSession()
     if (!session || session.role !== 'student') {
       return NextResponse.json({ success: false, message: 'Unauthorized. Please login first.' }, { status: 401 })
     }
 
-    const { email, otp } = await request.json()
-    if (!email || !otp || typeof otp !== 'string' || otp.trim().length !== 6) {
-      return NextResponse.json({ success: false, message: 'Please enter the complete 6-digit OTP.' }, { status: 400 })
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(studentVerifyEmailOtpSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
     }
+    const { email, otp } = validation.data
 
     const normalizedEmail = email.trim().toLowerCase()
     const trimmedOtp = otp.trim()
+
+    // Dual Rate Limit: 5 verification attempts per 10 min per IP and per email
+    const rateLimit = await checkRateLimit(request, 5, 600, 'otp:student-verify-email', normalizedEmail)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
 
     // Find the latest valid unused OTP for this email
     const otpRecord = await prisma.oTP.findFirst({

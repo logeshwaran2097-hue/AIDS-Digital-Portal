@@ -2,28 +2,39 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession, sendStudentVerificationEmail, checkEmailAvailability } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateOTP, hashOTP } from '@/lib/utils'
-import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { checkRateLimit, rateLimitResponse, checkApiUsageQuota, quotaExceededResponse } from '@/lib/rateLimit'
+import { validateBody, studentSendEmailOtpSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 3, 120, 'otp:student-send-email')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
-
   try {
     const session = await getSession()
     if (!session || session.role !== 'student') {
       return NextResponse.json({ success: false, message: 'Unauthorized. Please login first.' }, { status: 401 })
     }
 
-    const { email } = await request.json()
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ success: false, message: 'Please provide a valid email address.' }, { status: 400 })
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(studentSendEmailOtpSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
     }
+    const { email } = validation.data
 
     const normalizedEmail = email.trim().toLowerCase()
+
+    // Dual Rate Limit: 3 requests per 10 min per IP and per email
+    const rateLimit = await checkRateLimit(request, 3, 600, 'otp:student-send-email', normalizedEmail)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
+    // Check monthly email spending quota
+    const quota = await checkApiUsageQuota('email', 1)
+    if (!quota.allowed) {
+      return quotaExceededResponse('email', quota.hardLimit, quota.period)
+    }
+
     if (!normalizedEmail.endsWith('@gmail.com')) {
       return NextResponse.json(
         { success: false, message: 'Only @gmail.com personal email addresses are allowed (e.g. name@gmail.com).' },

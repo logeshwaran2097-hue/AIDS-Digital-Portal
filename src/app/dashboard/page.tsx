@@ -16,7 +16,7 @@ export default async function StudentDashboardPage() {
       role="student"
       userName={data?.user?.name || session.name || 'Student'}
       userEmail={data?.user?.email || session.email}
-      profileImage={data?.user?.profileImage}
+      profileImage={data?.user?.profileImage || null}
     >
       <StudentDashboard data={data as any} />
     </PortalLayout>

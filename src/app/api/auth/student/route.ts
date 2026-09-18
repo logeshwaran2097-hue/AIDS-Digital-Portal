@@ -1,36 +1,59 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateStudent } from '@/lib/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { logFailedLogin, safeErrorResponse } from '@/lib/securityLogger'
 import { z } from 'zod'
 
-const loginSchema = z.object({
-  registerNumber: z.string().optional(),
-  email: z.string().optional(),
-  password: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-}).refine((data) => data.registerNumber || data.email, {
-  message: 'Register Number or Email ID is required',
-})
+const loginSchema = z
+  .object({
+    registerNumber: z.string().max(30).optional(),
+    email: z.string().email().optional(),
+    password: z.string().max(100).optional(),
+    dateOfBirth: z.string().max(30).optional(),
+  })
+  .strict()
+  .refine((data) => data.registerNumber || data.email, {
+    message: 'Register Number or Email ID is required',
+  })
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 5, 60, 'auth:student')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  const userAgent = request.headers.get('user-agent') || 'unknown'
 
   try {
     const body = await request.json()
-    const { registerNumber, email, password, dateOfBirth } = loginSchema.parse(body)
+    const parsed = loginSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, message: parsed.error.errors[0]?.message || 'Invalid login details' }, { status: 400 })
+    }
+    const { registerNumber, email, password, dateOfBirth } = parsed.data
     const identifier = (registerNumber || email || '').trim()
     const passwordOrDob = password || dateOfBirth || ''
+
+    // Dual Rate Limit: 5 attempts per 15 min per IP and per account
+    const rateLimit = await checkRateLimit(request, 5, 900, 'auth:student', identifier)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
 
     const result = await authenticateStudent(identifier, passwordOrDob)
 
     if (!result.success || !result.user || !result.token) {
+      await logFailedLogin({
+        role: 'student',
+        identifier,
+        ip: clientIp,
+        userAgent,
+        reason: result.message || 'Invalid Register Number, Email, or Password',
+      })
+
       return NextResponse.json(
         { success: false, message: result.message || 'Invalid Register Number, Email, or Password.' },
         { status: 401 }
@@ -78,10 +101,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    console.error('Student login error:', error)
-    return NextResponse.json(
-      { success: false, message: 'An error occurred during authentication.' },
-      { status: 500 }
-    )
+    return safeErrorResponse(error, 'An error occurred during authentication.', 500, {
+      path: '/api/auth/student',
+      method: 'POST',
+      ip: clientIp,
+    })
   }
 }

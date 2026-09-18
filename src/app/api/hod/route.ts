@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { parseSafeDateOfBirth, formatNameWithDegree } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
+import { validateBody, createHodSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,7 +58,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const data = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(createHodSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const data = validation.data
     const {
       facultyId,
       name,

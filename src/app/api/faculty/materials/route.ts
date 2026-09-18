@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import path from 'path'
 import fs from 'fs/promises'
+import { validateFileBuffer } from '@/lib/fileValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -150,9 +151,16 @@ export async function POST(request: Request) {
     // Process file storage
     let fileUrl = ''
     if (buffer && buffer.length > 0) {
-      const safeBase = (originalName || `${title}.pdf`).replace(/[^a-zA-Z0-9.-]/g, '_')
-      const fileName = `${subjectCode}_${Date.now()}_${safeBase}`
-      
+      const validation = validateFileBuffer(buffer, originalName || `${title}.pdf`, {
+        maxSizeBytes: 10 * 1024 * 1024,
+      })
+      if (!validation.valid) {
+        return NextResponse.json({ success: false, message: validation.error }, { status: 400 })
+      }
+
+      const fileName = `${subjectCode}_${validation.safeFileName}`
+      mimeType = validation.detectedMime || mimeType
+
       try {
         const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'materials')
         await fs.mkdir(uploadDir, { recursive: true })

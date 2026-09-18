@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { validateBody, attendanceUnlockActionSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,6 +84,9 @@ export async function GET(request: Request) {
     if (!session) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
+    if (session.role === 'student') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 })
+    }
 
     const { searchParams } = new URL(request.url)
     const year = searchParams.get('year')
@@ -146,13 +150,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(attendanceUnlockActionSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const { action } = body
 
     // ──────────────────────────────────────────────────────────────────────────
     // 1. Advisor asks permission to HOD to edit attendance
     // ──────────────────────────────────────────────────────────────────────────
     if (action === 'REQUEST') {
+      if (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin') {
+        return NextResponse.json({ success: false, message: 'Forbidden. Faculty or Admin role required to request unlock.' }, { status: 403 })
+      }
       const {
         sessionId,
         year,
@@ -256,6 +268,9 @@ export async function POST(request: Request) {
     // 2. HOD Approves the unlock request
     // ──────────────────────────────────────────────────────────────────────────
     if (action === 'APPROVE') {
+      if (session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin') {
+        return NextResponse.json({ success: false, message: 'Forbidden. HOD or Admin role required.' }, { status: 403 })
+      }
       const { requestId, reviewNote } = body
       if (!requestId) {
         return NextResponse.json({ success: false, message: 'Request ID is required' }, { status: 400 })
@@ -347,6 +362,9 @@ export async function POST(request: Request) {
     // 3. HOD Rejects the unlock request
     // ──────────────────────────────────────────────────────────────────────────
     if (action === 'REJECT') {
+      if (session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin') {
+        return NextResponse.json({ success: false, message: 'Forbidden. HOD or Admin role required.' }, { status: 403 })
+      }
       const { requestId, reviewNote } = body
       if (!requestId) {
         return NextResponse.json({ success: false, message: 'Request ID is required' }, { status: 400 })

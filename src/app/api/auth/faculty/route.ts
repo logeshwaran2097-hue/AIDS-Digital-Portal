@@ -1,38 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateFaculty } from '@/lib/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { logFailedLogin, safeErrorResponse } from '@/lib/securityLogger'
 import { z } from 'zod'
 
-const loginSchema = z.object({
-  facultyId: z.string().optional(),
-  email: z.string().optional(),
-  name: z.string().optional(),
-  password: z.string().optional(),
-  dateOfBirth: z.string().optional(),
-  role: z.string().optional(),
-  loginAsRole: z.string().optional(),
-}).refine((data) => data.facultyId || data.email || data.name, {
-  message: 'Faculty Email ID or Name is required',
-})
+const loginSchema = z
+  .object({
+    facultyId: z.string().max(50).optional(),
+    email: z.string().email().optional(),
+    name: z.string().max(100).optional(),
+    password: z.string().max(100).optional(),
+    dateOfBirth: z.string().max(30).optional(),
+    role: z.string().max(30).optional(),
+    loginAsRole: z.string().max(30).optional(),
+  })
+  .strict()
+  .refine((data) => data.facultyId || data.email || data.name, {
+    message: 'Faculty Email ID or Name is required',
+  })
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 5, 60, 'auth:faculty')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  const userAgent = request.headers.get('user-agent') || 'unknown'
 
   try {
     const body = await request.json()
-    const { facultyId, email, name, password, dateOfBirth, role, loginAsRole } = loginSchema.parse(body)
+    const parsed = loginSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, message: parsed.error.errors[0]?.message || 'Invalid login details' }, { status: 400 })
+    }
+    const { facultyId, email, name, password, dateOfBirth, role, loginAsRole } = parsed.data
     const identifier = (facultyId || email || name || '').trim()
     const passwordOrDob = password || dateOfBirth || ''
     const targetRole = (loginAsRole || role || 'faculty') === 'advisor' ? 'advisor' : 'faculty'
 
+    // Dual Rate Limit: 5 attempts per 15 min per IP and per account
+    const rateLimit = await checkRateLimit(request, 5, 900, 'auth:faculty', identifier)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
     const result = await authenticateFaculty(identifier, passwordOrDob, targetRole)
 
     if (!result.success || !result.user || !result.token) {
+      await logFailedLogin({
+        role: targetRole,
+        identifier,
+        ip: clientIp,
+        userAgent,
+        reason: result.message || 'Invalid Faculty Email, Name, or Password',
+      })
+
       return NextResponse.json(
         { success: false, message: result.message || 'Invalid Faculty Email, Name, or Password.' },
         { status: 401 }
@@ -101,10 +124,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    console.error('Faculty login error:', error)
-    return NextResponse.json(
-      { success: false, message: 'An error occurred during authentication.' },
-      { status: 500 }
-    )
+    return safeErrorResponse(error, 'An error occurred during authentication.', 500, {
+      path: '/api/auth/faculty',
+      method: 'POST',
+      ip: clientIp,
+    })
   }
 }

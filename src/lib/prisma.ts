@@ -1,20 +1,17 @@
 import { PrismaClient } from '@prisma/client'
 
-// IPv4-capable Supabase connection pooler in ap-northeast-1 (Tokyo) for serverless / Vercel
-// Port 6543 = Transaction Mode (multiplexed for serverless, eliminates EMAXCONNSESSION 15-client limit)
-// Port 5432 = Session Mode (reserved for DIRECT_URL migrations/schema push)
-const DEFAULT_POSTGRES_URL = 'postgresql://postgres.hiqwsermiypdnnkuzihw:dfghjkhgc4657689@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require&pgbouncer=true&connection_limit=1'
-const DEFAULT_DIRECT_URL = 'postgresql://postgres.hiqwsermiypdnnkuzihw:dfghjkhgc4657689@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres?sslmode=require'
-
 function normalizeSupabaseUrl(rawUrl: string, isDirect = false): string {
+  if (!rawUrl) return ''
   try {
     const parsed = new URL(rawUrl)
     // db.[ref].supabase.co is IPv6-only and fails on AWS Lambda / Vercel Serverless Functions.
     // Transparently rewrite to the IPv4-capable Supabase connection pooler:
-    if (parsed.hostname.includes('db.hiqwsermiypdnnkuzihw.supabase.co') || (parsed.hostname.includes('.supabase.co') && !parsed.hostname.includes('.pooler.supabase.'))) {
+    if (parsed.hostname.includes('.supabase.co') && !parsed.hostname.includes('.pooler.supabase.')) {
+      const match = parsed.hostname.match(/^db\.([^.]+)\.supabase\.co/)
+      const projectRef = match ? match[1] : ''
       parsed.hostname = 'aws-0-ap-northeast-1.pooler.supabase.com'
-      if (parsed.username === 'postgres') {
-        parsed.username = 'postgres.hiqwsermiypdnnkuzihw'
+      if (parsed.username === 'postgres' && projectRef) {
+        parsed.username = `postgres.${projectRef}`
       }
     }
 
@@ -25,7 +22,6 @@ function normalizeSupabaseUrl(rawUrl: string, isDirect = false): string {
         parsed.searchParams.delete('pgbouncer')
       } else {
         // Runtime serverless queries MUST use Transaction mode (port 6543) with pgbouncer=true.
-        // Port 5432 is Session mode which has a strict 15-client limit (EMAXCONNSESSION).
         parsed.port = '6543'
         parsed.searchParams.set('pgbouncer', 'true')
       }
@@ -36,15 +32,11 @@ function normalizeSupabaseUrl(rawUrl: string, isDirect = false): string {
   }
 }
 
-if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:') || process.env.DATABASE_URL.includes('[YOUR-PASSWORD]') || process.env.DATABASE_URL.includes('db.hiqwsermiypdnnkuzihw.supabase.co')) {
-  process.env.DATABASE_URL = DEFAULT_POSTGRES_URL
-} else {
+if (process.env.DATABASE_URL) {
   process.env.DATABASE_URL = normalizeSupabaseUrl(process.env.DATABASE_URL, false)
 }
 
-if (!process.env.DIRECT_URL || process.env.DIRECT_URL.startsWith('file:') || process.env.DIRECT_URL.includes('[YOUR-PASSWORD]') || process.env.DIRECT_URL.includes('db.hiqwsermiypdnnkuzihw.supabase.co')) {
-  process.env.DIRECT_URL = DEFAULT_DIRECT_URL
-} else {
+if (process.env.DIRECT_URL) {
   process.env.DIRECT_URL = normalizeSupabaseUrl(process.env.DIRECT_URL, true)
 }
 
@@ -55,7 +47,8 @@ const globalForPrisma = globalThis as unknown as {
 
 // Compute optimized connection pooling parameters for PostgreSQL (Supabase / Render)
 function getOptimizedDatabaseUrl(): string {
-  const rawUrl = process.env.DATABASE_URL || DEFAULT_POSTGRES_URL
+  const rawUrl = process.env.DATABASE_URL || ''
+  if (!rawUrl) return ''
   const url = normalizeSupabaseUrl(rawUrl, false)
 
   try {

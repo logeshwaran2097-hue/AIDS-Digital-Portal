@@ -1,32 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendAdminOTP, verifyAdminOTP } from '@/lib/auth'
-import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { checkRateLimit, rateLimitResponse, checkApiUsageQuota, quotaExceededResponse } from '@/lib/rateLimit'
+import { logFailedLogin, safeErrorResponse } from '@/lib/securityLogger'
 import { z } from 'zod'
 
-const sendOTPSchema = z.object({
-  email: z.string().email('Invalid email address'),
-})
+const sendOTPSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+  })
+  .strict()
 
-const verifyOTPSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  otp: z.string().length(6, 'OTP must be 6 digits'),
-})
+const verifyOTPSchema = z
+  .object({
+    email: z.string().email('Invalid email address'),
+    otp: z.string().length(6, 'OTP must be 6 digits'),
+    challenge: z.string().optional(),
+  })
+  .strict()
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 5, 60, 'auth:admin')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  const userAgent = request.headers.get('user-agent') || 'unknown'
 
   try {
-    const body = await request.json()
-    
-    if (body.otp) {
-      const { email, otp } = verifyOTPSchema.parse(body)
-      const challenge = request.cookies.get('otp-challenge')?.value || body.challenge
-      const result = await verifyAdminOTP(email, otp, challenge)
+    const rawJson = await request.json()
+    const email = rawJson?.email ? String(rawJson.email).trim().toLowerCase() : ''
+
+    // Dual Rate Limit: 5 attempts per 15 min per IP and per account
+    const rateLimit = await checkRateLimit(request, 5, 900, 'auth:admin', email)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
+    if (rawJson?.otp) {
+      const parsed = verifyOTPSchema.safeParse(rawJson)
+      if (!parsed.success) {
+        return NextResponse.json({ success: false, message: parsed.error.errors[0]?.message || 'Invalid input' }, { status: 400 })
+      }
+      const { email: verifiedEmail, otp } = parsed.data
+      const challenge = request.cookies.get('otp-challenge')?.value || rawJson.challenge
+      const result = await verifyAdminOTP(verifiedEmail, otp, challenge)
 
       if (!result.success || !result.user || !result.token) {
+        await logFailedLogin({
+          role: 'admin',
+          identifier: verifiedEmail,
+          ip: clientIp,
+          userAgent,
+          reason: result.message || 'Authentication failed',
+        })
+
         return NextResponse.json(
           { success: false, message: result.message || 'Authentication failed' },
           { status: 401 }
@@ -56,7 +82,18 @@ export async function POST(request: NextRequest) {
 
       return response
     } else {
-      const { email } = sendOTPSchema.parse(body)
+      const parsed = sendOTPSchema.safeParse(rawJson)
+      if (!parsed.success) {
+        return NextResponse.json({ success: false, message: parsed.error.errors[0]?.message || 'Invalid email' }, { status: 400 })
+      }
+      const { email } = parsed.data
+
+      // Check monthly email spending quota
+      const quota = await checkApiUsageQuota('email', 1)
+      if (!quota.allowed) {
+        return quotaExceededResponse('email', quota.hardLimit, quota.period)
+      }
+
       const result = await sendAdminOTP(email)
 
       if (!result.success) {
@@ -91,10 +128,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    console.error('Admin auth error:', error)
-    return NextResponse.json(
-      { success: false, message: 'An error occurred during authentication.' },
-      { status: 500 }
-    )
+    return safeErrorResponse(error, 'An error occurred during authentication.', 500, {
+      path: '/api/auth/admin',
+      method: 'POST',
+      ip: clientIp,
+    })
   }
 }

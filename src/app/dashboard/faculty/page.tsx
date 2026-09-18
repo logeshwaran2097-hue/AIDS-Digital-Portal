@@ -43,7 +43,7 @@ export default async function FacultyPage() {
       role="student" 
       userName={user?.name || session.name || 'Student'} 
       userEmail={user?.email || session.email}
-      profileImage={(user as any)?.profileImage}
+      profileImage={(user as any)?.profileImage || null}
     >
       <FacultyList 
         users={facultyRows} 

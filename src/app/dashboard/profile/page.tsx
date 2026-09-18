@@ -107,7 +107,7 @@ export default async function StudentProfilePage() {
       role="student"
       userName={finalUser.name || session.name || 'Student'}
       userEmail={verifiedPersonalEmail || undefined}
-      profileImage={(finalUser as any)?.profileImage}
+      profileImage={(finalUser as any)?.profileImage || null}
     >
       <div className="py-2 animate-fade-in">
         <StudentProfileView

@@ -250,12 +250,18 @@ export function PortalLayout({
 
   // Sync profile image from props, localStorage, and /api/auth/me
   useEffect(() => {
-    const imgProp = userImage || profileImage
+    const imgProp = userImage !== undefined ? userImage : profileImage
     if (imgProp && !imgProp.startsWith('blob:')) {
       setAvatarImage(imgProp)
       setAvatarError(false)
       if (typeof window !== 'undefined') {
         localStorage.setItem('user_profile_image', imgProp as string)
+      }
+    } else if (imgProp === null || imgProp === '') {
+      setAvatarImage(null)
+      setAvatarError(false)
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('user_profile_image')
       }
     }
   }, [userImage, profileImage])
@@ -264,12 +270,16 @@ export function PortalLayout({
     if (typeof window === 'undefined') return
 
     // 1. Initial check in localStorage if avatarImage is still empty
-    if (!avatarImage) {
+    if (profileImage === null || userImage === null) {
+      setAvatarImage(null)
+      setAvatarError(false)
+      localStorage.removeItem('user_profile_image')
+    } else if (!avatarImage) {
       const cached = localStorage.getItem('user_profile_image')
-      if (cached && !cached.startsWith('blob:')) {
+      if (cached && !cached.startsWith('blob:') && cached !== 'null') {
         setAvatarImage(cached)
       } else {
-        if (cached?.startsWith('blob:')) {
+        if (cached?.startsWith('blob:') || cached === 'null') {
           localStorage.removeItem('user_profile_image')
         }
         try {
@@ -300,6 +310,11 @@ export function PortalLayout({
             setAvatarImage(data.user.profileImage)
             setAvatarError(false)
             localStorage.setItem('user_profile_image', data.user.profileImage)
+          } else {
+            // Explicitly clear avatar if user has no photo in database
+            setAvatarImage(null)
+            setAvatarError(false)
+            localStorage.removeItem('user_profile_image')
           }
           if (data.user.residencyStatus || data.user.busNo || data.user.busDetails) {
             const res = data.user.residencyStatus || (data.user.busNo || data.user.busDetails ? 'Day Scholar' : 'Hostel')
@@ -314,17 +329,28 @@ export function PortalLayout({
 
     // 3. Listen to realtime profile image update events across the portal
     const handleProfileUpdate = (e: any) => {
-      const newImg = e.detail || localStorage.getItem('user_profile_image')
-      if (newImg && !newImg.startsWith('blob:')) {
+      const newImg = e.detail
+      if (newImg && typeof newImg === 'string' && !newImg.startsWith('blob:')) {
         setAvatarImage(newImg)
         setAvatarError(false)
+        localStorage.setItem('user_profile_image', newImg)
+      } else {
+        // Explicitly cleared or removed
+        setAvatarImage(null)
+        setAvatarError(false)
+        localStorage.removeItem('user_profile_image')
       }
     }
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'user_profile_image' && e.newValue && !e.newValue.startsWith('blob:')) {
-        setAvatarImage(e.newValue)
-        setAvatarError(false)
+      if (e.key === 'user_profile_image') {
+        if (e.newValue && !e.newValue.startsWith('blob:') && e.newValue !== 'null') {
+          setAvatarImage(e.newValue)
+          setAvatarError(false)
+        } else {
+          setAvatarImage(null)
+          setAvatarError(false)
+        }
       }
     }
 
@@ -335,7 +361,7 @@ export function PortalLayout({
       window.removeEventListener('portal-profile-image-updated', handleProfileUpdate)
       window.removeEventListener('storage', handleStorageChange)
     }
-  }, [avatarImage])
+  }, [avatarImage, profileImage, userImage])
 
   // Sync real-time notifications from API
   const syncNotifications = async () => {

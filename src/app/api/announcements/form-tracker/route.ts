@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { validateBody, formTrackerSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -11,6 +12,11 @@ export const fetchCache = 'force-no-store'
 
 export async function GET(request: Request) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const announcementId = searchParams.get('announcementId')
     const batchYear = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
@@ -41,7 +47,28 @@ export async function GET(request: Request) {
       }
     }
 
-    // 2. Fetch target student cohort from database
+    const isStaff = session.role === 'faculty' || session.role === 'hod' || session.role === 'admin' || session.role === 'super_admin'
+    if (!isStaff) {
+      // Students only receive their own completion status to prevent leaking classmates' PII
+      const student = await prisma.student.findUnique({
+        where: { userId: session.userId },
+      }).catch(() => null)
+      const reg = (student?.registerNumber || session.registerNumber || '').toUpperCase()
+      const isCompleted = completedList.some((c) => c.registerNumber.toUpperCase() === reg)
+
+      return NextResponse.json({
+        success: true,
+        announcementId,
+        isCompleted,
+        totalCount: 0,
+        completedCount: completedList.length,
+        pendingCount: 0,
+        completedStudents: [],
+        pendingStudents: [],
+      })
+    }
+
+    // 2. Staff: Fetch target student cohort from database
     const studentFilter: any = {}
     if (batchYear) studentFilter.year = batchYear
     if (batchSection) studentFilter.section = batchSection
@@ -108,19 +135,23 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSession()
-    const body = await request.json()
-    const { announcementId, studentId, registerNumber, studentName } = body
-
-    if (!announcementId) {
-      return NextResponse.json({ success: false, message: 'Missing announcementId' }, { status: 400 })
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    // Determine student info from session if student, or from request body
-    let finalReg = registerNumber
-    let finalName = studentName
-    let finalStudentId = studentId
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(formTrackerSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
+    const { announcementId } = body
 
-    if (session && session.role === 'student') {
+    let finalReg = session.registerNumber
+    let finalName = session.name
+    let finalStudentId = session.userId
+
+    if (session.role === 'student') {
       const student = await prisma.student.findUnique({
         where: { userId: session.userId },
       }).catch(() => null)
@@ -129,10 +160,17 @@ export async function POST(request: Request) {
         finalStudentId = student.id
         finalName = session.name || student.registerNumber
       }
+    } else {
+      const isStaff = session.role === 'faculty' || session.role === 'hod' || session.role === 'admin' || session.role === 'super_admin'
+      if (isStaff && body.registerNumber) {
+        finalReg = body.registerNumber
+        finalStudentId = body.studentId || ''
+        finalName = body.studentName || body.registerNumber
+      }
     }
 
     if (!finalReg) {
-      return NextResponse.json({ success: false, message: 'Could not identify student' }, { status: 400 })
+      return NextResponse.json({ success: false, message: 'Could not identify student from session' }, { status: 400 })
     }
 
     const settingKey = `form_tracker_${announcementId}`

@@ -75,7 +75,17 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
   return payload
 }
 
+let _testSessionOverride: JWTPayload | null | undefined = undefined
+
+export function __setTestSession(session: JWTPayload | null | undefined) {
+  _testSessionOverride = session
+}
+
 export async function getSession(): Promise<JWTPayload | null> {
+  if (_testSessionOverride !== undefined) {
+    return _testSessionOverride
+  }
+
   try {
     const cookieStore = await cookies()
     const token =

@@ -38,7 +38,7 @@ export default async function StudentODApplicationsPage() {
       role="student"
       userName={user.name || session.name || 'Student'}
       userEmail={user.email || session.email}
-      profileImage={(user as any)?.profileImage}
+      profileImage={(user as any)?.profileImage || null}
       roleBadgeLabel="Student"
     >
       <div className="py-2 animate-fade-in">

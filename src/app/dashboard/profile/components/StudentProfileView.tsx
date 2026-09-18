@@ -205,6 +205,11 @@ export function StudentProfileView({
           if (parsed.parentPhone === '6381366088' && !(initialStudent as any).parentPhone) {
             parsed.parentPhone = ''
           }
+          if (!parsed.profileImage) {
+            parsed.profileImage = null
+            localStorage.removeItem('user_profile_image')
+            window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: null }))
+          }
           setProfile((prev) => ({ ...prev, ...parsed }))
           setFormData((prev) => ({ ...prev, ...parsed }))
         }
@@ -301,6 +306,40 @@ export function StudentProfileView({
     reader.readAsDataURL(file)
   }
 
+  const handleRemovePhoto = async () => {
+    setImageError(false)
+    setProfile((prev) => {
+      const upd = { ...prev, profileImage: null }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(storageKey, JSON.stringify(upd))
+        localStorage.removeItem('user_profile_image')
+        window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: null }))
+      }
+      return upd
+    })
+    setFormData((prev) => ({ ...prev, profileImage: null }))
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('user_profile_image')
+      window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: null }))
+    }
+
+    try {
+      await fetch('/api/students', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          registerNumber: profile.registerNumber,
+          profileImage: null,
+        }),
+      })
+      toast.success('Passport photograph removed successfully!')
+      playNotificationChime()
+    } catch {
+      toast.error('Failed to remove photo on server')
+    }
+  }
+
   const handleDownloadCard = () => {
     downloadStudentCardPDF({
       name: profile.name,
@@ -350,6 +389,13 @@ export function StudentProfileView({
       setProfile(updatedProfile)
       if (typeof window !== 'undefined') {
         localStorage.setItem(storageKey, JSON.stringify(updatedProfile))
+        if (formData.profileImage) {
+          localStorage.setItem('user_profile_image', formData.profileImage)
+          window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: formData.profileImage }))
+        } else {
+          localStorage.removeItem('user_profile_image')
+          window.dispatchEvent(new CustomEvent('portal-profile-image-updated', { detail: null }))
+        }
       }
 
       // Persist directly to database
@@ -377,7 +423,7 @@ export function StudentProfileView({
           section: formData.section,
           batch: formData.batch,
           advisorName: formData.advisor,
-          profileImage: formData.profileImage || undefined,
+          profileImage: formData.profileImage !== undefined ? formData.profileImage : null,
         }),
       }).catch(() => { })
 
@@ -414,21 +460,33 @@ export function StudentProfileView({
                   {profile.name.charAt(0) || 'L'}
                 </div>
               )}
-              <label
-                className="absolute -bottom-1 -right-1 bg-[#22C7E8] hover:bg-white text-[#071A3D] p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] group-hover:scale-110 flex items-center justify-center"
-                title="Upload / Change Photo"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <input
-                  type="file"
-                  accept="image/png, image/jpeg, image/jpg"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) handlePhotoUpload(f)
-                  }}
-                  className="hidden"
-                />
-              </label>
+              <div className="absolute -bottom-1 -right-1 flex items-center gap-1">
+                {profile.profileImage && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] hover:scale-110 flex items-center justify-center"
+                    title="Remove Profile Photo"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <label
+                  className="bg-[#22C7E8] hover:bg-white text-[#071A3D] p-2 rounded-2xl shadow-lg cursor-pointer transition-all border-2 border-[#071A3D] group-hover:scale-110 flex items-center justify-center"
+                  title="Upload / Change Photo"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/jpg"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) handlePhotoUpload(f)
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
 
             <div>
@@ -762,7 +820,10 @@ export function StudentProfileView({
                       {formData.profileImage && (
                         <button
                           type="button"
-                          onClick={() => setFormData((prev) => ({ ...prev, profileImage: null }))}
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, profileImage: null }))
+                            handleRemovePhoto()
+                          }}
                           className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 cursor-pointer"
                           title="Remove Photo"
                         >

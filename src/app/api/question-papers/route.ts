@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getSession } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateFileBuffer } from '@/lib/fileValidation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -7,6 +10,20 @@ export const fetchCache = 'force-no-store'
 
 export async function POST(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Faculty or Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
+    // Upload Rate Limit: 10 uploads per 10 minutes per user/IP
+    const rateLimit = await checkRateLimit(request, 10, 600, 'question-papers:upload', session.userId)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
     const contentType = request.headers.get('content-type') || ''
     let subjectId: string = ''
     let examType: string = ''
@@ -17,10 +34,12 @@ export async function POST(request: Request) {
     let fileName: string = ''
     let fileSize: number = 2500000
     let fileType: string = 'application/pdf'
-    let uploadedByName: string = 'Faculty Member'
     let classPercentage: number | undefined = undefined
     let studentsAppeared: number | undefined = undefined
     let studentsPassed: number | undefined = undefined
+
+    const uploadedByName = session.name || 'Faculty Member'
+    const uploadedById = session.userId
 
     if (contentType.includes('application/json')) {
       const body = await request.json()
@@ -30,7 +49,6 @@ export async function POST(request: Request) {
       year = Number(body.year) || 2
       semester = Number(body.semester) || 3
       section = body.section || 'A'
-      uploadedByName = body.uploadedByName || 'Faculty Member'
       fileName = body.fileName || `${examType.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`
       fileSize = Number(body.fileSize) || 2500000
     } else {
@@ -43,13 +61,17 @@ export async function POST(request: Request) {
       year = data.get('year') ? Number(data.get('year')) : 2
       semester = data.get('semester') ? Number(data.get('semester')) : 3
       section = (data.get('section') as string) || 'A'
-      uploadedByName = (data.get('uploadedByName') as string) || 'Faculty Member'
 
       if (file && typeof file.arrayBuffer === 'function') {
         const bytes = await file.arrayBuffer()
+        const buf = Buffer.from(bytes)
+        const val = validateFileBuffer(buf, file.name)
+        if (!val.valid) {
+          return NextResponse.json({ success: false, message: val.error }, { status: 400 })
+        }
         fileSize = bytes.byteLength
-        fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '-')}`
-        fileType = file.type || 'application/pdf'
+        fileName = val.safeFileName || `${Date.now()}_qp.pdf`
+        fileType = val.detectedMime || 'application/pdf'
       } else {
         fileName = `${(title || examType).replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.pdf`
       }
@@ -77,6 +99,7 @@ export async function POST(request: Request) {
         fileType,
         fileSize,
         fileUrl: `/uploads/${fileName}`,
+        uploadedById,
         uploadedByName,
         status: 'published',
       },
@@ -88,7 +111,7 @@ export async function POST(request: Request) {
         title: `📄 Question Paper Uploaded: ${examType}`,
         message: `Official question paper for Semester ${semester || 'Curriculum'} is now available in Question Papers Bank.`,
         target: 'all',
-        createdByName: 'Faculty Advisory',
+        createdByName: session.name || 'Faculty Advisory',
         status: 'published',
       },
     }).catch(() => {})
@@ -108,6 +131,12 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+  // Search Rate Limit: 30 queries per minute per IP
+  const rateLimit = await checkRateLimit(request, 30, 60, 'question-papers:search')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     const subjectId = searchParams.get('subjectId')
@@ -136,6 +165,11 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Faculty or Admin privileges required.' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { id, subjectId, examType, academicYear, year, semester, section } = body
 
@@ -143,7 +177,14 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 })
     }
 
-    // If ID exists in DB, update it
+    const existing = await prisma.questionPaper.findUnique({ where: { id } }).catch(() => null)
+    if (existing) {
+      const isPrivileged = session.role === 'admin' || session.role === 'super_admin' || session.role === 'hod'
+      if (!isPrivileged && existing.uploadedById !== session.userId) {
+        return NextResponse.json({ success: false, message: 'Forbidden: You do not own this question paper.' }, { status: 403 })
+      }
+    }
+
     let updated = null
     try {
       updated = await prisma.questionPaper.update({
@@ -158,7 +199,6 @@ export async function PUT(request: Request) {
         },
       })
     } catch {
-      // Mock / fallback item handled gracefully
       updated = { id, subjectId, examType, academicYear, year, semester, section }
     }
 
@@ -171,6 +211,11 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Faculty or Admin privileges required.' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     let id = searchParams.get('id')
 
@@ -185,12 +230,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 })
     }
 
-    try {
-      await prisma.questionPaper.delete({
-        where: { id },
-      })
-    } catch {
-      // If it doesn't exist in DB (e.g. mock/fallback ID), still return success for UI state
+    const existing = await prisma.questionPaper.findUnique({ where: { id } }).catch(() => null)
+    if (existing) {
+      const isPrivileged = session.role === 'admin' || session.role === 'super_admin' || session.role === 'hod'
+      if (!isPrivileged && existing.uploadedById !== session.userId) {
+        return NextResponse.json({ success: false, message: 'Forbidden: You do not own this question paper.' }, { status: 403 })
+      }
+      await prisma.questionPaper.delete({ where: { id } })
     }
 
     return NextResponse.json({ success: true, message: 'Question paper removed successfully' })

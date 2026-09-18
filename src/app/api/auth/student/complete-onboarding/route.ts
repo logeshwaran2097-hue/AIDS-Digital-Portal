@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { verifyOTP, parseSafeDateOfBirth } from '@/lib/utils'
 import bcrypt from 'bcryptjs'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateBody, studentCompleteOnboardingSchema } from '@/lib/validations/apiValidation'
 
 import { revalidatePath } from 'next/cache'
 
@@ -21,7 +22,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Unauthorized. Please login first.' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(studentCompleteOnboardingSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification, residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint, profileImage } = body
 
     const isCustomEmail = email && !email.endsWith('@student.vsb.edu.in') && email.includes('@')

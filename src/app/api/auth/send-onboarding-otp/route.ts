@@ -2,17 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateOTP, hashOTP } from '@/lib/utils'
 import { prisma } from '@/lib/prisma'
 import { sendStudentVerificationEmail, generateOTPChallenge, checkEmailAvailability } from '@/lib/auth'
-import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { checkRateLimit, rateLimitResponse, checkApiUsageQuota, quotaExceededResponse } from '@/lib/rateLimit'
+import { validateBody, sendOnboardingOtpSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 3, 120, 'otp:send-onboarding')
-  if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
-  }
-
   try {
+    const rawJson = await request.json()
+    const parsed = validateBody(sendOnboardingOtpSchema, rawJson)
+    if (!parsed.success) return parsed.response
+
     const {
       email,
       name,
@@ -30,16 +30,21 @@ export async function POST(request: NextRequest) {
       advisorSem,
       advisorSec,
       advisorBatch,
-    } = await request.json()
-
-    if (!email || !email.includes('@')) {
-      return NextResponse.json(
-        { success: false, message: 'Please provide a valid email address.' },
-        { status: 400 }
-      )
-    }
+    } = parsed.data
 
     const trimmedEmail = email.trim().toLowerCase()
+
+    // Dual Rate Limit: 3 requests per 10 min per IP and per email
+    const rateLimit = await checkRateLimit(request, 3, 600, 'otp:send-onboarding', trimmedEmail)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
+    // Check monthly email spending quota
+    const quota = await checkApiUsageQuota('email', 1)
+    if (!quota.allowed) {
+      return quotaExceededResponse('email', quota.hardLimit, quota.period)
+    }
 
     // Validate email uniqueness across active accounts before generating/sending OTP
     const availability = await checkEmailAvailability(trimmedEmail, {

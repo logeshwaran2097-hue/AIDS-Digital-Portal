@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import { categorizeNotification } from '@/lib/notificationClassifier'
 import { dispatchWebPushNotification } from '@/lib/pushNotifier'
+import { validateBody, createNotificationSchema, patchNotificationSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -12,12 +13,12 @@ export const fetchCache = 'force-no-store'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const role = searchParams.get('role')
     const since = searchParams.get('since')
     const limit = parseInt(searchParams.get('limit') || '30', 10)
 
     const session = await getSession()
-    const userRole = role || session?.role || 'student'
+    // Role must strictly come from the verified session, never client query param
+    const userRole = session?.role || 'student'
     const userId = session?.userId
     const userReg = session?.registerNumber || (session?.email ? session.email.split('@')[0].toUpperCase() : '')
     const userEmail = session?.email || ''
@@ -214,15 +215,20 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { title, message, target = 'all', targetIds = [], createdByName, link } = body
-
-    if (!title || !message) {
-      return NextResponse.json({ success: false, message: 'Title and message are required' }, { status: 400 })
+    const session = await getSession()
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, message: 'Forbidden. Faculty, HOD, or Admin role required.' }, { status: 403 })
     }
 
-    const session = await getSession()
-    const issuerName = createdByName || session?.name || 'Administrator'
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(createNotificationSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
+    const { title, message, target = 'all', targetIds = [], createdByName, link } = body
+
+    const issuerName = session.name || createdByName || 'Administrator'
 
     const notification = await prisma.notification.create({
       data: {
@@ -282,7 +288,12 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json().catch(() => ({}))
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(patchNotificationSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const { notificationId, markAllRead } = body
 
     if (markAllRead) {
@@ -354,6 +365,11 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json({ success: false, message: 'Forbidden. Admin or HOD role required.' }, { status: 403 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     const clearAll = searchParams.get('clearAll')

@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { parseSafeDateOfBirth } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
+import { validateBody, adminCreateStudentSchema, studentSelfUpdateSchema, adminUpdateStudentSchema } from '@/lib/validations/apiValidation'
+import { invalidateDbCache } from '@/lib/dbCache'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -11,6 +13,14 @@ export const fetchCache = 'force-no-store'
 
 export async function GET(request: Request) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Please log in to view student records.' },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const year = searchParams.get('year')
     const semester = searchParams.get('semester')
@@ -240,7 +250,10 @@ export async function POST(request: Request) {
       )
     }
 
-    data = await request.json()
+    const rawJson = await request.json()
+    const parsed = validateBody(adminCreateStudentSchema, rawJson)
+    if (!parsed.success) return parsed.response
+    data = parsed.data
     const {
       registerNumber,
       name,
@@ -486,7 +499,35 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   let data: any = {}
   try {
-    data = await request.json()
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Authentication required.' },
+        { status: 401 }
+      )
+    }
+
+    const rawJson = await request.json()
+    const isAdmin = session.role === 'admin' || session.role === 'super_admin'
+    const isStudent = session.role === 'student'
+
+    if (!isAdmin && !isStudent) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden. You do not have permission to modify student records.' },
+        { status: 403 }
+      )
+    }
+
+    if (isStudent) {
+      const parsed = validateBody(studentSelfUpdateSchema, rawJson)
+      if (!parsed.success) return parsed.response
+      data = parsed.data
+    } else {
+      const parsed = validateBody(adminUpdateStudentSchema, rawJson)
+      if (!parsed.success) return parsed.response
+      data = parsed.data
+    }
+
     const {
       id,
       userId: passedUserId,
@@ -532,6 +573,25 @@ export async function PUT(request: Request) {
 
     if (!student && id && id.length > 3) {
       student = await prisma.student.findUnique({ where: { registerNumber: String(id).trim().toUpperCase() } }).catch(() => null)
+    }
+
+    const isOwner = isStudent && (
+      (student && (student.userId === session.userId || student.registerNumber === session.registerNumber)) ||
+      (!student && session.registerNumber && (!regUpper || session.registerNumber === regUpper))
+    )
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden. You cannot modify another student\'s records.' },
+        { status: 403 }
+      )
+    }
+
+    if (!student && !isAdmin) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Only administrators can register new student records.' },
+        { status: 403 }
+      )
     }
 
     let passwordHash: string | undefined = undefined
@@ -627,6 +687,13 @@ export async function PUT(request: Request) {
 
       revalidatePath('/admin/students')
       revalidatePath('/admin/dashboard')
+      revalidatePath('/dashboard/profile')
+      revalidatePath('/dashboard')
+
+      invalidateDbCache('auth')
+      if (student?.userId) {
+        invalidateDbCache(`user_${student.userId}`)
+      }
 
       return NextResponse.json({
         success: true,

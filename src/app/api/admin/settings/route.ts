@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import bcrypt from 'bcryptjs'
+import { validateBody, adminSettingsSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,11 +41,11 @@ const DEFAULT_SETTINGS = {
   notifyNewStudent: true,
   // SMS & WhatsApp Gateway Configuration — defaults: Fast2SMS WhatsApp & SMS
   smsProvider: 'fast2sms', // 'twilio' | 'fast2sms' | 'custom'
-  smsApiKey: 'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4',
+  smsApiKey: process.env.FAST2SMS_API_KEY || '',
   smsSenderId: 'TXTIND',
   whatsappEnabled: true,
   whatsappProvider: 'fast2sms', // 'fast2sms' | 'meta' | 'twilio'
-  fast2smsWhatsappApiKey: 'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4',
+  fast2smsWhatsappApiKey: process.env.FAST2SMS_WHATSAPP_API_KEY || process.env.FAST2SMS_API_KEY || '',
   fast2smsPhoneNumberId: '1325593377300934',
   fast2smsMessageId: '31679',
   fast2smsTemplateName: 'vsb_attendance_alert',
@@ -118,7 +119,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(adminSettingsSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
 
     // Check if it's a password change request
     if (body.action === 'CHANGE_PASSWORD') {

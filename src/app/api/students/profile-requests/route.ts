@@ -1,18 +1,34 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { parseSafeDateOfBirth } from '@/lib/utils'
+import { getSession } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { validateBody, profileChangeRequestSchema, profileChangeReviewSchema } from '@/lib/validations/apiValidation'
+
 
 export const dynamic = 'force-dynamic'
 
 // GET: Fetch profile change requests
 export async function GET(request: Request) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const registerNumber = searchParams.get('registerNumber')
     const status = searchParams.get('status')
 
     const where: any = {}
-    if (registerNumber) where.registerNumber = registerNumber.trim().toUpperCase()
+
+    // Students can ONLY view their own profile change requests
+    if (session.role === 'student') {
+      where.registerNumber = (session.registerNumber || '').toUpperCase()
+    } else if (registerNumber) {
+      where.registerNumber = registerNumber.trim().toUpperCase()
+    }
+
     if (status && status !== 'ALL') where.status = status
 
     const requests = await (prisma as any).profileChangeRequest.findMany({
@@ -57,26 +73,57 @@ export async function GET(request: Request) {
 // POST: Student submits a profile change request
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { registerNumber, studentName, requestedData, currentData, reason } = body
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!registerNumber || !requestedData) {
+    // Rate Limit: 10 profile change requests per hour per user/IP
+    const rateLimit = await checkRateLimit(request, 10, 3600, 'profile-requests:submit', session.userId)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(profileChangeRequestSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
+    const { studentName, requestedData, currentData, reason } = body
+
+    // Register Number must come from the verified session for students, never body
+    let regUpper = ''
+    if (session.role === 'student') {
+      regUpper = (session.registerNumber || '').trim().toUpperCase()
+    } else {
+      regUpper = (body.registerNumber || session.registerNumber || '').trim().toUpperCase()
+    }
+
+    if (!regUpper || !requestedData) {
       return NextResponse.json(
         { success: false, message: 'Register Number and Requested Changes are required' },
         { status: 400 }
       )
     }
 
-    const regUpper = registerNumber.trim().toUpperCase()
-
     // Find student in database if available
-    const student = await prisma.student.findUnique({ where: { registerNumber: regUpper } }).catch(() => null)
+    const student = await prisma.student.findFirst({
+      where: {
+        OR: [
+          { registerNumber: regUpper },
+          { userId: session.userId },
+        ],
+      },
+    }).catch(() => null)
+
+    const finalStudentName = studentName || session.name || 'Student'
 
     const newRequest = await (prisma as any).profileChangeRequest.create({
       data: {
         studentId: student?.id || null,
         registerNumber: regUpper,
-        studentName: studentName || 'Student',
+        studentName: finalStudentName,
         requestedData: typeof requestedData === 'string' ? requestedData : JSON.stringify(requestedData),
         currentData: typeof currentData === 'string' ? currentData : JSON.stringify(currentData || {}),
         reason: reason || 'Student requested profile update',
@@ -87,10 +134,10 @@ export async function POST(request: Request) {
     // Also push an institutional notification for admin
     await prisma.notification.create({
       data: {
-        title: `📝 Profile Edit Request: ${studentName} (${regUpper})`,
+        title: `📝 Profile Edit Request: ${finalStudentName} (${regUpper})`,
         message: `Student submitted details for official approval. Reason: ${reason || 'Profile update requested'}`,
         target: 'admin',
-        createdByName: studentName || 'Student',
+        createdByName: finalStudentName,
         status: 'published',
       },
     }).catch(() => {})
@@ -112,12 +159,21 @@ export async function POST(request: Request) {
 // PATCH: Admin approves or rejects a request
 export async function PATCH(request: Request) {
   try {
-    const body = await request.json()
-    const { id, action, adminNotes, reviewedBy = 'Department Administrator' } = body
-
-    if (!id || !['approve', 'reject'].includes(action)) {
-      return NextResponse.json({ success: false, message: 'Invalid request or action' }, { status: 400 })
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Admin or HOD authority required.' },
+        { status: 403 }
+      )
     }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(profileChangeReviewSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
+    const { id, action, adminNotes, reviewedBy = session.name || 'Department Administrator' } = body
 
     const existing = await (prisma as any).profileChangeRequest.findUnique({ where: { id } })
     if (!existing) {
@@ -212,11 +268,31 @@ export async function PATCH(request: Request) {
 // DELETE: Cancel or remove a request
 export async function DELETE(request: Request) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Missing request ID' }, { status: 400 })
+    }
+
+    const existing = await (prisma as any).profileChangeRequest.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'Request not found' }, { status: 404 })
+    }
+
+    const isAdmin = session.role === 'admin' || session.role === 'super_admin' || session.role === 'hod'
+    const isOwner = session.role === 'student' && existing.registerNumber === session.registerNumber
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden. You do not have permission to delete this request.' },
+        { status: 403 }
+      )
     }
 
     await (prisma as any).profileChangeRequest.delete({ where: { id } })

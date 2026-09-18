@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { extractTextFromFile } from '@/lib/syllabusParser'
 import { parseQuestionBankText, ParsedQuestion } from '@/lib/questionBankParser'
+import { validateFileBuffer } from '@/lib/fileValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,8 +53,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSession()
-    if (!session) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    if (!session || (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json({ success: false, message: 'Unauthorized. Faculty, HOD, or Admin role required.' }, { status: 403 })
     }
 
     const contentType = request.headers.get('content-type') || ''
@@ -81,7 +82,17 @@ export async function POST(request: Request) {
       }
 
       const fileBuffer = Buffer.from(await file.arrayBuffer())
-      const rawText = await extractTextFromFile(fileBuffer, file.type, file.name)
+      const val = validateFileBuffer(fileBuffer, file.name, {
+        allowedMimeTypes: [
+          'application/pdf',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ],
+      })
+      if (!val.valid) {
+        return NextResponse.json({ success: false, message: val.error }, { status: 400 })
+      }
+
+      const rawText = await extractTextFromFile(fileBuffer, val.detectedMime || file.type, file.name)
       const parsedQuestions = parseQuestionBankText(rawText)
 
       if (parsedQuestions.length === 0) {
@@ -325,12 +336,25 @@ export async function DELETE(request: Request) {
     if (!session) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
+    if (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin') {
+      return NextResponse.json({ success: false, message: 'Forbidden. Faculty, HOD, or Admin role required.' }, { status: 403 })
+    }
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Question ID is required' }, { status: 400 })
+    }
+
+    const existing = await prisma.importantQuestion.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'Question not found' }, { status: 404 })
+    }
+
+    const isAdmin = session.role === 'admin' || session.role === 'super_admin' || session.role === 'hod'
+    if (!isAdmin && existing.uploadedById && existing.uploadedById !== session.userId) {
+      return NextResponse.json({ success: false, message: 'Forbidden. You do not have permission to delete this question.' }, { status: 403 })
     }
 
     await prisma.importantQuestion.delete({

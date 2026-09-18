@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getSession } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -10,6 +11,10 @@ const CACHE_TTL_MS = 15000 // 15 seconds fast in-memory cache
 
 export async function GET() {
   try {
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod')) {
+      return NextResponse.json({ success: false, message: 'Forbidden. Admin or HOD role required.' }, { status: 403 })
+    }
     const now = Date.now()
     if (cachedStats && now - cachedStats.timestamp < CACHE_TTL_MS) {
       return NextResponse.json(

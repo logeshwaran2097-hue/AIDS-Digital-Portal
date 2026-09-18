@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { validateBody, adminAcademicsSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,16 +24,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const session = await requireRoleSession(['admin', 'hod'])
-    const body = await request.json()
-
-    const { code, name, credits = 4, category = 'Professional Core (PC)', description = '', semester = 1 } = body
-
-    if (!code || !name) {
-      return NextResponse.json(
-        { success: false, message: 'Course Code and Course Name are required' },
-        { status: 400 }
-      )
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(adminAcademicsSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
     }
+    const body = validation.data
+    const { code, name, credits = 4, category = 'Professional Core (PC)', description = '', semester = 1 } = body
 
     const currentYear = await prisma.academicYear.findFirst({
       where: { isCurrent: true },

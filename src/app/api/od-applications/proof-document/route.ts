@@ -20,16 +20,18 @@ function cleanText(str: string): string {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const registerNumber = searchParams.get('registerNumber') || '922525243007'
-  const customType = searchParams.get('type') || 'Personal / Emergency Leave'
-  const customReason = searchParams.get('reason') || 'Personal / Family Requisition'
-  const fromDate = searchParams.get('from') || '2026-09-24'
-  const toDate = searchParams.get('to') || '2026-09-27'
+  const registerNumber = (searchParams.get('registerNumber') || '922525243007').replace(/[^a-zA-Z0-9]/g, '')
+  const customType = esc(searchParams.get('type') || 'Personal / Emergency Leave')
+  const customReason = esc(searchParams.get('reason') || 'Personal / Family Requisition')
+  const rawFrom = searchParams.get('from') || '2026-09-24'
+  const rawTo = searchParams.get('to') || '2026-09-27'
+  const fromDate = esc(rawFrom.replace(/[^0-9-]/g, '').slice(0, 10))
+  const toDate = esc(rawTo.replace(/[^0-9-]/g, '').slice(0, 10))
 
-  const nameParam = searchParams.get('name')
-  const parentPhoneParam = searchParams.get('parentPhone')
-  const proofFileNameParam = searchParams.get('proofFileName')
-  const totalLeavesTakenParam = searchParams.get('totalLeavesTaken')
+  const nameParam = searchParams.get('name') ? esc(searchParams.get('name')) : null
+  const parentPhoneParam = searchParams.get('parentPhone') ? esc(searchParams.get('parentPhone')) : null
+  const proofFileNameParam = searchParams.get('proofFileName') ? esc(searchParams.get('proofFileName')) : null
+  const totalLeavesTakenParam = searchParams.get('totalLeavesTaken') ? esc(searchParams.get('totalLeavesTaken')) : null
 
   // Fetch student profile from database
   const student = await prisma.student.findFirst({
@@ -108,7 +110,8 @@ export async function GET(request: Request) {
     : (student?.busNo ? `College Bus ${student.busNo}${student.boardingPoint ? ` (${student.boardingPoint})` : ''}` : 'College Bus 44 (olappalayam)')
 
   // Event Details
-  const eventParam = searchParams.get('event') || searchParams.get('eventName')
+  const rawEventParam = searchParams.get('event') || searchParams.get('eventName')
+  const eventParam = rawEventParam ? esc(rawEventParam) : null
   let eventName = eventParam || 'Personal Leave & Parent Consent Requisition'
   let eventNature = 'Formal Personal / Emergency Leave'
   let eventStages = 'Requisition Submitted → Parent Telephonic Consent → Advisor Review'
@@ -1078,7 +1081,6 @@ export async function GET(request: Request) {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=3600',
-      'Access-Control-Allow-Origin': '*',
     },
   })
 }

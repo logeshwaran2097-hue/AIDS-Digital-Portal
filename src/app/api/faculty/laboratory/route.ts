@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { validateBody, createLabActivitySchema, updateLabActivitySchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -187,7 +188,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Faculty record not found' }, { status: 404 })
     }
 
-    const body = await request.json()
+    const rawJson = await request.json()
+    const parsed = validateBody(createLabActivitySchema, rawJson)
+    if (!parsed.success) return parsed.response
+    const body = parsed.data
     const {
       labName,
       labCode,
@@ -208,10 +212,6 @@ export async function POST(request: Request) {
       attendanceCount,
       remarks,
     } = body
-
-    if (!date || !experimentName || !topicsCovered) {
-      return NextResponse.json({ success: false, message: 'Date, Experiment/Activity Name, and Topics Covered are required' }, { status: 400 })
-    }
 
     const newActivity = await prisma.labDayActivity.create({
       data: {
@@ -252,11 +252,29 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const rawJson = await request.json()
+    const parsed = validateBody(updateLabActivitySchema, rawJson)
+    if (!parsed.success) return parsed.response
+    const body = parsed.data
     const { id, ...updates } = body
 
-    if (!id) {
-      return NextResponse.json({ success: false, message: 'Activity ID is required' }, { status: 400 })
+    const existing = await prisma.labDayActivity.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'Activity not found' }, { status: 404 })
+    }
+
+    if (session.role !== 'admin' && session.role !== 'super_admin') {
+      const faculty = await prisma.faculty.findFirst({
+        where: {
+          OR: [
+            { userId: session.userId },
+            ...(session.facultyId ? [{ facultyId: session.facultyId }] : []),
+          ],
+        },
+      })
+      if (!faculty || existing.facultyId !== faculty.id) {
+        return NextResponse.json({ success: false, message: 'Forbidden. You do not own this lab activity.' }, { status: 403 })
+      }
     }
 
     const updated = await prisma.labDayActivity.update({
@@ -298,6 +316,25 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'ID is required' }, { status: 400 })
+    }
+
+    const existing = await prisma.labDayActivity.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'Activity not found' }, { status: 404 })
+    }
+
+    if (session.role !== 'admin' && session.role !== 'super_admin') {
+      const faculty = await prisma.faculty.findFirst({
+        where: {
+          OR: [
+            { userId: session.userId },
+            ...(session.facultyId ? [{ facultyId: session.facultyId }] : []),
+          ],
+        },
+      })
+      if (!faculty || existing.facultyId !== faculty.id) {
+        return NextResponse.json({ success: false, message: 'Forbidden. You do not own this lab activity.' }, { status: 403 })
+      }
     }
 
     await prisma.labDayActivity.delete({

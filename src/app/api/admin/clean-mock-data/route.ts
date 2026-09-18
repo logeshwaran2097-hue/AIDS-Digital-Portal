@@ -1,11 +1,39 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { clearAllDbCache } from '@/lib/dbCache'
+import { getSession } from '@/lib/auth'
+import { logSecurityEvent, safeErrorResponse } from '@/lib/securityLogger'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
+    // Strictly disable mock data wipe in production unless explicitly authorized via environment variable
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_MOCK_DATA_CLEAN !== 'true') {
+      await logSecurityEvent({
+        type: 'SUSPICIOUS_ACTIVITY',
+        action: 'ATTEMPTED_MOCK_DATA_CLEAN_IN_PRODUCTION',
+        module: 'SYSTEM',
+        status: 'warning',
+        details: 'Attempted to invoke clean-mock-data in a production environment.',
+      })
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Database wipe operations are strictly disabled in production environments.',
+        },
+        { status: 403 }
+      )
+    }
+
+    const session = await getSession()
+    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Admin privileges required.' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json().catch(() => ({}))
     const { target = 'all' } = body
 
@@ -114,14 +142,9 @@ export async function POST(request: Request) {
       cleared: clearedInfo,
     })
   } catch (error) {
-    console.error('Error clearing mock data:', error)
-    return NextResponse.json(
-      { success: false, message: 'Failed to clear mock data', error: String(error) },
-      { status: 500 }
-    )
+    return safeErrorResponse(error, 'Failed to clear mock data', 500, {
+      path: '/api/admin/clean-mock-data',
+      method: 'POST',
+    })
   }
-}
-
-export async function GET() {
-  return POST(new Request('http://localhost', { method: 'POST', body: JSON.stringify({ target: 'all' }) }))
 }

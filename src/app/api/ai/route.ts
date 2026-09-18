@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { prisma } from '@/lib/prisma'
+import { getSession } from '@/lib/auth'
+import { checkRateLimit, rateLimitResponse, checkApiUsageQuota, quotaExceededResponse } from '@/lib/rateLimit'
+import { validateBody, aiQuerySchema } from '@/lib/validations/apiValidation'
+
 
 // Universal Real-Time Database Query Engine (Strictly Database Grounded)
 
 // Universal Real-Time Database Query Engine
-async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string; suggestions: string[] }> {
+async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ answer: string; suggestions: string[] }> {
   const rawQ = query.trim()
   const q = rawQ.toLowerCase()
 
@@ -20,6 +24,16 @@ async function getDynamicKnowledgeBase(query: string): Promise<{ answer: string;
       /\d{4,}/.test(q) || // contains number like 922522AD001
       q.includes('roster')
     ) {
+      const isStaff = session && (session.role === 'faculty' || session.role === 'hod' || session.role === 'admin' || session.role === 'super_admin')
+      if (!isStaff) {
+        const userReg = session?.registerNumber?.toLowerCase()
+        if (!userReg || !q.includes(userReg)) {
+          return {
+            answer: `🔒 **Student Directory Privacy Notice:**\n\nStudent directory listings and contact information are restricted to authorized Faculty and Administrators to protect student privacy.\n\n*You can view your personal academic and attendance records directly on your dashboard.*`,
+            suggestions: ['Faculty directorate?', 'HOD leadership?', 'Academic calendar?'],
+          }
+        }
+      }
       // Find matching students in live SQLite DB
       const cleanKeywords = q.replace(/student|who is|details of|about|find|search|is|the|tell me/gi, '').trim()
 
@@ -464,19 +478,35 @@ const chatHistories = new Map<string, Array<{ role: string; parts: Array<{ text:
 
 export async function POST(request: Request) {
   try {
-    const { message, sessionId } = await request.json()
-    const query = (message || '').trim()
+    const session = await getSession()
+    const userIdentifier = session?.userId || session?.email || ''
 
-    if (!query) {
-      return NextResponse.json({ success: false, answer: 'Please type a message.' })
+    // Dual Rate Limit: 15 queries per minute per IP, 60 queries per hour per user
+    const rateLimit = await checkRateLimit(request, 15, 60, 'ai:query', userIdentifier)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
     }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(aiQuerySchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const { message, sessionId } = validation.data
+    const query = message.trim()
 
     const apiKey = process.env.GEMINI_API_KEY
 
     // If no API key or local testing, use live dynamic database knowledge
     if (!apiKey || apiKey === 'your-gemini-api-key') {
-      const result = await getDynamicKnowledgeBase(query)
+      const result = await getDynamicKnowledgeBase(query, session)
       return NextResponse.json({ success: true, ...result, source: 'database-live' })
+    }
+
+    // Check hard monthly spending budget/quota before calling Google Gemini
+    const quota = await checkApiUsageQuota('gemini_ai', 1)
+    if (!quota.allowed) {
+      return quotaExceededResponse('gemini_ai', quota.hardLimit, quota.period)
     }
 
     try {
@@ -489,7 +519,7 @@ export async function POST(request: Request) {
       }
       const history = chatHistories.get(sid)!
 
-      const dbKnowledge = await getDynamicKnowledgeBase(query)
+      const dbKnowledge = await getDynamicKnowledgeBase(query, session)
 
       const chat = model.startChat({
         history,
@@ -525,7 +555,7 @@ Please respond clearly and accurately using the live context provided.`
       })
     } catch (aiError: any) {
       console.error('Gemini API error:', aiError?.message || aiError)
-      const result = await getDynamicKnowledgeBase(query)
+      const result = await getDynamicKnowledgeBase(query, session)
       return NextResponse.json({ success: true, ...result, source: 'database-live' })
     }
   } catch (error) {
@@ -539,11 +569,18 @@ Please respond clearly and accurately using the live context provided.`
 }
 
 export async function GET(request: Request) {
+  // Query Rate Limit: 30 searches per minute per IP
+  const rateLimit = await checkRateLimit(request, 30, 60, 'ai:search')
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit)
+  }
+
   try {
+    const session = await getSession()
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q') || searchParams.get('query') || ''
 
-    const result = await getDynamicKnowledgeBase(query)
+    const result = await getDynamicKnowledgeBase(query, session)
     return NextResponse.json({
       success: true,
       query,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
+import { validateBody, pushSubscriptionSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,20 +19,22 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { endpoint, keys, role, regNo } = body
-
-    if (!endpoint || !keys?.p256dh || !keys?.auth) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid push subscription payload' },
-        { status: 400 }
-      )
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const session = await getSession().catch(() => null)
-    const userRole = role || session?.role || 'student'
-    const userRegNo = (regNo || session?.registerNumber || '').toUpperCase()
-    const userId = session?.userId || null
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(pushSubscriptionSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
+    const { endpoint, keys } = body
+
+    const userRole = session.role || 'student'
+    const userRegNo = (session.registerNumber || '').toUpperCase()
+    const userId = session.userId
     const userAgent = request.headers.get('user-agent') || null
 
     const subscription = await (prisma as any).pushSubscription.upsert({

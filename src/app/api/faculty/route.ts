@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import { parseSafeDateOfBirth, formatNameWithDegree } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
+import { validateBody, createFacultySchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -89,7 +90,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const data = await request.json()
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(createFacultySchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const data = validation.data
     const {
       facultyId,
       name,

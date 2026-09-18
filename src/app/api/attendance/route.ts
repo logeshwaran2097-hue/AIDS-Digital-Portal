@@ -2,11 +2,24 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
+import { checkRateLimit, rateLimitResponse, checkApiUsageQuota } from '@/lib/rateLimit'
+import { validateBody, saveAttendanceSchema } from '@/lib/validations/apiValidation'
+
 
 // GET: Fetch students for a given year/section or all reports
 export async function GET(request: Request) {
   try {
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
+    const isStaff = session.role === 'faculty' || session.role === 'hod' || session.role === 'admin' || session.role === 'super_admin'
+
+    if (!isStaff && (searchParams.get('all') === 'true' || searchParams.get('report') === 'true')) {
+      return NextResponse.json({ success: false, message: 'Forbidden. Students cannot access global attendance reports.' }, { status: 403 })
+    }
 
     // Global All-Years All-Sections Report Mode (Cached for ultra-fast instant load)
     if (searchParams.get('all') === 'true' || searchParams.get('report') === 'true') {
@@ -246,6 +259,23 @@ export async function GET(request: Request) {
       }
     } catch {}
 
+    if (!isStaff) {
+      const studentReg = (session.registerNumber || '').toUpperCase()
+      const studentData = studentsWithAttendance.filter(s => s.registerNumber?.toUpperCase() === studentReg)
+      return NextResponse.json({
+        success: true,
+        students: studentData,
+        existingSession: null,
+        unlockRequest: null,
+        summary: {
+          total: studentData.length,
+          present: studentData.filter((s) => s.status === 'P').length,
+          absent: studentData.filter((s) => s.status === 'A').length,
+          od: studentData.filter((s) => s.status === 'OD' || s.status === 'ML').length,
+        },
+      })
+    }
+
     return NextResponse.json({
       success: true,
       students: studentsWithAttendance,
@@ -287,8 +317,22 @@ export async function POST(request: Request) {
     if (!session) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
+    if (session.role !== 'faculty' && session.role !== 'hod' && session.role !== 'admin' && session.role !== 'super_admin') {
+      return NextResponse.json({ success: false, message: 'Forbidden. Faculty, HOD, or Admin role required.' }, { status: 403 })
+    }
 
-    const body = await request.json()
+    // Rate Limit: 20 attendance submissions per 10 minutes per faculty
+    const rateLimit = await checkRateLimit(request, 20, 600, 'attendance:save', session.userId)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(saveAttendanceSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const {
       sessionType,
       subjectCode,
@@ -608,6 +652,10 @@ export async function POST(request: Request) {
             })
 
           if (targets.length > 0) {
+            // Check monthly SMS spending quota before triggering carrier dispatches
+            const quota = await checkApiUsageQuota('sms', targets.length)
+            const isQuotaBlocked = !quota.allowed
+
             // Lazy import to avoid circular init issues
             const { getGatewayConfig, buildBilingualStatusMessage, sendSms, sendWhatsapp } = await import('@/lib/gateway')
             const baseCfg = await getGatewayConfig()
@@ -629,28 +677,33 @@ export async function POST(request: Request) {
               const results: any = { registerNumber: t.registerNumber, status: st, phone, sms: null, whatsapp: null }
               const promises: Promise<any>[] = []
 
-              if (notifySms) promises.push(sendSms(phone, fullBilingualBody, baseCfg).then((r) => (results.sms = r)))
-              else results.sms = { success: false, skipped: true, reason: 'notifyAbsentViaSms disabled' }
-
-              if (notifyWa) {
-                promises.push(
-                  sendWhatsapp(
-                    phone,
-                    {
-                      studentName: t.studentName,
-                      date,
-                      status: st,
-                      remarks: t.remarks,
-                      fullMessage: fullBilingualBody,
-                    },
-                    baseCfg
-                  ).then((r) => (results.whatsapp = r))
-                )
+              if (isQuotaBlocked) {
+                results.sms = { success: false, skipped: true, reason: 'Monthly SMS quota limit reached' }
+                results.whatsapp = { success: false, skipped: true, reason: 'Monthly SMS/WhatsApp quota limit reached' }
               } else {
-                results.whatsapp = { success: false, skipped: true, reason: 'notifyAbsentViaWhatsapp disabled' }
-              }
+                if (notifySms) promises.push(sendSms(phone, fullBilingualBody, baseCfg).then((r) => (results.sms = r)))
+                else results.sms = { success: false, skipped: true, reason: 'notifyAbsentViaSms disabled' }
 
-              await Promise.allSettled(promises)
+                if (notifyWa) {
+                  promises.push(
+                    sendWhatsapp(
+                      phone,
+                      {
+                        studentName: t.studentName,
+                        date,
+                        status: st,
+                        remarks: t.remarks,
+                        fullMessage: fullBilingualBody,
+                      },
+                      baseCfg
+                    ).then((r) => (results.whatsapp = r))
+                  )
+                } else {
+                  results.whatsapp = { success: false, skipped: true, reason: 'notifyAbsentViaWhatsapp disabled' }
+                }
+
+                await Promise.allSettled(promises)
+              }
 
               const anySuccess = results.sms?.success || results.whatsapp?.success
               const actionPrefix = st === 'OD' ? 'OD_ALERT' : st === 'ML' ? 'ML_ALERT' : st === 'L' ? 'LATE_ALERT' : 'ABSENT_ALERT'

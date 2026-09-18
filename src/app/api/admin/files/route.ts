@@ -1,22 +1,39 @@
 import { NextResponse } from 'next/server'
 import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
+import { z } from 'zod'
 
 export const dynamic = 'force-dynamic'
+
+const adminFileUploadSchema = z
+  .object({
+    originalName: z.string().min(1).max(200),
+    module: z.enum(['resources', 'question-papers', 'syllabus', 'vault']).optional(),
+    fileType: z.enum(['pdf', 'docx', 'png', 'jpg', 'webp']).optional(),
+    uploadedByName: z.string().max(100).optional(),
+  })
+  .strict()
 
 export async function POST(request: Request) {
   try {
     const session = await requireRoleSession(['admin'])
-    const body = await request.json()
 
-    const { originalName, module, fileType, uploadedByName } = body
+    // Rate Limit: 10 uploads per 10 minutes per admin/IP
+    const rateLimit = await checkRateLimit(request, 10, 600, 'files:upload', session.userId)
+    if (!rateLimit.allowed) {
+      return rateLimitResponse(rateLimit)
+    }
 
-    if (!originalName) {
+    const rawJson = await request.json()
+    const parsed = adminFileUploadSchema.safeParse(rawJson)
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, message: 'Document title is required' },
+        { success: false, message: parsed.error.errors[0]?.message || 'Invalid file upload metadata' },
         { status: 400 }
       )
     }
+    const { originalName, module, fileType, uploadedByName } = parsed.data
 
     const cleanTitle = originalName.replace(/[^a-zA-Z0-9]/g, '_')
     const fileName = `${cleanTitle.slice(0, 35)}_${Date.now()}.${fileType || 'pdf'}`

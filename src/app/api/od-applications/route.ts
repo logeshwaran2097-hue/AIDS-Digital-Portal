@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { dispatchWebPushNotification } from '@/lib/pushNotifier'
+import { validateBody, odApplicationReviewSchema, odApplicationPostSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +15,12 @@ export async function GET(request: Request) {
     const notificationId = searchParams.get('notificationId')
 
     const session = await getSession()
-    const targetRegNo = (registerNumber || (session?.role === 'student' ? session?.registerNumber : null))?.trim().toUpperCase()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized session' }, { status: 401 })
+    }
+
+    // Students are strictly bound to their own registerNumber; query params cannot override it
+    const targetRegNo = (session.role === 'student' ? session.registerNumber : (registerNumber || session.registerNumber))?.trim().toUpperCase()
 
     let whereClause: any = {}
 
@@ -466,12 +472,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { notificationId, registerNumber, action, remarks, studentName, eventName, dates } = body
-
-    if (!registerNumber || !action) {
-      return NextResponse.json({ success: false, message: 'Register number and action are required.' }, { status: 400 })
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(odApplicationReviewSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
     }
+    const body = validation.data
+    const { notificationId, registerNumber, action, remarks, studentName, eventName, dates } = body
 
     const regUpper = String(registerNumber).trim().toUpperCase()
     const reviewerName = session.name || (session.role === 'hod' ? 'Head of Department' : 'Class Advisor')
@@ -703,7 +710,38 @@ export async function PATCH(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getSession()
-    const body = await request.json()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized session' }, { status: 401 })
+    }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(odApplicationPostSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body: any = validation.data
+
+    // Allow Class Advisor to upload/attach proof slip directly from review modal
+    if (body.action === 'upload_advisor_proof') {
+      if (session.role !== 'faculty' && session.role !== 'admin' && session.role !== 'super_admin' && session.role !== 'hod') {
+        return NextResponse.json({ success: false, message: 'Forbidden. Faculty or Admin role required.' }, { status: 403 })
+      }
+      const { registerNumber, fileName, fileData, fileSize, fileType } = body
+      const regU = String(registerNumber).trim().toUpperCase()
+      const record = await (prisma as any).fileRecord.create({
+        data: {
+          fileName: fileName || `advisor_proof_${regU}_${Date.now()}.png`,
+          originalName: fileName || 'Advisor Verified Proof Slip',
+          fileType: fileType || 'image/png',
+          fileSize: fileSize || fileData.length || 1024,
+          fileUrl: fileData,
+          module: 'attendance_od_proof',
+          relatedId: regU,
+          uploadedByName: session?.name || 'Class Advisor',
+        },
+      })
+      return NextResponse.json({ success: true, file: record, message: 'Proof slip attached successfully!' })
+    }
 
     const {
       studentName,
@@ -734,15 +772,25 @@ export async function POST(request: Request) {
       abstractOrLetterName,
     } = body
 
-    if (!registerNumber || !fromDate || !toDate || !applicationType) {
+    if (session.role === 'student' && registerNumber && registerNumber.trim().toUpperCase() !== session.registerNumber?.trim().toUpperCase()) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden. Students can only submit OD applications for their own register number.' },
+        { status: 403 }
+      )
+    }
+
+    const regUpper = session.role === 'student'
+      ? (session.registerNumber || '').trim().toUpperCase()
+      : String(registerNumber || session.registerNumber || '').trim().toUpperCase()
+
+    if (!regUpper || !fromDate || !toDate || !applicationType) {
       return NextResponse.json(
         { success: false, message: 'Register Number, Application Type, and Date Range are required.' },
         { status: 400 }
       )
     }
 
-    const regUpper = String(registerNumber).trim().toUpperCase()
-    const name = studentName || session?.name || 'Student'
+    const name = session.role === 'student' ? (session.name || studentName || 'Student') : (studentName || session?.name || 'Student')
     const days = totalDays || 1
     const eventSummary = eventName || projectTitle || organizer || 'Academic Activity'
 
@@ -817,28 +865,6 @@ export async function POST(request: Request) {
         status: 'pending_advisor_approval',
       },
     }).catch(() => {})
-
-    // Allow Class Advisor to upload/attach proof slip directly from review modal
-    if (body.action === 'upload_advisor_proof') {
-      const { registerNumber, fileName, fileData, fileSize, fileType } = body
-      if (!registerNumber || !fileData) {
-        return NextResponse.json({ success: false, message: 'Register Number and file data required' }, { status: 400 })
-      }
-      const regU = String(registerNumber).trim().toUpperCase()
-      const record = await (prisma as any).fileRecord.create({
-        data: {
-          fileName: fileName || `advisor_proof_${regU}_${Date.now()}.png`,
-          originalName: fileName || 'Advisor Verified Proof Slip',
-          fileType: fileType || 'image/png',
-          fileSize: fileSize || fileData.length || 1024,
-          fileUrl: fileData,
-          module: 'attendance_od_proof',
-          relatedId: regU,
-          uploadedByName: session?.name || 'Class Advisor',
-        },
-      })
-      return NextResponse.json({ success: true, file: record, message: 'Proof slip attached successfully!' })
-    }
 
     // 6. SAVE FILE PROOF RECORDS (IF UPLOADED)
     if (brochureFile && brochureName) {

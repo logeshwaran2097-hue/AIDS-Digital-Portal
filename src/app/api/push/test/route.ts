@@ -2,15 +2,25 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { sendPushToSubscription, dispatchWebPushNotification } from '@/lib/pushNotifier'
+import { validateBody, pushTestSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => ({}))
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
+    }
+
+    const rawBody = await request.json().catch(() => ({}))
+    const validation = validateBody(pushTestSchema, rawBody)
+    if (!validation.success) {
+      return validation.response
+    }
+    const body = validation.data
     const { endpoint, delaySeconds = 0, title, message } = body
 
-    const session = await getSession().catch(() => null)
     const notifTitle = title || '🔔 Digital Portal of AI&DS'
     const notifMessage = message || 'Official Announcement: Real Mobile Push Notifications are now active on your device!'
 
