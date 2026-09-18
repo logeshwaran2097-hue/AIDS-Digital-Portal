@@ -3,12 +3,14 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.5'
+export const APP_VERSION = '2.7.6'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-18'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Critical Layout & Page Visibility Fix: Removed conflicting relative position from fixed sidebar so main dashboard and header render properly on screen.',
+  'Tailwind Dark Mode Activation: Explicitly enabled class-based dark mode across all theme variants.',
   'Default Midnight Luxury & Obsidian Theme: Portal boots seamlessly in deep royal midnight sapphire aesthetic, preventing bright canvas flashes.',
   'Harmonized Widescreen Layouts: Full responsive expansion across widescreen monitors, eliminating narrow column clipping in student attendance and profile registers.',
   'Ultra-Luxury Royal Sapphire Menus Across All Roles: Complete UI/UX redesign of portal navigation sidebars, drawer panels, headers, and mobile docks for Student, Faculty, HOD, and Administrator portals.',

@@ -1064,7 +1064,7 @@ export function PortalLayout({
       {/* Slide-out Navigation Drawer / Sidebar (Executive Obsidian Crystal Panel) */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#030816] via-[#061226] to-[#02050E] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-white/10 shadow-[10px_0_40px_rgba(0,0,0,0.65)] pb-safe select-none backdrop-blur-2xl relative overflow-hidden',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#030816] via-[#061226] to-[#02050E] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-white/10 shadow-[10px_0_40px_rgba(0,0,0,0.65)] pb-safe select-none backdrop-blur-2xl overflow-hidden',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
