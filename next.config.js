@@ -99,24 +99,6 @@ const nextConfig = {
         ],
       },
       {
-        source: '/_next/static/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/(college-emblem.png|favicon.ico|icon-192.png|icon-512.png|apple-touch-icon.png)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
-          },
-        ],
-      },
-      {
         source: '/manifest.json',
         headers: [
           {

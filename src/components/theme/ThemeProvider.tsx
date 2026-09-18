@@ -17,24 +17,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
-      // Keep Login page clean and pristine in its original brand theme
-      if (typeof window !== 'undefined' && (window.location.pathname === '/' || window.location.pathname.startsWith('/login'))) {
-        document.documentElement.classList.remove('midnight', 'dark')
-        return
-      }
-
-      // Reset any stale midnight experimental theme to default clean light
-      if (theme === 'midnight') {
-        theme = 'light'
-        try {
-          localStorage.setItem('vsb-portal-theme', 'light')
-          localStorage.removeItem('portal_theme')
-        } catch {}
-      }
-
       // Apply Theme Mode
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark')
+      if (theme === 'dark' || theme === 'midnight') {
+        document.documentElement.classList.add('midnight', 'dark')
       } else {
         document.documentElement.classList.remove('midnight', 'dark')
       }

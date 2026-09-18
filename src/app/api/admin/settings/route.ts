@@ -40,19 +40,17 @@ const DEFAULT_SETTINGS = {
   notifyNewStudent: true,
   // SMS & WhatsApp Gateway Configuration — defaults: Fast2SMS WhatsApp & SMS
   smsProvider: 'fast2sms', // 'twilio' | 'fast2sms' | 'custom'
-  smsApiKey: process.env.FAST2SMS_API_KEY || '',
+  smsApiKey: 'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4',
   smsSenderId: 'TXTIND',
   whatsappEnabled: true,
   whatsappProvider: 'fast2sms', // 'fast2sms' | 'meta' | 'twilio'
-  fast2smsWhatsappApiKey: process.env.FAST2SMS_WHATSAPP_API_KEY || process.env.FAST2SMS_API_KEY || '',
+  fast2smsWhatsappApiKey: 'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4',
   fast2smsPhoneNumberId: '1325593377300934',
   fast2smsMessageId: '31679',
   fast2smsTemplateName: 'vsb_attendance_alert',
   whatsappPhoneNumberId: '1325593377300934',
   whatsappBusinessAccountId: '2173997096493507',
   whatsappAccessToken: '',
-  twilioAccountSid: '',
-  twilioAuthToken: '',
   twilioWhatsappFrom: 'whatsapp:+14155238886',
   // Real-time absent alerts (parent notification)
   notifyAbsentViaSms: true,
@@ -80,12 +78,6 @@ const DEFAULT_SETTINGS = {
   },
 }
 
-function maskKey(key?: string) {
-  if (!key) return ''
-  if (key.length <= 8) return '••••••••'
-  return '••••••••' + key.slice(-4)
-}
-
 export async function GET() {
   try {
     const session = await getSession()
@@ -100,7 +92,7 @@ export async function GET() {
           where: { key: 'portal_config' },
         }).catch(() => null)
 
-        let cfg = { ...DEFAULT_SETTINGS }
+        let cfg = DEFAULT_SETTINGS
         if (saved?.value) {
           try {
             cfg = { ...DEFAULT_SETTINGS, ...JSON.parse(saved.value) }
@@ -112,16 +104,7 @@ export async function GET() {
       ['settings']
     )
 
-    // Mask sensitive keys before returning to client
-    const safeConfig = {
-      ...config,
-      smsApiKey: maskKey(config.smsApiKey),
-      fast2smsWhatsappApiKey: maskKey(config.fast2smsWhatsappApiKey),
-      whatsappAccessToken: maskKey(config.whatsappAccessToken),
-      twilioAuthToken: maskKey(config.twilioAuthToken),
-    }
-
-    return NextResponse.json({ success: true, settings: safeConfig })
+    return NextResponse.json({ success: true, settings: config })
   } catch (error) {
     console.error('Error fetching settings:', error)
     return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 })
@@ -173,39 +156,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'Password updated successfully!' })
     }
 
-    // Standard settings update: preserve masked secret keys if not modified by user
-    let payload = { ...body }
-    const saved = await prisma.systemSettings.findUnique({
-      where: { key: 'portal_config' },
-    }).catch(() => null)
-
-    if (saved?.value) {
-      try {
-        const existing = JSON.parse(saved.value)
-        if (payload.smsApiKey?.startsWith('••••')) {
-          payload.smsApiKey = existing.smsApiKey || ''
-        }
-        if (payload.fast2smsWhatsappApiKey?.startsWith('••••')) {
-          payload.fast2smsWhatsappApiKey = existing.fast2smsWhatsappApiKey || ''
-        }
-        if (payload.whatsappAccessToken?.startsWith('••••')) {
-          payload.whatsappAccessToken = existing.whatsappAccessToken || ''
-        }
-        if (payload.twilioAuthToken?.startsWith('••••')) {
-          payload.twilioAuthToken = existing.twilioAuthToken || ''
-        }
-      } catch {}
-    }
-
+    // Standard settings update
     await prisma.systemSettings.upsert({
       where: { key: 'portal_config' },
       update: {
-        value: JSON.stringify(payload),
+        value: typeof body === 'string' ? body : JSON.stringify(body),
         updatedAt: new Date(),
       },
       create: {
         key: 'portal_config',
-        value: JSON.stringify(payload),
+        value: typeof body === 'string' ? body : JSON.stringify(body),
         description: 'V.S.B. AI & DS Portal Global Configuration',
         isPublic: true,
       },
@@ -223,19 +183,10 @@ export async function POST(request: NextRequest) {
 
     invalidateCache('settings')
 
-    // Return sanitized settings to client
-    const safePayload = {
-      ...payload,
-      smsApiKey: maskKey(payload.smsApiKey),
-      fast2smsWhatsappApiKey: maskKey(payload.fast2smsWhatsappApiKey),
-      whatsappAccessToken: maskKey(payload.whatsappAccessToken),
-      twilioAuthToken: maskKey(payload.twilioAuthToken),
-    }
-
     return NextResponse.json({
       success: true,
       message: 'Portal settings saved and applied in real time!',
-      settings: safePayload,
+      settings: body,
     })
   } catch (error) {
     console.error('Error saving settings:', error)

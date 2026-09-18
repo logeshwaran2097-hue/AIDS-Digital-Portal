@@ -256,6 +256,7 @@ export async function POST(request: NextRequest) {
       message: `6-digit verification OTP has been sent directly to your email (${trimmedEmail})`,
       challenge,
       emailSent: emailResult?.success ?? true,
+      devOtp: process.env.NODE_ENV !== 'production' ? otp : undefined,
     })
 
     response.cookies.set('onboarding-challenge', challenge, {

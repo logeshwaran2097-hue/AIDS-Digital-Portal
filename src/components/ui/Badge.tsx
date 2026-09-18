@@ -20,14 +20,14 @@ const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       variantClass = getRoleColor(role)
     } else {
       const variants: Record<string, string> = {
-        default: 'bg-[#071A3D] text-white shadow-xs',
-        secondary: 'bg-[#1455D9] text-white shadow-xs',
-        success: 'bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs',
-        warning: 'bg-amber-50 text-amber-800 border border-amber-200 shadow-xs',
-        danger: 'bg-rose-50 text-rose-700 border border-rose-200 shadow-xs',
-        info: 'bg-blue-50 text-blue-700 border border-blue-200 shadow-xs',
-        gold: 'bg-amber-50 text-amber-900 border border-amber-300 shadow-xs',
-        cyan: 'bg-cyan-50 text-cyan-800 border border-cyan-200 shadow-xs',
+        default: 'bg-gradient-to-r from-[#071A3D] to-[#0A2248] text-white border border-white/10 shadow-xs',
+        secondary: 'bg-gradient-to-r from-[#1455D9] to-[#2563EB] text-white shadow-xs',
+        success: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-xs',
+        warning: 'bg-amber-50 text-amber-800 border border-amber-200/80 shadow-xs',
+        danger: 'bg-rose-50 text-rose-700 border border-rose-200/80 shadow-xs',
+        info: 'bg-blue-50 text-blue-700 border border-blue-200/80 shadow-xs',
+        gold: 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-900 border border-amber-300/80 shadow-xs',
+        cyan: 'bg-cyan-50 text-cyan-800 border border-cyan-200/80 shadow-xs',
       }
       variantClass = variants[variant] || variants.default
     }

@@ -65,13 +65,6 @@ export default function LoginPage() {
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Preserve original login page pristine aesthetic without dark mode interference
-      document.documentElement.classList.remove('midnight', 'dark')
-      try {
-        localStorage.setItem('vsb-portal-theme', 'light')
-        localStorage.removeItem('portal_theme')
-      } catch {}
-
       // Check for active existing session so mobile users never get logged out when switching apps
       const checkActiveSession = async () => {
         try {
@@ -279,13 +272,24 @@ export default function LoginPage() {
   const [correctionSubmitting, setCorrectionSubmitting] = React.useState(false)
   const [correctionSubmitted, setCorrectionSubmitted] = React.useState(false)
 
-  // Instant Responsive Stage Controller (Default 9 for instant interactive readiness)
-  const [animStage, setAnimStage] = React.useState(9)
+  // Deterministic 1-by-1 Staged Appearance Controller
+  const [animStage, setAnimStage] = React.useState(0)
   const router = useRouter()
 
   React.useEffect(() => {
-    // Ensure all stages are fully active with zero delay
-    setAnimStage(9)
+    // Progressive staged entrance timers
+    const timers = [
+      setTimeout(() => setAnimStage(1), 150),  // Stage 1: Accreditation Shield
+      setTimeout(() => setAnimStage(2), 450),  // Stage 2: Picture & Celestial Emblem
+      setTimeout(() => setAnimStage(3), 750),  // Stage 3: College Name
+      setTimeout(() => setAnimStage(4), 1000), // Stage 4: Autonomous Karur Tag
+      setTimeout(() => setAnimStage(5), 1200), // Stage 5: Golden Light Beam
+      setTimeout(() => setAnimStage(6), 1400), // Stage 6: Department Name
+      setTimeout(() => setAnimStage(7), 1600), // Stage 7: Digital Portal CPU Badge
+      setTimeout(() => setAnimStage(8), 1850), // Stage 8: Luxury Login Card
+      setTimeout(() => setAnimStage(9), 2150), // Stage 9: Motto & Footer
+    ]
+    return () => timers.forEach(clearTimeout)
   }, [])
 
   React.useEffect(() => {
@@ -940,13 +944,13 @@ export default function LoginPage() {
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
       >
         <div className="flex flex-col items-center text-center space-y-4 max-w-sm relative z-10 animate-in fade-in zoom-in-95 duration-300">
-          <div className="w-24 h-24 rounded-3xl bg-white/10 p-2.5 shadow-2xl border border-amber-400/50 flex items-center justify-center backdrop-blur-md">
+          <div className="w-20 h-20 rounded-2xl bg-white/10 p-2 shadow-2xl border border-amber-400/40 flex items-center justify-center animate-pulse">
             <Image
               src="/college-emblem.png"
-              alt="V.S.B. Engineering College Emblem"
-              width={84}
-              height={84}
-              className="w-full h-full object-contain drop-shadow-md transform hover:scale-105 transition-transform"
+              alt="VSB Portal"
+              width={64}
+              height={64}
+              className="object-contain drop-shadow-md"
               priority
             />
           </div>
@@ -1034,7 +1038,7 @@ export default function LoginPage() {
         {/* Stage 1: Accreditation Top Badge & Laptop Install App Button */}
         <div className="flex items-center justify-center gap-2.5 flex-wrap">
           <div className={cn(
-            "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-300 ease-out transform",
+            "inline-flex items-center gap-1.5 sm:gap-2 px-3 py-0.5 sm:py-1 rounded-full bg-white/90 border border-[#071A41]/10 text-[9px] sm:text-xs font-black text-[#071A41] shadow-xs backdrop-blur-md transition-all duration-700 ease-out transform",
             animStage >= 1 ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
           )}>
             <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#E7B93E] animate-pulse" />
@@ -1058,41 +1062,38 @@ export default function LoginPage() {
           )}
         </div>
 
-        {/* Stage 2: 3-LAYER CELESTIAL MASTER EMBLEM (VSB OFFICIAL LOGO) */}
+        {/* Stage 2: INSTAGRAM-STYLE MODERN SQUIRCLE EMBLEM */}
         <div className={cn(
-          "relative flex items-center justify-center h-28 sm:h-32 my-1 anim-medallion-levitate transition-all duration-300 ease-out transform",
+          "relative flex items-center justify-center h-24 sm:h-28 my-1 anim-medallion-levitate transition-all duration-700 ease-out transform",
           animStage >= 2 ? "opacity-100 scale-100" : "opacity-0 scale-75"
         )}>
-          {/* Layer 3: Outer Celestial Dashed Cyan Tech Ring */}
-          <div 
-            className="absolute w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-dashed border-[#06B6D4]/50 shadow-[0_0_15px_rgba(6,182,212,0.35)] animate-spin" 
-            style={{ animationDuration: '16s', willChange: 'transform' }} 
-          />
+          {/* Outer Pulsing Gradient Aura */}
+          <div className="absolute w-22 h-22 sm:w-26 sm:h-26 rounded-[28px] bg-gradient-to-tr from-[#1455D9]/30 via-[#06B6D4]/25 to-[#EAB308]/30 blur-md animate-pulse" />
 
-          {/* Layer 2: Middle Sapphire-Cyan Glass Orbit Halo */}
-          <div className="absolute w-24 h-24 sm:w-28 sm:h-28 rounded-full border-[1.5px] border-[#1557C0]/30 bg-gradient-to-tr from-cyan-100/30 via-blue-100/15 to-amber-100/25 shadow-[0_0_20px_rgba(21,87,192,0.22)] anim-solar-corona" />
-          
-          {/* Layer 1: Inner Circular Gold Medallion with Specular Sheen */}
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF2B2] to-[#B8860B] shadow-[0_12px_30px_rgba(7,26,65,0.22),0_0_22px_rgba(231,185,62,0.5)] ring-2 ring-white/90 overflow-hidden hover:scale-105 transition-transform duration-300 group">
-            {/* Specular Liquid Gold Sweep */}
+          {/* Modern Instagram-Style Radiant Squircle */}
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] sm:rounded-[26px] p-1 bg-gradient-to-tr from-[#051329] via-[#1455D9] via-60%-[#06B6D4] to-[#FACC15] shadow-[0_12px_32px_rgba(7,26,65,0.28),0_0_20px_rgba(6,182,212,0.35)] ring-1.5 ring-white/60 overflow-hidden hover:scale-105 transition-all duration-500 group cursor-pointer">
+            {/* Top-Right Sunlight Flare */}
+            <div className="absolute top-0 right-0 w-12 h-12 bg-radial from-[#FDE047]/60 via-[#06B6D4]/20 to-transparent pointer-events-none" />
+
+            {/* Specular Sheen Sweep */}
             <div className="anim-gold-sheen" />
 
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-inner overflow-hidden relative z-10">
+            {/* Inner Pure White Disc Housing Authentic Emblem */}
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-[0_4px_12px_rgba(5,19,41,0.2)] border-2 border-[#EAB308]/90 overflow-hidden relative z-10 group-hover:rotate-3 transition-transform duration-500">
               <Image
                 src="/college-emblem.png"
-                alt="V.S.B. Engineering College Official Logo"
-                width={96}
-                height={96}
-                className="w-full h-full object-contain drop-shadow-xs transform group-hover:scale-105 transition-transform duration-300"
-                style={{ imageRendering: '-webkit-optimize-contrast' }}
+                alt="V.S.B. Engineering College Logo"
+                width={72}
+                height={72}
+                className="w-full h-full object-contain drop-shadow-xs"
                 priority
               />
             </div>
           </div>
 
           {/* Sparkling Diamond Glint at Top-Right */}
-          <div className="absolute top-1 right-1/2 translate-x-10 sm:translate-x-12 -translate-y-1 text-[#E7B93E] anim-diamond-twinkle pointer-events-none">
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E7B93E] drop-shadow-[0_0_8px_rgba(231,185,62,0.95)]" />
+          <div className="absolute top-0.5 right-1/2 translate-x-10 sm:translate-x-12 -translate-y-1 text-[#FACC15] anim-diamond-twinkle pointer-events-none">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#FACC15] drop-shadow-[0_0_8px_rgba(250,204,21,0.9)]" />
           </div>
         </div>
 
@@ -1100,7 +1101,7 @@ export default function LoginPage() {
         <div className="space-y-1.5 w-full">
           {/* Stage 3: College Master Title */}
           <div className={cn(
-            "transition-all duration-300 ease-out transform",
+            "transition-all duration-700 ease-out transform",
             animStage >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             <h1
@@ -1113,7 +1114,7 @@ export default function LoginPage() {
 
           {/* Stage 4: Autonomous Karur Tag */}
           <div className={cn(
-            "transition-all duration-300 ease-out transform",
+            "transition-all duration-700 ease-out transform",
             animStage >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             <p className="text-[9px] sm:text-xs font-black text-[#1557C0] tracking-widest uppercase flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#1557C0]/10 via-[#1557C0]/15 to-[#1557C0]/10 px-3.5 py-0.5 rounded-full border border-[#1557C0]/20 mx-auto w-fit shadow-xs">
@@ -1124,20 +1125,20 @@ export default function LoginPage() {
 
           {/* Stage 5: Glowing Golden Light Beam Separator */}
           <div className={cn(
-            "w-36 sm:w-48 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-1 anim-beam-glow transition-all duration-300 ease-out transform origin-center",
+            "w-36 sm:w-48 h-[2px] bg-gradient-to-r from-transparent via-[#E7B93E] to-transparent mx-auto rounded-full my-1 anim-beam-glow transition-all duration-700 ease-out transform origin-center",
             animStage >= 5 ? "opacity-80 scale-x-100" : "opacity-0 scale-x-0"
           )} />
 
           {/* Stage 6: Prominent Digital Portal of AI&DS Master Title */}
           <div className={cn(
-            "space-y-2 transition-all duration-300 ease-out transform",
+            "space-y-2 transition-all duration-700 ease-out transform",
             animStage >= 6 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             {/* PRESTIGIOUS ROYAL SAPPHIRE & GOLD APP TITLE BADGE */}
             <div className="inline-flex items-center gap-2 sm:gap-2.5 px-4 sm:px-6 py-2 rounded-2xl bg-gradient-to-r from-[#1455D9] via-[#1E60E6] to-[#0F44B8] text-white shadow-[0_10px_25px_-3px_rgba(20,85,217,0.4)] border-2 border-[#E7B93E] hover:scale-105 transition-all duration-300 flex-wrap justify-center">
               <Cpu className="w-5 h-5 text-[#FFF3B8] animate-pulse shrink-0" />
               <span className="text-base sm:text-2xl font-black tracking-wider text-white drop-shadow-sm">
-                Digital Portal of AI &amp; DS
+                Digital POrtal Of AI&amp;DS
               </span>
               <button
                 type="button"
@@ -1257,12 +1258,12 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* LOGIN CARD */}
+      {/* ULTRA-LUXURY LOGIN CARD (STAGE 8) */}
       <div
         className={cn(
-          "login-card w-full max-w-[430px] bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 space-y-3.5 relative z-10 my-1 shadow-lg transition-all duration-300 ease-out transform",
+          "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-700 ease-out transform",
           animStage >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none",
-          authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-slate-200/90',
+          authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-white/95',
           authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
         )}
       >
@@ -1303,19 +1304,19 @@ export default function LoginPage() {
                 className={cn(
                   'relative flex flex-col items-center justify-center gap-1 rounded-2xl py-2 px-0.5 text-xs font-bold transition-all duration-300 cursor-pointer border shadow-xs',
                   selectedRole === role.id
-                    ? 'bg-gradient-to-b from-[#1E66E8] via-[#0E3A94] to-[#071A3D] text-white border-[#D4AF37]/70 shadow-[0_10px_22px_-3px_rgba(212,175,55,0.35)] scale-[1.04]'
+                    ? 'bg-gradient-to-b from-[#1557C0] via-[#0D3B82] to-[#071A41] text-white border-cyan-400/40 shadow-[0_10px_20px_-3px_rgba(21,87,192,0.4)] scale-[1.03]'
                     : 'bg-white/80 hover:bg-white text-[#071A41] hover:border-slate-300 border-slate-200/80 hover:scale-[1.01]'
                 )}
               >
                 {selectedRole === role.id && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#D4AF37] text-[#071A41] flex items-center justify-center shadow-md">
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#E7B93E] text-[#071A41] flex items-center justify-center shadow-md">
                     <Check className="w-2 h-2 stroke-[3.5]" />
                   </span>
                 )}
                 <span className="text-lg sm:text-xl drop-shadow-xs">{role.icon}</span>
                 <span className="text-[9px] sm:text-[10px] font-black truncate">{role.label}</span>
                 {selectedRole === role.id && (
-                  <span className="w-5 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent rounded-full mt-0.5 animate-pulse" />
+                  <span className="w-4 h-0.5 bg-[#E7B93E] rounded-full mt-0.5 animate-pulse" />
                 )}
               </button>
             ))}
@@ -1377,7 +1378,7 @@ export default function LoginPage() {
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
                       autoComplete="username"
-                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1401,7 +1402,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1449,7 +1450,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1473,7 +1474,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1523,7 +1524,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1547,7 +1548,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1595,7 +1596,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1619,7 +1620,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1667,7 +1668,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       autoComplete="email"
-                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1684,25 +1685,7 @@ export default function LoginPage() {
                     <span>{loading ? 'Sending OTP...' : 'Send Login OTP'}</span>
                   </button>
                 ) : (
-                  <div className="space-y-3 animate-fade-in">
-                    {/* Official Email OTP Dispatched Card */}
-                    <div className="p-3 rounded-2xl bg-gradient-to-r from-blue-50/90 to-indigo-50/80 border border-blue-200/90 flex items-center gap-3 shadow-xs">
-                      <div className="w-10 h-10 rounded-xl bg-white p-1 border border-blue-200 shadow-sm flex items-center justify-center shrink-0">
-                        <Image
-                          src="/email-otp-icon.png"
-                          alt="Security Email OTP Dispatched"
-                          width={40}
-                          height={40}
-                          className="w-full h-full object-contain"
-                          priority
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-black text-[#071A41]">6-Digit Security OTP Dispatched</p>
-                        <p className="text-[10.5px] text-blue-700 font-semibold truncate">Check mailbox: {email}</p>
-                      </div>
-                    </div>
-
+                  <div className="space-y-2.5 animate-fade-in">
                     <div className="space-y-1">
                       <label className="block text-[11px] font-black text-[#071A41] flex items-center gap-1.5">
                         <Key className="w-3.5 h-3.5 text-[#1557C0]" />
@@ -1714,7 +1697,7 @@ export default function LoginPage() {
                         maxLength={6}
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="login-input w-full px-4 py-2.5 sm:py-3 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/70 focus:outline-none focus:ring-4 focus:ring-[#1557C0]/20 focus:border-[#1557C0] transition-all shadow-inner"
+                        className="w-full px-4 py-2.5 sm:py-3 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/70 focus:outline-none focus:ring-4 focus:ring-[#1557C0]/20 focus:border-[#1557C0] transition-all shadow-inner"
                       />
                     </div>
 
@@ -1769,7 +1752,7 @@ export default function LoginPage() {
 
       {/* QUOTE (STAGE 9) */}
       <div className={cn(
-        "text-center space-y-1 relative z-10 pt-2 pb-1 transition-all duration-300 ease-out transform",
+        "text-center space-y-1 relative z-10 pt-2 pb-1 transition-all duration-700 ease-out transform",
         animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         <div className="flex items-center justify-center gap-2">
@@ -1791,7 +1774,7 @@ export default function LoginPage() {
 
       {/* FOOTER (STAGE 9) */}
       <footer className={cn(
-        "w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 px-2 text-center transition-all duration-300 ease-out transform",
+        "w-full max-w-[420px] mx-auto flex flex-col items-center justify-center gap-2 text-[10px] sm:text-[11px] text-[#071A41] font-bold z-10 pt-2 border-t border-blue-200/50 px-2 text-center transition-all duration-700 ease-out transform",
         animStage >= 9 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
       )}>
         <div className="flex items-center justify-center gap-3">
@@ -2496,19 +2479,11 @@ export default function LoginPage() {
                 {/* 2. Email Verification via OTP */}
                 <div className="p-3 sm:p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-blue-200">
-                    <span className="font-black text-[#071A41] flex items-center gap-2.5 text-xs">
-                      <div className="w-8 h-8 rounded-lg bg-white p-1 border border-blue-200 shadow-xs flex items-center justify-center shrink-0">
-                        <Image
-                          src="/email-otp-icon.png"
-                          alt="Email OTP Verification"
-                          width={32}
-                          height={32}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <span>Verify Student Email via OTP *</span>
+                    <span className="font-black text-[#071A41] flex items-center gap-2 text-xs">
+                      <img src="/email-otp-icon.png" alt="Email OTP" className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-contain" />
+                      Verify Student Email via OTP *
                     </span>
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-full border border-blue-200">Official Communication</span>
+                    <span className="text-[10px] font-bold text-blue-700">Official Communication</span>
                   </div>
 
                   <div>

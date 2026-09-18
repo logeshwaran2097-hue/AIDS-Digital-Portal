@@ -39,7 +39,6 @@ import {
   Camera,
   Upload,
   Trash2,
-  ChevronDown,
 } from 'lucide-react'
 import { downloadStudentCardPDF } from '@/lib/pdfGenerator'
 import { toast } from '@/components/ui/Toast'
@@ -395,7 +394,7 @@ export function StudentProfileView({
   }
 
   return (
-    <div className="space-y-6 animate-fade-in w-full">
+    <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
       {/* Hero Identity Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white p-6 sm:p-8 shadow-xl">
         <div className="absolute right-0 bottom-0 w-80 h-full bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-[#22C7E8]/20 via-transparent to-transparent pointer-events-none" />
@@ -672,921 +671,860 @@ export function StudentProfileView({
 
       {/* COMPREHENSIVE EDIT PROFILE MODAL (DIRECT EDIT & SAVE) */}
       {isEditOpen && (
-        <div className="fixed inset-0 z-50 bg-[#020817]/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-          <div className="bg-gradient-to-b from-[#0a183d] via-[#071330] to-[#040c20] text-white rounded-3xl max-w-2xl w-full shadow-[0_25px_80px_rgba(0,0,0,0.8),0_0_60px_rgba(20,85,217,0.25)] flex flex-col max-h-[92vh] sm:max-h-[88vh] overflow-hidden border border-blue-500/30 animate-scale-up my-auto ring-1 ring-white/10">
-            <form onSubmit={handleSaveProfile} className="flex flex-col h-full overflow-hidden">
-              
-              {/* MODAL HEADER (Pinned / Non-scrolling) */}
-              <div className="p-5 sm:p-6 pb-3.5 border-b border-white/10 shrink-0 bg-[#091738]/90 backdrop-blur-md space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1455D9] to-indigo-600 border border-blue-400/40 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
-                      <Edit3 className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2">
-                        Edit Student Profile
-                      </h3>
-                      <div className="flex items-center gap-2 text-xs mt-0.5">
-                        <span className="font-mono font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-500/30 shadow-inner">
-                          {formData.registerNumber}
-                        </span>
-                        <span className="text-white/30">·</span>
-                        <span className="font-semibold text-slate-200 truncate max-w-[200px] sm:max-w-[320px]">
-                          {formData.name}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditOpen(false)}
-                    className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                    aria-label="Close modal"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {/* Streamlined Synchronous Notice */}
-                <div className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-950/70 to-indigo-950/50 border border-blue-500/30 text-xs text-blue-200 flex items-center gap-2.5 shadow-inner">
-                  <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <p className="text-[11px] leading-tight">
-                    <span className="font-bold text-cyan-300">Instant Sync:</span> Updates save immediately to your profile, student registry &amp; generated documents.
-                  </p>
-                </div>
-
-                {/* Modern Segmented Navigation Bar */}
-                <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#040c1e] rounded-2xl border border-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('personal')}
-                    className={cn(
-                      'py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5',
-                      activeTab === 'personal'
-                        ? 'bg-gradient-to-r from-[#1455D9] to-blue-600 text-white shadow-md shadow-blue-500/30 border border-blue-400/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                    )}
-                  >
-                    <User className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Personal &amp; Contact</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('academic')}
-                    className={cn(
-                      'py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5',
-                      activeTab === 'academic'
-                        ? 'bg-gradient-to-r from-[#1455D9] to-blue-600 text-white shadow-md shadow-blue-500/30 border border-blue-400/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                    )}
-                  >
-                    <GraduationCap className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Academic &amp; Batch</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('kpis')}
-                    className={cn(
-                      'py-2 px-2 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5',
-                      activeTab === 'kpis'
-                        ? 'bg-gradient-to-r from-[#1455D9] to-blue-600 text-white shadow-md shadow-blue-500/30 border border-blue-400/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                    )}
-                  >
-                    <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Performance</span>
-                  </button>
-                </div>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up my-8 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b pb-3 shrink-0">
+              <div>
+                <h3 className="text-xl font-black text-[#071A3D] flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-[#1455D9]" /> Edit Student Profile
+                </h3>
+                <p className="text-xs text-[#1455D9] font-mono font-bold">
+                  {formData.registerNumber} · {formData.name}
+                </p>
               </div>
+              <button
+                onClick={() => setIsEditOpen(false)}
+                className="p-2 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-              {/* MODAL BODY (Scrollable with smooth custom scrollbar) */}
-              <div className="p-5 sm:p-6 overflow-y-auto space-y-4.5 text-xs flex-1 custom-scrollbar bg-gradient-to-b from-transparent to-[#020714]/40">
-                {/* TAB 1: PERSONAL & CONTACT */}
-                {activeTab === 'personal' && (
-                  <div className="space-y-4 animate-fade-in">
-                    {/* Photo Upload in Edit Modal */}
-                    <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/50 to-indigo-950/30 border border-blue-500/30 flex items-center gap-4 shadow-sm">
-                      <div className="relative group shrink-0">
-                        {formData.profileImage ? (
-                          <img
-                            src={formData.profileImage}
-                            alt="Preview"
-                            className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-400/70 shadow-lg shadow-cyan-500/20 bg-[#040c1e]"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 rounded-2xl bg-[#040c1e] border-2 border-dashed border-cyan-500/40 flex items-center justify-center text-cyan-400 font-bold text-lg shadow-inner">
-                            {formData.name.charAt(0) || 'S'}
-                          </div>
-                        )}
-                        {formData.profileImage && (
-                          <button
-                            type="button"
-                            onClick={() => setFormData((prev) => ({ ...prev, profileImage: null }))}
-                            className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 cursor-pointer"
-                            title="Remove Photo"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="space-y-1">
-                        <p className="font-bold text-white text-xs">Student Passport Photograph</p>
-                        <p className="text-[10px] text-slate-400">Appears on Student Profile &amp; Pre-filled on ID Card PDF</p>
-                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#1455D9] to-indigo-600 hover:from-blue-600 hover:to-indigo-500 text-white font-bold text-[11px] cursor-pointer shadow-md shadow-blue-500/30 transition-all">
-                          <Upload className="w-3 h-3" />
-                          <span>{formData.profileImage ? 'Change Photo' : 'Upload Photo'}</span>
-                          <input
-                            type="file"
-                            accept="image/png, image/jpeg, image/jpg"
-                            onChange={(e) => {
-                              const f = e.target.files?.[0]
-                              if (f) {
-                                const reader = new FileReader()
-                                reader.onload = (event) => {
-                                  const img = document.createElement('img')
-                                  img.onload = () => {
-                                    const canvas = document.createElement('canvas')
-                                    const maxDim = 300
-                                    let w = img.width
-                                    let h = img.height
-                                    if (w > h) {
-                                      if (w > maxDim) {
-                                        h = Math.round((h * maxDim) / w)
-                                        w = maxDim
-                                      }
-                                    } else {
-                                      if (h > maxDim) {
-                                        w = Math.round((w * maxDim) / h)
-                                        h = maxDim
-                                      }
+            {/* Direct Update Notice */}
+            <div className="p-3 rounded-2xl bg-blue-50/80 border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5 shrink-0">
+              <Sparkles className="w-4 h-4 text-[#1455D9] shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Instant Profile Updates:</p>
+                <p className="text-[11px] text-blue-800 mt-0.5">
+                  Update your personal, contact, and academic information anytime. Changes are saved immediately to your profile and student records.
+                </p>
+              </div>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="flex border-b border-gray-200 gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab('personal')}
+                className={cn(
+                  'px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5',
+                  activeTab === 'personal'
+                    ? 'border-[#1455D9] text-[#1455D9]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                )}
+              >
+                <User className="w-3.5 h-3.5" /> Personal &amp; Contact
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('academic')}
+                className={cn(
+                  'px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5',
+                  activeTab === 'academic'
+                    ? 'border-[#1455D9] text-[#1455D9]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                )}
+              >
+                <GraduationCap className="w-3.5 h-3.5" /> Academic &amp; Batch
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('kpis')}
+                className={cn(
+                  'px-4 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5',
+                  activeTab === 'kpis'
+                    ? 'border-[#1455D9] text-[#1455D9]'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                )}
+              >
+                <TrendingUp className="w-3.5 h-3.5" /> Performance &amp; Standing
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4 text-xs overflow-y-auto pr-1 flex-1">
+              {/* TAB 1: PERSONAL & CONTACT */}
+              {activeTab === 'personal' && (
+                <div className="space-y-4 animate-fade-in">
+                  {/* Photo Upload in Edit Modal */}
+                  <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/80 flex items-center gap-4">
+                    <div className="relative group shrink-0">
+                      {formData.profileImage ? (
+                        <img
+                          src={formData.profileImage}
+                          alt="Preview"
+                          className="w-16 h-16 rounded-2xl object-cover border-2 border-[#1455D9] shadow-sm bg-white"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-white border-2 border-dashed border-blue-300 flex items-center justify-center text-blue-500 font-bold text-lg shadow-inner">
+                          {formData.name.charAt(0) || 'S'}
+                        </div>
+                      )}
+                      {formData.profileImage && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, profileImage: null }))}
+                          className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 cursor-pointer"
+                          title="Remove Photo"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-bold text-[#071A3D] text-xs">Student Passport Photograph</p>
+                      <p className="text-[10px] text-gray-500">Appears on Student Profile &amp; Pre-filled on ID Card PDF</p>
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold text-[11px] cursor-pointer shadow-xs transition-all">
+                        <Upload className="w-3 h-3" />
+                        <span>{formData.profileImage ? 'Change Photo' : 'Upload Photo'}</span>
+                        <input
+                          type="file"
+                          accept="image/png, image/jpeg, image/jpg"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) {
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
+                                const img = document.createElement('img')
+                                img.onload = () => {
+                                  const canvas = document.createElement('canvas')
+                                  const maxDim = 300
+                                  let w = img.width
+                                  let h = img.height
+                                  if (w > h) {
+                                    if (w > maxDim) {
+                                      h = Math.round((h * maxDim) / w)
+                                      w = maxDim
                                     }
-                                    canvas.width = w
-                                    canvas.height = h
-                                    const ctx = canvas.getContext('2d')
-                                    if (ctx) {
-                                      ctx.drawImage(img, 0, 0, w, h)
-                                      const base64 = canvas.toDataURL('image/jpeg', 0.85)
-                                      setFormData((prev) => ({ ...prev, profileImage: base64 }))
+                                  } else {
+                                    if (h > maxDim) {
+                                      w = Math.round((w * maxDim) / h)
+                                      h = maxDim
                                     }
                                   }
-                                  img.src = event.target?.result as string
+                                  canvas.width = w
+                                  canvas.height = h
+                                  const ctx = canvas.getContext('2d')
+                                  if (ctx) {
+                                    ctx.drawImage(img, 0, 0, w, h)
+                                    const base64 = canvas.toDataURL('image/jpeg', 0.85)
+                                    setFormData((prev) => ({ ...prev, profileImage: base64 }))
+                                  }
                                 }
-                                reader.readAsDataURL(f)
+                                img.src = event.target?.result as string
                               }
-                            }}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
+                              reader.readAsDataURL(f)
+                            }
+                          }}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
+                  </div>
 
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-[#071A3D]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Full Name</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-bold text-[#071A3D]">Personal Email Address</label>
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                          @gmail.com only
+                        </span>
+                      </div>
                       <input
-                        type="text"
-                        required
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-white shadow-inner"
+                        type="email"
+                        value={formData.personalEmail || (formData.email && !formData.email.endsWith('@student.vsb.edu.in') ? formData.email : '')}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setFormData({ ...formData, personalEmail: val, email: val })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono text-[#071A3D] text-xs"
+                        placeholder="e.g. yourname@gmail.com"
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block font-bold text-slate-200 text-[11px]">Personal Email Address</label>
-                          <span className="text-[10px] font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/30 px-1.5 py-0.5 rounded">
-                            @gmail.com only
-                          </span>
-                        </div>
-                        <input
-                          type="email"
-                          value={formData.personalEmail || (formData.email && !formData.email.endsWith('@student.vsb.edu.in') ? formData.email : '')}
-                          onChange={(e) => {
-                            const val = e.target.value
-                            setFormData({ ...formData, personalEmail: val, email: val })
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-mono text-cyan-200 text-xs shadow-inner"
-                          placeholder="e.g. yourname@gmail.com"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Student Contact Number</label>
-                        <input
-                          type="text"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 text-white shadow-inner"
-                          placeholder="+91 98765 43210"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Parent / Guardian Mobile</label>
-                        <input
-                          type="text"
-                          value={formData.parentPhone || ''}
-                          onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026]/90 hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-mono text-white shadow-inner"
-                          placeholder="e.g. 9876543210"
-                        />
-                        <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(formData.isParentWhatsapp)}
-                            onChange={(e) => setFormData({ ...formData, isParentWhatsapp: e.target.checked })}
-                            className="w-3.5 h-3.5 rounded bg-[#061026] border-white/20 text-emerald-500 focus:ring-emerald-500"
-                          />
-                          <span className="text-[11px] font-bold text-emerald-400">Available on WhatsApp</span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-white/10">
-                      <label className="block font-bold text-slate-200 text-[11px] mb-1.5 flex items-center justify-between">
-                        <span>Date of Birth (Day / Month / Year)</span>
-                        {formData.dateOfBirth && formData.dateOfBirth.includes('-') && (
-                          <span className="text-[10px] font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-500/30">
-                            Selected: {formData.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(formData.dateOfBirth.split('-')[1], 10)] || formData.dateOfBirth.split('-')[1]}-{formData.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
-                          </span>
-                        )}
-                      </label>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="relative">
-                          <select
-                            value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[2] || '') : ''}
-                            onChange={(e) => {
-                              const parts = (formData.dateOfBirth || '2005-01-01').split('-')
-                              const y = parts[0] || '2005'
-                              const m = parts[1] || '01'
-                              setFormData({ ...formData, dateOfBirth: `${y}-${m}-${e.target.value.padStart(2, '0')}` })
-                            }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
-                          >
-                            <option value="" className="text-slate-400 bg-[#0a183d]">Day</option>
-                            {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
-                              <option key={d} value={d} className="text-white bg-[#0a183d]">{d}</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
-                        </div>
-
-                        <div className="relative">
-                          <select
-                            value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[1] || '') : ''}
-                            onChange={(e) => {
-                              const parts = (formData.dateOfBirth || '2005-01-01').split('-')
-                              const y = parts[0] || '2005'
-                              const d = parts[2] || '01'
-                              setFormData({ ...formData, dateOfBirth: `${y}-${e.target.value.padStart(2, '0')}-${d}` })
-                            }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
-                          >
-                            <option value="" className="text-slate-400 bg-[#0a183d]">Month</option>
-                            {[
-                              { val: '01', label: '01 - Jan' },
-                              { val: '02', label: '02 - Feb' },
-                              { val: '03', label: '03 - Mar' },
-                              { val: '04', label: '04 - Apr' },
-                              { val: '05', label: '05 - May' },
-                              { val: '06', label: '06 - Jun' },
-                              { val: '07', label: '07 - Jul' },
-                              { val: '08', label: '08 - Aug' },
-                              { val: '09', label: '09 - Sep' },
-                              { val: '10', label: '10 - Oct' },
-                              { val: '11', label: '11 - Nov' },
-                              { val: '12', label: '12 - Dec' },
-                            ].map((m) => (
-                              <option key={m.val} value={m.val} className="text-white bg-[#0a183d]">{m.label}</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
-                        </div>
-
-                        <div className="relative">
-                          <select
-                            value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[0] || '') : ''}
-                            onChange={(e) => {
-                              const parts = (formData.dateOfBirth || '2005-01-01').split('-')
-                              const m = parts[1] || '01'
-                              const d = parts[2] || '01'
-                              setFormData({ ...formData, dateOfBirth: `${e.target.value}-${m}-${d}` })
-                            }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
-                          >
-                            <option value="" className="text-slate-400 bg-[#0a183d]">Year</option>
-                            {Array.from({ length: 30 }, (_, i) => String(2012 - i)).map((y) => (
-                              <option key={y} value={y} className="text-white bg-[#0a183d]">{y}</option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
-                        </div>
-                      </div>
-                    </div>
-
                     <div>
-                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Blood Group</label>
-                      <div className="relative">
-                        <select
-                          value={formData.bloodGroup}
-                          onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
-                          className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 font-semibold text-xs text-white cursor-pointer shadow-inner"
-                        >
-                          <option value="" className="text-slate-400 bg-[#0a183d]">Select Blood Group</option>
-                          <option value="O +ve" className="text-white bg-[#0a183d]">O +ve</option>
-                          <option value="O -ve" className="text-white bg-[#0a183d]">O -ve</option>
-                          <option value="A +ve" className="text-white bg-[#0a183d]">A +ve</option>
-                          <option value="A -ve" className="text-white bg-[#0a183d]">A -ve</option>
-                          <option value="B +ve" className="text-white bg-[#0a183d]">B +ve</option>
-                          <option value="B -ve" className="text-white bg-[#0a183d]">B -ve</option>
-                          <option value="AB +ve" className="text-white bg-[#0a183d]">AB +ve</option>
-                          <option value="AB -ve" className="text-white bg-[#0a183d]">AB -ve</option>
-                        </select>
-                        <ChevronDown className="w-4 h-4 text-cyan-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
-                      </div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Student Contact Number</label>
+                      <input
+                        type="text"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        placeholder="+91 98765 43210"
+                      />
                     </div>
 
-                    {/* RESIDENCY & TRANSPORT SETUP */}
-                    <div className="p-4 rounded-2xl bg-[#040c20]/90 border border-white/10 space-y-3.5 shadow-inner">
-                      <div className="flex items-center justify-between">
-                        <label className="block font-black text-white text-xs uppercase tracking-wider">
-                          Residency &amp; Accommodation
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-[#071A3D] mb-1">Parent / Guardian Mobile</label>
+                      <input
+                        type="text"
+                        value={formData.parentPhone || ''}
+                        onChange={(e) => setFormData({ ...formData, parentPhone: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono"
+                        placeholder="e.g. 9876543210"
+                      />
+                      <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(formData.isParentWhatsapp)}
+                          onChange={(e) => setFormData({ ...formData, isParentWhatsapp: e.target.checked })}
+                          className="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <span className="text-[11px] font-bold text-gray-600">Available on WhatsApp</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100">
+                    <label className="block font-bold text-[#071A3D] mb-1.5 flex items-center justify-between">
+                      <span>Date of Birth (Day / Month / Year)</span>
+                      {formData.dateOfBirth && formData.dateOfBirth.includes('-') && (
+                        <span className="text-[10px] font-bold text-[#1455D9] bg-blue-50 px-2 py-0.5 rounded-md">
+                          Selected: {formData.dateOfBirth.split('-')[2]}-{['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][parseInt(formData.dateOfBirth.split('-')[1], 10)] || formData.dateOfBirth.split('-')[1]}-{formData.dateOfBirth.split('-')[0]} (DD-MM-YYYY)
+                        </span>
+                      )}
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <select
+                        value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[2] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (formData.dateOfBirth || '2005-01-01').split('-')
+                          const y = parts[0] || '2005'
+                          const m = parts[1] || '01'
+                          setFormData({ ...formData, dateOfBirth: `${y}-${m}-${e.target.value.padStart(2, '0')}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-xs"
+                      >
+                        <option value="">Day (DD)</option>
+                        {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, '0')).map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[1] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (formData.dateOfBirth || '2005-01-01').split('-')
+                          const y = parts[0] || '2005'
+                          const d = parts[2] || '01'
+                          setFormData({ ...formData, dateOfBirth: `${y}-${e.target.value.padStart(2, '0')}-${d}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-xs"
+                      >
+                        <option value="">Month (MM)</option>
+                        {[
+                          { val: '01', label: '01 - Jan' },
+                          { val: '02', label: '02 - Feb' },
+                          { val: '03', label: '03 - Mar' },
+                          { val: '04', label: '04 - Apr' },
+                          { val: '05', label: '05 - May' },
+                          { val: '06', label: '06 - Jun' },
+                          { val: '07', label: '07 - Jul' },
+                          { val: '08', label: '08 - Aug' },
+                          { val: '09', label: '09 - Sep' },
+                          { val: '10', label: '10 - Oct' },
+                          { val: '11', label: '11 - Nov' },
+                          { val: '12', label: '12 - Dec' },
+                        ].map((m) => (
+                          <option key={m.val} value={m.val}>{m.label}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        value={formData.dateOfBirth ? (formData.dateOfBirth.split('-')[0] || '') : ''}
+                        onChange={(e) => {
+                          const parts = (formData.dateOfBirth || '2005-01-01').split('-')
+                          const m = parts[1] || '01'
+                          const d = parts[2] || '01'
+                          setFormData({ ...formData, dateOfBirth: `${e.target.value}-${m}-${d}` })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold text-xs"
+                      >
+                        <option value="">Year (YYYY)</option>
+                        {Array.from({ length: 30 }, (_, i) => String(2012 - i)).map((y) => (
+                          <option key={y} value={y}>{y}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Blood Group</label>
+                    <select
+                      value={formData.bloodGroup}
+                      onChange={(e) => setFormData({ ...formData, bloodGroup: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-semibold"
+                    >
+                      <option value="">Select Blood Group</option>
+                      <option value="O +ve">O +ve</option>
+                      <option value="O -ve">O -ve</option>
+                      <option value="A +ve">A +ve</option>
+                      <option value="A -ve">A -ve</option>
+                      <option value="B +ve">B +ve</option>
+                      <option value="B -ve">B -ve</option>
+                      <option value="AB +ve">AB +ve</option>
+                      <option value="AB -ve">AB -ve</option>
+                    </select>
+                  </div>
+
+                  {/* RESIDENCY & TRANSPORT SETUP */}
+                  <div className="p-4 rounded-2xl bg-gray-50/80 border border-gray-200 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-black text-[#071A3D] text-xs uppercase tracking-wider">
+                        Residency &amp; Accommodation
+                      </label>
+                      <span className="text-[11px] text-gray-400 font-medium">Select your accommodation</span>
+                    </div>
+
+                    {/* Radio Type Selector: Day Scholar vs Hosteller */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newType = 'Day Scholar'
+                          const isCollegeBus = formData.dayScholarType !== 'Out Bus'
+                          const bNo = formData.busNo || 'Route 12'
+                          const stop = formData.boardingPoint || 'Karur Bus Stand'
+                          const outM = formData.outBusMode || 'Public Bus'
+                          const newSummary = isCollegeBus
+                            ? `Day Scholar · College Bus ${bNo} · Boarding: ${stop}`
+                            : `Day Scholar · Out Bus (${outM}) · From: ${stop}`
+                          setFormData({
+                            ...formData,
+                            residencyType: newType,
+                            dayScholarType: isCollegeBus ? 'College Bus' : 'Out Bus',
+                            busNo: isCollegeBus ? bNo : formData.busNo,
+                            boardingPoint: stop,
+                            residencyStatus: newSummary,
+                          })
+                        }}
+                        className={cn(
+                          'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
+                          (formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel')))
+                            ? 'bg-blue-50/80 border-[#1455D9] ring-2 ring-[#1455D9]/20 text-[#071A3D]'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#1455D9] flex items-center justify-center shrink-0">
+                          <Bus className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs">Day Scholar</p>
+                          <p className="text-[10px] text-gray-500">College Bus / Out Bus</p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newType = 'Hosteller'
+                          const block = formData.hostelBlock || 'Boys Hostel Block A (Ganga)'
+                          const room = formData.roomNo || 'Room 101'
+                          const newSummary = `Hosteller · ${block} · ${room}`
+                          setFormData({
+                            ...formData,
+                            residencyType: newType,
+                            hostelBlock: block,
+                            roomNo: room,
+                            residencyStatus: newSummary,
+                          })
+                        }}
+                        className={cn(
+                          'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
+                          (formData.residencyType === 'Hosteller' || formData.residencyStatus?.toLowerCase().includes('hostel'))
+                            ? 'bg-purple-50/80 border-purple-600 ring-2 ring-purple-600/20 text-[#071A3D]'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        )}
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+                          <Building className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs">Hosteller</p>
+                          <p className="text-[10px] text-gray-500">College Hostel Residence</p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* DAY SCHOLAR SUB-OPTIONS: College Bus User vs Out Bus User */}
+                    {(formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
+                      <div className="p-3.5 rounded-2xl bg-white border border-blue-100 space-y-3">
+                        <label className="block font-bold text-gray-700 text-[11px]">
+                          Day Scholar Transport Option:
                         </label>
-                        <span className="text-[11px] text-slate-400 font-medium">Select your accommodation</span>
-                      </div>
 
-                      {/* Radio Type Selector: Day Scholar vs Hosteller */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newType = 'Day Scholar'
-                            const isCollegeBus = formData.dayScholarType !== 'Out Bus'
-                            const bNo = formData.busNo || 'Route 12'
-                            const stop = formData.boardingPoint || 'Karur Bus Stand'
-                            const outM = formData.outBusMode || 'Public Bus'
-                            const newSummary = isCollegeBus
-                              ? `Day Scholar · College Bus ${bNo} · Boarding: ${stop}`
-                              : `Day Scholar · Out Bus (${outM}) · From: ${stop}`
-                            setFormData({
-                              ...formData,
-                              residencyType: newType,
-                              dayScholarType: isCollegeBus ? 'College Bus' : 'Out Bus',
-                              busNo: isCollegeBus ? bNo : formData.busNo,
-                              boardingPoint: stop,
-                              residencyStatus: newSummary,
-                            })
-                          }}
-                          className={cn(
-                            'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
-                            (formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel')))
-                              ? 'bg-gradient-to-br from-blue-900/60 to-indigo-900/50 border-blue-500 ring-2 ring-blue-500/30 text-white shadow-lg shadow-blue-500/20'
-                              : 'bg-[#061026]/70 border-white/10 text-slate-400 hover:border-white/20 hover:text-white'
-                          )}
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-400/30 text-cyan-300 flex items-center justify-center shrink-0">
-                            <Bus className="w-4 h-4" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const bNo = formData.busNo || 'Route 12'
+                              const stop = formData.boardingPoint || 'Karur Bus Stand'
+                              setFormData({
+                                ...formData,
+                                dayScholarType: 'College Bus',
+                                busNo: bNo,
+                                boardingPoint: stop,
+                                residencyStatus: `Day Scholar · College Bus ${bNo} · Boarding: ${stop}`,
+                              })
+                            }}
+                            className={cn(
+                              'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
+                              formData.dayScholarType !== 'Out Bus'
+                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                            )}
+                          >
+                            <Bus className="w-4 h-4" /> College Bus User
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const mode = formData.outBusMode || 'Public Bus (TNSTC / Private)'
+                              const stop = formData.boardingPoint || 'Local Stop'
+                              setFormData({
+                                ...formData,
+                                dayScholarType: 'Out Bus',
+                                outBusMode: mode,
+                                boardingPoint: stop,
+                                residencyStatus: `Day Scholar · Out Bus (${mode}) · From: ${stop}`,
+                              })
+                            }}
+                            className={cn(
+                              'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
+                              formData.dayScholarType === 'Out Bus'
+                                ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                                : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                            )}
+                          >
+                            <Car className="w-4 h-4" /> Out Bus / Own Transport
+                          </button>
+                        </div>
+
+                        {/* If College Bus User */}
+                        {formData.dayScholarType !== 'Out Bus' ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <div>
+                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                College Bus Route / Bus No.
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Bus No. 12 - Karur or Route 08 - Trichy"
+                                value={formData.busNo || ''}
+                                onChange={(e) => {
+                                  const bNo = e.target.value
+                                  setFormData({
+                                    ...formData,
+                                    busNo: bNo,
+                                    residencyStatus: `Day Scholar · College Bus ${bNo} · Boarding: ${formData.boardingPoint || 'Main Stop'}`,
+                                  })
+                                }}
+                                className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                Boarding Point / Stop Name
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. Karur Bus Stand / Tollgate"
+                                value={formData.boardingPoint || ''}
+                                onChange={(e) => {
+                                  const pt = e.target.value
+                                  setFormData({
+                                    ...formData,
+                                    boardingPoint: pt,
+                                    residencyStatus: `Day Scholar · College Bus ${formData.busNo || 'Bus'} · Boarding: ${pt}`,
+                                  })
+                                }}
+                                className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
+                              />
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-xs">Day Scholar</p>
-                            <p className="text-[10px] text-slate-400">College Bus / Out Bus</p>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newType = 'Hosteller'
-                            const block = (formData.hostelBlock && ['Boys Hostel I', 'Boys Hostel II', 'Boys Hostel III', 'Girls Hostel I', 'Girls Hostel II', 'Girls Hostel III'].includes(formData.hostelBlock))
-                              ? formData.hostelBlock
-                              : (formData.hostelBlock?.includes('Girls')
-                                  ? (formData.hostelBlock.includes('III') || formData.hostelBlock.includes('3') ? 'Girls Hostel III' : formData.hostelBlock.includes('II') || formData.hostelBlock.includes('2') ? 'Girls Hostel II' : 'Girls Hostel I')
-                                  : 'Boys Hostel I')
-                            const room = formData.roomNo || 'Room 101'
-                            const newSummary = `Hosteller · ${block} · ${room}`
-                            setFormData({
-                              ...formData,
-                              residencyType: newType,
-                              hostelBlock: block,
-                              roomNo: room,
-                              residencyStatus: newSummary,
-                            })
-                          }}
-                          className={cn(
-                            'p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3',
-                            (formData.residencyType === 'Hosteller' || formData.residencyStatus?.toLowerCase().includes('hostel'))
-                              ? 'bg-gradient-to-br from-purple-900/60 to-indigo-900/50 border-purple-500 ring-2 ring-purple-500/30 text-white shadow-lg shadow-purple-500/20'
-                              : 'bg-[#061026]/70 border-white/10 text-slate-400 hover:border-white/20 hover:text-white'
-                          )}
-                        >
-                          <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/30 text-purple-300 flex items-center justify-center shrink-0">
-                            <Building className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-xs">Hosteller</p>
-                            <p className="text-[10px] text-slate-400">College Hostel Residence</p>
-                          </div>
-                        </button>
-                      </div>
-
-                      {/* DAY SCHOLAR SUB-OPTIONS: College Bus User vs Out Bus User */}
-                      {(formData.residencyType === 'Day Scholar' || (!formData.residencyType && !formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
-                        <div className="p-3.5 rounded-2xl bg-[#061026]/90 border border-blue-500/25 space-y-3 shadow-inner">
-                          <label className="block font-bold text-blue-200 text-[11px]">
-                            Day Scholar Transport Option:
-                          </label>
-
-                          <div className="grid grid-cols-2 gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const bNo = formData.busNo || 'Route 12'
-                                const stop = formData.boardingPoint || 'Karur Bus Stand'
-                                setFormData({
-                                  ...formData,
-                                  dayScholarType: 'College Bus',
-                                  busNo: bNo,
-                                  boardingPoint: stop,
-                                  residencyStatus: `Day Scholar · College Bus ${bNo} · Boarding: ${stop}`,
-                                })
-                              }}
-                              className={cn(
-                                'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
-                                formData.dayScholarType !== 'Out Bus'
-                                  ? 'bg-[#1455D9] text-white border-blue-400/40 shadow-md shadow-blue-500/30'
-                                  : 'bg-[#040c1e] text-slate-400 border-white/10 hover:border-white/20 hover:text-white'
-                              )}
-                            >
-                              <Bus className="w-4 h-4" /> College Bus User
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const mode = formData.outBusMode || 'Public Bus (TNSTC / Private)'
-                                const stop = formData.boardingPoint || 'Local Stop'
-                                setFormData({
-                                  ...formData,
-                                  dayScholarType: 'Out Bus',
-                                  outBusMode: mode,
-                                  boardingPoint: stop,
-                                  residencyStatus: `Day Scholar · Out Bus (${mode}) · From: ${stop}`,
-                                })
-                              }}
-                              className={cn(
-                                'p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer',
-                                formData.dayScholarType === 'Out Bus'
-                                  ? 'bg-[#1455D9] text-white border-blue-400/40 shadow-md shadow-blue-500/30'
-                                  : 'bg-[#040c1e] text-slate-400 border-white/10 hover:border-white/20 hover:text-white'
-                              )}
-                            >
-                              <Car className="w-4 h-4" /> Out Bus / Own Transport
-                            </button>
-                          </div>
-
-                          {/* If College Bus User */}
-                          {formData.dayScholarType !== 'Out Bus' ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        ) : (
+                          /* If Out Bus User */
+                          <div className="space-y-3 pt-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div>
-                                <label className="block font-bold text-slate-300 text-[11px] mb-1">
-                                  College Bus Route / Bus No.
+                                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                  Out Bus Transport Mode
                                 </label>
-                                <input
-                                  type="text"
-                                  placeholder="e.g. Bus No. 12 - Karur or Route 08 - Trichy"
-                                  value={formData.busNo || ''}
+                                <select
+                                  value={formData.outBusMode || 'Public Bus (TNSTC / Private)'}
                                   onChange={(e) => {
-                                    const bNo = e.target.value
+                                    const m = e.target.value
                                     setFormData({
                                       ...formData,
-                                      busNo: bNo,
-                                      residencyStatus: `Day Scholar · College Bus ${bNo} · Boarding: ${formData.boardingPoint || 'Main Stop'}`,
+                                      outBusMode: m,
+                                      residencyStatus: `Day Scholar · Out Bus (${m}) · From: ${formData.boardingPoint || 'Local Stop'}`,
                                     })
                                   }}
-                                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
-                                />
+                                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs bg-white"
+                                >
+                                  <option value="Public Bus (TNSTC / Private)">Public Bus (TNSTC / Private)</option>
+                                  <option value="Own Two-Wheeler / Bike">Own Two-Wheeler / Bike</option>
+                                  <option value="Private Van / Auto">Private Van / Auto</option>
+                                  <option value="Walking / Nearby Resident">Walking / Nearby Resident</option>
+                                </select>
                               </div>
 
                               <div>
-                                <label className="block font-bold text-slate-300 text-[11px] mb-1">
-                                  Boarding Point / Stop Name
+                                <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                  Starting Location / Stop
                                 </label>
                                 <input
                                   type="text"
-                                  placeholder="e.g. Karur Bus Stand / Tollgate"
+                                  placeholder="e.g. Thanthonimalai / Velliyanai"
                                   value={formData.boardingPoint || ''}
                                   onChange={(e) => {
                                     const pt = e.target.value
                                     setFormData({
                                       ...formData,
                                       boardingPoint: pt,
-                                      residencyStatus: `Day Scholar · College Bus ${formData.busNo || 'Bus'} · Boarding: ${pt}`,
+                                      residencyStatus: `Day Scholar · Out Bus (${formData.outBusMode || 'Public/Own'}) · From: ${pt}`,
                                     })
                                   }}
-                                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
+                                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
                                 />
-                              </div>
-                            </div>
-                          ) : (
-                            /* If Out Bus User */
-                            <div className="space-y-3 pt-1">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                  <label className="block font-bold text-slate-300 text-[11px] mb-1">
-                                    Out Bus Transport Mode
-                                  </label>
-                                  <div className="relative">
-                                    <select
-                                      value={formData.outBusMode || 'Public Bus (TNSTC / Private)'}
-                                      onChange={(e) => {
-                                        const m = e.target.value
-                                        setFormData({
-                                          ...formData,
-                                          outBusMode: m,
-                                          residencyStatus: `Day Scholar · Out Bus (${m}) · From: ${formData.boardingPoint || 'Local Stop'}`,
-                                        })
-                                      }}
-                                      className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white cursor-pointer shadow-inner"
-                                    >
-                                      <option value="Public Bus (TNSTC / Private)" className="text-white bg-[#0a183d]">Public Bus (TNSTC / Private)</option>
-                                      <option value="Own Two-Wheeler / Bike" className="text-white bg-[#0a183d]">Own Two-Wheeler / Bike</option>
-                                      <option value="Private Van / Auto" className="text-white bg-[#0a183d]">Private Van / Auto</option>
-                                      <option value="Walking / Nearby Resident" className="text-white bg-[#0a183d]">Walking / Nearby Resident</option>
-                                    </select>
-                                    <ChevronDown className="w-4 h-4 text-cyan-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
-                                  </div>
-                                </div>
-
-                                <div>
-                                  <label className="block font-bold text-slate-300 text-[11px] mb-1">
-                                    Starting Location / Stop
-                                  </label>
-                                  <input
-                                    type="text"
-                                    placeholder="e.g. Thanthonimalai / Velliyanai"
-                                    value={formData.boardingPoint || ''}
-                                    onChange={(e) => {
-                                      const pt = e.target.value
-                                      setFormData({
-                                        ...formData,
-                                        boardingPoint: pt,
-                                        residencyStatus: `Day Scholar · Out Bus (${formData.outBusMode || 'Public/Own'}) · From: ${pt}`,
-                                      })
-                                    }}
-                                    className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
-                                  />
-                                </div>
-                              </div>
-
-                              <div>
-                                <label className="block font-bold text-slate-300 text-[11px] mb-1">
-                                  Residential Address (Optional)
-                                </label>
-                                <input
-                                  type="text"
-                                  placeholder="Door No, Street Name, Area, City, Pincode"
-                                  value={formData.address || ''}
-                                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                  className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-xs text-white shadow-inner"
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* HOSTELLER SUB-OPTIONS */}
-                      {(formData.residencyType === 'Hosteller' || (!formData.residencyType && formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
-                        <div className="p-3.5 rounded-2xl bg-[#061026]/90 border border-purple-500/25 space-y-3 shadow-inner">
-                          <label className="block font-bold text-purple-200 text-[11px]">
-                            Hostel Allocation Details:
-                          </label>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block font-bold text-slate-300 text-[11px] mb-1">
-                                Hostel Block
-                              </label>
-                              <div className="relative">
-                                <select
-                                  value={
-                                    (formData.hostelBlock && ['Boys Hostel I', 'Boys Hostel II', 'Boys Hostel III', 'Girls Hostel I', 'Girls Hostel II', 'Girls Hostel III'].includes(formData.hostelBlock))
-                                      ? formData.hostelBlock
-                                      : (formData.hostelBlock?.includes('Girls')
-                                          ? (formData.hostelBlock.includes('III') || formData.hostelBlock.includes('3') ? 'Girls Hostel III' : formData.hostelBlock.includes('II') || formData.hostelBlock.includes('2') ? 'Girls Hostel II' : 'Girls Hostel I')
-                                          : (formData.hostelBlock?.includes('Boys')
-                                              ? (formData.hostelBlock.includes('III') || formData.hostelBlock.includes('3') ? 'Boys Hostel III' : formData.hostelBlock.includes('II') || formData.hostelBlock.includes('2') ? 'Boys Hostel II' : 'Boys Hostel I')
-                                              : 'Boys Hostel I'))
-                                  }
-                                  onChange={(e) => {
-                                    const b = e.target.value
-                                    setFormData({
-                                      ...formData,
-                                      hostelBlock: b,
-                                      residencyStatus: `Hosteller · ${b} · ${formData.roomNo || 'Room 101'}`,
-                                    })
-                                  }}
-                                  className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-purple-400/30 bg-[#040c1e] hover:border-purple-400/60 focus:outline-none focus:border-purple-400 text-xs font-semibold text-white cursor-pointer shadow-inner"
-                                >
-                                  <option value="Boys Hostel I" className="text-white bg-[#0a183d]">Boys Hostel I</option>
-                                  <option value="Boys Hostel II" className="text-white bg-[#0a183d]">Boys Hostel II</option>
-                                  <option value="Boys Hostel III" className="text-white bg-[#0a183d]">Boys Hostel III</option>
-                                  <option value="Girls Hostel I" className="text-white bg-[#0a183d]">Girls Hostel I</option>
-                                  <option value="Girls Hostel II" className="text-white bg-[#0a183d]">Girls Hostel II</option>
-                                  <option value="Girls Hostel III" className="text-white bg-[#0a183d]">Girls Hostel III</option>
-                                </select>
-                                <ChevronDown className="w-4 h-4 text-purple-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
                               </div>
                             </div>
 
                             <div>
-                              <label className="block font-bold text-slate-300 text-[11px] mb-1">
-                                Room Number
+                              <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                                Residential Address (Optional)
                               </label>
                               <input
                                 type="text"
-                                placeholder="e.g. Room 204"
-                                value={formData.roomNo || ''}
-                                onChange={(e) => {
-                                  const r = e.target.value
-                                  setFormData({
-                                    ...formData,
-                                    roomNo: r,
-                                    residencyStatus: `Hosteller · ${formData.hostelBlock || 'Boys Hostel'} · ${r}`,
-                                  })
-                                }}
-                                className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#040c1e] hover:border-purple-400/40 focus:outline-none focus:border-purple-400 text-xs text-white shadow-inner"
+                                placeholder="Door No, Street Name, Area, City, Pincode"
+                                value={formData.address || ''}
+                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] text-xs"
                               />
                             </div>
                           </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* HOSTELLER SUB-OPTIONS */}
+                    {(formData.residencyType === 'Hosteller' || (!formData.residencyType && formData.residencyStatus?.toLowerCase().includes('hostel'))) && (
+                      <div className="p-3.5 rounded-2xl bg-white border border-purple-100 space-y-3">
+                        <label className="block font-bold text-gray-700 text-[11px]">
+                          Hostel Allocation Details:
+                        </label>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                              Hostel Block
+                            </label>
+                            <select
+                              value={formData.hostelBlock || 'Boys Hostel Block A (Ganga)'}
+                              onChange={(e) => {
+                                const b = e.target.value
+                                setFormData({
+                                  ...formData,
+                                  hostelBlock: b,
+                                  residencyStatus: `Hosteller · ${b} · ${formData.roomNo || 'Room'}`,
+                                })
+                              }}
+                              className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-purple-600 text-xs bg-white font-semibold"
+                            >
+                              <option value="Boys Hostel Block A (Ganga)">Boys Hostel Block A (Ganga)</option>
+                              <option value="Boys Hostel Block B (Yamuna)">Boys Hostel Block B (Yamuna)</option>
+                              <option value="Boys Hostel Block C (Kaveri)">Boys Hostel Block C (Kaveri)</option>
+                              <option value="Girls Hostel Block A (Thamarai)">Girls Hostel Block A (Thamarai)</option>
+                              <option value="Girls Hostel Block B (Malligai)">Girls Hostel Block B (Malligai)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block font-bold text-gray-700 text-[11px] mb-1">
+                              Room Number
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. Room 204"
+                              value={formData.roomNo || ''}
+                              onChange={(e) => {
+                                const r = e.target.value
+                                setFormData({
+                                  ...formData,
+                                  roomNo: r,
+                                  residencyStatus: `Hosteller · ${formData.hostelBlock || 'Boys Hostel'} · ${r}`,
+                                })
+                              }}
+                              className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-purple-600 text-xs"
+                            />
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {/* TAB 2: ACADEMIC & BATCH */}
-                {activeTab === 'academic' && (
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Register Number</label>
-                        <input
-                          type="text"
-                          value={formData.registerNumber}
-                          onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value.toUpperCase() })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-cyan-500/30 bg-[#061026] focus:outline-none focus:border-cyan-400 font-mono font-bold text-cyan-300 shadow-inner"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Degree &amp; Program Name</label>
-                        <input
-                          type="text"
-                          value={formData.degreeProgram}
-                          onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-semibold text-white shadow-inner"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Academic Regulation</label>
-                        <input
-                          type="text"
-                          value={formData.regulation}
-                          onChange={(e) => setFormData({ ...formData, regulation: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                          placeholder="R-2021 (Autonomous System)"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Academic Batch</label>
-                        <input
-                          type="text"
-                          value={formData.batch}
-                          onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                          placeholder="2023 - 2027 (4 Year Program)"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Year</label>
-                        <div className="relative">
-                          <select
-                            value={formData.year}
-                            onChange={(e) => {
-                              const y = Number(e.target.value)
-                              const minS = (y - 1) * 2 + 1
-                              const maxS = y * 2
-                              const currentSem = formData.semester
-                              const newSem = (currentSem >= minS && currentSem <= maxS) ? currentSem : minS
-                              setFormData({ ...formData, year: y, semester: newSem })
-                            }}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-bold text-xs text-white cursor-pointer shadow-inner"
-                          >
-                            <option value={1} className="text-white bg-[#0a183d]">Year 1</option>
-                            <option value={2} className="text-white bg-[#0a183d]">Year 2</option>
-                            <option value={3} className="text-white bg-[#0a183d]">Year 3</option>
-                            <option value={4} className="text-white bg-[#0a183d]">Year 4</option>
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Semester</label>
-                        <div className="relative">
-                          <select
-                            value={formData.semester}
-                            onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-bold text-xs text-white cursor-pointer shadow-inner"
-                          >
-                            {[1, 2, 3, 4, 5, 6, 7, 8]
-                              .filter((s) => Math.ceil(s / 2) === formData.year)
-                              .map((s) => {
-                                const sYear = Math.ceil(s / 2)
-                                return (
-                                  <option key={s} value={s} className="text-white bg-[#0a183d]">
-                                    Semester {s} (Year {sYear} {s % 2 === 1 ? 'Odd' : 'Even'})
-                                  </option>
-                                )
-                              })}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Section</label>
-                        <div className="relative">
-                          <select
-                            value={formData.section}
-                            onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                            className="w-full appearance-none px-3 py-2.5 pr-7 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 font-bold text-xs text-white cursor-pointer shadow-inner"
-                          >
-                            <option value="A" className="text-white bg-[#0a183d]">Section A</option>
-                            <option value="B" className="text-white bg-[#0a183d]">Section B</option>
-                            <option value="C" className="text-white bg-[#0a183d]">Section C</option>
-                            <option value="D" className="text-white bg-[#0a183d]">Section D</option>
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-cyan-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Assigned Faculty Advisor</label>
-                      <input
-                        type="text"
-                        value={formData.advisor}
-                        onChange={(e) => setFormData({ ...formData, advisor: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                        placeholder="Dr. S. Karthik (Professor)"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 3: PERFORMANCE & STANDING */}
-                {activeTab === 'kpis' && (
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Academic CGPA</label>
-                        <input
-                          type="text"
-                          value={formData.cgpa}
-                          onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-amber-500/40 focus:outline-none focus:border-amber-400 font-black text-[#F4C430] bg-[#020614] text-sm tracking-wider shadow-inner"
-                          placeholder="8.84 / 10.0"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">CGPA Class / Standing</label>
-                        <input
-                          type="text"
-                          value={formData.cgpaClass}
-                          onChange={(e) => setFormData({ ...formData, cgpaClass: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                          placeholder="First Class with Distinction"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Attendance Record</label>
-                        <input
-                          type="text"
-                          value={formData.attendance}
-                          onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/40 focus:outline-none focus:border-emerald-400 font-bold text-emerald-400 bg-[#020614] shadow-inner"
-                          placeholder="92.5%"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Attendance Remark</label>
-                        <input
-                          type="text"
-                          value={formData.attendanceRemark}
-                          onChange={(e) => setFormData({ ...formData, attendanceRemark: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                          placeholder="Compliant (>75% Req)"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Department Rank</label>
-                        <input
-                          type="text"
-                          value={formData.rank}
-                          onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-cyan-500/40 focus:outline-none focus:border-cyan-400 font-bold text-cyan-300 bg-[#020614] shadow-inner"
-                          placeholder="Rank 4 / 68"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Rank Remark / Standing</label>
-                        <input
-                          type="text"
-                          value={formData.rankRemark}
-                          onChange={(e) => setFormData({ ...formData, rankRemark: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                          placeholder="Top 6% in Batch"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Arrear Status</label>
-                        <input
-                          type="text"
-                          value={formData.arrears}
-                          onChange={(e) => setFormData({ ...formData, arrears: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-emerald-500/40 focus:outline-none focus:border-emerald-400 font-bold text-emerald-400 bg-[#020614] shadow-inner"
-                          placeholder="0 Arrears"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block font-bold text-slate-200 text-[11px] mb-1">Arrear Status Remark</label>
-                        <input
-                          type="text"
-                          value={formData.arrearRemark}
-                          onChange={(e) => setFormData({ ...formData, arrearRemark: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                          placeholder="All Semesters Cleared"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-200 text-[11px] mb-1">Official Enrollment Status Badge</label>
-                      <input
-                        type="text"
-                        value={formData.enrollmentStatus}
-                        onChange={(e) => setFormData({ ...formData, enrollmentStatus: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-white/15 bg-[#061026] hover:border-blue-400/40 focus:outline-none focus:border-cyan-400 text-white shadow-inner"
-                        placeholder="Enrolled & Active"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* MODAL FOOTER (Pinned / Non-scrolling at bottom) */}
-              <div className="px-5 sm:px-6 py-3.5 sm:py-4 bg-[#050f24] border-t border-white/10 flex items-center justify-between gap-3 shrink-0 rounded-b-3xl">
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 min-w-0">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="truncate hidden sm:inline">Changes save immediately to official registry</span>
                 </div>
+              )}
 
-                <div className="flex items-center gap-2 shrink-0">
+              {/* TAB 2: ACADEMIC & BATCH */}
+              {activeTab === 'academic' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Register Number</label>
+                      <input
+                        type="text"
+                        value={formData.registerNumber}
+                        onChange={(e) => setFormData({ ...formData, registerNumber: e.target.value.toUpperCase() })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono font-bold text-[#1455D9]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Degree &amp; Program Name</label>
+                      <input
+                        type="text"
+                        value={formData.degreeProgram}
+                        onChange={(e) => setFormData({ ...formData, degreeProgram: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Academic Regulation</label>
+                      <input
+                        type="text"
+                        value={formData.regulation}
+                        onChange={(e) => setFormData({ ...formData, regulation: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        placeholder="R-2021 (Autonomous System)"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Academic Batch</label>
+                      <input
+                        type="text"
+                        value={formData.batch}
+                        onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        placeholder="2023 - 2027 (4 Year Program)"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Year</label>
+                      <select
+                        value={formData.year}
+                        onChange={(e) => {
+                          const y = Number(e.target.value)
+                          const minS = (y - 1) * 2 + 1
+                          const maxS = y * 2
+                          const currentSem = formData.semester
+                          const newSem = (currentSem >= minS && currentSem <= maxS) ? currentSem : minS
+                          setFormData({ ...formData, year: y, semester: newSem })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
+                      >
+                        <option value={1}>Year 1</option>
+                        <option value={2}>Year 2</option>
+                        <option value={3}>Year 3</option>
+                        <option value={4}>Year 4</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
+                      <select
+                        value={formData.semester}
+                        onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
+                      >
+                        {[1, 2, 3, 4, 5, 6, 7, 8]
+                          .filter((s) => Math.ceil(s / 2) === formData.year)
+                          .map((s) => {
+                            const sYear = Math.ceil(s / 2)
+                            return (
+                              <option key={s} value={s}>
+                                Semester {s} (Year {sYear} {s % 2 === 1 ? 'Odd' : 'Even'})
+                              </option>
+                            )
+                          })}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Section</label>
+                      <select
+                        value={formData.section}
+                        onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
+                      >
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                        <option value="D">Section D</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Assigned Faculty Advisor</label>
+                    <input
+                      type="text"
+                      value={formData.advisor}
+                      onChange={(e) => setFormData({ ...formData, advisor: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                      placeholder="Dr. S. Karthik (Professor)"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: PERFORMANCE & STANDING */}
+              {activeTab === 'kpis' && (
+                <div className="space-y-4 animate-fade-in">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Academic CGPA</label>
+                      <input
+                        type="text"
+                        value={formData.cgpa}
+                        onChange={(e) => setFormData({ ...formData, cgpa: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#F4C430] bg-[#071A3D]"
+                        placeholder="8.84 / 10.0"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">CGPA Class / Standing</label>
+                      <input
+                        type="text"
+                        value={formData.cgpaClass}
+                        onChange={(e) => setFormData({ ...formData, cgpaClass: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        placeholder="First Class with Distinction"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Attendance Record</label>
+                      <input
+                        type="text"
+                        value={formData.attendance}
+                        onChange={(e) => setFormData({ ...formData, attendance: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-green-700"
+                        placeholder="92.5%"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Attendance Remark</label>
+                      <input
+                        type="text"
+                        value={formData.attendanceRemark}
+                        onChange={(e) => setFormData({ ...formData, attendanceRemark: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        placeholder="Compliant (>75% Req)"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Department Rank</label>
+                      <input
+                        type="text"
+                        value={formData.rank}
+                        onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#1455D9]"
+                        placeholder="Rank 4 / 68"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Rank Remark / Standing</label>
+                      <input
+                        type="text"
+                        value={formData.rankRemark}
+                        onChange={(e) => setFormData({ ...formData, rankRemark: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        placeholder="Top 6% in Batch"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Arrear Status</label>
+                      <input
+                        type="text"
+                        value={formData.arrears}
+                        onChange={(e) => setFormData({ ...formData, arrears: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-emerald-600"
+                        placeholder="0 Arrears"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#071A3D] mb-1">Arrear Status Remark</label>
+                      <input
+                        type="text"
+                        value={formData.arrearRemark}
+                        onChange={(e) => setFormData({ ...formData, arrearRemark: e.target.value })}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                        placeholder="All Semesters Cleared"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#071A3D] mb-1">Official Enrollment Status Badge</label>
+                    <input
+                      type="text"
+                      value={formData.enrollmentStatus}
+                      onChange={(e) => setFormData({ ...formData, enrollmentStatus: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                      placeholder="Enrolled & Active"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Footer Controls */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t shrink-0">
+                <p className="text-[11px] text-gray-500 hidden sm:block">
+                  Changes are saved immediately to your profile
+                </p>
+
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsEditOpen(false)}
-                    className="px-4 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/10 font-semibold cursor-pointer text-xs transition-colors"
+                    className="px-4 py-2.5 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer text-xs"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#1455D9] via-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold cursor-pointer shadow-lg shadow-blue-500/30 flex items-center gap-2 text-xs transition-all active:scale-98 border border-blue-400/30 disabled:opacity-50"
+                    className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-2 text-xs transition-all hover:scale-102 disabled:opacity-50"
                   >
                     <Save className="w-4 h-4" /> {loading ? 'Saving...' : 'Save Profile Changes'}
                   </button>

@@ -81,7 +81,7 @@ export async function getGatewayConfig(): Promise<GatewayConfig> {
   const rawApiKey =
     portal.smsApiKey ||
     process.env.FAST2SMS_API_KEY ||
-    ''
+    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
 
   const fast2smsWaKey =
     portal.fast2smsWhatsappApiKey ||
@@ -335,7 +335,7 @@ async function sendFast2SmsWhatsapp(
     cfg.smsApiKey?.trim() ||
     process.env.FAST2SMS_WHATSAPP_API_KEY ||
     process.env.FAST2SMS_API_KEY ||
-    ''
+    'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
 
   if (!token) {
     return { success: false, provider: 'Fast2SMS WhatsApp', channel: 'whatsapp', error: 'Fast2SMS WhatsApp API key missing' }

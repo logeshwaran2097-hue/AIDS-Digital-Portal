@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateStudent } from '@/lib/auth'
-import { rateLimit } from '@/lib/rateLimit'
 import { z } from 'zod'
 
 const loginSchema = z.object({
-  registerNumber: z.string().trim().max(50).optional(),
-  email: z.string().trim().max(100).optional(),
-  password: z.string().min(1, 'Password or Date of Birth is required').max(128).optional(),
-  dateOfBirth: z.string().trim().max(30).optional(),
+  registerNumber: z.string().optional(),
+  email: z.string().optional(),
+  password: z.string().optional(),
+  dateOfBirth: z.string().optional(),
 }).refine((data) => data.registerNumber || data.email, {
   message: 'Register Number or Email ID is required',
-}).refine((data) => data.password || data.dateOfBirth, {
-  message: 'Password or Date of Birth is required',
 })
 
 export const dynamic = 'force-dynamic'
@@ -19,15 +16,11 @@ export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 export async function POST(request: NextRequest) {
-  // 1. Sliding-window rate limit (5 attempts per min per IP)
-  const rateLimitRes = rateLimit(request, 'auth')
-  if (rateLimitRes) return rateLimitRes
-
   try {
     const body = await request.json()
     const { registerNumber, email, password, dateOfBirth } = loginSchema.parse(body)
     const identifier = (registerNumber || email || '').trim()
-    const passwordOrDob = (password || dateOfBirth || '').trim()
+    const passwordOrDob = password || dateOfBirth || ''
 
     const result = await authenticateStudent(identifier, passwordOrDob)
 

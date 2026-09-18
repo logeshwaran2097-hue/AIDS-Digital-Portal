@@ -29,8 +29,6 @@ import {
   Users,
   School,
   Bus,
-  Sun,
-  Moon,
 } from 'lucide-react'
 import { studentNavItems, facultyNavItems, hodNavItems, adminNavItems } from './navItems'
 import { FloatingChatbot } from '@/components/ai/FloatingChatbot'
@@ -79,22 +77,10 @@ const navItemsMap: Record<string, NavItem[]> = {
 }
 
 const roleBadgeMap: Record<string, { label: string; color: string }> = {
-  student: {
-    label: 'Student Scholar',
-    color: 'bg-gradient-to-r from-blue-600/25 to-cyan-500/20 text-cyan-300 border-cyan-400/35 shadow-[0_0_12px_rgba(34,197,232,0.15)]',
-  },
-  faculty: {
-    label: 'Faculty Member',
-    color: 'bg-gradient-to-r from-emerald-600/25 to-teal-500/20 text-emerald-300 border-emerald-400/35 shadow-[0_0_12px_rgba(52,211,153,0.15)]',
-  },
-  hod: {
-    label: 'Head of Department',
-    color: 'bg-gradient-to-r from-amber-500/30 to-yellow-500/20 text-amber-300 border-amber-400/40 shadow-[0_0_14px_rgba(244,196,48,0.25)]',
-  },
-  admin: {
-    label: 'System Administrator',
-    color: 'bg-gradient-to-r from-purple-600/30 to-indigo-500/20 text-purple-200 border-purple-400/35 shadow-[0_0_14px_rgba(168,85,247,0.2)]',
-  },
+  student: { label: 'Student', color: 'bg-[#2878E8]/20 text-[#2878E8] border-[#2878E8]/30' },
+  faculty: { label: 'Faculty', color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' },
+  hod: { label: 'HOD', color: 'bg-[#F4C430]/20 text-[#F4C430] border-[#F4C430]/30' },
+  admin: { label: 'Admin', color: 'bg-red-400/20 text-red-300 border-red-400/30' },
 }
 
 interface NotificationItem {
@@ -695,9 +681,9 @@ export function PortalLayout({
   const isLabHandler = roleBadgeLabel === 'Lab Handler' || roleBadgeLabel === 'Lab In-charge'
 
   const effectiveRoleBadgeColor = isLabHandler
-    ? 'bg-gradient-to-r from-cyan-600/25 to-blue-500/20 text-cyan-200 border-cyan-400/40 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
+    ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
     : isFacultyAdvisor
-    ? 'bg-gradient-to-r from-teal-600/25 to-emerald-500/20 text-teal-200 border-teal-400/40 shadow-[0_0_12px_rgba(45,212,191,0.2)]'
+    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
     : roleBadge.color
 
   const effectiveRoleBadgeLabel =
@@ -964,106 +950,13 @@ export function PortalLayout({
     window.location.href = '/login'
   }
 
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('portal_theme')
-      if (saved === 'dark') {
-        setIsDarkMode(true)
-        document.documentElement.classList.add('midnight', 'dark')
-        document.documentElement.classList.remove('light-crystal')
-      } else {
-        setIsDarkMode(false)
-        document.documentElement.classList.remove('midnight', 'dark')
-        document.documentElement.classList.add('light-crystal')
-        try {
-          localStorage.setItem('portal_theme', 'light')
-          localStorage.setItem('vsb-portal-theme', 'light-crystal')
-        } catch {}
-      }
-    }
-  }, [])
-
-  const toggleTheme = () => {
-    const nextDark = !isDarkMode
-    setIsDarkMode(nextDark)
-    if (nextDark) {
-      document.documentElement.classList.add('midnight', 'dark')
-      document.documentElement.classList.remove('light-crystal')
-      try {
-        localStorage.setItem('portal_theme', 'dark')
-        localStorage.setItem('vsb-portal-theme', 'midnight')
-      } catch {}
-    } else {
-      document.documentElement.classList.remove('midnight', 'dark')
-      document.documentElement.classList.add('light-crystal')
-      try {
-        localStorage.setItem('portal_theme', 'light')
-        localStorage.setItem('vsb-portal-theme', 'light-crystal')
-      } catch {}
-    }
-    window.dispatchEvent(new CustomEvent('portal-theme-changed'))
-  }
-
-  const getNavCategory = (href: string, label: string): string => {
-    const l = href.toLowerCase()
-    if (
-      l.endsWith('/dashboard') ||
-      l === '/admin' ||
-      l.includes('attendance') ||
-      l.includes('gpa') ||
-      l.includes('subject') ||
-      l.includes('mark') ||
-      l.includes('academic') ||
-      l.includes('curriculum')
-    ) {
-      return 'ACADEMICS & CURRICULUM'
-    }
-    if (
-      l.includes('od-') ||
-      l.includes('proof') ||
-      l.includes('pass') ||
-      l.includes('leave') ||
-      l.includes('student')
-    ) {
-      return 'STUDENT AFFAIRS & PASSES'
-    }
-    if (
-      l.includes('ai') ||
-      l.includes('study') ||
-      l.includes('question') ||
-      l.includes('project') ||
-      l.includes('resource') ||
-      l.includes('file') ||
-      l.includes('laboratory') ||
-      l.includes('/lab')
-    ) {
-      return 'LEARNING & RESEARCH'
-    }
-    if (
-      l.includes('faculty') ||
-      l.includes('event') ||
-      l.includes('announcement') ||
-      l.includes('achievement') ||
-      l.includes('hod') ||
-      l.includes('admins') ||
-      l.includes('roles') ||
-      l.includes('report') ||
-      l.includes('log')
-    ) {
-      return 'INSTITUTION & DIRECTORY'
-    }
-    return 'ACCOUNT & PREFERENCES'
-  }
-
   const handleNavClick = (href: string) => {
     setIsDrawerOpen(false)
     setActivePath(href)
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFD] text-[#071A3D] relative transition-colors duration-300">
+    <div className="min-h-screen bg-[#f8fafd] text-[#071A3D] relative">
       {/* Mobile Drawer Overlay */}
       {isDrawerOpen && (
         <div
@@ -1072,26 +965,26 @@ export function PortalLayout({
           aria-hidden="true"
         />
       )}
+
       {/* Slide-out Navigation Drawer / Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-[#0B132B] text-slate-100 flex flex-col transition-transform duration-300 ease-in-out border-r border-slate-800 shadow-xl pb-safe select-none',
+          'fixed top-0 bottom-0 left-0 z-50 w-72 bg-gradient-to-b from-[#051330] via-[#071A3D] to-[#040D21] text-white flex flex-col transition-transform duration-300 ease-in-out border-r border-blue-500/20 shadow-2xl pb-safe',
           isDrawerOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-
         {/* Drawer Header with Official Emblem */}
-        <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02] relative z-10">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div className="w-10 h-10 rounded-full p-1 bg-gradient-to-tr from-[#D4AF37] to-[#1E66E8] ring-1 ring-white/20 flex items-center justify-center shrink-0 shadow-md">
-                <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+              <div className="w-11 h-11 rounded-full p-[2.5px] bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] via-[#EC4899] to-[#FACC15] shadow-[0_0_18px_rgba(0,245,255,0.45),0_0_12px_rgba(236,72,153,0.35)] ring-2 ring-white/30 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_24px_rgba(0,245,255,0.7),0_0_18px_rgba(236,72,153,0.6)]">
+                <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden border border-amber-300/80">
                   <Image
                     src="/college-emblem.png"
                     alt="V.S.B. Engineering College Official Emblem"
-                    width={38}
-                    height={38}
-                    className="w-full h-full object-contain rounded-full"
+                    width={42}
+                    height={42}
+                    className="w-full h-full object-contain rounded-full drop-shadow-xs"
                     priority
                   />
                 </div>
@@ -1099,80 +992,68 @@ export function PortalLayout({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <p className="text-sm font-black text-white leading-tight tracking-tight drop-shadow-xs">AI &amp; DS Portal</p>
+                <p className="text-sm font-black text-white leading-tight tracking-wide">Digital Portal of AI&amp;DS</p>
                 <button
                   type="button"
                   onClick={triggerPortalUpdateCheck}
-                  title="Check for real-time app updates"
-                  className="px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-500/30 hover:to-cyan-500/30 text-cyan-300 text-[10px] font-mono font-bold tracking-wide cursor-pointer transition-all border border-cyan-400/30 shadow-xs flex items-center gap-1"
+                  title="Tap to check for real-time app updates"
+                  className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 hover:bg-cyan-400/30 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider cursor-pointer active:scale-95 transition-transform"
                 >
-                  <Sparkles className="w-2.5 h-2.5 text-cyan-300" />
-                  <span>{APP_VERSION_LABEL}</span>
+                  {APP_VERSION_LABEL}
                 </button>
               </div>
-              <p className="text-[10.5px] text-slate-400 font-medium tracking-wide truncate mt-0.5 flex items-center gap-1">
-                <span>V.S.B. Engineering College</span>
-                <span className="text-[8.5px] px-1 py-0.2 rounded bg-white/10 text-slate-300 font-semibold uppercase">Autonomous</span>
-              </p>
+              <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
             </div>
           </div>
           {/* Close button on mobile */}
           <button
             onClick={() => setIsDrawerOpen(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* User VIP Profile Card in Drawer */}
+        {/* User Mini Profile Card in Drawer */}
         <Link
           href={profileHref}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'relative overflow-hidden p-3.5 mx-3 my-2.5 rounded-2xl border transition-all duration-300 flex items-center gap-3.5 shrink-0 cursor-pointer shadow-md group z-10',
+            'p-3.5 mx-3 my-3 rounded-2xl border transition-all flex items-center gap-3 shrink-0 cursor-pointer',
             (activePath || pathname) === profileHref
-              ? 'bg-gradient-to-br from-blue-900/40 via-[#0B1A3B]/80 to-[#071328] border-cyan-400/40 shadow-[0_4px_20px_rgba(20,85,217,0.35)]'
-              : 'bg-gradient-to-br from-white/[0.06] via-[#07142E]/70 to-white/[0.02] border-white/10 hover:border-amber-400/40 hover:bg-white/[0.08]'
+              ? 'bg-white/15 border-white/30 shadow-md ring-1 ring-white/20'
+              : 'bg-white/[0.06] border-white/10 hover:bg-white/[0.12] hover:border-white/20'
           )}
         >
-          <div className="relative w-10 h-10 rounded-xl p-[2px] bg-gradient-to-tr from-amber-400 via-cyan-400 to-blue-600 shadow-[0_0_12px_rgba(34,197,232,0.3)] shrink-0">
-            <div className="w-full h-full rounded-[10px] overflow-hidden bg-slate-950 text-white flex items-center justify-center font-bold text-xs shadow-inner">
-              {avatarImage && !avatarError ? (
-                <img
-                  src={avatarImage}
-                  alt={userName}
-                  className="w-full h-full object-cover"
-                  onError={() => setAvatarError(true)}
-                />
-              ) : (
-                userName.charAt(0) || 'U'
-              )}
-            </div>
-            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 ring-2 ring-[#071328] shadow-[0_0_8px_rgba(52,211,153,0.9)] flex items-center justify-center" title="Online & Connected">
-              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-            </span>
+          <div className="w-11 h-11 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-base shadow-md shrink-0 ring-2 ring-white/20">
+            {avatarImage && !avatarError ? (
+              <img
+                src={avatarImage}
+                alt={userName}
+                className="w-full h-full object-cover"
+                onError={() => setAvatarError(true)}
+              />
+            ) : (
+              userName.charAt(0) || 'U'
+            )}
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="text-xs sm:text-[13px] font-black text-white group-hover:text-amber-200 transition-colors truncate leading-tight tracking-tight">
-              {userName}
-            </h4>
-            <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+            <h4 className="text-sm font-bold text-white truncate leading-tight">{userName}</h4>
+            <p className="text-[11px] text-gray-300 truncate mt-0.5">
               {role === 'hod' || (userEmail && userEmail.toLowerCase().startsWith('hod'))
-                ? 'AI & DS Dept · Autonomous'
+                ? 'AI & DS Dept'
                 : (userEmail && !userEmail.endsWith('@student.vsb.edu.in'))
                 ? userEmail
-                : 'AI & DS Dept · Student'}
+                : 'AI & DS Dept'}
             </p>
             <span
               className={cn(
-                'inline-flex items-center gap-1 text-[9.5px] font-bold px-2 py-0.5 rounded-md border mt-1.5 uppercase tracking-wider',
+                'inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mt-1.5',
                 effectiveRoleBadgeColor
               )}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
-              <span>{effectiveRoleBadgeLabel}</span>
+              {effectiveRoleBadgeLabel}
             </span>
           </div>
         </Link>
@@ -1180,10 +1061,11 @@ export function PortalLayout({
         {/* Navigation Link Items */}
         <nav
           ref={navContainerRef}
-          className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 custom-scrollbar relative z-10"
+          className="flex-1 overflow-y-auto px-3 py-2 space-y-1"
           aria-label="Main navigation"
+          style={{ scrollbarWidth: 'thin' }}
         >
-          {resolvedNavItems.map((item, index) => {
+          {resolvedNavItems.map((item) => {
             const current = activePath || pathname
             const exactMatchExists = resolvedNavItems.some((i) => i.href === current)
             const isRootDashboard =
@@ -1222,142 +1104,122 @@ export function PortalLayout({
             const displayLabel = meta?.label || item.label
             const notifCount = getMenuNotificationCount(item.href, displayLabel)
 
-            const currentCategory = getNavCategory(item.href, displayLabel)
-            const prevCategory = index > 0 ? getNavCategory(resolvedNavItems[index - 1].href, resolvedNavItems[index - 1].label) : null
-            const showCategoryHeader = currentCategory !== prevCategory
-
             return (
-              <React.Fragment key={item.href}>
-                {showCategoryHeader && (
-                  <div className={cn("pt-4 pb-1.5 px-3 flex items-center gap-2 select-none", index === 0 && "pt-1.5")}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-cyan-400 shadow-[0_0_8px_rgba(244,196,48,0.8)] shrink-0" />
-                    <span className="text-[9.5px] font-black uppercase tracking-[0.18em] bg-gradient-to-r from-amber-200 via-amber-100 to-slate-200 bg-clip-text text-transparent">
-                      {currentCategory}
-                    </span>
-                    <span className="flex-1 h-px bg-gradient-to-r from-amber-400/30 via-white/10 to-transparent" />
-                  </div>
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={true}
+                data-active={isActive ? 'true' : 'false'}
+                onMouseEnter={() => {
+                  try {
+                    router.prefetch(item.href)
+                  } catch {}
+                }}
+                onMouseDown={() => {
+                  try {
+                    router.prefetch(item.href)
+                  } catch {}
+                }}
+                onClick={() => handleNavClick(item.href)}
+                style={isActive ? { backgroundColor: accentColor, boxShadow: `0 4px 18px ${accentColor}70` } : {}}
+                className={cn(
+                  'flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer group',
+                  isActive
+                    ? 'text-white shadow-md ring-1 ring-white/20'
+                    : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
                 )}
-                <Link
-                  href={item.href}
-                  prefetch={true}
-                  data-active={isActive ? 'true' : 'false'}
-                  onMouseEnter={() => {
-                    try {
-                      router.prefetch(item.href)
-                    } catch {}
-                  }}
-                  onMouseDown={() => {
-                    try {
-                      router.prefetch(item.href)
-                    } catch {}
-                  }}
-                  onClick={() => handleNavClick(item.href)}
-                  className={cn(
-                    'relative flex items-center justify-between rounded-xl px-3 py-2 text-xs sm:text-[13px] font-medium transition-all duration-200 cursor-pointer group select-none overflow-hidden my-0.5',
-                    isActive
-                      ? 'bg-gradient-to-r from-[#1455D9] via-[#1A5CE5] to-[#0E3A9E] text-white font-bold shadow-[0_4px_20px_rgba(20,85,217,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] border border-cyan-400/30 pl-3.5'
-                      : 'text-slate-300 hover:bg-gradient-to-r hover:from-white/[0.08] hover:via-white/[0.04] hover:to-transparent hover:text-white hover:border hover:border-white/10 hover:translate-x-1'
-                  )}
-                >
-                  {/* Glowing active edge indicator */}
-                  {isActive && (
-                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-gradient-to-b from-amber-300 via-cyan-400 to-blue-400 shadow-[0_0_10px_rgba(34,197,232,0.9)]" />
-                  )}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className={cn('shrink-0 text-base relative', isActive ? 'text-white' : 'text-[#22C7E8]')}>
+                    {item.icon}
+                    {notifCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 ring-2 ring-[#071A3D] animate-ping" />
+                    )}
+                  </span>
+                  <span className="truncate">{displayLabel}</span>
+                </div>
 
-                  <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  {notifCount > 0 && (
                     <span
                       className={cn(
-                        'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-base transition-all duration-200 relative',
+                        'inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black tracking-tight shadow-xs animate-pulse transition-all',
                         isActive
-                          ? 'bg-white/15 text-amber-300 border border-white/20 shadow-inner drop-shadow-[0_0_8px_rgba(244,196,48,0.5)]'
-                          : 'bg-white/[0.03] text-slate-400 border border-white/5 group-hover:text-cyan-300 group-hover:bg-white/[0.08] group-hover:border-cyan-500/30 group-hover:scale-105'
+                          ? 'bg-white text-[#1455D9] ring-1 ring-white/60'
+                          : 'bg-red-500 text-white ring-2 ring-red-400/40'
                       )}
+                      title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
                     >
-                      {item.icon}
-                      {notifCount > 0 && !isActive && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[#071328] animate-pulse" />
-                      )}
+                      {notifCount > 99 ? '99+' : notifCount}
                     </span>
-                    <span className="truncate tracking-tight">{displayLabel}</span>
-                  </div>
+                  )}
 
-                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                    {notifCount > 0 ? (
-                      <span
-                        className={cn(
-                          'inline-flex items-center justify-center min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-black tracking-tight shadow-md transition-transform duration-200 group-hover:scale-105',
-                          isActive
-                            ? 'bg-gradient-to-r from-amber-300 to-[#F4C430] text-slate-950 shadow-[0_0_10px_rgba(244,196,48,0.6)]'
-                            : 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)] ring-1 ring-white/20'
-                        )}
-                        title={`${notifCount} notification${notifCount > 1 ? 's' : ''} for ${displayLabel}`}
-                      >
-                        {notifCount > 99 ? '99+' : notifCount}
-                      </span>
-                    ) : isActive ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-300 shadow-[0_0_6px_rgba(34,197,232,0.9)] shrink-0" />
-                    ) : null}
-                  </div>
-                </Link>
-              </React.Fragment>
+                  {meta?.badgeText && (
+                    <span
+                      className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase text-white shrink-0 shadow-2xs"
+                      style={{ backgroundColor: meta.badgeColor || '#1455D9' }}
+                    >
+                      {meta.badgeText}
+                    </span>
+                  )}
+                </div>
+              </Link>
             )
           })}
         </nav>
 
+
+
         {/* Drawer Footer with Version & Logout */}
-        <div className="p-3.5 border-t border-white/10 bg-gradient-to-t from-black/40 via-black/20 to-transparent space-y-2.5 relative z-10">
-          <div className="px-2 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-between text-[11px] text-slate-400 font-medium">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span className="text-slate-300 font-semibold tracking-wide">Live Portal</span>
-            </div>
+        <div className="p-3 border-t border-white/10 bg-white/5 space-y-2">
+          <div className="px-1 flex items-center justify-between text-[11px] text-white/50 font-medium">
+            <span>AI&amp;DS Portal</span>
             <button
               type="button"
               onClick={triggerPortalUpdateCheck}
               title="Check for Portal Updates"
-              className="font-mono font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 px-2 py-0.5 rounded-md border border-cyan-500/30 cursor-pointer active:scale-95 transition-all text-[10px] flex items-center gap-1 shadow-xs"
+              className="font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/25 px-2 py-0.5 rounded-md border border-cyan-500/20 cursor-pointer active:scale-95 transition-all text-[10px]"
             >
-              <Sparkles className="w-2.5 h-2.5 text-cyan-300" />
-              <span>{APP_VERSION_LABEL}</span>
+              {APP_VERSION_LABEL} · Check Update
             </button>
           </div>
           <button
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
             disabled={isLoggingOut}
-            className="flex w-full items-center justify-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-200 border border-rose-500/20 hover:border-rose-500/40 transition-all duration-200 cursor-pointer disabled:opacity-50 shadow-sm"
+            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
           >
             <LogOut className="h-4 w-4" />
-            <span>Sign Out Session</span>
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
       {/* Main Top Header */}
-      <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#08132B]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 lg:pl-72 shadow-xs transition-all">
+      <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-xs lg:pl-72">
         {/* Real-time Push Notification Permission Banner for Mobile & Desktop */}
         {pushPermission === 'default' && !isPermissionBannerDismissed && (
-          <div className="bg-slate-900 text-white px-4 py-2 border-b border-slate-800 shadow-xs flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
+          <div className="bg-gradient-to-r from-[#071A3D] via-[#1455D9] to-[#071A3D] text-white px-3 sm:px-6 py-2 border-b border-[#22C7E8]/40 shadow-sm flex items-center justify-between gap-2 text-[11px] sm:text-xs animate-in slide-in-from-top duration-300">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="p-1 rounded-md bg-blue-500/20 text-blue-400 shrink-0">
-                <Bell className="w-3.5 h-3.5" />
+              <span className="p-1 rounded-lg bg-amber-400/20 text-amber-300 shrink-0">
+                <Bell className="w-3.5 h-3.5 animate-bounce" />
               </span>
-              <p className="truncate text-slate-200 font-medium text-[11px] sm:text-xs">
-                <strong className="text-white font-semibold">Enable Alerts:</strong> Turn on notifications to receive instant institutional updates and passes.
+              <p className="truncate font-semibold text-blue-100">
+                <strong className="text-white font-black">Enable Notifications:</strong> Turn on alerts to receive instant college updates, bus schedules & pass approvals on this phone.
               </p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={handleEnablePush}
-                className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] transition-colors cursor-pointer"
+                className="px-3 py-1 rounded-lg bg-[#F4C430] hover:bg-amber-300 text-[#071A3D] font-black text-[11px] transition-all shadow-xs active:scale-95 cursor-pointer"
               >
                 Turn On
               </button>
               <button
                 type="button"
                 onClick={() => setIsPermissionBannerDismissed(true)}
-                className="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="p-1 text-blue-200 hover:text-white transition-colors cursor-pointer"
                 aria-label="Dismiss banner"
               >
                 <X className="w-3.5 h-3.5" />
@@ -1368,13 +1230,13 @@ export function PortalLayout({
 
         {/* Banner if user blocked notifications in phone/browser settings */}
         {pushPermission === 'denied' && !isPermissionBannerDismissed && (
-          <div className="bg-amber-950/90 text-white px-4 py-2 border-b border-amber-900/60 shadow-xs flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top duration-200">
+          <div className="bg-gradient-to-r from-amber-950 via-[#78350F] to-amber-950 text-white px-3 sm:px-6 py-2 border-b border-amber-500/40 shadow-sm flex items-center justify-between gap-2 text-[11px] sm:text-xs animate-in slide-in-from-top duration-300">
             <div className="flex items-center gap-2 min-w-0">
-              <span className="p-1 rounded-md bg-amber-500/20 text-amber-300 shrink-0">
+              <span className="p-1 rounded-lg bg-amber-500/30 text-amber-200 shrink-0">
                 <AlertTriangle className="w-3.5 h-3.5" />
               </span>
-              <p className="truncate text-amber-200 font-medium text-[11px] sm:text-xs">
-                <strong className="text-white font-semibold">Notifications Blocked:</strong> Allow alerts in your browser settings to receive passes and reminders.
+              <p className="truncate font-semibold text-amber-100">
+                <strong className="text-white font-black">Notifications Blocked:</strong> To see alerts in your phone status bar, tap the lock/settings icon in your browser &gt; allow notifications.
               </p>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -1396,17 +1258,17 @@ export function PortalLayout({
             </div>
           </div>
         )}
-        <div className="portal-top-header w-full max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="portal-top-header flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Hamburger Menu & Brand on Mobile */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="relative p-2.5 rounded-xl text-slate-800 dark:text-slate-100 hover:bg-white/80 dark:hover:bg-white/10 border border-transparent hover:border-slate-200 dark:hover:border-white/10 lg:hidden transition-colors shadow-2xs"
+              className="relative p-2 rounded-xl text-[#071A3D] hover:bg-gray-100 lg:hidden transition-colors"
               aria-label="Open Navigation Drawer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-6 h-6" />
               {totalMenuNotifications > 0 && (
-                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-white dark:ring-[#040A18] shadow-md animate-pulse">
+                <span className="absolute top-1 right-1 min-w-[17px] h-[17px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
                   {totalMenuNotifications > 99 ? '99+' : totalMenuNotifications}
                 </span>
               )}
@@ -1422,42 +1284,46 @@ export function PortalLayout({
                       key={m.href}
                       href={m.href}
                       onClick={() => handleNavClick(m.href)}
-                      className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-white/5 hover:bg-slate-200/80 dark:hover:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:text-[#1455D9] dark:hover:text-cyan-300 transition-all text-xs font-semibold group cursor-pointer shadow-xs"
-                      title={`${m.count} updates in ${m.label}`}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100/90 hover:bg-blue-50 border border-slate-200/80 hover:border-blue-200 text-[#071A3D] hover:text-[#1455D9] transition-all text-xs font-bold shadow-2xs group cursor-pointer"
+                      title={`${m.count} new notification${m.count > 1 ? 's' : ''} in ${m.label}`}
                     >
-                      <span className="text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-cyan-300 transition-colors">
+                      <span className="text-blue-600 group-hover:scale-110 transition-transform">
                         {m.icon}
                       </span>
                       <span className="truncate max-w-[130px]">{m.label}</span>
-                      <span className="min-w-[18px] h-[18px] px-1.5 bg-[#1455D9]/15 dark:bg-cyan-500/20 text-[#1455D9] dark:text-cyan-300 border border-blue-400/20 rounded-full text-[10px] font-bold flex items-center justify-center">
+                      <span className="min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center shadow-xs animate-pulse">
                         {m.count > 99 ? '99+' : m.count}
                       </span>
                     </Link>
                   ))}
                 </div>
 
-                {/* 2. Interactive Menu Updates Pill Button (Luxury Royal Sapphire) */}
+                {/* 2. Interactive Menu Updates Pill Button (visible across screen sizes) */}
                 <button
                   type="button"
                   onClick={() => setIsMenuNotifOpen((prev) => !prev)}
                   className={cn(
-                    'flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all duration-200 cursor-pointer shadow-xs',
+                    'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full border text-xs font-bold transition-all shadow-xs cursor-pointer',
                     isMenuNotifOpen
-                      ? 'bg-gradient-to-r from-[#071A3D] via-[#1455D9] to-[#071A3D] text-white border-amber-400/50 shadow-[0_0_16px_rgba(244,196,48,0.3)]'
-                      : 'bg-white/90 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-white/15 hover:border-blue-400 dark:hover:border-cyan-400/40 shadow-xs hover:shadow-md'
+                      ? 'bg-red-500 text-white border-red-600 ring-2 ring-red-300/50'
+                      : 'bg-red-50 hover:bg-red-100/90 text-red-700 border-red-200 hover:border-red-300'
                   )}
-                  title="Click to view menus with unread updates"
+                  title="Click to view all menus with notifications"
                   aria-expanded={isMenuNotifOpen}
                 >
-                  <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-cyan-400 shrink-0 shadow-[0_0_6px_rgba(34,197,232,0.8)] animate-pulse" />
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
                   <span className="tracking-tight">
                     {menusWithNotifications.length}{' '}
-                    <span>Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
+                    <span className="hidden sm:inline">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
+                    <span className="sm:hidden">Menu{menusWithNotifications.length > 1 ? 's' : ''}</span>
                   </span>
                   <span
                     className={cn(
-                      'px-2 py-0.5 rounded-full text-[10px] font-black',
-                      isMenuNotifOpen ? 'bg-amber-400 text-slate-950' : 'bg-slate-200 dark:bg-white/15 text-slate-800 dark:text-white'
+                      'px-1.5 py-0.2 rounded-full text-[10px] font-black',
+                      isMenuNotifOpen ? 'bg-white text-red-600' : 'bg-red-500 text-white'
                     )}
                   >
                     {totalMenuNotifications}
@@ -1479,25 +1345,25 @@ export function PortalLayout({
                       className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs sm:hidden"
                     />
 
-                    <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 w-auto sm:w-80 rounded-3xl bg-white dark:bg-[#071328] border border-slate-200 dark:border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.45)] z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left flex flex-col font-sans backdrop-blur-xl">
-                      <div className="p-4 bg-gradient-to-r from-[#071A41] via-[#0D2E73] to-[#071A41] text-white flex items-center justify-between border-b border-white/10 shadow-sm">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-inner">
+                    <div className="fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:left-0 sm:top-full sm:mt-2 w-auto sm:w-80 rounded-2xl bg-white border border-slate-200 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 origin-top-left flex flex-col font-sans">
+                      <div className="p-3.5 bg-[#071A41] text-white flex items-center justify-between shadow-xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-red-500/20 border border-red-400/30 flex items-center justify-center text-red-300">
                             <Bell className="w-4 h-4" />
                           </div>
                           <div>
                             <h4 className="text-xs font-black tracking-wide text-white">Menu Notifications</h4>
-                            <p className="text-[10px] text-cyan-200 font-medium">
-                              {totalMenuNotifications} update{totalMenuNotifications > 1 ? 's' : ''} across {menusWithNotifications.length} section{menusWithNotifications.length > 1 ? 's' : ''}
+                            <p className="text-[10px] text-blue-200">
+                              {totalMenuNotifications} alert{totalMenuNotifications > 1 ? 's' : ''} across {menusWithNotifications.length} menu{menusWithNotifications.length > 1 ? 's' : ''}
                             </p>
                           </div>
                         </div>
-                        <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-[#F4C430] text-slate-950 text-[10px] font-black shadow-xs">
+                        <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black">
                           Active
                         </span>
                       </div>
 
-                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 p-1.5 bg-white dark:bg-[#071328] custom-scrollbar">
+                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 p-1.5 bg-white" style={{ scrollbarWidth: 'thin' }}>
                         {menusWithNotifications.map((m) => (
                           <Link
                             key={m.href}
@@ -1506,33 +1372,33 @@ export function PortalLayout({
                               handleNavClick(m.href)
                               setIsMenuNotifOpen(false)
                             }}
-                            className="flex items-center justify-between p-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group cursor-pointer"
+                            className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-white/5 text-[#1455D9] dark:text-cyan-300 group-hover:bg-[#1455D9] group-hover:text-white transition-all flex items-center justify-center shrink-0 shadow-2xs border border-blue-100 dark:border-white/10">
+                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#1455D9] group-hover:bg-[#1455D9] group-hover:text-white transition-colors flex items-center justify-center shrink-0 shadow-2xs">
                                 {m.icon}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#1455D9] dark:group-hover:text-cyan-300 truncate">
+                                <p className="text-xs font-bold text-slate-800 group-hover:text-[#1455D9] truncate">
                                   {m.label}
                                 </p>
-                                <p className="text-[10px] text-slate-400 truncate">
-                                  Click to navigate
+                                <p className="text-[10px] text-slate-500 truncate">
+                                  Click to open this section
                                 </p>
                               </div>
                             </div>
-                            <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10px] font-black shrink-0 shadow-xs">
+                            <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 text-xs font-black shrink-0 shadow-2xs group-hover:bg-red-500 group-hover:text-white group-hover:border-red-500 transition-colors">
                               {m.count} new
                             </span>
                           </Link>
                         ))}
                       </div>
 
-                      <div className="p-3 bg-slate-50 dark:bg-black/30 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs">
+                      <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
                         <Link
                           href={notificationsHref}
                           onClick={() => setIsMenuNotifOpen(false)}
-                          className="text-[11px] font-bold text-[#1455D9] dark:text-cyan-300 hover:underline inline-flex items-center gap-1"
+                          className="text-[11px] font-bold text-[#1455D9] hover:underline inline-flex items-center gap-1"
                         >
                           <span>All Notifications</span>
                           <ExternalLink className="w-3 h-3" />
@@ -1540,7 +1406,7 @@ export function PortalLayout({
                         <button
                           type="button"
                           onClick={() => setIsMenuNotifOpen(false)}
-                          className="text-[11px] font-bold text-slate-400 hover:text-slate-200 cursor-pointer"
+                          className="text-[11px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
                         >
                           Close
                         </button>
@@ -1574,15 +1440,15 @@ export function PortalLayout({
               <button
                 onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                 className={cn(
-                  'relative p-2 rounded-xl transition-all flex items-center justify-center border border-white/10 hover:border-cyan-400/40 cursor-pointer shadow-xs',
-                  isNotificationOpen ? 'bg-blue-600/30 text-cyan-300 border-cyan-400/50 shadow-[0_0_12px_rgba(34,197,232,0.3)]' : 'bg-slate-900/60 text-slate-200 hover:text-white hover:bg-slate-800/80'
+                  'relative p-2.5 rounded-full transition-colors flex items-center justify-center',
+                  isNotificationOpen ? 'bg-[#1455D9]/10 text-[#1455D9]' : 'hover:bg-gray-100 text-[#071A3D]'
                 )}
                 aria-label="Toggle notifications"
                 aria-expanded={isNotificationOpen}
               >
-                <Bell className="h-4.5 w-4.5" />
+                <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[10px] font-black flex items-center justify-center border-2 border-[#040B1C] shadow-md animate-pulse">
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white rounded-full text-[10px] font-black flex items-center justify-center border-2 border-white shadow-xs animate-pulse">
                     {unreadCount}
                   </span>
                 )}
@@ -1756,15 +1622,16 @@ export function PortalLayout({
               )}
             </div>
 
-            {/* Official Version Badge */}
+            {/* Official Version Badge - Interactive Manual Update Check */}
             <button
               type="button"
               onClick={triggerPortalUpdateCheck}
-              title={`Release ${APP_VERSION_LABEL} · Click to check updates`}
-              className="hidden lg:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-blue-200/90 bg-white/85 hover:bg-white text-[#1455D9] text-xs font-bold transition-all cursor-pointer shadow-[0_2px_10px_rgba(20,85,217,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] hover:scale-105 active:scale-95"
+              title={`Official Release Version ${APP_VERSION_LABEL} · Click to check for updates`}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 hover:from-blue-100 hover:to-indigo-100 text-[#1455D9] text-xs font-black shadow-2xs cursor-pointer transition-all active:scale-95"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#1455D9] animate-pulse" />
-              <span className="font-mono font-bold text-[11px] tracking-wide">{APP_VERSION_LABEL}</span>
+              <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
+              <span>{APP_VERSION_LABEL}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
             </button>
 
             {/* Vision & Mission Quick Access */}
@@ -1772,48 +1639,38 @@ export function PortalLayout({
               type="button"
               onClick={() => setShowVisionModal(true)}
               title="View Department Vision & Mission"
-              className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-amber-300/90 bg-amber-50/90 hover:bg-amber-100/90 text-amber-900 text-xs font-bold transition-all cursor-pointer shadow-[0_2px_10px_rgba(245,158,11,0.08),inset_0_1px_0_rgba(255,255,255,0.9)] hover:scale-105 active:scale-95"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-300/80 bg-amber-50/80 hover:bg-amber-100 text-amber-900 text-xs font-bold transition-all shadow-2xs cursor-pointer hover:scale-102"
             >
               <Target className="w-3.5 h-3.5 text-amber-600" />
               <span>Vision &amp; Mission</span>
             </button>
 
-            {/* 1-Click Luxury Theme Switcher (White Crystal / Midnight Centurion) */}
-            <button
-              type="button"
-              onClick={toggleTheme}
-              title="Toggle Theme (White Crystal / Midnight Centurion)"
-              className="p-2 rounded-xl border border-slate-200/90 bg-white/85 hover:bg-white text-slate-700 shadow-[0_2px_10px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.9)] transition-all cursor-pointer hover:scale-105 active:scale-95"
-            >
-              <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
-            </button>
-
             {/* Profile Avatar & Name */}
             <Link
               href={profileHref}
-              className="flex items-center gap-2.5 p-1 pr-3.5 rounded-full bg-white/85 hover:bg-white border border-slate-200/90 hover:border-blue-400/60 transition-all duration-300 shadow-[0_2px_12px_rgba(7,26,61,0.06)] group cursor-pointer hover:scale-[1.02] active:scale-98"
+              className="flex items-center gap-2.5 p-1.5 pr-3.5 rounded-full hover:bg-slate-100/90 transition-all border border-slate-200/80 bg-white/80 backdrop-blur-xs shadow-2xs hover:shadow-xs group"
             >
-              <div className="relative w-8 h-8 rounded-full p-[1.5px] bg-gradient-to-tr from-[#D4AF37] via-cyan-400 to-[#1455D9] shadow-[0_0_10px_rgba(34,197,232,0.3)] shrink-0">
-                <div className="w-full h-full rounded-full overflow-hidden bg-slate-950 text-white flex items-center justify-center font-bold text-xs">
-                  {avatarImage && !avatarError ? (
-                    <img
-                      src={avatarImage}
-                      alt={userName}
-                      className="w-full h-full object-cover"
-                      onError={() => setAvatarError(true)}
-                    />
-                  ) : (
-                    userName.charAt(0) || 'U'
-                  )}
-                </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shadow-xs ring-2 ring-[#1455D9]/25 shrink-0">
+                {avatarImage && !avatarError ? (
+                  <img
+                    src={avatarImage}
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                    onError={() => setAvatarError(true)}
+                  />
+                ) : (
+                  userName.charAt(0) || 'U'
+                )}
               </div>
               <div className="hidden sm:flex flex-col text-left leading-none">
-                <span className="text-xs font-bold text-[#071A3D] max-w-[120px] truncate group-hover:text-[#1455D9] transition-colors">
+                <span className="text-xs font-bold text-[#071A3D] max-w-[130px] truncate group-hover:text-[#1455D9] transition-colors">
                   {userName}
                 </span>
-                <span className="text-[9.5px] text-[#1455D9] font-bold mt-0.5 uppercase tracking-wider">
-                  {effectiveRoleBadgeLabel}
+                <span className={cn(
+                  'text-[9px] font-extrabold mt-0.5',
+                  isLabHandler ? 'text-cyan-600' : isFacultyAdvisor ? 'text-emerald-600' : 'text-slate-600'
+                )}>
+                  {effectiveRoleBadgeLabel.toUpperCase()}
                 </span>
               </div>
             </Link>
@@ -1824,7 +1681,7 @@ export function PortalLayout({
               onClick={() => setShowLogoutConfirm(true)}
               disabled={isLoggingOut}
               title="Logout from portal"
-              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl text-rose-700 hover:text-rose-800 bg-rose-50/90 hover:bg-rose-100/90 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 border border-rose-200/90 shadow-xs hover:scale-105 active:scale-95"
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-rose-200/80 bg-rose-50/80 hover:bg-rose-100/90 text-rose-600 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer hover:scale-102 shadow-2xs disabled:opacity-50"
             >
               <LogOut className="w-4 h-4 text-rose-500" />
               <span className="hidden sm:inline">Logout</span>
@@ -1838,9 +1695,9 @@ export function PortalLayout({
         <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">{children}</div>
       </main>
 
-      {/* Mobile Bottom 5-Tab Navigation Bar (Obsidian Glass Floating Dock) */}
+      {/* Mobile Bottom 5-Tab Navigation Bar */}
       <nav
-        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-gradient-to-t from-[#020612] via-[#050D24]/95 to-[#071328]/90 backdrop-blur-2xl border-t border-white/10 grid grid-cols-5 py-2 px-1 pb-safe shadow-[0_-8px_32px_rgba(0,0,0,0.6)] select-none"
+        className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur-md border-t border-slate-200/90 grid grid-cols-5 py-1.5 px-1 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.06)] select-none"
         aria-label="Bottom mobile navigation"
         style={{ touchAction: 'manipulation' }}
       >
@@ -1852,10 +1709,10 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
             (activePath || pathname) === '/dashboard' || (activePath || pathname) === '/faculty-dashboard' || (activePath || pathname) === '/hod-dashboard' || (activePath || pathname) === '/admin/dashboard'
-              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-[#1455D9]'
+              : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <Home className="h-5 w-5" />
@@ -1870,16 +1727,16 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : role === 'faculty' ? '/faculty-dashboard/subjects' : '/dashboard/subjects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
             (activePath || pathname).includes('students') || (activePath || pathname).includes('subjects') || (activePath || pathname).includes('academics') || (activePath || pathname).includes('od-proofs')
-              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-[#1455D9]'
+              : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <div className="relative">
             {role === 'admin' ? <Users className="h-5 w-5" /> : role === 'hod' ? <ShieldCheck className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
             {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-[#020612] shadow-xs">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
                 {getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/students' : role === 'hod' ? '/hod-dashboard/od-proofs' : '/dashboard/subjects', role === 'admin' ? 'Students' : role === 'hod' ? 'OD Proofs' : 'Courses')}
               </span>
             )}
@@ -1895,16 +1752,16 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects') } catch {} }}
           onClick={() => handleNavClick(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects')}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
             (activePath || pathname).includes('faculty') || (activePath || pathname).includes('projects') || ((activePath || pathname).includes('students') && role === 'faculty')
-              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
-              : 'text-slate-400 hover:text-slate-200'
+              ? 'text-[#1455D9]'
+              : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <div className="relative">
             {role === 'admin' ? <School className="h-5 w-5" /> : role === 'faculty' ? <Users className="h-5 w-5" /> : <FolderOpen className="h-5 w-5" />}
             {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-[#020612] shadow-xs">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
                 {getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects') > 9 ? '9+' : getMenuNotificationCount(role === 'admin' ? '/admin/faculty' : role === 'hod' ? '/hod-dashboard/projects' : role === 'faculty' ? '/faculty-dashboard/students' : '/dashboard/projects', role === 'admin' ? 'Faculty' : role === 'faculty' ? 'Students' : 'Projects')}
               </span>
             )}
@@ -1918,16 +1775,14 @@ export function PortalLayout({
           prefetch={true}
           onClick={() => handleNavClick(notificationsHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl relative',
-            (activePath || pathname).includes('notifications')
-              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
-              : 'text-slate-400 hover:text-slate-200'
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors relative',
+            (activePath || pathname).includes('notifications') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <div className="relative">
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-2 ring-[#020612] shadow-xs">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center ring-1 ring-white shadow-xs animate-pulse">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -1943,10 +1798,8 @@ export function PortalLayout({
           onMouseDown={() => { try { router.prefetch(profileHref) } catch {} }}
           onClick={() => handleNavClick(profileHref)}
           className={cn(
-            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-medium transition-all rounded-xl',
-            (activePath || pathname).includes('profile')
-              ? 'text-cyan-300 font-bold bg-white/10 shadow-inner'
-              : 'text-slate-400 hover:text-slate-200'
+            'flex flex-col items-center gap-1 py-1 text-[10px] sm:text-[11px] font-bold transition-colors',
+            (activePath || pathname).includes('profile') ? 'text-[#1455D9]' : 'text-gray-500 hover:text-[#071A3D]'
           )}
         >
           <UserIcon className="h-5 w-5" />
@@ -1995,23 +1848,19 @@ export function PortalLayout({
         onClose={() => setIsDownloaderOpen(false)}
       />
 
-      {/* Logout Confirmation Modal (Luxury Midnight Sapphire Glass) */}
+      {/* Logout Confirmation Modal */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-gradient-to-b from-[#061226] via-[#091B3E] to-[#030919] text-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-[0_25px_70px_rgba(0,0,0,0.85)] border border-white/15 animate-in zoom-in-95 duration-200 text-center relative overflow-hidden">
-            {/* Ambient aura glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-24 bg-rose-500/15 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="w-16 h-16 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto mb-4 shadow-[0_0_24px_rgba(244,63,94,0.3)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3D]/70 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200 text-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4 shadow-inner ring-8 ring-red-50">
               <LogOut className="w-8 h-8" />
             </div>
 
-            <h3 className="text-lg sm:text-xl font-black text-white mb-1.5 tracking-tight">
-              Sign Out of Portal Session
+            <h3 className="text-lg sm:text-xl font-black text-[#071A3D] mb-1">
+              Confirm Sign Out
             </h3>
-            <p className="text-xs sm:text-sm text-slate-300 mb-6 leading-relaxed">
-              Are you sure you want to end your current session for{' '}
-              <strong className="text-amber-300 font-bold">{userName}</strong> ({role.toUpperCase()})?
+            <p className="text-xs sm:text-sm text-gray-500 mb-6 leading-relaxed">
+              Are you sure you want to end your current session for <strong className="text-[#071A3D] font-bold">{userName}</strong> ({role.toUpperCase()})?
             </p>
 
             <div className="grid grid-cols-2 gap-3">
@@ -2019,7 +1868,7 @@ export function PortalLayout({
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
                 disabled={isLoggingOut}
-                className="px-4 py-3 rounded-xl border border-white/10 text-slate-300 font-bold text-xs hover:bg-white/10 hover:text-white transition-all cursor-pointer disabled:opacity-50"
+                className="px-4 py-3 rounded-2xl border border-gray-200 text-gray-700 font-bold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -2027,17 +1876,17 @@ export function PortalLayout({
                 type="button"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="px-4 py-3 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-bold text-xs transition-all shadow-[0_4px_20px_rgba(244,63,94,0.4)] border border-rose-400/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-4 py-3 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-md shadow-red-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isLoggingOut ? (
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Signing out...</span>
+                    Signing out...
                   </>
                 ) : (
                   <>
                     <LogOut className="w-4 h-4" />
-                    <span>Yes, Sign Out</span>
+                    Yes, Sign Out
                   </>
                 )}
               </button>

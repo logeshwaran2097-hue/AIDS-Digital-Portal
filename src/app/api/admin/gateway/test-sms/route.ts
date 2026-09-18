@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
           apiKey.trim() ||
           process.env.FAST2SMS_WHATSAPP_API_KEY ||
           process.env.FAST2SMS_API_KEY ||
-          ''
+          'XSyBcPD25Z6hbnUftEkTVr90xzuMWawoKQRILOHdCY8elm43ipVt9cDqsCbhOo805HdKuLeAES7QGyP4'
 
         if (!token) {
           return NextResponse.json({

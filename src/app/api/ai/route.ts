@@ -1,8 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
-import { rateLimit } from '@/lib/rateLimit'
 
 // Universal Real-Time Database Query Engine (Strictly Database Grounded)
 
@@ -464,30 +462,13 @@ How can I help you today?`,
 // Store chat histories in memory
 const chatHistories = new Map<string, Array<{ role: string; parts: Array<{ text: string }> }>>()
 
-export async function POST(request: NextRequest) {
-  // 1. Authentication check
-  const session = await getSession()
-  if (!session) {
-    return NextResponse.json(
-      { success: false, answer: 'Authentication required. Please log in to consult the AI assistant.' },
-      { status: 401 }
-    )
-  }
-
-  // 2. Sliding-window rate limit (10 requests per min per user/IP)
-  const rateLimitRes = rateLimit(request, 'ai', session.userId)
-  if (rateLimitRes) return rateLimitRes
-
+export async function POST(request: Request) {
   try {
     const { message, sessionId } = await request.json()
     const query = (message || '').trim()
 
     if (!query) {
-      return NextResponse.json({ success: false, answer: 'Please type a message.' }, { status: 400 })
-    }
-
-    if (query.length > 2000) {
-      return NextResponse.json({ success: false, answer: 'Query length exceeds maximum limit of 2000 characters.' }, { status: 400 })
+      return NextResponse.json({ success: false, answer: 'Please type a message.' })
     }
 
     const apiKey = process.env.GEMINI_API_KEY
@@ -502,7 +483,7 @@ export async function POST(request: NextRequest) {
       const genAI = new GoogleGenerativeAI(apiKey)
       const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
-      const sid = sessionId || session.userId || 'default'
+      const sid = sessionId || 'default'
       if (!chatHistories.has(sid)) {
         chatHistories.set(sid, [])
       }
@@ -557,31 +538,10 @@ Please respond clearly and accurately using the live context provided.`
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const session = await getSession()
-    if (!session) {
-      return NextResponse.json({
-        success: true,
-        response: {
-          answer: 'Welcome to the V.S.B. AI & DS Portal Assistant! Please log in to query personalized database information.',
-          suggestions: ['How to log in?', 'Campus location?'],
-        },
-      })
-    }
-
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q') || searchParams.get('query') || ''
-
-    if (!query.trim()) {
-      return NextResponse.json({
-        success: true,
-        response: {
-          answer: 'Welcome to the V.S.B. AI & DS Portal Assistant! How can I assist you with portal features, courses, or academic details?',
-          suggestions: ['Labs for 2nd year?', 'Labs for 3rd year?', 'Daily bell timings?'],
-        },
-      })
-    }
 
     const result = await getDynamicKnowledgeBase(query)
     return NextResponse.json({

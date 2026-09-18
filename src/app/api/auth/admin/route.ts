@@ -1,23 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendAdminOTP, verifyAdminOTP } from '@/lib/auth'
-import { rateLimit } from '@/lib/rateLimit'
 import { z } from 'zod'
 
 const sendOTPSchema = z.object({
-  email: z.string().trim().email('Invalid email address').max(150),
+  email: z.string().email('Invalid email address'),
 })
 
 const verifyOTPSchema = z.object({
-  email: z.string().trim().email('Invalid email address').max(150),
-  otp: z.string().trim().regex(/^\d{6}$/, 'OTP must be exactly 6 numeric digits'),
-  challenge: z.string().trim().optional(),
+  email: z.string().email('Invalid email address'),
+  otp: z.string().length(6, 'OTP must be 6 digits'),
 })
 
 export async function POST(request: NextRequest) {
-  // 1. Sliding-window rate limit (5 attempts per min per IP)
-  const rateLimitRes = rateLimit(request, 'auth')
-  if (rateLimitRes) return rateLimitRes
-
   try {
     const body = await request.json()
     
@@ -70,6 +64,7 @@ export async function POST(request: NextRequest) {
         success: true, 
         message: result.message,
         challenge: result.challenge,
+        devOtp: (result as any).devOtp,
       })
 
       if (result.challenge) {

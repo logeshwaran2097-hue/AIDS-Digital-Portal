@@ -3,15 +3,16 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.8.4'
+export const APP_VERSION = '2.3.0'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
-export const APP_RELEASE_DATE = '2026-09-18'
+export const APP_RELEASE_DATE = '2026-09-17'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'Restored Clean Institutional Default UI/UX: Pure white and slate surfaces, standard typography, clean cards, and responsive tables across all portals.',
-  'Optimized Login Experience: Instant login form interactivity (<40ms) with zero artificial delay, prominent VSB college emblem, and clean vector/transparent Mail OTP logo.',
-  'Performance & Asset Refinements: Removed bulky checkerboard artifacts, optimized email OTP delivery with inline attachments, and verified Next.js production build.',
+  'Official Institutional Hostel Gate Pass: Complete format redesign with academic letterhead, Autonomous crest, and NAAC/NBA compliance',
+  'High-Resolution Gate Pass PDF Slip: Tamper-proof downloadable PDF pass slip with dual security borders, scannable QR verification, and seals',
+  'Campus Main Gate Security Movement Log: Security checkpoint tracking for departure out-time and arrival in-time',
+  'Requisition Form & Print Optimization: Added destination tracking, departure scheduling, quick reason presets, and seamless A4 print slip layout',
 ]
 
 
