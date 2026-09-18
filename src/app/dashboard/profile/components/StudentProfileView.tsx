@@ -1059,7 +1059,11 @@ export function StudentProfileView({
                           type="button"
                           onClick={() => {
                             const newType = 'Hosteller'
-                            const block = formData.hostelBlock || 'Boys Hostel Block A (Ganga)'
+                            const block = (formData.hostelBlock && ['Boys Hostel I', 'Boys Hostel II', 'Boys Hostel III', 'Girls Hostel I', 'Girls Hostel II', 'Girls Hostel III'].includes(formData.hostelBlock))
+                              ? formData.hostelBlock
+                              : (formData.hostelBlock?.includes('Girls')
+                                  ? (formData.hostelBlock.includes('III') || formData.hostelBlock.includes('3') ? 'Girls Hostel III' : formData.hostelBlock.includes('II') || formData.hostelBlock.includes('2') ? 'Girls Hostel II' : 'Girls Hostel I')
+                                  : 'Boys Hostel I')
                             const room = formData.roomNo || 'Room 101'
                             const newSummary = `Hosteller · ${block} · ${room}`
                             setFormData({
@@ -1267,22 +1271,31 @@ export function StudentProfileView({
                               </label>
                               <div className="relative">
                                 <select
-                                  value={formData.hostelBlock || 'Boys Hostel Block A (Ganga)'}
+                                  value={
+                                    (formData.hostelBlock && ['Boys Hostel I', 'Boys Hostel II', 'Boys Hostel III', 'Girls Hostel I', 'Girls Hostel II', 'Girls Hostel III'].includes(formData.hostelBlock))
+                                      ? formData.hostelBlock
+                                      : (formData.hostelBlock?.includes('Girls')
+                                          ? (formData.hostelBlock.includes('III') || formData.hostelBlock.includes('3') ? 'Girls Hostel III' : formData.hostelBlock.includes('II') || formData.hostelBlock.includes('2') ? 'Girls Hostel II' : 'Girls Hostel I')
+                                          : (formData.hostelBlock?.includes('Boys')
+                                              ? (formData.hostelBlock.includes('III') || formData.hostelBlock.includes('3') ? 'Boys Hostel III' : formData.hostelBlock.includes('II') || formData.hostelBlock.includes('2') ? 'Boys Hostel II' : 'Boys Hostel I')
+                                              : 'Boys Hostel I'))
+                                  }
                                   onChange={(e) => {
                                     const b = e.target.value
                                     setFormData({
                                       ...formData,
                                       hostelBlock: b,
-                                      residencyStatus: `Hosteller · ${b} · ${formData.roomNo || 'Room'}`,
+                                      residencyStatus: `Hosteller · ${b} · ${formData.roomNo || 'Room 101'}`,
                                     })
                                   }}
                                   className="w-full appearance-none px-3.5 py-2.5 pr-9 rounded-xl border border-purple-200 bg-white hover:border-purple-300 focus:outline-none focus:border-purple-600 text-xs font-semibold text-gray-800 cursor-pointer shadow-2xs"
                                 >
-                                  <option value="Boys Hostel Block A (Ganga)" className="text-gray-800 bg-white">Boys Hostel Block A (Ganga)</option>
-                                  <option value="Boys Hostel Block B (Yamuna)" className="text-gray-800 bg-white">Boys Hostel Block B (Yamuna)</option>
-                                  <option value="Boys Hostel Block C (Kaveri)" className="text-gray-800 bg-white">Boys Hostel Block C (Kaveri)</option>
-                                  <option value="Girls Hostel Block A (Thamarai)" className="text-gray-800 bg-white">Girls Hostel Block A (Thamarai)</option>
-                                  <option value="Girls Hostel Block B (Malligai)" className="text-gray-800 bg-white">Girls Hostel Block B (Malligai)</option>
+                                  <option value="Boys Hostel I" className="text-gray-800 bg-white">Boys Hostel I</option>
+                                  <option value="Boys Hostel II" className="text-gray-800 bg-white">Boys Hostel II</option>
+                                  <option value="Boys Hostel III" className="text-gray-800 bg-white">Boys Hostel III</option>
+                                  <option value="Girls Hostel I" className="text-gray-800 bg-white">Girls Hostel I</option>
+                                  <option value="Girls Hostel II" className="text-gray-800 bg-white">Girls Hostel II</option>
+                                  <option value="Girls Hostel III" className="text-gray-800 bg-white">Girls Hostel III</option>
                                 </select>
                                 <ChevronDown className="w-4 h-4 text-purple-400 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
                               </div>
