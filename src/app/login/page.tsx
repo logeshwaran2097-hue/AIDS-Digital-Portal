@@ -67,6 +67,10 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       // Preserve original login page pristine aesthetic without dark mode interference
       document.documentElement.classList.remove('midnight', 'dark')
+      try {
+        localStorage.setItem('vsb-portal-theme', 'light')
+        localStorage.removeItem('portal_theme')
+      } catch {}
 
       // Check for active existing session so mobile users never get logged out when switching apps
       const checkActiveSession = async () => {
@@ -1253,12 +1257,12 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* ULTRA-LUXURY LOGIN CARD (STAGE 8) */}
+      {/* LOGIN CARD */}
       <div
         className={cn(
-          "w-full max-w-[395px] bg-white/85 backdrop-blur-2xl rounded-[2rem] sm:rounded-[2.25rem] border p-3.5 sm:p-5 space-y-3 sm:space-y-4 relative z-10 my-0.5 shadow-[0_25px_60px_-15px_rgba(7,26,65,0.18),0_0_0_1.5px_rgba(255,255,255,0.85)_inset] transition-all duration-300 ease-out transform",
+          "login-card w-full max-w-[430px] bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 space-y-3.5 relative z-10 my-1 shadow-lg transition-all duration-300 ease-out transform",
           animStage >= 8 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8 pointer-events-none",
-          authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-white/95',
+          authStatus === 'error' ? 'border-rose-500/90 anim-error-shake shadow-[0_0_40px_rgba(244,63,94,0.35)]' : 'border-slate-200/90',
           authStatus === 'success' && 'border-emerald-500/80 shadow-[0_0_50px_rgba(16,185,129,0.4)] scale-[0.98]'
         )}
       >
@@ -1373,7 +1377,7 @@ export default function LoginPage() {
                       onChange={(e) => setRegisterNumber(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1397,7 +1401,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1445,7 +1449,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1469,7 +1473,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1519,7 +1523,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1543,7 +1547,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1591,7 +1595,7 @@ export default function LoginPage() {
                       onChange={(e) => setFacultyId(e.target.value)}
                       required
                       autoComplete="username"
-                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1615,7 +1619,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-10 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                     <button
                       type="button"
@@ -1663,7 +1667,7 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       autoComplete="email"
-                      className="w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
+                      className="login-input w-full pl-10 pr-3.5 py-2.5 sm:py-3 rounded-xl border border-slate-200/90 text-xs sm:text-sm font-bold text-[#071A41] bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#1557C0]/15 focus:border-[#1557C0] focus:shadow-[0_0_20px_rgba(21,87,192,0.18)] transition-all placeholder:text-slate-400 placeholder:font-normal shadow-xs"
                     />
                   </div>
                 </div>
@@ -1710,7 +1714,7 @@ export default function LoginPage() {
                         maxLength={6}
                         value={otp}
                         onChange={(e) => setOtp(e.target.value)}
-                        className="w-full px-4 py-2.5 sm:py-3 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/70 focus:outline-none focus:ring-4 focus:ring-[#1557C0]/20 focus:border-[#1557C0] transition-all shadow-inner"
+                        className="login-input w-full px-4 py-2.5 sm:py-3 text-center text-lg font-mono font-black tracking-widest rounded-xl border border-blue-300 text-[#071A41] bg-blue-50/70 focus:outline-none focus:ring-4 focus:ring-[#1557C0]/20 focus:border-[#1557C0] transition-all shadow-inner"
                       />
                     </div>
 
