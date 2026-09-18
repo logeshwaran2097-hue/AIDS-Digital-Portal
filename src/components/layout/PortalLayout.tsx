@@ -1075,16 +1075,18 @@ export function PortalLayout({
         {/* Drawer Header with Official Emblem */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02] relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl p-[2px] bg-gradient-to-tr from-[#F4C430] via-[#22C7E8] to-[#1455D9] shadow-[0_0_16px_rgba(244,196,48,0.35)] flex items-center justify-center shrink-0">
-              <div className="w-full h-full rounded-[14px] bg-white p-0.5 flex items-center justify-center overflow-hidden shadow-inner">
-                <Image
-                  src="/college-emblem.png"
-                  alt="V.S.B. Engineering College Official Emblem"
-                  width={38}
-                  height={38}
-                  className="w-full h-full object-contain"
-                  priority
-                />
+            <div className="relative group">
+              <div className="w-10 h-10 rounded-full p-1 bg-gradient-to-tr from-[#D4AF37] to-[#1E66E8] ring-1 ring-white/20 flex items-center justify-center shrink-0 shadow-md">
+                <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+                  <Image
+                    src="/college-emblem.png"
+                    alt="V.S.B. Engineering College Official Emblem"
+                    width={38}
+                    height={38}
+                    className="w-full h-full object-contain rounded-full"
+                    priority
+                  />
+                </div>
               </div>
             </div>
             <div className="min-w-0">

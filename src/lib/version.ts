@@ -3,12 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.7'
+export const APP_VERSION = '2.7.8'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-18'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Restored Previous Celestial Circular Emblem Logo: Reinstated the authentic 3-layer circular VSB college emblem with celestial dashed cyan ring and gold medallion across login and portal drawer.',
   'Login Page UI/UX Restored to Original Aesthetic: Preserved pristine light design, clean slate inputs, and protected against dark mode and autofill color shifts.',
   'Critical Layout & Page Visibility Fix: Removed conflicting relative position from fixed sidebar so main dashboard and header render properly on screen.',
   'Tailwind Dark Mode Activation: Explicitly enabled class-based dark mode across all theme variants.',
