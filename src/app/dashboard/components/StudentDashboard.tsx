@@ -331,18 +331,18 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
 
       {/* Live Attendance Health & Chronometer Overview */}
       <section aria-label="Attendance Overview">
-        <div className="lux-glass-card rounded-3xl p-6 sm:p-7 border border-[#D4AF37]/25 dark:border-white/15 shadow-xl space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-200/70 dark:border-white/10">
+        <div className="lux-glass-card rounded-3xl p-6 sm:p-7 border border-[#D4AF37]/35 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_0_35px_rgba(20,85,217,0.25)] space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/10">
             <div>
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/15 text-blue-700 dark:text-cyan-300 border border-blue-400/30 text-[10px] font-mono font-bold uppercase tracking-wider shadow-2xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-blue-500/20 text-cyan-200 border border-[#D4AF37]/35 text-[10px] font-mono font-bold uppercase tracking-wider shadow-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
                   {att.totalSessions > 0 ? "Biometric Ledger Verified" : "Enrolled Academic Term"}
                 </span>
                 <span className="text-xs text-slate-300 font-semibold">· Semester {data.student.semester} Compliance</span>
               </div>
               <h2 className="text-xl font-black text-white mt-2 flex items-center gap-2.5 tracking-tight">
-                <div className="p-2 rounded-2xl bg-gradient-to-tr from-[#1748A8] to-[#1455D9] text-white shadow-[0_0_15px_rgba(20,85,217,0.4)] border border-cyan-400/30">
+                <div className="p-2 rounded-2xl bg-gradient-to-tr from-[#1748A8] to-[#1455D9] text-white shadow-[0_0_15px_rgba(20,85,217,0.4)] border border-[#D4AF37]/40">
                   <CalendarDays className="w-5 h-5 text-[#FDE68A]" />
                 </div>
                 <span>Attendance &amp; Academic Health Chronometer</span>
@@ -490,11 +490,14 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 })}
               </div>
             ) : (
-              <div className="py-8 px-6 text-center rounded-2xl border border-cyan-500/20 bg-gradient-to-b from-[#0A1D42]/60 to-[#051128]/80 space-y-2">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-cyan-400/30 text-cyan-300 flex items-center justify-center mx-auto shadow-xs">
+              <div className="py-8 px-6 text-center rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-[#0C2254]/80 via-[#08183E]/90 to-[#040E28]/95 space-y-2 shadow-inner">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1748A8] to-[#0A1E4A] border border-[#D4AF37]/40 text-[#FDE68A] flex items-center justify-center mx-auto shadow-md">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <p className="font-black text-sm text-white">Semester Curriculum Roll Active</p>
+                <p className="font-black text-sm text-white flex items-center justify-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22C7E8]" />
+                  <span>Semester Curriculum Roll Active</span>
+                </p>
                 <p className="text-xs text-slate-300 max-w-sm mx-auto">Official course periods synchronized with biometric attendance ledger.</p>
               </div>
             )}
@@ -502,19 +505,19 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         </div>
       </section>
 
-      {/* Luxury Search Bar */}
+      {/* Luxury Search Bar - Imperial Royal Sapphire & Gold */}
       <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400/70 group-focus-within:text-cyan-300 transition-colors pointer-events-none" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#F5CE62] group-focus-within:text-[#FFE885] transition-colors pointer-events-none" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search subjects, notes, question papers, events, or resources..."
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-white/15 bg-gradient-to-r from-[#0E2048]/90 via-[#091636]/95 to-[#040D22]/98 text-sm focus:outline-none focus:ring-4 focus:ring-cyan-500/25 focus:border-cyan-400 shadow-xl placeholder:text-slate-400 transition-all text-white"
+          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-[#D4AF37]/35 bg-gradient-to-r from-[#12306C]/90 via-[#0C2254]/95 to-[#07163C]/98 text-sm focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/25 focus:border-[#F5CE62] shadow-[0_12px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(20,85,217,0.25)] placeholder:text-slate-300 transition-all text-white font-medium"
         />
       </div>
 
-      {/* Sculpted 3D Luxury Quick Navigation Tiles */}
+      {/* Sculpted 3D Luxury Quick Navigation Tiles - Floating Jewel Plaque */}
       <section aria-label="Quick Navigation">
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-3.5">
           {quickAccess.map((item) => (
@@ -523,13 +526,13 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
               href={item.href}
               prefetch={true}
               className={cn(
-                'flex flex-col items-center justify-center p-4 rounded-3xl bg-gradient-to-b from-[#0E2048]/85 via-[#091636]/90 to-[#040D22]/98 border border-white/12 hover:border-cyan-400/50 text-white shadow-[0_12px_32px_rgba(0,0,0,0.6)] hover:shadow-[0_16px_40px_rgba(20,85,217,0.35)] transition-all duration-300 group text-center space-y-2.5 lux-specular-sweep hover:-translate-y-1 cursor-pointer'
+                'flex flex-col items-center justify-center p-4 rounded-3xl bg-gradient-to-b from-[#14367A]/90 via-[#0D2458]/95 to-[#07163C]/98 border border-[#D4AF37]/30 hover:border-[#F5CE62] text-white shadow-[0_12px_32px_rgba(0,0,0,0.65),0_0_20px_rgba(20,85,217,0.25)] hover:shadow-[0_18px_45px_rgba(212,175,55,0.35)] transition-all duration-300 group text-center space-y-2.5 lux-specular-sweep hover:-translate-y-1.5 cursor-pointer'
               )}
             >
-              <div className={cn('p-3 rounded-2xl transition-all group-hover:scale-110 group-hover:rotate-3 duration-300 border shadow-md', item.bg)}>
+              <div className={cn('p-3 rounded-2xl transition-all group-hover:scale-115 group-hover:rotate-3 duration-300 border shadow-md', item.bg)}>
                 {item.icon}
               </div>
-              <span className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 transition-colors line-clamp-1">
+              <span className="text-xs font-bold text-slate-100 group-hover:text-[#FDE68A] transition-colors line-clamp-1">
                 {item.label}
               </span>
             </Link>

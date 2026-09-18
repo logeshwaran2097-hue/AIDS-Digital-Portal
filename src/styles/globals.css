@@ -1098,50 +1098,50 @@ button, a, input, select, textarea {
 }
 
 .lux-glass-card {
-  background: linear-gradient(145deg, rgba(14, 30, 70, 0.85) 0%, rgba(8, 20, 48, 0.92) 55%, rgba(4, 11, 28, 0.97) 100%);
-  backdrop-filter: blur(16px) saturate(190%);
-  -webkit-backdrop-filter: blur(16px) saturate(190%);
-  border: 1px solid rgba(56, 189, 248, 0.22);
-  box-shadow: 0 16px 45px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) inset, inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  color: #F8FAFC;
+  background: linear-gradient(145deg, rgba(16, 46, 112, 0.82) 0%, rgba(11, 32, 82, 0.9) 50%, rgba(7, 20, 56, 0.98) 100%);
+  backdrop-filter: blur(16px) saturate(200%);
+  -webkit-backdrop-filter: blur(16px) saturate(200%);
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.85), 0 0 35px -5px rgba(20, 85, 217, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  color: #FFFFFF;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
 }
 
 .lux-glass-card:hover {
-  border-color: rgba(212, 175, 55, 0.55);
-  box-shadow: 0 20px 50px -8px rgba(14, 58, 148, 0.45), 0 0 24px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-color: rgba(245, 206, 98, 0.65);
+  box-shadow: 0 25px 60px -8px rgba(0, 0, 0, 0.9), 0 0 40px rgba(212, 175, 55, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 html.dark .lux-glass-card,
 html.midnight .lux-glass-card {
-  background: linear-gradient(145deg, rgba(14, 30, 70, 0.85) 0%, rgba(8, 20, 48, 0.92) 55%, rgba(4, 11, 28, 0.97) 100%);
-  backdrop-filter: blur(16px) saturate(190%);
-  -webkit-backdrop-filter: blur(16px) saturate(190%);
-  border: 1px solid rgba(56, 189, 248, 0.22);
-  box-shadow: 0 16px 45px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) inset, inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(16, 46, 112, 0.82) 0%, rgba(11, 32, 82, 0.9) 50%, rgba(7, 20, 56, 0.98) 100%);
+  backdrop-filter: blur(16px) saturate(200%);
+  -webkit-backdrop-filter: blur(16px) saturate(200%);
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.85), 0 0 35px -5px rgba(20, 85, 217, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 html.dark .lux-glass-card:hover,
 html.midnight .lux-glass-card:hover {
-  border-color: rgba(212, 175, 55, 0.55);
-  box-shadow: 0 20px 50px -8px rgba(14, 58, 148, 0.45), 0 0 24px rgba(212, 175, 55, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  border-color: rgba(245, 206, 98, 0.65);
+  box-shadow: 0 25px 60px -8px rgba(0, 0, 0, 0.9), 0 0 40px rgba(212, 175, 55, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .lux-glass-header {
-  background: rgba(4, 11, 28, 0.88);
+  background: rgba(4, 11, 28, 0.92);
   backdrop-filter: blur(28px) saturate(200%);
   -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.6), 0 1px 0 0 rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.7), 0 1px 0 0 rgba(212, 175, 55, 0.25);
 }
 
 html.dark .lux-glass-header,
 html.midnight .lux-glass-header {
-  background: rgba(4, 11, 28, 0.88);
+  background: rgba(4, 11, 28, 0.92);
   backdrop-filter: blur(28px) saturate(200%);
   -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.6), 0 1px 0 0 rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.7), 0 1px 0 0 rgba(212, 175, 55, 0.25);
 }
 
 .lux-gold-foil-text {
@@ -1153,9 +1153,9 @@ html.midnight .lux-glass-header {
 }
 
 .lux-sapphire-card {
-  background: radial-gradient(circle at 10% 0%, #1748A8 0%, #0D2D6C 40%, #071A3D 75%, #030818 100%);
-  border: 1px solid rgba(212, 175, 55, 0.42);
-  box-shadow: 0 25px 50px -12px rgba(2, 6, 20, 0.85), 0 0 35px -5px rgba(212, 175, 55, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.28);
+  background: radial-gradient(circle at 10% 0%, #1A4EB5 0%, #0F3278 40%, #091F4D 75%, #040E26 100%);
+  border: 1px solid rgba(212, 175, 55, 0.48);
+  box-shadow: 0 25px 50px -12px rgba(2, 6, 20, 0.9), 0 0 40px -5px rgba(212, 175, 55, 0.28), inset 0 1px 0 0 rgba(255, 255, 255, 0.32);
 }
 
 .lux-button-primary {
@@ -1177,13 +1177,13 @@ html.midnight .lux-glass-header {
   background: linear-gradient(135deg, #FDE68A 0%, #F5CE62 35%, #D4AF37 70%, #B88E18 100%);
   color: #071328;
   font-weight: 900;
-  box-shadow: 0 4px 18px 0 rgba(212, 175, 55, 0.4), inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 18px 0 rgba(212, 175, 55, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.65);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lux-button-gold:hover {
   transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 8px 26px 0 rgba(212, 175, 55, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 26px 0 rgba(212, 175, 55, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.75);
 }
 
 .lux-button-gold:active {
@@ -1192,47 +1192,47 @@ html.midnight .lux-glass-header {
 
 /* Luxury Chronometer Complication Cards */
 .lux-kpi-cyan {
-  background: linear-gradient(145deg, rgba(8, 38, 88, 0.75) 0%, rgba(5, 22, 54, 0.88) 60%, rgba(3, 12, 32, 0.96) 100%);
-  border: 1px solid rgba(34, 197, 232, 0.35);
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(34, 197, 232, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(14, 52, 130, 0.88) 0%, rgba(8, 32, 86, 0.95) 60%, rgba(4, 16, 48, 0.98) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px -4px rgba(34, 197, 232, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .lux-kpi-cyan:hover {
-  border-color: rgba(34, 197, 232, 0.65);
-  box-shadow: 0 20px 48px -8px rgba(34, 197, 232, 0.35), 0 0 32px rgba(34, 197, 232, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(56, 189, 248, 0.8);
+  box-shadow: 0 20px 48px -8px rgba(34, 197, 232, 0.45), 0 0 35px rgba(34, 197, 232, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .lux-kpi-amber {
-  background: linear-gradient(145deg, rgba(64, 42, 8, 0.7) 0%, rgba(38, 24, 5, 0.85) 60%, rgba(20, 12, 2, 0.95) 100%);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(245, 158, 11, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(110, 68, 8, 0.88) 0%, rgba(68, 40, 4, 0.95) 60%, rgba(36, 20, 2, 0.98) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px -4px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .lux-kpi-amber:hover {
-  border-color: rgba(245, 158, 11, 0.65);
-  box-shadow: 0 20px 48px -8px rgba(245, 158, 11, 0.35), 0 0 32px rgba(245, 158, 11, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(245, 158, 11, 0.85);
+  box-shadow: 0 20px 48px -8px rgba(245, 158, 11, 0.45), 0 0 35px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .lux-kpi-emerald {
-  background: linear-gradient(145deg, rgba(6, 52, 36, 0.7) 0%, rgba(4, 32, 22, 0.85) 60%, rgba(2, 18, 12, 0.95) 100%);
-  border: 1px solid rgba(52, 211, 153, 0.35);
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(52, 211, 153, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(12, 84, 56, 0.88) 0%, rgba(6, 52, 34, 0.95) 60%, rgba(3, 28, 18, 0.98) 100%);
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px -4px rgba(52, 211, 153, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .lux-kpi-emerald:hover {
-  border-color: rgba(52, 211, 153, 0.65);
-  box-shadow: 0 20px 48px -8px rgba(52, 211, 153, 0.35), 0 0 32px rgba(52, 211, 153, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(52, 211, 153, 0.85);
+  box-shadow: 0 20px 48px -8px rgba(52, 211, 153, 0.45), 0 0 35px rgba(52, 211, 153, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .lux-kpi-rose {
-  background: linear-gradient(145deg, rgba(68, 10, 24, 0.7) 0%, rgba(42, 6, 15, 0.85) 60%, rgba(24, 3, 8, 0.95) 100%);
-  border: 1px solid rgba(251, 113, 133, 0.35);
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px -4px rgba(251, 113, 133, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, rgba(115, 18, 42, 0.88) 0%, rgba(72, 8, 24, 0.95) 60%, rgba(38, 4, 12, 0.98) 100%);
+  border: 1px solid rgba(251, 113, 133, 0.5);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.8), 0 0 25px -4px rgba(251, 113, 133, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .lux-kpi-rose:hover {
-  border-color: rgba(251, 113, 133, 0.65);
-  box-shadow: 0 20px 48px -8px rgba(251, 113, 133, 0.35), 0 0 32px rgba(251, 113, 133, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(251, 113, 133, 0.85);
+  box-shadow: 0 20px 48px -8px rgba(251, 113, 133, 0.45), 0 0 35px rgba(251, 113, 133, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .lux-specular-sweep {
