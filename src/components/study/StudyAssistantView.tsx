@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import {
   Bot,
   Sparkles,
@@ -13,263 +13,193 @@ import {
   Copy,
   Printer,
   ChevronDown,
+  ChevronRight,
   Layers,
   Code2,
   BrainCircuit,
   Zap,
-  RotateCcw
+  RotateCcw,
+  Check,
+  AlertCircle,
+  GraduationCap,
+  Target,
+  Award,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { Badge } from '@/components/ui/Badge'
+import { cn } from '@/lib/utils'
 
-interface SubjectUnitData {
-  code: string
-  name: string
-  units: {
-    unitNo: number
-    title: string
-    topics: string[]
-    partA: { q: string; a: string }[]
-    partB: { q: string; marks: number; solution: string }[]
-    notes: { title: string; points: string[] }[]
-    quiz: { q: string; options: string[]; answerIndex: number; explanation: string }[]
-  }[]
-}
+import {
+  STUDY_DATABASE,
+  SubjectUnitData,
+  UnitData,
+  PartAQuestion,
+  PartBQuestion,
+  PartCQuestion,
+  RevisionNote,
+  QuizQuestion,
+} from '@/data/studyDatabase';
 
-const STUDY_DATABASE: SubjectUnitData[] = [
-  {
-    code: 'AL3391',
-    name: 'Artificial Intelligence',
-    units: [
-      {
-        unitNo: 1,
-        title: 'Problem Solving & State Space Search',
-        topics: ['State Space Representation', 'Breadth First Search', 'Depth First Search', 'Heuristic Search (A*)', 'Minimax & Alpha-Beta Pruning'],
-        partA: [
-          {
-            q: 'Define Rational Agent in Artificial Intelligence.',
-            a: 'A rational agent is an autonomous entity that perceives its environment through sensors, acts upon that environment through actuators, and always selects an action that maximizes its expected performance measure based on its percept sequence and built-in knowledge.'
-          },
-          {
-            q: 'What is an admissible heuristic in A* search?',
-            a: 'A heuristic function h(n) is admissible if it never overestimates the actual cost to reach the goal state from node n (i.e., h(n) <= h*(n), where h*(n) is the true optimal cost).'
-          },
-          {
-            q: 'Distinguish between BFS and DFS in terms of completeness and space complexity.',
-            a: 'BFS is always complete for finite branching factors with space complexity O(b^d). DFS is not complete in infinite-depth trees unless depth-limited, but has linear space complexity O(b*m).'
-          }
-        ],
-        partB: [
-          {
-            q: 'Explain the A* Search algorithm with an illustrative graph example. Prove its optimality conditions.',
-            marks: 16,
-            solution: '1. Evaluation Function: f(n) = g(n) + h(n), where g(n) is actual path cost from start to n, and h(n) is estimated cost from n to goal.\n2. Optimality: When h(n) is admissible (in tree search) and consistent/monotonic (in graph search), A* is guaranteed to return the minimal cost path.\n3. Step-by-Step Traversal: Maintain OPEN priority queue sorted by f(n) and CLOSED set. Expand node with min f(n), compute f for successors, and terminate when goal is popped from OPEN.'
-          },
-          {
-            q: 'Discuss Minimax algorithm with Alpha-Beta Pruning. How does pruning reduce branch evaluation?',
-            marks: 13,
-            solution: 'Alpha represents the best value for MAX along the path (initially -infinity). Beta represents the best value for MIN (initially +infinity). Pruning condition: If alpha >= beta, the current branch cannot influence the final decision and is pruned, reducing optimal time complexity from O(b^m) to O(b^(m/2)).'
-          }
-        ],
-        notes: [
-          {
-            title: 'Search Complexity Comparison Table',
-            points: [
-              'BFS: Time O(b^d), Space O(b^d), Complete: Yes, Optimal: Yes (if uniform step cost)',
-              'DFS: Time O(b^m), Space O(bm), Complete: No (cycles), Optimal: No',
-              'Iterative Deepening (IDDFS): Time O(b^d), Space O(bd), Complete: Yes, Optimal: Yes',
-              'A* Search: Time O(b^d), Space O(b^d), Complete: Yes, Optimal: Yes (if h is admissible)'
-            ]
-          }
-        ],
-        quiz: [
-          {
-            q: 'Which search algorithm uses the evaluation function f(n) = g(n) + h(n)?',
-            options: ['Greedy Best-First Search', 'A* Search', 'Depth-First Search', 'Uniform Cost Search'],
-            answerIndex: 1,
-            explanation: 'A* uses f(n) = g(n) + h(n) balancing actual path cost g(n) and heuristic estimate h(n).'
-          },
-          {
-            q: 'In Alpha-Beta pruning, when does a cutoff occur?',
-            options: ['When alpha < beta', 'When alpha >= beta', 'When alpha == 0', 'When beta == infinity'],
-            answerIndex: 1,
-            explanation: 'Cutoff occurs whenever alpha >= beta, because the opposing player already has a better move.'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    code: 'AD3351',
-    name: 'Design and Analysis of Algorithms',
-    units: [
-      {
-        unitNo: 2,
-        title: 'Divide and Conquer & Dynamic Programming',
-        topics: ['Merge Sort', 'Quick Sort', '0/1 Knapsack Problem', 'Longest Common Subsequence (LCS)', 'Floyd-Warshall Algorithm'],
-        partA: [
-          {
-            q: 'State the Master Theorem for solving recurrence relations.',
-            a: 'For T(n) = aT(n/b) + f(n): If f(n) = O(n^(log_b(a) - e)), T(n) = Theta(n^log_b(a)). If f(n) = Theta(n^log_b(a)), T(n) = Theta(n^log_b(a) * log n). If f(n) = Omega(n^(log_b(a) + e)), T(n) = Theta(f(n)).'
-          },
-          {
-            q: 'What is the Principle of Optimality in Dynamic Programming?',
-            a: 'An optimal sequence of decisions has the property that whatever the initial state and decision are, the remaining decisions must constitute an optimal decision sequence with regard to the state resulting from the first decision.'
-          }
-        ],
-        partB: [
-          {
-            q: 'Formulate the dynamic programming solution for the 0/1 Knapsack problem. Trace with capacity W=5, items w=[2,3,4], v=[3,4,5].',
-            marks: 13,
-            solution: 'Recurrence: V[i, w] = max(V[i-1, w], v[i] + V[i-1, w - w[i]]) if w >= w[i], else V[i-1, w]. Table dimensions: (n+1) x (W+1). Optimal value obtained is 7 with items 1 and 2.'
-          }
-        ],
-        notes: [
-          {
-            title: 'Sorting Algorithms Complexities',
-            points: [
-              'Merge Sort: Best O(n log n), Worst O(n log n), Space O(n), Stable: Yes',
-              'Quick Sort: Best O(n log n), Worst O(n^2), Space O(log n), Stable: No',
-              'Heap Sort: Best O(n log n), Worst O(n log n), Space O(1), Stable: No'
-            ]
-          }
-        ],
-        quiz: [
-          {
-            q: 'What is the worst-case time complexity of Merge Sort?',
-            options: ['O(n)', 'O(n log n)', 'O(n^2)', 'O(log n)'],
-            answerIndex: 1,
-            explanation: 'Merge sort always divides in half and merges in linear time, guaranteeing O(n log n) even in the worst case.'
-          }
-        ]
-      }
-    ]
-  },
-  {
-    code: 'AD3501',
-    name: 'Deep Learning',
-    units: [
-      {
-        unitNo: 3,
-        title: 'Convolutional Neural Networks (CNNs) & Architectures',
-        topics: ['Convolution Operation', 'Pooling Layers', 'ResNet & Skip Connections', 'Vanishing Gradient Problem', 'VGG & Inception'],
-        partA: [
-          {
-            q: 'Why do Skip / Residual Connections solve the vanishing gradient problem in ResNet?',
-            a: 'Residual connections provide an identity shortcut F(x) + x, allowing gradients during backpropagation to flow directly backward without attenuation, preventing gradients from vanishing even in 152+ layer networks.'
-          },
-          {
-            q: 'Differentiate between valid padding and same padding in CNNs.',
-            a: 'Valid padding applies no zero-padding, reducing spatial dimensions: (W - K + 1). Same padding pads with zeros so output spatial dimensions match the input dimensions: (W - K + 2P)/S + 1 = W.'
-          }
-        ],
-        partB: [
-          {
-            q: 'Explain the architecture of ResNet with mathematical justification of residual blocks and backpropagation gradient flow.',
-            marks: 16,
-            solution: '1. Problem: Degradation problem where deeper networks saturate and degrade accuracy.\n2. Formulation: Instead of fitting H(x), let F(x) = H(x) - x, so H(x) = F(x) + x.\n3. Gradient Flow: dL/dx = (dL/dH) * (dF/dx + 1). The +1 term ensures gradients never vanish regardless of weight vanishing.'
-          }
-        ],
-        notes: [
-          {
-            title: 'Activation Functions Summary',
-            points: [
-              'ReLU: f(x) = max(0, x), solves vanishing gradient for positive values, computationally efficient.',
-              'LeakyReLU: f(x) = max(0.01x, x), prevents dying ReLU problem.',
-              'Softmax: Exponentiates and normalizes to produce multi-class probability distribution summing to 1.'
-            ]
-          }
-        ],
-        quiz: [
-          {
-            q: 'What is the primary function of a Max Pooling layer in a CNN?',
-            options: ['Increase parameters', 'Reduce spatial dimensions and introduce translation invariance', 'Compute gradients', 'Prevent zero padding'],
-            answerIndex: 1,
-            explanation: 'Pooling downsamples feature map width and height, reducing memory and computation while providing spatial translation invariance.'
-          }
-        ]
-      }
-    ]
-  }
-]
 
 export default function StudyAssistantView() {
   const [selectedSubjectIdx, setSelectedSubjectIdx] = useState(0)
   const [selectedUnitIdx, setSelectedUnitIdx] = useState(0)
   const [activeMode, setActiveMode] = useState<'questions' | 'notes' | 'quiz' | 'tutor'>('questions')
-  
-  // Chat Tutor state
+  const [expandedPartA, setExpandedPartA] = useState<Record<number, boolean>>({})
+  const [expandedPartB, setExpandedPartB] = useState<Record<number, boolean>>({})
+  const [expandedPartC, setExpandedPartC] = useState<Record<number, boolean>>({})
+
+  // Chat Tutor state — connected to real /api/ai
   const [chatMessages, setChatMessages] = useState<{ sender: 'user' | 'ai'; text: string; code?: string }[]>([
     {
       sender: 'ai',
-      text: 'Hello! I am your Anna University AI & DS Exam Study Assistant. Ask me to explain any engineering concept, generate 2-mark or 13-mark questions, or solve algorithm derivations!'
+      text: '👋 Hello! I am your **Anna University AI & DS Exam Study Assistant** powered by live AI.\n\nI can help you with:\n• Generate Part A (2-mark), Part B (8-mark), Part C (16-mark) model answers\n• Explain any engineering concept with derivations\n• Solve algorithm problems step-by-step\n• Search live department database (students, faculty, events)\n\nAsk me anything!'
     }
   ])
   const [inputQuery, setInputQuery] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
 
   // Quiz interactive state
   const [selectedQuizAnswers, setSelectedQuizAnswers] = useState<Record<number, number>>({})
 
+  // AI Question Generator Agent state
+  const [aiGenMark, setAiGenMark] = useState<'2' | '8' | '16'>('2')
+  const [aiGenTopic, setAiGenTopic] = useState('')
+  const [isAiGenLoading, setIsAiGenLoading] = useState(false)
+  const [showAiGenPanel, setShowAiGenPanel] = useState(false)
+  const [generatedQuestionsList, setGeneratedQuestionsList] = useState<{
+    id: string
+    mark: number
+    part: string
+    question: string
+    answer: string
+    topic: string
+    date: string
+  }[]>([])
+
   const currentSubject = STUDY_DATABASE[selectedSubjectIdx] || STUDY_DATABASE[0]
   const currentUnit = currentSubject.units[selectedUnitIdx] || currentSubject.units[0]
 
-  const handleSendQuery = () => {
-    if (!inputQuery.trim()) return
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
 
-    const userText = inputQuery
+  // ===== AI QUESTION GENERATOR AGENT =====
+  const handleGenerateAIQuestion = async () => {
+    setIsAiGenLoading(true)
+    const topic = aiGenTopic.trim() || currentUnit.topics[0] || currentUnit.title
+    const partName = aiGenMark === '2' ? 'Part A (2 Marks)' : aiGenMark === '8' ? 'Part B (8 Marks)' : 'Part C (16 Marks)'
+    const prompt = `You are an Anna University R-2021 Chief Examiner for ${currentSubject.code} - ${currentSubject.name}. 
+Generate an authentic university exam question and comprehensive model answer for:
+Unit ${currentUnit.unitNo}: ${currentUnit.title}
+Topic: ${topic}
+Format: ${partName}
+
+Requirements:
+1. Exact Anna University exam style question phrasing.
+2. Complete model answer formatted with key points, equations, pseudocode or diagrams if applicable.
+3. Mark distribution breakdown.
+Return the response in this structure:
+QUESTION: [Question text here]
+ANSWER: [Detailed model answer here]`
+
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          sessionId: `gen-${currentSubject.code}`,
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.answer) {
+        const text = data.answer
+        let q = ''
+        let a = text
+        if (text.includes('QUESTION:') && text.includes('ANSWER:')) {
+          const parts = text.split('ANSWER:')
+          q = parts[0].replace('QUESTION:', '').trim()
+          a = parts[1].trim()
+        } else {
+          const lines = text.split('\n')
+          q = lines[0].replace(/^#+\s*|\*\*Q:\*\*\s*|Q:\s*/i, '').trim()
+          a = lines.slice(1).join('\n').trim()
+        }
+        setGeneratedQuestionsList(prev => [
+          {
+            id: `gen-${Date.now()}`,
+            mark: Number(aiGenMark),
+            part: aiGenMark === '2' ? 'Part A' : aiGenMark === '8' ? 'Part B' : 'Part C',
+            question: q || `${partName} Question on ${topic}`,
+            answer: a || text,
+            topic,
+            date: new Date().toLocaleTimeString(),
+          },
+          ...prev,
+        ])
+        toast.success(`Generated ${partName} question!`)
+      } else {
+        toast.error('Could not generate question. Please try again.')
+      }
+    } catch (err) {
+      toast.error('Network error generating question.')
+    } finally {
+      setIsAiGenLoading(false)
+    }
+  }
+
+  // ===== REAL AI TUTOR — Connected to /api/ai (Gemini) =====
+  const handleSendQuery = async () => {
+    if (!inputQuery.trim() || isGenerating) return
+
+    const userText = inputQuery.trim()
     setInputQuery('')
     setChatMessages(prev => [...prev, { sender: 'user', text: userText }])
     setIsGenerating(true)
 
-    setTimeout(() => {
-      let aiReply = ''
-      let codeSnippet = ''
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `[Subject: ${currentSubject.code} - ${currentSubject.name}, Unit ${currentUnit.unitNo}: ${currentUnit.title}] ${userText}`,
+          sessionId: `study-${currentSubject.code}`,
+        }),
+      })
 
-      if (userText.toLowerCase().includes('a*') || userText.toLowerCase().includes('search')) {
-        aiReply = `### A* Search Algorithm Breakdown\nA* finds the shortest path using f(n) = g(n) + h(n).\n\n**Core Rules:**\n- **g(n):** Exact cost to reach node n from start.\n- **h(n):** Heuristic estimated cost to reach goal from n.\n- **Optimality:** Guaranteed if h(n) is admissible (never overestimates).\n\nHere is a Python implementation snippet:`
-        codeSnippet = `import heapq
+      const data = await res.json()
 
-def a_star_search(graph, start, goal, h):
-    open_set = []
-    heapq.heappush(open_set, (h[start], 0, start, [start]))
-    visited = set()
-
-    while open_set:
-        f, g, current, path = heapq.heappop(open_set)
-        if current == goal:
-            return path, g
-        visited.add(current)
-        for neighbor, weight in graph[current].items():
-            if neighbor not in visited:
-                new_g = g + weight
-                heapq.heappush(open_set, (new_g + h[neighbor], new_g, neighbor, path + [neighbor]))
-    return None`
-      } else if (userText.toLowerCase().includes('sql') || userText.toLowerCase().includes('salary')) {
-        aiReply = `### SQL Query: Finding 2nd Highest Salary\nIn Anna University Database examinations, use either subquery with MAX or DENSE_RANK() window function:`
-        codeSnippet = `-- Method 1: Subquery
-SELECT MAX(salary) AS SecondHighestSalary 
-FROM Employee 
-WHERE salary < (SELECT MAX(salary) FROM Employee);
-
--- Method 2: Window Function (Preferred for ties)
-WITH RankedSalaries AS (
-    SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) as rnk
-    FROM Employee
-)
-SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
+      if (data.success && data.answer) {
+        setChatMessages(prev => [...prev, {
+          sender: 'ai',
+          text: data.answer,
+        }])
       } else {
-        aiReply = `According to Anna University Regulation 2021 guidelines for **${currentSubject.name}**:\n\n1. **Key Concept Definition**: Focus on precise technical terminology in Part A.\n2. **Mathematical Formulation**: State all assumptions, objective functions, and constraints clearly.\n3. **Diagrams & Flowcharts**: Awarded 40% of marks in Part B/C questions.\n\nWould you like me to generate a tailored 13-mark model question for this topic?`
+        setChatMessages(prev => [...prev, {
+          sender: 'ai',
+          text: data.message || data.answer || 'I apologize, I couldn\'t process that query. Please try rephrasing your question.',
+        }])
       }
-
-      setChatMessages(prev => [...prev, { sender: 'ai', text: aiReply, code: codeSnippet }])
+    } catch (err) {
+      setChatMessages(prev => [...prev, {
+        sender: 'ai',
+        text: '⚠️ Network error connecting to AI service. Please check your connection and try again.',
+      }])
+    } finally {
       setIsGenerating(false)
-    }, 800)
+    }
   }
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
     toast.success('Copied to clipboard!')
   }
+
+  const togglePartA = (idx: number) => setExpandedPartA(prev => ({ ...prev, [idx]: !prev[idx] }))
+  const togglePartB = (idx: number) => setExpandedPartB(prev => ({ ...prev, [idx]: !prev[idx] }))
+  const togglePartC = (idx: number) => setExpandedPartC(prev => ({ ...prev, [idx]: !prev[idx] }))
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -286,81 +216,78 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
               AI-Powered Study Assistant & Question Generator
             </h1>
             <p className="text-sm text-cyan-100/80 max-w-2xl leading-relaxed">
-              Generate university standard 2-mark (Part A) and 13/16-mark (Part B/C) analytical exam questions with step-by-step solutions, quick revision flashcards, and live AI tutor chat.
+              Generate university standard Part A (2-mark), Part B (8-mark), and Part C (16-mark) questions with model answers, quick revision flashcards, and live AI tutor chat.
             </p>
           </div>
 
-          {/* Subject Switcher */}
-          <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shrink-0 space-y-1">
-            <label className="text-[10px] uppercase font-bold text-cyan-200 block">Selected Course:</label>
-            <select
-              value={selectedSubjectIdx}
-              onChange={(e) => {
-                setSelectedSubjectIdx(Number(e.target.value))
-                setSelectedUnitIdx(0)
-                toast.success('Subject loaded!')
-              }}
-              className="bg-[#071A3D] text-white p-2 rounded-xl text-xs font-bold border border-white/20 focus:outline-none"
-            >
-              {STUDY_DATABASE.map((s, idx) => (
-                <option key={s.code} value={idx}>{s.code} - {s.name}</option>
-              ))}
-            </select>
+          {/* Subject & Unit Switcher */}
+          <div className="bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/20 shrink-0 space-y-2">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold text-cyan-200 block">Selected Course:</label>
+              <select
+                value={selectedSubjectIdx}
+                onChange={(e) => {
+                  setSelectedSubjectIdx(Number(e.target.value))
+                  setSelectedUnitIdx(0)
+                  setExpandedPartA({})
+                  setExpandedPartB({})
+                  setExpandedPartC({})
+                }}
+                className="w-full bg-[#071A3D] text-white p-2 rounded-xl text-xs font-bold border border-white/20 focus:outline-none cursor-pointer"
+              >
+                {STUDY_DATABASE.map((s, idx) => (
+                  <option key={s.code} value={idx}>{s.code} - {s.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-bold text-cyan-200 block">Unit:</label>
+              <select
+                value={selectedUnitIdx}
+                onChange={(e) => {
+                  setSelectedUnitIdx(Number(e.target.value))
+                  setExpandedPartA({})
+                  setExpandedPartB({})
+                  setExpandedPartC({})
+                }}
+                className="w-full bg-[#071A3D] text-white p-2 rounded-xl text-xs font-bold border border-white/20 focus:outline-none cursor-pointer"
+              >
+                {currentSubject.units.map((u, idx) => (
+                  <option key={idx} value={idx}>Unit {u.unitNo}: {u.title}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Tab Switcher */}
         <div className="mt-8 flex flex-wrap gap-2 border-t border-white/10 pt-4">
-          <button
-            onClick={() => setActiveMode('questions')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-              activeMode === 'questions'
-                ? 'bg-white text-[#071A3D] shadow-lg shadow-black/20'
-                : 'text-white/80 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <FileQuestion className="w-4 h-4 text-blue-600" />
-            <span>Part A & B Question Generator</span>
-          </button>
-          <button
-            onClick={() => setActiveMode('notes')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-              activeMode === 'notes'
-                ? 'bg-white text-[#071A3D] shadow-lg shadow-black/20'
-                : 'text-white/80 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <BookOpen className="w-4 h-4 text-emerald-600" />
-            <span>Smart Revision Notes</span>
-          </button>
-          <button
-            onClick={() => setActiveMode('quiz')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-              activeMode === 'quiz'
-                ? 'bg-white text-[#071A3D] shadow-lg shadow-black/20'
-                : 'text-white/80 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <Zap className="w-4 h-4 text-amber-600" />
-            <span>Diagnostic Quiz</span>
-          </button>
-          <button
-            onClick={() => setActiveMode('tutor')}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-              activeMode === 'tutor'
-                ? 'bg-white text-[#071A3D] shadow-lg shadow-black/20'
-                : 'text-white/80 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            <Bot className="w-4 h-4 text-purple-600" />
-            <span>AI Tutor Chat</span>
-          </button>
+          {[
+            { key: 'questions' as const, label: 'Part A, B & C Question Bank', icon: <FileQuestion className="w-4 h-4 text-blue-600" /> },
+            { key: 'notes' as const, label: 'Smart Revision Notes', icon: <BookOpen className="w-4 h-4 text-emerald-600" /> },
+            { key: 'quiz' as const, label: 'Diagnostic Quiz', icon: <Zap className="w-4 h-4 text-amber-600" /> },
+            { key: 'tutor' as const, label: 'AI Tutor Chat', icon: <Bot className="w-4 h-4 text-purple-600" /> },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveMode(tab.key)}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                activeMode === tab.key
+                  ? 'bg-white text-[#071A3D] shadow-lg shadow-black/20'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Mode 1: Part A & B Question Generator */}
+      {/* ================ MODE 1: QUESTION BANK ================ */}
       {activeMode === 'questions' && (
         <div className="space-y-6">
+          {/* Unit Header */}
           <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -368,88 +295,327 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
                 Unit {currentUnit.unitNo}: {currentUnit.title}
               </span>
             </div>
-            <button
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print Question Bank</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold text-slate-400 hidden sm:inline">Anna University R-2021 Format</span>
+              <button
+                onClick={() => setShowAiGenPanel(!showAiGenPanel)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                <span>{showAiGenPanel ? 'Hide AI Agent' : 'Generate with AI Agent'}</span>
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print</span>
+              </button>
+            </div>
           </div>
 
-          {/* Part A Section */}
+          {/* AI Question Generator Agent Panel */}
+          {showAiGenPanel && (
+            <div className="bg-gradient-to-br from-[#071A3D] via-[#0D285F] to-[#1455D9] rounded-3xl p-6 text-white shadow-xl space-y-4 border border-blue-400/20 animate-in fade-in-50 duration-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                    <Sparkles className="w-4 h-4 text-cyan-300" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-white">AI Exam Question Generator Agent</h3>
+                    <p className="text-[11px] text-cyan-200">
+                      Creates authentic Anna University R-2021 examination questions with scoring schemes
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="role" className="bg-cyan-500/20 text-cyan-200 border-cyan-400/30 text-[10px]">
+                  Live Gemini Engine
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2">
+                <div className="sm:col-span-4 space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-cyan-200 block">Marks / Question Type:</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { l: 'Part A (2M)', v: '2' },
+                      { l: 'Part B (8M)', v: '8' },
+                      { l: 'Part C (16M)', v: '16' },
+                    ].map((btn) => (
+                      <button
+                        key={btn.v}
+                        type="button"
+                        onClick={() => setAiGenMark(btn.v as any)}
+                        className={cn(
+                          'py-2 px-1.5 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer',
+                          aiGenMark === btn.v
+                            ? 'bg-white text-[#071A3D] border-white shadow-md'
+                            : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20'
+                        )}
+                      >
+                        {btn.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="sm:col-span-5 space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-cyan-200 block">Syllabus Topic Focus:</label>
+                  <select
+                    value={aiGenTopic}
+                    onChange={(e) => setAiGenTopic(e.target.value)}
+                    className="w-full bg-[#051330] text-white p-2.5 rounded-xl text-xs font-semibold border border-white/20 focus:outline-none focus:border-cyan-400 cursor-pointer"
+                  >
+                    <option value="">Full Unit Scope ({currentUnit.title})</option>
+                    {currentUnit.topics.map((t, i) => (
+                      <option key={i} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="sm:col-span-3 flex items-end">
+                  <button
+                    onClick={handleGenerateAIQuestion}
+                    disabled={isAiGenLoading}
+                    className="w-full py-2.5 px-4 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 text-[#071A3D] font-black text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {isAiGenLoading ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-[#071A3D] border-t-transparent rounded-full animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Generate Question</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Generated Question Cards */}
+              {generatedQuestionsList.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
+                  <span className="text-[11px] font-bold text-cyan-200 block uppercase tracking-wider">
+                    Recent AI Generated Questions ({generatedQuestionsList.length})
+                  </span>
+                  {generatedQuestionsList.map((gq) => (
+                    <div
+                      key={gq.id}
+                      className="bg-white/95 text-slate-900 rounded-2xl p-4 border border-white shadow-md space-y-2.5 animate-in fade-in-50 duration-200"
+                    >
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            'px-2.5 py-0.5 rounded-full text-[10px] font-black',
+                            gq.mark === 2 ? 'bg-blue-100 text-blue-800' : gq.mark === 8 ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'
+                          )}>
+                            {gq.part} — {gq.mark} Marks
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-400">
+                            Topic: {gq.topic} • {gq.date}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleCopy(`Q: ${gq.question}\n\nModel Answer:\n${gq.answer}`)}
+                          className="text-slate-500 hover:text-blue-600 p-1 rounded-lg hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy</span>
+                        </button>
+                      </div>
+
+                      <p className="font-bold text-xs sm:text-sm text-slate-900 leading-snug">
+                        {gq.question}
+                      </p>
+
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-700 whitespace-pre-line leading-relaxed max-h-72 overflow-y-auto">
+                        <strong className="text-blue-700 block mb-1">Model University Answer & Solution:</strong>
+                        {gq.answer}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── PART A — 2 Marks ── */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 font-bold text-xs">
+                <span className="px-3 py-1 rounded-full bg-blue-600 text-white font-black text-xs">
                   PART A
                 </span>
                 <h3 className="font-bold text-slate-900 text-sm">2-Mark Questions & Model Answers</h3>
+                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
+                  10 × 2 = 20 Marks
+                </span>
               </div>
               <span className="text-xs text-slate-400 font-mono">Anna University Format</span>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {currentUnit.partA.map((qa, i) => (
-                <div key={i} className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <h4 className="font-bold text-slate-800 text-xs sm:text-sm">
+                <div key={i} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+                  <button
+                    onClick={() => togglePartA(i)}
+                    className="w-full flex items-start justify-between gap-3 p-4 text-left cursor-pointer hover:bg-slate-100/50 transition-colors"
+                  >
+                    <h4 className="font-bold text-slate-800 text-xs sm:text-sm flex-1">
                       Q{i + 1}. {qa.q}
                     </h4>
-                    <button
-                      onClick={() => handleCopy(`${qa.q}\nAnswer: ${qa.a}`)}
-                      className="text-slate-400 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
-                      title="Copy Q&A"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
-                    <strong className="text-blue-700">Ans: </strong>{qa.a}
-                  </p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">2M</span>
+                      {expandedPartA[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                    </div>
+                  </button>
+                  {expandedPartA[i] && (
+                    <div className="px-4 pb-4">
+                      <div className="bg-white p-3 rounded-xl border border-slate-100 text-xs text-slate-600 leading-relaxed flex items-start gap-2">
+                        <div className="flex-1">
+                          <strong className="text-blue-700">Ans: </strong>{qa.a}
+                        </div>
+                        <button
+                          onClick={() => handleCopy(`Q: ${qa.q}\nAns: ${qa.a}`)}
+                          className="text-slate-400 hover:text-blue-600 transition-colors cursor-pointer shrink-0 mt-0.5"
+                          title="Copy Q&A"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Part B Section */}
+          {/* ── PART B — 8 Marks ── */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 font-bold text-xs">
-                  PART B / C
+                <span className="px-3 py-1 rounded-full bg-amber-600 text-white font-black text-xs">
+                  PART B
                 </span>
-                <h3 className="font-bold text-slate-900 text-sm">13 & 16-Mark Analytical Solutions</h3>
+                <h3 className="font-bold text-slate-900 text-sm">8-Mark Descriptive Questions</h3>
+                <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold">
+                  5 × 8 = 40 Marks (Answer any 4)
+                </span>
               </div>
-              <span className="text-xs text-slate-400 font-mono">Comprehensive Breakdown</span>
+              <span className="text-xs text-slate-400 font-mono">Diagrams & Derivations Required</span>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {currentUnit.partB.map((qa, i) => (
-                <div key={i} className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-100 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <h4 className="font-bold text-slate-900 text-sm">
+                <div key={i} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+                  <button
+                    onClick={() => togglePartB(i)}
+                    className="w-full flex items-start justify-between gap-3 p-4 sm:p-5 text-left cursor-pointer hover:bg-slate-100/50 transition-colors"
+                  >
+                    <h4 className="font-bold text-slate-900 text-sm flex-1">
                       Q{i + 1}. {qa.q}
                     </h4>
-                    <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-xs font-bold shrink-0">
-                      {qa.marks} Marks
-                    </span>
-                  </div>
-
-                  <div className="bg-white p-4 rounded-xl border border-slate-100 text-xs text-slate-700 space-y-2 whitespace-pre-line leading-relaxed">
-                    <span className="font-bold text-purple-800 block uppercase text-[10px] tracking-wider">
-                      Model University Solution & Derivation:
-                    </span>
-                    {qa.solution}
-                  </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold">
+                        8 Marks
+                      </span>
+                      {expandedPartB[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                    </div>
+                  </button>
+                  {expandedPartB[i] && (
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                      <div className="bg-white p-4 rounded-xl border border-slate-100 text-xs text-slate-700 space-y-2 whitespace-pre-line leading-relaxed">
+                        <span className="font-bold text-amber-800 block uppercase text-[10px] tracking-wider">
+                          Model University Solution:
+                        </span>
+                        {qa.a}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* ── PART C — 16 Marks ── */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-purple-700 text-white font-black text-xs">
+                  PART C
+                </span>
+                <h3 className="font-bold text-slate-900 text-sm">16-Mark Comprehensive Analytical Questions</h3>
+                <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold">
+                  3 × 16 = 48 Marks (Answer any 2)
+                </span>
+              </div>
+              <span className="text-xs text-slate-400 font-mono">Essay-Type with Full Derivation</span>
+            </div>
+
+            <div className="space-y-3">
+              {currentUnit.partC.map((qa, i) => (
+                <div key={i} className="bg-slate-50 rounded-2xl border border-purple-100 overflow-hidden">
+                  <button
+                    onClick={() => togglePartC(i)}
+                    className="w-full flex items-start justify-between gap-3 p-4 sm:p-5 text-left cursor-pointer hover:bg-purple-50/50 transition-colors"
+                  >
+                    <h4 className="font-bold text-slate-900 text-sm flex-1">
+                      Q{i + 1}. {qa.q}
+                    </h4>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold">
+                        16 Marks
+                      </span>
+                      {expandedPartC[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                    </div>
+                  </button>
+                  {expandedPartC[i] && (
+                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                      <div className="bg-white p-4 rounded-xl border border-purple-100 text-xs text-slate-700 space-y-2 whitespace-pre-line leading-relaxed max-h-[600px] overflow-y-auto">
+                        <span className="font-bold text-purple-800 block uppercase text-[10px] tracking-wider">
+                          Comprehensive Model Answer & Derivation:
+                        </span>
+                        {qa.a}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Exam Pattern Summary Card */}
+          <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-2xl p-5 border border-slate-200 space-y-3">
+            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <GraduationCap className="w-4 h-4 text-blue-600" />
+              Anna University R-2021 Exam Pattern Summary
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-white rounded-xl p-3 border border-blue-100">
+                <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold">PART A</span>
+                <p className="text-xs text-slate-600 mt-1.5">10 Questions × 2 Marks = <strong>20 Marks</strong></p>
+                <p className="text-[10px] text-slate-400 mt-0.5">All questions compulsory. Short answer format.</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-amber-100">
+                <span className="px-2 py-0.5 rounded-full bg-amber-600 text-white text-[10px] font-bold">PART B</span>
+                <p className="text-xs text-slate-600 mt-1.5">5 Questions × 8 Marks = <strong>40 Marks</strong></p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Answer any 4 out of 5. Descriptive with diagrams.</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-purple-100">
+                <span className="px-2 py-0.5 rounded-full bg-purple-700 text-white text-[10px] font-bold">PART C</span>
+                <p className="text-xs text-slate-600 mt-1.5">3 Questions × 16 Marks = <strong>48 Marks</strong></p>
+                <p className="text-[10px] text-slate-400 mt-0.5">Answer any 2 out of 3. Comprehensive essay-type.</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-400 font-semibold">Total: 108 Marks (Scaled to 100) · Duration: 3 Hours · All 5 Units Covered</p>
           </div>
         </div>
       )}
 
-      {/* Mode 2: Smart Revision Notes */}
+      {/* ================ MODE 2: SMART REVISION NOTES ================ */}
       {activeMode === 'notes' && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
           <div className="border-b border-slate-100 pb-4">
@@ -457,6 +623,21 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
             <h3 className="font-extrabold text-slate-900 text-lg">
               {currentSubject.name} • Unit {currentUnit.unitNo}: {currentUnit.title}
             </h3>
+          </div>
+
+          {/* Topics Overview */}
+          <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 space-y-2">
+            <h4 className="font-bold text-blue-900 text-xs flex items-center gap-2">
+              <Layers className="w-4 h-4 text-blue-600" />
+              Syllabus Topics Covered
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {currentUnit.topics.map((t, i) => (
+                <span key={i} className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-[11px] font-medium text-blue-800">
+                  {t}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -470,7 +651,7 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
                   {note.points.map((pt, pIdx) => (
                     <li key={pIdx} className="flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                      <span>{pt}</span>
+                      <span className="font-mono">{pt}</span>
                     </li>
                   ))}
                 </ul>
@@ -480,15 +661,16 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
         </div>
       )}
 
-      {/* Mode 3: Diagnostic Quiz */}
+      {/* ================ MODE 3: DIAGNOSTIC QUIZ ================ */}
       {activeMode === 'quiz' && (
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
               <span className="text-xs uppercase font-bold text-amber-600">Self-Assessment Test</span>
               <h3 className="font-extrabold text-slate-900 text-lg">
-                5-Question Rapid Diagnostic Check
+                {currentUnit.quiz.length}-Question Rapid Diagnostic Check
               </h3>
+              <p className="text-xs text-slate-500 mt-0.5">Unit {currentUnit.unitNo}: {currentUnit.title}</p>
             </div>
             <button
               onClick={() => {
@@ -555,25 +737,57 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
               )
             })}
           </div>
+
+          {/* Quiz Score */}
+          {Object.keys(selectedQuizAnswers).length === currentUnit.quiz.length && currentUnit.quiz.length > 0 && (
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-5 border border-blue-200 text-center space-y-2">
+              <Award className="w-10 h-10 text-blue-600 mx-auto" />
+              <h4 className="font-bold text-slate-900 text-lg">
+                Score: {currentUnit.quiz.filter((q, i) => selectedQuizAnswers[i] === q.answerIndex).length} / {currentUnit.quiz.length}
+              </h4>
+              <p className="text-xs text-slate-500">
+                {currentUnit.quiz.filter((q, i) => selectedQuizAnswers[i] === q.answerIndex).length === currentUnit.quiz.length
+                  ? '🎉 Perfect Score! You\'re ready for the exam!'
+                  : 'Review the explanations for incorrect answers and try again.'}
+              </p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Mode 4: AI Tutor Chat */}
+      {/* ================ MODE 4: AI TUTOR CHAT (REAL API) ================ */}
       {activeMode === 'tutor' && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[650px]">
           <div className="p-4 bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center font-bold">
                 <Bot className="w-5 h-5 text-cyan-300" />
               </div>
               <div>
-                <h3 className="font-bold text-sm">Anna University AI Tutor</h3>
-                <p className="text-[11px] text-cyan-200">Online • Specialized in R-2021 Syllabus</p>
+                <h3 className="font-bold text-sm">AI Study Tutor — Powered by Gemini</h3>
+                <p className="text-[11px] text-cyan-200">
+                  Online • {currentSubject.code} — Unit {currentUnit.unitNo} Context
+                </p>
               </div>
             </div>
-            <span className="text-xs font-mono bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
-              {currentSubject.code}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono bg-white/10 px-2.5 py-1 rounded-lg border border-white/20">
+                {currentSubject.code}
+              </span>
+              <button
+                onClick={() => {
+                  setChatMessages([{
+                    sender: 'ai',
+                    text: '🔄 Chat cleared! Ask me anything about your syllabus.'
+                  }])
+                  toast.success('Chat history cleared')
+                }}
+                className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
+                title="Clear Chat"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-white/80" />
+              </button>
+            </div>
           </div>
 
           {/* Chat Messages */}
@@ -581,7 +795,7 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
             {chatMessages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex gap-3 max-w-2xl ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
+                className={`flex gap-3 max-w-3xl ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
               >
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
@@ -594,7 +808,7 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
                 </div>
 
                 <div
-                  className={`p-4 rounded-2xl text-xs space-y-2 leading-relaxed ${
+                  className={`p-4 rounded-2xl text-xs space-y-2 leading-relaxed max-w-2xl ${
                     msg.sender === 'user'
                       ? 'bg-blue-600 text-white rounded-tr-none'
                       : 'bg-slate-50 border border-slate-200 text-slate-800 rounded-tl-none'
@@ -612,10 +826,33 @@ SELECT salary FROM RankedSalaries WHERE rnk = 2 LIMIT 1;`
 
             {isGenerating && (
               <div className="flex items-center gap-2 text-xs text-slate-400 italic">
-                <Bot className="w-4 h-4 animate-spin text-blue-600" />
-                <span>AI Tutor is formulating university response...</span>
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+                <span>AI is generating response...</span>
               </div>
             )}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Quick Action Chips */}
+          <div className="px-3 py-2 border-t border-slate-100 bg-white flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
+            {[
+              `Explain ${currentUnit.topics[0]}`,
+              `Generate 2-mark question on ${currentUnit.title}`,
+              `Solve a problem on ${currentUnit.topics[1] || currentUnit.topics[0]}`,
+              `Compare algorithms in Unit ${currentUnit.unitNo}`,
+            ].map((chip, i) => (
+              <button
+                key={i}
+                onClick={() => { setInputQuery(chip); }}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[10px] font-semibold whitespace-nowrap border border-slate-200 cursor-pointer transition-colors shrink-0"
+              >
+                {chip}
+              </button>
+            ))}
           </div>
 
           {/* Chat Input */}

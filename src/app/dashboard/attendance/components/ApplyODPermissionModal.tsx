@@ -304,6 +304,44 @@ export function ApplyODPermissionModal({
   const [organizer, setOrganizer] = useState('')
   const [eventMode, setEventMode] = useState<'In-Person' | 'Online / Virtual' | 'Hybrid'>('In-Person')
   const [reason, setReason] = useState('')
+  const [isAiDrafting, setIsAiDrafting] = useState(false)
+
+  const handleAiDraftReason = async () => {
+    setIsAiDrafting(true)
+    const ev = eventName.trim() || 'Technical Symposium / Competition'
+    const org = organizer.trim() || 'Host Institution'
+    const prompt = `You are an academic application assistant for a student in B.Tech Artificial Intelligence & Data Science at V.S.B. Engineering College.
+Write a formal, clear 2-sentence academic statement/reason for an On-Duty (OD) or Leave application.
+Context:
+- Type: ${appType}
+- Event/Activity Name: ${ev}
+- Host/Organizer: ${org}
+- Dates: ${fromDate || 'scheduled date'} to ${toDate || 'scheduled date'}
+
+Keep it strictly 2 sentences, formal, respectful, explaining academic benefit and participation intent. Return ONLY the drafted statement without quotes.`
+
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          sessionId: 'od-statement-agent',
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.answer) {
+        setReason(data.answer.replace(/^"|"$/g, '').trim())
+        toast.success('AI drafted formal academic statement!')
+      } else {
+        setReason(`Requesting official On-Duty permission to participate in ${ev} organized by ${org} from ${fromDate || 'the scheduled date'} to ${toDate || 'the scheduled date'} to represent our college and acquire advanced domain expertise in Artificial Intelligence & Data Science.`)
+      }
+    } catch {
+      setReason(`Requesting official On-Duty permission to participate in ${ev} organized by ${org} from ${fromDate || 'the scheduled date'} to ${toDate || 'the scheduled date'} to represent our college and acquire advanced domain expertise in Artificial Intelligence & Data Science.`)
+    } finally {
+      setIsAiDrafting(false)
+    }
+  }
 
   // Team Details (For Hackathons / Presentations)
   const [isTeam, setIsTeam] = useState(true)
@@ -1083,9 +1121,20 @@ export function ApplyODPermissionModal({
 
               {/* STEP 5: Reason & Statement */}
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  Reason &amp; Academic Explanation <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700">
+                    Reason &amp; Academic Explanation <span className="text-red-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAiDraftReason}
+                    disabled={isAiDrafting}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1455D9] hover:text-[#071A3D] bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-lg transition-colors cursor-pointer border border-blue-200"
+                  >
+                    <Sparkles className="w-3 h-3 text-blue-600" />
+                    <span>{isAiDrafting ? 'Drafting...' : '✨ AI Write Statement'}</span>
+                  </button>
+                </div>
                 <textarea
                   required
                   rows={2}

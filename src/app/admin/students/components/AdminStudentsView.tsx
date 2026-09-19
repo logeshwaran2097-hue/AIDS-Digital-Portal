@@ -19,6 +19,7 @@ import {
   Calendar,
   Layers,
   Sparkles,
+  Bot,
   UserCheck,
   AlertTriangle,
   AlertCircle,
@@ -101,6 +102,69 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
   // Main Tab Navigation: 'directory' | 'requests'
   const [activeMainTab, setActiveMainTab] = useState<'directory' | 'requests'>('directory')
+
+  // AI Student Query & Advisor Agent State
+  const [showAiAgent, setShowAiAgent] = useState(false)
+  const [aiQueryInput, setAiQueryInput] = useState('')
+  const [isAiQuerying, setIsAiQuerying] = useState(false)
+  const [aiAgentResponse, setAiAgentResponse] = useState<string | null>(null)
+
+  const handleRunAiAgent = async (customQuery?: string) => {
+    const q = (customQuery || aiQueryInput).trim()
+    if (!q) return
+    setIsAiQuerying(true)
+    setAiAgentResponse(null)
+
+    const lowerQ = q.toLowerCase()
+    if (lowerQ.includes('low attendance') || lowerQ.includes('< 75') || lowerQ.includes('below 75') || lowerQ.includes('shortage')) {
+      const lowAtt = students.filter(s => {
+        const att = parseFloat(s.attendance || '100')
+        return !isNaN(att) && att < 75
+      })
+      const summary = `📊 **AI Attendance Analysis (${lowAtt.length} students < 75% threshold):**\n\n` +
+        (lowAtt.length > 0 
+          ? lowAtt.map(s => `• **${s.registerNumber}** — ${s.name} (Yr ${s.year}, Sec ${s.section}): Attendance **${s.attendance || 'N/A'}%** | Parent: ${s.parentPhone || 'N/A'}`).join('\n')
+          : 'All students have satisfactory attendance (≥ 75%).')
+      setAiAgentResponse(summary)
+      setIsAiQuerying(false)
+      return
+    }
+
+    if (lowerQ.includes('top') || lowerQ.includes('rank') || lowerQ.includes('highest cgpa')) {
+      const topStudents = [...students]
+        .filter(s => s.cgpa && !isNaN(parseFloat(s.cgpa)))
+        .sort((a, b) => parseFloat(b.cgpa || '0') - parseFloat(a.cgpa || '0'))
+        .slice(0, 5)
+      const summary = `🏆 **Top 5 Academic Performers (by CGPA):**\n\n` +
+        (topStudents.length > 0
+          ? topStudents.map((s, idx) => `${idx + 1}. **${s.name}** (${s.registerNumber}) — CGPA: **${s.cgpa}** | Year ${s.year} Sec ${s.section}`).join('\n')
+          : 'No CGPA records found yet.')
+      setAiAgentResponse(summary)
+      setIsAiQuerying(false)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `[Admin Student Directory Query] Database size: ${students.length} students. Query: ${q}`,
+          sessionId: 'admin-student-agent',
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.answer) {
+        setAiAgentResponse(data.answer)
+      } else {
+        setAiAgentResponse('I could not analyze this student query. Try asking about attendance, CGPA, or specific register numbers.')
+      }
+    } catch {
+      setAiAgentResponse('Network error querying AI engine.')
+    } finally {
+      setIsAiQuerying(false)
+    }
+  }
 
   // Profile Edit Permission Requests State
   const [profileRequests, setProfileRequests] = useState<any[]>([])
@@ -807,6 +871,117 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           <p className="text-2xl font-black text-amber-700 mt-0.5">B.Tech AI &amp; DS</p>
           <p className="text-[10px] text-amber-700 font-medium mt-1">Anna University · Reg 2021</p>
         </div>
+      </div>
+
+      {/* AI Student Advisor & Natural Language Query Agent */}
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0E2C66] to-[#1455D9] rounded-2xl p-4 text-white shadow-md border border-blue-400/20 space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+              <Bot className="w-4 h-4 text-cyan-300" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-xs sm:text-sm text-white">AI Student Advisor & Intelligence Agent</h3>
+                <span className="px-1.5 py-0.5 rounded bg-cyan-400/20 text-cyan-200 border border-cyan-400/30 text-[9px] font-bold">
+                  Live Agent
+                </span>
+              </div>
+              <p className="text-[11px] text-cyan-100/70">
+                Natural language query & instant analytics across student database
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowAiAgent(!showAiAgent)}
+            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-cyan-200 text-xs font-bold border border-white/20 transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
+            <span>{showAiAgent ? 'Collapse Agent' : 'Open Query Console'}</span>
+          </button>
+        </div>
+
+        {showAiAgent && (
+          <div className="pt-2 border-t border-white/10 space-y-3 animate-in fade-in-50 duration-200">
+            {/* Quick Action Chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] uppercase font-bold text-cyan-200 mr-1">Quick Insights:</span>
+              {[
+                { l: '⚠️ Low Attendance (<75%)', q: 'Show students with low attendance below 75' },
+                { l: '🏆 Top CGPA Rankers', q: 'Top highest cgpa students' },
+                { l: '🚌 Day Scholars vs Hostellers', q: 'How many students are day scholars vs hostellers?' },
+                { l: '📧 Parent Notification Draft', q: 'Draft an official SMS/Email notice for students with attendance shortage' },
+              ].map((chip, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    setAiQueryInput(chip.q)
+                    handleRunAiAgent(chip.q)
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-cyan-400 hover:text-[#071A3D] text-[10px] font-semibold text-white/90 border border-white/20 transition-colors cursor-pointer"
+                >
+                  {chip.l}
+                </button>
+              ))}
+            </div>
+
+            {/* Input Bar */}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ask anything about students (e.g. 'Students in Sec A with high CGPA', 'Find student 922522AD001')..."
+                value={aiQueryInput}
+                onChange={(e) => setAiQueryInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleRunAiAgent()}
+                className="flex-1 bg-[#051330] border border-white/20 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-gray-400 focus:outline-none focus:border-cyan-400"
+              />
+              <button
+                onClick={() => handleRunAiAgent()}
+                disabled={isAiQuerying || !aiQueryInput.trim()}
+                className="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 text-[#071A3D] font-bold text-xs transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+              >
+                {isAiQuerying ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-[#071A3D] border-t-transparent rounded-full animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Ask Agent</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Agent Output Response */}
+            {aiAgentResponse && (
+              <div className="p-3.5 rounded-xl bg-white text-slate-900 border border-white shadow-sm space-y-2 animate-in fade-in-50 duration-150">
+                <div className="flex items-center justify-between text-xs font-bold text-[#071A3D] border-b border-gray-100 pb-1.5">
+                  <span className="flex items-center gap-1.5">
+                    <Bot className="w-4 h-4 text-blue-600" />
+                    <span>Agent Intelligence Report</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(aiAgentResponse)
+                      toast.success('Agent report copied!')
+                    }}
+                    className="text-gray-400 hover:text-blue-600 text-[11px] font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Copy className="w-3 h-3" />
+                    <span>Copy</span>
+                  </button>
+                </div>
+                <div className="text-xs text-slate-700 whitespace-pre-line leading-relaxed max-h-60 overflow-y-auto">
+                  {aiAgentResponse}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Filter & Search Bar */}

@@ -64,20 +64,23 @@ export function AIChatbot() {
         setIsTyping(true)
 
         try {
-            const res = await fetch(`/api/ai?q=${encodeURIComponent(query)}`, { cache: 'no-store' })
+            const res = await fetch('/api/ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: query, sessionId: 'portal-ai-chatbot' }),
+            })
             const data = await res.json()
 
-            // Simulate slight delay for natural feel
-            await new Promise(r => setTimeout(r, 400 + Math.random() * 600))
+            const answer = data.success && (data.answer || data.response?.answer)
+                ? (data.answer || data.response.answer)
+                : "I apologize, I couldn't process that. Please try rephrasing your question."
 
             const botMsg: ChatMessage = {
                 id: `bot-${Date.now()}`,
-                text: data.success && data.response?.answer
-                    ? data.response.answer
-                    : "I'm not sure about that. Could you rephrase your question?",
+                text: answer,
                 sender: 'bot',
                 time: getTime(),
-                suggestions: data.response?.suggestions || [],
+                suggestions: data.suggestions || data.response?.suggestions || [],
             }
             setMessages(prev => [...prev, botMsg])
         } catch {

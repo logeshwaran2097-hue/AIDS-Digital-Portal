@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
@@ -18,9 +19,13 @@ import {
   Code2,
   Layers,
   ChevronRight,
+  ChevronDown,
   Printer,
   Copy,
   Check,
+  Bot,
+  ArrowRight,
+  ExternalLink,
 } from 'lucide-react'
 import { EmptyState } from '@/components/portal/states'
 import { cn } from '@/lib/utils'
@@ -88,8 +93,22 @@ export default function StudyDetailsView({
   syllabi: Syllabus[]
 }) {
   const [selected, setSelected] = useState(subjects[0]?.id || 'none')
-  const [iqFilter, setIqFilter] = useState<'ALL' | 2 | 16>('ALL')
+  const [iqFilter, setIqFilter] = useState<'ALL' | 2 | 8 | 16>('ALL')
   const [copiedQ, setCopiedQ] = useState<string | null>(null)
+
+  // AI Question Generator Agent State
+  const [aiGenMark, setAiGenMark] = useState<'2' | '8' | '16'>('2')
+  const [aiGenUnitId, setAiGenUnitId] = useState<string>('')
+  const [isAiLoading, setIsAiLoading] = useState(false)
+  const [showAiPanel, setShowAiPanel] = useState(false)
+  const [expandedAiQ, setExpandedAiQ] = useState<Record<string, boolean>>({})
+  const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<{
+    id: string
+    question: string
+    answer: string
+    marks: number
+    unitTitle: string
+  }[]>([])
 
   const current = subjects.find((s) => s.id === selected)
   const subjectUnits = units.filter((u) => u.subjectId === selected)
@@ -98,10 +117,83 @@ export default function StudyDetailsView({
   const subjectIQ = importantQuestions.filter((i) => i.subjectId === selected)
   const subjectSyllabus = syllabi.find((s) => s.subjectId === selected)
 
-  const filteredIQ = subjectIQ.filter((q) => {
+  // Combine DB questions and AI generated questions
+  const allAvailableIQ = [
+    ...subjectIQ,
+    ...aiGeneratedQuestions.map(aq => ({
+      id: aq.id,
+      subjectId: selected,
+      question: aq.question,
+      marks: aq.marks,
+      answer: aq.answer,
+      unitTitle: aq.unitTitle,
+      status: 'published',
+      createdAt: new Date(),
+    }))
+  ]
+
+  const filteredIQ = allAvailableIQ.filter((q) => {
     if (iqFilter === 'ALL') return true
     return q.marks === iqFilter
   })
+
+  const handleGenerateAIQuestion = async () => {
+    if (!current) return
+    setIsAiLoading(true)
+    const targetUnit = subjectUnits.find(u => u.id === aiGenUnitId) || subjectUnits[0]
+    const unitTitle = targetUnit ? `Unit ${targetUnit.number}: ${targetUnit.title}` : 'Full Syllabus'
+    const partLabel = aiGenMark === '2' ? 'Part A (2-Mark Short Answer)' : aiGenMark === '8' ? 'Part B (8-Mark Descriptive)' : 'Part C (16-Mark Comprehensive Analytical)'
+    
+    const prompt = `You are an Anna University R-2021 Chief Examiner for ${current.code} - ${current.name}.
+Generate 1 authentic university examination question and detailed model answer for ${unitTitle}.
+Format: ${partLabel}.
+
+Please structure strictly as:
+QUESTION: [Exam-style question]
+ANSWER: [Comprehensive model answer with formulas/points/pseudocode]`
+
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: prompt,
+          sessionId: `study-details-${current.code}`,
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.answer) {
+        const text = data.answer
+        let q = ''
+        let a = text
+        if (text.includes('QUESTION:') && text.includes('ANSWER:')) {
+          const parts = text.split('ANSWER:')
+          q = parts[0].replace('QUESTION:', '').trim()
+          a = parts[1].trim()
+        } else {
+          const lines = text.split('\n')
+          q = lines[0].replace(/^#+\s*|\*\*Q:\*\*\s*|Q:\s*/i, '').trim()
+          a = lines.slice(1).join('\n').trim()
+        }
+        const newId = `ai-q-${Date.now()}`
+        setAiGeneratedQuestions(prev => [
+          {
+            id: newId,
+            question: q || `${partLabel} Question on ${unitTitle}`,
+            answer: a || text,
+            marks: Number(aiGenMark),
+            unitTitle,
+          },
+          ...prev,
+        ])
+        setExpandedAiQ(prev => ({ ...prev, [newId]: true }))
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsAiLoading(false)
+    }
+  }
 
   const copyQuestion = (q: string) => {
     navigator.clipboard.writeText(q)
@@ -446,11 +538,12 @@ export default function StudyDetailsView({
               {/* 5. IMPORTANT QUESTIONS TAB */}
               <TabsContent value="important" className="pt-4 space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {[
                       { l: 'All Questions', v: 'ALL' },
                       { l: 'Part-A (2-Marks)', v: 2 },
-                      { l: 'Part-B (16-Marks)', v: 16 },
+                      { l: 'Part-B (8-Marks)', v: 8 },
+                      { l: 'Part-C (16-Marks)', v: 16 },
                     ].map((btn) => (
                       <button
                         key={String(btn.v)}
@@ -467,43 +560,199 @@ export default function StudyDetailsView({
                     ))}
                   </div>
 
-                  <span className="text-xs text-gray-400 font-semibold">{filteredIQ.length} Questions</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowAiPanel(!showAiPanel)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-xs cursor-pointer transition-all"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                      <span>{showAiPanel ? 'Close AI Generator' : 'AI Question Generator Agent'}</span>
+                    </button>
+                    <span className="text-xs text-gray-400 font-semibold">{filteredIQ.length} Questions</span>
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  {filteredIQ.map((q, idx) => (
-                    <div
-                      key={q.id}
-                      className="p-5 rounded-3xl bg-white border border-gray-200 shadow-2xs hover:shadow-md transition-all flex items-start justify-between gap-4"
-                    >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <span className="w-6 h-6 rounded-full bg-gray-100 text-[#071A3D] font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                          {idx + 1}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-[#071A3D] leading-relaxed">{q.question}</p>
-                          <span className="text-[10px] text-gray-400 mt-1 inline-block">Anna University Question Bank</span>
+                {/* AI Question Generator Agent Panel */}
+                {showAiPanel && (
+                  <div className="p-5 rounded-3xl bg-gradient-to-br from-[#071A3D] via-[#0E2C66] to-[#1455D9] text-white shadow-xl space-y-4 border border-blue-400/20 animate-in fade-in-50 duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                          <Bot className="w-4 h-4 text-cyan-300" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm text-white">AI Question & Solution Agent</h4>
+                          <p className="text-[11px] text-cyan-200">
+                            Generate authentic Anna University R-2021 Part A (2M), Part B (8M), or Part C (16M) questions on demand
+                          </p>
+                        </div>
+                      </div>
+                      <Link
+                        href="/dashboard/study-assistant"
+                        className="inline-flex items-center gap-1 text-xs text-cyan-300 hover:text-white font-semibold transition-colors"
+                      >
+                        <span>Open Full AI Tutor</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+                      <div className="sm:col-span-4 space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-cyan-200 block">Exam Mark Pattern:</label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {[
+                            { l: 'Part A (2M)', v: '2' },
+                            { l: 'Part B (8M)', v: '8' },
+                            { l: 'Part C (16M)', v: '16' },
+                          ].map((btn) => (
+                            <button
+                              key={btn.v}
+                              type="button"
+                              onClick={() => setAiGenMark(btn.v as any)}
+                              className={cn(
+                                'py-2 px-1 rounded-xl text-xs font-bold border transition-all text-center cursor-pointer',
+                                aiGenMark === btn.v
+                                  ? 'bg-white text-[#071A3D] border-white shadow-md'
+                                  : 'bg-white/10 text-white/80 border-white/10 hover:bg-white/20'
+                              )}
+                            >
+                              {btn.l}
+                            </button>
+                          ))}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge
-                          variant={q.marks === 16 ? 'role' : 'info'}
-                          className="font-bold text-[10px]"
+                      <div className="sm:col-span-5 space-y-1">
+                        <label className="text-[10px] uppercase font-bold text-cyan-200 block">Target Unit:</label>
+                        <select
+                          value={aiGenUnitId}
+                          onChange={(e) => setAiGenUnitId(e.target.value)}
+                          className="w-full bg-[#051330] text-white p-2 rounded-xl text-xs font-semibold border border-white/20 focus:outline-none focus:border-cyan-400 cursor-pointer"
                         >
-                          {q.marks} Marks
-                        </Badge>
+                          <option value="">Full Course Scope ({current.name})</option>
+                          {subjectUnits.map((u) => (
+                            <option key={u.id} value={u.id}>Unit {u.number}: {u.title}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-3 flex items-end">
                         <button
-                          onClick={() => copyQuestion(q.question)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-[#1455D9] hover:bg-gray-100 transition-colors cursor-pointer"
-                          title="Copy Question"
+                          onClick={handleGenerateAIQuestion}
+                          disabled={isAiLoading}
+                          className="w-full py-2.5 px-3 rounded-xl bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 text-[#071A3D] font-black text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          {copiedQ === q.question ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                          {isAiLoading ? (
+                            <>
+                              <div className="w-3.5 h-3.5 border-2 border-[#071A3D] border-t-transparent rounded-full animate-spin" />
+                              <span>Generating...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Generate with AI</span>
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
+
+                {/* Questions List */}
+                {filteredIQ.length === 0 ? (
+                  <div className="p-8 rounded-3xl bg-white border border-dashed border-gray-300 text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <div className="max-w-md mx-auto space-y-1">
+                      <h4 className="font-bold text-slate-800 text-sm">No Questions In This Mark Category</h4>
+                      <p className="text-xs text-slate-500">
+                        Generate official Anna University Part A (2M), Part B (8M), or Part C (16M) questions instantly using our AI Question Agent!
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                      <button
+                        onClick={() => {
+                          setShowAiPanel(true)
+                          if (iqFilter !== 'ALL') setAiGenMark(String(iqFilter) as any)
+                        }}
+                        className="px-4 py-2 rounded-xl bg-[#071A3D] text-white text-xs font-bold hover:bg-[#1455D9] transition-colors cursor-pointer"
+                      >
+                        Generate with AI Agent
+                      </button>
+                      <Link
+                        href="/dashboard/study-assistant"
+                        className="px-4 py-2 rounded-xl border border-gray-200 text-slate-700 text-xs font-bold hover:bg-gray-50 transition-colors inline-flex items-center gap-1.5"
+                      >
+                        <span>Open AI Study Assistant</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredIQ.map((q: any, idx) => (
+                      <div
+                        key={q.id}
+                        className="p-5 rounded-3xl bg-white border border-gray-200 shadow-2xs hover:shadow-md transition-all space-y-3"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <span className="w-6 h-6 rounded-full bg-gray-100 text-[#071A3D] font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                              {idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-[#071A3D] leading-relaxed">{q.question}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] text-gray-400">
+                                  {q.unitTitle ? `${q.unitTitle} • ` : ''}Anna University Question Bank
+                                </span>
+                                {q.id.startsWith('ai-q-') && (
+                                  <span className="px-1.5 py-0.2 rounded bg-cyan-50 text-cyan-700 border border-cyan-200 text-[9px] font-bold">
+                                    AI Generated
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge
+                              variant={q.marks === 16 ? 'role' : q.marks === 8 ? 'warning' : 'info'}
+                              className="font-bold text-[10px]"
+                            >
+                              {q.marks === 2 ? 'Part-A (2M)' : q.marks === 8 ? 'Part-B (8M)' : 'Part-C (16M)'}
+                            </Badge>
+                            <button
+                              onClick={() => copyQuestion(q.answer ? `Q: ${q.question}\n\nAns:\n${q.answer}` : q.question)}
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-[#1455D9] hover:bg-gray-100 transition-colors cursor-pointer"
+                              title="Copy Question & Answer"
+                            >
+                              {copiedQ === q.question ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            </button>
+                            {q.answer && (
+                              <button
+                                onClick={() => setExpandedAiQ(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
+                                className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1"
+                              >
+                                <span>{expandedAiQ[q.id] ? 'Hide' : 'Answer'}</span>
+                                <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", expandedAiQ[q.id] && "rotate-180")} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {q.answer && expandedAiQ[q.id] && (
+                          <div className="pt-2 border-t border-gray-100 text-xs text-slate-700 bg-slate-50 p-3.5 rounded-2xl whitespace-pre-line leading-relaxed border border-slate-200">
+                            <strong className="text-blue-700 block mb-1">Model University Answer & Solution:</strong>
+                            {q.answer}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>
