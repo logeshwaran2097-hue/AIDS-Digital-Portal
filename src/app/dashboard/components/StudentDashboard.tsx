@@ -183,6 +183,11 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
     if (updatedUser) {
       setCurrentUser((prev) => ({ ...prev, ...updatedUser, mustChangePassword: false }))
     }
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.replace('/dashboard')
+      }
+    }, 400)
   }
 
   const handleOnboardingClose = () => {

@@ -18,8 +18,19 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return validation.response
     }
-    const body = validation.data
-    const userIdentifier = session?.userId || session?.email || body?.email || body?.registerNumber || ''
+    const body = validation.data as {
+      userId?: string; registerNumber?: string; facultyId?: string; role?: string;
+      name?: string; phone?: string | null; parentPhone?: string | null; isParentWhatsapp?: boolean;
+      email?: string | null; dateOfBirth?: string | null; department?: string; year?: any;
+      semester?: any; section?: string; advisorName?: string | null; bloodGroup?: string | null;
+      residencyStatus?: string | null; hostelBlock?: string | null; roomNo?: string | null;
+      busNo?: string | null; boardingPoint?: string | null; profileImage?: string | null;
+      address?: string | null; busDetails?: string | null; newPassword?: string;
+      qualification?: string | null; specialization?: string | null; experience?: any;
+      correctionRemarks?: string | null; staffId?: string | null; emailOtp?: string;
+      challenge?: string; otp?: string;
+    }
+    const userIdentifier = session?.userId || session?.email || (body?.email ? String(body.email) : '') || (body?.registerNumber ? String(body.registerNumber) : '') || ''
 
     // Dual Rate Limit: 5 attempts per 15 min per IP and per user
     const rateLimit = await checkRateLimit(request, 5, 900, 'auth:complete-profile', userIdentifier)
@@ -176,7 +187,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (submittedOtp || (!session && challenge)) {
-      const otpRecord = await prisma.oTP.findFirst({
+      let otpRecord = await prisma.oTP.findFirst({
         where: {
           email: normalizedEmail || user.email,
           expiresAt: { gt: new Date() },
@@ -184,6 +195,18 @@ export async function POST(request: NextRequest) {
         },
         orderBy: { createdAt: 'desc' },
       })
+
+      // Fallback: If already verified and marked used during auto-verify within last 15 minutes
+      if (!otpRecord) {
+        otpRecord = await prisma.oTP.findFirst({
+          where: {
+            email: normalizedEmail || user.email,
+            createdAt: { gt: new Date(Date.now() - 15 * 60 * 1000) },
+          },
+          orderBy: { createdAt: 'desc' },
+        })
+      }
+
       const isValidChallenge = Boolean(challenge && verifyOTPChallenge(challenge, normalizedEmail || user.email, submittedOtp))
       const isDbOtpValid = otpRecord
         ? (verifyOTP(submittedOtp, otpRecord.codeHash) || (await bcrypt.compare(submittedOtp, otpRecord.codeHash).catch(() => false)))
@@ -195,7 +218,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         )
       }
-      if (otpRecord) {
+      if (otpRecord && !otpRecord.used) {
         await prisma.oTP.update({
           where: { id: otpRecord.id },
           data: { used: true },
@@ -223,7 +246,7 @@ export async function POST(request: NextRequest) {
         data: {
           ...(name && name.trim() ? { name: name.trim() } : {}),
           ...(normalizedEmail ? { email: normalizedEmail } : {}),
-          ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
+          ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
           ...(body.profileImage ? { profileImage: body.profileImage } : {}),
           ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
           emailVerified: true,
@@ -245,7 +268,7 @@ export async function POST(request: NextRequest) {
             data: {
               ...(name && name.trim() ? { name: name.trim() } : {}),
               ...(normalizedEmail ? { email: normalizedEmail } : {}),
-              ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
+              ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
               ...(body.profileImage ? { profileImage: body.profileImage } : {}),
               ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
               emailVerified: true,
@@ -258,7 +281,7 @@ export async function POST(request: NextRequest) {
             where: { id: targetUserId },
             data: {
               ...(name && name.trim() ? { name: name.trim() } : {}),
-              ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
+              ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
               ...(body.profileImage ? { profileImage: body.profileImage } : {}),
               ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
               emailVerified: true,
@@ -312,17 +335,17 @@ export async function POST(request: NextRequest) {
                   roomNo: null,
                   busNo: busNo !== undefined ? busNo : studentRec.busNo,
                   boardingPoint: boardingPoint !== undefined ? boardingPoint : studentRec.boardingPoint,
-                  busDetails: busDetails !== undefined && busDetails !== '' ? busDetails.trim() : studentRec.busDetails,
+                  busDetails: busDetails !== undefined && busDetails ? busDetails.trim() : studentRec.busDetails,
                 }
               : {
                   ...(hostelBlock !== undefined ? { hostelBlock } : {}),
                   ...(roomNo !== undefined ? { roomNo } : {}),
                   ...(busNo !== undefined ? { busNo } : {}),
                   ...(boardingPoint !== undefined ? { boardingPoint } : {}),
-                  ...(busDetails !== undefined && busDetails !== '' ? { busDetails: busDetails.trim() } : {}),
+                  ...(busDetails !== undefined && busDetails ? { busDetails: busDetails.trim() } : {}),
                 }),
-            ...(address !== undefined && address !== '' ? { address: address.trim() } : {}),
-            ...(advisorName !== undefined && advisorName !== '' ? { advisorName: advisorName.trim() } : {}),
+            ...(address !== undefined && address ? { address: address.trim() } : {}),
+            ...(advisorName !== undefined && advisorName ? { advisorName: advisorName.trim() } : {}),
           } as any,
         }).catch((err) => console.warn('Student update warning:', err))
 

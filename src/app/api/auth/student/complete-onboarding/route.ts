@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
     const trimmedOtp = otp ? otp.trim() : ''
 
     // Verify OTP
-    const otpRecord = await prisma.oTP.findFirst({
+    let otpRecord = await prisma.oTP.findFirst({
       where: {
         email: normalizedEmail,
         expiresAt: { gt: new Date() },
@@ -182,11 +182,27 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    if (!otpRecord || !verifyOTP(trimmedOtp, otpRecord.codeHash)) {
+    // Fallback: If already verified and marked used during Step 2 auto-verification within last 15 minutes
+    if (!otpRecord) {
+      otpRecord = await prisma.oTP.findFirst({
+        where: {
+          email: normalizedEmail,
+          createdAt: { gt: new Date(Date.now() - 15 * 60 * 1000) },
+        },
+        orderBy: { createdAt: 'desc' },
+      })
+    }
+
+    const isOtpValid = otpRecord && (
+      verifyOTP(trimmedOtp, otpRecord.codeHash) ||
+      (await bcrypt.compare(trimmedOtp, otpRecord.codeHash).catch(() => false))
+    )
+
+    if (!isOtpValid) {
       return NextResponse.json({ success: false, message: 'Invalid or expired OTP. Please verify OTP first.' }, { status: 400 })
     }
 
-    if (otpRecord) {
+    if (otpRecord && !otpRecord.used) {
       // Mark OTP as used
       await prisma.oTP.update({
         where: { id: otpRecord.id },
@@ -372,6 +388,13 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    })
+    response.cookies.set('auth_token', newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
 
