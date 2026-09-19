@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import {
   X,
@@ -325,20 +325,70 @@ export function ApplyODPermissionModal({
     }
   }
 
+  useEffect(() => {
+    if (isOpen) {
+      if (
+        !reason ||
+        reason.includes('Privacy Notice') ||
+        reason.includes('Student Directory') ||
+        reason.includes('Anna University') ||
+        reason.includes('Unit 1') ||
+        reason.length < 20
+      ) {
+        setReason(getDefaultAcademicStatement(appType, eventName, organizer, fromDate, toDate))
+      }
+    }
+  }, [isOpen])
+
+  const handleSelectCategory = (newType: ApplicationType) => {
+    setAppType(newType)
+    if (
+      !reason ||
+      reason.includes('Privacy Notice') ||
+      reason.includes('Student Directory') ||
+      reason.includes('Anna University') ||
+      reason.includes('Unit 1') ||
+      reason.includes('I am requesting') ||
+      reason.includes('Requesting official')
+    ) {
+      const ev = eventName.trim() || (newType.includes('Leave') ? '' : 'Technical Event')
+      const org = organizer.trim() || 'Host Institution'
+      setReason(getDefaultAcademicStatement(newType, ev, org, fromDate, toDate))
+    }
+  }
+
+  const handleDateChange = (type: 'from' | 'to', val: string) => {
+    const newFrom = type === 'from' ? val : fromDate
+    const newTo = type === 'to' ? val : toDate
+    if (type === 'from') setFromDate(val)
+    if (type === 'to') setToDate(val)
+
+    if (
+      !reason ||
+      reason.includes('Privacy Notice') ||
+      reason.includes('Student Directory') ||
+      reason.includes('Anna University') ||
+      reason.includes('Unit 1') ||
+      reason.includes('I am requesting') ||
+      reason.includes('Requesting official')
+    ) {
+      const ev = eventName.trim() || (appType.includes('Leave') ? '' : 'Technical Event')
+      const org = organizer.trim() || 'Host Institution'
+      setReason(getDefaultAcademicStatement(appType, ev, org, newFrom, newTo))
+    }
+  }
+
   const handleAiDraftReason = async () => {
     setIsAiDrafting(true)
-    const ev = eventName.trim() || 'Technical Event'
+    const ev = eventName.trim() || (appType.includes('Leave') ? '' : 'Technical Event')
     const org = organizer.trim() || 'Host Institution'
     const defaultStmt = getDefaultAcademicStatement(appType, ev, org, fromDate, toDate)
 
-    const prompt = `Draft a formal, respectful 2-sentence institutional reason for a college student's application.
-Application Details:
-- Category: ${appType}
-- Event/Activity Name: ${ev}
-- Host/Organizer: ${org}
-- Dates: ${fromDate || 'scheduled date'} to ${toDate || 'scheduled date'}
-
-Rules: Strictly 2 sentences. Formal college English. No markdown, no quotes, no syllabus text.`
+    const prompt = `Draft formal application reason for student application.
+Category: ${appType}
+Event: ${ev}
+Host: ${org}
+Dates: ${fromDate && toDate ? `from ${fromDate} to ${toDate}` : fromDate ? `on ${fromDate}` : 'for the scheduled duration'}`
 
     try {
       const res = await fetch('/api/ai', {
@@ -347,23 +397,40 @@ Rules: Strictly 2 sentences. Formal college English. No markdown, no quotes, no 
         body: JSON.stringify({
           message: prompt,
           sessionId: 'od-statement-agent',
+          agent: 'od-reason-agent',
+          context: {
+            category: appType,
+            eventName: ev,
+            organizer: org,
+            fromDate,
+            toDate,
+            studentName: userName,
+            registerNumber: student.registerNumber,
+          },
         }),
       })
       const data = await res.json()
       if (data.success && data.answer) {
         let cleanText = data.answer.replace(/^["'`]+|["'`]+$/g, '').replace(/[*#_~`]+/g, '').trim()
-        if (cleanText.includes('Anna University') || cleanText.includes('Unit 1') || cleanText.includes('AD3501') || cleanText.length < 20) {
+        if (
+          cleanText.includes('Privacy Notice') ||
+          cleanText.includes('Student Directory') ||
+          cleanText.includes('Anna University') ||
+          cleanText.includes('Unit 1') ||
+          cleanText.includes('AD3501') ||
+          cleanText.length < 20
+        ) {
           cleanText = defaultStmt
         }
         setReason(cleanText)
-        toast.success('AI drafted formal academic statement!')
+        toast.success('Agent drafted formal academic statement!')
       } else {
         setReason(defaultStmt)
-        toast.success('Generated formal statement!')
+        toast.success('Agent generated formal statement!')
       }
     } catch {
       setReason(defaultStmt)
-      toast.success('Generated formal statement!')
+      toast.success('Agent generated formal statement!')
     } finally {
       setIsAiDrafting(false)
     }
@@ -740,7 +807,7 @@ Rules: Strictly 2 sentences. Formal college English. No markdown, no quotes, no 
                       <button
                         key={item.type}
                         type="button"
-                        onClick={() => setAppType(item.type)}
+                        onClick={() => handleSelectCategory(item.type)}
                         className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-blue-50/80 border-[#1455D9] shadow-md shadow-blue-500/10 ring-2 ring-[#1455D9]/20'
@@ -776,7 +843,7 @@ Rules: Strictly 2 sentences. Formal college English. No markdown, no quotes, no 
                       type="date"
                       required
                       value={fromDate}
-                      onChange={(e) => setFromDate(e.target.value)}
+                      onChange={(e) => handleDateChange('from', e.target.value)}
                       className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-semibold focus:outline-none focus:border-[#1455D9] bg-white"
                     />
                   </div>
@@ -786,7 +853,7 @@ Rules: Strictly 2 sentences. Formal college English. No markdown, no quotes, no 
                       type="date"
                       required
                       value={toDate}
-                      onChange={(e) => setToDate(e.target.value)}
+                      onChange={(e) => handleDateChange('to', e.target.value)}
                       className="w-full px-3 py-2 rounded-xl border border-gray-300 text-xs font-semibold focus:outline-none focus:border-[#1455D9] bg-white"
                     />
                   </div>
@@ -1158,7 +1225,7 @@ Rules: Strictly 2 sentences. Formal college English. No markdown, no quotes, no 
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1455D9] hover:text-[#071A3D] bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-lg transition-colors cursor-pointer border border-blue-200"
                   >
                     <Sparkles className="w-3 h-3 text-blue-600" />
-                    <span>{isAiDrafting ? 'Drafting...' : '✨ AI Write Statement'}</span>
+                    <span>{isAiDrafting ? 'Agent Drafting...' : '✨ AI Agent Draft Reason'}</span>
                   </button>
                 </div>
                 <textarea

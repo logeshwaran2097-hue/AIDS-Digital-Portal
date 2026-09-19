@@ -618,8 +618,10 @@ export const aiQuerySchema = z
     message: z.string().min(1).max(2000),
     sessionId: z.string().max(100).optional(),
     apiKey: z.string().max(200).optional(),
+    agent: z.string().max(100).optional(),
+    context: z.record(z.any()).optional(),
   })
-  .strict()
+  .passthrough()
 
 // ==========================================
 // 10. Complete Profile & Admin/Settings Schemas

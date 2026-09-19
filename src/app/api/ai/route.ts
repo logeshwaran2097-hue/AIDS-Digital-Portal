@@ -242,8 +242,121 @@ function handleAcademicCurriculumQuery(rawQ: string): { answer: string; suggesti
 
 
 // =============================================================================
-// ON-DUTY (OD) & LEAVE APPLICATION REASON STATEMENT GENERATOR
+// AGENT: OD & LEAVE REASON AUTONOMOUS AGENT
 // =============================================================================
+async function executeOdLeaveReasonAgent(
+  rawQ: string,
+  context?: any,
+  activeApiKey?: string
+): Promise<{ answer: string; suggestions: string[] }> {
+  const combined = `${rawQ} ${context?.category || ''}`.toLowerCase()
+
+  let type = 'od'
+  if (/personal|family|emergency/i.test(combined)) {
+    type = 'personal'
+  } else if (/medical|sick|health|hospital|doctor/i.test(combined)) {
+    type = 'medical'
+  } else if (/internship|project|training|corporate/i.test(combined)) {
+    type = 'internship'
+  } else if (/sports|cultural|tournament|match|zonal/i.test(combined)) {
+    type = 'sports'
+  } else if (/paper|presentation|symposium|conference|research/i.test(combined)) {
+    type = 'symposium'
+  } else if (/hackathon|coding|contest|challenge/i.test(combined)) {
+    type = 'hackathon'
+  }
+
+  // Extract dates
+  let dates =
+    context?.fromDate && context?.toDate
+      ? `from ${context.fromDate} to ${context.toDate}`
+      : context?.fromDate
+      ? `on ${context.fromDate}`
+      : ''
+  if (!dates) {
+    const dateMatch = rawQ.match(/dates?:\s*([^\n\r]+)/i)
+    dates = dateMatch ? dateMatch[1].trim() : 'for the scheduled duration'
+  }
+
+  // Extract event name & organizer
+  const eventName =
+    context?.eventName ||
+    rawQ.match(/event(?:\/activity)?(?:\s*name)?:\s*([^\n\r]+)/i)?.[1]?.trim() ||
+    'the scheduled academic event'
+  const organizer =
+    context?.organizer ||
+    rawQ.match(/host(?:\/organizer)?:\s*([^\n\r]+)/i)?.[1]?.trim() ||
+    'the host institution'
+
+  // Autonomous fallback answer generator
+  let baseStatement = ''
+  if (type === 'personal') {
+    baseStatement = `I am requesting formal personal leave ${dates} due to essential family commitments. I will ensure all missed lecture notes, laboratory coursework, and continuous assessment tasks are fully completed upon my return to college.`
+  } else if (type === 'medical') {
+    baseStatement = `I am requesting formal medical leave ${dates} on healthcare grounds under medical consultation and rest. I will submit the authentic medical fitness certificate and catch up on all academic sessions immediately upon resumption.`
+  } else if (type === 'internship') {
+    baseStatement = `I am requesting official On-Duty permission to attend the industrial internship and practical project training at ${organizer} ${dates}. This applied industrial training directly strengthens my domain competencies in Artificial Intelligence and Data Science while fulfilling curricular project requirements.`
+  } else if (type === 'sports') {
+    baseStatement = `I am requesting official On-Duty permission to represent V.S.B. Engineering College in ${eventName} organized by ${organizer} ${dates}. I will uphold the sporting prestige of our institution and diligently make up for all academic classes missed during this period.`
+  } else if (type === 'symposium') {
+    baseStatement = `I am requesting official On-Duty permission to present our research paper and participate in ${eventName} hosted by ${organizer} ${dates}. This academic presentation allows our department to showcase institutional research innovation and interact with domain experts.`
+  } else {
+    // Hackathon or general OD
+    baseStatement = `I am requesting official On-Duty permission to participate in ${eventName} organized by ${organizer} ${dates}. This competitive challenge provides practical problem-solving experience and allows our team to represent V.S.B. Engineering College with distinction.`
+  }
+
+  // If live Gemini is active, let it refine the statement while enforcing strict institutional policy
+  if (activeApiKey && activeApiKey !== 'your-gemini-api-key') {
+    try {
+      const genAI = new GoogleGenerativeAI(activeApiKey)
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        systemInstruction: `You are the official Academic Administrative Agent for V.S.B. Engineering College (Department of Artificial Intelligence & Data Science).
+Draft exactly 2 formal, polite, and persuasive sentences suitable as the official reason for a college student's application.
+Strict Rules:
+1. Exactly 2 sentences.
+2. Formal, respectful academic English.
+3. Absolutely NO markdown headings, NO bullet points, NO asterisks, NO quotes, NO syllabus notes, NO emojis, NO Privacy Notice.
+4. Output ONLY the 2 sentences.`,
+      })
+
+      const agentPrompt = `Draft formal application reason for student application.
+Category: ${type}
+Dates: ${dates}
+Event: ${eventName}
+Host: ${organizer}
+Base reason draft: ${baseStatement}
+Return only 2 formal sentences.`
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: agentPrompt }] }],
+        generationConfig: { maxOutputTokens: 250, temperature: 0.5 },
+      })
+      const text = result.response.text()?.trim()
+      if (
+        text &&
+        text.length > 20 &&
+        !text.includes('Anna University') &&
+        !text.includes('Privacy Notice') &&
+        !text.includes('Student Directory')
+      ) {
+        baseStatement = text.replace(/^["'`]+|["'`]+$/g, '').replace(/[*#_~`]+/g, '').trim()
+      }
+    } catch (e: any) {
+      console.warn('Gemini OD statement drafting agent fallback to deterministic generator:', e?.message)
+    }
+  }
+
+  return {
+    answer: baseStatement,
+    suggestions: [
+      'Submit application',
+      'Attach supporting proofs',
+      'View approval status',
+    ],
+  }
+}
+
 function handleOdLeaveStatement(rawQ: string): { answer: string; suggestions: string[] } {
   const q = rawQ.toLowerCase()
 
@@ -262,21 +375,18 @@ function handleOdLeaveStatement(rawQ: string): { answer: string; suggestions: st
     type = 'hackathon'
   }
 
-  // Extract dates if present in the prompt (e.g. Dates: 09/19/2026 to 09/22/2026)
   const dateMatch = rawQ.match(/dates?:\s*([^\n\r]+)/i)
   const dates = dateMatch ? dateMatch[1].trim() : 'the scheduled dates'
 
-  // Extract event name if present
   const eventMatch = rawQ.match(/event(?:\/activity)?(?:\s*name)?:\s*([^\n\r]+)/i)
   const eventName = eventMatch ? eventMatch[1].trim() : 'the designated event'
 
-  // Extract host/organizer if present
   const orgMatch = rawQ.match(/host(?:\/organizer)?:\s*([^\n\r]+)/i)
   const organizer = orgMatch ? orgMatch[1].trim() : 'the host institution'
 
   let answer = ''
   if (type === 'personal') {
-    answer = `I am requesting formal personal leave for ${dates} due to unavoidable family commitments. I will ensure all missed academic coursework and lab assignments are completed promptly upon returning to college.`
+    answer = `I am requesting formal personal leave for ${dates} due to essential family commitments. I will ensure all missed academic coursework and lab assignments are completed promptly upon returning to college.`
   } else if (type === 'medical') {
     answer = `I am requesting formal medical leave for ${dates} on health grounds under medical consultation and rest. I will submit the requisite medical fitness certificate and catch up on all academic sessions immediately upon resumption.`
   } else if (type === 'internship') {
@@ -286,7 +396,6 @@ function handleOdLeaveStatement(rawQ: string): { answer: string; suggestions: st
   } else if (type === 'symposium') {
     answer = `I am requesting official On-Duty permission to present our research paper and participate in ${eventName} hosted by ${organizer} during ${dates}. This academic presentation allows us to represent our department, showcase institutional innovation, and interact with subject matter experts.`
   } else {
-    // Hackathon or general OD
     answer = `I am requesting official On-Duty permission to participate in ${eventName} organized by ${organizer} during ${dates}. This competitive challenge provides practical problem-solving experience and allows our team to represent V.S.B. Engineering College with distinction.`
   }
 
@@ -308,8 +417,8 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
   // 0A. OD & LEAVE APPLICATION FORMAL STATEMENT AGENT (TOP PRIORITY FOR PERMISSIONS)
   // ---------------------------------------------------------------------------
   if (
-    /on-duty|leave application|permission application|draft.*statement|academic application assistant|formal.*statement|reason for an on-duty|od application/i.test(rawQ) ||
-    /leave.*statement|write.*statement|reason & academic explanation/i.test(rawQ)
+    /on-duty|leave|permission|od\b/i.test(rawQ) &&
+    (/statement|reason|draft|application|institutional/i.test(rawQ) || /personal|medical|internship|sports|symposium|hackathon/i.test(rawQ))
   ) {
     return handleOdLeaveStatement(rawQ)
   }
@@ -813,6 +922,27 @@ export async function POST(request: Request) {
       } catch (err: any) {
         return NextResponse.json({ success: false, message: err.message || 'Invalid Gemini API key.' })
       }
+    }
+
+    // =========================================================================
+    // DEDICATED AUTONOMOUS AGENT: OD & LEAVE REASON APPLICATION DRAFTER
+    // =========================================================================
+    const isOdAgent =
+      sessionId === 'od-statement-agent' ||
+      validation.data.agent === 'od-reason-agent' ||
+      validation.data.agent === 'od-permission-agent' ||
+      /on-duty|leave application|permission application|od application/i.test(query) ||
+      (/leave|permission|on-duty|od\b/i.test(query) && /draft|reason|statement|institutional/i.test(query))
+
+    if (isOdAgent) {
+      const agentResult = await executeOdLeaveReasonAgent(query, validation.data.context, activeApiKey)
+      return NextResponse.json({
+        success: true,
+        answer: agentResult.answer,
+        suggestions: agentResult.suggestions,
+        agent: 'od-reason-agent',
+        source: activeApiKey ? 'gemini-agent' : 'autonomous-agent',
+      })
     }
 
     // Try live Google Gemini API if key is present
