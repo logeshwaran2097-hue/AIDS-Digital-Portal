@@ -3,17 +3,16 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.5.7'
+export const APP_VERSION = '2.6.0'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-19'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'Comprehensive API Validation Fix: Resolved all "Unrecognized key(s)" errors across student, faculty, HOD, and profile endpoints',
-  'Schema Passthrough Migration: Converted 10+ form-facing Zod schemas from .strict() to .passthrough() preventing UI payload rejections',
-  'Student Onboarding Fix: Complete profile, OD application, and onboarding OTP schemas now accept all UI form state gracefully',
-  'Faculty & HOD Settings Hardening: Settings and profile update schemas no longer reject extra preference fields',
-  'Bulk Import Resilience: CSV import schema accepts additional columns without validation failures',
-  'Email Validation Stability: Optional email preprocessing handles blank, null, and whitespace values across all endpoints',
-  'Production Security Hardening: Strict HSTS, nosniff, SAMEORIGIN, Permissions-Policy, and hardened CSP headers maintained',
+  'Full Anna University R-2021 Curricular Database: 15 complete units across AL3391 (AI), AD3351 (DAA), and AD3501 (Deep Learning) with zero placeholders',
+  'Multi-Model Google Gemini Integration: Live connection supporting Gemini 1.5 Flash, 2.0 Flash, and Gemini Pro with 2,500 max output tokens',
+  'Custom Gemini API Key Settings: 1-click personal key configuration and live connection verification directly in the AI Study Assistant',
+  'Authentic Anna University Exam Rubrics: Part A (2 Marks), Part B (8 Marks), and Part C (16 Marks) with exact Bloom\'s Taxonomy (K1-K6) and Course Outcome (CO) mapping',
+  'Autonomous Academic AI Synthesizer: Dynamic generation of fresh exam questions, derivations, pseudocode, and model answer keys without API dependency',
+  'Portal-Wide AI Agent Ecosystem: AI Student Advisor (Admin Students), AI Career Mentor (Student Profile), and AI Statement Drafter (OD/Leave Requests)',
 ]
