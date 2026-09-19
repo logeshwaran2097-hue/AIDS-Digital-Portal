@@ -3,13 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.6.5'
+export const APP_VERSION = '2.6.6'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-19'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'College Branding & App Icon Harmonization: Restored authentic circular gold college crest on login page Stage 2 and portal navigation headers, while designating the radiant multi-stop gradient squircle exclusively as the official standalone App Icon across PWA, mobile launchers, splash screens, and favicons',
+  'Emblem Design: Restored the modern radiant squircle college emblem across the login portal and navigation headers',
   'Luxury Email Header Redesign: Deployed executive royal midnight sapphire header with metallic gold crown accent, elevated squircle logo medallion pedestal, and autonomous badge',
   'Bus Pass PDF Optimization: Streamlined official transportation slip by removing redundant helpline desk, arrival/departure times, and bottom signature blocks',
   'Bus Route & Stop Formatting: Standardized bus number formatting as Bus No. 05, stripped stop timestamps, and resolved special character encoding issues across PDF and verify pass views',
