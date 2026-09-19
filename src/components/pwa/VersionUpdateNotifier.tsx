@@ -359,13 +359,13 @@ export function VersionUpdateNotifier() {
           <>
             <div className="flex items-start gap-4 pt-1">
               <div className="relative shrink-0">
-                <div className="w-18 h-18 rounded-2xl bg-[#071A41] p-1.5 shadow-md shadow-slate-900/10 border-2 border-amber-400/80 flex items-center justify-center">
+                <div className="w-18 h-18 rounded-2xl shadow-md shadow-slate-900/10 flex items-center justify-center">
                   <Image
-                    src="/college-emblem.png"
+                    src="/app-logo.png"
                     alt="VSB Portal"
-                    width={56}
-                    height={56}
-                    className="object-contain"
+                    width={72}
+                    height={72}
+                    className="w-full h-full object-contain rounded-2xl"
                   />
                 </div>
                 <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#01875f] text-white shadow-xs">

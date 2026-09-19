@@ -135,16 +135,14 @@ export function AppSecurityInstallModal({
             {/* Header: App Info + Play Store / App Store Security Shield */}
             <div className="flex items-start gap-4 pt-1">
               <div className="relative shrink-0">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] p-0.5 shadow-lg shadow-blue-500/20 flex items-center justify-center">
-                  <div className="w-full h-full bg-[#071A41] rounded-[14px] flex items-center justify-center p-1.5">
-                    <Image
-                      src="/college-emblem.png"
-                      alt="VSB Portal"
-                      width={44}
-                      height={44}
-                      className="object-contain"
-                    />
-                  </div>
+                <div className="w-16 h-16 rounded-2xl shadow-lg shadow-blue-500/20 flex items-center justify-center">
+                  <Image
+                    src="/app-logo.png"
+                    alt="VSB Portal"
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-contain rounded-2xl"
+                  />
                 </div>
                 <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xs">
                   <ShieldCheck className="w-3.5 h-3.5" />

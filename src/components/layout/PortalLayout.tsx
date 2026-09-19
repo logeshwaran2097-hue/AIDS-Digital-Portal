@@ -987,19 +987,15 @@ export function PortalLayout({
         {/* Drawer Header with Official Emblem */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="w-11 h-11 rounded-full p-[2.5px] bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] via-[#EC4899] to-[#FACC15] shadow-[0_0_18px_rgba(0,245,255,0.45),0_0_12px_rgba(236,72,153,0.35)] ring-2 ring-white/30 flex items-center justify-center shrink-0 transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_0_24px_rgba(0,245,255,0.7),0_0_18px_rgba(236,72,153,0.6)]">
-                <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden border border-amber-300/80">
-                  <Image
-                    src="/college-emblem.png"
-                    alt="V.S.B. Engineering College Official Emblem"
-                    width={42}
-                    height={42}
-                    className="w-full h-full object-contain rounded-full drop-shadow-xs"
-                    priority
-                  />
-                </div>
-              </div>
+            <div className="relative group shrink-0">
+              <Image
+                src="/app-logo.png"
+                alt="V.S.B. Engineering College Official Emblem"
+                width={44}
+                height={44}
+                className="w-11 h-11 object-contain rounded-[14px] drop-shadow-[0_4px_12px_rgba(20,85,217,0.35)] transition-all duration-300 group-hover:scale-105"
+                priority
+              />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -1429,16 +1425,14 @@ export function PortalLayout({
             )}
 
             <Link href={role === 'admin' ? '/admin/dashboard' : role === 'hod' ? '/hod-dashboard' : role === 'faculty' ? '/faculty-dashboard' : '/dashboard'} className="flex items-center gap-2.5 lg:hidden">
-              <div className="w-8 h-8 rounded-full p-[2px] bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] to-[#EC4899] shadow-[0_0_10px_rgba(0,245,255,0.4)] flex items-center justify-center shrink-0">
-                <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-amber-300/80">
-                  <Image
-                    src="/college-emblem.png"
-                    alt="V.S.B. Emblem"
-                    width={30}
-                    height={30}
-                    className="rounded-full object-contain"
-                  />
-                </div>
+              <div className="w-8 h-8 shrink-0">
+                <Image
+                  src="/app-logo.png"
+                  alt="V.S.B. Emblem"
+                  width={32}
+                  height={32}
+                  className="w-full h-full rounded-lg object-contain drop-shadow-sm"
+                />
               </div>
               <span className="text-sm font-black text-[#071A3D] tracking-tight">Digital Portal of AI&amp;DS</span>
             </Link>

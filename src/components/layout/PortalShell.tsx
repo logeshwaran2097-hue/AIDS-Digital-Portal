@@ -118,10 +118,8 @@ export function Sidebar({ role }: { role: string }) {
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-navy text-white hidden lg:flex flex-col">
       <div className="flex items-center gap-3 p-5 border-b border-white/10">
-        <div className="w-10 h-10 rounded-full p-[2.5px] bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] via-[#EC4899] to-[#FACC15] shadow-[0_0_15px_rgba(0,245,255,0.45),0_0_10px_rgba(236,72,153,0.35)] ring-2 ring-white/30 flex items-center justify-center shrink-0">
-          <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-amber-300/80">
-            <Image src="/college-emblem.png" alt="V.S.B. Engineering College Logo" width={38} height={38} className="object-contain" priority />
-          </div>
+        <div className="w-10 h-10 shrink-0">
+          <Image src="/app-logo.png" alt="V.S.B. Engineering College Logo" width={40} height={40} className="w-full h-full object-contain rounded-xl drop-shadow-md hover:scale-105 transition-transform" priority />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-bold text-white leading-tight">V.S.B. Engineering College</p>
@@ -177,10 +175,8 @@ export function TopBar({ role, userName }: { role: string; userName: string }) {
           </svg>
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full p-[2px] bg-gradient-to-tr from-[#00F5FF] via-[#8B5CF6] to-[#EC4899] shadow-[0_0_10px_rgba(0,245,255,0.4)] flex items-center justify-center shrink-0">
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-amber-300/80">
-              <Image src="/college-emblem.png" alt="College Logo" width={30} height={30} className="object-contain" priority />
-            </div>
+          <div className="w-8 h-8 shrink-0">
+            <Image src="/app-logo.png" alt="College Logo" width={32} height={32} className="w-full h-full object-contain rounded-lg drop-shadow-sm" priority />
           </div>
           <span className="hidden sm:inline text-sm font-semibold text-navy">V.S.B. AI &amp; DS Portal</span>
         </div>

@@ -969,13 +969,13 @@ export default function LoginPage() {
         style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
       >
         <div className="flex flex-col items-center text-center space-y-4 max-w-sm relative z-10 animate-in fade-in zoom-in-95 duration-300">
-          <div className="w-20 h-20 rounded-2xl bg-white/10 p-2 shadow-2xl border border-amber-400/40 flex items-center justify-center animate-pulse">
+          <div className="w-20 h-20 rounded-2xl shadow-2xl flex items-center justify-center animate-pulse">
             <Image
-              src="/college-emblem.png"
+              src="/app-logo.png"
               alt="VSB Portal"
-              width={64}
-              height={64}
-              className="object-contain drop-shadow-md"
+              width={80}
+              height={80}
+              className="w-full h-full object-contain rounded-2xl drop-shadow-md"
               priority
             />
           </div>

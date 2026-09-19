@@ -864,8 +864,8 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
             <div style="margin-bottom: 12px;">
               ${
                 hasLogo
-                  ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="60" height="60" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #F4C430; background-color: #ffffff; padding: 2px; vertical-align: middle; display: inline-block; object-fit: contain;" />'
-                  : '<div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; border: 2px solid #F4C430;">VSB</div>'
+                  ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="68" height="68" style="width: 68px; height: 68px; border-radius: 18px; vertical-align: middle; display: inline-block; object-fit: contain; box-shadow: 0 4px 14px rgba(0,0,0,0.35);" />'
+                  : '<div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 48px; height: 48px; line-height: 48px; border-radius: 14px; border: 2px solid #F4C430;">VSB</div>'
               }
             </div>
             <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;">V.S.B. ENGINEERING COLLEGE</h1>
@@ -1246,8 +1246,8 @@ export async function sendStudentVerificationEmail(
             <div style="margin-bottom: 12px;">
               ${
                 hasLogo
-                  ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="60" height="60" style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid #F4C430; background-color: #ffffff; padding: 2px; vertical-align: middle; display: inline-block; object-fit: contain;" />'
-                  : '<div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 44px; height: 44px; line-height: 44px; border-radius: 50%; border: 2px solid #F4C430;">VSB</div>'
+                  ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="68" height="68" style="width: 68px; height: 68px; border-radius: 18px; vertical-align: middle; display: inline-block; object-fit: contain; box-shadow: 0 4px 14px rgba(0,0,0,0.35);" />'
+                  : '<div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 48px; height: 48px; line-height: 48px; border-radius: 14px; border: 2px solid #F4C430;">VSB</div>'
               }
             </div>
             <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;">V.S.B. ENGINEERING COLLEGE</h1>
