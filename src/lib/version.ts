@@ -3,14 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.7.8'
+export const APP_VERSION = '2.7.9'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-19'
 
 export const APP_RELEASE_HIGHLIGHTS = [
-  'OD Application Verification Agent: Resolved variable declaration scoping in ApplyODPermissionModal ensuring clean build validation and seamless real-time pre-submission verification',
-  'Automatic AI Verification Agent: Added intelligent live pre-submission validator ensuring dates consistency, required proofs verification, and 2-sentence formal institutional statement compliance',
+  'Seamless Background Auto-Verification: Cleaned frontend UI by removing manual verification card and drafting button; all date syncing, proof validation, and 2-sentence institutional statement drafting now occur entirely in the background',
   'Enlarged Statement Viewport: Expanded Reason & Academic Explanation textarea to 4 rows with vertical resizability and relaxed line-height so the complete sentences are visible without scrolling',
   'Autonomous OD & Leave Reason Agent: Implemented dedicated agent architecture with dynamic date synchronization, category adaptation (Personal Leave, Medical Leave, Hackathons, Symposia, Internships), and total exclusion of student directory privacy notices and exam syllabus notes',
   'OD & Leave Reason AI Drafting: Fixed statement generator returning Anna University syllabus notes by adding exclusion guards and category-tailored formal statements for Personal Leave, Medical Leave, and On-Duty requests',
