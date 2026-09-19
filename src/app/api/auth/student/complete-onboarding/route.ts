@@ -11,7 +11,7 @@ import { revalidatePath } from 'next/cache'
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = checkRateLimit(request, 5, 60, 'auth:complete-onboarding')
+  const rateLimit = await checkRateLimit(request, 20, 60, 'auth:complete-onboarding')
   if (!rateLimit.allowed) {
     return rateLimitResponse(rateLimit)
   }

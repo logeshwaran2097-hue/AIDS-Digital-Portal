@@ -368,12 +368,21 @@ export function StudentOnboardingModal({
       } else {
         const errorMsg = data.message || 'Failed to send OTP'
         toast.error(errorMsg)
-        // Update emailCheckStatus for any API error so the UI shows feedback
-        setEmailCheckStatus({
-          checking: false,
-          available: false,
-          message: errorMsg,
-        })
+        if (
+          errorMsg.toLowerCase().includes('already linked') ||
+          errorMsg.toLowerCase().includes('already registered') ||
+          errorMsg.toLowerCase().includes('already in use') ||
+          errorMsg.toLowerCase().includes('rate limit') ||
+          errorMsg.toLowerCase().includes('try again')
+        ) {
+          setEmailCheckStatus({
+            checking: false,
+            available: false,
+            message: errorMsg,
+          })
+        } else {
+          setOtpError(errorMsg)
+        }
       }
     } catch {
       toast.error('Network error sending OTP. Please try again.')
@@ -1322,7 +1331,9 @@ export function StudentOnboardingModal({
                       <p className="font-black text-rose-900 text-xs">
                         {emailCheckStatus.message?.toLowerCase().includes('rate limit') || emailCheckStatus.message?.toLowerCase().includes('try again')
                           ? 'Too Many Attempts — Please Wait'
-                          : 'Email Already Linked to Another Account'}
+                          : emailCheckStatus.message?.toLowerCase().includes('already linked') || emailCheckStatus.message?.toLowerCase().includes('already registered')
+                          ? 'Email Already Linked to Another Account'
+                          : 'Email Notice'}
                       </p>
                       <p className="text-[11px] text-rose-700 font-medium leading-snug mt-0.5">
                         {emailCheckStatus.message ||

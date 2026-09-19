@@ -47,15 +47,15 @@ export const adminSendOtpSchema = z
   .object({
     email: z.string().email('Invalid email address'),
   })
-  .strict()
+  .passthrough()
 
 export const adminVerifyOtpSchema = z
   .object({
     email: z.string().email('Invalid email address'),
-    otp: z.string().length(6, 'OTP must be 6 digits'),
+    otp: z.string().min(4).max(10),
     challenge: z.string().optional(),
   })
-  .strict()
+  .passthrough()
 
 export const facultyLoginSchema = z
   .object({
@@ -67,7 +67,7 @@ export const facultyLoginSchema = z
     role: z.string().max(30).optional(),
     loginAsRole: z.string().max(30).optional(),
   })
-  .strict()
+  .passthrough()
   .refine((d) => d.facultyId || d.email || d.name, {
     message: 'Faculty Email ID, Faculty ID, or Name is required',
   })
@@ -80,7 +80,7 @@ export const hodLoginSchema = z
     password: z.string().max(100).optional(),
     dateOfBirth: z.string().max(30).optional(),
   })
-  .strict()
+  .passthrough()
   .refine((d) => d.facultyId || d.email || d.name, {
     message: 'HOD Email ID, Name, or HOD ID is required',
   })
@@ -92,7 +92,7 @@ export const studentLoginSchema = z
     password: z.string().max(100).optional(),
     dateOfBirth: z.string().max(30).optional(),
   })
-  .strict()
+  .passthrough()
   .refine((d) => d.registerNumber || d.email, {
     message: 'Register Number or Email ID is required',
   })
@@ -104,7 +104,7 @@ export const checkEmailSchema = z
     registerNumber: z.string().max(50).optional(),
     facultyId: z.string().max(50).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const sendOnboardingOtpSchema = z
   .object({
@@ -130,23 +130,31 @@ export const sendOnboardingOtpSchema = z
 export const verifyOnboardingOtpSchema = z
   .object({
     email: z.string().email('Valid email address is required'),
-    otp: z.string().length(6, 'OTP must be 6 digits'),
+    otp: z.string().min(4).max(10),
     challenge: z.string().max(500).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const studentSendEmailOtpSchema = z
   .object({
     email: z.string().email('Valid email address is required'),
+    name: z.string().max(100).optional(),
+    regNo: z.string().max(50).optional(),
+    registerNumber: z.string().max(50).optional(),
+    advisorName: z.string().max(100).optional(),
+    year: z.union([z.number(), z.string()]).optional(),
+    semester: z.union([z.number(), z.string()]).optional(),
+    section: z.string().max(10).optional(),
+    department: z.string().max(150).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const studentVerifyEmailOtpSchema = z
   .object({
     email: z.string().email('Valid email address is required'),
-    otp: z.string().length(6, 'OTP must be 6 digits'),
+    otp: z.string().min(4).max(10),
   })
-  .strict()
+  .passthrough()
 
 export const studentCompleteOnboardingSchema = z
   .object({

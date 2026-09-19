@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase()
 
-    // Dual Rate Limit: 3 requests per 10 min per IP and per email
-    const rateLimit = await checkRateLimit(request, 3, 600, 'otp:student-send-email', normalizedEmail)
+    // Dual Rate Limit: 6 requests per 10 min per IP and per email
+    const rateLimit = await checkRateLimit(request, 6, 600, 'otp:student-send-email', normalizedEmail)
     if (!rateLimit.allowed) {
       return rateLimitResponse(rateLimit)
     }
@@ -80,22 +80,26 @@ export async function POST(request: NextRequest) {
       where: { userId: session.userId },
     })
 
-    const studentName = session.name || 'Student'
-    const regNo = student?.registerNumber || session.registerNumber || ''
-    let advisorName = student?.advisorName || ''
+    const studentName = session.name || validation.data.name || 'Student'
+    const regNo = student?.registerNumber || session.registerNumber || validation.data.regNo || validation.data.registerNumber || ''
+    let advisorName = student?.advisorName || validation.data.advisorName || ''
     let subjectHandler = ''
 
-    if (!advisorName && student?.year && student?.section) {
+    if (!advisorName && (student?.year || validation.data.year) && (student?.section || validation.data.section)) {
       try {
-        const advFaculty = await prisma.faculty.findFirst({
-          where: {
-            advisorYear: student.year,
-            advisorSec: { equals: student.section, mode: 'insensitive' },
-          },
-        })
-        if (advFaculty) {
-          const advUser = await prisma.user.findUnique({ where: { id: advFaculty.userId } })
-          if (advUser?.name) advisorName = advUser.name
+        const studentYear = student?.year || Number(validation.data.year) || undefined
+        const studentSec = student?.section || validation.data.section || undefined
+        if (studentYear && studentSec) {
+          const advFaculty = await prisma.faculty.findFirst({
+            where: {
+              advisorYear: studentYear,
+              advisorSec: { equals: studentSec, mode: 'insensitive' },
+            },
+          })
+          if (advFaculty) {
+            const advUser = await prisma.user.findUnique({ where: { id: advFaculty.userId } })
+            if (advUser?.name) advisorName = advUser.name
+          }
         }
       } catch {}
     }
@@ -128,10 +132,10 @@ export async function POST(request: NextRequest) {
         name: studentName,
         role: 'student',
         registerNumber: regNo,
-        department: student?.department || 'B.Tech Artificial Intelligence & Data Science',
-        year: student?.year,
-        semester: student?.semester,
-        section: student?.section,
+        department: student?.department || validation.data.department || 'B.Tech Artificial Intelligence & Data Science',
+        year: student?.year || (validation.data.year ? Number(validation.data.year) : undefined),
+        semester: student?.semester || (validation.data.semester ? Number(validation.data.semester) : undefined),
+        section: student?.section || validation.data.section,
         advisorName,
         subjectHandlerName: subjectHandler,
       })
