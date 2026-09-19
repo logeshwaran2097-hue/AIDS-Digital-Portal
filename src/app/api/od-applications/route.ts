@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { dispatchWebPushNotification } from '@/lib/pushNotifier'
-import { validateBody, odApplicationReviewSchema, odApplicationPostSchema } from '@/lib/validations/apiValidation'
+import { validateBody, odApplicationReviewSchema, odApplicationPostSchema, odApplicationSubmitSchema, odAdvisorProofSchema } from '@/lib/validations/apiValidation'
 
 export const dynamic = 'force-dynamic'
 
@@ -717,7 +717,9 @@ export async function POST(request: Request) {
     }
 
     const rawBody = await request.json().catch(() => ({}))
-    const validation = validateBody(odApplicationPostSchema, rawBody)
+    const validation = rawBody?.action === 'upload_advisor_proof'
+      ? validateBody(odAdvisorProofSchema, rawBody)
+      : validateBody(odApplicationSubmitSchema, rawBody)
     if (!validation.success) {
       return validation.response
     }
@@ -774,16 +776,19 @@ export async function POST(request: Request) {
       abstractOrLetterName,
     } = body
 
-    if (session.role === 'student' && registerNumber && registerNumber.trim().toUpperCase() !== session.registerNumber?.trim().toUpperCase()) {
+    if (session.role === 'student' && registerNumber && session.registerNumber && registerNumber.trim().toUpperCase() !== session.registerNumber.trim().toUpperCase()) {
       return NextResponse.json(
         { success: false, message: 'Forbidden. Students can only submit OD applications for their own register number.' },
         { status: 403 }
       )
     }
 
-    const regUpper = session.role === 'student'
-      ? (session.registerNumber || '').trim().toUpperCase()
-      : String(registerNumber || session.registerNumber || '').trim().toUpperCase()
+    const regUpper = (
+      (session.role === 'student' ? session.registerNumber : '') ||
+      registerNumber ||
+      session.registerNumber ||
+      ''
+    ).trim().toUpperCase()
 
     if (!regUpper || !fromDate || !toDate || !applicationType) {
       return NextResponse.json(
@@ -793,7 +798,7 @@ export async function POST(request: Request) {
     }
 
     const name = session.role === 'student' ? (session.name || studentName || 'Student') : (studentName || session?.name || 'Student')
-    const days = totalDays || 1
+    const days = totalDays ? Number(totalDays) || 1 : 1
     const eventSummary = eventName || projectTitle || organizer || 'Academic Activity'
 
     // Formulate Proofs List string
