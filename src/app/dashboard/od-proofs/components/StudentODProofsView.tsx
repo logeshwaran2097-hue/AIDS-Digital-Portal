@@ -567,8 +567,8 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                       </div>
                     )}
 
-                    {/* 4-Step Progress Lifecycle */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {/* 3-Step Proof Lifecycle */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                       {/* Step 1: Pre-Registered */}
                       <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -634,27 +634,6 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                         >
                           {isCertUploaded ? 'Edit' : 'Upload'}
                         </button>
-                      </div>
-
-                      {/* Step 4: Advisor Sign-off */}
-                      <div
-                        className={`p-3 rounded-2xl border flex items-center gap-2 ${
-                          isVerified
-                            ? 'bg-emerald-50 border-emerald-200'
-                            : 'bg-gray-50 border-gray-200'
-                        }`}
-                      >
-                        {isVerified ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-                        )}
-                        <div>
-                          <p className="font-bold text-[#071A3D]">4. Attendance Credit</p>
-                          <p className="text-[10px] text-gray-500">
-                            {isVerified ? 'Official OD Granted' : 'Awaiting Advisor'}
-                          </p>
-                        </div>
                       </div>
                     </div>
 

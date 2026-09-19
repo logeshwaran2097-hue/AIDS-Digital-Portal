@@ -3,12 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.8.3'
+export const APP_VERSION = '2.8.4'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-19'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Event Proofs Workflow Streamlined: Removed redundant "4. Attendance Credit (Awaiting Advisor)" milestone from the student Event Proofs dossier view, maintaining a clean 3-step proof lifecycle (Pre-Registered, Geo-Tag Photo, Certificate) now that attendance is automatically allocated upon OD sanction',
   'Multi-Tab Concurrent Role Session Isolation: Enabled dedicated role-scoped cookies (auth-token-student, auth-token-admin, auth-token-faculty, auth-token-hod) with contextual referrer inspection so multiple roles can remain logged in concurrently in separate tabs without data collision or session overwriting',
   'Automatic Roll Call Attendance Allocation: When an OD or Leave requisition is sanctioned by HOD or Executive authority, attendance is automatically allocated and credited for all applied calendar dates directly to the student academic roll and daily attendance sessions',
   'Evidence & Requisition Dossier Alignment: Renamed default leave evidence file to Official_Student_Requisition_Letter.pdf matching the official student requisition letter and evidence header',
