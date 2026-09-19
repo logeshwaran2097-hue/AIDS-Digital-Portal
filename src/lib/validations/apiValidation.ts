@@ -125,7 +125,7 @@ export const sendOnboardingOtpSchema = z
     advisorSec: z.string().max(10).optional(),
     advisorBatch: z.string().max(50).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const verifyOnboardingOtpSchema = z
   .object({
@@ -167,7 +167,7 @@ export const studentCompleteOnboardingSchema = z
     boardingPoint: z.string().max(100).optional().nullable(),
     profileImage: z.string().max(2000000).optional().nullable(),
   })
-  .strict()
+  .passthrough()
 
 // ==========================================
 // 2. Student Management & Profile Schemas
@@ -405,6 +405,7 @@ export const odApplicationSubmitSchema = z
     abstractOrLetter: z.string().max(2000000).optional().nullable(),
     abstractOrLetterName: z.string().max(200).optional().nullable(),
   })
+  .passthrough()
 export const odAdvisorProofSchema = z
   .object({
     action: z.literal('upload_advisor_proof'),
@@ -656,7 +657,7 @@ export const completeProfileSchema = z
     otp: z.string().max(10).optional(),
     challenge: z.string().max(500).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const createFacultySchema = z
   .object({
@@ -765,7 +766,7 @@ export const facultySettingsSchema = z
     officeHours: z.string().max(100).optional(),
     profileImage: z.string().max(500000).optional().nullable(),
   })
-  .strict()
+  .passthrough()
 
 export const hodSettingsSchema = z
   .object({
@@ -784,7 +785,7 @@ export const hodSettingsSchema = z
     odProofNotification: z.boolean().optional(),
     advisorApprovalRequired: z.boolean().optional(),
   })
-  .strict()
+  .passthrough()
 
 export const hodProfileSchema = z
   .object({
@@ -799,7 +800,7 @@ export const hodProfileSchema = z
     specializations: z.array(z.string().max(100)).optional(),
     bio: z.string().max(2000).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const profileChangeRequestSchema = z
   .object({
@@ -841,7 +842,7 @@ export const bulkStudentItemSchema = z
     attendance: z.union([z.string(), z.number()]).optional().nullable(),
     status: z.string().max(30).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const bulkStudentImportSchema = z
   .object({
