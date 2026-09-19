@@ -17,6 +17,14 @@ import { STUDY_DATABASE, SubjectUnitData, UnitData } from '@/data/studyDatabase'
 function handleAcademicCurriculumQuery(rawQ: string): { answer: string; suggestions: string[] } | null {
   const q = rawQ.toLowerCase()
 
+  // Guard: Never treat OD / Leave / Permission application statement drafting as a syllabus query
+  if (
+    /on-duty|leave application|permission application|draft.*statement|academic application assistant|formal.*statement|reason for an on-duty|od application/i.test(rawQ) ||
+    /leave.*statement|write.*statement|reason & academic explanation/i.test(rawQ)
+  ) {
+    return null
+  }
+
   const isChiefExaminer = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(rawQ)
   const isPartQuery = /part\s*[abc]\s*\(\d+\s*marks?\)|part\s*[abc]/i.test(q)
   const hasCourseCode = /\b(al3391|ad3351|ad3501)\b/i.test(q)
@@ -233,12 +241,81 @@ function handleAcademicCurriculumQuery(rawQ: string): { answer: string; suggesti
 }
 
 
+// =============================================================================
+// ON-DUTY (OD) & LEAVE APPLICATION REASON STATEMENT GENERATOR
+// =============================================================================
+function handleOdLeaveStatement(rawQ: string): { answer: string; suggestions: string[] } {
+  const q = rawQ.toLowerCase()
+
+  let type = 'od'
+  if (/personal|family/i.test(q)) {
+    type = 'personal'
+  } else if (/medical/i.test(q)) {
+    type = 'medical'
+  } else if (/internship|project/i.test(q)) {
+    type = 'internship'
+  } else if (/sports|cultural/i.test(q)) {
+    type = 'sports'
+  } else if (/paper|presentation|symposium|conference/i.test(q)) {
+    type = 'symposium'
+  } else if (/hackathon|coding|contest|challenge/i.test(q)) {
+    type = 'hackathon'
+  }
+
+  // Extract dates if present in the prompt (e.g. Dates: 09/19/2026 to 09/22/2026)
+  const dateMatch = rawQ.match(/dates?:\s*([^\n\r]+)/i)
+  const dates = dateMatch ? dateMatch[1].trim() : 'the scheduled dates'
+
+  // Extract event name if present
+  const eventMatch = rawQ.match(/event(?:\/activity)?(?:\s*name)?:\s*([^\n\r]+)/i)
+  const eventName = eventMatch ? eventMatch[1].trim() : 'the designated event'
+
+  // Extract host/organizer if present
+  const orgMatch = rawQ.match(/host(?:\/organizer)?:\s*([^\n\r]+)/i)
+  const organizer = orgMatch ? orgMatch[1].trim() : 'the host institution'
+
+  let answer = ''
+  if (type === 'personal') {
+    answer = `I am requesting formal personal leave for ${dates} due to unavoidable family commitments. I will ensure all missed academic coursework and lab assignments are completed promptly upon returning to college.`
+  } else if (type === 'medical') {
+    answer = `I am requesting formal medical leave for ${dates} on health grounds under medical consultation and rest. I will submit the requisite medical fitness certificate and catch up on all academic sessions immediately upon resumption.`
+  } else if (type === 'internship') {
+    answer = `I am requesting official On-Duty permission to attend the industry internship and practical training at ${organizer} during ${dates}. This applied industrial training directly strengthens my domain competencies in Artificial Intelligence and Data Science while fulfilling curricular project requirements.`
+  } else if (type === 'sports') {
+    answer = `I am requesting official On-Duty permission to represent V.S.B. Engineering College in ${eventName} organized by ${organizer} during ${dates}. I will uphold the sporting prestige of our institution and diligently make up for all academic classes missed during the event.`
+  } else if (type === 'symposium') {
+    answer = `I am requesting official On-Duty permission to present our research paper and participate in ${eventName} hosted by ${organizer} during ${dates}. This academic presentation allows us to represent our department, showcase institutional innovation, and interact with subject matter experts.`
+  } else {
+    // Hackathon or general OD
+    answer = `I am requesting official On-Duty permission to participate in ${eventName} organized by ${organizer} during ${dates}. This competitive challenge provides practical problem-solving experience and allows our team to represent V.S.B. Engineering College with distinction.`
+  }
+
+  return {
+    answer,
+    suggestions: [
+      'Refine statement',
+      'Add team details',
+      'Submit application',
+    ],
+  }
+}
+
 async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ answer: string; suggestions: string[] }> {
   const rawQ = query.trim()
   const q = rawQ.toLowerCase()
 
   // ---------------------------------------------------------------------------
-  // 0. ANNA UNIVERSITY R-2021 ACADEMIC INTELLIGENCE ENGINE (TOP PRIORITY)
+  // 0A. OD & LEAVE APPLICATION FORMAL STATEMENT AGENT (TOP PRIORITY FOR PERMISSIONS)
+  // ---------------------------------------------------------------------------
+  if (
+    /on-duty|leave application|permission application|draft.*statement|academic application assistant|formal.*statement|reason for an on-duty|od application/i.test(rawQ) ||
+    /leave.*statement|write.*statement|reason & academic explanation/i.test(rawQ)
+  ) {
+    return handleOdLeaveStatement(rawQ)
+  }
+
+  // ---------------------------------------------------------------------------
+  // 0B. ANNA UNIVERSITY R-2021 ACADEMIC INTELLIGENCE ENGINE
   // ---------------------------------------------------------------------------
   const academicCurriculum = handleAcademicCurriculumQuery(rawQ)
   if (academicCurriculum) {
@@ -747,6 +824,7 @@ export async function POST(request: Request) {
         let modelUsed = ''
 
         const isQuestionGen = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(query)
+        const isOdDrafting = sessionId === 'od-statement-agent' || /on-duty|leave application|permission application|draft.*statement|academic application assistant|formal.*statement|reason for an on-duty/i.test(query)
         const dbKnowledge = await getDynamicKnowledgeBase(query, session)
 
         const systemInstructions = isQuestionGen
@@ -765,6 +843,14 @@ Requirements:
 Format your output strictly as:
 QUESTION: [Question with Bloom's level and CO]
 ANSWER: [Comprehensive model answer with derivations, diagrams/pseudocode, and mark distribution]`
+          : isOdDrafting
+          ? `You are the official academic administrative assistant at V.S.B. Engineering College.
+Your objective is to draft exactly 2 formal, polite, and respectful sentences suitable as the official reason in a college student's leave or On-Duty (OD) application.
+Rules:
+1. Output exactly 2 sentences.
+2. Formal, respectful academic English.
+3. Absolutely NO markdown headings, NO bullet points, NO asterisks, NO quotes, NO syllabus notes.
+4. Output ONLY the 2 sentences.`
           : `You are the official V.S.B. AI & DS Portal Academic Assistant powered by Google Gemini.
 Verified Institutional & Curricular Context:
 ${dbKnowledge.answer}
@@ -794,10 +880,17 @@ Answer the student or faculty query with high academic rigor, clear headings, de
           }
         }
 
-        if (generatedText && generatedText.trim().length > 20) {
+        if (generatedText && generatedText.trim().length > 15) {
+          let cleanAnswer = generatedText.trim()
+          if (isOdDrafting) {
+            cleanAnswer = cleanAnswer
+              .replace(/^["'`]+|["'`]+$/g, '')
+              .replace(/[*#_~`]+/g, '')
+              .trim()
+          }
           return NextResponse.json({
             success: true,
-            answer: generatedText,
+            answer: cleanAnswer,
             suggestions: dbKnowledge.suggestions,
             source: 'gemini-live',
             model: modelUsed,

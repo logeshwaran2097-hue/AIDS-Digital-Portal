@@ -306,19 +306,39 @@ export function ApplyODPermissionModal({
   const [reason, setReason] = useState('')
   const [isAiDrafting, setIsAiDrafting] = useState(false)
 
+  const getDefaultAcademicStatement = (type: ApplicationType, ev: string, org: string, from: string, to: string) => {
+    const dates = from && to ? `from ${from} to ${to}` : from ? `on ${from}` : 'for the scheduled duration'
+    switch (type) {
+      case 'Personal / Emergency Leave':
+        return `I am requesting formal personal leave ${dates} due to unavoidable family commitments. I will ensure all missed academic coursework and lab assignments are completed promptly upon returning to college.`
+      case 'Medical Leave (ML)':
+        return `I am requesting formal medical leave ${dates} on health grounds under medical consultation and rest. I will submit the requisite medical fitness certificate and catch up on all academic sessions immediately upon resumption.`
+      case 'Industry Internship / Project Work OD':
+        return `I am requesting official On-Duty permission to attend the practical internship / project program at ${org || 'the organization'} ${dates}. This applied industrial training directly strengthens my technical competencies while fulfilling curricular project requirements.`
+      case 'Sports / Cultural Event OD':
+        return `I am requesting official On-Duty permission to represent V.S.B. Engineering College in ${ev || 'the sports/cultural competition'} organized by ${org || 'the host institution'} ${dates}. I will uphold our college's prestige and diligently make up for all academic classes missed during this period.`
+      case 'Paper Presentation / Conference OD':
+        return `I am requesting official On-Duty permission to present our research paper in ${ev || 'the technical conference'} hosted by ${org || 'the institution'} ${dates}. This academic presentation allows us to showcase institutional research innovation and interact with domain experts.`
+      case 'Technical Hackathon / Competition OD':
+      default:
+        return `I am requesting official On-Duty permission to participate in ${ev || 'the technical contest'} organized by ${org || 'the organizer'} ${dates}. This competitive challenge provides practical problem-solving experience and allows our team to represent V.S.B. Engineering College with distinction.`
+    }
+  }
+
   const handleAiDraftReason = async () => {
     setIsAiDrafting(true)
-    const ev = eventName.trim() || 'Technical Symposium / Competition'
+    const ev = eventName.trim() || 'Technical Event'
     const org = organizer.trim() || 'Host Institution'
-    const prompt = `You are an academic application assistant for a student in B.Tech Artificial Intelligence & Data Science at V.S.B. Engineering College.
-Write a formal, clear 2-sentence academic statement/reason for an On-Duty (OD) or Leave application.
-Context:
-- Type: ${appType}
+    const defaultStmt = getDefaultAcademicStatement(appType, ev, org, fromDate, toDate)
+
+    const prompt = `Draft a formal, respectful 2-sentence institutional reason for a college student's application.
+Application Details:
+- Category: ${appType}
 - Event/Activity Name: ${ev}
 - Host/Organizer: ${org}
 - Dates: ${fromDate || 'scheduled date'} to ${toDate || 'scheduled date'}
 
-Keep it strictly 2 sentences, formal, respectful, explaining academic benefit and participation intent. Return ONLY the drafted statement without quotes.`
+Rules: Strictly 2 sentences. Formal college English. No markdown, no quotes, no syllabus text.`
 
     try {
       const res = await fetch('/api/ai', {
@@ -331,13 +351,19 @@ Keep it strictly 2 sentences, formal, respectful, explaining academic benefit an
       })
       const data = await res.json()
       if (data.success && data.answer) {
-        setReason(data.answer.replace(/^"|"$/g, '').trim())
+        let cleanText = data.answer.replace(/^["'`]+|["'`]+$/g, '').replace(/[*#_~`]+/g, '').trim()
+        if (cleanText.includes('Anna University') || cleanText.includes('Unit 1') || cleanText.includes('AD3501') || cleanText.length < 20) {
+          cleanText = defaultStmt
+        }
+        setReason(cleanText)
         toast.success('AI drafted formal academic statement!')
       } else {
-        setReason(`Requesting official On-Duty permission to participate in ${ev} organized by ${org} from ${fromDate || 'the scheduled date'} to ${toDate || 'the scheduled date'} to represent our college and acquire advanced domain expertise in Artificial Intelligence & Data Science.`)
+        setReason(defaultStmt)
+        toast.success('Generated formal statement!')
       }
     } catch {
-      setReason(`Requesting official On-Duty permission to participate in ${ev} organized by ${org} from ${fromDate || 'the scheduled date'} to ${toDate || 'the scheduled date'} to represent our college and acquire advanced domain expertise in Artificial Intelligence & Data Science.`)
+      setReason(defaultStmt)
+      toast.success('Generated formal statement!')
     } finally {
       setIsAiDrafting(false)
     }
