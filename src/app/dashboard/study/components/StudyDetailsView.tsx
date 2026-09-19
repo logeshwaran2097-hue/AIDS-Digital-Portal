@@ -30,6 +30,7 @@ import {
 import { EmptyState } from '@/components/portal/states'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { STUDY_DATABASE } from '@/data/studyDatabase'
 
 interface Subject {
   id: string
@@ -162,34 +163,67 @@ ANSWER: [Comprehensive model answer with formulas/points/pseudocode]`
         }),
       })
       const data = await res.json()
-      if (data.success && data.answer) {
-        const text = data.answer
-        let q = ''
-        let a = text
-        if (text.includes('QUESTION:') && text.includes('ANSWER:')) {
-          const parts = text.split('ANSWER:')
-          q = parts[0].replace('QUESTION:', '').trim()
-          a = parts[1].trim()
-        } else {
-          const lines = text.split('\n')
-          q = lines[0].replace(/^#+\s*|\*\*Q:\*\*\s*|Q:\s*/i, '').trim()
-          a = lines.slice(1).join('\n').trim()
-        }
-        const newId = `ai-q-${Date.now()}`
-        setAiGeneratedQuestions(prev => [
-          {
-            id: newId,
-            question: q || `${partLabel} Question on ${unitTitle}`,
-            answer: a || text,
-            marks: Number(aiGenMark),
-            unitTitle,
-          },
-          ...prev,
-        ])
-        setExpandedAiQ(prev => ({ ...prev, [newId]: true }))
+      let text = data?.success && data?.answer ? data.answer : ''
+      const isInvalid = !text || /bell timings|refreshment break|dining break|institutional/i.test(text)
+
+      let q = ''
+      let a = ''
+
+      if (!isInvalid && text.includes('QUESTION:') && text.includes('ANSWER:')) {
+        const parts = text.split('ANSWER:')
+        q = parts[0].replace('QUESTION:', '').trim()
+        a = parts[1].trim()
+      } else if (!isInvalid && text.length > 40) {
+        const lines = text.split('\n')
+        q = lines[0].replace(/^#+\s*|\*\*Q:\*\*\s*|Q:\s*/i, '').trim()
+        a = lines.slice(1).join('\n').trim()
       }
+
+      // If invalid or empty, draw authentic question from STUDY_DATABASE
+      if (!q || !a || /bell timings|refreshment break|dining break|institutional/i.test(q + a)) {
+        const matchedSub = STUDY_DATABASE.find(s => s.code.toLowerCase() === current.code.toLowerCase() || s.name.toLowerCase().includes(current.name.toLowerCase())) || STUDY_DATABASE[0]
+        const matchedU = matchedSub.units.find(u => targetUnit && (u.unitNo === targetUnit.number || u.title.toLowerCase().includes(targetUnit.title.toLowerCase()))) || matchedSub.units[0]
+        const pool = aiGenMark === '2' ? matchedU.partA : aiGenMark === '8' ? matchedU.partB : matchedU.partC
+        const chosen = pool[Math.floor(Math.random() * pool.length)] || pool[0]
+        q = chosen.q
+        const markBreakdown = aiGenMark === '2'
+          ? '\n\n[Mark Scheme: 2 Marks — Precise Technical Definition / Equation (1 Mark), Key Terms / Asymptotic Complexity (1 Mark)]'
+          : aiGenMark === '8'
+          ? '\n\n[Mark Scheme: 8 Marks — Algorithm Formulation / Principle (3 Marks), Step-by-Step Derivation / Trace (3 Marks), Diagram / Illustrative Example (2 Marks)]'
+          : '\n\n[Mark Scheme: 16 Marks — Comprehensive Architecture & Mathematical Formulation (6 Marks), Algorithmic Derivation & Proof (6 Marks), Step-by-Step Numerical Trace & Evaluation Matrix (4 Marks)]'
+        a = chosen.a + markBreakdown
+      }
+
+      const newId = `ai-q-${Date.now()}`
+      setAiGeneratedQuestions(prev => [
+        {
+          id: newId,
+          question: q,
+          answer: a,
+          marks: Number(aiGenMark),
+          unitTitle,
+        },
+        ...prev,
+      ])
+      setExpandedAiQ(prev => ({ ...prev, [newId]: true }))
     } catch (err) {
-      console.error(err)
+      // Local fallback
+      const matchedSub = STUDY_DATABASE.find(s => s.code.toLowerCase() === current.code.toLowerCase()) || STUDY_DATABASE[0]
+      const matchedU = matchedSub.units[0]
+      const pool = aiGenMark === '2' ? matchedU.partA : aiGenMark === '8' ? matchedU.partB : matchedU.partC
+      const chosen = pool[0]
+      const newId = `ai-q-${Date.now()}`
+      setAiGeneratedQuestions(prev => [
+        {
+          id: newId,
+          question: chosen.q,
+          answer: chosen.a,
+          marks: Number(aiGenMark),
+          unitTitle,
+        },
+        ...prev,
+      ])
+      setExpandedAiQ(prev => ({ ...prev, [newId]: true }))
     } finally {
       setIsAiLoading(false)
     }

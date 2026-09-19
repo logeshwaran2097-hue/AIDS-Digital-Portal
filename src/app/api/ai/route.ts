@@ -9,6 +9,192 @@ import { validateBody, aiQuerySchema } from '@/lib/validations/apiValidation'
 // Universal Real-Time Database Query Engine (Strictly Database Grounded)
 
 // Universal Real-Time Database Query Engine
+import { STUDY_DATABASE, SubjectUnitData, UnitData } from '@/data/studyDatabase'
+
+// =============================================================================
+// ANNA UNIVERSITY R-2021 ACADEMIC INTELLIGENCE ENGINE (100% AUTHENTIC 15 UNITS)
+// =============================================================================
+function handleAcademicCurriculumQuery(rawQ: string): { answer: string; suggestions: string[] } | null {
+  const q = rawQ.toLowerCase()
+
+  const isChiefExaminer = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(rawQ)
+  const isPartQuery = /part\s*[abc]\s*\(\d+\s*marks?\)|part\s*[abc]/i.test(q)
+  const hasCourseCode = /\b(al3391|ad3351|ad3501)\b/i.test(q)
+  const isAcademicTopic = /\b(artificial intelligence|deep learning|design and analysis of algorithms|divide and conquer|dynamic programming|greedy|knapsack|master theorem|recurrence|a\*|bfs|dfs|heuristic|hill climbing|minimax|alpha-beta|csp|logic|bayes|hidden markov|viterbi|strips|pddl|decision tree|random forest|merge sort|quick sort|strassen|lcs|floyd-warshall|prim|kruskal|dijkstra|bellman-ford|max flow|ford-fulkerson|bipartite matching|n-queens|branch and bound|backtracking|p vs np|np-complete|perceptron|backpropagation|vanishing gradient|adam optimizer|cnn|lenet|alexnet|vgg|googlenet|resnet|skip connection|rnn|bptt|lstm|gru|transformer|attention|multi-head attention|bert|gpt|gan|vae)\b/i.test(q)
+
+  if (!isChiefExaminer && !hasCourseCode && !isAcademicTopic && !isPartQuery && !q.includes('unit 1') && !q.includes('unit 2') && !q.includes('unit 3') && !q.includes('unit 4') && !q.includes('unit 5')) {
+    return null
+  }
+
+  // Determine Target Subject
+  let targetSubject: SubjectUnitData = STUDY_DATABASE[0] // AL3391 by default
+  if (/ad3501|deep learning|neural network|cnn|lenet|alexnet|vgg|googlenet|resnet|rnn|lstm|gru|transformer|attention|bert|gpt|gan|vae|backpropagation|activation function/i.test(q)) {
+    targetSubject = STUDY_DATABASE.find(s => s.code === 'AD3501') || targetSubject
+  } else if (/ad3351|algorithm|daa|divide and conquer|dynamic programming|greedy|master theorem|recurrence|quick sort|merge sort|strassen|knapsack|lcs|floyd-warshall|prim|kruskal|dijkstra|bellman-ford|max flow|ford-fulkerson|matching|branch and bound|backtracking|np-complete/i.test(q)) {
+    targetSubject = STUDY_DATABASE.find(s => s.code === 'AD3351') || targetSubject
+  } else if (/al3391|artificial intelligence|intelligent agent|state space|a\*|heuristic|hill climbing|minimax|alpha-beta|csp|propositional logic|first-order logic|unification|bayes|markov|viterbi|strips|pddl|decision tree/i.test(q)) {
+    targetSubject = STUDY_DATABASE.find(s => s.code === 'AL3391') || targetSubject
+  }
+
+  // Determine Target Unit
+  let targetUnit: UnitData = targetSubject.units[0]
+  const unitMatch = q.match(/unit\s*([1-5])/i)
+  if (unitMatch && unitMatch[1]) {
+    const uNo = parseInt(unitMatch[1], 10)
+    const foundUnit = targetSubject.units.find(u => u.unitNo === uNo)
+    if (foundUnit) targetUnit = foundUnit
+  } else {
+    for (const u of targetSubject.units) {
+      if (u.topics.some(t => q.includes(t.toLowerCase()))) {
+        targetUnit = u
+        break
+      }
+    }
+  }
+
+  // Question Generator / Exam Blueprint Query
+  if (isChiefExaminer || isPartQuery || q.includes('question:')) {
+    let mark: 2 | 8 | 16 = 2
+    if (/part\s*c|16\s*marks?/i.test(q)) {
+      mark = 16
+    } else if (/part\s*b|8\s*marks?/i.test(q)) {
+      mark = 8
+    }
+
+    let topicText = ''
+    const topicMatch = rawQ.match(/Topic:\s*([^\n\r]+)/i)
+    if (topicMatch && topicMatch[1]) {
+      topicText = topicMatch[1].trim()
+    }
+
+    if (mark === 2) {
+      const candidates = targetUnit.partA
+      let chosen = candidates[0]
+      if (topicText && topicText.length > 2) {
+        const matched = candidates.find(c => c.q.toLowerCase().includes(topicText.toLowerCase()) || c.a.toLowerCase().includes(topicText.toLowerCase()))
+        if (matched) chosen = matched
+      }
+      if (!chosen && candidates.length > 0) {
+        chosen = candidates[Math.floor(Math.random() * candidates.length)]
+      }
+      return {
+        answer: 'QUESTION: ' + chosen.q + '\n\nANSWER: ' + chosen.a + '\n\n[Mark Scheme: 2 Marks — Precise Anna University Definition/Equation, Full Marks for exact technical keywords]',
+        suggestions: [
+          'Generate Part B (8M) question for ' + targetSubject.code + ' Unit ' + targetUnit.unitNo,
+          'Generate Part C (16M) question for ' + targetSubject.code + ' Unit ' + targetUnit.unitNo,
+          'Smart revision notes for Unit ' + targetUnit.unitNo,
+        ],
+      }
+    } else if (mark === 8) {
+      const candidates = targetUnit.partB
+      let chosen = candidates[0]
+      if (topicText && topicText.length > 2) {
+        const matched = candidates.find(c => c.q.toLowerCase().includes(topicText.toLowerCase()) || c.a.toLowerCase().includes(topicText.toLowerCase()))
+        if (matched) chosen = matched
+      }
+      if (!chosen && candidates.length > 0) {
+        chosen = candidates[Math.floor(Math.random() * candidates.length)]
+      }
+      return {
+        answer: 'QUESTION: ' + chosen.q + '\n\nANSWER: ' + chosen.a + '\n\n[Mark Scheme: 8 Marks — Principle/Algorithm (3 Marks), Step-by-Step Proof/Derivation (3 Marks), Diagram/Example (2 Marks)]',
+        suggestions: [
+          'Generate Part A (2M) question for ' + targetSubject.code + ' Unit ' + targetUnit.unitNo,
+          'Generate Part C (16M) question for ' + targetSubject.code + ' Unit ' + targetUnit.unitNo,
+          'Diagnostic Quiz for Unit ' + targetUnit.unitNo,
+        ],
+      }
+    } else {
+      const candidates = targetUnit.partC
+      let chosen = candidates[0]
+      if (topicText && topicText.length > 2) {
+        const matched = candidates.find(c => c.q.toLowerCase().includes(topicText.toLowerCase()) || c.a.toLowerCase().includes(topicText.toLowerCase()))
+        if (matched) chosen = matched
+      }
+      if (!chosen && candidates.length > 0) {
+        chosen = candidates[Math.floor(Math.random() * candidates.length)]
+      }
+      return {
+        answer: 'QUESTION: ' + chosen.q + '\n\nANSWER: ' + chosen.a + '\n\n[Mark Scheme: 16 Marks — Comprehensive Architecture/Formulation (6 Marks), Mathematical Proof/Derivation (6 Marks), Trace/Evaluation Matrix (4 Marks)]',
+        suggestions: [
+          'Generate Part A (2M) question for ' + targetSubject.code + ' Unit ' + targetUnit.unitNo,
+          'Generate Part B (8M) question for ' + targetSubject.code + ' Unit ' + targetUnit.unitNo,
+          'Smart revision notes for Unit ' + targetUnit.unitNo,
+        ],
+      }
+    }
+  }
+
+  // Academic Explanation / Tutor Queries
+  const allQuestions = [...targetUnit.partB, ...targetUnit.partC, ...targetUnit.partA]
+  const cleanQ = q.replace(/\[subject:[^\]]+\]/gi, '').trim()
+  const searchWords = cleanQ.split(/\s+/).filter(w => w.length > 2 && !['what', 'explain', 'tell', 'about', 'how', 'does', 'with', 'the', 'and', 'for', 'write'].includes(w))
+
+  let bestMatch: { q: string; a: string } | null = null
+  let bestScore = 0
+
+  for (const item of allQuestions) {
+    const itemText = (item.q + ' ' + item.a).toLowerCase()
+    let score = 0
+    for (const word of searchWords) {
+      if (itemText.includes(word)) score += 1
+    }
+    if (score > bestScore) {
+      bestScore = score
+      bestMatch = item
+    }
+  }
+
+  if (bestMatch && bestScore >= 1) {
+    return {
+      answer: '🎓 **Anna University R-2021 Academic Intelligence — ' + targetSubject.code + ' (' + targetSubject.name + ')**\n\n' +
+        '📖 **Unit ' + targetUnit.unitNo + ': ' + targetUnit.title + '**\n\n' +
+        '### 📌 ' + bestMatch.q + '\n\n' +
+        bestMatch.a + '\n\n' +
+        '---\n' +
+        '💡 *Anna University Examination Key: Emphasize clear definitions, bulleted principles, formulas, and step-by-step traces to secure full marks.*\n\n*You can practice real Part A (2M), Part B (8M), and Part C (16M) questions in the **AI Study Assistant**.*',
+      suggestions: [
+        'Part A (2M) question for Unit ' + targetUnit.unitNo,
+        'Part B (8M) question for Unit ' + targetUnit.unitNo,
+        'Part C (16M) question for Unit ' + targetUnit.unitNo,
+      ],
+    }
+  }
+
+  for (const note of targetUnit.notes) {
+    if (searchWords.some(w => note.title.toLowerCase().includes(w))) {
+      return {
+        answer: '🎓 **Anna University R-2021 Revision Summary — ' + targetSubject.code + ' (' + targetSubject.name + ')**\n\n' +
+          '📖 **Unit ' + targetUnit.unitNo + ': ' + targetUnit.title + '**\n\n' +
+          '### 📝 ' + note.title + '\n\n' +
+          note.points.map(p => '• ' + p).join('\n') +
+          '\n\n*Review all 5 units in the **AI Study Assistant**.*',
+        suggestions: [
+          'Part A (2M) question for Unit ' + targetUnit.unitNo,
+          'Part B (8M) question for Unit ' + targetUnit.unitNo,
+        ],
+      }
+    }
+  }
+
+  return {
+    answer: '🎓 **Anna University R-2021 Curriculum Scope — ' + targetSubject.code + ' (' + targetSubject.name + ')**\n\n' +
+      '📖 **Unit ' + targetUnit.unitNo + ': ' + targetUnit.title + '**\n\n' +
+      '**Syllabus Topics Covered:**\n' +
+      targetUnit.topics.map(t => '• ' + t).join('\n') +
+      '\n\n**Representative Exam Question:**\n' +
+      '• **Part A (2M):** ' + targetUnit.partA[0]?.q + '\n' +
+      '• **Part B (8M):** ' + targetUnit.partB[0]?.q + '\n' +
+      '• **Part C (16M):** ' + targetUnit.partC[0]?.q + '\n\n' +
+      '*Access complete model answers and diagnostic quizzes in the **AI Study Assistant**.*',
+    suggestions: [
+      'Part A (2M) question for Unit ' + targetUnit.unitNo,
+      'Part B (8M) question for Unit ' + targetUnit.unitNo,
+      'Part C (16M) question for Unit ' + targetUnit.unitNo,
+    ],
+  }
+}
+
+
 async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ answer: string; suggestions: string[] }> {
   const rawQ = query.trim()
   const q = rawQ.toLowerCase()
@@ -310,19 +496,8 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
     // -------------------------------------------------------------------------
     // 10. DAILY SCHEDULE, TIMETABLE & BELL TIMINGS (8 PERIODS)
     // -------------------------------------------------------------------------
-    if (
-      q.includes('timetable') ||
-      q.includes('timing') ||
-      q.includes('period') ||
-      q.includes('bell') ||
-      q.includes('schedule') ||
-      q.includes('break') ||
-      q.includes('lunch') ||
-      q.includes('hour') ||
-      q.includes('1.20') ||
-      q.includes('4.30') ||
-      q.includes('9.15')
-    ) {
+    const isScheduleQuery = /\b(bell timings?|class timings?|period timings?|daily schedule|timetable|lunch break|tea break|college hours|working hours|daily periods?)\b/i.test(q)
+    if (isScheduleQuery && !q.includes('exam') && !q.includes('question') && !q.includes('unit') && !q.includes('mark') && !q.includes('syllabus')) {
       return {
         answer: `⏰ **Official Institutional Bell Timings & 8-Period Daily Schedule:**
 
