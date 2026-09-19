@@ -814,37 +814,19 @@ export async function verifyAdminOTP(email: string, otp: string, challenge?: str
   return { success: true, token, user: activeUser, admin: activeAdmin }
 }
 
-function getLuxuryEmailHeaderHtml(hasLogo: boolean): string {
+function getEmailHeaderHtml(hasLogo: boolean): string {
   return `
-    <!-- Top Royal Gold Crown Accent Strip -->
-    <div style="height: 4px; background: #D4AF37; background: linear-gradient(90deg, #996515 0%, #D4AF37 25%, #FFF0BA 50%, #D4AF37 75%, #996515 100%);"></div>
-
-    <!-- Unified Royal Midnight Sapphire Header (Harmonized Color Canvas) -->
-    <div style="background-color: #071A3D; background: linear-gradient(180deg, #040E24 0%, #071A3D 55%, #0B2558 100%); padding: 32px 20px 24px; text-align: center;">
-      
-      <!-- Individual Dedicated Pedestal for Official Logo -->
-      <div style="margin: 0 auto 16px; text-align: center;">
-        <div style="display: inline-block; padding: 4px; background-color: #0A204C; background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%); border-radius: 24px; border: 2px solid #E7B93E; box-shadow: 0 0 20px rgba(231,185,62,0.4), 0 8px 25px rgba(0,0,0,0.45); text-align: center;">
-          ${
-            hasLogo
-              ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="70" height="70" style="width: 70px; height: 70px; border-radius: 19px; vertical-align: middle; display: block; object-fit: contain;" />'
-              : '<div style="display: block; background: #071A3D; color: #F4C430; font-weight: 900; font-size: 20px; width: 66px; height: 66px; line-height: 66px; border-radius: 18px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">VSB</div>'
-          }
-        </div>
+    <div style="background: #071A3D; padding: 24px 20px; text-align: center;">
+      <div style="margin-bottom: 12px; text-align: center;">
+        ${
+          hasLogo
+            ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="68" height="68" style="width: 68px; height: 68px; border-radius: 18px; vertical-align: middle; display: inline-block; object-fit: contain; box-shadow: 0 4px 14px rgba(0,0,0,0.35);" />'
+            : '<div style="display: inline-block; background-color: #ffffff; color: #071A3D; font-weight: 800; font-size: 16px; width: 48px; height: 48px; line-height: 48px; border-radius: 14px; border: 2px solid #F4C430;">VSB</div>'
+        }
       </div>
-
-      <!-- Master College Name -->
-      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 1.2px; line-height: 1.3; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; text-shadow: 0 2px 8px rgba(0,0,0,0.4);">V.S.B. ENGINEERING COLLEGE</h1>
-
-      <!-- Department Subtitle -->
-      <p style="color: #F4C430; margin: 6px 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif; text-shadow: 0 1px 4px rgba(0,0,0,0.3);">Department of Artificial Intelligence &amp; Data Science</p>
-
-      <!-- Institutional Accreditations Tagline -->
-      <p style="color: #94A3B8; margin: 8px 0 0; font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Autonomous Institution • NBA &amp; NAAC &apos;A&apos; Accredited • Karur</p>
+      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;">V.S.B. ENGINEERING COLLEGE</h1>
+      <p style="color: #F4C430; margin: 4px 0 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Department of AI &amp; Data Science</p>
     </div>
-
-    <!-- Luxury Golden Divider Ribbon -->
-    <div style="height: 3px; background: #D4AF37; background: linear-gradient(90deg, rgba(212, 175, 55, 0.15) 0%, #D4AF37 30%, #FFF0BA 50%, #D4AF37 70%, rgba(212, 175, 55, 0.15) 100%);"></div>
   `
 }
 
@@ -879,7 +861,10 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
       ]
     : []
 
-  const officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
+  let officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
+  if (!officialFrom.includes('@')) {
+    officialFrom = `"${officialFrom.replace(/["<>]/g, '').trim()}" <${smtpUser}>`
+  }
 
   const mailOptions = {
     from: officialFrom,
@@ -893,11 +878,11 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 20px 12px; background-color: #f1f5f9;">
-        <div style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 12px 36px rgba(7, 26, 61, 0.08);">
-          ${getLuxuryEmailHeaderHtml(hasLogo)}
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 540px; margin: 0 auto; padding: 16px; background-color: #f1f5f9;">
+        <div style="background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+          ${getEmailHeaderHtml(hasLogo)}
           
-          <div style="padding: 26px 22px;">
+          <div style="padding: 24px 20px;">
             <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">Admin Login Verification</h2>
             <p style="margin: 0 0 14px; font-size: 14px; color: #334155;">Dear <strong>${name}</strong>,</p>
 
@@ -913,7 +898,7 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
                 </tr>
                 <tr>
                   <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🛡️ Access Role:</td>
-                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">System Administrator (Super Admin)</td>
+                  <td style="padding: 3px 0; color: #071A3D; font-weight: 700;">System Administrator [Super Admin]</td>
                 </tr>
                 <tr>
                   <td style="padding: 3px 0; color: #64748b; font-weight: 600;">🔒 Security Status:</td>
@@ -928,11 +913,11 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
               <span style="font-size: 36px; font-weight: 800; color: #071A3D; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace; display: inline-block;">${otp}</span>
             </div>
             
-            <p style="margin: 0 0 10px; font-size: 13px; color: #e11d48; font-weight: 600;">⏱️ Valid for ${OTP_EXPIRY_MINUTES} minutes only.</p>
+            <p style="margin: 0 0 10px; font-size: 13px; color: #e11d48; font-weight: 600;">⏰ Valid for ${OTP_EXPIRY_MINUTES} minutes only.</p>
             <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this OTP, please secure your account immediately or ignore this email.</p>
             
             <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; text-align: center;">
-              <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal • Automated Security Alert</p>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal — Automated Security Alert</p>
             </div>
           </div>
         </div>
@@ -1089,7 +1074,10 @@ export async function sendStudentVerificationEmail(
       ]
     : []
 
-  const officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
+  let officialFrom = process.env.EMAIL_FROM || `"V.S.B. AI & DS Portal" <${smtpUser}>`
+  if (!officialFrom.includes('@')) {
+    officialFrom = `"${officialFrom.replace(/["<>]/g, '').trim()}" <${smtpUser}>`
+  }
 
   // Build role-specific table rows & headers
   let emailTitle = 'Email & Password Setup Verification'
@@ -1277,11 +1265,11 @@ export async function sendStudentVerificationEmail(
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 20px 12px; background-color: #f1f5f9;">
-        <div style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 12px 36px rgba(7, 26, 61, 0.08);">
-          ${getLuxuryEmailHeaderHtml(hasLogo)}
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 540px; margin: 0 auto; padding: 16px; background-color: #f1f5f9;">
+        <div style="background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+          ${getEmailHeaderHtml(hasLogo)}
           
-          <div style="padding: 26px 22px;">
+          <div style="padding: 24px 20px;">
             <h2 style="color: #071A3D; margin: 0 0 12px; font-size: 18px; font-weight: 700;">${emailTitle}</h2>
             <p style="margin: 0 0 14px; font-size: 14px; color: #334155;">Dear <strong>${name}</strong>,</p>
 
@@ -1301,7 +1289,7 @@ export async function sendStudentVerificationEmail(
             <p style="margin: 0 0 16px; font-size: 12px; color: #64748b;">If you did not request this email verification, please contact your department administrator immediately.</p>
             
             <div style="border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 20px; text-align: center;">
-              <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal • Institutional Verification System</p>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">V.S.B. AI &amp; DS Academic Portal — Institutional Verification System</p>
             </div>
           </div>
         </div>
