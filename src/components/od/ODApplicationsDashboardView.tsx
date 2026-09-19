@@ -268,9 +268,13 @@ export function ODApplicationsDashboardView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'hod_approve',
+          notificationId: app.id,
           registerNumber: app.registerNumber,
           studentName: app.studentName,
           eventName: app.eventName,
+          fromDate: app.fromDate,
+          toDate: app.toDate,
+          applicationType: app.applicationType,
           dates: `${app.fromDate} to ${app.toDate}`,
           remarks: 'Officially sanctioned and OD attendance credited by Head of Department.',
         }),

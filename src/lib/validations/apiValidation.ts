@@ -439,8 +439,11 @@ export const odApplicationReviewSchema = z
     studentName: z.string().max(100).optional(),
     eventName: z.string().max(200).optional(),
     dates: z.string().max(100).optional(),
+    fromDate: z.string().max(50).optional(),
+    toDate: z.string().max(50).optional(),
+    applicationType: z.string().max(100).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const odProofActionSchema = z
   .object({

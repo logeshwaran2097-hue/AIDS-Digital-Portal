@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
-import { syncSanctionedODsForStudent } from '@/lib/odSync'
+import { syncSanctionedODsForStudent, allocateSanctionedAttendance } from '@/lib/odSync'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import { validateBody, odProofActionSchema } from '@/lib/validations/apiValidation'
 
@@ -471,6 +471,19 @@ export async function POST(request: Request) {
         },
       }).catch(() => {})
 
+      // 3. Automatically allocate attendance on the days for this student
+      await allocateSanctionedAttendance({
+        registerNumber: existing.registerNumber,
+        studentName: existing.studentName,
+        fromDate: existing.eventDate,
+        toDate: existing.eventDate,
+        applicationType: existing.category,
+        eventName: existing.eventName,
+        sanctionedBy: session.name || 'Head of Department',
+      }).catch((err) => {
+        console.warn('[allocateSanctionedAttendance] error in od-proofs:', err)
+      })
+
       return NextResponse.json({
         success: true,
         message: `OD Attendance officially sanctioned by HOD for ${existing.studentName}!`,
@@ -562,6 +575,19 @@ export async function POST(request: Request) {
           status: 'success',
         },
       }).catch(() => {})
+
+      // 3. Automatically allocate attendance on the days for this student
+      await allocateSanctionedAttendance({
+        registerNumber: existing.registerNumber,
+        studentName: existing.studentName,
+        fromDate: existing.eventDate,
+        toDate: existing.eventDate,
+        applicationType: existing.category,
+        eventName: existing.eventName,
+        sanctionedBy: session.name || 'System Administrator',
+      }).catch((err) => {
+        console.warn('[allocateSanctionedAttendance] error in od-proofs admin sanction:', err)
+      })
 
       return NextResponse.json({
         success: true,

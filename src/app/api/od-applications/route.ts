@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { dispatchWebPushNotification } from '@/lib/pushNotifier'
 import { validateBody, odApplicationReviewSchema, odApplicationPostSchema, odApplicationSubmitSchema, odAdvisorProofSchema } from '@/lib/validations/apiValidation'
+import { allocateSanctionedAttendance } from '@/lib/odSync'
 
 export const dynamic = 'force-dynamic'
 
@@ -658,6 +659,20 @@ export async function PATCH(request: Request) {
           status: 'published',
         },
       }).catch(() => {})
+
+      // 3. Automatically allocate attendance records for all sanctioned days
+      await allocateSanctionedAttendance({
+        registerNumber: regUpper,
+        studentName,
+        fromDate: (body as any)?.fromDate,
+        toDate: (body as any)?.toDate,
+        dates: dates || (targetAudit ? targetAudit.details : undefined),
+        applicationType: (body as any)?.applicationType,
+        eventName,
+        sanctionedBy: reviewerName,
+      }).catch((err) => {
+        console.warn('[allocateSanctionedAttendance] error:', err)
+      })
     }
 
     // 3. If endorsed by advisor, notify HOD for final authorization
