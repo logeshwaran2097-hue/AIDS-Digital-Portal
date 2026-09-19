@@ -436,6 +436,37 @@ Dates: ${fromDate && toDate ? `from ${fromDate} to ${toDate}` : fromDate ? `on $
     }
   }
 
+  // Team Details (For Hackathons / Presentations)
+  const [isTeam, setIsTeam] = useState(true)
+  const [teamName, setTeamName] = useState('')
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
+    {
+      name: userName,
+      registerNumber: student.registerNumber,
+      year: String(student.year || '2'),
+      section: student.section || 'A',
+    },
+  ])
+
+  // Project / Internship Details
+  const [projectTitle, setProjectTitle] = useState('')
+  const [domain, setDomain] = useState('Artificial Intelligence & Machine Learning')
+  const [companyGuide, setCompanyGuide] = useState('')
+
+  // Medical / Personal Details
+  const [doctorName, setDoctorName] = useState('')
+  const [parentContact, setParentContact] = useState('')
+
+  // File Proof States (Base64 + File Name)
+  const [brochureFile, setBrochureFile] = useState<string | null>(null)
+  const [brochureName, setBrochureName] = useState('')
+
+  const [registrationProof, setRegistrationProof] = useState<string | null>(null)
+  const [registrationProofName, setRegistrationProofName] = useState('')
+
+  const [abstractOrLetter, setAbstractOrLetter] = useState<string | null>(null)
+  const [abstractOrLetterName, setAbstractOrLetterName] = useState('')
+
   const [isAiVerifying, setIsAiVerifying] = useState(false)
 
   const isAllDetailsVerified = Boolean(
@@ -470,37 +501,6 @@ Dates: ${fromDate && toDate ? `from ${fromDate} to ${toDate}` : fromDate ? `on $
       setIsAiVerifying(false)
     }
   }
-
-  // Team Details (For Hackathons / Presentations)
-  const [isTeam, setIsTeam] = useState(true)
-  const [teamName, setTeamName] = useState('')
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      name: userName,
-      registerNumber: student.registerNumber,
-      year: String(student.year || '2'),
-      section: student.section || 'A',
-    },
-  ])
-
-  // Project / Internship Details
-  const [projectTitle, setProjectTitle] = useState('')
-  const [domain, setDomain] = useState('Artificial Intelligence & Machine Learning')
-  const [companyGuide, setCompanyGuide] = useState('')
-
-  // Medical / Personal Details
-  const [doctorName, setDoctorName] = useState('')
-  const [parentContact, setParentContact] = useState('')
-
-  // File Proof States (Base64 + File Name)
-  const [brochureFile, setBrochureFile] = useState<string | null>(null)
-  const [brochureName, setBrochureName] = useState('')
-
-  const [registrationProof, setRegistrationProof] = useState<string | null>(null)
-  const [registrationProofName, setRegistrationProofName] = useState('')
-
-  const [abstractOrLetter, setAbstractOrLetter] = useState<string | null>(null)
-  const [abstractOrLetterName, setAbstractOrLetterName] = useState('')
 
   if (!isOpen) return null
 
