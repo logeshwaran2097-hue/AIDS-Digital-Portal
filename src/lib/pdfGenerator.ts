@@ -1924,7 +1924,7 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.setTextColor(7, 26, 61)
   doc.text(routeText, marginX + 42, curY + 21)
 
-  // Row 3: Designated Boarding Stop & Pass Authorization
+  // Row 3: Designated Boarding Stop
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
   doc.text('Designated Boarding Stop:', marginX + 4, curY + 29)
@@ -1932,14 +1932,7 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.setTextColor(21, 87, 192)
   doc.text(cleanBoardingStop, marginX + 42, curY + 29)
 
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Pass Authorization:', marginX + contentW / 2 + 4, curY + 29)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(16, 185, 129)
-  doc.text('Verified Active Commuter (Academic Year 2026-27)', marginX + contentW / 2 + 38, curY + 29)
-
-  // Section 3: Security QR Code and Institutional Rules (Section 3 Desk & Helpline removed completely as requested)
+  // Section 3: Security QR Code and Institutional Rules
   curY += 45
   const qrBoxW = 46
   const qrBoxH = 46
@@ -1995,38 +1988,6 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
     doc.text(r, rulesX + 4, ruleY)
     ruleY += 6.6
   })
-
-  // Section 4: Signatures & Validation Seals
-  curY += qrBoxH + 16
-  const sigColW = contentW / 3
-
-  // Col 1: Student
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.5)
-  doc.setTextColor(7, 26, 61)
-  doc.text('_____________________________', marginX + 6, curY + 10)
-  doc.text('Signature of the Student', marginX + 6, curY + 15)
-
-  // Col 2: Faculty Incharge
-  doc.text('_____________________________', marginX + sigColW + 6, curY + 10)
-  doc.text('Faculty Bus Incharge', marginX + sigColW + 6, curY + 15)
-
-  // Col 3: Principal & Seal
-  doc.text('_____________________________', marginX + sigColW * 2 + 6, curY + 10)
-  doc.text('Principal / Transport Convener', marginX + sigColW * 2 + 6, curY + 15)
-
-  // Circular Institutional Seal Mark
-  doc.setDrawColor(21, 87, 192)
-  doc.setLineWidth(0.5)
-  const sealX = marginX + contentW - 18
-  const sealY = curY + 8
-  doc.circle(sealX, sealY, 9, 'S')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5)
-  doc.setTextColor(21, 87, 192)
-  doc.text('V.S.B. ENGG', sealX, sealY - 3, { align: 'center' })
-  doc.text('TRANSPORT', sealX, sealY, { align: 'center' })
-  doc.text('OFFICIAL SEAL', sealX, sealY + 3, { align: 'center' })
 
   // Footer compliance text
   doc.setFont('helvetica', 'normal')
