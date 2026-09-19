@@ -819,29 +819,33 @@ function getLuxuryEmailHeaderHtml(hasLogo: boolean): string {
     <!-- Top Royal Gold Crown Accent Strip -->
     <div style="height: 4px; background: #D4AF37; background: linear-gradient(90deg, #996515 0%, #D4AF37 25%, #FFF0BA 50%, #D4AF37 75%, #996515 100%);"></div>
 
-    <!-- Luxury Royal Midnight Sapphire Header -->
-    <div style="background-color: #071A3D; background: linear-gradient(180deg, #051329 0%, #071A3D 55%, #0A2558 100%); padding: 30px 20px 24px; text-align: center;">
-      
-      <!-- Emblem Logo -->
-      <div style="margin-bottom: 16px; text-align: center;">
+    <!-- Dedicated Individual Place for Official Logo -->
+    <div style="background-color: #ffffff; padding: 24px 20px 20px; text-align: center;">
+      <div style="display: inline-block; text-align: center;">
         ${
           hasLogo
-            ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="70" height="70" style="width: 70px; height: 70px; border-radius: 18px; vertical-align: middle; display: inline-block; object-fit: contain; box-shadow: 0 8px 24px rgba(0,0,0,0.45); border: 1.5px solid rgba(255, 255, 255, 0.25);" />'
-            : '<div style="display: inline-block; background: #071A3D; color: #F4C430; font-weight: 900; font-size: 18px; width: 64px; height: 64px; line-height: 64px; border-radius: 18px; border: 2px solid #D4AF37; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">VSB</div>'
+            ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="76" height="76" style="width: 76px; height: 76px; border-radius: 20px; vertical-align: middle; display: inline-block; object-fit: contain; box-shadow: 0 8px 24px rgba(7, 26, 61, 0.15);" />'
+            : '<div style="display: inline-block; background: #071A3D; color: #F4C430; font-weight: 900; font-size: 20px; width: 68px; height: 68px; line-height: 68px; border-radius: 18px; border: 2px solid #D4AF37; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">VSB</div>'
         }
       </div>
+    </div>
 
+    <!-- Luxury Metallic Gold Divider Ribbon -->
+    <div style="height: 3px; background: #D4AF37; background: linear-gradient(90deg, #996515 0%, #D4AF37 25%, #FFF0BA 50%, #D4AF37 75%, #996515 100%);"></div>
+
+    <!-- Institutional Directorate Banner -->
+    <div style="background-color: #071A3D; background: linear-gradient(180deg, #051329 0%, #071A3D 60%, #0a2558 100%); padding: 22px 20px 20px; text-align: center;">
       <!-- Master College Name -->
-      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 1px; line-height: 1.25; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;">V.S.B. ENGINEERING COLLEGE</h1>
+      <h1 style="color: #ffffff; margin: 0; font-size: 19px; font-weight: 800; letter-spacing: 1px; line-height: 1.3; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;">V.S.B. ENGINEERING COLLEGE</h1>
 
       <!-- Department Subtitle -->
       <p style="color: #F4C430; margin: 6px 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Department of Artificial Intelligence &amp; Data Science</p>
 
       <!-- Institutional Accreditations Tagline -->
-      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Autonomous Institution • NBA &amp; NAAC &apos;A&apos; Accredited</p>
+      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Autonomous Institution • NBA &amp; NAAC &apos;A&apos; Accredited • Karur</p>
     </div>
 
-    <!-- Luxury Golden Divider Ribbon -->
+    <!-- Subtle Bottom Accent Line -->
     <div style="height: 2px; background: #D4AF37; background: linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, #D4AF37 30%, #FFF0BA 50%, #D4AF37 70%, rgba(212, 175, 55, 0.1) 100%);"></div>
   `
 }
