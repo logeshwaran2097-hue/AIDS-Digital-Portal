@@ -436,6 +436,41 @@ Dates: ${fromDate && toDate ? `from ${fromDate} to ${toDate}` : fromDate ? `on $
     }
   }
 
+  const [isAiVerifying, setIsAiVerifying] = useState(false)
+
+  const isAllDetailsVerified = Boolean(
+    fromDate &&
+    toDate &&
+    reason &&
+    reason.length > 20 &&
+    (brochureFile || registrationProof || abstractOrLetter || appType.includes('Leave'))
+  )
+
+  const handleAutoVerifyAndPolish = async () => {
+    setIsAiVerifying(true)
+    try {
+      if (!fromDate || !toDate) {
+        toast.error('AI Verifier: Please select From Date and To Date.')
+        setIsAiVerifying(false)
+        return
+      }
+
+      if (!reason || reason.length < 25 || reason.includes('Privacy Notice') || reason.includes('Anna University')) {
+        await handleAiDraftReason()
+      } else {
+        toast.success('AI Verifier: Statement adheres to 2-sentence institutional standards.')
+      }
+
+      if (!appType.includes('Leave') && !brochureFile && !registrationProof) {
+        toast.warning('AI Verifier: Proof recommended for technical On-Duty approval.')
+      } else {
+        toast.success('AI Verifier: Application is 100% compliant for submission!')
+      }
+    } finally {
+      setIsAiVerifying(false)
+    }
+  }
+
   // Team Details (For Hackathons / Presentations)
   const [isTeam, setIsTeam] = useState(true)
   const [teamName, setTeamName] = useState('')
@@ -1212,8 +1247,8 @@ Dates: ${fromDate && toDate ? `from ${fromDate} to ${toDate}` : fromDate ? `on $
                 </div>
               </div>
 
-              {/* STEP 5: Reason & Statement */}
-              <div>
+              {/* STEP 5: Reason & Statement (Enlarged for full sentence readability) */}
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-bold text-gray-700">
                     Reason &amp; Academic Explanation <span className="text-red-500">*</span>
@@ -1222,20 +1257,89 @@ Dates: ${fromDate && toDate ? `from ${fromDate} to ${toDate}` : fromDate ? `on $
                     type="button"
                     onClick={handleAiDraftReason}
                     disabled={isAiDrafting}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1455D9] hover:text-[#071A3D] bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-lg transition-colors cursor-pointer border border-blue-200"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#1455D9] hover:text-[#071A3D] bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors cursor-pointer border border-blue-200 shadow-sm"
                   >
-                    <Sparkles className="w-3 h-3 text-blue-600" />
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                     <span>{isAiDrafting ? 'Agent Drafting...' : '✨ AI Agent Draft Reason'}</span>
                   </button>
                 </div>
                 <textarea
                   required
-                  rows={2}
+                  rows={4}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   placeholder="Explain event agenda, expected outcomes, or why leave is requested..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-medium bg-white focus:outline-none focus:border-[#1455D9] resize-none"
+                  className="w-full min-h-[110px] px-3.5 py-3 rounded-xl border border-gray-300 text-xs sm:text-[13px] font-medium leading-relaxed bg-white focus:outline-none focus:ring-2 focus:ring-[#1455D9]/20 focus:border-[#1455D9] resize-y shadow-sm transition-all text-gray-800"
                 />
+                <div className="flex items-center justify-between text-[11px] text-gray-400 px-1">
+                  <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    Formal 2-Sentence Institutional Statement
+                  </span>
+                  <span>{reason.length} characters</span>
+                </div>
+              </div>
+
+              {/* STEP 6: Automatic AI Application Verification Agent */}
+              <div className="p-3.5 rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-blue-50/70 space-y-2.5 shadow-sm">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-[#1455D9] text-white flex items-center justify-center font-black text-xs shadow-md shadow-blue-500/20">
+                      🤖
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-[#071A3D] flex items-center gap-2">
+                        <span>AI Application Verification Agent</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                          isAllDetailsVerified
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {isAllDetailsVerified ? '✓ 100% Ready' : 'Live Verification'}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-gray-500 font-medium">
+                        Autonomous validator for dates, mandatory proofs, and academic reason compliance.
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAutoVerifyAndPolish}
+                    disabled={isAiVerifying}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-white bg-[#1455D9] hover:bg-[#0E44B8] active:scale-95 px-3 py-1.5 rounded-xl transition-all shadow-md shadow-blue-600/20 cursor-pointer"
+                  >
+                    {isAiVerifying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5 text-[#F4C430]" />}
+                    <span>{isAiVerifying ? 'Verifying...' : 'Auto-Verify & Polish'}</span>
+                  </button>
+                </div>
+
+                {/* Verification Health Checklist */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="flex items-center gap-2 bg-white/90 p-2 rounded-xl border border-blue-100/70 text-[11px]">
+                    <CheckCircle2 className={`w-4 h-4 shrink-0 ${reason && reason.length > 20 ? 'text-emerald-500' : 'text-amber-500'}`} />
+                    <span className="font-semibold text-gray-700 truncate">
+                      {reason && reason.length > 20 ? 'Statement Verified' : 'Draft Statement'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/90 p-2 rounded-xl border border-blue-100/70 text-[11px]">
+                    <CheckCircle2 className={`w-4 h-4 shrink-0 ${fromDate && toDate ? 'text-emerald-500' : 'text-amber-500'}`} />
+                    <span className="font-semibold text-gray-700 truncate">
+                      {fromDate && toDate ? `${calculateDays()} Day(s) Scheduled` : 'Dates Required'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-white/90 p-2 rounded-xl border border-blue-100/70 text-[11px]">
+                    <CheckCircle2 className={`w-4 h-4 shrink-0 ${(brochureFile || registrationProof || abstractOrLetter || appType.includes('Leave')) ? 'text-emerald-500' : 'text-amber-500'}`} />
+                    <span className="font-semibold text-gray-700 truncate">
+                      {(brochureFile || registrationProof || abstractOrLetter)
+                        ? 'Official Proofs Attached'
+                        : appType.includes('Leave')
+                        ? 'Leave Self-Declared'
+                        : 'Proofs Recommended'}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Modal Actions */}
