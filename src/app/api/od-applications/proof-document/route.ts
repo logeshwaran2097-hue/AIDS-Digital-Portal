@@ -83,7 +83,7 @@ export async function GET(request: Request) {
     if (isMedical) rawProofDocName = 'Medical_Fitness_Certificate_&_Physician_Prescription.pdf'
     else if (isOD) rawProofDocName = 'On_Duty_Requisition_&_Event_Brochure.pdf'
     else if (isTemple) rawProofDocName = 'Family_Ceremony_Invitation_Letter.pdf'
-    else rawProofDocName = 'Parent_Leave_Consent_Letter.pdf'
+    else rawProofDocName = 'Official_Student_Requisition_Letter.pdf'
   }
 
   // Calculate days
