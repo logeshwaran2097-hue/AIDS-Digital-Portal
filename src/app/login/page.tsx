@@ -859,10 +859,24 @@ export default function LoginPage() {
 
       const data = await res.json()
       if (res.ok && data.success) {
+        const effectiveRole = selectedRole || 'student'
+        const reg = (onboardingForm.registerNumber || '').trim().toUpperCase()
+        const email = (onboardingForm.email || '').trim().toLowerCase()
+        const userId = data.user?.id || onboardingUser?.id || ''
+        const userName = data.user?.name || onboardingForm.name || ''
+
         if (typeof window !== 'undefined') {
-          const reg = (onboardingForm.registerNumber || '').trim().toUpperCase()
-          const email = (onboardingForm.email || '').trim().toLowerCase()
-          const userId = data.user?.id || onboardingUser?.id || ''
+          localStorage.setItem('portal_login_role', effectiveRole)
+          localStorage.setItem(
+            'portal_user_session',
+            JSON.stringify({
+              role: effectiveRole,
+              name: userName,
+              id: userId,
+            })
+          )
+          document.cookie = `portal_login_role=${effectiveRole}; path=/; max-age=2592000; SameSite=Lax`
+
           if (reg) {
             localStorage.setItem(`vsb_student_onboarding_done_${reg}`, 'true')
             sessionStorage.setItem(`vsb_student_onboarding_done_${reg}`, 'true')
@@ -876,23 +890,23 @@ export default function LoginPage() {
             sessionStorage.setItem(`vsb_student_onboarding_done_${userId}`, 'true')
           }
         }
-        toast.success('Profile verified & password updated successfully!')
-        setShowOnboardingModal(false)
+
+        toast.success('Onboarding complete! Entering Student Portal...')
         const dashboardMap: Record<string, string> = {
           student: '/dashboard',
           faculty: '/faculty-dashboard',
           advisor: '/faculty-dashboard/attendance?mode=morning&role=advisor',
           hod: '/hod-dashboard',
         }
-        setTimeout(() => {
-          window.location.href = dashboardMap[selectedRole] || '/dashboard'
-        }, 300)
+        const targetUrl = dashboardMap[effectiveRole] || '/dashboard'
+        window.location.replace(targetUrl)
+        return
       } else {
         toast.error(data.message || 'Failed to complete setup.')
+        setOnboardingLoading(false)
       }
     } catch {
       toast.error('Network error saving profile.')
-    } finally {
       setOnboardingLoading(false)
     }
   }
@@ -2781,37 +2795,19 @@ export default function LoginPage() {
                         </span>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Prominent Admin Contact / Change Notice */}
-                <div className="p-3.5 rounded-2xl bg-amber-50/90 border-2 border-amber-300/90 space-y-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-amber-200/90 flex items-center justify-center text-amber-800 shrink-0 mt-0.5">
-                      <AlertCircle className="w-4 h-4" />
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200/90 sm:col-span-2">
+                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">PORTAL SECURITY / PASSWORD</span>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-slate-700 text-[11px] flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-slate-500" />
+                          Permanent Password Set
+                        </span>
+                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Confirmed &amp; Secured
+                        </span>
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <h5 className="font-black text-xs text-amber-950">
-                        Important: Verify All Details &amp; Future Corrections
-                      </h5>
-                      <p className="text-[11px] text-amber-900 leading-relaxed font-medium">
-                        Please verify all your details above. Once confirmed, you cannot edit official particulars directly from your portal. <strong>If any changes are required, you must contact the Department Administrator.</strong>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span className="text-[10px] font-bold text-amber-800">
-                      Any mistakes in academic records or personal details?
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowCorrectionModal(true)}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-amber-400 text-amber-900 hover:bg-amber-100 text-[11px] font-black transition-all shadow-xs cursor-pointer shrink-0"
-                    >
-                      <Pencil className="w-3 h-3 text-amber-700" />
-                      <span>Contact Admin / Request Correction</span>
-                    </button>
                   </div>
                 </div>
 
@@ -2852,7 +2848,7 @@ export default function LoginPage() {
                         )}
                       </div>
                       <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                        I solemnly confirm that I have verified all details above. I acknowledge that upon completion, my official records are locked and any future corrections must be petitioned through the Department Administrator.
+                        I solemnly confirm that I have verified all details above and authorize my enrollment into the Student Portal.
                       </p>
                     </div>
                   </label>

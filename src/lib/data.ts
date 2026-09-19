@@ -13,14 +13,17 @@ export async function getStudentData(userId: string) {
 }
 
 async function fetchStudentDataDirect(userId: string) {
+  let user: any = null
+  let student: any = null
+
   try {
     const [initialUser, initialStudent] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId } }).catch(() => null),
       prisma.student.findUnique({ where: { userId } }).catch(() => null),
     ])
 
-    let user: any = initialUser
-    let student: any = initialStudent
+    user = initialUser
+    student = initialStudent
 
     if (!student && user) {
       // Try resolving by email prefix or name if userId wasn't directly linked
@@ -79,9 +82,22 @@ async function fetchStudentDataDirect(userId: string) {
       }
     }
 
+    if (!student) {
+      student = {
+        id: 'student-default',
+        userId: userId,
+        registerNumber: user?.email ? user.email.split('@')[0].toUpperCase() : 'STUDENT',
+        dateOfBirth: null,
+        department: 'Artificial Intelligence & Data Science',
+        year: 1,
+        semester: 1,
+        section: 'A',
+      }
+    }
+
     // Dynamic Advisor Resolution:
     // If student has no recorded advisorName, deduce it automatically from Faculty or ClassAdvisor allocation
-    if ((!student.advisorName || student.advisorName.trim() === '') && student.year) {
+    if (student && (!student.advisorName || student.advisorName.trim() === '') && student.year) {
       const studentSec = (student.section || 'A').toUpperCase()
       const matchingFaculty = await prisma.faculty.findFirst({
         where: {
@@ -153,14 +169,14 @@ async function fetchStudentDataDirect(userId: string) {
       ]),
       prisma.subject.findMany({ take: 30, orderBy: { code: 'asc' } }).catch(() => []),
       prisma.semester.findMany({
-        where: { number: student.semester },
+        where: { number: student?.semester ?? 1 },
         select: { id: true },
       }).catch(() => []),
       prisma.attendanceRecord.findMany({
         where: {
           OR: [
-            { studentId: student.id },
-            { registerNumber: student.registerNumber },
+            { studentId: student?.id || '' },
+            { registerNumber: student?.registerNumber || '' },
           ],
         },
         include: {

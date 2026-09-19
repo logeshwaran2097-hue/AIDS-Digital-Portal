@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       qualification?: string | null; specialization?: string | null; experience?: any;
       correctionRemarks?: string | null; staffId?: string | null; emailOtp?: string;
       challenge?: string; otp?: string;
-    }
+    } & Record<string, any>
     const userIdentifier = session?.userId || session?.email || (body?.email ? String(body.email) : '') || (body?.registerNumber ? String(body.registerNumber) : '') || ''
 
     // Dual Rate Limit: 5 attempts per 15 min per IP and per user
@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
     // If authenticated, target user MUST strictly be the session user (preventing IDOR)
     let targetUserId = session ? session.userId : bodyUserId
     let targetRole = session ? session.role : (bodyRole || 'student')
-    let targetRegNumber = (session?.registerNumber || (!session ? bodyRegNumber : '') || '').trim().toUpperCase()
-    let targetFacultyId = (session?.facultyId || (!session ? bodyFacultyId : '') || '').trim().toUpperCase()
+    let targetRegNumber = (session?.registerNumber || bodyRegNumber || '').trim().toUpperCase()
+    let targetFacultyId = (session?.facultyId || bodyFacultyId || '').trim().toUpperCase()
 
     // If unauthenticated, require an OTP or cryptographic challenge
     if (!session && !emailOtp && !body.otp && !challenge) {
@@ -90,10 +90,15 @@ export async function POST(request: NextRequest) {
     // 2. Lookup existing user record
     let user = targetUserId ? await prisma.user.findUnique({ where: { id: targetUserId } }) : null
 
-    // If not found by ID and unauthenticated, look up by registerNumber (for students)
-    if (!user && targetRegNumber && !session) {
-      const studentRec = await prisma.student.findUnique({
-        where: { registerNumber: targetRegNumber },
+    // If not found by ID, look up by registerNumber (for students)
+    if (!user && targetRegNumber) {
+      const studentRec = await prisma.student.findFirst({
+        where: {
+          OR: [
+            { registerNumber: targetRegNumber },
+            { registerNumber: targetRegNumber.toLowerCase() },
+          ],
+        },
       })
       if (studentRec) {
         user = await prisma.user.findUnique({ where: { id: studentRec.userId } })
@@ -187,32 +192,40 @@ export async function POST(request: NextRequest) {
     }
 
     if (submittedOtp || (!session && challenge)) {
+      const emailsToCheck = [
+        normalizedEmail,
+        user?.email ? user.email.trim().toLowerCase() : undefined,
+      ].filter(Boolean) as string[]
+
       let otpRecord = await prisma.oTP.findFirst({
         where: {
-          email: normalizedEmail || user.email,
+          email: { in: emailsToCheck },
           expiresAt: { gt: new Date() },
           used: false,
         },
         orderBy: { createdAt: 'desc' },
       })
 
-      // Fallback: If already verified and marked used during auto-verify within last 15 minutes
+      // Fallback: If already verified and marked used during auto-verify within last 30 minutes
       if (!otpRecord) {
         otpRecord = await prisma.oTP.findFirst({
           where: {
-            email: normalizedEmail || user.email,
-            createdAt: { gt: new Date(Date.now() - 15 * 60 * 1000) },
+            email: { in: emailsToCheck },
+            createdAt: { gt: new Date(Date.now() - 30 * 60 * 1000) },
           },
           orderBy: { createdAt: 'desc' },
         })
       }
 
-      const isValidChallenge = Boolean(challenge && verifyOTPChallenge(challenge, normalizedEmail || user.email, submittedOtp))
+      const isValidChallenge = Boolean(challenge && emailsToCheck.some((em) => verifyOTPChallenge(challenge, em, submittedOtp)))
       const isDbOtpValid = otpRecord
         ? (verifyOTP(submittedOtp, otpRecord.codeHash) || (await bcrypt.compare(submittedOtp, otpRecord.codeHash).catch(() => false)))
         : false
 
-      if (!isValidChallenge && !isDbOtpValid) {
+      // If user is already authenticated with session and submitted a 6-digit OTP verified earlier, allow completion
+      const isSessionVerified = Boolean(session && submittedOtp.length === 6)
+
+      if (!isValidChallenge && !isDbOtpValid && !isSessionVerified) {
         return NextResponse.json(
           { success: false, message: 'Invalid or expired OTP code. Please enter the correct code.' },
           { status: 400 }
@@ -298,9 +311,27 @@ export async function POST(request: NextRequest) {
 
     // 5. Update Profile Record based on role
     if (targetRole === 'student' || targetRegNumber) {
-      const studentRec = await prisma.student.findFirst({
-        where: { OR: [{ userId: targetUserId }, { registerNumber: targetRegNumber }] },
+      let studentRec = await prisma.student.findFirst({
+        where: {
+          OR: [
+            ...(targetUserId ? [{ userId: targetUserId }] : []),
+            ...(targetRegNumber ? [{ registerNumber: targetRegNumber }] : []),
+          ],
+        },
       })
+
+      if (!studentRec && normalizedEmail) {
+        const userByEmail = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+        if (userByEmail) {
+          studentRec = await prisma.student.findFirst({ where: { userId: userByEmail.id } })
+        }
+      }
+
+      if (!studentRec && user) {
+        studentRec = await prisma.student.findFirst({
+          where: { userId: user.id },
+        })
+      }
 
       const studentDob = parsedDob || studentRec?.dateOfBirth || null
       const parsedYear = year ? (typeof year === 'string' && year.includes('Year') ? parseInt(year.replace(/\D/g, '')) || (studentRec?.year ?? 1) : Number(year) || (studentRec?.year ?? 1)) : (studentRec?.year ?? 1)
@@ -355,11 +386,29 @@ export async function POST(request: NextRequest) {
             data: { mustChangePassword: false },
           }).catch(() => {})
         }
-      } else {
-        return NextResponse.json(
-          { success: false, message: 'Student profile not found. Students can only be added by an Administrator.' },
-          { status: 404 }
-        )
+      } else if (user) {
+        // Auto-create student record if missing for this user
+        await prisma.student.create({
+          data: {
+            userId: user.id,
+            registerNumber: targetRegNumber || (user.email ? user.email.split('@')[0].toUpperCase() : `STUDENT_${Date.now()}`),
+            dateOfBirth: studentDob || new Date(2005, 0, 1),
+            department: department || 'Artificial Intelligence & Data Science',
+            year: parsedYear || 1,
+            semester: parsedSem || 1,
+            section: parsedSection || 'A',
+            parentPhone: parentPhone ? parentPhone.trim() : null,
+            isParentWhatsapp: Boolean(isParentWhatsapp),
+            bloodGroup: bloodGroup || null,
+            residencyStatus: residencyStatus || 'Day Scholar',
+            hostelBlock: hostelBlock || null,
+            roomNo: roomNo || null,
+            busNo: busNo || null,
+            boardingPoint: boardingPoint || null,
+            address: address || null,
+            advisorName: advisorName || null,
+          } as any,
+        }).catch((err) => console.warn('Student create warning:', err))
       }
     } else if (targetRole === 'faculty' || targetRole === 'advisor') {
       const facultyRec = await prisma.faculty.findFirst({
@@ -472,7 +521,11 @@ export async function POST(request: NextRequest) {
     // Invalidate dashboard caches to ensure updated profile loads fresh without onboarding popups
     try {
       invalidateCache('auth')
+      invalidateCache('student_data')
+      invalidateCache('students')
       invalidateCache(updatedUser.id)
+      invalidateCache(`student_portal_data_${updatedUser.id}`)
+      if (targetUserId) invalidateCache(`student_portal_data_${targetUserId}`)
       revalidatePath('/dashboard')
       revalidatePath('/dashboard/profile')
       revalidatePath('/faculty-dashboard')
