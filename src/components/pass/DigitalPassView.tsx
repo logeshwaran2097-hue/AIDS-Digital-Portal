@@ -535,7 +535,7 @@ export default function DigitalPassView({
             <span className="text-slate-950 font-black">
               {activeMode === 'hostel'
                 ? `🏡 Hostel Resident · ${currentHostel.name} (Room ${roomNo})`
-                : `🚌 Day Scholar · College Bus #${currentRoute.busNo || '5'} (${currentRoute.name})`}
+                : `🚌 Day Scholar · College Bus ${String(currentRoute.busNo || '5').replace(/^#\s*/, '')} (${currentRoute.name})`}
             </span>
           </span>
           <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold border ${
@@ -855,7 +855,7 @@ export default function DigitalPassView({
                       </p>
                       <div className="flex items-center gap-2 pt-1">
                         <a
-                          href={`/verify-pass?id=${encodeURIComponent(`VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&hostel=${encodeURIComponent(`College Bus #${currentRoute.busNo} (${currentRoute.routeNo})`)}&room=${encodeURIComponent(boardingStop)}&category=${encodeURIComponent('COLLEGE BUS COMMUTER PASS')}&purpose=${encodeURIComponent(`Regular Commute • ${currentRoute.via}`)}&curfew=${encodeURIComponent(`Arrival ${currentRoute.morningArrival} | Departure ${currentRoute.eveningDeparture}`)}&parent=${encodeURIComponent(currentRoute.contact)}&warden=${encodeURIComponent(currentRoute.driver)}&time=${encodeURIComponent(issueDate)}`}
+                          href={`/verify-pass?id=${encodeURIComponent(`VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&hostel=${encodeURIComponent(`College Bus ${String(currentRoute.busNo || '').replace(/^#\s*/, '')} (${currentRoute.routeNo})`)}&room=${encodeURIComponent(boardingStop)}&category=${encodeURIComponent('COLLEGE BUS COMMUTER PASS')}&purpose=${encodeURIComponent(`Regular Commute • ${currentRoute.via}`)}&curfew=${encodeURIComponent(`Arrival ${currentRoute.morningArrival} | Departure ${currentRoute.eveningDeparture}`)}&parent=${encodeURIComponent(currentRoute.contact)}&warden=${encodeURIComponent(currentRoute.driver)}&time=${encodeURIComponent(issueDate)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-all shadow-2xs"

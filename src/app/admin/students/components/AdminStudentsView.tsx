@@ -1224,7 +1224,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     ) : (
                       <span className="flex items-center gap-1 text-blue-700 font-medium truncate">
                         <Bus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                        {s.busNo ? `Bus #${s.busNo}${s.boardingPoint ? ` (${s.boardingPoint})` : ''}` : (s.boardingPoint || 'Day Scholar')}
+                        {s.busNo ? `Bus ${s.busNo.replace(/^#\s*/, '')}${s.boardingPoint ? ` (${s.boardingPoint})` : ''}` : (s.boardingPoint || 'Day Scholar')}
                       </span>
                     )}
                   </div>
@@ -1347,7 +1347,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                               {s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock ? (
                                 <>🏢 {s.hostelBlock ? `Block ${s.hostelBlock}${s.roomNo ? ` · Rm ${s.roomNo}` : ''}` : s.residencyStatus}</>
                               ) : (
-                                <>🚌 {s.busNo ? `Bus #${s.busNo}${s.boardingPoint ? ` (${s.boardingPoint})` : ''}` : (s.boardingPoint || s.residencyStatus)}</>
+                                <>🚌 {s.busNo ? `Bus ${s.busNo.replace(/^#\s*/, '')}${s.boardingPoint ? ` (${s.boardingPoint})` : ''}` : (s.boardingPoint || s.residencyStatus)}</>
                               )}
                             </span>
                           )}
@@ -1372,7 +1372,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                               {s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock ? (
                                 <>🏢 {s.hostelBlock ? `Block ${s.hostelBlock}` : 'Hosteller'}</>
                               ) : (
-                                <>🚌 {s.busNo ? `Bus #${s.busNo}` : 'Day Scholar'}</>
+                                <>🚌 {s.busNo ? `Bus ${s.busNo.replace(/^#\s*/, '')}` : 'Day Scholar'}</>
                               )}
                             </span>
                           )}
@@ -2440,9 +2440,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           </div>
                           <div className="grid grid-cols-2 gap-2 pt-0.5 text-gray-700">
                             <div>
-                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus Route / No.</span>
+                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus No.</span>
                               <span className="font-black text-[#071A3D] text-[13px]">
-                                {selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit Bus'}
+                                {selectedStudent.busNo ? `Bus ${selectedStudent.busNo.replace(/^#\s*/, '')}` : 'College Transit Bus'}
                               </span>
                             </div>
                             <div>

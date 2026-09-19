@@ -1230,8 +1230,8 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                           </div>
                           <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px]">
                             <div>
-                              <span className="text-gray-400 text-[10px] block">Bus Route / No.</span>
-                              <span className="font-bold text-[#071A3D]">{activeStudentModal.busNo ? `Bus #${activeStudentModal.busNo}` : 'College Transit'}</span>
+                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus No.</span>
+                              <span className="font-bold text-[#071A3D]">{activeStudentModal.busNo ? `Bus ${activeStudentModal.busNo.replace(/^#\s*/, '')}` : 'College Transit'}</span>
                             </div>
                             <div>
                               <span className="text-gray-400 text-[10px] block">Boarding Point</span>

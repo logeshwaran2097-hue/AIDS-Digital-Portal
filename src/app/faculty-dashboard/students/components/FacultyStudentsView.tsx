@@ -322,7 +322,7 @@ export function FacultyStudentsView({
                 `Room Allocation: ${s.roomNo ? `Room ${s.roomNo}` : 'Assigned Room'}`,
               ]
             : [
-                `College Bus Number: ${s.busNo ? `Route Bus #${s.busNo}` : 'College Bus'}`,
+                `College Bus Number: ${s.busNo ? `Route Bus ${s.busNo.replace(/^#\s*/, '')}` : 'College Bus'}`,
                 `Boarding Point: ${s.boardingPoint || 'Main Bus Stop'}`,
                 `Transit Particulars: ${s.busDetails || 'Day Scholar Route'}`,
               ]),
@@ -827,7 +827,7 @@ export function FacultyStudentsView({
                                 </span>
                                 {s.busNo && (
                                   <p className="text-[10px] text-gray-500 font-semibold mt-0.5">
-                                    Bus #{s.busNo} {s.boardingPoint ? `· ${s.boardingPoint}` : ''}
+                                    Bus {s.busNo.replace(/^#\s*/, '')} {s.boardingPoint ? `· ${s.boardingPoint}` : ''}
                                   </p>
                                 )}
                               </div>
@@ -982,7 +982,7 @@ export function FacultyStudentsView({
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-                        <Bus className="w-3 h-3" /> Day Scholar {s.busNo ? `· Bus #${s.busNo}` : ''}
+                        <Bus className="w-3 h-3" /> Day Scholar {s.busNo ? `· Bus ${s.busNo.replace(/^#\s*/, '')}` : ''}
                       </span>
                     )}
 
@@ -1264,8 +1264,8 @@ export function FacultyStudentsView({
                     return (
                       <>
                         <div>
-                          <span className="text-gray-400 text-[10px] block">College Bus Route</span>
-                          <span className="font-bold text-[#071A3D]">{selectedStudent.busNo ? `Bus #${selectedStudent.busNo}` : 'College Transit'}</span>
+                          <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus No.</span>
+                          <span className="font-bold text-[#071A3D]">{selectedStudent.busNo ? `Bus ${selectedStudent.busNo.replace(/^#\s*/, '')}` : 'College Transit'}</span>
                         </div>
                         <div>
                           <span className="text-gray-400 text-[10px] block">Boarding Point</span>
