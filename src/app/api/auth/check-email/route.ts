@@ -6,22 +6,34 @@ import { validateBody, checkEmailSchema } from '@/lib/validations/apiValidation'
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 10, 60, 'auth:check-email')
+  // Generous limit for campus network where multiple students share public IP
+  const rateLimit = await checkRateLimit(request, 300, 60, 'auth:check-email')
   if (!rateLimit.allowed) {
-    return rateLimitResponse(rateLimit)
+    return NextResponse.json({ available: true })
   }
 
   try {
     const rawJson = await request.json()
     const parsed = validateBody(checkEmailSchema, rawJson)
-    if (!parsed.success) return parsed.response
+    if (!parsed.success) {
+      return NextResponse.json({ available: true })
+    }
     const { email, userId, registerNumber, facultyId } = parsed.data
 
-    if (registerNumber && !email.trim().toLowerCase().endsWith('@gmail.com')) {
-      return NextResponse.json({
-        available: false,
-        message: 'Only @gmail.com personal email addresses are permitted.',
-      })
+    const normalized = (email || '').trim().toLowerCase()
+    if (!normalized || !normalized.includes('@') || !normalized.includes('.')) {
+      return NextResponse.json({ available: true })
+    }
+
+    // If student has entered a full domain that is not gmail
+    if (registerNumber && normalized.includes('@')) {
+      const domain = normalized.split('@')[1] || ''
+      if (domain.includes('.') && domain !== 'gmail.com') {
+        return NextResponse.json({
+          available: false,
+          message: 'Students must provide a personal @gmail.com address (e.g. name@gmail.com).',
+        })
+      }
     }
 
     const result = await checkEmailAvailability(email, {

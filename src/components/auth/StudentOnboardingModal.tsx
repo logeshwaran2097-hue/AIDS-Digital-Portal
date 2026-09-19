@@ -221,15 +221,16 @@ export function StudentOnboardingModal({
           }),
         })
         const data = await res.json()
+        const isAvailable = res.ok ? data.available !== false : true
         setEmailCheckStatus({
           checking: false,
-          available: Boolean(data.available),
-          message: data.message || (data.available ? null : `The email address ${rawEmail} is already linked to another account.`),
+          available: isAvailable,
+          message: isAvailable ? null : (data.message || `The email address ${rawEmail} is already linked to another account.`),
         })
       } catch {
         setEmailCheckStatus({ checking: false, available: true, message: null })
       }
-    }, 350)
+    }, 500)
 
     return () => clearTimeout(timer)
   }, [isOpen, form.email, initialData.registerNumber])

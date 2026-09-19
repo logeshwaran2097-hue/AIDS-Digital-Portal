@@ -685,16 +685,25 @@ export default function LoginPage() {
             registerNumber: onboardingForm.registerNumber,
           }),
         })
+        if (!res.ok) {
+          // In case of rate-limiting or network issues, do not falsely flag as unavailable
+          setEmailCheckStatus({ checking: false, available: true, message: null })
+          return
+        }
         const data = await res.json()
+        if (data.available === undefined) {
+          setEmailCheckStatus({ checking: false, available: true, message: null })
+          return
+        }
         setEmailCheckStatus({
           checking: false,
           available: Boolean(data.available),
-          message: data.message || (data.available ? null : `The email address ${rawEmail} is already linked to another account.`),
+          message: data.available ? null : (data.message || `The email address ${rawEmail} is already linked to another account.`),
         })
       } catch {
         setEmailCheckStatus({ checking: false, available: true, message: null })
       }
-    }, 350)
+    }, 500)
 
     return () => clearTimeout(timer)
   }, [onboardingForm.email, onboardingUser?.id, onboardingForm.registerNumber])

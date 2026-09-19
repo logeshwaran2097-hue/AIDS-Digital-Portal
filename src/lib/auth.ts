@@ -1392,6 +1392,28 @@ export async function checkEmailAvailability(
       return { available: true }
     }
 
+    // Check if matching student by register number
+    const targetReg = options?.registerNumber?.trim().toUpperCase()
+    if (targetReg) {
+      const student = await prisma.student.findFirst({
+        where: { registerNumber: { equals: targetReg, mode: 'insensitive' } },
+      })
+      if (student && student.userId === existingUser.id) {
+        return { available: true }
+      }
+    }
+
+    // Check if matching faculty by faculty ID
+    const targetFacId = options?.facultyId?.trim().toUpperCase()
+    if (targetFacId) {
+      const faculty = await prisma.faculty.findFirst({
+        where: { facultyId: { equals: targetFacId, mode: 'insensitive' } },
+      })
+      if (faculty && faculty.userId === existingUser.id) {
+        return { available: true }
+      }
+    }
+
     // Check linked profiles to determine if it's the same person or an orphan
     const [linkedStudent, linkedFaculty, linkedHod, linkedAdmin] = await Promise.all([
       prisma.student.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
@@ -1400,12 +1422,8 @@ export async function checkEmailAvailability(
       prisma.admin.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
     ])
 
-    const targetReg = options?.registerNumber?.trim().toUpperCase()
     const isSameStudent = Boolean(linkedStudent && targetReg && linkedStudent.registerNumber.toUpperCase() === targetReg)
-
-    const targetFacId = options?.facultyId?.trim().toUpperCase()
     const isSameFaculty = Boolean(linkedFaculty && targetFacId && linkedFaculty.facultyId.toUpperCase() === targetFacId)
-
     const isOrphan = !linkedStudent && !linkedFaculty && !linkedHod && !linkedAdmin
 
     if (isSameStudent || isSameFaculty || isOrphan) {

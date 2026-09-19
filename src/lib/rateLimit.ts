@@ -243,19 +243,25 @@ export async function checkRateLimit(
   const now = Date.now()
 
   // 1. Evaluate Client IP Limit
+  // In institutional / campus environments, multiple students share the same public NAT IP.
+  // When an individual identifier (email / register number) is provided, the user limit strictly
+  // protects that specific account, while the IP limit is scaled appropriately for campus networks.
+  const hasIdentifier = Boolean(identifier && identifier.trim() !== '')
+  const effectiveIpLimit = hasIdentifier ? Math.max(limit * 25, 200) : limit
+
   const ipKey = `rl:ip:${endpoint}:${clientIp}`
-  let ipData = await checkUpstashRedis(ipKey, limit, windowSeconds)
+  let ipData = await checkUpstashRedis(ipKey, effectiveIpLimit, windowSeconds)
   if (!ipData) {
-    ipData = await checkDatabaseStore(ipKey, limit, windowSeconds)
+    ipData = await checkDatabaseStore(ipKey, effectiveIpLimit, windowSeconds)
   }
 
-  if (ipData.count > limit) {
-    await handleViolation(ipKey, endpoint, clientIp, identifier, limit, windowSeconds)
+  if (ipData.count > effectiveIpLimit) {
+    await handleViolation(ipKey, endpoint, clientIp, identifier, effectiveIpLimit, windowSeconds)
 
     return {
       allowed: false,
       success: false,
-      limit,
+      limit: effectiveIpLimit,
       remaining: 0,
       reset: now + ipData.ttl * 1000,
       resetInSeconds: ipData.ttl,
