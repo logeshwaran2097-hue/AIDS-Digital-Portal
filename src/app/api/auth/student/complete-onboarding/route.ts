@@ -27,7 +27,13 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return validation.response
     }
-    const body = validation.data
+    const body = validation.data as {
+      name?: string; phone?: string | null; parentPhone?: string | null; dateOfBirth?: string | null;
+      email?: string | null; otp?: string; newPassword?: string; skipEmailVerification?: boolean;
+      residencyStatus?: string | null; bloodGroup?: string | null; isParentWhatsapp?: boolean;
+      hostelBlock?: string | null; roomNo?: string | null; busNo?: string | null;
+      boardingPoint?: string | null; profileImage?: string | null;
+    }
     const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification, residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint, profileImage } = body
 
     const isCustomEmail = email && !email.endsWith('@student.vsb.edu.in') && email.includes('@')
