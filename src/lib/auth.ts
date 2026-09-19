@@ -820,37 +820,29 @@ function getLuxuryEmailHeaderHtml(hasLogo: boolean): string {
     <div style="height: 4px; background: #D4AF37; background: linear-gradient(90deg, #996515 0%, #D4AF37 25%, #FFF0BA 50%, #D4AF37 75%, #996515 100%);"></div>
 
     <!-- Luxury Royal Midnight Sapphire Header -->
-    <div style="background-color: #061533; background: linear-gradient(180deg, #040e24 0%, #071A3D 55%, #0a2558 100%); padding: 32px 20px 26px; text-align: center;">
+    <div style="background-color: #071A3D; background: linear-gradient(180deg, #051329 0%, #071A3D 55%, #0A2558 100%); padding: 30px 20px 24px; text-align: center;">
       
-      <!-- Logo Medallion Pedestal -->
-      <div style="margin-bottom: 14px; text-align: center;">
-        <div style="display: inline-block; padding: 7px; background: #ffffff; border-radius: 22px; border: 2px solid #D4AF37; box-shadow: 0 8px 24px rgba(0,0,0,0.45), 0 0 16px rgba(212, 175, 55, 0.35); text-align: center;">
-          ${
-            hasLogo
-              ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="66" height="66" style="width: 66px; height: 66px; border-radius: 16px; vertical-align: middle; display: block; object-fit: contain;" />'
-              : '<div style="display: block; background: #071A3D; color: #F4C430; font-weight: 900; font-size: 18px; width: 62px; height: 62px; line-height: 62px; border-radius: 16px; border: 2px solid #D4AF37; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">VSB</div>'
-          }
-        </div>
-      </div>
-
-      <!-- Autonomous Badge Pill -->
-      <div style="margin-bottom: 9px;">
-        <span style="display: inline-block; padding: 3px 14px; background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 999px; color: #F8D368; font-size: 9.5px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">An Autonomous Institution</span>
+      <!-- Emblem Logo -->
+      <div style="margin-bottom: 16px; text-align: center;">
+        ${
+          hasLogo
+            ? '<img src="cid:vsb_college_logo" alt="V.S.B. College Logo" width="70" height="70" style="width: 70px; height: 70px; border-radius: 18px; vertical-align: middle; display: inline-block; object-fit: contain; box-shadow: 0 8px 24px rgba(0,0,0,0.45); border: 1.5px solid rgba(255, 255, 255, 0.25);" />'
+            : '<div style="display: inline-block; background: #071A3D; color: #F4C430; font-weight: 900; font-size: 18px; width: 64px; height: 64px; line-height: 64px; border-radius: 18px; border: 2px solid #D4AF37; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Roboto, sans-serif;">VSB</div>'
+        }
       </div>
 
       <!-- Master College Name -->
-      <h1 style="color: #ffffff; margin: 0; font-size: 21px; font-weight: 800; letter-spacing: 0.8px; line-height: 1.25; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">V.S.B. ENGINEERING COLLEGE</h1>
+      <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 1px; line-height: 1.25; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif;">V.S.B. ENGINEERING COLLEGE</h1>
 
       <!-- Department Subtitle -->
-      <p style="color: #F4C430; margin: 6px 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif; text-shadow: 0 1px 6px rgba(0,0,0,0.4);">Department of Artificial Intelligence &amp; Data Science</p>
+      <p style="color: #F4C430; margin: 6px 0 0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.4px; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Department of Artificial Intelligence &amp; Data Science</p>
 
-      <!-- Accreditations & Affiliation -->
-      <p style="color: #94a3b8; margin: 7px 0 0; font-size: 10px; font-weight: 500; letter-spacing: 0.4px; line-height: 1.4; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Approved by AICTE • Affiliated to Anna University • NAAC \'A\' Grade &amp; NBA Accredited</p>
+      <!-- Institutional Accreditations Tagline -->
+      <p style="color: #94a3b8; margin: 8px 0 0; font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif;">Autonomous Institution • NBA &amp; NAAC &apos;A&apos; Accredited</p>
     </div>
 
-    <!-- Luxury Dual Accent Trim (Radiant Gold Ribbon + Royal Accent) -->
-    <div style="height: 3px; background: #D4AF37; background: linear-gradient(90deg, rgba(212, 175, 55, 0.15) 0%, #D4AF37 25%, #FFF0BA 50%, #D4AF37 75%, rgba(212, 175, 55, 0.15) 100%);"></div>
-    <div style="height: 1px; background: #071A3D;"></div>
+    <!-- Luxury Golden Divider Ribbon -->
+    <div style="height: 2px; background: #D4AF37; background: linear-gradient(90deg, rgba(212, 175, 55, 0.1) 0%, #D4AF37 30%, #FFF0BA 50%, #D4AF37 70%, rgba(212, 175, 55, 0.1) 100%);"></div>
   `
 }
 
@@ -899,7 +891,7 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 20px 12px; background-color: #f1f5f9;">
-        <div style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 12px 36px rgba(7, 26, 61, 0.14);">
+        <div style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 12px 36px rgba(7, 26, 61, 0.08);">
           ${getLuxuryEmailHeaderHtml(hasLogo)}
           
           <div style="padding: 26px 22px;">
@@ -1271,7 +1263,7 @@ export async function sendStudentVerificationEmail(
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
       <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 20px 12px; background-color: #f1f5f9;">
-        <div style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #cbd5e1; box-shadow: 0 12px 36px rgba(7, 26, 61, 0.14);">
+        <div style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 12px 36px rgba(7, 26, 61, 0.08);">
           ${getLuxuryEmailHeaderHtml(hasLogo)}
           
           <div style="padding: 26px 22px;">
