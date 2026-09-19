@@ -1871,120 +1871,78 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   // Section 2: Transportation & Route Details Table
   curY += 31
   doc.setFillColor(243, 247, 254)
-  doc.roundedRect(marginX, curY, contentW, 42, 2, 2, 'F')
+  doc.roundedRect(marginX, curY, contentW, 36, 2, 2, 'F')
   doc.setDrawColor(215, 228, 245)
   doc.setLineWidth(0.3)
-  doc.roundedRect(marginX, curY, contentW, 42, 2, 2, 'S')
+  doc.roundedRect(marginX, curY, contentW, 36, 2, 2, 'S')
 
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(8)
   doc.setTextColor(21, 87, 192)
-  doc.text('2. ALLOCATED TRANSPORTATION & ROUTE DETAILS', marginX + 4, curY + 5)
+  doc.text('2. ALLOCATED TRANSPORTATION & ROUTE DETAILS', marginX + 4, curY + 5.5)
+
+  // Clean and format values properly
+  const busNumDigits = String(data.busNo || '').replace(/[^0-9]/g, '')
+  const formattedBusNo = busNumDigits ? `Bus No. ${busNumDigits.padStart(2, '0')}` : (data.busNo ? `Bus No. ${data.busNo}` : 'Bus No. 05')
+
+  const rawRouteName = data.routeName || 'College Campus Transit'
+  const cleanRouteName = rawRouteName
+    .replace(/[↔→]/g, 'to')
+    .replace(/!\"/g, 'to')
+    .replace(/\s*->\s*/g, ' to ')
+    .replace(/\s*<->\s*/g, ' to ')
+    .replace(/\s+to\s+/gi, ' to ')
+    .trim()
+  const routeText = data.routeNo ? `${data.routeNo}: ${cleanRouteName}` : cleanRouteName
+
+  const cleanBoardingStop = (data.boardingStop || 'Designated Stop')
+    .replace(/\s*\([^)]*\)/g, '')
+    .trim()
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8)
   doc.setTextColor(75, 85, 105)
 
-  // Row 1
-  doc.text('Allocated Bus Number:', marginX + 4, curY + 12)
+  // Row 1: Bus Number & Commuter Category
+  doc.text('Allocated Bus Number:', marginX + 4, curY + 13)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(`BUS #${data.busNo}`, marginX + 42, curY + 12)
+  doc.text(formattedBusNo, marginX + 42, curY + 13)
 
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Commuter Category:', marginX + contentW / 2 + 4, curY + 12)
+  doc.text('Commuter Category:', marginX + contentW / 2 + 4, curY + 13)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text('Day Scholar (College Bus)', marginX + contentW / 2 + 38, curY + 12)
+  doc.text('Day Scholar (College Bus)', marginX + contentW / 2 + 38, curY + 13)
 
-  // Row 2
+  // Row 2: Allocated Route
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Allocated Route:', marginX + 4, curY + 18)
+  doc.text('Allocated Route:', marginX + 4, curY + 21)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(7, 26, 61)
-  doc.text(`${data.routeNo || 'Route'}: ${data.routeName || 'College Campus Transit'}`, marginX + 42, curY + 18)
+  doc.text(routeText, marginX + 42, curY + 21)
 
-  // Row 3
+  // Row 3: Designated Boarding Stop & Pass Authorization
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Designated Boarding Stop:', marginX + 4, curY + 24)
+  doc.text('Designated Boarding Stop:', marginX + 4, curY + 29)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(21, 87, 192)
-  doc.text(data.boardingStop, marginX + 42, curY + 24)
+  doc.text(cleanBoardingStop, marginX + 42, curY + 29)
 
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(75, 85, 105)
-  doc.text('Morning College Arrival:', marginX + contentW / 2 + 4, curY + 24)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text(data.morningArrival || '08:30 AM', marginX + contentW / 2 + 38, curY + 24)
-
-  // Row 4
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Evening Campus Departure:', marginX + 4, curY + 30)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text(data.eveningDeparture || '05:00 PM', marginX + 42, curY + 30)
-
-  // Row 5: Transit Authorization
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Pass Authorization:', marginX + 4, curY + 36)
+  doc.text('Pass Authorization:', marginX + contentW / 2 + 4, curY + 29)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(16, 185, 129)
-  doc.text('Verified Active Commuter (Academic Year 2026-27)', marginX + 42, curY + 36)
+  doc.text('Verified Active Commuter (Academic Year 2026-27)', marginX + contentW / 2 + 38, curY + 29)
 
-  // Section 3: Official College Transit Desk & Essential Communications
-  curY += 47
-  doc.setFillColor(248, 250, 252)
-  doc.roundedRect(marginX, curY, contentW, 24, 2, 2, 'F')
-  doc.setDrawColor(226, 232, 240)
-  doc.setLineWidth(0.3)
-  doc.roundedRect(marginX, curY, contentW, 24, 2, 2, 'S')
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(8)
-  doc.setTextColor(21, 87, 192)
-  doc.text('3. INSTITUTIONAL TRANSPORTATION DESK & HELPLINE', marginX + 4, curY + 5)
-
-  // Row 1
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(8)
-  doc.setTextColor(75, 85, 105)
-  doc.text('Administrative Office:', marginX + 4, curY + 12)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('04324-290141', marginX + 38, curY + 12)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Transport Division:', marginX + contentW / 2 + 4, curY + 12)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(21, 87, 192)
-  doc.text('04324-290142', marginX + contentW / 2 + 34, curY + 12)
-
-  // Row 2
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Official Helpdesk Email:', marginX + 4, curY + 18)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('info@vsb.ac.in', marginX + 38, curY + 18)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(75, 85, 105)
-  doc.text('Campus Location:', marginX + contentW / 2 + 4, curY + 18)
-  doc.setFont('helvetica', 'bold')
-  doc.setTextColor(7, 26, 61)
-  doc.text('NH-67, Karur-Coimbatore Highway', marginX + contentW / 2 + 34, curY + 18)
-
-  // Section 4: Security QR Code and Institutional Rules
-  curY += 31
-  const qrBoxW = 44
-  const qrBoxH = 44
+  // Section 3: Security QR Code and Institutional Rules (Section 3 Desk & Helpline removed completely as requested)
+  curY += 45
+  const qrBoxW = 46
+  const qrBoxH = 46
 
   // QR Code Mount
   doc.setFillColor(255, 255, 255)
@@ -2019,11 +1977,11 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.5)
   doc.setTextColor(7, 26, 61)
-  doc.text('INSTITUTIONAL TRANSPORTATION REGULATIONS:', rulesX + 4, curY + 5)
+  doc.text('INSTITUTIONAL TRANSPORTATION REGULATIONS:', rulesX + 4, curY + 5.5)
 
   const rules = [
     '1. This transport pass is strictly non-transferable and valid for Academic Year 2026-27.',
-    '2. Students must be present at the designated stop at least 5 minutes prior to bus arrival.',
+    '2. Students must be present at the designated stop prior to scheduled bus arrival.',
     '3. Display of this digital QR slip or physical pass to the conductor/incharge is mandatory upon boarding.',
     '4. Discipline and decorum must be maintained at all times inside the college transportation vehicle.',
     '5. In case of route or boarding stop alteration, submit application to the Transport Desk 24 hours prior.'
@@ -2032,36 +1990,36 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(6.5)
   doc.setTextColor(71, 85, 105)
-  let ruleY = curY + 11
+  let ruleY = curY + 12
   rules.forEach(r => {
     doc.text(r, rulesX + 4, ruleY)
-    ruleY += 6.2
+    ruleY += 6.6
   })
 
-  // Section 5: Signatures & Validation Seals
-  curY += qrBoxH + 12
+  // Section 4: Signatures & Validation Seals
+  curY += qrBoxH + 16
   const sigColW = contentW / 3
 
   // Col 1: Student
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.5)
   doc.setTextColor(7, 26, 61)
-  doc.text('_____________________________', marginX + 6, curY + 8)
-  doc.text('Signature of the Student', marginX + 6, curY + 13)
+  doc.text('_____________________________', marginX + 6, curY + 10)
+  doc.text('Signature of the Student', marginX + 6, curY + 15)
 
   // Col 2: Faculty Incharge
-  doc.text('_____________________________', marginX + sigColW + 6, curY + 8)
-  doc.text('Faculty Bus Incharge', marginX + sigColW + 6, curY + 13)
+  doc.text('_____________________________', marginX + sigColW + 6, curY + 10)
+  doc.text('Faculty Bus Incharge', marginX + sigColW + 6, curY + 15)
 
   // Col 3: Principal & Seal
-  doc.text('_____________________________', marginX + sigColW * 2 + 6, curY + 8)
-  doc.text('Principal / Transport Convener', marginX + sigColW * 2 + 6, curY + 13)
+  doc.text('_____________________________', marginX + sigColW * 2 + 6, curY + 10)
+  doc.text('Principal / Transport Convener', marginX + sigColW * 2 + 6, curY + 15)
 
   // Circular Institutional Seal Mark
   doc.setDrawColor(21, 87, 192)
   doc.setLineWidth(0.5)
   const sealX = marginX + contentW - 18
-  const sealY = curY + 6
+  const sealY = curY + 8
   doc.circle(sealX, sealY, 9, 'S')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(5)
@@ -2077,7 +2035,7 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
   doc.text(
     'This official transportation credential is cryptographically authenticated and generated from the V.S.B. Digital Portal AI&DS Administration System. Compliant with Anna University Institutional Transportation Standards.',
     pageWidth / 2,
-    pageHeight - 6,
+    pageHeight - 8,
     { align: 'center' }
   )
 

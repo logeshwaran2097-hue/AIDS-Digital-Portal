@@ -42,14 +42,15 @@ interface DigitalPassViewProps {
   initialBusNo?: string
   initialBusDetails?: string
   initialBoardingPoint?: string
+  initialParentPhone?: string
 }
 
 const BUS_ROUTES = [
   {
     routeNo: 'Route 12',
     busNo: '12',
-    name: 'Karur Central ↔ VSB Campus',
-    via: 'Bus Stand → Collectorate → Gandhigramam → VSB',
+    name: 'Karur Central to VSB Campus',
+    via: 'Bus Stand -> Collectorate -> Gandhigramam -> VSB',
     driver: 'Mr. M. Selvaraj (Driver)',
     driverPhone: '+91 94432 18290',
     incharge: 'Dr. K. Ravichandran (Faculty Incharge)',
@@ -63,8 +64,8 @@ const BUS_ROUTES = [
   {
     routeNo: 'Route 07',
     busNo: '7',
-    name: 'Erode Junction ↔ VSB Campus',
-    via: 'Erode Railway Jn → Kodumudi → Velur → VSB',
+    name: 'Erode Junction to VSB Campus',
+    via: 'Erode Railway Jn -> Kodumudi -> Velur -> VSB',
     driver: 'Mr. K. Palanisamy (Driver)',
     driverPhone: '+91 98421 77123',
     incharge: 'Prof. M. Senthilkumar (Faculty Incharge)',
@@ -78,8 +79,8 @@ const BUS_ROUTES = [
   {
     routeNo: 'Route 18',
     busNo: '18',
-    name: 'Dindigul Central ↔ VSB Campus',
-    via: 'Dindigul Bus Stand → Vedasandur → VSB',
+    name: 'Dindigul Central to VSB Campus',
+    via: 'Dindigul Bus Stand -> Vedasandur -> VSB',
     driver: 'Mr. S. Murugesan (Driver)',
     driverPhone: '+91 99440 33418',
     incharge: 'Dr. A. Ramesh (Faculty Incharge)',
@@ -93,8 +94,8 @@ const BUS_ROUTES = [
   {
     routeNo: 'Route 22',
     busNo: '22',
-    name: 'Tiruchirappalli Junction ↔ VSB Campus',
-    via: 'Trichy Central → Kulithalai → Mayanur → VSB',
+    name: 'Tiruchirappalli Junction to VSB Campus',
+    via: 'Trichy Central -> Kulithalai -> Mayanur -> VSB',
     driver: 'Mr. R. Veeramani (Driver)',
     driverPhone: '+91 97894 55601',
     incharge: 'Prof. R. Vijayakumar (Faculty Incharge)',
@@ -108,8 +109,8 @@ const BUS_ROUTES = [
   {
     routeNo: 'Route 05',
     busNo: '5',
-    name: 'Namakkal Central ↔ VSB Campus',
-    via: 'Namakkal Bus Stand → Mohanur → Vkl / Vangal → VSB',
+    name: 'Namakkal Central to VSB Campus',
+    via: 'Namakkal Bus Stand -> Mohanur -> Vkl / Vangal -> VSB',
     driver: 'Mr. P. Subramanian (Driver)',
     driverPhone: '+91 98429 88912',
     incharge: 'Dr. S. Karthikeyan (Faculty Bus Incharge)',
@@ -144,6 +145,7 @@ export default function DigitalPassView({
   initialBusNo,
   initialBusDetails,
   initialBoardingPoint,
+  initialParentPhone,
 }: DigitalPassViewProps) {
   // Determine onboarding residency category:
   // If student chose Hostel in onboarding -> only hostel content shows
@@ -215,7 +217,7 @@ export default function DigitalPassView({
   const [destination, setDestination] = useState('Karur Central / Tech Hub')
   const [departureTime, setDepartureTime] = useState('Today, 02:30 PM')
   const [expectedReturn, setExpectedReturn] = useState('06:15 PM Today')
-  const [parentPhone, setParentPhone] = useState('+91 94432 55890')
+  const [parentPhone, setParentPhone] = useState(initialParentPhone || '+91 94432 55890')
   const [applicationTime, setApplicationTime] = useState('Today, 02:45 PM')
 
   // Multi-step Authorization Lifecycle for Gate Pass
@@ -408,7 +410,7 @@ export default function DigitalPassView({
           routeNo: currentRoute.routeNo,
           routeName: currentRoute.name,
           via: currentRoute.via,
-          boardingStop,
+          boardingStop: boardingStop.replace(/\s*\([^)]*\)/g, '').trim(),
           busRegNo: currentRoute.busRegNo,
           morningArrival: currentRoute.morningArrival,
           eveningDeparture: currentRoute.eveningDeparture,
@@ -756,7 +758,7 @@ export default function DigitalPassView({
                       </div>
                       <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono flex items-center gap-1 border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        Bus #{currentRoute.busNo}
+                        Bus No. {String(currentRoute.busNo).replace(/[^0-9]/g, '').padStart(2, '0')}
                       </span>
                     </div>
 
@@ -765,7 +767,7 @@ export default function DigitalPassView({
                         <span className="text-blue-500 font-medium block text-[11px]">Selected Boarding Stop:</span>
                         <div className="flex items-center gap-1.5 mt-0.5 font-bold text-slate-800">
                           <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span>{boardingStop}</span>
+                          <span>{boardingStop.replace(/\s*\([^)]*\)/g, '').trim()}</span>
                         </div>
                       </div>
                       <div>
@@ -897,19 +899,19 @@ export default function DigitalPassView({
                 <div className="flex justify-between items-center text-slate-600">
                   <span className="font-medium">Onboarded Bus Number:</span>
                   <span className="font-bold text-slate-900 bg-emerald-100/70 px-2 py-0.5 rounded-md font-mono">
-                    Bus #{currentRoute.busNo || initialBusNo || '5'}
+                    Bus No. {String(currentRoute.busNo || initialBusNo || '5').replace(/[^0-9]/g, '').padStart(2, '0')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-600">
                   <span className="font-medium">Allocated Route:</span>
                   <span className="font-bold text-slate-900 truncate max-w-[200px]">
-                    {currentRoute.routeNo}: {currentRoute.name.split('↔')[0]}
+                    {currentRoute.routeNo}: {currentRoute.name.replace(/ to .*/, '').replace(/↔.*/, '')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-600">
                   <span className="font-medium">Designated Boarding Stop:</span>
                   <span className="font-extrabold text-emerald-800">
-                    {boardingStop}
+                    {boardingStop.replace(/\s*\([^)]*\)/g, '').trim()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-600 border-t border-emerald-100 pt-1.5">

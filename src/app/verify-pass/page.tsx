@@ -97,9 +97,15 @@ function VerifyPassContent() {
   // Bus specific properties
   const busNo = searchParams.get('busNo') || details?.busNo || ''
   const routeNo = searchParams.get('routeNo') || details?.routeNo || ''
-  const routeName = searchParams.get('routeName') || details?.routeName || 'College Campus Commuter Route'
+  const routeName = (searchParams.get('routeName') || details?.routeName || 'College Campus Commuter Route')
+    .replace(/[↔→]/g, 'to')
+    .replace(/!\"/g, 'to')
+    .replace(/\s*->\s*/g, ' to ')
+    .trim()
   const via = searchParams.get('via') || details?.via || ''
-  const boardingStop = searchParams.get('stop') || searchParams.get('boardingStop') || details?.boardingStop || 'Designated Stop'
+  const boardingStop = (searchParams.get('stop') || searchParams.get('boardingStop') || details?.boardingStop || 'Designated Stop')
+    .replace(/\s*\([^)]*\)/g, '')
+    .trim()
   const morningArrival = searchParams.get('morningArrival') || details?.morningArrival || '08:30 AM'
   const eveningDeparture = searchParams.get('eveningDeparture') || details?.eveningDeparture || '05:00 PM'
 
@@ -227,7 +233,7 @@ function VerifyPassContent() {
                         </strong>
                       </div>
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 font-mono">
-                        Bus #{busNo}
+                        Bus No. {String(busNo).replace(/[^0-9]/g, '').padStart(2, '0') || busNo}
                       </span>
                     </div>
 
@@ -338,7 +344,7 @@ function VerifyPassContent() {
               {isBusPass ? (
                 <div className="space-y-2">
                   <p className="text-xs text-slate-300">
-                    Conductor / Incharge Verification: Check student boarding stop ({boardingStop}) and confirm Bus #{busNo}.
+                    Conductor / Incharge Verification: Check student boarding stop ({boardingStop}) and confirm Bus No. {String(busNo).replace(/[^0-9]/g, '').padStart(2, '0') || busNo}.
                   </p>
                   {!boardingVerified ? (
                     <button
@@ -353,7 +359,7 @@ function VerifyPassContent() {
                       <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
                         <strong>✓ Boarding Verified at {currentTime}</strong>
-                        <p className="text-[11px] text-emerald-300">Authorized for Bus #{busNo} • {boardingStop}</p>
+                        <p className="text-[11px] text-emerald-300">Authorized for Bus No. {String(busNo).replace(/[^0-9]/g, '').padStart(2, '0') || busNo} • {boardingStop}</p>
                       </div>
                     </div>
                   )}
