@@ -854,6 +854,7 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
   const fs = require('fs')
   const path = require('path')
 
+
   if (dns.setDefaultResultOrder) {
     try {
       dns.setDefaultResultOrder('ipv4first')
@@ -943,18 +944,30 @@ async function sendOTPEmail(email: string, otp: string, name: string) {
   if (isRealSmtpConfigured) {
     try {
       const port = parseInt(process.env.SMTP_PORT || '465')
+      let resolvedHost = process.env.SMTP_HOST || 'smtp.gmail.com'
+      try {
+        const ip = await new Promise<string>((resolve, reject) => {
+          dns.lookup(resolvedHost, (err: any, address: string) => {
+            if (err || !address) reject(err)
+            else resolve(address)
+          })
+        })
+        if (ip) resolvedHost = ip
+      } catch {}
+
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        host: resolvedHost,
         port: port,
         secure: port === 465,
         auth: {
           user: smtpUser,
           pass: smtpPass,
         },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 7000,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
         tls: {
+          servername: process.env.SMTP_HOST || 'smtp.gmail.com',
           rejectUnauthorized: false,
         },
       })
@@ -1300,18 +1313,30 @@ export async function sendStudentVerificationEmail(
   if (isRealSmtpConfigured) {
     try {
       const port = parseInt(process.env.SMTP_PORT || '465')
+      let resolvedHost = process.env.SMTP_HOST || 'smtp.gmail.com'
+      try {
+        const ip = await new Promise<string>((resolve, reject) => {
+          dns.lookup(resolvedHost, (err: any, address: string) => {
+            if (err || !address) reject(err)
+            else resolve(address)
+          })
+        })
+        if (ip) resolvedHost = ip
+      } catch {}
+
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        host: resolvedHost,
         port: port,
         secure: port === 465,
         auth: {
           user: smtpUser,
           pass: smtpPass,
         },
-        connectionTimeout: 5000,
-        greetingTimeout: 5000,
-        socketTimeout: 7000,
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000,
         tls: {
+          servername: process.env.SMTP_HOST || 'smtp.gmail.com',
           rejectUnauthorized: false,
         },
       })
