@@ -28,6 +28,12 @@ import {
   RefreshCw,
   X,
   ExternalLink,
+  Search,
+  Filter,
+  Trash2,
+  Maximize2,
+  Minimize2,
+  CheckCheck,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Badge } from '@/components/ui/Badge'
@@ -52,6 +58,9 @@ export default function StudyAssistantView() {
   const [expandedPartA, setExpandedPartA] = useState<Record<number, boolean>>({})
   const [expandedPartB, setExpandedPartB] = useState<Record<number, boolean>>({})
   const [expandedPartC, setExpandedPartC] = useState<Record<number, boolean>>({})
+  const [questionFilter, setQuestionFilter] = useState<'all' | 'partA' | 'partB' | 'partC'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [allExpanded, setAllExpanded] = useState(false)
 
   // Chat Tutor state — connected to real /api/ai
   const [chatMessages, setChatMessages] = useState<{ sender: 'user' | 'ai'; text: string; code?: string }[]>([
@@ -173,8 +182,8 @@ ANSWER: [Detailed model answer here]`
       const data = await res.json()
       let text = data?.success && data?.answer ? data.answer : ''
 
-      // Safety check: Never accept timetable, schedule, or non-exam responses
-      const isInvalid = !text || /bell timings|refreshment break|dining break|institutional schedule|privacy notice/i.test(text)
+      // Safety check: Never accept timetable, schedule, attendance, or non-exam responses
+      const isInvalid = !text || /bell timings|refreshment break|dining break|institutional schedule|privacy notice|attendance regulations|working days|institutional calendar/i.test(text)
 
       let q = ''
       let a = ''
@@ -183,26 +192,28 @@ ANSWER: [Detailed model answer here]`
         const parts = text.split('ANSWER:')
         q = parts[0].replace('QUESTION:', '').trim()
         a = parts[1].trim()
-      } else if (!isInvalid && text.length > 40) {
+      } else if (!isInvalid && text.length > 40 && !text.includes('Institutional Attendance')) {
         const lines = text.split('\n')
         q = lines[0].replace(/^#+\s*|\*\*Q:\*\*\s*|Q:\s*/i, '').trim()
         a = lines.slice(1).join('\n').trim()
       }
 
       // If invalid or missing, immediately draw from 100% authentic Anna University R-2021 questions
-      if (!q || !a || /bell timings|refreshment break|dining break|institutional schedule/i.test(q + a)) {
+      if (!q || !a || /bell timings|refreshment break|dining break|institutional schedule|attendance regulations|working days/i.test(q + a)) {
         const pool = aiGenMark === '2' ? currentUnit.partA : aiGenMark === '8' ? currentUnit.partB : currentUnit.partC
-        let chosen = pool.find(item => topic && (item.q.toLowerCase().includes(topic.toLowerCase()) || item.a.toLowerCase().includes(topic.toLowerCase())))
+        let chosen = pool.find(item => topic && !topic.toLowerCase().includes('full unit scope') && (item.q.toLowerCase().includes(topic.toLowerCase()) || item.a.toLowerCase().includes(topic.toLowerCase())))
         if (!chosen) {
           const already = generatedQuestionsList.map(item => item.question)
           chosen = pool.find(item => !already.includes(item.q)) || pool[Math.floor(Math.random() * pool.length)] || pool[0]
         }
-        q = chosen.q
+        const blooms = aiGenMark === '2' ? ['K1 - Remembering', 'K2 - Understanding', 'K3 - Applying'] : aiGenMark === '8' ? ['K3 - Applying', 'K4 - Analyzing', 'K2 - Understanding'] : ['K5 - Evaluating', 'K6 - Creating', 'K4 - Analyzing']
+        const bloom = blooms[Math.floor(Math.random() * blooms.length)]
+        q = `[Bloom's: ${bloom} | CO${currentUnit.unitNo}] ${chosen.q}`
         const markBreakdown = aiGenMark === '2'
-          ? '\n\n[Mark Scheme: 2 Marks — Precise Technical Definition / Equation (1 Mark), Key Terms / Asymptotic Complexity (1 Mark)]'
+          ? '\n\n**Official Mark Allocation (2 Marks):**\n• Exact Technical Definition / Equation: 1 Mark\n• Core Terms / Asymptotic Boundary: 1 Mark'
           : aiGenMark === '8'
-          ? '\n\n[Mark Scheme: 8 Marks — Algorithm Formulation / Principle (3 Marks), Step-by-Step Derivation / Trace (3 Marks), Diagram / Illustrative Example (2 Marks)]'
-          : '\n\n[Mark Scheme: 16 Marks — Comprehensive Architecture & Mathematical Formulation (6 Marks), Algorithmic Derivation & Proof (6 Marks), Step-by-Step Numerical Trace & Evaluation Matrix (4 Marks)]'
+          ? '\n\n**Official Mark Allocation (8 Marks):**\n• Algorithm Formulation / Principle: 3 Marks\n• Step-by-Step Derivation / Algorithmic Pseudocode: 3 Marks\n• Diagram / Illustrative Numerical Trace: 2 Marks'
+          : '\n\n**Official Mark Allocation (16 Marks):**\n• System Architecture & Problem Formulation: 6 Marks\n• Rigorous Mathematical Derivations & Algorithmic Proof: 6 Marks\n• Comparative Evaluation Matrix & Step-by-Step Numerical Trace: 4 Marks'
         a = chosen.a + markBreakdown
       }
 
@@ -317,6 +328,42 @@ ANSWER: [Detailed model answer here]`
   const togglePartA = (idx: number) => setExpandedPartA(prev => ({ ...prev, [idx]: !prev[idx] }))
   const togglePartB = (idx: number) => setExpandedPartB(prev => ({ ...prev, [idx]: !prev[idx] }))
   const togglePartC = (idx: number) => setExpandedPartC(prev => ({ ...prev, [idx]: !prev[idx] }))
+
+  const toggleExpandAll = () => {
+    if (allExpanded) {
+      setExpandedPartA({})
+      setExpandedPartB({})
+      setExpandedPartC({})
+      setAllExpanded(false)
+    } else {
+      const aExp: Record<number, boolean> = {}
+      const bExp: Record<number, boolean> = {}
+      const cExp: Record<number, boolean> = {}
+      currentUnit.partA.forEach((_, i) => { aExp[i] = true })
+      currentUnit.partB.forEach((_, i) => { bExp[i] = true })
+      currentUnit.partC.forEach((_, i) => { cExp[i] = true })
+      setExpandedPartA(aExp)
+      setExpandedPartB(bExp)
+      setExpandedPartC(cExp)
+      setAllExpanded(true)
+    }
+  }
+
+  const filteredPartA = currentUnit.partA.filter(qa =>
+    !searchQuery.trim() ||
+    qa.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    qa.a.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  const filteredPartB = currentUnit.partB.filter(qa =>
+    !searchQuery.trim() ||
+    qa.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    qa.a.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  const filteredPartC = currentUnit.partC.filter(qa =>
+    !searchQuery.trim() ||
+    qa.q.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    qa.a.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
@@ -502,6 +549,22 @@ ANSWER: [Detailed model answer here]`
                       <option key={i} value={t}>{t}</option>
                     ))}
                   </select>
+                  <div className="flex items-center flex-wrap gap-1 pt-1">
+                    <span className="text-[9px] uppercase font-bold text-cyan-300">Quick:</span>
+                    {currentUnit.topics.slice(0, 3).map((t, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setAiGenTopic(t)}
+                        className={cn(
+                          'px-2 py-0.5 rounded-md text-[9px] font-semibold border transition-all cursor-pointer',
+                          aiGenTopic === t ? 'bg-cyan-400 text-[#071A3D] border-cyan-400 font-bold' : 'bg-white/10 text-cyan-100 border-white/20 hover:bg-white/20'
+                        )}
+                      >
+                        {t.length > 22 ? t.slice(0, 20) + '...' : t}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="sm:col-span-3 flex items-end">
@@ -527,195 +590,373 @@ ANSWER: [Detailed model answer here]`
 
               {/* Generated Question Cards */}
               {generatedQuestionsList.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-white/10 space-y-3">
-                  <span className="text-[11px] font-bold text-cyan-200 block uppercase tracking-wider">
-                    Recent AI Generated Questions ({generatedQuestionsList.length})
-                  </span>
-                  {generatedQuestionsList.map((gq) => (
-                    <div
-                      key={gq.id}
-                      className="bg-white/95 text-slate-900 rounded-2xl p-4 border border-white shadow-md space-y-2.5 animate-in fade-in-50 duration-200"
+                <div className="mt-4 pt-4 border-t border-white/10 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-cyan-200 block uppercase tracking-wider">
+                      Recent AI Generated Questions ({generatedQuestionsList.length})
+                    </span>
+                    <button
+                      onClick={() => setGeneratedQuestionsList([])}
+                      className="text-[11px] text-cyan-300 hover:text-white underline cursor-pointer"
                     >
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className={cn(
-                            'px-2.5 py-0.5 rounded-full text-[10px] font-black',
-                            gq.mark === 2 ? 'bg-blue-100 text-blue-800' : gq.mark === 8 ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'
-                          )}>
-                            {gq.part} — {gq.mark} Marks
-                          </span>
-                          <span className="text-[10px] font-mono text-slate-400">
-                            Topic: {gq.topic} • {gq.date}
-                          </span>
+                      Clear History
+                    </button>
+                  </div>
+                  {generatedQuestionsList.map((gq) => {
+                    const bloomMatch = gq.question.match(/\[Bloom's:\s*([^|\]]+)\s*\|\s*(CO\d+)\]/i);
+                    const cleanQuestion = bloomMatch ? gq.question.replace(bloomMatch[0], '').trim() : gq.question;
+                    const bloomBadge = bloomMatch ? bloomMatch[1].trim() : (gq.mark === 2 ? 'K1 - Remembering' : gq.mark === 8 ? 'K3 - Applying' : 'K5 - Evaluating');
+                    const coBadge = bloomMatch ? bloomMatch[2].trim() : `CO${currentUnit.unitNo}`;
+
+                    let mainAnswer = gq.answer;
+                    let markScheme = '';
+                    if (gq.answer.includes('**Official Mark Allocation')) {
+                      const split = gq.answer.split('**Official Mark Allocation');
+                      mainAnswer = split[0].trim();
+                      markScheme = 'Official Mark Allocation ' + split[1].trim();
+                    } else if (gq.answer.includes('[Mark Scheme:')) {
+                      const split = gq.answer.split('[Mark Scheme:');
+                      mainAnswer = split[0].trim();
+                      markScheme = split[1].replace(/\]$/, '').trim();
+                    }
+
+                    return (
+                      <div
+                        key={gq.id}
+                        className="bg-white text-slate-900 rounded-2xl p-5 border border-white/40 shadow-xl space-y-3.5 animate-in fade-in-50 duration-200"
+                      >
+                        <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+                          <div className="flex items-center flex-wrap gap-1.5">
+                            <span className={cn(
+                              'px-3 py-1 rounded-full text-xs font-black shadow-xs',
+                              gq.mark === 2 ? 'bg-blue-600 text-white' : gq.mark === 8 ? 'bg-amber-600 text-white' : 'bg-purple-600 text-white'
+                            )}>
+                              {gq.part} ({gq.mark} Marks)
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[10px] font-bold">
+                              {bloomBadge}
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-md bg-cyan-50 text-cyan-800 border border-cyan-200 text-[10px] font-bold">
+                              {coBadge}
+                            </span>
+                            <span className="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-medium">
+                              {gq.topic || currentUnit.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">{gq.date}</span>
+                            <button
+                              onClick={() => handleCopy(`[${gq.part} - ${gq.mark}M | ${bloomBadge} | ${coBadge}]\nQ: ${cleanQuestion}\n\nModel Solution:\n${gq.answer}`)}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Q&A</span>
+                            </button>
+                            <button
+                              onClick={() => setGeneratedQuestionsList(prev => prev.filter(item => item.id !== gq.id))}
+                              className="p-1 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                              title="Delete question"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          onClick={() => handleCopy(`Q: ${gq.question}\n\nModel Answer:\n${gq.answer}`)}
-                          className="text-slate-500 hover:text-blue-600 p-1 rounded-lg hover:bg-slate-100 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copy</span>
-                        </button>
-                      </div>
 
-                      <p className="font-bold text-xs sm:text-sm text-slate-900 leading-snug">
-                        {gq.question}
-                      </p>
+                        <div className="flex items-start gap-2.5">
+                          <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-800 font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+                            Q
+                          </span>
+                          <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug">
+                            {cleanQuestion}
+                          </h4>
+                        </div>
 
-                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-700 whitespace-pre-line leading-relaxed max-h-72 overflow-y-auto">
-                        <strong className="text-blue-700 block mb-1">Model University Answer & Solution:</strong>
-                        {gq.answer}
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs sm:text-sm text-slate-700 whitespace-pre-line leading-relaxed max-h-80 overflow-y-auto">
+                          <strong className="text-blue-700 block mb-1.5 flex items-center gap-1.5 text-xs uppercase tracking-wider">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            Official Anna University Model Solution:
+                          </strong>
+                          {mainAnswer}
+                        </div>
+
+                        {markScheme && (
+                          <div className="bg-amber-50/70 p-3 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                            <strong className="text-amber-800 block mb-1 text-[11px] uppercase tracking-wide flex items-center gap-1.5">
+                              <Award className="w-3.5 h-3.5 text-amber-700" />
+                              Anna University Mark Allocation Scheme:
+                            </strong>
+                            <div className="whitespace-pre-line font-medium text-amber-900/90 text-xs">
+                              {markScheme}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           )}
 
-          {/* ── PART A — 2 Marks ── */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-blue-600 text-white font-black text-xs">
-                  PART A
-                </span>
-                <h3 className="font-bold text-slate-900 text-sm">2-Mark Questions & Model Answers</h3>
-                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
-                  10 × 2 = 20 Marks
-                </span>
-              </div>
-              <span className="text-xs text-slate-400 font-mono">Anna University Format</span>
-            </div>
-
-            <div className="space-y-3">
-              {currentUnit.partA.map((qa, i) => (
-                <div key={i} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
-                  <button
-                    onClick={() => togglePartA(i)}
-                    className="w-full flex items-start justify-between gap-3 p-4 text-left cursor-pointer hover:bg-slate-100/50 transition-colors"
-                  >
-                    <h4 className="font-bold text-slate-800 text-xs sm:text-sm flex-1">
-                      Q{i + 1}. {qa.q}
-                    </h4>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">2M</span>
-                      {expandedPartA[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                    </div>
-                  </button>
-                  {expandedPartA[i] && (
-                    <div className="px-4 pb-4">
-                      <div className="bg-white p-3 rounded-xl border border-slate-100 text-xs text-slate-600 leading-relaxed flex items-start gap-2">
-                        <div className="flex-1">
-                          <strong className="text-blue-700">Ans: </strong>{qa.a}
-                        </div>
-                        <button
-                          onClick={() => handleCopy(`Q: ${qa.q}\nAns: ${qa.a}`)}
-                          className="text-slate-400 hover:text-blue-600 transition-colors cursor-pointer shrink-0 mt-0.5"
-                          title="Copy Q&A"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
+          {/* ── Question Bank Filter Toolbar ── */}
+          <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            {/* Mark Filter Segmented Control */}
+            <div className="flex items-center flex-wrap gap-1.5">
+              {[
+                { key: 'all' as const, label: 'All Questions', count: currentUnit.partA.length + currentUnit.partB.length + currentUnit.partC.length },
+                { key: 'partA' as const, label: 'Part A (2M)', count: currentUnit.partA.length },
+                { key: 'partB' as const, label: 'Part B (8M)', count: currentUnit.partB.length },
+                { key: 'partC' as const, label: 'Part C (16M)', count: currentUnit.partC.length },
+              ].map(f => (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setQuestionFilter(f.key)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
+                    questionFilter === f.key
+                      ? 'bg-[#071A3D] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   )}
-                </div>
+                >
+                  <span>{f.label}</span>
+                  <span className={cn(
+                    'px-1.5 py-0.2 rounded-full text-[10px] font-black',
+                    questionFilter === f.key ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                  )}>
+                    {f.count}
+                  </span>
+                </button>
               ))}
             </div>
+
+            {/* Search and Expand All */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 md:w-64">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search questions or keywords..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-7 py-1.5 rounded-xl text-xs border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-blue-500 font-medium"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={toggleExpandAll}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 flex items-center gap-1.5 cursor-pointer shrink-0"
+              >
+                {allExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                <span>{allExpanded ? 'Collapse All' : 'Expand All'}</span>
+              </button>
+            </div>
           </div>
+
+          {/* Search Empty State */}
+          {searchQuery && filteredPartA.length === 0 && filteredPartB.length === 0 && filteredPartC.length === 0 && (
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                <Search className="w-6 h-6" />
+              </div>
+              <h4 className="font-bold text-slate-800 text-sm">No Questions Matching "{searchQuery}"</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Try searching for related topics like "search", "algorithm", "network", or clear the search to view all {currentUnit.title} questions.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="px-4 py-2 rounded-xl bg-[#071A3D] text-white text-xs font-bold cursor-pointer hover:bg-blue-950"
+              >
+                Reset Search
+              </button>
+            </div>
+          )}
+
+          {/* ── PART A — 2 Marks ── */}
+          {(questionFilter === 'all' || questionFilter === 'partA') && filteredPartA.length > 0 && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-blue-600 text-white font-black text-xs">
+                    PART A
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-sm">2-Mark Questions & Model Answers</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
+                    {filteredPartA.length} Questions (10 × 2 = 20 Marks)
+                  </span>
+                </div>
+                <span className="text-xs text-slate-400 font-mono">Anna University Format</span>
+              </div>
+
+              <div className="space-y-3">
+                {filteredPartA.map((qa, i) => (
+                  <div key={i} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => togglePartA(i)}
+                      className="w-full flex items-start justify-between gap-3 p-4 text-left cursor-pointer hover:bg-slate-100/50 transition-colors"
+                    >
+                      <h4 className="font-bold text-slate-800 text-xs sm:text-sm flex-1">
+                        Q{i + 1}. {qa.q}
+                      </h4>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold">2M</span>
+                        {expandedPartA[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    </button>
+                    {expandedPartA[i] && (
+                      <div className="px-4 pb-4">
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 text-xs text-slate-600 leading-relaxed flex items-start gap-2">
+                          <div className="flex-1">
+                            <strong className="text-blue-700">Ans: </strong>{qa.a}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(`Q: ${qa.q}\nAns: ${qa.a}`)}
+                            className="text-slate-400 hover:text-blue-600 transition-colors cursor-pointer shrink-0 mt-0.5"
+                            title="Copy Q&A"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── PART B — 8 Marks ── */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-amber-600 text-white font-black text-xs">
-                  PART B
-                </span>
-                <h3 className="font-bold text-slate-900 text-sm">8-Mark Descriptive Questions</h3>
-                <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold">
-                  5 × 8 = 40 Marks (Answer any 4)
-                </span>
-              </div>
-              <span className="text-xs text-slate-400 font-mono">Diagrams & Derivations Required</span>
-            </div>
-
-            <div className="space-y-3">
-              {currentUnit.partB.map((qa, i) => (
-                <div key={i} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
-                  <button
-                    onClick={() => togglePartB(i)}
-                    className="w-full flex items-start justify-between gap-3 p-4 sm:p-5 text-left cursor-pointer hover:bg-slate-100/50 transition-colors"
-                  >
-                    <h4 className="font-bold text-slate-900 text-sm flex-1">
-                      Q{i + 1}. {qa.q}
-                    </h4>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold">
-                        8 Marks
-                      </span>
-                      {expandedPartB[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                    </div>
-                  </button>
-                  {expandedPartB[i] && (
-                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
-                      <div className="bg-white p-4 rounded-xl border border-slate-100 text-xs text-slate-700 space-y-2 whitespace-pre-line leading-relaxed">
-                        <span className="font-bold text-amber-800 block uppercase text-[10px] tracking-wider">
-                          Model University Solution:
-                        </span>
-                        {qa.a}
-                      </div>
-                    </div>
-                  )}
+          {(questionFilter === 'all' || questionFilter === 'partB') && filteredPartB.length > 0 && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-amber-600 text-white font-black text-xs">
+                    PART B
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-sm">8-Mark Descriptive Questions</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold">
+                    {filteredPartB.length} Questions (5 × 8 = 40 Marks)
+                  </span>
                 </div>
-              ))}
+                <span className="text-xs text-slate-400 font-mono">Diagrams & Derivations Required</span>
+              </div>
+
+              <div className="space-y-3">
+                {filteredPartB.map((qa, i) => (
+                  <div key={i} className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => togglePartB(i)}
+                      className="w-full flex items-start justify-between gap-3 p-4 sm:p-5 text-left cursor-pointer hover:bg-slate-100/50 transition-colors"
+                    >
+                      <h4 className="font-bold text-slate-900 text-sm flex-1">
+                        Q{i + 1}. {qa.q}
+                      </h4>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold">
+                          8 Marks
+                        </span>
+                        {expandedPartB[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    </button>
+                    {expandedPartB[i] && (
+                      <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                        <div className="bg-white p-4 rounded-xl border border-slate-100 text-xs text-slate-700 space-y-2 whitespace-pre-line leading-relaxed">
+                          <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                            <span className="font-bold text-amber-800 uppercase text-[10px] tracking-wider">
+                              Model University Solution:
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(`Q: ${qa.q}\nAns: ${qa.a}`)}
+                              className="text-slate-400 hover:text-amber-600 transition-colors cursor-pointer text-xs flex items-center gap-1 font-semibold"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy</span>
+                            </button>
+                          </div>
+                          {qa.a}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* ── PART C — 16 Marks ── */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-purple-700 text-white font-black text-xs">
-                  PART C
-                </span>
-                <h3 className="font-bold text-slate-900 text-sm">16-Mark Comprehensive Analytical Questions</h3>
-                <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold">
-                  3 × 16 = 48 Marks (Answer any 2)
-                </span>
-              </div>
-              <span className="text-xs text-slate-400 font-mono">Essay-Type with Full Derivation</span>
-            </div>
-
-            <div className="space-y-3">
-              {currentUnit.partC.map((qa, i) => (
-                <div key={i} className="bg-slate-50 rounded-2xl border border-purple-100 overflow-hidden">
-                  <button
-                    onClick={() => togglePartC(i)}
-                    className="w-full flex items-start justify-between gap-3 p-4 sm:p-5 text-left cursor-pointer hover:bg-purple-50/50 transition-colors"
-                  >
-                    <h4 className="font-bold text-slate-900 text-sm flex-1">
-                      Q{i + 1}. {qa.q}
-                    </h4>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold">
-                        16 Marks
-                      </span>
-                      {expandedPartC[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
-                    </div>
-                  </button>
-                  {expandedPartC[i] && (
-                    <div className="px-4 sm:px-5 pb-4 sm:pb-5">
-                      <div className="bg-white p-4 rounded-xl border border-purple-100 text-xs text-slate-700 space-y-2 whitespace-pre-line leading-relaxed max-h-[600px] overflow-y-auto">
-                        <span className="font-bold text-purple-800 block uppercase text-[10px] tracking-wider">
-                          Comprehensive Model Answer & Derivation:
-                        </span>
-                        {qa.a}
-                      </div>
-                    </div>
-                  )}
+          {(questionFilter === 'all' || questionFilter === 'partC') && filteredPartC.length > 0 && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-purple-700 text-white font-black text-xs">
+                    PART C
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-sm">16-Mark Comprehensive Analytical Questions</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold">
+                    {filteredPartC.length} Questions (3 × 16 = 48 Marks)
+                  </span>
                 </div>
-              ))}
+                <span className="text-xs text-slate-400 font-mono">Essay-Type with Full Derivation</span>
+              </div>
+
+              <div className="space-y-3">
+                {filteredPartC.map((qa, i) => (
+                  <div key={i} className="bg-slate-50 rounded-2xl border border-purple-100 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => togglePartC(i)}
+                      className="w-full flex items-start justify-between gap-3 p-4 sm:p-5 text-left cursor-pointer hover:bg-purple-50/50 transition-colors"
+                    >
+                      <h4 className="font-bold text-slate-900 text-sm flex-1">
+                        Q{i + 1}. {qa.q}
+                      </h4>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold">
+                          16 Marks
+                        </span>
+                        {expandedPartC[i] ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+                      </div>
+                    </button>
+                    {expandedPartC[i] && (
+                      <div className="px-4 sm:px-5 pb-4 sm:pb-5">
+                        <div className="bg-white p-4 rounded-xl border border-purple-100 text-xs text-slate-700 space-y-2 whitespace-pre-line leading-relaxed max-h-[600px] overflow-y-auto">
+                          <div className="flex items-center justify-between pb-1 border-b border-purple-100">
+                            <span className="font-bold text-purple-800 uppercase text-[10px] tracking-wider">
+                              Comprehensive Model Answer & Derivation:
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(`Q: ${qa.q}\nAns: ${qa.a}`)}
+                              className="text-slate-400 hover:text-purple-600 transition-colors cursor-pointer text-xs flex items-center gap-1 font-semibold"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy</span>
+                            </button>
+                          </div>
+                          {qa.a}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Exam Pattern Summary Card */}
           <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-2xl p-5 border border-slate-200 space-y-3">

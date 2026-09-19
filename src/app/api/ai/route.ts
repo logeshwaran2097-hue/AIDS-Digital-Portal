@@ -65,6 +65,9 @@ function handleAcademicCurriculumQuery(rawQ: string): { answer: string; suggesti
     const topicMatch = rawQ.match(/Topic:\s*([^\n\r]+)/i)
     if (topicMatch && topicMatch[1]) {
       topicText = topicMatch[1].trim()
+      if (topicText.toLowerCase().includes('full unit scope')) {
+        topicText = ''
+      }
     }
 
     if (mark === 2) {
@@ -233,6 +236,14 @@ function handleAcademicCurriculumQuery(rawQ: string): { answer: string; suggesti
 async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ answer: string; suggestions: string[] }> {
   const rawQ = query.trim()
   const q = rawQ.toLowerCase()
+
+  // ---------------------------------------------------------------------------
+  // 0. ANNA UNIVERSITY R-2021 ACADEMIC INTELLIGENCE ENGINE (TOP PRIORITY)
+  // ---------------------------------------------------------------------------
+  const academicCurriculum = handleAcademicCurriculumQuery(rawQ)
+  if (academicCurriculum) {
+    return academicCurriculum
+  }
 
   try {
     // -------------------------------------------------------------------------
@@ -631,7 +642,11 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
     // -------------------------------------------------------------------------
     // 12. ATTENDANCE REGULATIONS & POLICIES
     // -------------------------------------------------------------------------
-    if (q.includes('attend') || q.includes('leave') || q.includes('od') || q.includes('condonation') || q.includes('percent')) {
+    if (
+      /\b(attendance|attending|absent|present|condonation|minimum attendance)\b/i.test(q) ||
+      /\b(on-duty|on duty)\b/i.test(q) ||
+      /\b(leave|leaves|od request|apply od)\b/i.test(q)
+    ) {
       return {
         answer: `📋 **Institutional Attendance Regulations:**\n\n• **Mandatory Minimum Attendance:** 75% for Anna University & Autonomous Exam Eligibility\n• **Condonation Range:** 65% - 74% (Permitted only with valid medical proof & HOD approval)\n• **Daily Periods:** Attendance marked across 8 periods daily (FN & AN)\n• **Critical Shortage Alert:** Dispatched via In-App Bell and SMS when attendance drops below 75%\n• **On-Duty (OD):** Symposium and project OD requests can be submitted via student portal.`,
         suggestions: ['Daily bell timings?', 'Student dashboard?', 'Academic calendar?'],
@@ -794,6 +809,18 @@ Answer the student or faculty query with high academic rigor, clear headings, de
     }
 
     // High-fidelity Autonomous Generative Engine (Anna University R-2021)
+    const isQuestionGenQuery = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(query)
+    if (isQuestionGenQuery) {
+      const academicResp = handleAcademicCurriculumQuery(query)
+      if (academicResp) {
+        return NextResponse.json({
+          success: true,
+          ...academicResp,
+          source: 'academic-curriculum-engine',
+        })
+      }
+    }
+
     const result = await getDynamicKnowledgeBase(query, session)
     return NextResponse.json({
       success: true,
