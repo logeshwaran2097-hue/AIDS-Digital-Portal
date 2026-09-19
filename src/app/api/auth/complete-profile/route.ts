@@ -503,20 +503,32 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    response.cookies.set('auth-token', token, {
+    const cookieOpts = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: 7 * 24 * 60 * 60,
-    })
-    response.cookies.set('auth_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60,
-    })
+    }
+
+    response.cookies.set('auth-token', token, cookieOpts)
+    response.cookies.set('auth_token', token, cookieOpts)
+
+    const userRole = (updatedUser.role || '').toLowerCase()
+    const roleCookieKey =
+      userRole === 'admin' || userRole === 'super_admin'
+        ? 'auth-token-admin'
+        : userRole === 'student'
+        ? 'auth-token-student'
+        : userRole === 'faculty' || userRole === 'advisor'
+        ? 'auth-token-faculty'
+        : userRole === 'hod'
+        ? 'auth-token-hod'
+        : `auth-token-${userRole}`
+
+    if (roleCookieKey) {
+      response.cookies.set(roleCookieKey, token, cookieOpts)
+    }
 
     // Invalidate dashboard caches to ensure updated profile loads fresh without onboarding popups
     try {

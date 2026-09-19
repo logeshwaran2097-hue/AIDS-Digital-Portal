@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { prisma } from './prisma'
 import { hashOTP, verifyOTP, generateOTP } from './utils'
@@ -81,33 +81,118 @@ export function __setTestSession(session: JWTPayload | null | undefined) {
   _testSessionOverride = session
 }
 
-export async function getSession(): Promise<JWTPayload | null> {
+export async function getSession(targetRole?: string | string[]): Promise<JWTPayload | null> {
   if (_testSessionOverride !== undefined) {
     return _testSessionOverride
   }
 
   try {
     const cookieStore = await cookies()
+
+    // 1. If targetRole(s) explicitly requested (e.g. from requireRoleSession(['student']) or ['admin', 'super_admin'])
+    if (targetRole) {
+      const roles = Array.isArray(targetRole) ? targetRole : [targetRole]
+      for (const r of roles) {
+        const norm = r.toLowerCase()
+        const key =
+          norm === 'admin' || norm === 'super_admin'
+            ? 'auth-token-admin'
+            : norm === 'student'
+            ? 'auth-token-student'
+            : norm === 'faculty' || norm === 'advisor'
+            ? 'auth-token-faculty'
+            : norm === 'hod'
+            ? 'auth-token-hod'
+            : `auth-token-${norm}`
+
+        const roleVal = cookieStore.get(key)?.value
+        if (roleVal) {
+          const verified = await verifyToken(roleVal)
+          if (verified) return verified
+        }
+      }
+    }
+
+    // 2. Check caller header / referer if available to disambiguate API calls
+    try {
+      const h = await headers()
+      const roleHdr = (h.get('x-portal-role') || '').toLowerCase()
+      const ref = (h.get('referer') || '').toLowerCase()
+
+      let preferredCookieKey: string | null = null
+      if (roleHdr === 'admin' || ref.includes('/admin')) {
+        preferredCookieKey = 'auth-token-admin'
+      } else if (roleHdr === 'student' || (ref.includes('/dashboard') && !ref.includes('faculty') && !ref.includes('hod'))) {
+        preferredCookieKey = 'auth-token-student'
+      } else if (roleHdr === 'faculty' || roleHdr === 'advisor' || ref.includes('/faculty-dashboard')) {
+        preferredCookieKey = 'auth-token-faculty'
+      } else if (roleHdr === 'hod' || ref.includes('/hod-dashboard')) {
+        preferredCookieKey = 'auth-token-hod'
+      }
+
+      if (preferredCookieKey) {
+        const prefVal = cookieStore.get(preferredCookieKey)?.value
+        if (prefVal) {
+          const verified = await verifyToken(prefVal)
+          if (verified) return verified
+        }
+      }
+    } catch {}
+
+    // 3. Check general auth-token
     const token =
       cookieStore.get('auth-token')?.value ||
       cookieStore.get('__Secure-auth-token')?.value ||
       cookieStore.get('authToken')?.value
-    if (!token) return null
-    return verifyToken(token)
+
+    if (token) {
+      const verified = await verifyToken(token)
+      if (verified) {
+        if (!targetRole) {
+          return verified
+        }
+        const roles = (Array.isArray(targetRole) ? targetRole : [targetRole]).map(r => r.toLowerCase())
+        if (roles.includes(verified.role.toLowerCase())) {
+          return verified
+        }
+      }
+    }
+
+    // 4. Fallback check for any active role tokens (only if targetRole is not strictly requested)
+    if (!targetRole) {
+      const roleKeys = ['auth-token-admin', 'auth-token-student', 'auth-token-faculty', 'auth-token-hod']
+      for (const k of roleKeys) {
+        const v = cookieStore.get(k)?.value
+        if (v) {
+          const verified = await verifyToken(v)
+          if (verified) return verified
+        }
+      }
+    }
+
+    return null
   } catch {
     return null
   }
 }
 
 export async function requireRoleSession(allowedRoles: string[]): Promise<JWTPayload> {
-  const session = await getSession()
+  const session = await getSession(allowedRoles)
   if (!session) {
     redirect('/login')
   }
 
-  // Super admins and admins have universal access
-  if (session.role === 'admin' || session.role === 'super_admin') {
+  // Check if session role is directly permitted
+  if (allowedRoles.includes(session.role)) {
     return session
+  }
+
+  // Super admins and admins have universal access to admin portals, but must stay in admin
+  if (session.role === 'admin' || session.role === 'super_admin') {
+    if (allowedRoles.includes('admin') || allowedRoles.includes('super_admin')) {
+      return session
+    }
+    redirect('/admin/dashboard')
   }
 
   // HOD can view HOD and faculty portals
@@ -129,37 +214,65 @@ export async function requireRoleSession(allowedRoles: string[]): Promise<JWTPay
     redirect('/faculty-dashboard')
   }
 
-  // Check if role is directly permitted
-  if (allowedRoles.includes(session.role)) {
-    return session
+  // Student can view student portal
+  if (session.role === 'student') {
+    if (allowedRoles.includes('student')) {
+      return session
+    }
+    redirect('/dashboard')
   }
 
-  // Gracefully redirect to the user's own home dashboard instead of kicking them to login
-  if (session.role === 'hod') redirect('/hod-dashboard')
-  if (session.role === 'faculty') {
-    if (session.isAdvisor || session.facultyType === 'advisor') {
-      redirect('/faculty-dashboard/attendance?mode=morning&role=advisor')
-    }
-    redirect('/faculty-dashboard')
-  }
-  if (session.role === 'admin' || session.role === 'super_admin') redirect('/admin/dashboard')
-  redirect('/dashboard')
+  redirect('/login')
 }
 
-export async function setAuthCookie(token: string) {
+export async function setAuthCookie(token: string, role?: string) {
   const cookieStore = await cookies()
-  cookieStore.set('auth-token', token, {
+  const opts = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: 'lax' as const,
     maxAge: 60 * 60 * 24 * 30, // 30 days
     path: '/',
-  })
+  }
+  cookieStore.set('auth-token', token, opts)
+  if (role) {
+    const norm = role.toLowerCase()
+    const roleKey =
+      norm === 'admin' || norm === 'super_admin'
+        ? 'auth-token-admin'
+        : norm === 'student'
+        ? 'auth-token-student'
+        : norm === 'faculty' || norm === 'advisor'
+        ? 'auth-token-faculty'
+        : norm === 'hod'
+        ? 'auth-token-hod'
+        : `auth-token-${norm}`
+    cookieStore.set(roleKey, token, opts)
+  }
 }
 
-export async function clearAuthCookie() {
+export async function clearAuthCookie(role?: string) {
   const cookieStore = await cookies()
-  cookieStore.delete('auth-token')
+  if (role) {
+    const norm = role.toLowerCase()
+    const roleKey =
+      norm === 'admin' || norm === 'super_admin'
+        ? 'auth-token-admin'
+        : norm === 'student'
+        ? 'auth-token-student'
+        : norm === 'faculty' || norm === 'advisor'
+        ? 'auth-token-faculty'
+        : norm === 'hod'
+        ? 'auth-token-hod'
+        : `auth-token-${norm}`
+    cookieStore.delete(roleKey)
+  } else {
+    cookieStore.delete('auth-token')
+    cookieStore.delete('auth-token-student')
+    cookieStore.delete('auth-token-admin')
+    cookieStore.delete('auth-token-faculty')
+    cookieStore.delete('auth-token-hod')
+  }
 }
 
 function normalizeDate(d: string | Date): string {

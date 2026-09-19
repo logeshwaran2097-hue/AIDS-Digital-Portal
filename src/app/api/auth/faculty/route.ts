@@ -100,13 +100,16 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    response.cookies.set('auth-token', result.token, {
+    const cookieOpts = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
-    })
+    }
+
+    response.cookies.set('auth-token', result.token, cookieOpts)
+    response.cookies.set('auth-token-faculty', result.token, cookieOpts)
 
     response.cookies.set('portal_login_role', effectiveRole, {
       httpOnly: false,

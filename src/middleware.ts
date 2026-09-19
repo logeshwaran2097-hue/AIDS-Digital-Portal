@@ -41,6 +41,7 @@ export function middleware(request: NextRequest) {
   // 4. Admin route gate: if navigating to /admin pages without an auth cookie, redirect to /login
   if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/api')) {
     const token =
+      request.cookies.get('auth-token-admin')?.value ||
       request.cookies.get('auth-token')?.value ||
       request.cookies.get('__Secure-auth-token')?.value ||
       request.cookies.get('authToken')?.value

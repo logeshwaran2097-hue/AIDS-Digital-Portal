@@ -149,13 +149,16 @@ export async function POST(request: NextRequest) {
         message: 'Details confirmed! Welcome to your student portal.',
       })
 
-      response.cookies.set('auth-token', newToken, {
+      const cookieOpts = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'lax' as const,
         maxAge: 60 * 60 * 24 * 30, // 30 days
         path: '/',
-      })
+      }
+
+      response.cookies.set('auth-token', newToken, cookieOpts)
+      response.cookies.set('auth-token-student', newToken, cookieOpts)
 
       return response
     }
@@ -384,20 +387,17 @@ export async function POST(request: NextRequest) {
       message: 'Onboarding complete! Your details have been saved.',
     })
 
-    response.cookies.set('auth-token', newToken, {
+    const cookieOpts = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
-    })
-    response.cookies.set('auth_token', newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
+    }
+
+    response.cookies.set('auth-token', newToken, cookieOpts)
+    response.cookies.set('auth-token-student', newToken, cookieOpts)
+    response.cookies.set('auth_token', newToken, cookieOpts)
 
     return response
   } catch (error) {
