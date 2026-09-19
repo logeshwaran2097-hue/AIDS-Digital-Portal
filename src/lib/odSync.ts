@@ -237,7 +237,6 @@ export async function allocateSanctionedAttendance(params: AllocateSanctionedAtt
   // 1. Resolve student info
   const student = await prisma.student.findFirst({
     where: { registerNumber: regUpper },
-    include: { user: true },
   }).catch(() => null)
 
   if (!student) {
@@ -300,7 +299,15 @@ export async function allocateSanctionedAttendance(params: AllocateSanctionedAtt
     attendanceStatus = 'OD'
   }
 
-  const studentDisplayName = studentName || student.user?.name || student.registerNumber
+  let studentDisplayName = studentName
+  if (!studentDisplayName && student.userId) {
+    try {
+      const u = await prisma.user.findUnique({ where: { id: student.userId } })
+      if (u?.name) studentDisplayName = u.name
+    } catch {}
+  }
+  if (!studentDisplayName) studentDisplayName = student.registerNumber
+
   const reviewerName = sanctionedBy || 'Head of Department'
   const remarksText = `Officially sanctioned by ${reviewerName}: ${eventName || applicationType || 'On-Duty Attendance Credited'}`
 
