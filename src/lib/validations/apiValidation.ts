@@ -609,6 +609,7 @@ export const aiQuerySchema = z
   .object({
     message: z.string().min(1).max(2000),
     sessionId: z.string().max(100).optional(),
+    apiKey: z.string().max(200).optional(),
   })
   .strict()
 

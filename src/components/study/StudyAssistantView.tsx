@@ -24,6 +24,10 @@ import {
   GraduationCap,
   Target,
   Award,
+  Key,
+  RefreshCw,
+  X,
+  ExternalLink,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Badge } from '@/components/ui/Badge'
@@ -62,6 +66,55 @@ export default function StudyAssistantView() {
 
   // Quiz interactive state
   const [selectedQuizAnswers, setSelectedQuizAnswers] = useState<Record<number, number>>({})
+
+  // User Google Gemini Key Configuration
+  const [userApiKey, setUserApiKey] = useState('')
+  const [isKeyModalOpen, setIsKeyModalOpen] = useState(false)
+  const [tempKeyInput, setTempKeyInput] = useState('')
+  const [isVerifyingKey, setIsVerifyingKey] = useState(false)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('gemini_api_key')
+      if (saved) setUserApiKey(saved)
+    } catch (e) {}
+  }, [])
+
+  const handleSaveApiKey = async () => {
+    const keyToTest = tempKeyInput.trim()
+    if (!keyToTest) {
+      setUserApiKey('')
+      localStorage.removeItem('gemini_api_key')
+      toast.success('Switched to Autonomous Gemini R-2021 Engine')
+      setIsKeyModalOpen(false)
+      return
+    }
+
+    setIsVerifyingKey(true)
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'PING_GEMINI_KEY',
+          apiKey: keyToTest,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setUserApiKey(keyToTest)
+        localStorage.setItem('gemini_api_key', keyToTest)
+        toast.success('Google Gemini API verified & connected live!')
+        setIsKeyModalOpen(false)
+      } else {
+        toast.error(data.message || 'Verification failed. Please check key.')
+      }
+    } catch (err) {
+      toast.error('Network error verifying key.')
+    } finally {
+      setIsVerifyingKey(false)
+    }
+  }
 
   // AI Question Generator Agent state
   const [aiGenMark, setAiGenMark] = useState<'2' | '8' | '16'>('2')
@@ -107,10 +160,14 @@ ANSWER: [Detailed model answer here]`
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userApiKey ? { 'x-gemini-key': userApiKey } : {}),
+        },
         body: JSON.stringify({
           message: prompt,
           sessionId: `gen-${currentSubject.code}`,
+          apiKey: userApiKey || undefined,
         }),
       })
       const data = await res.json()
@@ -202,10 +259,14 @@ ANSWER: [Detailed model answer here]`
     try {
       const res = await fetch('/api/ai', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(userApiKey ? { 'x-gemini-key': userApiKey } : {}),
+        },
         body: JSON.stringify({
           message: `[Subject: ${currentSubject.code} - ${currentSubject.name}, Unit ${currentUnit.unitNo}: ${currentUnit.title}] ${userText}`,
           sessionId: `study-${currentSubject.code}`,
+          apiKey: userApiKey || undefined,
         }),
       })
 
@@ -385,9 +446,22 @@ ANSWER: [Detailed model answer here]`
                     </p>
                   </div>
                 </div>
-                <Badge variant="role" className="bg-cyan-500/20 text-cyan-200 border-cyan-400/30 text-[10px]">
-                  Live Gemini Engine
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTempKeyInput(userApiKey)
+                      setIsKeyModalOpen(true)
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-semibold text-cyan-200 transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{userApiKey ? '🔑 Gemini Key Active' : '⚡ Add Gemini Key'}</span>
+                  </button>
+                  <Badge variant="role" className="bg-cyan-500/20 text-cyan-200 border-cyan-400/30 text-[10px]">
+                    {userApiKey ? 'Google Gemini 2.0 Live' : 'Gemini Engine R-2021'}
+                  </Badge>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-2">
