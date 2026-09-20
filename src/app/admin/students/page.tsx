@@ -51,12 +51,9 @@ export default async function AdminStudentsPage() {
   const studentsList: StudentRecord[] = joinedRows.map((s) => {
     const rawEmail = s.user_email || ''
     const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
-    const hasLoggedInWebsite = Boolean(
-      (s.user_phone && s.user_phone.trim()) ||
-      (rawEmail && !rawEmail.endsWith('@student.vsb.edu.in')) ||
-      (s.user_email_verified && s.user_last_login)
-    )
-    const effectiveStatus = (s.user_status?.toLowerCase() === 'active' && hasLoggedInWebsite) ? 'active' : 'inactive'
+    // A student is ACTIVE ONLY if they have authenticated and logged into the website
+    const hasLoggedInWebsite = Boolean(s.user_last_login) && s.user_status?.toLowerCase() === 'active'
+    const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
 
     return {
       id: s.id,
