@@ -3,12 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.8.9'
+export const APP_VERSION = '2.8.10'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-20'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Cohort Attendance Analytical Diagrams Suite: Implemented a high-definition visual analytics dashboard in the Administrative Reports view featuring an interactive Vector SVG Donut Diagram with statutory compliance sectors (Eligible ≥ 75%, Condonation Buffer 65%–74.9%, and Critical Shortage < 65%), a 5-tier Frequency Histogram with a 75% cutoff marker, a proportional Macro Day Allocation Stream (Present, OD, ML, Absent), and Section-wise comparative attendance analytics.',
   'Institutional OD & Leave Governance Registry: Enhanced administrative oversight across student On-Duty and Leave records, streamlined department-wide registry views, and established strict statutory role demarcation between Class Advisors and Institutional Executive Officers.',
   'Hackathon Duration-Based Daily Proofs (24h, 36h, 48h & Multi-Day): Dynamically generates daily proof checkpoints for hackathons and multi-day OD events (e.g. Day 1 Kickoff & Check-in, Day 2 Overnight Sprint & Mid-Evaluation, Day 3 Final Prototype & Jury Demo). Students can upload live geo-tagged proofs for each day individually, with full Sunday exclusion and multi-photo dossier inspection across Student, Class Advisor, and HOD dashboards.',
   'Sunday Exclusion in Academic Leave & OD Calculation: Sundays are strictly excluded from leave duration counts and attendance allocations across all applications, review modals, official dossiers, dashboards, and sync engines (e.g., Friday to Monday now accurately equals 3 academic working days instead of 4).',
