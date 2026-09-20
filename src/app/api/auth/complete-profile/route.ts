@@ -263,6 +263,7 @@ export async function POST(request: NextRequest) {
           ...(body.profileImage ? { profileImage: body.profileImage } : {}),
           ...(passwordHash ? { passwordHash, mustChangePassword: false } : { mustChangePassword: false }),
           emailVerified: true,
+          status: 'active',
           updatedAt: new Date(),
         },
       })

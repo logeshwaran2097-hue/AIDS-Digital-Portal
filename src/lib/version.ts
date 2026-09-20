@@ -3,12 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.8.11'
+export const APP_VERSION = '2.8.12'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-20'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Dynamic Real-Time Student Activity Status: Synchronized student status across administrative directories, rosters, and API endpoints so that accounts display "ACTIVE" (emerald pill with pulse indicator) exclusively when students have authenticated and logged into the portal website. Un-onboarded candidates who have never logged in accurately show "INACTIVE" (slate pill), with live KPI breakdown displaying exact active vs inactive headcounts and dedicated Active/Inactive status filtering.',
   'Streamlined Professional Digital Portal PDF Attestation: Redesigned the institutional Digital Portal Document attestation block across all generated PDFs (Student Progression Reports, Attendance Registers, Analytics Dossiers, Bus Passes, Gate Passes) into an ultra-clean, simple, and executive 24mm authenticated electronic copy declaration. Replaced bulky legal paragraphs with a concise 2-sentence statutory verification note, subtle brand accent, and compact metadata strip.',
   'Cohort Attendance Analytical Diagrams Suite: Implemented a high-definition visual analytics dashboard in the Administrative Reports view featuring an interactive Vector SVG Donut Diagram with statutory compliance sectors (Eligible ≥ 75%, Condonation Buffer 65%–74.9%, and Critical Shortage < 65%), a 5-tier Frequency Histogram with a 75% cutoff marker, a proportional Macro Day Allocation Stream (Present, OD, ML, Absent), and Section-wise comparative attendance analytics.',
   'Institutional OD & Leave Governance Registry: Enhanced administrative oversight across student On-Duty and Leave records, streamlined department-wide registry views, and established strict statutory role demarcation between Class Advisors and Institutional Executive Officers.',

@@ -61,7 +61,9 @@ export async function GET(request: Request) {
           u.name as user_name,
           u.email as user_email,
           u.phone as user_phone,
-          u.status as user_status
+          u.status as user_status,
+          u."lastLogin" as user_last_login,
+          u."emailVerified" as user_email_verified
         FROM "Student" s
         LEFT JOIN "User" u ON s."userId" = u.id
         ORDER BY s."registerNumber" ASC
@@ -70,6 +72,13 @@ export async function GET(request: Request) {
       const result = rows.map((s) => {
         const rawEmail = s.user_email || ''
         const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
+        const hasLoggedInWebsite = Boolean(
+          (s.user_phone && s.user_phone.trim()) ||
+          (rawEmail && !rawEmail.endsWith('@student.vsb.edu.in')) ||
+          (s.user_email_verified && s.user_last_login)
+        )
+        const effectiveStatus = (s.user_status?.toLowerCase() === 'active' && hasLoggedInWebsite) ? 'active' : 'inactive'
+
         return {
           id: s.id,
           userId: s.userId,
@@ -85,7 +94,7 @@ export async function GET(request: Request) {
           batch: s.batch || '',
           section: s.section,
           advisorName: s.advisorName || '',
-          status: s.user_status || 'active',
+          status: effectiveStatus,
           bloodGroup: s.bloodGroup,
           residencyStatus: s.residencyStatus,
           busNo: s.busNo || null,
@@ -143,6 +152,12 @@ export async function GET(request: Request) {
       const u = userMap.get(s.userId)
       const rawEmail = u?.email || ''
       const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
+      const hasLoggedInWebsite = Boolean(
+        (u?.phone && u.phone.trim()) ||
+        (rawEmail && !rawEmail.endsWith('@student.vsb.edu.in')) ||
+        (u?.emailVerified && u?.lastLogin)
+      )
+      const effectiveStatus = (u?.status?.toLowerCase() === 'active' && hasLoggedInWebsite) ? 'active' : 'inactive'
       const secKey = (s.section || 'A').toUpperCase()
       const resolvedAdvisor =
         (s as any).advisorName ||
@@ -169,7 +184,7 @@ export async function GET(request: Request) {
         batch: (s as any).batch || '',
         section: s.section,
         advisorName: resolvedAdvisor,
-        status: u?.status || 'active',
+        status: effectiveStatus,
         bloodGroup: (s as any).bloodGroup,
         residencyStatus: (s as any).residencyStatus,
         busNo: s.busNo || null,

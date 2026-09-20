@@ -38,7 +38,9 @@ export default async function AdminStudentsPage() {
         u.name as user_name,
         u.email as user_email,
         u.phone as user_phone,
-        u.status as user_status
+        u.status as user_status,
+        u."lastLogin" as user_last_login,
+        u."emailVerified" as user_email_verified
       FROM "Student" s
       LEFT JOIN "User" u ON s."userId" = u.id
       ORDER BY s."registerNumber" ASC
@@ -49,6 +51,13 @@ export default async function AdminStudentsPage() {
   const studentsList: StudentRecord[] = joinedRows.map((s) => {
     const rawEmail = s.user_email || ''
     const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
+    const hasLoggedInWebsite = Boolean(
+      (s.user_phone && s.user_phone.trim()) ||
+      (rawEmail && !rawEmail.endsWith('@student.vsb.edu.in')) ||
+      (s.user_email_verified && s.user_last_login)
+    )
+    const effectiveStatus = (s.user_status?.toLowerCase() === 'active' && hasLoggedInWebsite) ? 'active' : 'inactive'
+
     return {
       id: s.id,
       userId: s.userId,
@@ -63,7 +72,7 @@ export default async function AdminStudentsPage() {
       batch: s.batch || '',
       section: s.section,
       advisorName: s.advisorName || '',
-      status: s.user_status || 'active',
+      status: effectiveStatus,
       bloodGroup: s.bloodGroup || null,
       residencyStatus: s.residencyStatus || null,
       busNo: s.busNo || null,

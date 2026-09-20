@@ -382,9 +382,9 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     return { success: false, message: 'Invalid Register Number, Email, or Password.' }
   }
 
-  // 4. Check account status
-  if (user.status && user.status.toLowerCase() !== 'active') {
-    return { success: false, message: 'Student account is suspended or inactive. Please contact your administrator.' }
+  // 4. Check account status (allow inactive accounts to log in and activate, block suspended)
+  if (user.status && user.status.toLowerCase() === 'suspended') {
+    return { success: false, message: 'Student account has been suspended. Please contact your administrator.' }
   }
 
   // 5. Verify Password strictly against bcrypt hash
@@ -423,11 +423,12 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
     passwordChangeRequired = true
   }
 
-  // Update last login
+  // Update last login & activate status upon logging into website
   await prisma.user.update({
     where: { id: user.id },
-    data: { lastLogin: new Date() },
+    data: { lastLogin: new Date(), status: 'active' },
   }).catch(() => {})
+  user.status = 'active'
 
   const token = await createToken({
     userId: user.id,
