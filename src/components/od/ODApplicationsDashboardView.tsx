@@ -915,12 +915,28 @@ export function ODApplicationsDashboardView({
                       >
                         {app.applicationType}
                       </span>
-                      <div className="flex items-center gap-1.5">
-                        <Award className="w-4 h-4 text-amber-600 shrink-0" />
-                        <h4 className="text-sm font-black text-[#071A3D] truncate">
-                          {app.eventName || 'Academic Permission'}
-                        </h4>
-                      </div>
+                      {(() => {
+                        const isLeave = /leave|personal|family|emergency|medical/i.test(app.applicationType)
+                        const displayEvent =
+                          app.eventName && app.eventName !== 'Academic Activity'
+                            ? app.eventName
+                            : isLeave
+                            ? 'Family & Personal Requisition'
+                            : 'Academic On-Duty Activity'
+
+                        return (
+                          <div className="flex items-center gap-1.5">
+                            {isLeave ? (
+                              <FileText className="w-4 h-4 text-rose-500 shrink-0" />
+                            ) : (
+                              <Award className="w-4 h-4 text-amber-600 shrink-0" />
+                            )}
+                            <h4 className="text-sm font-black text-[#071A3D] truncate" title={displayEvent}>
+                              {displayEvent}
+                            </h4>
+                          </div>
+                        )
+                      })()}
                     </div>
 
                     {/* Inclusive Dates & Duration */}
@@ -1352,7 +1368,13 @@ export function ODApplicationsDashboardView({
                       </td>
                       <td className="p-3.5">
                         <div>
-                          <span className="font-bold text-[#071A3D] block">{app.eventName}</span>
+                          <span className="font-bold text-[#071A3D] block">
+                            {app.eventName && app.eventName !== 'Academic Activity'
+                              ? app.eventName
+                              : /leave|personal|family/i.test(app.applicationType)
+                              ? 'Family & Personal Requisition'
+                              : 'Academic On-Duty Activity'}
+                          </span>
                           <span className="text-[10px] text-gray-500">{app.applicationType}</span>
                         </div>
                       </td>
