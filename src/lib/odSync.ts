@@ -278,15 +278,11 @@ export async function allocateSanctionedAttendance(params: AllocateSanctionedAtt
   while (cursor <= endDate && loopLimit-- > 0) {
     const dayOfWeek = cursor.getDay() // 0 = Sunday
     const dStr = cursor.toISOString().split('T')[0]
-    // Include all requested dates (skip Sunday unless it's a single day event)
-    if (dayOfWeek !== 0 || startDate.getTime() === endDate.getTime()) {
+    // Sundays are not calculated in academic attendance: strictly skip Sundays
+    if (dayOfWeek !== 0) {
       dateList.push(dStr)
     }
     cursor.setDate(cursor.getDate() + 1)
-  }
-
-  if (dateList.length === 0) {
-    dateList.push(from)
   }
 
   // 4. Determine status: OD or ML (both count as attendance credited in academic portal)

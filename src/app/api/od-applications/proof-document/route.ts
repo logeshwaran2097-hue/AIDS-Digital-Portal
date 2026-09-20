@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { VSB_LOGO_BASE64 } from '@/lib/logoBase64'
+import { calculateAcademicDays } from '@/lib/academicDays'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,13 +87,11 @@ export async function GET(request: Request) {
     else rawProofDocName = 'Official_Student_Requisition_Letter.pdf'
   }
 
-  // Calculate days
-  const fromTime = new Date(fromDate).getTime()
-  const toTime = new Date(toDate).getTime()
-  let daysApplied = 4
-  if (!isNaN(fromTime) && !isNaN(toTime)) {
-    const diff = Math.round((toTime - fromTime) / (1000 * 60 * 60 * 24)) + 1
-    if (diff > 0) daysApplied = diff
+  // Calculate days (strictly excluding Sundays as non-working academic days)
+  let daysApplied = 3
+  if (fromDate && toDate) {
+    const calculated = calculateAcademicDays(fromDate, toDate)
+    if (calculated > 0) daysApplied = calculated
   }
 
   // Leave records

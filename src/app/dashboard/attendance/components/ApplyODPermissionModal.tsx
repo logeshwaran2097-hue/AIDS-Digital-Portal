@@ -26,6 +26,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
+import { calculateAcademicDays, formatAcademicDuration } from '@/lib/academicDays'
 
 export type ApplicationType =
   | 'Technical Hackathon / Competition OD'
@@ -416,14 +417,9 @@ export function ApplyODPermissionModal({
     appType === 'Industry Internship / Project Work OD'
 
 
-  // Calculate Total Days
+  // Calculate Total Days (Sundays are strictly excluded from academic duration)
   const calculateDays = () => {
-    if (!fromDate || !toDate) return 1
-    const start = new Date(fromDate)
-    const end = new Date(toDate)
-    const diffTime = end.getTime() - start.getTime()
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-    return diffDays > 0 ? diffDays : 1
+    return calculateAcademicDays(fromDate, toDate)
   }
 
   // Handle File Upload to Base64
@@ -648,7 +644,7 @@ export function ApplyODPermissionModal({
                 </div>
                 <div className="flex justify-between py-1.5">
                   <span className="text-gray-500">Duration:</span>
-                  <span className="font-bold text-[#1455D9]">{fromDate} to {toDate} ({calculateDays()} Day/s)</span>
+                  <span className="font-bold text-[#1455D9]">{fromDate} to {toDate} ({formatAcademicDuration(fromDate, toDate)})</span>
                 </div>
                 <div className="flex justify-between py-1.5">
                   <span className="text-gray-500">Event / Organization:</span>
@@ -772,7 +768,7 @@ export function ApplyODPermissionModal({
                   </span>
                   {fromDate && toDate && (
                     <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-[#1455D9] text-[11px] font-black">
-                      Total: {calculateDays()} Day(s)
+                      Total: {formatAcademicDuration(fromDate, toDate)} (Excl. Sundays)
                     </span>
                   )}
                 </div>

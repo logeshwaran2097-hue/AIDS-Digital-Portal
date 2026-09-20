@@ -10,6 +10,7 @@ function normalizeIndianPhone(raw: string | null | undefined): string {
 }
 
 import React, { useState, useEffect } from 'react'
+import { formatAcademicDuration } from '@/lib/academicDays'
 import {
   X,
   CheckCircle2,
@@ -376,13 +377,11 @@ export function AdvisorODReviewModal({
   const displayFromDate = effectiveFromDate || '2026-09-14'
   const displayToDate = effectiveToDate || displayFromDate
 
-  const effectiveTotalDays =
-    application?.days ||
-    application?.totalDays ||
-    (parsed.totalDays && !['2 Days', '1 Day', '1 day'].includes(parsed.totalDays) ? parsed.totalDays : null) ||
-    (auditLog?.details?.match(/\(([^)]+days?)\)/i)?.[1]) ||
-    parsed.totalDays ||
-    '1 Day'
+  const effectiveTotalDays = formatAcademicDuration(
+    displayFromDate,
+    displayToDate,
+    application?.days || application?.totalDays || parsed.totalDays
+  )
 
   const effectiveEventName = getContextualEventName()
   const effectiveReason = extractReason()

@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { dispatchWebPushNotification } from '@/lib/pushNotifier'
 import { validateBody, odApplicationReviewSchema, odApplicationPostSchema, odApplicationSubmitSchema, odAdvisorProofSchema } from '@/lib/validations/apiValidation'
 import { allocateSanctionedAttendance } from '@/lib/odSync'
+import { calculateAcademicDays, formatAcademicDuration } from '@/lib/academicDays'
 
 export const dynamic = 'force-dynamic'
 
@@ -290,7 +291,7 @@ export async function GET(request: Request) {
       const appType = typeMatch ? typeMatch[1].trim() : 'Personal / Emergency Leave'
       const fromDate = durationMatch ? durationMatch[1] : ''
       const toDate = durationMatch ? durationMatch[2] : ''
-      const days = durationMatch?.[3] ? durationMatch[3].trim() : ''
+      const days = formatAcademicDuration(fromDate, toDate, durationMatch?.[3] ? durationMatch[3].trim() : '')
       const eventName = eventMatch ? eventMatch[1].trim() : 'Academic / Personal Permission'
       const reason = reasonMatch ? reasonMatch[1].trim() : ''
       const proofs = proofMatch ? proofMatch[1].trim() : 'Digital verification'
@@ -364,7 +365,7 @@ export async function GET(request: Request) {
         applicationType: appType,
         fromDate,
         toDate,
-        days: days || '2 Days',
+        days: days || formatAcademicDuration(fromDate, toDate, '1 day'),
         eventName,
         reason,
         proofs,
@@ -436,7 +437,7 @@ export async function GET(request: Request) {
           applicationType: appType,
           fromDate,
           toDate,
-          days: '4 Days',
+          days: formatAcademicDuration(fromDate, toDate, '1 day'),
           eventName,
           reason: notif.message,
           proofs: 'Verified Student Requisition',
@@ -666,7 +667,7 @@ export async function PATCH(request: Request) {
         studentName,
         fromDate: (body as any)?.fromDate,
         toDate: (body as any)?.toDate,
-        dates: dates || (targetAudit ? targetAudit.details : undefined),
+        dates: dates || (targetAudit?.details ?? undefined),
         applicationType: (body as any)?.applicationType,
         eventName,
         sanctionedBy: reviewerName,
@@ -813,7 +814,8 @@ export async function POST(request: Request) {
     }
 
     const name = session.role === 'student' ? (session.name || studentName || 'Student') : (studentName || session?.name || 'Student')
-    const days = totalDays ? Number(totalDays) || 1 : 1
+    const computedAcademicDays = calculateAcademicDays(fromDate, toDate)
+    const days = computedAcademicDays > 0 ? computedAcademicDays : (totalDays ? Number(totalDays) || 1 : 1)
     const eventSummary = eventName || projectTitle || organizer || 'Academic Activity'
 
     // Formulate Proofs List string

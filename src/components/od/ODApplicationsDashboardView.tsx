@@ -11,6 +11,7 @@ function normalizeIndianPhone(raw: string | null | undefined): string {
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import { formatAcademicDuration } from '@/lib/academicDays'
 import {
   FileText,
   CheckCircle2,
@@ -936,7 +937,7 @@ export function ODApplicationsDashboardView({
                             {app.fromDate} &rarr; {app.toDate}
                           </span>
                           <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.2 rounded-md border border-blue-200 inline-block">
-                            Duration: {app.days}
+                            Duration: {formatAcademicDuration(app.fromDate, app.toDate, app.days)}
                           </span>
                         </div>
                       </div>
@@ -1359,7 +1360,7 @@ export function ODApplicationsDashboardView({
                         <span className="font-bold text-gray-800 block text-[11px]">
                           {app.fromDate} &rarr; {app.toDate}
                         </span>
-                        <span className="text-[10px] text-blue-700 font-bold">{app.days}</span>
+                        <span className="text-[10px] text-blue-700 font-bold">{formatAcademicDuration(app.fromDate, app.toDate, app.days)}</span>
                       </td>
                       <td className="p-3.5 text-center">
                         <span
