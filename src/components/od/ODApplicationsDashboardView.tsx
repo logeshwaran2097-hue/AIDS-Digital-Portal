@@ -534,14 +534,16 @@ export function ODApplicationsDashboardView({
                 ? 'Student On-Duty & Leave Requisitions · Live Endorsement Clearance & Attendance Sync · B.Tech AI & DS'
                 : viewRole === 'hod'
                 ? 'Department Head Sanctions & Institutional Approvals · Absence & Event Records · B.Tech AI & DS'
+                : viewRole === 'admin'
+                ? 'Institutional Administrative Registry · Department-Wide OD & Absence Oversight · B.Tech AI & DS'
                 : 'Class Advisor Section Advisory · Official Institutional Student Representation & Absence Records · B.Tech AI & DS'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Mode Banner / Class Jurisdiction (Only for Student and Advisor, hidden for HOD) ── */}
-      {viewRole !== 'hod' && (
+      {/* ── Mode Banner / Class Jurisdiction (Only for Student and Advisor, hidden for HOD & Admin) ── */}
+      {viewRole !== 'hod' && viewRole !== 'admin' && (
         <div
           className={cn(
             'text-white rounded-2xl shadow-md p-3.5 px-5 flex items-center justify-between gap-3',
