@@ -346,11 +346,11 @@ export function VersionUpdateNotifier() {
         cleanUrl.searchParams.set('_t', Date.now().toString())
         cleanUrl.searchParams.set('updated', 'true')
         window.location.replace(cleanUrl.toString())
-      } else {
-        window.location.reload()
       }
     } catch {
-      window.location.reload()
+      if (typeof window !== 'undefined') {
+        window.location.reload()
+      }
     }
   }
 
