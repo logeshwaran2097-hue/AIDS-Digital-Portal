@@ -83,6 +83,10 @@ export function VersionUpdateNotifier() {
 
       setLatestVersion(serverVer)
 
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('portal-version-detected', { detail: { version: serverVer } }))
+      }
+
       if (data.releaseHighlights && Array.isArray(data.releaseHighlights)) {
         setReleaseHighlights(data.releaseHighlights)
       }
@@ -289,7 +293,7 @@ export function VersionUpdateNotifier() {
       setDownloadedMb(2.9)
       setCurrentStageIdx(2)
 
-      // Stage 3: Service Worker Refresh
+      // Stage 3: Service Worker Refresh & Unregister
       if (waitingWorkerRef.current) {
         try {
           waitingWorkerRef.current.postMessage({ type: 'SKIP_WAITING' })
@@ -317,15 +321,34 @@ export function VersionUpdateNotifier() {
       // Stage 5: Finalization & Seamless Reload (Preserving User Session)
       try {
         localStorage.setItem(LOCAL_STORAGE_VERSION_KEY, latestVersion)
+        localStorage.setItem('last_notified_app_version', latestVersion)
         sessionStorage.setItem('portal_just_updated', 'true')
       } catch {}
 
       await new Promise((r) => setTimeout(r, 600))
 
-      // Keep user logged in and stay on their current dashboard/page
-      const currentPath = typeof window !== 'undefined' ? (window.location.pathname + window.location.search) : '/dashboard'
-      const targetDomain = isRedirectNeeded ? OFFICIAL_PRODUCTION_URL : window.location.origin
-      window.location.href = `${targetDomain}${currentPath}`
+      // Unregister service workers right before reload so next load pulls freshest bundle
+      if ('serviceWorker' in navigator) {
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations()
+          for (const reg of regs) {
+            await reg.unregister()
+          }
+        } catch {}
+      }
+
+      // Keep user logged in and stay on their current dashboard/page with cache-busting URL replace
+      if (typeof window !== 'undefined') {
+        const targetDomain = isRedirectNeeded ? OFFICIAL_PRODUCTION_URL : window.location.origin
+        const currentPath = window.location.pathname || '/dashboard'
+        const cleanUrl = new URL(`${targetDomain}${currentPath}`)
+        cleanUrl.searchParams.set('_v', latestVersion)
+        cleanUrl.searchParams.set('_t', Date.now().toString())
+        cleanUrl.searchParams.set('updated', 'true')
+        window.location.replace(cleanUrl.toString())
+      } else {
+        window.location.reload()
+      }
     } catch {
       window.location.reload()
     }

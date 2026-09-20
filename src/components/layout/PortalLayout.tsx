@@ -163,6 +163,24 @@ export function PortalLayout({
   const [menuMetaMap, setMenuMetaMap] = useState<Record<string, { label?: string; badgeText?: string; badgeColor?: string }>>({})
   const [apiMenuCounts, setApiMenuCounts] = useState<Record<string, number>>({})
   const [isMenuNotifOpen, setIsMenuNotifOpen] = useState(false)
+  const [activeVersion, setActiveVersion] = useState<string>(APP_VERSION_LABEL)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('vsb_portal_app_version')
+      if (stored) {
+        setActiveVersion(`v${stored}`)
+      }
+    } catch {}
+
+    const onVersionDetected = (e: any) => {
+      if (e?.detail?.version) {
+        setActiveVersion(`v${e.detail.version}`)
+      }
+    }
+    window.addEventListener('portal-version-detected', onVersionDetected)
+    return () => window.removeEventListener('portal-version-detected', onVersionDetected)
+  }, [])
 
   // Direct 1-Click PWA App Installation
   const deferredInstallPrompt = useRef<any>(null)
@@ -1006,7 +1024,7 @@ export function PortalLayout({
                   title="Tap to check for real-time app updates"
                   className="px-1.5 py-0.5 rounded-md bg-cyan-400/20 hover:bg-cyan-400/30 border border-cyan-400/40 text-cyan-300 text-[10px] font-black tracking-wider cursor-pointer active:scale-95 transition-transform"
                 >
-                  {APP_VERSION_LABEL}
+                  {activeVersion}
                 </button>
               </div>
               <p className="text-[11px] text-[#22C7E8] font-bold tracking-wider truncate">V.S.B. Engineering College</p>
@@ -1187,7 +1205,7 @@ export function PortalLayout({
               title="Check for Portal Updates"
               className="font-bold text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/25 px-2 py-0.5 rounded-md border border-cyan-500/20 cursor-pointer active:scale-95 transition-all text-[10px]"
             >
-              {APP_VERSION_LABEL} · Check Update
+              {activeVersion} · Check Update
             </button>
           </div>
           <button
@@ -1631,11 +1649,11 @@ export function PortalLayout({
             <button
               type="button"
               onClick={triggerPortalUpdateCheck}
-              title={`Official Release Version ${APP_VERSION_LABEL} · Click to check for updates`}
+              title={`Official Release Version ${activeVersion} · Click to check for updates`}
               className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200/80 bg-gradient-to-r from-blue-50/90 to-indigo-50/90 hover:from-blue-100 hover:to-indigo-100 text-[#1455D9] text-xs font-black shadow-2xs cursor-pointer transition-all active:scale-95"
             >
               <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
-              <span>{APP_VERSION_LABEL}</span>
+              <span>{activeVersion}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
             </button>
 
