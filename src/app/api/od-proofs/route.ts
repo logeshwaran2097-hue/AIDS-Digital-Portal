@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth'
 import { syncSanctionedODsForStudent, allocateSanctionedAttendance } from '@/lib/odSync'
 import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import { validateBody, odProofActionSchema } from '@/lib/validations/apiValidation'
+import { generateDailyProofCheckpoints, parseDailyProofs } from '@/lib/dailyProofs'
 
 export const dynamic = 'force-dynamic'
 
@@ -212,7 +213,7 @@ export async function POST(request: Request) {
 
     // 1. REGISTER NEW OD / HACKATHON
     if (action === 'REGISTER_OD') {
-      const { eventName, category, eventDate, venueCollege } = body
+      const { eventName, category, eventDate, venueCollege, durationFormat } = body as any
 
       if (!eventName || !eventDate) {
         return NextResponse.json({ success: false, message: 'Event Name and Date are required' }, { status: 400 })
@@ -236,6 +237,10 @@ export async function POST(request: Request) {
       const section = student?.section || 'B'
       const semester = student?.semester || 3
 
+      const format = durationFormat || (category === 'Hackathon' ? '24 Hours (2 Days)' : 'Single Day (8 Hours)')
+      const checkpoints = generateDailyProofCheckpoints(category || 'Hackathon', eventDate, format)
+      const dailyProofs = JSON.stringify(checkpoints)
+
       const newProof = await prisma.oDProof.create({
         data: {
           studentId: student?.id || null,
@@ -247,6 +252,8 @@ export async function POST(request: Request) {
           eventName: eventName.trim(),
           category: category || 'Hackathon',
           eventDate,
+          durationFormat: format,
+          dailyProofs,
           venueCollege: venueCollege ? venueCollege.trim() : null,
           status: 'pending_proofs',
         },
@@ -254,14 +261,14 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        message: 'OD Event registered! Please upload your Live Geo-tag photo on the event day.',
+        message: 'OD Event registered! Please upload your daily proof checkpoints as per the hackathon schedule.',
         proof: newProof,
       })
     }
 
-    // 2. UPLOAD STAGE 1: GEOTAGGED VENUE PHOTO
+    // 2. UPLOAD STAGE 1: GEOTAGGED VENUE & DAILY SPRINT PHOTO
     if (action === 'UPLOAD_GEOTAG') {
-      const { id, geoPhotoUrl, latitude, longitude, collegeName, collegeAddress, geoAddress, geoTimestamp } = body
+      const { id, geoPhotoUrl, latitude, longitude, collegeName, collegeAddress, geoAddress, geoTimestamp, dayNumber, caption } = body as any
 
       if (!id || !geoPhotoUrl) {
         return NextResponse.json({ success: false, message: 'Proof ID and photo data required' }, { status: 400 })
@@ -276,14 +283,38 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: false, message: 'Forbidden: You cannot upload proofs for another student\'s OD record.' }, { status: 403 })
       }
 
-      const updatedStatus = existing.certificateUrl ? 'under_review' : 'pending_proofs'
       const finalCollege = (collegeName || existing.venueCollege || '').trim()
       const finalAddress = (collegeAddress || geoAddress || '').trim()
+      const targetDay = Number(dayNumber) || 1
+
+      // Update daily checkpoints array
+      const currentDailyProofs = parseDailyProofs(existing)
+      const updatedCheckpoints = currentDailyProofs.map((item) => {
+        if (item.dayNumber === targetDay) {
+          return {
+            ...item,
+            photoUrl: geoPhotoUrl,
+            geoAddress: finalAddress || item.geoAddress || null,
+            timestamp: geoTimestamp ? new Date(geoTimestamp).toISOString() : new Date().toISOString(),
+            caption: caption || item.caption || null,
+            status: 'submitted' as const,
+          }
+        }
+        return item
+      })
+
+      // Check if all daily checkpoints are submitted
+      const allDailySubmitted = updatedCheckpoints.every((item) => item.status === 'submitted' && Boolean(item.photoUrl))
+      const updatedStatus = allDailySubmitted && existing.certificateUrl ? 'under_review' : 'pending_proofs'
+
+      // Keep primary geoPhotoUrl pointing to day 1 or fallback
+      const primaryPhoto = targetDay === 1 || !existing.geoPhotoUrl ? geoPhotoUrl : existing.geoPhotoUrl
 
       const updated = await prisma.oDProof.update({
         where: { id },
         data: {
-          geoPhotoUrl,
+          geoPhotoUrl: primaryPhoto,
+          dailyProofs: JSON.stringify(updatedCheckpoints),
           latitude: latitude ? Number(latitude) : null,
           longitude: longitude ? Number(longitude) : null,
           venueCollege: finalCollege || null,
@@ -296,8 +327,8 @@ export async function POST(request: Request) {
       // Notify Class Advisor
       await prisma.notification.create({
         data: {
-          title: `📍 [OD Geo-Tag Uploaded] ${existing.studentName} (${existing.registerNumber})`,
-          message: `${existing.studentName} uploaded a live geo-tagged venue photo for "${existing.eventName}" at ${finalCollege || 'host venue'}${finalAddress ? ` (${finalAddress})` : ''}.`,
+          title: `📍 [OD Day ${targetDay} Proof Uploaded] ${existing.studentName} (${existing.registerNumber})`,
+          message: `${existing.studentName} uploaded Day ${targetDay} live geo-tag photo for "${existing.eventName}" (${existing.category})${caption ? `: "${caption}"` : ''}.`,
           target: 'faculty',
           createdByName: existing.studentName,
           status: 'published',
@@ -306,7 +337,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        message: 'Live Geo-Tag Photo verified & uploaded successfully!',
+        message: `Day ${targetDay} Geo-Tag Photo verified & uploaded successfully!`,
         proof: updated,
       })
     }

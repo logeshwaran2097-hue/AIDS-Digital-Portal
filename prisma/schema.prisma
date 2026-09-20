@@ -590,8 +590,10 @@ model ODProof {
   eventDate          String
   venueCollege       String?
   
-  // Phase 1: Geo-tag Venue Photo
+  // Phase 1: Geo-tag Venue Photo & Daily Proofs (for 24h, 36h, 48h Hackathons & Multi-day events)
   geoPhotoUrl        String?
+  dailyProofs        String?   // JSON-serialized DailyProofItem[] array
+  durationFormat     String?   @default("Single Day (8 Hours)")
   latitude           Float?
   longitude          Float?
   geoAddress         String?

@@ -28,6 +28,11 @@ import {
   Download,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
+import {
+  parseDailyProofs,
+  DailyProofItem,
+  HackathonDurationFormat,
+} from '@/lib/dailyProofs'
 
 export interface ODProofItem {
   id: string
@@ -41,6 +46,8 @@ export interface ODProofItem {
   eventName: string
   category: string
   eventDate: string
+  durationFormat?: string | null
+  dailyProofs?: string | null
   venueCollege?: string | null
   geoPhotoUrl?: string | null
   latitude?: number | null
@@ -119,17 +126,23 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     window.open(url, '_blank')
   }
 
-  // Register Form
+  // Register Form with Hackathon Durations (24h, 36h, 48h)
   const [registerForm, setRegisterForm] = useState({
     eventName: '',
     category: 'Hackathon',
-    eventDate: new Date().toISOString().split('T')[0],
+    durationFormat: '24 Hours (2 Days)' as HackathonDurationFormat,
+    fromDate: new Date().toISOString().split('T')[0],
+    toDate: new Date().toISOString().split('T')[0],
     venueCollege: '',
   })
 
-  // Geo-tag Upload Form (Image contains embedded GPS timestamp & map from GeoTag/GPS camera)
+  // Geo-tag Upload Form (With Day selection & progress checkpoint caption)
   const [geoForm, setGeoForm] = useState({
     photoUrl: '',
+    dayNumber: 1,
+    dayTitle: '',
+    date: '',
+    caption: '',
   })
 
   // Certificate Upload Form
@@ -173,12 +186,20 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     e.preventDefault()
     setLoading(true)
     try {
+      const eventDate = registerForm.fromDate === registerForm.toDate
+        ? registerForm.fromDate
+        : `${registerForm.fromDate} to ${registerForm.toDate}`
+
       const res = await fetch('/api/od-proofs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'REGISTER_OD',
-          ...registerForm,
+          eventName: registerForm.eventName,
+          category: registerForm.category,
+          durationFormat: registerForm.durationFormat,
+          eventDate,
+          venueCollege: registerForm.venueCollege,
         }),
       })
       const result = await res.json()
@@ -189,7 +210,9 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
         setRegisterForm({
           eventName: '',
           category: 'Hackathon',
-          eventDate: new Date().toISOString().split('T')[0],
+          durationFormat: '24 Hours (2 Days)',
+          fromDate: new Date().toISOString().split('T')[0],
+          toDate: new Date().toISOString().split('T')[0],
           venueCollege: '',
         })
       } else {
@@ -202,7 +225,7 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     }
   }
 
-  // 3. SUBMIT GEOTAG PHOTO
+  // 3. SUBMIT GEOTAG PHOTO FOR SPECIFIC DAY
   const handleGeoSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedProof) return
@@ -220,6 +243,8 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
           action: 'UPLOAD_GEOTAG',
           id: selectedProof.id,
           geoPhotoUrl: geoForm.photoUrl,
+          dayNumber: geoForm.dayNumber,
+          caption: geoForm.caption,
           geoTimestamp: new Date().toISOString(),
         }),
       })
@@ -277,10 +302,17 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
     }
   }
 
-  const openGeoModal = (p: ODProofItem) => {
+  const openGeoModal = (p: ODProofItem, targetDay?: number) => {
     setSelectedProof(p)
+    const checkpoints = parseDailyProofs(p)
+    const day = targetDay || checkpoints.find((c) => !c.photoUrl)?.dayNumber || 1
+    const checkpoint = checkpoints.find((c) => c.dayNumber === day) || checkpoints[0]
     setGeoForm({
-      photoUrl: p.geoPhotoUrl || '',
+      photoUrl: checkpoint?.photoUrl || '',
+      dayNumber: day,
+      dayTitle: checkpoint?.title || `Day ${day} Proof`,
+      date: checkpoint?.date || p.eventDate,
+      caption: checkpoint?.caption || '',
     })
     setIsGeoModalOpen(true)
   }
@@ -447,7 +479,10 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
         ) : (
           <div className="grid gap-4">
             {filteredProofs.map((p) => {
-              const isGeoUploaded = Boolean(p.geoPhotoUrl)
+              const checkpoints = parseDailyProofs(p)
+              const submittedDailyProofs = checkpoints.filter((c) => c.status === 'submitted' && Boolean(c.photoUrl))
+              const isAllDaysCompleted = submittedDailyProofs.length === checkpoints.length && checkpoints.length > 0
+              const isGeoUploaded = Boolean(p.geoPhotoUrl) || submittedDailyProofs.length > 0
               const isCertUploaded = Boolean(p.certificateUrl)
               const isVerified = p.status === 'verified' || p.status === 'advisor_approved'
               const isResubmit = p.status === 'resubmit_requested'
@@ -469,6 +504,12 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                           <span className="px-2.5 py-0.5 rounded-full bg-blue-100/80 text-[#1455D9] text-[10px] font-black uppercase tracking-wider">
                             {p.category}
                           </span>
+                          {p.durationFormat && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-amber-100/80 text-amber-800 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-amber-600" />
+                              {p.durationFormat}
+                            </span>
+                          )}
                           <span className="text-xs text-gray-500 flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5 text-gray-400" />
                             {p.eventDate}
@@ -496,13 +537,13 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                           <Badge className="bg-rose-500 text-white font-black text-xs px-3 py-1 flex items-center gap-1 shadow-xs">
                             <AlertTriangle className="w-3.5 h-3.5" /> Re-upload Requested
                           </Badge>
-                        ) : isGeoUploaded && isCertUploaded ? (
+                        ) : isAllDaysCompleted && isCertUploaded ? (
                           <Badge className="bg-purple-600 text-white font-black text-xs px-3 py-1 flex items-center gap-1 shadow-xs">
                             <Clock className="w-3.5 h-3.5" /> Under Advisor Review
                           </Badge>
                         ) : (
                           <Badge className="bg-amber-500 text-white font-black text-xs px-3 py-1 flex items-center gap-1 shadow-xs">
-                            <Clock className="w-3.5 h-3.5" /> Awaiting Proofs
+                            <Clock className="w-3.5 h-3.5" /> Awaiting Proofs ({submittedDailyProofs.length}/{checkpoints.length} Days)
                           </Badge>
                         )}
                       </div>
@@ -542,15 +583,15 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                         </div>
 
                         {/* Quick upload buttons right in the sanctioned banner */}
-                        {(!isGeoUploaded || !isCertUploaded) && (
+                        {(!isAllDaysCompleted || !isCertUploaded) && (
                           <div className="flex items-center gap-2 shrink-0">
-                            {!isGeoUploaded && (
+                            {!isAllDaysCompleted && (
                               <button
                                 type="button"
                                 onClick={() => openGeoModal(p)}
                                 className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all hover:scale-105"
                               >
-                                <Camera className="w-3.5 h-3.5" /> Upload Photo
+                                <Camera className="w-3.5 h-3.5" /> Upload Daily Proof
                               </button>
                             )}
                             {!isCertUploaded && (
@@ -567,47 +608,53 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                       </div>
                     )}
 
-                    {/* 3-Step Proof Lifecycle */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    {/* Dynamic Daily Proofs Lifecycle (1. Pre-registered -> Day 1 -> Day 2 -> ... -> Certificate) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 text-xs">
                       {/* Step 1: Pre-Registered */}
                       <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <div>
-                          <p className="font-bold text-emerald-900">1. Pre-Registered</p>
+                        <div className="truncate">
+                          <p className="font-bold text-emerald-900 truncate">1. Pre-Registered</p>
                           <p className="text-[10px] text-emerald-700">OD Sanctioned</p>
                         </div>
                       </div>
 
-                      {/* Step 2: Geo-Tag Photo */}
-                      <div
-                        className={`p-3 rounded-2xl border flex items-center justify-between gap-2 ${
-                          isGeoUploaded
-                            ? 'bg-blue-50/70 border-blue-200'
-                            : 'bg-gray-50 border-gray-200'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {isGeoUploaded ? (
-                            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
-                          ) : (
-                            <MapPin className="w-4 h-4 text-gray-400 shrink-0" />
-                          )}
-                          <div className="truncate">
-                            <p className="font-bold text-[#071A3D] truncate">2. Geo-Tag Photo</p>
-                            <p className="text-[10px] text-gray-500 truncate">
-                              {isGeoUploaded ? 'GPS Verified' : 'Pending'}
-                            </p>
+                      {/* Dynamic Checkpoints for Each Day of Hackathon / Multi-day Event */}
+                      {checkpoints.map((cp, idx) => {
+                        const isSubmitted = cp.status === 'submitted' && Boolean(cp.photoUrl)
+                        return (
+                          <div
+                            key={cp.dayNumber}
+                            className={`p-3 rounded-2xl border flex items-center justify-between gap-2 ${
+                              isSubmitted ? 'bg-blue-50/70 border-blue-200' : 'bg-gray-50 border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              {isSubmitted ? (
+                                <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                              ) : (
+                                <Camera className="w-4 h-4 text-gray-400 shrink-0" />
+                              )}
+                              <div className="truncate">
+                                <p className="font-bold text-[#071A3D] truncate" title={cp.title}>
+                                  {idx + 2}. {cp.title.includes(':') ? cp.title.split(':')[0] : `Day ${cp.dayNumber}`}
+                                </p>
+                                <p className="text-[10px] text-gray-500 truncate">
+                                  {isSubmitted ? 'GPS Verified' : cp.date ? `Pending · ${cp.date}` : 'Pending'}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => openGeoModal(p, cp.dayNumber)}
+                              className="px-2.5 py-1 rounded-lg bg-[#1455D9] text-white text-[10px] font-bold shrink-0 hover:bg-[#0e44b5] cursor-pointer"
+                            >
+                              {isSubmitted ? 'Edit' : 'Upload'}
+                            </button>
                           </div>
-                        </div>
-                        <button
-                          onClick={() => openGeoModal(p)}
-                          className="px-2.5 py-1 rounded-lg bg-[#1455D9] text-white text-[10px] font-bold shrink-0 hover:bg-[#0e44b5] cursor-pointer"
-                        >
-                          {isGeoUploaded ? 'Edit' : 'Upload'}
-                        </button>
-                      </div>
+                        )
+                      })}
 
-                      {/* Step 3: Certificate */}
+                      {/* Final Step: Event Certificate */}
                       <div
                         className={`p-3 rounded-2xl border flex items-center justify-between gap-2 ${
                           isCertUploaded
@@ -622,7 +669,9 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                             <Award className="w-4 h-4 text-gray-400 shrink-0" />
                           )}
                           <div className="truncate">
-                            <p className="font-bold text-[#071A3D] truncate">3. Certificate</p>
+                            <p className="font-bold text-[#071A3D] truncate">
+                              {checkpoints.length + 2}. Certificate
+                            </p>
                             <p className="text-[10px] text-gray-500 truncate">
                               {isCertUploaded ? p.achievement || 'Submitted' : 'Pending'}
                             </p>
@@ -637,20 +686,29 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                       </div>
                     </div>
 
-                    {/* Proof Cards Preview Strip */}
-                    {(isGeoUploaded || isCertUploaded) && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-gray-100">
-                        {/* Geo-Tag Preview */}
-                        {isGeoUploaded && (
-                          <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-start gap-3">
-                            <div 
-                              onClick={() => setPreviewMedia({ url: p.geoPhotoUrl || '', title: `${p.eventName} — Venue Geo-Tag Photo`, category: 'Venue Geo-Tag Photo' })}
+                    {/* Proof Cards Preview Strip (Daily Geo-Tags & Certificate) */}
+                    {(submittedDailyProofs.length > 0 || isCertUploaded) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2 border-t border-gray-100">
+                        {/* Render All Submitted Daily Proofs */}
+                        {submittedDailyProofs.map((cp) => (
+                          <div
+                            key={cp.dayNumber}
+                            className="p-3 rounded-2xl bg-gray-50 border border-gray-200 flex items-start gap-3"
+                          >
+                            <div
+                              onClick={() =>
+                                setPreviewMedia({
+                                  url: cp.photoUrl || '',
+                                  title: `${p.eventName} — ${cp.title}`,
+                                  category: `Day ${cp.dayNumber} Geo-Tag Photo`,
+                                })
+                              }
                               className="w-16 h-16 rounded-xl overflow-hidden bg-black/10 shrink-0 relative border border-gray-300 cursor-pointer group"
                               title="Click to view full photo"
                             >
                               <img
-                                src={p.geoPhotoUrl || ''}
-                                alt="Venue Geotag"
+                                src={cp.photoUrl || ''}
+                                alt={cp.title}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                               />
                               <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
@@ -659,27 +717,36 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                             </div>
                             <div className="space-y-1 text-xs min-w-0 flex-1">
                               <span className="font-bold text-[#071A3D] flex items-center gap-1">
-                                <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                                <span>Venue Geo-Tag Photo</span>
+                                <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <span className="truncate">{cp.title}</span>
                               </span>
-                              {p.venueCollege && (
-                                <p className="font-bold text-[11px] text-[#071A3D] truncate">{p.venueCollege}</p>
-                              )}
-                              {p.geoAddress && (
-                                <p className="text-[11px] text-gray-500 truncate">{p.geoAddress}</p>
+                              <p className="text-[11px] text-gray-500 flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-gray-400" />
+                                <span>{cp.date}</span>
+                              </p>
+                              {cp.caption && (
+                                <p className="text-[11px] text-[#1455D9] font-medium italic truncate">
+                                  &ldquo;{cp.caption}&rdquo;
+                                </p>
                               )}
                               <div className="pt-1 flex items-center gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => setPreviewMedia({ url: p.geoPhotoUrl || '', title: `${p.eventName} — Venue Geo-Tag Photo`, category: 'Venue Geo-Tag Photo' })}
+                                  onClick={() =>
+                                    setPreviewMedia({
+                                      url: cp.photoUrl || '',
+                                      title: `${p.eventName} — ${cp.title}`,
+                                      category: `Day ${cp.dayNumber} Geo-Tag Photo`,
+                                    })
+                                  }
                                   className="text-[11px] text-[#1455D9] font-bold flex items-center gap-1 hover:underline cursor-pointer"
                                 >
-                                  <Eye className="w-3.5 h-3.5" /> View Geo-Tag Photo
+                                  <Eye className="w-3.5 h-3.5" /> View Photo
                                 </button>
                               </div>
                             </div>
                           </div>
-                        )}
+                        ))}
 
                         {/* Certificate Preview */}
                         {isCertUploaded && (
@@ -726,24 +793,22 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                     )}
 
                     {/* Direct Proof Upload CTA Footer if proofs are missing */}
-                    {(!isGeoUploaded || !isCertUploaded) && (
+                    {(!isAllDaysCompleted || !isCertUploaded) && (
                       <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-2.5">
                         <div className="text-xs text-gray-600 font-medium">
                           <span className="text-[#071A3D] font-bold">Proof Actions:</span>{' '}
-                          {!isGeoUploaded && !isCertUploaded
-                            ? 'Submit both Stage 1 Geo-Tag photo and Stage 2 Certificate to complete proof dossier.'
-                            : !isGeoUploaded
-                            ? 'Stage 1 Geo-Tag photo is pending submission.'
-                            : 'Stage 2 Certificate is pending submission.'}
+                          {submittedDailyProofs.length} of {checkpoints.length} Daily Proofs Submitted
+                          {!isAllDaysCompleted && ` · Day ${checkpoints.find(c => !c.photoUrl)?.dayNumber || 1} photo pending`}
+                          {!isCertUploaded ? ' · Final certificate pending' : ''}
                         </div>
-                        <div className="flex items-center gap-2">
-                          {!isGeoUploaded && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {!isAllDaysCompleted && (
                             <button
                               type="button"
                               onClick={() => openGeoModal(p)}
                               className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer transition-all hover:scale-105"
                             >
-                              <Camera className="w-3.5 h-3.5" /> Upload Geo-Tag Photo
+                              <Camera className="w-3.5 h-3.5" /> Upload Day {checkpoints.find(c => !c.photoUrl)?.dayNumber || 1} Proof
                             </button>
                           )}
                           {!isCertUploaded && (
@@ -803,7 +868,14 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                   <label className="block font-bold text-[#071A3D] mb-1">Category *</label>
                   <select
                     value={registerForm.category}
-                    onChange={(e) => setRegisterForm({ ...registerForm, category: e.target.value })}
+                    onChange={(e) => {
+                      const cat = e.target.value
+                      setRegisterForm({
+                        ...registerForm,
+                        category: cat,
+                        durationFormat: cat === 'Hackathon' ? '24 Hours (2 Days)' : 'Single Day (8 Hours)',
+                      })
+                    }}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9] bg-white"
                   >
                     <option value="Hackathon">Hackathon</option>
@@ -812,20 +884,54 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                     <option value="Project Expo">Project Expo</option>
                     <option value="Sports">Sports Meet</option>
                     <option value="Workshop">Hands-on Workshop</option>
+                    <option value="Internship">Internship / Industrial</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Event Date *</label>
+                  <label className="block font-bold text-[#071A3D] mb-1">Duration & Format *</label>
+                  <select
+                    value={registerForm.durationFormat}
+                    onChange={(e) => setRegisterForm({ ...registerForm, durationFormat: e.target.value as HackathonDurationFormat })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9] bg-white"
+                  >
+                    <option value="24 Hours (2 Days)">24 Hours Hackathon (2 Days)</option>
+                    <option value="36 Hours (2-3 Days)">36 Hours Hackathon (2-3 Days)</option>
+                    <option value="48 Hours (3 Days)">48 Hours Hackathon (3 Days)</option>
+                    <option value="Single Day (8 Hours)">Single Day Event (1 Day)</option>
+                    <option value="Multi-Day Range">Custom Multi-Day Date Range</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">From / Start Date *</label>
                   <input
                     type="date"
                     required
-                    value={registerForm.eventDate}
-                    onChange={(e) => setRegisterForm({ ...registerForm, eventDate: e.target.value })}
+                    value={registerForm.fromDate}
+                    onChange={(e) => setRegisterForm({ ...registerForm, fromDate: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">To / End Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={registerForm.toDate}
+                    onChange={(e) => setRegisterForm({ ...registerForm, toDate: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9]"
                   />
                 </div>
               </div>
+
+              <p className="text-[11px] text-gray-500 bg-blue-50/60 p-2.5 rounded-xl border border-blue-100 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#1455D9] shrink-0" />
+                <span>Daily proof submission checkpoints will be generated for each working day (Sundays excluded).</span>
+              </p>
 
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Host College / Venue Campus</label>
@@ -860,15 +966,16 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 2: UPLOAD STAGE 1 - LIVE GEO-TAG VENUE PHOTO */}
+      {/* MODAL 2: UPLOAD STAGE 1 - LIVE GEO-TAG VENUE PHOTO & DAILY PROOFS */}
       {/* ========================================================================= */}
       {isGeoModalOpen && selectedProof && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#071A3D]">Upload Live Venue Geo-Tag Photo</h3>
+                <h3 className="text-lg font-black text-[#071A3D]">Upload Daily Geo-Tag Proof</h3>
                 <p className="text-xs text-[#1455D9] font-bold">{selectedProof.eventName}</p>
+                <p className="text-[11px] text-gray-500 font-medium">{geoForm.dayTitle}</p>
               </div>
               <button
                 onClick={() => setIsGeoModalOpen(false)}
@@ -878,7 +985,71 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
               </button>
             </div>
 
+            {/* Checkpoint day selector if multiple days */}
+            {(() => {
+              const checkpoints = parseDailyProofs(selectedProof)
+              if (checkpoints.length <= 1) return null
+              return (
+                <div className="space-y-1.5">
+                  <label className="block font-bold text-[#071A3D] text-[11px] uppercase tracking-wider">
+                    Select Hackathon Day Checkpoint *
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {checkpoints.map((cp) => {
+                      const isSel = geoForm.dayNumber === cp.dayNumber
+                      const isSubmitted = cp.status === 'submitted' && Boolean(cp.photoUrl)
+                      return (
+                        <button
+                          key={cp.dayNumber}
+                          type="button"
+                          onClick={() =>
+                            setGeoForm((prev) => ({
+                              ...prev,
+                              dayNumber: cp.dayNumber,
+                              dayTitle: cp.title,
+                              date: cp.date,
+                              photoUrl: cp.photoUrl || '',
+                              caption: cp.caption || '',
+                            }))
+                          }
+                          className={`p-2 rounded-xl text-left border text-xs font-bold transition-all cursor-pointer ${
+                            isSel
+                              ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                              : isSubmitted
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-900 hover:bg-emerald-100'
+                              : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span>Day {cp.dayNumber}</span>
+                            {isSubmitted && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
+                          </div>
+                          <p className={`text-[10px] font-normal truncate mt-0.5 ${isSel ? 'text-blue-100' : 'text-gray-500'}`}>
+                            {cp.date}
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
+
             <form onSubmit={handleGeoSubmit} className="space-y-4 text-xs">
+              {/* Optional Progress Caption / Checkpoint Note */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">
+                  Progress Milestone / Activity Caption (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Round 1 Ideation Pitch completed or 24hr midnight coding session"
+                  value={geoForm.caption}
+                  onChange={(e) => setGeoForm({ ...geoForm, caption: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:outline-none focus:border-[#1455D9]"
+                />
+              </div>
+
               {/* Camera / Photo Upload input */}
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">

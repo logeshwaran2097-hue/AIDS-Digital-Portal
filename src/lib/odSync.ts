@@ -1,5 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { cachedDbQuery } from '@/lib/dbCache'
+import { generateDailyProofCheckpoints } from '@/lib/dailyProofs'
+import { getAcademicWorkingDates } from '@/lib/academicDays'
 
 export async function syncSanctionedODsForStudent(regNo: string, studentInfo?: any) {
   if (!regNo) return []
@@ -96,11 +98,24 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
 
     // Extract dates
     let eventDate = new Date().toISOString().split('T')[0]
-    const durationMatch = details.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
-    if (durationMatch) {
-      eventDate = durationMatch[1]
-    } else if (log.createdAt) {
-      eventDate = new Date(log.createdAt).toISOString().split('T')[0]
+    let fromDate = ''
+    let toDate = ''
+    const durationRangeMatch = details.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})\s+to\s+([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
+    if (durationRangeMatch) {
+      fromDate = durationRangeMatch[1]
+      toDate = durationRangeMatch[2]
+      eventDate = `${fromDate} to ${toDate}`
+    } else {
+      const durationMatch = details.match(/Duration:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/i)
+      if (durationMatch) {
+        fromDate = durationMatch[1]
+        toDate = durationMatch[1]
+        eventDate = durationMatch[1]
+      } else if (log.createdAt) {
+        eventDate = new Date(log.createdAt).toISOString().split('T')[0]
+        fromDate = eventDate
+        toDate = eventDate
+      }
     }
 
     // Extract category
@@ -112,11 +127,33 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
     else if (/sports/i.test(details)) category = 'Sports'
     else if (/internship|industrial/i.test(details)) category = 'Internship'
 
+    // Determine Hackathon / Event duration format
+    let durationFormat = 'Single Day (8 Hours)'
+    const isHackathon = /hackathon/i.test(category) || /hackathon/i.test(details) || /hackathon/i.test(eventName)
+    if (/24\s*h|24\s*hour/i.test(details) || /24\s*h|24\s*hour/i.test(eventName)) {
+      durationFormat = '24 Hours (2 Days)'
+    } else if (/36\s*h|36\s*hour/i.test(details) || /36\s*h|36\s*hour/i.test(eventName)) {
+      durationFormat = '36 Hours (2-3 Days)'
+    } else if (/48\s*h|48\s*hour/i.test(details) || /48\s*h|48\s*hour/i.test(eventName)) {
+      durationFormat = '48 Hours (3 Days)'
+    } else if (fromDate && toDate && fromDate !== toDate) {
+      const working = getAcademicWorkingDates(fromDate, toDate)
+      if (working.length === 2) durationFormat = isHackathon ? '24 Hours (2 Days)' : 'Multi-Day Range'
+      else if (working.length >= 3) durationFormat = isHackathon ? '36 Hours (2-3 Days)' : 'Multi-Day Range'
+      else durationFormat = 'Multi-Day Range'
+    } else if (isHackathon) {
+      // Default hackathons to 24 Hours (2 Days) if unspecified
+      durationFormat = '24 Hours (2 Days)'
+    }
+
+    const checkpoints = generateDailyProofCheckpoints(category, eventDate, durationFormat)
+    const dailyProofsJson = JSON.stringify(checkpoints)
+
     // Check if proof already exists
     const alreadyExists = existingProofs.find(
       (p) =>
         (p.odRequestId && p.odRequestId === log.id) ||
-        (p.eventName.toLowerCase() === eventName.toLowerCase() && p.eventDate === eventDate)
+        (p.eventName.toLowerCase() === eventName.toLowerCase() && (p.eventDate === eventDate || p.eventDate.includes(fromDate)))
     )
 
     if (!alreadyExists) {
@@ -133,6 +170,8 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
             eventName,
             category,
             eventDate,
+            durationFormat,
+            dailyProofs: dailyProofsJson,
             venueCollege: 'Academic Host Venue',
             status: isExecutiveSanction ? 'verified' : isAdvisorSigned ? 'under_review' : 'pending_proofs',
             advisorRemarks: isExecutiveSanction
@@ -149,21 +188,38 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
       } catch (err) {
         console.warn('Could not auto-create ODProof from audit log:', err)
       }
-    } else if (isExecutiveSanction && alreadyExists.status !== 'verified') {
-      try {
-        const updated = await prisma.oDProof.update({
-          where: { id: alreadyExists.id },
-          data: {
-            status: 'verified',
-            attendanceCredited: true,
-            verifiedByName: 'Head of Department',
-            verifiedAt: new Date(),
-            advisorRemarks: 'HOD Sanctioned: Officially sanctioned for On-Duty attendance credit.',
-          },
-        })
-        const idx = existingProofs.findIndex((p) => p.id === alreadyExists.id)
-        if (idx !== -1) existingProofs[idx] = updated
-      } catch {}
+    } else {
+      // If proof exists but has no dailyProofs, upgrade it
+      const needsUpgrade = !alreadyExists.dailyProofs || (alreadyExists.eventDate !== eventDate && eventDate.includes(' to '))
+      if (needsUpgrade || (isExecutiveSanction && alreadyExists.status !== 'verified')) {
+        try {
+          const updated = await prisma.oDProof.update({
+            where: { id: alreadyExists.id },
+            data: {
+              ...(needsUpgrade
+                ? {
+                    eventDate,
+                    durationFormat,
+                    dailyProofs: JSON.stringify(
+                      generateDailyProofCheckpoints(alreadyExists.category || category, eventDate, durationFormat, alreadyExists.geoPhotoUrl)
+                    ),
+                  }
+                : {}),
+              ...(isExecutiveSanction && alreadyExists.status !== 'verified'
+                ? {
+                    status: 'verified',
+                    attendanceCredited: true,
+                    verifiedByName: 'Head of Department',
+                    verifiedAt: new Date(),
+                    advisorRemarks: 'HOD Sanctioned: Officially sanctioned for On-Duty attendance credit.',
+                  }
+                : {}),
+            },
+          })
+          const idx = existingProofs.findIndex((p) => p.id === alreadyExists.id)
+          if (idx !== -1) existingProofs[idx] = updated
+        } catch {}
+      }
     }
 
     if (isExecutiveSanction) {

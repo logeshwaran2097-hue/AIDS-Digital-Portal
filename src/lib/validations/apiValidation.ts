@@ -476,6 +476,10 @@ export const odProofActionSchema = z
     certificateName: z.string().max(200).optional(),
     achievement: z.string().max(200).optional(),
     remarks: z.string().max(1000).optional(),
+    durationFormat: z.string().max(100).optional().nullable(),
+    dayNumber: z.union([z.number(), z.string()]).optional().nullable(),
+    dailyProofs: z.string().max(10000000).optional().nullable(),
+    caption: z.string().max(500).optional().nullable(),
   })
   .strict()
 

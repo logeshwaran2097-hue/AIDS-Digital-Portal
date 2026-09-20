@@ -27,6 +27,7 @@ import {
   Download,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
+import { parseDailyProofs } from '@/lib/dailyProofs'
 
 export interface ODProofItem {
   id: string
@@ -40,6 +41,8 @@ export interface ODProofItem {
   eventName: string
   category: string
   eventDate: string
+  durationFormat?: string | null
+  dailyProofs?: string | null
   venueCollege?: string | null
   geoPhotoUrl?: string | null
   latitude?: number | null
@@ -526,68 +529,87 @@ export function AdvisorODProofsView({ initialProofs, advisorJurisdiction }: Advi
 
             {/* Side-by-Side Proofs Display */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              {/* Left Column: Stage 1 Geo-Tag Photo */}
-              <div className="p-4 rounded-2xl bg-blue-50/40 border border-blue-100 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#071A3D] flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-[#1455D9]" /> Stage 1: Venue Geo-Tag Photo
-                  </span>
-                  {selectedProof.geoPhotoUrl ? (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
-                      GPS Validated
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 text-[10px] font-bold">
-                      Not Uploaded
-                    </span>
-                  )}
-                </div>
+              {/* Left Column: Stage 1 Daily Geo-Tag Proofs */}
+              {(() => {
+                const checkpoints = parseDailyProofs(selectedProof)
+                const submitted = checkpoints.filter((c) => c.status === 'submitted' && Boolean(c.photoUrl))
+                const isMulti = checkpoints.length > 1
 
-                {selectedProof.geoPhotoUrl ? (
-                  <div className="space-y-2">
-                    <div 
-                      onClick={() => setPreviewMedia({ url: selectedProof.geoPhotoUrl || '', title: `${selectedProof.studentName} — Venue Geo-Tag Photo`, category: 'Venue Geo-Tag Photo' })}
-                      className="rounded-2xl overflow-hidden border border-gray-200 shadow-xs max-h-72 bg-black flex items-center justify-center p-1 cursor-pointer group"
-                      title="Click to view full photo"
-                    >
-                      <img
-                        src={selectedProof.geoPhotoUrl}
-                        alt="Venue Geo-tag"
-                        className="w-full h-auto max-h-72 object-contain rounded-xl group-hover:opacity-90 transition-opacity"
-                      />
+                return (
+                  <div className="p-4 rounded-2xl bg-blue-50/40 border border-blue-100 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#071A3D] flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4 text-[#1455D9]" /> Stage 1: {isMulti ? `Daily Proofs (${submitted.length}/${checkpoints.length})` : 'Venue Geo-Tag Photo'}
+                      </span>
+                      {submitted.length > 0 ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                          {submitted.length === checkpoints.length ? 'All Days Validated' : `${submitted.length}/${checkpoints.length} Days Validated`}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-600 text-[10px] font-bold">
+                          Not Uploaded
+                        </span>
+                      )}
                     </div>
-                    <div className="p-3.5 rounded-xl bg-white border border-blue-200 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">GPS Geotag Photo:</span>
-                        <button
-                          type="button"
-                          onClick={() => setPreviewMedia({ url: selectedProof.geoPhotoUrl || '', title: `${selectedProof.studentName} — Venue Geo-Tag Photo`, category: 'Venue Geo-Tag Photo' })}
-                          className="text-[11px] text-[#1455D9] font-bold flex items-center gap-1 hover:underline cursor-pointer"
-                        >
-                          <Eye className="w-3.5 h-3.5" /> View Full Image
-                        </button>
+
+                    {submitted.length > 0 ? (
+                      <div className="space-y-3">
+                        {submitted.map((cp) => (
+                          <div key={cp.dayNumber} className="p-3 rounded-xl bg-white border border-blue-200 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-[#071A3D] text-xs flex items-center gap-1">
+                                <span className="px-1.5 py-0.5 rounded-md bg-blue-100 text-[#1455D9] text-[10px] font-black">
+                                  Day {cp.dayNumber}
+                                </span>
+                                <span>{cp.title}</span>
+                              </span>
+                              <span className="text-[10px] text-gray-500">{cp.date}</span>
+                            </div>
+
+                            {cp.photoUrl && (
+                              <div 
+                                onClick={() => setPreviewMedia({ url: cp.photoUrl || '', title: `${selectedProof.studentName} — ${cp.title}`, category: `Day ${cp.dayNumber} Photo` })}
+                                className="rounded-xl overflow-hidden border border-gray-200 shadow-xs max-h-48 bg-black flex items-center justify-center p-1 cursor-pointer group"
+                                title="Click to view full photo"
+                              >
+                                <img
+                                  src={cp.photoUrl}
+                                  alt={cp.title}
+                                  className="w-full h-auto max-h-48 object-contain rounded-lg group-hover:opacity-90 transition-opacity"
+                                />
+                              </div>
+                            )}
+
+                            {cp.caption && (
+                              <p className="text-[11px] text-[#1455D9] font-medium italic">
+                                &ldquo;{cp.caption}&rdquo;
+                              </p>
+                            )}
+
+                            <div className="flex items-center justify-between pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewMedia({ url: cp.photoUrl || '', title: `${selectedProof.studentName} — ${cp.title}`, category: `Day ${cp.dayNumber} Photo` })}
+                                className="text-[11px] text-[#1455D9] font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> View Day {cp.dayNumber} Image
+                              </button>
+                              <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> GPS Verified
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      {selectedProof.venueCollege && (
-                        <div>
-                          <p className="font-black text-[#071A3D] text-xs">
-                            {selectedProof.venueCollege}
-                          </p>
-                        </div>
-                      )}
-                      {selectedProof.geoAddress && (
-                        <p className="text-gray-700 text-[11px] leading-snug">
-                          {selectedProof.geoAddress}
-                        </p>
-                      )}
-                    </div>
+                    ) : (
+                      <div className="p-6 rounded-2xl bg-white border border-dashed border-gray-300 text-center text-gray-400">
+                        <MapPin className="w-8 h-8 mx-auto mb-1 text-gray-300" />
+                        <p className="font-medium text-xs">Student has not checked in at the venue yet.</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="p-6 rounded-2xl bg-white border border-dashed border-gray-300 text-center text-gray-400">
-                    <MapPin className="w-8 h-8 mx-auto mb-1 text-gray-300" />
-                    <p className="font-medium text-xs">Student has not checked in at the venue yet.</p>
-                  </div>
-                )}
-              </div>
+                )
+              })()}
 
               {/* Right Column: Stage 2 Certificate */}
               <div className="p-4 rounded-2xl bg-purple-50/40 border border-purple-100 space-y-3">

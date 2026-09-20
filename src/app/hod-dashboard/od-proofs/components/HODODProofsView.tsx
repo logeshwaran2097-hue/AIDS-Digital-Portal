@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { parseDailyProofs } from '@/lib/dailyProofs'
 
 export interface ODProofItem {
   id: string
@@ -48,6 +49,8 @@ export interface ODProofItem {
   eventName: string
   category: string
   eventDate: string
+  durationFormat?: string | null
+  dailyProofs?: string | null
   venueCollege?: string | null
   geoPhotoUrl?: string | null
   latitude?: number | null
@@ -923,81 +926,113 @@ export function HODODProofsView({ initialProofs, hodName }: Props) {
                 </div>
               </div>
 
-              {/* 3. Proof 1: Venue Geo-Tag Photo & GPS Telemetry */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h5 className="font-black text-[#071A3D] flex items-center gap-1.5 text-xs">
-                    <MapPin className="w-4 h-4 text-[#1455D9]" />
-                    <span>Proof 1: Live Event Venue Geo-Tag Photo &amp; GPS Telemetry</span>
-                  </h5>
-                  {selectedProof.geoTimestamp && (
-                    <span className="text-[10px] text-gray-400 font-mono">
-                      Timestamp: {new Date(selectedProof.geoTimestamp).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
+              {/* 3. Proof 1: Venue Geo-Tag Photos & Daily Checkpoints */}
+              {(() => {
+                const checkpoints = parseDailyProofs(selectedProof)
+                const submitted = checkpoints.filter((c) => c.status === 'submitted' && Boolean(c.photoUrl))
+                const isMulti = checkpoints.length > 1
 
-                {selectedProof.geoPhotoUrl ? (
-                  <div className="rounded-2xl border border-gray-200 overflow-hidden bg-gray-50 p-3 space-y-3">
-                    <div
-                      onClick={() =>
-                        setPreviewMedia({
-                          url: selectedProof.geoPhotoUrl!,
-                          title: `${selectedProof.studentName} — Venue Geo-Tag Photo`,
-                          category: 'Venue Geo-Tag Photo',
-                        })
-                      }
-                      className="relative h-48 sm:h-60 w-full rounded-xl overflow-hidden bg-black/5 cursor-pointer group"
-                    >
-                      <img
-                        src={selectedProof.geoPhotoUrl}
-                        alt="Venue Geo-Tag"
-                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs gap-1.5 backdrop-blur-xs">
-                        <Eye className="w-4 h-4" /> Click to Inspect Full Size
-                      </div>
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-black text-[#071A3D] flex items-center gap-1.5 text-xs">
+                        <MapPin className="w-4 h-4 text-[#1455D9]" />
+                        <span>Proof 1: {isMulti ? `Daily Hackathon Proofs (${submitted.length}/${checkpoints.length} Validated)` : 'Live Event Venue Geo-Tag Photo & GPS'}</span>
+                      </h5>
+                      {selectedProof.geoTimestamp && (
+                        <span className="text-[10px] text-gray-400 font-mono">
+                          Latest: {new Date(selectedProof.geoTimestamp).toLocaleString('en-IN')}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                      {selectedProof.geoAddress && (
-                        <div className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-700">
-                          <p className="text-[10px] text-gray-400 font-bold uppercase">Geocoded Venue Address</p>
-                          <p className="font-medium mt-0.5 flex items-start gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
-                            <span>{selectedProof.geoAddress}</span>
-                          </p>
-                        </div>
-                      )}
+                    {submitted.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {submitted.map((cp) => (
+                          <div key={cp.dayNumber} className="rounded-2xl border border-gray-200 overflow-hidden bg-gray-50 p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs text-[#071A3D] flex items-center gap-1">
+                                <span className="px-1.5 py-0.5 rounded-md bg-blue-100 text-[#1455D9] text-[10px] font-black">
+                                  Day {cp.dayNumber}
+                                </span>
+                                <span className="truncate">{cp.title}</span>
+                              </span>
+                              <span className="text-[10px] text-gray-500">{cp.date}</span>
+                            </div>
 
-                      {selectedProof.latitude && selectedProof.longitude && (
-                        <div className="p-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 flex flex-col justify-between">
-                          <div>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">GPS Satellite Coordinates</p>
-                            <p className="font-mono font-bold text-[#1455D9] mt-0.5">
-                              {selectedProof.latitude.toFixed(4)}° N, {selectedProof.longitude.toFixed(4)}° E
-                            </p>
+                            <div
+                              onClick={() =>
+                                setPreviewMedia({
+                                  url: cp.photoUrl!,
+                                  title: `${selectedProof.studentName} — ${cp.title}`,
+                                  category: `Day ${cp.dayNumber} Photo`,
+                                })
+                              }
+                              className="relative h-40 w-full rounded-xl overflow-hidden bg-black/5 cursor-pointer group"
+                            >
+                              <img
+                                src={cp.photoUrl!}
+                                alt={cp.title}
+                                className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                              />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs gap-1.5 backdrop-blur-xs">
+                                <Eye className="w-4 h-4" /> Click to Inspect Full Size
+                              </div>
+                            </div>
+
+                            {cp.caption && (
+                              <p className="text-[11px] text-[#1455D9] font-medium italic truncate">
+                                &ldquo;{cp.caption}&rdquo;
+                              </p>
+                            )}
+
+                            <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1">
+                              <span>GPS Geotag Verified</span>
+                              {selectedProof.latitude && selectedProof.longitude && (
+                                <a
+                                  href={`https://www.google.com/maps?q=${selectedProof.latitude},${selectedProof.longitude}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[#1455D9] font-bold flex items-center gap-1 hover:underline"
+                                >
+                                  <ExternalLink className="w-3 h-3" /> Map
+                                </a>
+                              )}
+                            </div>
                           </div>
-                          <a
-                            href={`https://www.google.com/maps?q=${selectedProof.latitude},${selectedProof.longitude}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-2 text-xs text-[#1455D9] font-bold flex items-center gap-1 hover:underline"
-                          >
-                            <ExternalLink className="w-3 h-3" /> View Satellite Location on Google Maps
-                          </a>
+                        ))}
+                      </div>
+                    ) : selectedProof.geoPhotoUrl ? (
+                      <div className="rounded-2xl border border-gray-200 overflow-hidden bg-gray-50 p-3 space-y-3">
+                        <div
+                          onClick={() =>
+                            setPreviewMedia({
+                              url: selectedProof.geoPhotoUrl!,
+                              title: `${selectedProof.studentName} — Venue Geo-Tag Photo`,
+                              category: 'Venue Geo-Tag Photo',
+                            })
+                          }
+                          className="relative h-48 sm:h-60 w-full rounded-xl overflow-hidden bg-black/5 cursor-pointer group"
+                        >
+                          <img
+                            src={selectedProof.geoPhotoUrl}
+                            alt="Venue Geo-Tag"
+                            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold text-xs gap-1.5 backdrop-blur-xs">
+                            <Eye className="w-4 h-4" /> Click to Inspect Full Size
+                          </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="p-6 rounded-2xl bg-gray-50 border border-dashed border-gray-300 text-center text-gray-400">
+                        <MapPin className="w-8 h-8 mx-auto mb-1 text-gray-300" />
+                        <p className="font-medium text-xs">Student has not uploaded live venue geo-tag photo yet.</p>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="p-6 rounded-2xl border-2 border-dashed border-gray-200 text-center text-gray-400">
-                    <AlertTriangle className="w-6 h-6 mx-auto mb-1 text-amber-500" />
-                    <p className="font-bold text-gray-600">Geo-tag photo not uploaded yet</p>
-                    <p className="text-[11px] text-gray-400">Student must snap on-site at the event venue.</p>
-                  </div>
-                )}
-              </div>
+                )
+              })()}
 
               {/* 4. Proof 2: Completion Certificate / Award Letter */}
               <div className="space-y-2">
