@@ -3,12 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.8.5'
+export const APP_VERSION = '2.8.6'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-20'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'Universal Digital Portal Document Description & Attestation: Added a standardized, institutional-grade Digital Portal Document description block to the end of every generated PDF (College Bus Pass, Hostel Gate Pass, Attendance Reports, Bar Chart Analytics, Academic Records). Explicitly declares that the document is an authenticated Digital Portal E-Copy and NOT an original physical certificate, with IT Act digital signature exemption and real-time QR verification details.',
   'College Bus Pass Pure Verification: Removed all placeholder data, mock vehicle registration numbers, fake driver/faculty incharge phone directories, and arbitrary arrival/departure schedules from the College Bus Transportation Pass view, presenting only authentic onboarding verified student transit credentials',
   'Event Proofs Workflow Streamlined: Removed redundant "4. Attendance Credit (Awaiting Advisor)" milestone from the student Event Proofs dossier view, maintaining a clean 3-step proof lifecycle (Pre-Registered, Geo-Tag Photo, Certificate) now that attendance is automatically allocated upon OD sanction',
   'Multi-Tab Concurrent Role Session Isolation: Enabled dedicated role-scoped cookies (auth-token-student, auth-token-admin, auth-token-faculty, auth-token-hod) with contextual referrer inspection so multiple roles can remain logged in concurrently in separate tabs without data collision or session overwriting',

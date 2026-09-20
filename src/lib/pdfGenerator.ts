@@ -12,6 +12,152 @@ export interface PDFDocOptions {
   fileName?: string
 }
 
+export interface DigitalPortalNoticeOptions {
+  y: number
+  contentW: number
+  marginX: number
+  recordType?: string
+  verificationCode?: string
+  repositoryName?: string
+  issuingAuthority?: string
+  boxHeight?: number
+  isCompact?: boolean
+}
+
+/**
+ * Universal Official Digital Portal Document Notice Block
+ * Renders a standardized, professional institutional description method at the end of every PDF record.
+ * Fulfills the requirement:
+ * "This is Digital Portal Document, Not an original document like professional description method will be at last for all records"
+ */
+export function drawDigitalPortalDocumentNotice(
+  doc: jsPDF,
+  options: DigitalPortalNoticeOptions
+): number {
+  const {
+    y,
+    contentW,
+    marginX,
+    recordType = 'OFFICIAL DIGITAL PORTAL RECORD',
+    verificationCode = 'VSB-DIGITAL-PORTAL-E-RECORD',
+    repositoryName = 'Centralized Autonomous ERP Ledger',
+    issuingAuthority = 'Office of HOD (AI & DS) · Digital Directorate',
+    boxHeight = 52,
+    isCompact = false,
+  } = options
+
+  const boxY = y
+  const boxH = boxHeight
+
+  // 1. Container Background & Border
+  doc.setFillColor(248, 250, 254)
+  doc.setDrawColor(205, 220, 240)
+  doc.setLineWidth(0.35)
+  doc.roundedRect(marginX, boxY, contentW, boxH, 2, 2, 'FD')
+
+  // 2. Left Deep Navy Accent Bar
+  doc.setFillColor(7, 26, 61)
+  doc.roundedRect(marginX, boxY, 3.5, boxH, 1, 1, 'F')
+
+  // 3. Top Row Header Badges
+  // Left Pill: Digital Portal Document Classification (NOT AN ORIGINAL PHYSICAL DOCUMENT)
+  doc.setFillColor(235, 244, 255)
+  doc.setDrawColor(190, 215, 250)
+  doc.setLineWidth(0.2)
+  doc.roundedRect(marginX + 6, boxY + 2.5, 84, 4.4, 1, 1, 'FD')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.8)
+  doc.setTextColor(20, 85, 217)
+  doc.text('DIGITAL PORTAL DOCUMENT · NOT AN ORIGINAL PHYSICAL DOCUMENT', marginX + 48, boxY + 5.6, { align: 'center' })
+
+  // Right Pill: Authenticated Status
+  doc.setFillColor(236, 253, 245)
+  doc.setDrawColor(167, 243, 208)
+  doc.roundedRect(marginX + contentW - 55, boxY + 2.5, 49, 4.4, 1, 1, 'FD')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.8)
+  doc.setTextColor(5, 122, 85)
+  doc.text('SYSTEM AUTHENTICATED E-RECORD · VALID', marginX + contentW - 30.5, boxY + 5.6, { align: 'center' })
+
+  // 4. Primary Attestation Title
+  let textY = boxY + 11.2
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(
+    'LEGAL & INSTITUTIONAL DESCRIPTION: SYSTEM-GENERATED DIGITAL PORTAL DOCUMENT (ELECTRONIC COPY)',
+    marginX + 6,
+    textY
+  )
+
+  // 5. Professional Description Method Points
+  textY += 4.0
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.7)
+  doc.setTextColor(75, 90, 110)
+
+  const p1 = '1. Document Nature: This record is electronically generated from the V.S.B. Digital Portal AI&DS Autonomous Administration System. It is an official institutional Digital Portal Document and NOT an original physical certificate or stamped parchment.'
+  const splitP1 = doc.splitTextToSize(p1, contentW - 12)
+  doc.text(splitP1, marginX + 6, textY)
+  textY += splitP1.length * 3.1
+
+  const p2 = '2. Signature Exemption: Pursuant to Information Technology Act electronic records provisions and Autonomous Institutional Regulations, this digital document is cryptographically verified and does not require a physical handwritten signature or wet-ink seal.'
+  const splitP2 = doc.splitTextToSize(p2, contentW - 12)
+  doc.text(splitP2, marginX + 6, textY)
+  textY += splitP2.length * 3.1
+
+  const p3 = '3. Live Online Authentication: Genuine authenticity and real-time status of this record can be confirmed by scanning the embedded QR code using any smartphone camera or visiting the verification portal.'
+  const splitP3 = doc.splitTextToSize(p3, contentW - 12)
+  doc.text(splitP3, marginX + 6, textY)
+  textY += splitP3.length * 3.1
+
+  if (!isCompact && boxH >= 48) {
+    const p4 = '4. Tamper-Evident Notice: Any physical or digital alteration, erasure, or unauthorized duplication renders this digital record void and is subject to institutional disciplinary action.'
+    const splitP4 = doc.splitTextToSize(p4, contentW - 12)
+    doc.text(splitP4, marginX + 6, textY)
+    textY += splitP4.length * 3.1
+  }
+
+  // 6. Metadata Verification Footer Bar inside the Container
+  const metaY = boxY + boxH - 9.5
+  doc.setDrawColor(225, 235, 247)
+  doc.setLineWidth(0.25)
+  doc.line(marginX + 6, metaY, marginX + contentW - 6, metaY)
+
+  const col1X = marginX + 6
+  const col2X = marginX + Math.round(contentW * 0.38)
+  const col3X = marginX + Math.round(contentW * 0.72)
+
+  // Col 1: Record Repository
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(115, 130, 150)
+  doc.text('RECORD REPOSITORY', col1X, metaY + 3.0)
+  doc.setFontSize(5.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(repositoryName, col1X, metaY + 6.5)
+
+  // Col 2: Issuing Authority
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(115, 130, 150)
+  doc.text('ISSUING AUTHORITY', col2X, metaY + 3.0)
+  doc.setFontSize(5.8)
+  doc.setTextColor(7, 26, 61)
+  doc.text(issuingAuthority, col2X, metaY + 6.5)
+
+  // Col 3: Verification Code
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.8)
+  doc.setTextColor(115, 130, 150)
+  doc.text('VERIFICATION IDENTIFIER', col3X, metaY + 3.0)
+  doc.setFontSize(5.8)
+  doc.setTextColor(20, 85, 217)
+  doc.text(verificationCode, col3X, metaY + 6.5)
+
+  return boxY + boxH
+}
+
 export function generateAndDownloadPDF(options: PDFDocOptions) {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -354,90 +500,25 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
     }
   }
 
-  // 6. OFFICIAL DIGITAL RECORD CERTIFICATION & AUTHENTICATION SEAL (NO PHYSICAL SIGNATURE REQUIRED)
-  const certH = 26
-  let certY = currentY + 4
-  if (certY + certH > pageHeight - 13) {
-    certY = pageHeight - 13 - certH
+  // 6. OFFICIAL DIGITAL PORTAL DOCUMENT NOTICE & DESCRIPTION METHOD (NOT AN ORIGINAL PHYSICAL DOCUMENT)
+  const certH = 50
+  let certY = currentY + 5
+  if (certY + certH > pageHeight - 14) {
+    doc.addPage()
+    certY = marginX + 6
   }
 
-  // Outer Certification Container Box
-  doc.setFillColor(248, 250, 254)
-  doc.setDrawColor(205, 220, 240)
-  doc.setLineWidth(0.35)
-  doc.roundedRect(marginX, certY, contentW, certH, 2, 2, 'FD')
-
-  // Left Deep Navy Accent Bar
-  doc.setFillColor(7, 26, 61)
-  doc.roundedRect(marginX, certY, 3.5, certH, 1, 1, 'F')
-
-  // Top Row: Badges / Pills
-  doc.setFillColor(235, 244, 255)
-  doc.setDrawColor(190, 215, 250)
-  doc.setLineWidth(0.2)
-  doc.roundedRect(marginX + 6, certY + 2.5, 60, 4.2, 1, 1, 'FD')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.8)
-  doc.setTextColor(20, 85, 217)
-  doc.text('OFFICIAL DIGITAL ACADEMIC RECORD', marginX + 36, certY + 5.5, { align: 'center' })
-
-  doc.setFillColor(236, 253, 245)
-  doc.setDrawColor(167, 243, 208)
-  doc.roundedRect(marginX + contentW - 55, certY + 2.5, 49, 4.2, 1, 1, 'FD')
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.8)
-  doc.setTextColor(5, 122, 85)
-  doc.text('SYSTEM AUTHENTICATED · VALID', marginX + contentW - 30.5, certY + 5.5, { align: 'center' })
-
-  // Core Legal & Authentication Statement
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL REPORT BASED ON INSTITUTIONAL DATABASE RECORDS.', marginX + 6, certY + 10.2)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.0)
-  doc.setTextColor(75, 90, 110)
-  const certNotice = 'All attendance statistics and academic metrics are electronically certified from the centralized ERP records of the Department of Artificial Intelligence & Data Science, V.S.B. Engineering College. As an authenticated digital document, no physical signature is required.'
-  const splitNotice = doc.splitTextToSize(certNotice, contentW - 12)
-  doc.text(splitNotice, marginX + 6, certY + 14)
-
-  // Inner Divider Line
-  doc.setDrawColor(225, 235, 247)
-  doc.setLineWidth(0.25)
-  doc.line(marginX + 6, certY + 17.5, marginX + contentW - 6, certY + 17.5)
-
-  // 3 Distinct Clean Non-Overlapping Columns (Stacked Label on Top, Value Below)
-  const col1X = marginX + 6
-  const col2X = marginX + 68
-  const col3X = marginX + 128
-
-  // Col 1: Record Source
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('RECORD REPOSITORY', col1X, certY + 20.8)
-  doc.setFontSize(6.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text('Centralized Autonomous ERP', col1X, certY + 24.2)
-
-  // Col 2: Issuing Authority
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('ISSUING AUTHORITY', col2X, certY + 20.8)
-  doc.setFontSize(6.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text('Office of HOD (AI & DS)', col2X, certY + 24.2)
-
-  // Col 3: Verification Code
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('VERIFICATION CODE', col3X, certY + 20.8)
-  doc.setFontSize(6.0)
-  doc.setTextColor(20, 85, 217)
-  doc.text('VSB-SEC-2026-AUTONOMOUS', col3X, certY + 24.2)
+  drawDigitalPortalDocumentNotice(doc, {
+    y: certY,
+    contentW,
+    marginX,
+    recordType: options.category || 'ACADEMIC RECORD & SYLLABUS DOSSIER',
+    verificationCode: options.subjectCode ? `VSB-ACAD-${options.subjectCode}` : 'VSB-DIGITAL-PORTAL-E-RECORD',
+    repositoryName: 'Centralized Autonomous ERP Ledger',
+    issuingAuthority: 'Office of HOD (AI & DS) · Digital Directorate',
+    boxHeight: certH,
+    isCompact: false,
+  })
 
   // 7. Multi-Page Running Footer Bar
   const totalPages = doc.getNumberOfPages()
@@ -448,10 +529,10 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
     doc.setDrawColor(220, 228, 240)
     doc.line(marginX - 3, pageHeight - 11, marginX + contentW + 3, pageHeight - 11)
 
-    doc.setFontSize(6.2)
+    doc.setFontSize(5.5)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(110, 125, 145)
-    doc.text('CONFIDENTIAL · V.S.B. ENGINEERING COLLEGE · AI & DS ACADEMIC DIGITAL PORTAL · FOR OFFICIAL INSTITUTIONAL USE ONLY', marginX, pageHeight - 6.5)
+    doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL · SYSTEM-GENERATED ELECTRONIC RECORD (NOT AN ORIGINAL PHYSICAL CERTIFICATE)', marginX, pageHeight - 6.5)
     doc.text(`Page ${i} of ${totalPages}`, marginX + contentW, pageHeight - 6.5, { align: 'right' })
   }
 
@@ -736,77 +817,32 @@ export function generateAttendanceBarGraphPDF(options: {
   currentY += auditRows.length * gridRowHeight + 5
 
   // 5. OFFICIAL DIGITAL RECORD CERTIFICATION & AUTHENTICATION SEAL (NO SIGNATURE REQUIRED)
-  const bgCertH = 22
+  const bgCertH = 36
   const bgCertY = Math.max(currentY + 2, pageHeight - 11 - bgCertH)
   const bgMarginX = 15
   const bgContentW = pageWidth - 30
 
-  // Certification Box
-  doc.setFillColor(248, 250, 254)
-  doc.setDrawColor(205, 220, 240)
-  doc.setLineWidth(0.35)
-  doc.roundedRect(bgMarginX, bgCertY, bgContentW, bgCertH, 1.8, 1.8, 'FD')
-
-  // Left Navy Accent Ribbon
-  doc.setFillColor(7, 26, 61)
-  doc.roundedRect(bgMarginX, bgCertY, 3, bgCertH, 1, 1, 'F')
-
-  // Top Title and Statement
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text('THIS IS A SYSTEM-GENERATED OFFICIAL DIGITAL ANALYTICS REPORT · NO SIGNATURE REQUIRED', bgMarginX + 6, bgCertY + 5.2)
-
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6.0)
-  doc.setTextColor(75, 90, 110)
-  const bgCertNotice = 'All aggregate metrics and student cohort data are electronically certified directly from institutional database records for official academic audit purposes.'
-  const splitBgNotice = doc.splitTextToSize(bgCertNotice, bgContentW - 12)
-  doc.text(splitBgNotice, bgMarginX + 6, bgCertY + 9.2)
-
-  // Inner Divider Line
-  doc.setDrawColor(225, 235, 247)
-  doc.setLineWidth(0.25)
-  doc.line(bgMarginX + 6, bgCertY + 12.5, bgMarginX + bgContentW - 6, bgCertY + 12.5)
-
-  // 3 Distinct Clean Non-Overlapping Columns (Stacked Label on Top, Value Below)
-  const bgCol1X = bgMarginX + 6
-  const bgCol2X = bgMarginX + 68
-  const bgCol3X = bgMarginX + 128
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('RECORD REPOSITORY', bgCol1X, bgCertY + 16.2)
-  doc.setFontSize(6.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text('Centralized Autonomous ERP', bgCol1X, bgCertY + 19.8)
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('ISSUING AUTHORITY', bgCol2X, bgCertY + 16.2)
-  doc.setFontSize(6.0)
-  doc.setTextColor(7, 26, 61)
-  doc.text('Office of HOD (AI & DS)', bgCol2X, bgCertY + 19.8)
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.0)
-  doc.setTextColor(115, 130, 150)
-  doc.text('VERIFICATION CODE', bgCol3X, bgCertY + 16.2)
-  doc.setFontSize(6.0)
-  doc.setTextColor(20, 85, 217)
-  doc.text('VSB-SEC-2026-AUTONOMOUS', bgCol3X, bgCertY + 19.8)
+  drawDigitalPortalDocumentNotice(doc, {
+    y: bgCertY,
+    contentW: bgContentW,
+    marginX: bgMarginX,
+    recordType: 'COHORT ATTENDANCE ANALYTICS REPORT',
+    verificationCode: 'VSB-ATT-ANALYTICS-2026',
+    repositoryName: 'Centralized Autonomous ERP Ledger',
+    issuingAuthority: 'Office of HOD (AI & DS)',
+    boxHeight: bgCertH,
+    isCompact: true,
+  })
 
   // Footer
   doc.setFillColor(248, 250, 253)
   doc.rect(0, pageHeight - 8, pageWidth, 8, 'F')
   doc.setDrawColor(220, 228, 240)
   doc.line(0, pageHeight - 8, pageWidth, pageHeight - 8)
-  doc.setFontSize(7)
+  doc.setFontSize(5.8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(100, 110, 125)
-  doc.text('V.S.B. AI & DS Digital Portal · Official Bar Chart Analytics Statement', 15, pageHeight - 3)
+  doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL · SYSTEM GENERATED ELECTRONIC RECORD (NOT AN ORIGINAL PHYSICAL CERTIFICATE)', 15, pageHeight - 3)
   doc.text('Page 1 of 1', pageWidth - 15, pageHeight - 3, { align: 'right' })
 
   const safeFileName = (options.fileName || 'VSB_Bar_Chart_Report')
@@ -1222,7 +1258,7 @@ export async function downloadStudentCardPDF(student: {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(3.6)
   doc.setTextColor(100, 115, 135)
-  doc.text('Institutional Identity Document · If found, return to College Office · Ph: 04324-290141', cardW / 2, 138.6, { align: 'center' })
+  doc.text('Digital Portal E-Pass · Not an Original Physical Smartcard · Ph: 04324-290141', cardW / 2, 138.6, { align: 'center' })
 
   doc.save(`Student_Card_${student.registerNumber}.pdf`)
 }
@@ -1626,57 +1662,74 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
 
   currentY += 6
 
-  // 7. Official Endorsement Signatures
+  // 7. Official Endorsement Signatures (Digital Attestations)
   doc.setDrawColor(215, 226, 242)
   doc.setLineWidth(0.3)
   doc.line(marginX, currentY, marginX + contentW, currentY)
 
-  currentY += 6
+  currentY += 5
 
   const signColW = contentW / 3
 
   // Signatory 1
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7)
+  doc.setFontSize(6.8)
   doc.setTextColor(7, 26, 61)
   doc.text('CLASS ADVISORS COMMITTEE', marginX + 4, currentY)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6)
+  doc.setFontSize(5.8)
   doc.setTextColor(100, 115, 135)
   doc.text('Morning Roll-Call Verified', marginX + 4, currentY + 3.5)
-  doc.text('Signature: ___________________', marginX + 4, currentY + 11)
+  doc.setTextColor(16, 185, 129)
+  doc.text('✓ Digitally Recorded by Class Advisor', marginX + 4, currentY + 7.5)
 
   // Signatory 2
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7)
+  doc.setFontSize(6.8)
   doc.setTextColor(7, 26, 61)
   doc.text('DEPARTMENT ACADEMIC CELL', marginX + signColW + 4, currentY)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6)
+  doc.setFontSize(5.8)
   doc.setTextColor(100, 115, 135)
   doc.text('Regulation 2021 Monitoring', marginX + signColW + 4, currentY + 3.5)
-  doc.text('Signature: ___________________', marginX + signColW + 4, currentY + 11)
+  doc.setTextColor(16, 185, 129)
+  doc.text('✓ Electronically Audited & Synced', marginX + signColW + 4, currentY + 7.5)
 
   // Signatory 3: HOD
   const hodX = marginX + signColW * 2 + 4
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7)
+  doc.setFontSize(6.8)
   doc.setTextColor(7, 26, 61)
   doc.text('HEAD OF DEPARTMENT (HOD)', hodX, currentY)
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(6)
+  doc.setFontSize(5.8)
   doc.setTextColor(100, 115, 135)
-  doc.text(`Prof. ${options.hodName || 'hello'} · AI & DS`, hodX, currentY + 3.5)
-  doc.text('Approved: ___________________', hodX, currentY + 11)
+  doc.text(`Prof. ${options.hodName || 'Head of Department'} · AI & DS`, hodX, currentY + 3.5)
+  doc.setTextColor(20, 85, 217)
+  doc.text('✓ Sanctioned by HOD', hodX, currentY + 7.5)
+
+  currentY += 12
+
+  drawDigitalPortalDocumentNotice(doc, {
+    y: currentY,
+    contentW,
+    marginX,
+    recordType: 'ADVISOR ATTENDANCE AUDIT RECORD',
+    verificationCode: `VSB-ATT-ROLL-${printDate.replace(/[^0-9]/g, '')}`,
+    repositoryName: 'Daily Roll-Call Central Database',
+    issuingAuthority: 'Academic Attendance Cell & HOD Office',
+    boxHeight: 36,
+    isCompact: true,
+  })
 
   // Footer compliance text
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(5.8)
+  doc.setFontSize(5.6)
   doc.setTextColor(130, 145, 165)
   doc.text(
-    'This official document is generated from the VSB Digital Portal AI&DS Directorate system. Compliant with Anna University R-2021 Autonomous attendance criteria.',
+    'DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL · SYSTEM GENERATED ELECTRONIC RECORD (NOT AN ORIGINAL PHYSICAL CERTIFICATE)',
     pageWidth / 2,
-    pageHeight - 8,
+    pageHeight - 6,
     { align: 'center' }
   )
 
@@ -1989,14 +2042,30 @@ export function generateAndDownloadBusPassPDF(data: BusPassPDFData) {
     ruleY += 6.6
   })
 
+  // Section 4: Official Digital Portal Document Notice & Verification Attestation
+  curY += qrBoxH + 5
+  const noticeH = 50
+
+  drawDigitalPortalDocumentNotice(doc, {
+    y: curY,
+    contentW,
+    marginX,
+    recordType: 'COLLEGE BUS TRANSPORTATION PASS',
+    verificationCode: `VSB-BUS-${data.passNo || data.registerNumber}`,
+    repositoryName: 'Centralized Transport ERP Ledger',
+    issuingAuthority: 'College Transport Directorate & AI/DS HOD Office',
+    boxHeight: noticeH,
+    isCompact: false,
+  })
+
   // Footer compliance text
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(5.8)
+  doc.setFontSize(5.6)
   doc.setTextColor(140, 155, 175)
   doc.text(
-    'This official transportation credential is cryptographically authenticated and generated from the V.S.B. Digital Portal AI&DS Administration System. Compliant with Anna University Institutional Transportation Standards.',
+    'DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL · SYSTEM GENERATED ELECTRONIC RECORD (NOT AN ORIGINAL PHYSICAL CERTIFICATE)',
     pageWidth / 2,
-    pageHeight - 8,
+    pageHeight - 6.5,
     { align: 'center' }
   )
 
@@ -2386,58 +2455,71 @@ export function generateAndDownloadHostelGatePassPDF(data: HostelGatePassPDFData
     ruleY += 6.2
   })
 
-  // Section 6: Signatures & Validation Seals
-  curY += qrBoxH + 11
-  const sigColW = contentW / 3
+  // Section 6: Official Digital Attestation & Digital Portal Document Notice
+  curY += qrBoxH + 4
+  const attColW = contentW / 3
+  doc.setFillColor(248, 250, 252)
+  doc.roundedRect(marginX, curY, contentW, 14, 1.5, 1.5, 'F')
+  doc.setDrawColor(226, 232, 240)
+  doc.setLineWidth(0.3)
+  doc.roundedRect(marginX, curY, contentW, 14, 1.5, 1.5, 'S')
 
-  // Col 1: Student
+  // Col 1: Student Undertaking
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.5)
+  doc.setFontSize(6.5)
   doc.setTextColor(7, 26, 61)
-  doc.text('_____________________________', marginX + 6, curY + 7)
-  doc.text('Signature of the Student', marginX + 6, curY + 11.5)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(5.8)
-  doc.setTextColor(100, 115, 135)
-  doc.text('(I undertake to return before curfew)', marginX + 6, curY + 15)
-
-  // Col 2: Hostel Warden
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.5)
-  doc.setTextColor(7, 26, 61)
-  doc.text('_____________________________', marginX + sigColW + 6, curY + 7)
-  doc.text('Hostel Warden / Deputy Warden', marginX + sigColW + 6, curY + 11.5)
+  doc.text('STUDENT DIGITAL UNDERTAKING', marginX + 4, curY + 4.5)
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(5.8)
   doc.setTextColor(16, 185, 129)
-  doc.text('✓ Digitally Sanctioned & Recorded', marginX + sigColW + 6, curY + 15)
+  doc.text('✓ Digitally Acknowledged & Logged', marginX + 4, curY + 8.5)
+  doc.setTextColor(100, 115, 135)
+  doc.text(data.studentName, marginX + 4, curY + 12)
 
-  // Col 3: Chief Warden / Principal
+  // Col 2: Hostel Warden
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.5)
+  doc.setFontSize(6.5)
   doc.setTextColor(7, 26, 61)
-  doc.text('_____________________________', marginX + sigColW * 2 + 6, curY + 7)
-  doc.text('Chief Warden / Administrative Dean', marginX + sigColW * 2 + 6, curY + 11.5)
+  doc.text('HOSTEL WARDEN SANCTION', marginX + attColW + 4, curY + 4.5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(16, 185, 129)
+  doc.text('✓ Digitally Sanctioned & Recorded', marginX + attColW + 4, curY + 8.5)
+  doc.setTextColor(100, 115, 135)
+  doc.text(data.wardenName, marginX + attColW + 4, curY + 12)
 
-  // Circular Institutional Seal Mark
-  doc.setDrawColor(13, 90, 66)
-  doc.setLineWidth(0.5)
-  const sealX = marginX + contentW - 17
-  const sealY = curY + 6
-  doc.circle(sealX, sealY, 9, 'S')
+  // Col 3: Institutional Approval
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5)
-  doc.setTextColor(13, 90, 66)
-  doc.text('VSB HOSTEL', sealX, sealY - 3, { align: 'center' })
-  doc.text('SANCTIONED', sealX, sealY, { align: 'center' })
-  doc.text('OFFICIAL SEAL', sealX, sealY + 3, { align: 'center' })
+  doc.setFontSize(6.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AUTONOMOUS PORTAL APPROVAL', marginX + attColW * 2 + 4, curY + 4.5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(5.8)
+  doc.setTextColor(20, 85, 217)
+  doc.text('✓ E-Outpass Record Active', marginX + attColW * 2 + 4, curY + 8.5)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Hostel Administration Cell', marginX + attColW * 2 + 4, curY + 12)
+
+  curY += 16
+
+  drawDigitalPortalDocumentNotice(doc, {
+    y: curY,
+    contentW,
+    marginX,
+    recordType: 'HOSTEL GATE PASS OUTPASS',
+    verificationCode: data.passRecordNumber || `VSB-GP-${data.registerNumber}`,
+    repositoryName: 'Hostel Administration Central Ledger',
+    issuingAuthority: 'Hostel Warden & Chief Warden Office',
+    boxHeight: 34,
+    isCompact: true,
+  })
 
   // Footer compliance text
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(5.8)
+  doc.setFontSize(5.6)
   doc.setTextColor(140, 155, 175)
   doc.text(
-    'This official gate pass credential is cryptographically authenticated and generated from the V.S.B. Digital Portal AI&DS Administration System. Compliant with Anna University Autonomous Regulations.',
+    'DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL · SYSTEM GENERATED ELECTRONIC RECORD (NOT AN ORIGINAL PHYSICAL CERTIFICATE)',
     pageWidth / 2,
     pageHeight - 5.5,
     { align: 'center' }
