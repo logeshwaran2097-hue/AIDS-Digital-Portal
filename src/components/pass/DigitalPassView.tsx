@@ -198,13 +198,15 @@ export default function DigitalPassView({
     return false
   })
 
-  const [selectedRouteIndex, setSelectedRouteIndex] = useState(initialBusIdx !== -1 ? initialBusIdx : 4)
-  const matchedRoute = initialBusIdx !== -1 ? BUS_ROUTES[initialBusIdx] : BUS_ROUTES[4]
-  const matchedStop = initialBoardingPoint
-    ? (matchedRoute.stops.find(s => s.toLowerCase().includes(initialBoardingPoint.toLowerCase())) || initialBoardingPoint)
-    : matchedRoute.stops[0]
+  const displayBusNo = (initialBusNo || '').replace(/[^0-9]/g, '') || (initialBusDetails?.match(/bus\s*(\d+)/i)?.[1]) || '05'
+  const formattedBusNo = displayBusNo ? `Bus No. ${displayBusNo.padStart(2, '0')}` : 'Bus No. 05'
+  const displayBoardingPoint = (initialBoardingPoint || '').replace(/\s*\([^)]*\)/g, '').trim() || 'Designated Stop'
+  const displayRouteName = initialBusDetails && !initialBusDetails.toLowerCase().includes('dummy')
+    ? initialBusDetails
+    : `College Campus Commuter Transit (${formattedBusNo})`
 
-  const [boardingStop, setBoardingStop] = useState(matchedStop)
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState(initialBusIdx !== -1 ? initialBusIdx : 4)
+  const [boardingStop, setBoardingStop] = useState(displayBoardingPoint)
 
   // Hostel state - auto select from onboarding data
   const initialHostelIdx = HOSTEL_BLOCKS.findIndex(
@@ -335,8 +337,8 @@ export default function DigitalPassView({
       console.error('Failed to generate gate pass QR code:', err)
     })
 
-    // Generate College Bus Pass verification URL & QR code (embedded with all details for 100% instant offline phone camera recognition)
-    const busVerifyUrl = `${publicOrigin}/verify-pass?type=bus&id=${encodeURIComponent(busPassId)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&busNo=${encodeURIComponent(currentRoute.busNo)}&routeNo=${encodeURIComponent(currentRoute.routeNo)}&routeName=${encodeURIComponent(currentRoute.name)}&via=${encodeURIComponent(currentRoute.via)}&stop=${encodeURIComponent(boardingStop)}&busReg=${encodeURIComponent(currentRoute.busRegNo)}&morningArrival=${encodeURIComponent(currentRoute.morningArrival)}&eveningDeparture=${encodeURIComponent(currentRoute.eveningDeparture)}&incharge=${encodeURIComponent(currentRoute.incharge)}&inchargePhone=${encodeURIComponent(currentRoute.inchargePhone)}&driver=${encodeURIComponent(currentRoute.driver)}&driverPhone=${encodeURIComponent(currentRoute.driverPhone)}&time=${encodeURIComponent(issueDate)}`
+    // Generate College Bus Pass verification URL & QR code (embedded with factual verified student details)
+    const busVerifyUrl = `${publicOrigin}/verify-pass?type=bus&id=${encodeURIComponent(busPassId)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&busNo=${encodeURIComponent(displayBusNo)}&stop=${encodeURIComponent(displayBoardingPoint)}&time=${encodeURIComponent(issueDate)}`
 
     QRCode.toDataURL(busVerifyUrl, {
       width: 450,
@@ -406,18 +408,18 @@ export default function DigitalPassView({
           department,
           year,
           section,
-          busNo: currentRoute.busNo,
-          routeNo: currentRoute.routeNo,
-          routeName: currentRoute.name,
-          via: currentRoute.via,
-          boardingStop: boardingStop.replace(/\s*\([^)]*\)/g, '').trim(),
-          busRegNo: currentRoute.busRegNo,
-          morningArrival: currentRoute.morningArrival,
-          eveningDeparture: currentRoute.eveningDeparture,
-          incharge: currentRoute.incharge,
-          inchargePhone: currentRoute.inchargePhone,
-          driver: currentRoute.driver,
-          driverPhone: currentRoute.driverPhone,
+          busNo: formattedBusNo,
+          routeNo: '',
+          routeName: displayRouteName,
+          via: '',
+          boardingStop: displayBoardingPoint,
+          busRegNo: '',
+          morningArrival: '',
+          eveningDeparture: '',
+          incharge: '',
+          inchargePhone: '',
+          driver: '',
+          driverPhone: '',
           issueDate,
           qrDataUrl: busQrUrl || undefined,
         })
@@ -535,7 +537,7 @@ export default function DigitalPassView({
             <span className="text-slate-950 font-black">
               {activeMode === 'hostel'
                 ? `🏡 Hostel Resident · ${currentHostel.name} (Room ${roomNo})`
-                : `🚌 Day Scholar · College Bus ${String(currentRoute.busNo || '5').replace(/^#\s*/, '')} (${currentRoute.name})`}
+                : `🚌 Day Scholar · ${formattedBusNo} (Boarding Point: ${displayBoardingPoint})`}
             </span>
           </span>
           <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-extrabold border ${
@@ -655,7 +657,7 @@ export default function DigitalPassView({
                     🎉 College Bus Transportation Slip Generated!
                   </strong>
                   <span className="text-blue-800 text-[11px]">
-                    Synchronized from your verified Onboarding profile (Bus No: {currentRoute.busNo || initialBusNo || '5'} • Boarding Point: {boardingStop}).
+                    Synchronized from your verified Onboarding profile ({formattedBusNo} • Boarding Point: {displayBoardingPoint}).
                   </span>
                 </div>
               </div>
@@ -753,74 +755,43 @@ export default function DigitalPassView({
                       <div className="flex items-center gap-2">
                         <Bus className="w-5 h-5 text-blue-600" />
                         <h4 className="font-bold text-blue-950 text-sm">
-                          {currentRoute.routeNo}: {currentRoute.name}
+                          {displayRouteName}
                         </h4>
                       </div>
                       <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono flex items-center gap-1 border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        Bus No. {String(currentRoute.busNo).replace(/[^0-9]/g, '').padStart(2, '0')}
+                        {formattedBusNo}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-blue-100">
                       <div>
-                        <span className="text-blue-500 font-medium block text-[11px]">Selected Boarding Stop:</span>
+                        <span className="text-blue-500 font-medium block text-[11px]">Allocated Bus Number:</span>
+                        <div className="flex items-center gap-1.5 mt-0.5 font-bold text-slate-800 font-mono">
+                          <Bus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span>{formattedBusNo}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-blue-500 font-medium block text-[11px]">Designated Boarding Stop:</span>
                         <div className="flex items-center gap-1.5 mt-0.5 font-bold text-slate-800">
                           <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span>{boardingStop.replace(/\s*\([^)]*\)/g, '').trim()}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-blue-500 font-medium block text-[11px]">Bus Vehicle Number:</span>
-                        <div className="font-mono font-bold text-slate-800 mt-0.5">
-                          {currentRoute.busRegNo}
+                          <span>{displayBoardingPoint}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-blue-100">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-blue-100">
                       <div>
-                        <span className="text-blue-500 font-medium block text-[11px]">Morning College Arrival:</span>
-                        <strong className="text-slate-800 font-bold mt-0.5 block">{currentRoute.morningArrival}</strong>
+                        <span className="text-blue-500 font-medium block text-[11px]">Commuter Category:</span>
+                        <strong className="text-slate-800 font-bold mt-0.5 block">Day Scholar (College Bus Commuter)</strong>
                       </div>
                       <div>
-                        <span className="text-blue-500 font-medium block text-[11px]">Evening Campus Departure:</span>
-                        <strong className="text-slate-800 font-bold mt-0.5 block">{currentRoute.eveningDeparture}</strong>
+                        <span className="text-blue-500 font-medium block text-[11px]">Transportation Slip Status:</span>
+                        <span className="text-emerald-700 font-bold mt-0.5 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Active &amp; Valid
+                        </span>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    {/* Faculty Incharge */}
-                    <div className="flex items-center justify-between bg-emerald-50/70 border border-emerald-200/80 p-3 rounded-xl">
-                      <div className="min-w-0 pr-2">
-                        <span className="text-[10px] text-emerald-800 uppercase font-black block">Faculty Bus Incharge</span>
-                        <strong className="text-slate-900 font-bold block truncate">{currentRoute.incharge}</strong>
-                      </div>
-                      <a
-                        href={`tel:${currentRoute.inchargePhone}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-bold text-[11px] transition-colors shrink-0 shadow-2xs"
-                        title={`Call ${currentRoute.incharge}`}
-                      >
-                        <Phone className="w-3 h-3" />
-                        <span>{currentRoute.inchargePhone}</span>
-                      </a>
-                    </div>
-
-                    {/* Bus Driver */}
-                    <div className="flex items-center justify-between bg-blue-50/70 border border-blue-200/80 p-3 rounded-xl">
-                      <div className="min-w-0 pr-2">
-                        <span className="text-[10px] text-blue-800 uppercase font-black block">College Bus Driver</span>
-                        <strong className="text-slate-900 font-bold block truncate">{currentRoute.driver}</strong>
-                      </div>
-                      <a
-                        href={`tel:${currentRoute.driverPhone}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-mono font-bold text-[11px] transition-colors shrink-0 shadow-2xs"
-                        title={`Call ${currentRoute.driver}`}
-                      >
-                        <Phone className="w-3 h-3" />
-                        <span>{currentRoute.driverPhone}</span>
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -855,7 +826,7 @@ export default function DigitalPassView({
                       </p>
                       <div className="flex items-center gap-2 pt-1">
                         <a
-                          href={`/verify-pass?id=${encodeURIComponent(`VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&hostel=${encodeURIComponent(`College Bus ${String(currentRoute.busNo || '').replace(/^#\s*/, '')} (${currentRoute.routeNo})`)}&room=${encodeURIComponent(boardingStop)}&category=${encodeURIComponent('COLLEGE BUS COMMUTER PASS')}&purpose=${encodeURIComponent(`Regular Commute • ${currentRoute.via}`)}&curfew=${encodeURIComponent(`Arrival ${currentRoute.morningArrival} | Departure ${currentRoute.eveningDeparture}`)}&parent=${encodeURIComponent(currentRoute.contact)}&warden=${encodeURIComponent(currentRoute.driver)}&time=${encodeURIComponent(issueDate)}`}
+                          href={`/verify-pass?id=${encodeURIComponent(`VSB/AI&DS/BUS-2026-${registerNumber ? registerNumber.slice(-4) : 'BUS'}`)}&name=${encodeURIComponent(studentName)}&reg=${encodeURIComponent(registerNumber)}&dept=${encodeURIComponent(department)}&year=${encodeURIComponent(String(year))}&sec=${encodeURIComponent(section)}&busNo=${encodeURIComponent(displayBusNo)}&stop=${encodeURIComponent(displayBoardingPoint)}&category=${encodeURIComponent('COLLEGE BUS COMMUTER PASS')}&type=bus&time=${encodeURIComponent(issueDate)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-all shadow-2xs"
@@ -899,19 +870,19 @@ export default function DigitalPassView({
                 <div className="flex justify-between items-center text-slate-600">
                   <span className="font-medium">Onboarded Bus Number:</span>
                   <span className="font-bold text-slate-900 bg-emerald-100/70 px-2 py-0.5 rounded-md font-mono">
-                    Bus No. {String(currentRoute.busNo || initialBusNo || '5').replace(/[^0-9]/g, '').padStart(2, '0')}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-slate-600">
-                  <span className="font-medium">Allocated Route:</span>
-                  <span className="font-bold text-slate-900 truncate max-w-[200px]">
-                    {currentRoute.routeNo}: {currentRoute.name.replace(/ to .*/, '').replace(/↔.*/, '')}
+                    {formattedBusNo}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-600">
                   <span className="font-medium">Designated Boarding Stop:</span>
                   <span className="font-extrabold text-emerald-800">
-                    {boardingStop.replace(/\s*\([^)]*\)/g, '').trim()}
+                    {displayBoardingPoint}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-slate-600">
+                  <span className="font-medium">Commuter Classification:</span>
+                  <span className="font-bold text-slate-900">
+                    Day Scholar (College Bus)
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-slate-600 border-t border-emerald-100 pt-1.5">
@@ -940,50 +911,6 @@ export default function DigitalPassView({
               </div>
             </div>
 
-            {/* Bus Crew Direct Calling Card */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-3">
-              <div className="flex items-center gap-2 text-slate-900 font-bold text-xs border-b border-slate-100 pb-2.5">
-                <Phone className="w-4 h-4 text-blue-600" />
-                <span>Bus Crew Direct Mobile Numbers</span>
-              </div>
-              
-              <div className="space-y-2.5 text-xs">
-                {/* Faculty Bus Incharge */}
-                <div className="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-emerald-800 block">Faculty Bus Incharge</span>
-                    <strong className="text-slate-900 text-xs block truncate">{currentRoute.incharge}</strong>
-                    <span className="text-[11px] font-mono text-emerald-900 font-bold">{currentRoute.inchargePhone}</span>
-                  </div>
-                  <a
-                    href={`tel:${currentRoute.inchargePhone}`}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs shrink-0"
-                    title={`Call Incharge: ${currentRoute.inchargePhone}`}
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>Call</span>
-                  </a>
-                </div>
-
-                {/* College Bus Driver */}
-                <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <span className="text-[10px] uppercase font-bold text-blue-800 block">Designated Bus Driver</span>
-                    <strong className="text-slate-900 text-xs block truncate">{currentRoute.driver}</strong>
-                    <span className="text-[11px] font-mono text-blue-900 font-bold">{currentRoute.driverPhone}</span>
-                  </div>
-                  <a
-                    href={`tel:${currentRoute.driverPhone}`}
-                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs shrink-0"
-                    title={`Call Driver: ${currentRoute.driverPhone}`}
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>Call</span>
-                  </a>
-                </div>
-              </div>
-            </div>
-
             {/* Official Transport Rules & Guidelines */}
             <div className="bg-gradient-to-r from-blue-50 to-slate-50 rounded-2xl p-4 border border-blue-100 text-xs text-slate-700 space-y-1.5">
               <div className="font-bold text-blue-900 flex items-center gap-1.5">
@@ -991,28 +918,10 @@ export default function DigitalPassView({
                 <span>Transport Rules &amp; Guidelines</span>
               </div>
               <ul className="text-[11px] text-slate-600 space-y-1 list-disc pl-4 leading-relaxed">
-                <li>Be at the designated boarding stop ({boardingStop}) 5 minutes prior to scheduled morning arrival.</li>
+                <li>Be at the designated boarding stop ({displayBoardingPoint}) 5 minutes prior to scheduled morning arrival.</li>
                 <li>Display this digital QR pass slip or printed pass when boarding the bus.</li>
-                <li>Transport passes are non-transferable and verified cryptographically by security.</li>
+                <li>Transport passes are non-transferable and verified cryptographically by institutional security.</li>
               </ul>
-            </div>
-
-            {/* Campus Security & Transport Incharge Desk */}
-            <div className="bg-gradient-to-br from-slate-900 to-[#071A3D] text-white rounded-3xl p-5 space-y-3 shadow-lg">
-              <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs">
-                <Phone className="w-4 h-4" />
-                <span>Campus Transport &amp; Security Desk</span>
-              </div>
-              <div className="space-y-1.5 text-xs text-slate-300">
-                <div className="flex justify-between">
-                  <span>Main Gate Security:</span>
-                  <span className="font-mono font-bold text-white">04324-290001</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>College Bus Transport Incharge:</span>
-                  <span className="font-mono font-bold text-white">04324-290008</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>

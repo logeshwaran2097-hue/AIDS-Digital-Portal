@@ -97,17 +97,18 @@ function VerifyPassContent() {
   // Bus specific properties
   const busNo = searchParams.get('busNo') || details?.busNo || ''
   const routeNo = searchParams.get('routeNo') || details?.routeNo || ''
-  const routeName = (searchParams.get('routeName') || details?.routeName || 'College Campus Commuter Route')
+  const formattedBusNo = busNo ? `Bus No. ${String(busNo).replace(/[^0-9]/g, '').padStart(2, '0') || busNo}` : ''
+  const routeName = (searchParams.get('routeName') || details?.routeName || (formattedBusNo ? `College Campus Commuter Transit (${formattedBusNo})` : 'College Campus Commuter Transit'))
     .replace(/[↔→]/g, 'to')
     .replace(/!\"/g, 'to')
     .replace(/\s*->\s*/g, ' to ')
     .trim()
   const via = searchParams.get('via') || details?.via || ''
-  const boardingStop = (searchParams.get('stop') || searchParams.get('boardingStop') || details?.boardingStop || 'Designated Stop')
+  const boardingStop = (searchParams.get('stop') || searchParams.get('boardingStop') || details?.boardingStop || 'Designated Boarding Stop')
     .replace(/\s*\([^)]*\)/g, '')
     .trim()
-  const morningArrival = searchParams.get('morningArrival') || details?.morningArrival || '08:30 AM'
-  const eveningDeparture = searchParams.get('eveningDeparture') || details?.eveningDeparture || '05:00 PM'
+  const morningArrival = searchParams.get('morningArrival') || details?.morningArrival || ''
+  const eveningDeparture = searchParams.get('eveningDeparture') || details?.eveningDeparture || ''
 
   const [gateActionStatus, setGateActionStatus] = useState<'pending' | 'exited' | 'returned'>('pending')
   const [boardingVerified, setBoardingVerified] = useState(false)
@@ -229,11 +230,11 @@ function VerifyPassContent() {
                       <div className="flex items-center gap-2">
                         <Bus className="w-4 h-4 text-blue-600" />
                         <strong className="text-sm font-black text-blue-950">
-                          {routeNo}: {routeName}
+                          {routeNo ? `${routeNo}: ` : ''}{routeName}
                         </strong>
                       </div>
                       <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 font-mono">
-                        Bus No. {String(busNo).replace(/[^0-9]/g, '').padStart(2, '0') || busNo}
+                        {formattedBusNo || (busNo ? `Bus No. ${busNo}` : 'College Bus')}
                       </span>
                     </div>
 
@@ -241,7 +242,7 @@ function VerifyPassContent() {
                       <div className="flex items-start gap-1.5">
                         <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
                         <div>
-                          <span className="text-[10px] text-slate-400 block font-semibold">Boarding Stop</span>
+                          <span className="text-[10px] text-slate-400 block font-semibold">Designated Boarding Stop</span>
                           <strong className="text-slate-800 text-xs">{boardingStop}</strong>
                         </div>
                       </div>
@@ -251,16 +252,22 @@ function VerifyPassContent() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100 text-slate-600">
-                      <div>
-                        <span className="text-[10px] text-slate-400 block">Morning Arrival</span>
-                        <strong className="text-slate-800 font-bold">{morningArrival}</strong>
+                    {(morningArrival || eveningDeparture) && (
+                      <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-slate-100 text-slate-600">
+                        {morningArrival && (
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">Morning Arrival</span>
+                            <strong className="text-slate-800 font-bold">{morningArrival}</strong>
+                          </div>
+                        )}
+                        {eveningDeparture && (
+                          <div>
+                            <span className="text-[10px] text-slate-400 block">Evening Departure</span>
+                            <strong className="text-slate-800 font-bold">{eveningDeparture}</strong>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block">Evening Departure</span>
-                        <strong className="text-slate-800 font-bold">{eveningDeparture}</strong>
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Verified Transport Status Banner */}
