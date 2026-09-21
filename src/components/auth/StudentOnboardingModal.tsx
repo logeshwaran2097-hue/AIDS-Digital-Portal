@@ -59,6 +59,7 @@ export function StudentOnboardingModal({
   const [onboardingStep, setOnboardingStep] = useState<1 | 2 | 3>(1)
   const [loading, setLoading] = useState(false)
   const [step3Confirmed, setStep3Confirmed] = useState(false)
+  const [step3Error, setStep3Error] = useState<string | null>(null)
 
   // Form State
   const [form, setForm] = useState({
@@ -435,6 +436,7 @@ export function StudentOnboardingModal({
     }
 
     setLoading(true)
+    setStep3Error(null)
     try {
       const finalResidency = form.residencyStatus === 'Day Scholar'
         ? (form.dayScholarType === 'College Bus'
@@ -446,7 +448,10 @@ export function StudentOnboardingModal({
 
       const res = await fetch('/api/auth/student/complete-onboarding', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-portal-role': 'student',
+        },
         body: JSON.stringify({
           name: initialData.name,
           email: form.email.trim().toLowerCase(),
@@ -514,10 +519,14 @@ export function StudentOnboardingModal({
           onComplete(data.user || {})
         }, 600)
       } else {
-        toast.error(data.message || 'Invalid or expired OTP. Please try again.')
+        const errorMsg = data.message || 'Invalid or expired OTP. Please try again.'
+        setStep3Error(errorMsg)
+        toast.error(errorMsg)
       }
     } catch {
-      toast.error('Network error completing verification.')
+      const netMsg = 'Network error completing verification. Please check your connection and try again.'
+      setStep3Error(netMsg)
+      toast.error(netMsg)
     } finally {
       setLoading(false)
     }
@@ -1577,7 +1586,10 @@ export function StudentOnboardingModal({
                     type="checkbox"
                     required
                     checked={step3Confirmed}
-                    onChange={(e) => setStep3Confirmed(e.target.checked)}
+                    onChange={(e) => {
+                      setStep3Confirmed(e.target.checked)
+                      if (step3Error) setStep3Error(null)
+                    }}
                     className="w-5 h-5 rounded-md text-emerald-600 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 cursor-pointer transition-all"
                   />
                 </div>
@@ -1606,6 +1618,14 @@ export function StudentOnboardingModal({
                 </div>
               </label>
             </div>
+
+            {/* Inline Error Banner if Step 3 fails */}
+            {step3Error && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs font-semibold animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{step3Error}</span>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">

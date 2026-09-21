@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     // Process in safe batches of 10 to stay safely within PostgreSQL connection limits
     const chunkSize = 10
     for (let i = 0; i < students.length; i += chunkSize) {
-      const chunk: BulkStudentInput[] = students.slice(i, i + chunkSize)
+      const chunk: BulkStudentInput[] = students.slice(i, i + chunkSize) as any
 
       await Promise.all(
         chunk.map(async (st, index) => {

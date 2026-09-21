@@ -824,7 +824,10 @@ export default function LoginPage() {
     try {
       const res = await fetch('/api/auth/complete-profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-portal-role': selectedRole || 'student',
+        },
         body: JSON.stringify({
           userId: onboardingUser?.id,
           registerNumber: onboardingForm.registerNumber,

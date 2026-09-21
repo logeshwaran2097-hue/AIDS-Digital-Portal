@@ -18,7 +18,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await getSession()
+    let session = await getSession('student')
+    if (!session) {
+      session = await getSession()
+    }
     if (!session || session.role !== 'student') {
       return NextResponse.json({ success: false, message: 'Unauthorized. Please login first.' }, { status: 401 })
     }
@@ -46,6 +49,7 @@ export async function POST(request: NextRequest) {
       const userUpdateData: any = {
         name: name ? name.trim() : session.name,
         mustChangePassword: false,
+        status: 'active',
         updatedAt: new Date(),
       }
       if (phone !== undefined) userUpdateData.phone = phone ? phone.trim() : null
@@ -87,7 +91,10 @@ export async function POST(request: NextRequest) {
       if (parentPhone !== undefined) studentUpdateData.parentPhone = parentPhone ? parentPhone.trim() : null
       if (isParentWhatsapp !== undefined) studentUpdateData.isParentWhatsapp = Boolean(isParentWhatsapp)
       if (bloodGroup !== undefined) studentUpdateData.bloodGroup = bloodGroup
-      if (residencyStatus !== undefined) studentUpdateData.residencyStatus = residencyStatus
+      if (residencyStatus !== undefined) {
+        studentUpdateData.residencyStatus = residencyStatus
+        studentUpdateData.busDetails = residencyStatus
+      }
       if (hostelBlock !== undefined) studentUpdateData.hostelBlock = hostelBlock
       if (roomNo !== undefined) studentUpdateData.roomNo = roomNo
       if (busNo !== undefined) studentUpdateData.busNo = busNo
@@ -183,12 +190,12 @@ export async function POST(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     })
 
-    // Fallback: If already verified and marked used during Step 2 auto-verification within last 30 minutes
+    // Fallback: If already verified and marked used during Step 2 auto-verification within last 2 hours
     if (!otpRecord) {
       otpRecord = await prisma.oTP.findFirst({
         where: {
           email: normalizedEmail,
-          createdAt: { gt: new Date(Date.now() - 30 * 60 * 1000) },
+          createdAt: { gt: new Date(Date.now() - 2 * 60 * 60 * 1000) },
         },
         orderBy: { createdAt: 'desc' },
       })
@@ -252,6 +259,7 @@ export async function POST(request: NextRequest) {
       phone: phone ? phone.trim() : undefined,
       emailVerified: true,
       mustChangePassword: false,
+      status: 'active',
       updatedAt: new Date(),
     }
     if (profileImage !== undefined) userUpdateData.profileImage = profileImage
@@ -318,7 +326,10 @@ export async function POST(request: NextRequest) {
     if (parentPhone) studentUpdateData.parentPhone = parentPhone.trim()
     if (isParentWhatsapp !== undefined) studentUpdateData.isParentWhatsapp = Boolean(isParentWhatsapp)
     if (bloodGroup !== undefined) studentUpdateData.bloodGroup = bloodGroup
-    if (residencyStatus !== undefined) studentUpdateData.residencyStatus = residencyStatus
+    if (residencyStatus !== undefined) {
+      studentUpdateData.residencyStatus = residencyStatus
+      studentUpdateData.busDetails = residencyStatus
+    }
     if (hostelBlock !== undefined) studentUpdateData.hostelBlock = hostelBlock
     if (roomNo !== undefined) studentUpdateData.roomNo = roomNo
     if (busNo !== undefined) studentUpdateData.busNo = busNo
