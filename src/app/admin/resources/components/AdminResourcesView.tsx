@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -17,7 +17,13 @@ import {
   FileText,
   Clock,
   Sparkles,
+  UploadCloud,
+  FileCheck,
+  Loader2,
+  AlertCircle,
+  FileUp,
 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
 export interface ResourceRecord {
@@ -43,6 +49,13 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [selectedResource, setSelectedResource] = useState<ResourceRecord | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+
+  // File Upload State
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -134,42 +147,135 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
     })
   }
 
-  const handleAddSubmit = (e: React.FormEvent) => {
+  const handleFilePicked = (file: File) => {
+    setSelectedFile(file)
+    setUploadError(null)
+    if (!formData.name.trim()) {
+      const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ')
+      setFormData((prev) => ({
+        ...prev,
+        name: cleanName,
+        fileName: file.name,
+      }))
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        fileName: file.name,
+      }))
+    }
+  }
+
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name) {
-      alert('Please fill in Resource Title')
+    if (!formData.name.trim()) {
+      toast.error('Please enter a Resource Title')
       return
     }
 
-    const newRes: ResourceRecord = {
-      id: 'res_' + Date.now(),
-      name: formData.name,
-      description: formData.description,
-      fileName: formData.fileName || `${formData.name.replace(/\s+/g, '_')}.pdf`,
-      fileType: 'pdf',
-      fileSize: 15400000,
-      fileUrl: `/resources/${formData.fileName || 'document.pdf'}`,
-      uploadedByName: formData.uploadedByName,
-      status: 'approved',
-      resourceType: formData.resourceType,
-      semester: Number(formData.semester),
-    }
+    setIsUploading(true)
+    setUploadError(null)
 
-    setResources([newRes, ...resources])
-    setIsAddModalOpen(false)
-    setFormData({
-      name: '',
-      description: '',
-      fileName: '',
-      resourceType: 'REFERENCE_BOOK',
-      semester: 1,
-      uploadedByName: 'System Administrator',
-    })
+    try {
+      let res: Response
+      if (selectedFile) {
+        const bodyFormData = new FormData()
+        bodyFormData.append('title', formData.name.trim())
+        bodyFormData.append('description', formData.description.trim())
+        bodyFormData.append('resourceType', formData.resourceType)
+        bodyFormData.append('semester', String(formData.semester))
+        bodyFormData.append('academicYear', '2025-2026')
+        bodyFormData.append('uploadedByName', formData.uploadedByName || 'System Administrator')
+        bodyFormData.append('file', selectedFile)
+
+        res = await fetch('/api/resources', {
+          method: 'POST',
+          body: bodyFormData,
+        })
+      } else {
+        const payload = {
+          title: formData.name.trim(),
+          description: formData.description.trim(),
+          resourceType: formData.resourceType,
+          semester: Number(formData.semester),
+          academicYear: '2025-2026',
+          uploadedByName: formData.uploadedByName || 'System Administrator',
+          fileName: formData.fileName || `${formData.name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 40)}.pdf`,
+          fileSize: 12500000,
+          fileType: 'application/pdf',
+        }
+
+        res = await fetch('/api/resources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
+
+      const result = await res.json()
+      if (result.success && result.resource) {
+        const created: ResourceRecord = {
+          id: result.resource.id,
+          name: result.resource.name,
+          description: result.resource.description,
+          fileName: result.resource.fileName,
+          fileType: result.resource.fileType || 'pdf',
+          fileSize: result.resource.fileSize || 1024 * 1024 * 5,
+          fileUrl: result.resource.fileUrl || `/resources/${result.resource.fileName}`,
+          uploadedByName: result.resource.uploadedByName || 'System Administrator',
+          status: result.resource.status || 'approved',
+          resourceType: result.resource.resourceType || formData.resourceType,
+          semester: result.resource.semester || Number(formData.semester),
+        }
+        setResources([created, ...resources])
+        setIsAddModalOpen(false)
+        setSelectedFile(null)
+        setFormData({
+          name: '',
+          description: '',
+          fileName: '',
+          resourceType: 'REFERENCE_BOOK',
+          semester: 1,
+          uploadedByName: 'System Administrator',
+        })
+        toast.success(result.message || 'Study resource published to library successfully!')
+      } else {
+        const msg = result.message || 'Failed to upload digital resource'
+        setUploadError(msg)
+        toast.error(msg)
+      }
+    } catch (err) {
+      console.error(err)
+      const msg = 'Network error uploading study resource.'
+      setUploadError(msg)
+      toast.error(msg)
+    } finally {
+      setIsUploading(false)
+    }
   }
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to remove this digital resource from the library?')) {
-      setResources(resources.filter((r) => r.id !== id))
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to permanently remove "${name}" from the digital library?`)) {
+      return
+    }
+
+    const prevResources = [...resources]
+    setResources(resources.filter((r) => r.id !== id))
+
+    try {
+      const res = await fetch(`/api/resources?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      })
+      const result = await res.json()
+      if (result.success) {
+        toast.success(`"${name}" removed from digital library.`)
+      } else {
+        setResources(prevResources)
+        toast.error(result.message || 'Failed to delete resource')
+      }
+    } catch (err) {
+      console.error(err)
+      setResources(prevResources)
+      toast.error('Error removing resource.')
     }
   }
 
@@ -572,16 +678,109 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
               </button>
             </div>
 
+            {uploadError && (
+              <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-2xl flex items-center gap-2 text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
+              {/* Interactive File Dropzone */}
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1.5 flex items-center justify-between">
+                  <span>Upload Study Material / PDF File</span>
+                  <span className="text-[10px] font-normal text-gray-400">PDF, DOCX, PPTX, EPUB (Up to 50MB)</span>
+                </label>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.epub,.txt"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleFilePicked(file)
+                  }}
+                />
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setIsDragging(true)
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setIsDragging(false)
+                    const file = e.dataTransfer.files?.[0]
+                    if (file) handleFilePicked(file)
+                  }}
+                  className={`border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all duration-200 ${
+                    isDragging
+                      ? 'border-[#1455D9] bg-blue-50/70 ring-2 ring-[#1455D9]/20 scale-[1.01]'
+                      : selectedFile
+                      ? 'border-emerald-300 bg-emerald-50/50'
+                      : 'border-gray-200 hover:border-[#1455D9]/50 hover:bg-gray-50/80 bg-slate-50/50'
+                  }`}
+                >
+                  {selectedFile ? (
+                    <div className="flex items-center justify-between gap-3 text-left">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                          <FileCheck className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#071A3D] text-xs truncate">{selectedFile.name}</p>
+                          <p className="text-[10px] text-gray-400 font-mono">
+                            {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB · Ready to upload
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedFile(null)
+                          if (fileInputRef.current) fileInputRef.current.value = ''
+                        }}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                        title="Remove file"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 py-2">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-100/70 text-[#1455D9] flex items-center justify-center mx-auto shadow-2xs">
+                        <UploadCloud className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#071A3D]">
+                          Click to browse file or drag &amp; drop here
+                        </p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">
+                          Select textbook PDF, syllabus pack, lecture notes, or lab manual
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-[#1455D9] font-bold text-[10px] border border-blue-200/60">
+                        <FileUp className="w-3 h-3" /> Browse Computer
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1">Resource Title *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Artificial Intelligence: A Modern Approach"
+                  placeholder="e.g. Artificial Intelligence: A Modern Approach - Stuart Russell"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
                 />
               </div>
 
@@ -605,7 +804,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
                   <select
                     value={formData.resourceType}
                     onChange={(e) => setFormData({ ...formData, resourceType: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-semibold"
                   >
                     <option value="REFERENCE_BOOK">Reference Textbook</option>
                     <option value="LECTURE_NOTES">Lecture Notes</option>
@@ -616,21 +815,10 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
               </div>
 
               <div>
-                <label className="block font-bold text-[#071A3D] mb-1">File Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. AI_Modern_Approach_4th_Ed.pdf"
-                  value={formData.fileName}
-                  onChange={(e) => setFormData({ ...formData, fileName: e.target.value })}
-                  className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#071A3D] mb-1">Description</label>
+                <label className="block font-bold text-[#071A3D] mb-1">Description &amp; Syllabus Coverage</label>
                 <textarea
                   rows={2}
-                  placeholder="Author details, edition, coverage topics..."
+                  placeholder="Author details, edition, key units covered, or exam syllabus notes..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
@@ -640,16 +828,29 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
               <div className="flex items-center justify-end gap-3 pt-3 border-t">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() => {
+                    setIsAddModalOpen(false)
+                    setSelectedFile(null)
+                    setUploadError(null)
+                  }}
                   className="px-4 py-2 rounded-xl text-gray-500 hover:bg-gray-100 font-bold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md"
+                  disabled={isUploading}
+                  className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  Save to Library
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading &amp; Saving...
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-4 h-4" /> Save to Library
+                    </>
+                  )}
                 </button>
               </div>
             </form>
