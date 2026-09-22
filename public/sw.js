@@ -3,7 +3,7 @@ const STATIC_ASSETS = [
   '/',
   '/login',
   '/manifest.json',
-  '/college-emblem.png',
+  '/app-logo.png',
   '/icon-192.png',
   '/icon-512.png',
   '/maskable-icon-192.png',
@@ -32,7 +32,7 @@ self.addEventListener('message', (event) => {
     const origin = self.location.origin
     const title = event.data.title || 'Digital Portal of AI&DS'
     const opts = event.data.options || {}
-    const iconUrl = opts.icon || (origin + '/college-emblem.png')
+    const iconUrl = opts.icon || (origin + '/app-logo.png')
     const badgeUrl = opts.badge || (origin + '/notification-badge.png')
     const notifTag = opts.tag || ('vsb-' + Date.now())
     const targetUrl = opts.data?.url || '/dashboard/notifications'
@@ -136,7 +136,7 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : (origin + '/college-emblem.png')
+  const iconUrl = data.icon ? (data.icon.startsWith('http') ? data.icon : origin + data.icon) : (origin + '/app-logo.png')
   const badgeUrl = data.badge ? (data.badge.startsWith('http') ? data.badge : origin + data.badge) : (origin + '/notification-badge.png')
   const notifTag = data.tag || (data.id ? ('vsb-notif-' + data.id) : 'vsb-portal-announcements')
 

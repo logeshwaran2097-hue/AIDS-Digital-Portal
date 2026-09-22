@@ -338,7 +338,7 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
           title,
           options: {
             body: payload.message,
-            icon: `${origin}/college-emblem.png`,
+            icon: `${origin}/app-logo.png`,
             badge: `${origin}/notification-badge.png`,
             tag: notifTag,
             data: { url: notifUrl, id: payload.id },
@@ -364,7 +364,7 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
         if (reg && reg.showNotification) {
           await reg.showNotification(title, {
             body: payload.message,
-            icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
+            icon: origin ? `${origin}/app-logo.png` : '/app-logo.png',
             badge: origin ? `${origin}/notification-badge.png` : '/notification-badge.png',
             timestamp: Date.now(),
             data: { url: notifUrl, id: payload.id },
@@ -383,7 +383,7 @@ export async function dispatchNativeNotification(payload: RealtimeNotificationPa
       try {
         const notif = new Notification(title, {
           body: payload.message,
-          icon: origin ? `${origin}/college-emblem.png` : '/college-emblem.png',
+          icon: origin ? `${origin}/app-logo.png` : '/app-logo.png',
           tag: notifTag,
           data: { url: notifUrl, id: payload.id },
         })

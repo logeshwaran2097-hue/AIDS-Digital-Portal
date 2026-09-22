@@ -602,14 +602,14 @@ export function ApplyODPermissionModal({
         {/* Modal Header */}
         <div className="px-6 pt-5 pb-4 sm:px-8 border-b border-gray-100 bg-gradient-to-b from-slate-50/80 to-transparent flex items-center justify-between gap-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="relative p-0.5 rounded-2xl bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_15px_rgba(231,185,62,0.4)]">
-              <div className="w-10 h-10 rounded-[14px] bg-[#071A3D] p-1 flex items-center justify-center overflow-hidden">
+            <div className="relative rounded-2xl shadow-md">
+              <div className="w-10 h-10 rounded-[14px] flex items-center justify-center overflow-hidden">
                 <Image
-                  src="/college-emblem.png"
+                  src="/app-logo.png"
                   alt="V.S.B. Crest"
-                  width={34}
-                  height={34}
-                  className="w-full h-full object-contain filter drop-shadow-[0_2px_4px_rgba(231,185,62,0.8)]"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-contain rounded-[14px]"
                 />
               </div>
             </div>

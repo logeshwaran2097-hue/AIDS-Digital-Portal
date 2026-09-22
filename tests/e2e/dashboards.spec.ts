@@ -32,6 +32,9 @@ test.describe('Portal Navigation & Security Guard Suite', () => {
     const manifestRes = await request.get('/manifest.json')
     expect(manifestRes.status()).toBe(200)
 
+    const appLogoRes = await request.get('/app-logo.png')
+    expect(appLogoRes.status()).toBe(200)
+
     const emblemRes = await request.get('/college-emblem.png')
     expect(emblemRes.status()).toBe(200)
   })

@@ -403,19 +403,15 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 sm:gap-6">
             {/* Official College Emblem with Pulsing Gold Corona & Hover Levitation */}
             <div className="relative shrink-0 group">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl p-1 bg-gradient-to-tr from-[#E7B93E] via-[#FFF3B8] to-[#B8860B] shadow-[0_0_35px_rgba(231,185,62,0.45)] flex items-center justify-center anim-medallion-levitate transition-transform duration-500 group-hover:scale-105">
-                <div className="w-full h-full rounded-xl bg-white p-1.5 flex items-center justify-center overflow-hidden relative">
-                  <Image
-                    src="/college-emblem.png"
-                    alt="V.S.B. Engineering College Emblem"
-                    width={84}
-                    height={84}
-                    className="w-full h-full object-contain"
-                    priority
-                  />
-                  {/* Subtle specular sheen */}
-                  <div className="anim-gold-sheen" />
-                </div>
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl shadow-[0_0_35px_rgba(231,185,62,0.45)] flex items-center justify-center anim-medallion-levitate transition-transform duration-500 group-hover:scale-105">
+                <Image
+                  src="/app-logo.png"
+                  alt="V.S.B. Engineering College Emblem"
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-contain rounded-2xl"
+                  priority
+                />
               </div>
             </div>
 

@@ -1132,14 +1132,14 @@ export default function LoginPage() {
             {/* Specular Sheen Sweep */}
             <div className="anim-gold-sheen" />
 
-            {/* Inner Pure White Disc Housing Authentic Emblem */}
-            <div className="w-full h-full rounded-full bg-white flex items-center justify-center p-1.5 shadow-[0_4px_12px_rgba(5,19,41,0.2)] border-2 border-[#EAB308]/90 overflow-hidden relative z-10 group-hover:rotate-3 transition-transform duration-500">
+            {/* Inner Housing Authentic Official Logo */}
+            <div className="w-full h-full rounded-[18px] sm:rounded-[22px] bg-white flex items-center justify-center p-1 shadow-[0_4px_12px_rgba(5,19,41,0.2)] overflow-hidden relative z-10 group-hover:scale-105 transition-transform duration-500">
               <Image
-                src="/college-emblem.png"
+                src="/app-logo.png"
                 alt="V.S.B. Engineering College Logo"
-                width={72}
-                height={72}
-                className="w-full h-full object-contain drop-shadow-xs"
+                width={80}
+                height={80}
+                className="w-full h-full object-contain rounded-[16px] drop-shadow-xs"
                 priority
               />
             </div>

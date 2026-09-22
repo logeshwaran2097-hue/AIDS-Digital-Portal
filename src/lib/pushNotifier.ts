@@ -129,7 +129,7 @@ export async function dispatchWebPushNotification(options: DispatchPushOptions) 
     const payload: PushNotificationPayload = {
       title: options.title || 'Digital Portal of AI&DS',
       body: options.message,
-      icon: '/college-emblem.png',
+      icon: '/app-logo.png',
       badge: '/notification-badge.png',
       tag: options.tag || `portal-${Date.now()}`,
       data: {

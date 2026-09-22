@@ -68,13 +68,13 @@ export function RealtimeNotificationToast({
 
         {/* Animated College Emblem & Live Pulse Badge on Left */}
         <div className="relative shrink-0 mt-0.5">
-          <div className="w-12 h-12 rounded-2xl bg-white p-1 shadow-md border-2 border-white/80 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
+          <div className="w-12 h-12 rounded-2xl shadow-md flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
             <Image
-              src="/college-emblem.png"
+              src="/app-logo.png"
               alt="VSB Emblem"
-              width={42}
-              height={42}
-              className="object-contain"
+              width={48}
+              height={48}
+              className="w-full h-full object-contain rounded-2xl"
             />
           </div>
           <span className="absolute -bottom-1 -right-1 flex h-4 w-4">

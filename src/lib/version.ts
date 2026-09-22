@@ -3,12 +3,13 @@
  * Digital Portal of AI & DS - V.S.B. Engineering College
  */
 
-export const APP_VERSION = '2.9.1'
+export const APP_VERSION = '2.9.2'
 export const APP_VERSION_LABEL = `v${APP_VERSION}`
 
 export const APP_RELEASE_DATE = '2026-09-22'
 
 export const APP_RELEASE_HIGHLIGHTS = [
+  'AI Agents Control Center: Completely rebuilt the Admin AI portal into a comprehensive multi-tab AI Agents Control Center. Features a live dashboard with 6 specialized AI agents (VSB Core Assistant, Faculty & Advisor AI, Notification Intelligence, Syllabus & Curriculum AI, Pass & Security AI, Analytics & Insights Engine), each with real-time status badges (Active/Idle/Training), accuracy scores, response-time metrics, and knowledge domain breakdowns. Includes a Live Chat panel connected to the real database-backed /api/ai endpoint with agent switching, an Admin-specific Knowledge Base viewer listing all 14 loaded curriculum and governance modules with sync status, and an Analytics tab with a performance comparison table, system health progress bars, and query distribution breakdown by domain.',
   'Dynamic Admin-Managed Subjects & Credit Scores: Completely removed static hardcoded placeholder subjects and mock presets from the GPA Calculator and Academic Marksheet modules. The GPA calculator now dynamically synchronizes with official courses, course types, and credit scores (including fractional lab credits e.g. 1.5) configured by Administrators in the Academics management portal, while providing instant on-the-fly custom course creation and grade computation for all 8 semesters.',
   'Comprehensive Admin Student Table View: Expanded the desktop table from 8 columns to 15 dedicated columns showing every available student field — Register Number, Name, Date of Birth, Blood Group, Email/Phone/Parent Contact, Class Advisor, Year/Semester, Section, Batch, Residency & Transport (with boarding point and address), CGPA, Attendance (color-coded above/below 75%), Activity Status, and Actions. Admins now have complete visibility into all student data at a glance without needing to open individual dossiers.',
   'Streamlined Professional Digital Portal PDF Attestation: Redesigned the institutional Digital Portal Document attestation block across all generated PDFs (Student Progression Reports, Attendance Registers, Analytics Dossiers, Bus Passes, Gate Passes) into an ultra-clean, simple, and executive 24mm authenticated electronic copy declaration. Replaced bulky legal paragraphs with a concise 2-sentence statutory verification note, subtle brand accent, and compact metadata strip.',

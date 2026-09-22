@@ -9,18 +9,41 @@ export function MobileAppSplashScreen() {
   const [isFadingOut, setIsFadingOut] = useState(false)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    // Never show splash screen if already displayed in this browser session
+    const alreadyShown = sessionStorage.getItem('vsb_splash_shown')
+    const currentPath = window.location.pathname || ''
+
+    // Never show splash when navigating or changing menus inside the portal
+    const isPortalRoute =
+      currentPath.startsWith('/dashboard') ||
+      currentPath.startsWith('/faculty-dashboard') ||
+      currentPath.startsWith('/hod-dashboard') ||
+      currentPath.startsWith('/admin')
+
+    if (alreadyShown || isPortalRoute) {
+      setIsVisible(false)
+      return
+    }
+
+    // Mark as shown so changing menus, navigating, or refreshing never triggers splash again
+    try {
+      sessionStorage.setItem('vsb_splash_shown', 'true')
+    } catch {}
+
     // Show splash only on client side to prevent hydration mismatch
     setIsVisible(true)
 
-    // 4.2-second ultra-luxury cinematic presentation, then smooth dissolve
+    // Ultra-luxury cinematic presentation, then smooth dissolve
     const fadeTimer = setTimeout(() => {
       setIsFadingOut(true)
-    }, 4200)
+    }, 3800)
 
-    // Unmount from DOM at 4.8s
+    // Unmount from DOM
     const unmountTimer = setTimeout(() => {
       setIsVisible(false)
-    }, 4800)
+    }, 4400)
 
     return () => {
       clearTimeout(fadeTimer)
