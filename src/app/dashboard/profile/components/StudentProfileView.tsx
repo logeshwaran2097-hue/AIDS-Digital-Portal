@@ -572,13 +572,6 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
 
           <div className="flex items-center flex-wrap gap-2 self-stretch md:self-auto justify-end">
             <button
-              onClick={() => handleOpenEdit('personal')}
-              type="button"
-              className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-xs font-bold flex items-center gap-1.5 transition-all border border-white/20 shadow-xs cursor-pointer hover:scale-102"
-            >
-              <Edit3 className="w-4 h-4 text-[#22C7E8]" /> Edit Profile
-            </button>
-            <button
               onClick={handleDownloadCard}
               type="button"
               className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shrink-0 cursor-pointer hover:scale-102"
@@ -590,50 +583,26 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
 
         {/* KPI Ribbon */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-white/15">
-          <div
-            onClick={() => handleOpenEdit('kpis')}
-            className="bg-white/10 hover:bg-white/15 cursor-pointer transition-all backdrop-blur-md p-3.5 rounded-2xl border border-white/10 group relative"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] text-gray-300 uppercase font-bold">Academic CGPA</p>
-              <Edit3 className="w-3 h-3 text-white/40 group-hover:text-[#F4C430] transition-colors" />
-            </div>
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+            <p className="text-[10px] text-gray-300 uppercase font-bold">Academic CGPA</p>
             <p className="text-xl font-black text-[#F4C430] mt-0.5">{profile.cgpa}</p>
             <p className="text-[10px] text-gray-300">{profile.cgpaClass}</p>
           </div>
 
-          <div
-            onClick={() => handleOpenEdit('kpis')}
-            className="bg-white/10 hover:bg-white/15 cursor-pointer transition-all backdrop-blur-md p-3.5 rounded-2xl border border-white/10 group relative"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] text-gray-300 uppercase font-bold">Attendance Record</p>
-              <Edit3 className="w-3 h-3 text-white/40 group-hover:text-green-400 transition-colors" />
-            </div>
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+            <p className="text-[10px] text-gray-300 uppercase font-bold">Attendance Record</p>
             <p className="text-xl font-black text-green-400 mt-0.5">{profile.attendance}</p>
             <p className="text-[10px] text-green-300">{profile.attendanceRemark}</p>
           </div>
 
-          <div
-            onClick={() => handleOpenEdit('kpis')}
-            className="bg-white/10 hover:bg-white/15 cursor-pointer transition-all backdrop-blur-md p-3.5 rounded-2xl border border-white/10 group relative"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] text-gray-300 uppercase font-bold">Department Standing</p>
-              <Edit3 className="w-3 h-3 text-white/40 group-hover:text-[#22C7E8] transition-colors" />
-            </div>
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+            <p className="text-[10px] text-gray-300 uppercase font-bold">Department Standing</p>
             <p className="text-xl font-black text-[#22C7E8] mt-0.5">{profile.rank}</p>
             <p className="text-[10px] text-gray-300">{profile.rankRemark}</p>
           </div>
 
-          <div
-            onClick={() => handleOpenEdit('kpis')}
-            className="bg-white/10 hover:bg-white/15 cursor-pointer transition-all backdrop-blur-md p-3.5 rounded-2xl border border-white/10 group relative"
-          >
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] text-gray-300 uppercase font-bold">Arrear Status</p>
-              <Edit3 className="w-3 h-3 text-white/40 group-hover:text-emerald-300 transition-colors" />
-            </div>
+          <div className="bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10">
+            <p className="text-[10px] text-gray-300 uppercase font-bold">Arrear Status</p>
             <p className="text-xl font-black text-emerald-300 mt-0.5">{profile.arrears}</p>
             <p className="text-[10px] text-gray-300">{profile.arrearRemark}</p>
           </div>
@@ -655,13 +624,6 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
                   <p className="text-[11px] text-gray-400">Department curriculum &amp; batch registration</p>
                 </div>
               </div>
-              <button
-                onClick={() => handleOpenEdit('academic')}
-                className="px-2.5 py-1.5 rounded-xl text-xs font-bold text-[#1455D9] bg-blue-50 hover:bg-blue-100 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Edit Academic Details"
-              >
-                <Edit3 className="w-3.5 h-3.5" /> Edit
-              </button>
             </div>
 
             <div className="space-y-3 text-xs">
