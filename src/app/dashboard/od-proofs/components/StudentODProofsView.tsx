@@ -26,6 +26,8 @@ import {
   GraduationCap,
   Eye,
   Download,
+  Edit3,
+  Trash2,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import {
@@ -96,10 +98,22 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
 
   // Modals state
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
+  const [isEditEventOpen, setIsEditEventOpen] = useState(false)
+  const [editingProof, setEditingProof] = useState<ODProofItem | null>(null)
   const [isGeoModalOpen, setIsGeoModalOpen] = useState(false)
   const [isCertModalOpen, setIsCertModalOpen] = useState(false)
   const [selectedProof, setSelectedProof] = useState<ODProofItem | null>(null)
   const [previewMedia, setPreviewMedia] = useState<{ url: string; title: string; category?: string } | null>(null)
+
+  // Edit Event Form State
+  const [editForm, setEditForm] = useState({
+    eventName: '',
+    category: 'Hackathon',
+    durationFormat: '24 Hours (2 Days)' as HackathonDurationFormat,
+    fromDate: new Date().toISOString().split('T')[0],
+    toDate: new Date().toISOString().split('T')[0],
+    venueCollege: '',
+  })
 
   // Safely open base64 data URLs in a new browser tab without Chrome top-frame navigation block
   const openInNewTabSafely = (url: string) => {
@@ -220,6 +234,91 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       }
     } catch {
       toast.error('Network error registering OD.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 2b. OPEN & SUBMIT EDIT OD EVENT
+  const openEditEventModal = (p: ODProofItem) => {
+    setEditingProof(p)
+    const dates = (p.eventDate || '').split(' to ')
+    const from = dates[0] || new Date().toISOString().split('T')[0]
+    const to = dates[1] || dates[0] || new Date().toISOString().split('T')[0]
+    setEditForm({
+      eventName: p.eventName || '',
+      category: p.category || 'Hackathon',
+      durationFormat: (p.durationFormat as HackathonDurationFormat) || '24 Hours (2 Days)',
+      fromDate: from,
+      toDate: to,
+      venueCollege: p.venueCollege || '',
+    })
+    setIsEditEventOpen(true)
+  }
+
+  const handleEditEventSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingProof) return
+    if (!editForm.eventName.trim()) {
+      toast.error('Please enter an event name.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const eventDate = editForm.fromDate === editForm.toDate
+        ? editForm.fromDate
+        : `${editForm.fromDate} to ${editForm.toDate}`
+
+      const res = await fetch('/api/od-proofs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'UPDATE_OD',
+          id: editingProof.id,
+          eventName: editForm.eventName.trim(),
+          category: editForm.category,
+          durationFormat: editForm.durationFormat,
+          eventDate,
+          venueCollege: editForm.venueCollege ? editForm.venueCollege.trim() : '',
+        }),
+      })
+      const result = await res.json()
+      if (res.ok && result.success) {
+        toast.success(result.message || 'OD Event updated successfully!')
+        setProofs((prev) => prev.map((p) => (p.id === editingProof.id ? result.proof : p)))
+        setIsEditEventOpen(false)
+        setEditingProof(null)
+      } else {
+        toast.error(result.message || 'Failed to update OD event.')
+      }
+    } catch {
+      toast.error('Network error updating OD event.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 2c. DELETE OD EVENT
+  const handleDeleteEvent = async (p: ODProofItem) => {
+    if (!confirm(`Are you sure you want to delete "${p.eventName}"? This cannot be undone.`)) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/od-proofs?id=${encodeURIComponent(p.id)}`, {
+        method: 'DELETE',
+      })
+      const result = await res.json()
+      if (res.ok && result.success) {
+        toast.success(result.message || 'Event removed successfully.')
+        setProofs((prev) => prev.filter((item) => item.id !== p.id))
+      } else {
+        toast.error(result.message || 'Failed to remove event.')
+      }
+    } catch {
+      toast.error('Network error removing event.')
     } finally {
       setLoading(false)
     }
@@ -524,7 +623,7 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                         <h3 className="text-base sm:text-lg font-black text-[#071A3D]">{p.eventName}</h3>
                       </div>
 
-                      <div className="shrink-0">
+                      <div className="shrink-0 flex items-center gap-2 flex-wrap sm:flex-nowrap">
                         {p.status === 'verified' ? (
                           <Badge className="bg-emerald-500 text-white font-black text-xs px-3 py-1 flex items-center gap-1 shadow-xs">
                             <CheckCircle2 className="w-3.5 h-3.5" /> OD Sanctioned & Credited
@@ -546,6 +645,26 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                             <Clock className="w-3.5 h-3.5" /> Awaiting Proofs ({submittedDailyProofs.length}/{checkpoints.length} Days)
                           </Badge>
                         )}
+
+                        {/* Edit & Delete Action Buttons */}
+                        <button
+                          type="button"
+                          onClick={() => openEditEventModal(p)}
+                          className="px-2.5 py-1 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 hover:text-[#1455D9] transition-all cursor-pointer shadow-2xs flex items-center gap-1 text-xs font-bold"
+                          title="Edit Event Details"
+                        >
+                          <Edit3 className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEvent(p)}
+                          className="px-2.5 py-1 rounded-xl border border-gray-200 hover:border-red-300 hover:bg-red-50 text-gray-700 hover:text-red-600 transition-all cursor-pointer shadow-2xs flex items-center gap-1 text-xs font-bold"
+                          title="Delete Event Record"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                          <span>Delete</span>
+                        </button>
                       </div>
                     </div>
 
@@ -1246,6 +1365,127 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
                 />
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {/* ========================================================================= */}
+      {/* MODAL 5: EDIT OD EVENT DETAILS (CRUD EDIT) */}
+      {/* ========================================================================= */}
+      {isEditEventOpen && editingProof && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div>
+                <h3 className="text-lg font-black text-[#071A3D]">Edit OD Event Details</h3>
+                <p className="text-xs text-gray-500">Update event name, category, dates or venue</p>
+              </div>
+              <button
+                onClick={() => setIsEditEventOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditEventSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Event Name / Hackathon Title *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Smart India Hackathon, Tech Symposium..."
+                  value={editForm.eventName}
+                  onChange={(e) => setEditForm({ ...editForm, eventName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Category *</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-medium"
+                  >
+                    <option value="Hackathon">Hackathon</option>
+                    <option value="Technical Paper">Technical Paper Presentation</option>
+                    <option value="Project Expo">Project Expo</option>
+                    <option value="Symposium">Symposium / Fest</option>
+                    <option value="Workshop">Hands-on Workshop</option>
+                    <option value="Conference">International / National Conference</option>
+                    <option value="Sports">Sports Tournament</option>
+                    <option value="Cultural">Cultural Fest</option>
+                    <option value="Other">Other Academic Activity</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Duration / Schedule *</label>
+                  <select
+                    value={editForm.durationFormat}
+                    onChange={(e) => setEditForm({ ...editForm, durationFormat: e.target.value as HackathonDurationFormat })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-medium"
+                  >
+                    <option value="Single Day (8 Hours)">Single Day (8 Hours)</option>
+                    <option value="24 Hours (2 Days)">24 Hours (2 Days)</option>
+                    <option value="36 Hours (2-3 Days)">36 Hours (2-3 Days)</option>
+                    <option value="48 Hours (3-4 Days)">48 Hours (3-4 Days)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">From Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={editForm.fromDate}
+                    onChange={(e) => setEditForm({ ...editForm, fromDate: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">To Date *</label>
+                  <input
+                    type="date"
+                    required
+                    value={editForm.toDate}
+                    onChange={(e) => setEditForm({ ...editForm, toDate: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#071A3D] mb-1">Host Institution / Venue</label>
+                <input
+                  type="text"
+                  placeholder="e.g. IIT Madras, Anna University, Coimbatore..."
+                  value={editForm.venueCollege}
+                  onChange={(e) => setEditForm({ ...editForm, venueCollege: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditEventOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !editForm.eventName.trim()}
+                  className="flex-1 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? 'Saving Changes...' : 'Update Event'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

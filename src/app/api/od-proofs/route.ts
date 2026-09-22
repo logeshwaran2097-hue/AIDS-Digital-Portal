@@ -266,6 +266,86 @@ export async function POST(request: Request) {
       })
     }
 
+    // 1b. UPDATE EXISTING OD / HACKATHON EVENT (CRUD Edit)
+    if (action === 'UPDATE_OD' || action === 'EDIT_OD') {
+      const { id, eventName, category, eventDate, venueCollege, durationFormat } = body as any
+
+      if (!id) {
+        return NextResponse.json({ success: false, message: 'Proof ID is required' }, { status: 400 })
+      }
+
+      const existing = await prisma.oDProof.findUnique({ where: { id } })
+      if (!existing) {
+        return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
+      }
+
+      if (session.role === 'student' && session.registerNumber && existing.registerNumber.toUpperCase() !== session.registerNumber.toUpperCase()) {
+        return NextResponse.json({ success: false, message: 'Forbidden: You can only edit your own OD events.' }, { status: 403 })
+      }
+
+      const format = durationFormat || existing.durationFormat || (category === 'Hackathon' ? '24 Hours (2 Days)' : 'Single Day (8 Hours)')
+      const targetDate = eventDate || existing.eventDate
+      const targetCategory = category || existing.category
+
+      // Regenerate checkpoints if date or duration changed, preserving already submitted checkpoints
+      let dailyProofs = existing.dailyProofs
+      if (eventDate !== existing.eventDate || durationFormat !== existing.durationFormat || category !== existing.category) {
+        const oldCheckpoints = parseDailyProofs(existing)
+        const newCheckpoints = generateDailyProofCheckpoints(targetCategory, targetDate, format)
+        // Map any existing submitted photos over
+        const mergedCheckpoints = newCheckpoints.map((ncp) => {
+          const matchingOld = oldCheckpoints.find((ocp) => ocp.dayNumber === ncp.dayNumber)
+          if (matchingOld && matchingOld.status === 'submitted') {
+            return { ...ncp, photoUrl: matchingOld.photoUrl, geoAddress: matchingOld.geoAddress, caption: matchingOld.caption, status: 'submitted' as const }
+          }
+          return ncp
+        })
+        dailyProofs = JSON.stringify(mergedCheckpoints)
+      }
+
+      const updated = await prisma.oDProof.update({
+        where: { id },
+        data: {
+          eventName: eventName ? eventName.trim() : existing.eventName,
+          category: targetCategory,
+          eventDate: targetDate,
+          durationFormat: format,
+          venueCollege: venueCollege !== undefined ? (venueCollege ? venueCollege.trim() : null) : existing.venueCollege,
+          dailyProofs,
+        },
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: `OD Event "${updated.eventName}" details updated successfully!`,
+        proof: updated,
+      })
+    }
+
+    // 1c. DELETE OD EVENT (CRUD Delete)
+    if (action === 'DELETE_OD' || action === 'DELETE_EVENT') {
+      const { id } = body as any
+      if (!id) {
+        return NextResponse.json({ success: false, message: 'Proof ID is required' }, { status: 400 })
+      }
+
+      const existing = await prisma.oDProof.findUnique({ where: { id } })
+      if (!existing) {
+        return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
+      }
+
+      if (session.role === 'student' && session.registerNumber && existing.registerNumber.toUpperCase() !== session.registerNumber.toUpperCase()) {
+        return NextResponse.json({ success: false, message: 'Forbidden: You can only delete your own OD records.' }, { status: 403 })
+      }
+
+      await prisma.oDProof.delete({ where: { id } })
+
+      return NextResponse.json({
+        success: true,
+        message: `OD Event "${existing.eventName}" removed successfully.`,
+      })
+    }
+
     // 2. UPLOAD STAGE 1: GEOTAGGED VENUE & DAILY SPRINT PHOTO
     if (action === 'UPLOAD_GEOTAG') {
       const { id, geoPhotoUrl, latitude, longitude, collegeName, collegeAddress, geoAddress, geoTimestamp, dayNumber, caption } = body as any
@@ -699,12 +779,12 @@ export async function POST(request: Request) {
   }
 }
 
-// DELETE: Delete an OD Proof (Admin Only)
+// DELETE: Delete an OD Proof (Student for own, or Staff/Admin)
 export async function DELETE(request: Request) {
   try {
     const session = await getSession()
-    if (!session || (session.role !== 'admin' && session.role !== 'super_admin')) {
-      return NextResponse.json({ success: false, message: 'Admin access required' }, { status: 403 })
+    if (!session) {
+      return NextResponse.json({ success: false, message: 'Unauthorized session' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -713,14 +793,23 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, message: 'Proof ID required' }, { status: 400 })
     }
 
+    const existing = await prisma.oDProof.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ success: false, message: 'OD record not found' }, { status: 404 })
+    }
+
+    if (session.role === 'student' && session.registerNumber && existing.registerNumber.toUpperCase() !== session.registerNumber.toUpperCase()) {
+      return NextResponse.json({ success: false, message: 'Forbidden: You can only delete your own OD records.' }, { status: 403 })
+    }
+
     const deleted = await prisma.oDProof.delete({ where: { id } })
 
     await prisma.auditLog.create({
       data: {
-        userName: session.name || 'System Administrator',
+        userName: session.name || 'Student / Admin',
         action: 'od_proof_deleted',
-        module: 'admin_portal',
-        details: `Deleted OD Proof record ${id} for ${deleted.studentName} (${deleted.registerNumber}).`,
+        module: 'attendance_portal',
+        details: `Deleted OD Proof record ${id} for ${deleted.studentName} (${deleted.registerNumber}). Event: ${deleted.eventName}`,
         status: 'success',
       },
     }).catch(() => {})
@@ -731,11 +820,12 @@ export async function DELETE(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'OD Proof record successfully removed.',
+      message: `OD Event "${deleted.eventName}" successfully removed.`,
     })
   } catch (error: any) {
     console.error('Error in DELETE /api/od-proofs:', error)
     return NextResponse.json({ success: false, message: error.message || 'Server error' }, { status: 500 })
   }
 }
+
 

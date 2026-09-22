@@ -452,6 +452,10 @@ export const odProofActionSchema = z
   .object({
     action: z.enum([
       'REGISTER_OD',
+      'UPDATE_OD',
+      'EDIT_OD',
+      'DELETE_OD',
+      'DELETE_EVENT',
       'UPLOAD_GEOTAG',
       'UPLOAD_CERTIFICATE',
       'ADVISOR_VERIFY',
