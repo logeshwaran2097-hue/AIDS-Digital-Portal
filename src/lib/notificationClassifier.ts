@@ -40,12 +40,9 @@ export function categorizeNotification(title: string, message?: string | null): 
     return 'od-proofs'
   }
 
-  // 3. General OD & Leave terms in title
+  // 3. General OD & Leave terms in title (using word boundaries to prevent false positives like 'today', 'hod', 'method')
   if (
-    t.includes('od') ||
-    t.includes('on-duty') ||
-    t.includes('on duty') ||
-    t.includes('leave')
+    /\b(od|on-duty|on duty|leave|onduty)\b/i.test(t)
   ) {
     return 'od-applications'
   }
@@ -180,9 +177,8 @@ export function getMenuCategoryKey(href: string, label: string): string {
   if (lowerHref.includes('od-proofs') || lowerLabel.includes('proof')) return 'od-proofs'
   if (
     lowerHref.includes('od-applications') ||
-    lowerHref.includes('od') ||
-    lowerLabel.includes('od') ||
-    lowerLabel.includes('leave')
+    /\b(od|on-duty|leave)\b/i.test(lowerHref) ||
+    /\b(od|on-duty|leave)\b/i.test(lowerLabel)
   ) {
     return 'od-applications'
   }
