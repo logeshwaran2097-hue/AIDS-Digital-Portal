@@ -47,6 +47,7 @@ interface ApplyODPermissionModalProps {
   }
   userName: string
   onApplicationSuccess?: (appData: any) => void
+  editData?: any
 }
 
 interface TeamMember {
@@ -289,9 +290,28 @@ export function ApplyODPermissionModal({
   student,
   userName,
   onApplicationSuccess,
+  editData,
 }: ApplyODPermissionModalProps) {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (editData && isOpen) {
+      setAppType(editData.applicationType || 'Technical Hackathon / Competition OD');
+      setFromDate(editData.fromDate || '');
+      setToDate(editData.toDate || '');
+      setEventName(editData.eventName || '');
+      setReason(editData.reason || '');
+    } else if (!isOpen) {
+      // Reset form when closed
+      setFromDate('');
+      setToDate('');
+      setEventName('');
+      setReason('');
+      setSubmitted(false);
+    }
+  }, [editData, isOpen]);
+
 
   // Primary Selection
   const [appType, setAppType] = useState<ApplicationType>('Technical Hackathon / Competition OD')
@@ -552,7 +572,7 @@ export function ApplyODPermissionModal({
       const data = await res.json()
       if (res.ok && data.success) {
         setSubmitted(true)
-        toast.success('Permission request submitted with all proofs!')
+        toast.success(editData?.id ? 'Application updated successfully!' : 'Permission request submitted with all proofs!')
         if (onApplicationSuccess) onApplicationSuccess(data.application)
       } else {
         toast.error(data.message || 'Failed to submit application.')
@@ -605,7 +625,7 @@ export function ApplyODPermissionModal({
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-black text-[#071A3D] tracking-tight">
-                Apply for On-Duty (OD) / Leave with Proofs
+                {editData?.id ? 'Edit OD / Leave Application' : 'Apply for On-Duty (OD) / Leave with Proofs'}
               </h2>
             </div>
           </div>
@@ -630,7 +650,7 @@ export function ApplyODPermissionModal({
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Request Dispatched with Proofs</span>
                 </div>
-                <h3 className="text-xl font-black text-[#071A3D]">Application Submitted Successfully</h3>
+                <h3 className="text-xl font-black text-[#071A3D]">{editData?.id ? 'Application Updated Successfully' : 'Application Submitted Successfully'}</h3>
                 <p className="text-xs text-gray-500 max-w-md mx-auto">
                   Your <span className="font-bold text-[#1455D9]">{appType}</span> request has been routed to your Class Advisor and the Head of Department for digital review.
                 </p>
@@ -1187,7 +1207,7 @@ export function ApplyODPermissionModal({
                   className="flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-[#1455D9] via-[#0E44B8] to-[#1455D9] hover:from-[#1044b5] hover:to-[#0c399c] active:scale-[0.99] disabled:opacity-60 text-white font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-blue-600/25 border border-blue-400/30 transition-all cursor-pointer"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4 text-[#F4C430]" />}
-                  <span>Submit Permission Application</span>
+                  <span>{editData?.id ? 'Update' : 'Submit'} Permission Application</span>
                 </button>
               </div>
             </form>

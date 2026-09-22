@@ -174,7 +174,27 @@ export function ODApplicationsDashboardView({
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const [typeFilter, setTypeFilter] = useState<string>('ALL')
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards')
+  
   const [selectedODModal, setSelectedODModal] = useState<any | null>(null)
+  const [editApplicationData, setEditApplicationData] = useState<any | null>(null)
+
+  const handleDeleteApplication = async (appId: string) => {
+    if (!confirm('Are you sure you want to withdraw and delete this application?')) return
+    
+    try {
+      const res = await fetch(`/api/od-applications?id=${appId}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Application deleted successfully')
+        fetchApplications(true)
+      } else {
+        const data = await res.json()
+        toast.error(data.message || 'Failed to delete application')
+      }
+    } catch (e) {
+      toast.error('Network error')
+    }
+  }
+
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null)
 
@@ -1449,14 +1469,39 @@ export function ODApplicationsDashboardView({
                           >
                             <ShieldCheck className="w-4 h-4" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedODModal(app)}
-                            className="p-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all cursor-pointer"
-                            title="Open Audit Modal"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          
+                            <button
+                              type="button"
+                              onClick={() => setSelectedODModal(app)}
+                              className="p-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all cursor-pointer"
+                              title="Open Audit Modal"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {viewRole === 'student' && app.status === 'pending_advisor_approval' && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditApplicationData(app);
+                                    setIsApplyModalOpen(true);
+                                  }}
+                                  className="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition-all cursor-pointer"
+                                  title="Edit Application"
+                                >
+                                  <Sparkles className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteApplication(app.id)}
+                                  className="p-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-all cursor-pointer"
+                                  title="Delete Application"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+
                         </div>
                       </td>
                     </tr>
@@ -1563,7 +1608,8 @@ export function ODApplicationsDashboardView({
       {viewRole === 'student' && studentData && (
         <ApplyODPermissionModal
           isOpen={isApplyModalOpen}
-          onClose={() => setIsApplyModalOpen(false)}
+          onClose={() => { setIsApplyModalOpen(false); setEditApplicationData(null); }}
+            editData={editApplicationData}
           student={studentData}
           userName={userName || studentData.name || 'Student'}
           onApplicationSuccess={() => {
