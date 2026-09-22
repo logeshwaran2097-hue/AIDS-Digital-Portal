@@ -70,6 +70,7 @@ export interface StudentRecord {
   status: string
   cgpa?: string | null
   attendance?: string | null
+  profileImage?: string | null
 }
 
 export function AdminStudentsView({ initialStudents }: { initialStudents: StudentRecord[] }) {
@@ -108,6 +109,79 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [aiQueryInput, setAiQueryInput] = useState('')
   const [isAiQuerying, setIsAiQuerying] = useState(false)
   const [aiAgentResponse, setAiAgentResponse] = useState<string | null>(null)
+  
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !selectedStudent) return
+    const file = e.target.files[0]
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file (JPG, PNG).')
+      return
+    }
+    
+    setIsUploadingPhoto(true)
+    try {
+      const reader = new FileReader()
+      reader.onload = async (event) => {
+        const base64 = event.target?.result as string
+        
+        // Compress image using canvas
+        const img = new Image()
+        img.onload = async () => {
+          const canvas = document.createElement('canvas')
+          const MAX_WIDTH = 400
+          const MAX_HEIGHT = 400
+          let width = img.width
+          let height = img.height
+
+          if (width > height && width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width
+            width = MAX_WIDTH
+          } else if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height
+            height = MAX_HEIGHT
+          }
+
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          ctx?.drawImage(img, 0, 0, width, height)
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8)
+
+          try {
+            const res = await fetch('/api/students', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: selectedStudent.id,
+                profileImage: compressedBase64
+              })
+            })
+            const data = await res.json()
+            if (res.ok && data.success) {
+              setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, profileImage: compressedBase64 } : s))
+              setSelectedStudent(prev => prev ? { ...prev, profileImage: compressedBase64 } : null)
+              toast.success('Profile photo updated successfully!')
+            } else {
+              toast.error(data.message || 'Failed to update photo')
+            }
+          } catch (error) {
+            toast.error('Network error. Failed to update photo.')
+          } finally {
+            setIsUploadingPhoto(false)
+          }
+        }
+        img.src = base64
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      toast.error('Failed to process image.')
+      setIsUploadingPhoto(false)
+    }
+  }
 
   const handleRunAiAgent = async (customQuery?: string) => {
     const q = (customQuery || aiQueryInput).trim()
@@ -2426,12 +2500,27 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       {isViewModalOpen && selectedStudent && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-7 shadow-2xl space-y-5 animate-scale-up max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div>
-                <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
-                  {selectedStudent.registerNumber}
-                </span>
-                <h3 className="text-lg font-black text-[#071A3D] mt-1">{selectedStudent.name}</h3>
+            <div className="flex items-start justify-between border-b pb-3">
+              <div className="flex items-center gap-4">
+                <div className="relative group shrink-0">
+                  {selectedStudent.profileImage ? (
+                    <img src={selectedStudent.profileImage} alt={selectedStudent.name} className="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-200" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white font-black flex items-center justify-center text-xl shadow-sm">
+                      {selectedStudent.name.charAt(0)}
+                    </div>
+                  )}
+                  <label className={`absolute inset-0 bg-black/50 text-white rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${isUploadingPhoto ? 'opacity-100' : ''}`}>
+                    {isUploadingPhoto ? <RotateCcw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
+                    <input type="file" className="hidden" accept="image/jpeg,image/png" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
+                  </label>
+                </div>
+                <div>
+                  <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
+                    {selectedStudent.registerNumber}
+                  </span>
+                  <h3 className="text-lg font-black text-[#071A3D] mt-1">{selectedStudent.name}</h3>
+                </div>
               </div>
               <button
                 onClick={() => setIsViewModalOpen(false)}

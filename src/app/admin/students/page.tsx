@@ -40,7 +40,8 @@ export default async function AdminStudentsPage() {
         u.phone as user_phone,
         u.status as user_status,
         u."lastLogin" as user_last_login,
-        u."emailVerified" as user_email_verified
+        u."emailVerified" as user_email_verified,
+        u."profileImage" as user_profile_image
       FROM "Student" s
       LEFT JOIN "User" u ON s."userId" = u.id
       ORDER BY s."registerNumber" ASC
@@ -80,6 +81,7 @@ export default async function AdminStudentsPage() {
       address: s.address || null,
       cgpa: s.cgpa ? String(s.cgpa) : null,
       attendance: s.attendance ? String(s.attendance) : null,
+      profileImage: s.user_profile_image || null,
     }
   })
 
