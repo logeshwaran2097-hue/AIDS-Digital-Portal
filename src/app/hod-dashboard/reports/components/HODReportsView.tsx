@@ -543,10 +543,10 @@ export function HODReportsView({
             </button>
 
             {[
-              { year: 1, name: 'Year I', label: '1st Year (Freshman)', sems: [1, 2] },
-              { year: 2, name: 'Year II', label: '2nd Year (Sophomore)', sems: [3, 4] },
-              { year: 3, name: 'Year III', label: '3rd Year (Junior)', sems: [5, 6] },
-              { year: 4, name: 'Year IV', label: '4th Year (Senior)', sems: [7, 8] },
+              { year: 1, name: 'Year I', label: '1st Year', sems: [1, 2] },
+              { year: 2, name: 'Year II', label: '2nd Year', sems: [3, 4] },
+              { year: 3, name: 'Year III', label: '3rd Year', sems: [5, 6] },
+              { year: 4, name: 'Year IV', label: '4th Year', sems: [7, 8] },
             ].map((y) => {
               const isSelected = selectedYear === y.year
               const yCount = (studentsList || []).filter((s) => s.year === y.year).length

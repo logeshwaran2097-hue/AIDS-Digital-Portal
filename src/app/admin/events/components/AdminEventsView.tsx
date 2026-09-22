@@ -70,10 +70,10 @@ const MONTHS_LIST = [
 
 const YEARS_LIST = [
   { key: 'ALL', label: 'All 4 Academic Years', short: 'All Years', semRange: 'Semesters 1 - 8' },
-  { key: 'year1', label: 'Year 1 · Freshman', short: 'Year 1', semRange: 'Sem 1 & Sem 2' },
-  { key: 'year2', label: 'Year 2 · Sophomore', short: 'Year 2', semRange: 'Sem 3 & Sem 4' },
-  { key: 'year3', label: 'Year 3 · Junior', short: 'Year 3', semRange: 'Sem 5 & Sem 6' },
-  { key: 'year4', label: 'Year 4 · Senior', short: 'Year 4', semRange: 'Sem 7 & Sem 8' },
+  { key: 'year1', label: 'Year 1 · Year I', short: 'Year 1', semRange: 'Sem 1 & Sem 2' },
+  { key: 'year2', label: 'Year 2 · Year II', short: 'Year 2', semRange: 'Sem 3 & Sem 4' },
+  { key: 'year3', label: 'Year 3 · Year III', short: 'Year 3', semRange: 'Sem 5 & Sem 6' },
+  { key: 'year4', label: 'Year 4 · Year IV', short: 'Year 4', semRange: 'Sem 7 & Sem 8' },
 ]
 
 const ALL_8_SEMESTERS = [
@@ -610,7 +610,7 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
           <p className="text-[10px] text-blue-700 font-medium mt-1">Semesters 1 – 4</p>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-purple-200/80 shadow-xs">
-          <p className="text-[10px] text-gray-400 font-bold uppercase">Years 3 &amp; 4 (Junior &amp; Senior)</p>
+          <p className="text-[10px] text-gray-400 font-bold uppercase">Years 3 &amp; 4 (Year III &amp; Year IV)</p>
           <p className="text-2xl font-black text-purple-700 mt-0.5">
             {events.filter((e) => e.academicYear === 'year3' || e.academicYear === 'year4' || e.academicYear === 'ALL').length}
           </p>
@@ -1090,14 +1090,14 @@ export function AdminEventsView({ initialEvents }: { initialEvents: EventRecord[
                     className="w-full p-2.5 rounded-xl border border-gray-200 bg-white font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     <option value="ALL">All 8 Semesters (Department-Wide)</option>
-                    <option value="sem1">Semester 1 · Year 1 (Freshman - Odd)</option>
-                    <option value="sem2">Semester 2 · Year 1 (Freshman - Even)</option>
-                    <option value="sem3">Semester 3 · Year 2 (Sophomore - Odd)</option>
-                    <option value="sem4">Semester 4 · Year 2 (Sophomore - Even)</option>
-                    <option value="sem5">Semester 5 · Year 3 (Junior - Odd)</option>
-                    <option value="sem6">Semester 6 · Year 3 (Junior - Even)</option>
-                    <option value="sem7">Semester 7 · Year 4 (Senior - Odd)</option>
-                    <option value="sem8">Semester 8 · Year 4 (Senior - Even)</option>
+                    <option value="sem1">Semester 1 · Year 1 (Year I - Odd)</option>
+                    <option value="sem2">Semester 2 · Year 1 (Year I - Even)</option>
+                    <option value="sem3">Semester 3 · Year 2 (Year II - Odd)</option>
+                    <option value="sem4">Semester 4 · Year 2 (Year II - Even)</option>
+                    <option value="sem5">Semester 5 · Year 3 (Year III - Odd)</option>
+                    <option value="sem6">Semester 6 · Year 3 (Year III - Even)</option>
+                    <option value="sem7">Semester 7 · Year 4 (Year IV - Odd)</option>
+                    <option value="sem8">Semester 8 · Year 4 (Year IV - Even)</option>
                   </select>
                 </div>
 

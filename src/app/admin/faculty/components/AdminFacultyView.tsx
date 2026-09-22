@@ -126,7 +126,7 @@ export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
   sem1: {
     semNumber: 1,
     yearNumber: 1,
-    semLabel: 'Semester 1 (Year 1 - Freshman Odd)',
+    semLabel: 'Semester 1 (Year 1 - Year I Odd)',
     badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     labs: [
       { id: 'lab_s1_py', code: 'AD2111', name: 'Problem Solving and Python Programming Laboratory', shortName: 'Python Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Tue' },
@@ -136,7 +136,7 @@ export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
   sem2: {
     semNumber: 2,
     yearNumber: 1,
-    semLabel: 'Semester 2 (Year 1 - Freshman Even)',
+    semLabel: 'Semester 2 (Year 1 - Year I Even)',
     badgeColor: 'bg-teal-50 text-teal-700 border-teal-200',
     labs: [
       { id: 'lab_s2_c', code: 'AD2211', name: 'C Programming and Data Structures Laboratory', shortName: 'C Programming Lab', credits: 2, defaultPeriod: 'Lab Session (FN)', defaultTime: '09:15 AM - 12:30 PM', defaultDays: 'Wed' },
@@ -146,7 +146,7 @@ export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
   sem3: {
     semNumber: 3,
     yearNumber: 2,
-    semLabel: 'Semester 3 (Year 2 - Sophomore Odd)',
+    semLabel: 'Semester 3 (Year 2 - Year II Odd)',
     badgeColor: 'bg-blue-50 text-[#1455D9] border-blue-200',
     labs: [
       { id: 'lab_s3_oop', code: 'AD2311', name: 'Object Oriented Programming Laboratory', shortName: 'OOP Lab (Java/C++)', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Tue' },
@@ -156,7 +156,7 @@ export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
   sem4: {
     semNumber: 4,
     yearNumber: 2,
-    semLabel: 'Semester 4 (Year 2 - Sophomore Even)',
+    semLabel: 'Semester 4 (Year 2 - Year II Even)',
     badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
     labs: [
       { id: 'lab_s4_dbms', code: 'AD2411', name: 'Database Management Systems Laboratory', shortName: 'DBMS Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Mon' },
@@ -166,7 +166,7 @@ export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
   sem5: {
     semNumber: 5,
     yearNumber: 3,
-    semLabel: 'Semester 5 (Year 3 - Junior Odd)',
+    semLabel: 'Semester 5 (Year 3 - Year III Odd)',
     badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
     labs: [
       { id: 'lab_s5_dl', code: 'AD2511', name: 'Deep Learning and Neural Networks Laboratory', shortName: 'Deep Learning Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Wed' },
@@ -176,7 +176,7 @@ export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
   sem6: {
     semNumber: 6,
     yearNumber: 3,
-    semLabel: 'Semester 6 (Year 3 - Junior Even)',
+    semLabel: 'Semester 6 (Year 3 - Year III Even)',
     badgeColor: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
     labs: [
       { id: 'lab_s6_nlp', code: 'AD2611', name: 'Natural Language Processing & CV Laboratory', shortName: 'NLP & Vision Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Thu' },
@@ -186,7 +186,7 @@ export const ALL_SEMESTERS_LABS: Record<SemKey, SemesterLabGroup> = {
   sem7: {
     semNumber: 7,
     yearNumber: 4,
-    semLabel: 'Semester 7 (Year 4 - Senior Odd)',
+    semLabel: 'Semester 7 (Year 4 - Year IV Odd)',
     badgeColor: 'bg-amber-50 text-amber-900 border-amber-300',
     labs: [
       { id: 'lab_s7_rl', code: 'AD2711', name: 'Reinforcement Learning and Robotics Laboratory', shortName: 'Robotics & RL Lab', credits: 2, defaultPeriod: 'Lab Session (AN)', defaultTime: '01:20 PM - 04:30 PM', defaultDays: 'Fri' },
@@ -2114,10 +2114,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </button>
 
               {[
-                { yr: 1, label: 'Year I (Freshman)', sems: 'Sem 1 & 2' },
-                { yr: 2, label: 'Year II (Sophomore)', sems: 'Sem 3 & 4' },
-                { yr: 3, label: 'Year III (Junior)', sems: 'Sem 5 & 6' },
-                { yr: 4, label: 'Year IV (Senior)', sems: 'Sem 7 & 8' },
+                { yr: 1, label: 'Year I', sems: 'Sem 1 & 2' },
+                { yr: 2, label: 'Year II', sems: 'Sem 3 & 4' },
+                { yr: 3, label: 'Year III', sems: 'Sem 5 & 6' },
+                { yr: 4, label: 'Year IV', sems: 'Sem 7 & 8' },
               ].map((item) => {
                 const isSelected = facultyYearFilter === String(item.yr)
                 const count = facultyMembersList.filter((f) => getFacultyYear(f) === item.yr).length
@@ -2284,10 +2284,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
               </button>
 
               {[
-                { yr: 1, label: 'Year I (Freshman)', sems: 'Sem 1 & 2', bg: 'hover:bg-blue-50' },
-                { yr: 2, label: 'Year II (Sophomore)', sems: 'Sem 3 & 4', bg: 'hover:bg-indigo-50' },
-                { yr: 3, label: 'Year III (Junior)', sems: 'Sem 5 & 6', bg: 'hover:bg-purple-50' },
-                { yr: 4, label: 'Year IV (Senior)', sems: 'Sem 7 & 8', bg: 'hover:bg-amber-50' },
+                { yr: 1, label: 'Year I', sems: 'Sem 1 & 2', bg: 'hover:bg-blue-50' },
+                { yr: 2, label: 'Year II', sems: 'Sem 3 & 4', bg: 'hover:bg-indigo-50' },
+                { yr: 3, label: 'Year III', sems: 'Sem 5 & 6', bg: 'hover:bg-purple-50' },
+                { yr: 4, label: 'Year IV', sems: 'Sem 7 & 8', bg: 'hover:bg-amber-50' },
               ].map((item) => {
                 const isSelected = yearFilter === String(item.yr)
                 const count = facultyList.filter(
@@ -3579,10 +3579,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
                       >
-                        <option value={1}>Year 1 (Freshman)</option>
-                        <option value={2}>Year 2 (Sophomore)</option>
-                        <option value={3}>Year 3 (Junior)</option>
-                        <option value={4}>Year 4 (Senior)</option>
+                        <option value={1}>Year 1</option>
+                        <option value={2}>Year 2</option>
+                        <option value={3}>Year 3</option>
+                        <option value={4}>Year 4</option>
                       </select>
                     </div>
 
@@ -3654,10 +3654,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           }}
                           className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-indigo-900 text-xs"
                         >
-                          <option value={1}>Year 1 (Freshman)</option>
-                          <option value={2}>Year 2 (Sophomore)</option>
-                          <option value={3}>Year 3 (Junior)</option>
-                          <option value={4}>Year 4 (Senior)</option>
+                          <option value={1}>Year 1</option>
+                          <option value={2}>Year 2</option>
+                          <option value={3}>Year 3</option>
+                          <option value={4}>Year 4</option>
                         </select>
                       </div>
                       <div>
@@ -3754,10 +3754,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           }}
                           className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-purple-900 text-xs"
                         >
-                          <option value={1}>Year 1 (Freshman)</option>
-                          <option value={2}>Year 2 (Sophomore)</option>
-                          <option value={3}>Year 3 (Junior)</option>
-                          <option value={4}>Year 4 (Senior)</option>
+                          <option value={1}>Year 1</option>
+                          <option value={2}>Year 2</option>
+                          <option value={3}>Year 3</option>
+                          <option value={4}>Year 4</option>
                         </select>
                       </div>
                       <div>
@@ -4185,10 +4185,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                         }}
                         className="w-full p-2 rounded-xl border border-gray-200 bg-white font-semibold"
                       >
-                        <option value={1}>Year 1 (Freshman)</option>
-                        <option value={2}>Year 2 (Sophomore)</option>
-                        <option value={3}>Year 3 (Junior)</option>
-                        <option value={4}>Year 4 (Senior)</option>
+                        <option value={1}>Year 1</option>
+                        <option value={2}>Year 2</option>
+                        <option value={3}>Year 3</option>
+                        <option value={4}>Year 4</option>
                       </select>
                     </div>
 
@@ -4260,10 +4260,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           }}
                           className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-indigo-900 text-xs"
                         >
-                          <option value={1}>Year 1 (Freshman)</option>
-                          <option value={2}>Year 2 (Sophomore)</option>
-                          <option value={3}>Year 3 (Junior)</option>
-                          <option value={4}>Year 4 (Senior)</option>
+                          <option value={1}>Year 1</option>
+                          <option value={2}>Year 2</option>
+                          <option value={3}>Year 3</option>
+                          <option value={4}>Year 4</option>
                         </select>
                       </div>
                       <div>
@@ -4360,10 +4360,10 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                           }}
                           className="w-full p-2 rounded-xl border border-gray-200 bg-white font-bold text-purple-900 text-xs"
                         >
-                          <option value={1}>Year 1 (Freshman)</option>
-                          <option value={2}>Year 2 (Sophomore)</option>
-                          <option value={3}>Year 3 (Junior)</option>
-                          <option value={4}>Year 4 (Senior)</option>
+                          <option value={1}>Year 1</option>
+                          <option value={2}>Year 2</option>
+                          <option value={3}>Year 3</option>
+                          <option value={4}>Year 4</option>
                         </select>
                       </div>
                       <div>

@@ -164,7 +164,7 @@ function ParticipationSection({
                   <span>{membersHeader}</span>
                 </span>
                 <span className="text-[10px] text-gray-400 block">
-                  Select Year (Seniors/Juniors) &amp; Class/Section for each member
+                  Select Year (Year IVs/Year IIIs) &amp; Class/Section for each member
                 </span>
               </div>
               <button
@@ -240,20 +240,20 @@ function ParticipationSection({
                     />
                   </div>
 
-                  {/* Academic Year (Senior / Junior) */}
+                  {/* Academic Year (Year IV / Year III) */}
                   <div className="sm:col-span-3">
                     <label className="block text-[10px] font-bold text-gray-500 mb-0.5">
-                      Year (Senior/Junior) *
+                      Year (Year IV/Year III) *
                     </label>
                     <select
                       value={member.year || '2'}
                       onChange={(e) => updateTeamMember(idx, 'year', e.target.value)}
                       className={`w-full px-2 py-1.5 rounded-lg border border-gray-300 text-xs bg-white font-semibold text-gray-800 focus:outline-none ${themeStyles.focusBorder} cursor-pointer`}
                     >
-                      <option value="1">Year 1 (Junior)</option>
+                      <option value="1">Year 1</option>
                       <option value="2">Year 2</option>
                       <option value="3">Year 3</option>
-                      <option value="4">Year 4 (Senior)</option>
+                      <option value="4">Year 4</option>
                     </select>
                   </div>
 

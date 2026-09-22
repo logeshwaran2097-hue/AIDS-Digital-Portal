@@ -200,7 +200,7 @@ export function StudentProfileView({
     setIsAiMentorLoading(true)
     setAiMentorAdvice(null)
 
-    const prompt = `You are a Senior Academic & Career Advisor for B.Tech Artificial Intelligence & Data Science at V.S.B. Engineering College (Anna University affiliated).
+    const prompt = `You are a Year IV Academic & Career Advisor for B.Tech Artificial Intelligence & Data Science at V.S.B. Engineering College (Anna University affiliated).
 Student Profile Context:
 - Name: ${profile.name}
 - Year: ${profile.year} (Semester ${profile.semester})

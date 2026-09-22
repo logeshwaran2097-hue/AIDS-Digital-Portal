@@ -87,10 +87,10 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
   }, [])
 
   const yearCadres = [
-    { year: 1, name: 'Year I', label: '1st Year Freshman Honors' },
-    { year: 2, name: 'Year II', label: '2nd Year Sophomore Laurels' },
-    { year: 3, name: 'Year III', label: '3rd Year Junior Accolades' },
-    { year: 4, name: 'Year IV', label: '4th Year Senior Distinctions' },
+    { year: 1, name: 'Year I', label: '1st Year Year I Honors' },
+    { year: 2, name: 'Year II', label: '2nd Year Year II Laurels' },
+    { year: 3, name: 'Year III', label: '3rd Year Year III Accolades' },
+    { year: 4, name: 'Year IV', label: '4th Year Year IV Distinctions' },
   ]
 
   const getYearCount = (yearNum: number) => {
@@ -429,10 +429,10 @@ export function AdminAchievementsView({ initialAchievements }: { initialAchievem
                       onChange={(e) => setFormData({ ...formData, year: Number(e.target.value) })}
                       className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-bold text-[#1455D9] bg-gray-50 focus:ring-2 focus:ring-[#1455D9] outline-none"
                     >
-                      <option value={1}>Year I (Freshman)</option>
-                      <option value={2}>Year II (Sophomore)</option>
-                      <option value={3}>Year III (Junior)</option>
-                      <option value={4}>Year IV (Senior)</option>
+                      <option value={1}>Year I</option>
+                      <option value={2}>Year II</option>
+                      <option value={3}>Year III</option>
+                      <option value={4}>Year IV</option>
                     </select>
                   </div>
                   <div>

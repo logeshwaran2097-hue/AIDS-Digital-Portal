@@ -58,19 +58,19 @@ export const TARGET_AUDIENCE_OPTIONS = [
   {
     group: 'Class Advisors (Year-Wise)',
     options: [
-      { value: 'advisors_year1', label: 'Year 1 Class Advisors (Freshman · Sem 1 & 2)', icon: 'user-check' },
-      { value: 'advisors_year2', label: 'Year 2 Class Advisors (Sophomore · Sem 3 & 4)', icon: 'user-check' },
-      { value: 'advisors_year3', label: 'Year 3 Class Advisors (Junior · Sem 5 & 6)', icon: 'user-check' },
-      { value: 'advisors_year4', label: 'Year 4 Class Advisors (Senior · Sem 7 & 8)', icon: 'user-check' },
+      { value: 'advisors_year1', label: 'Year 1 Class Advisors (Year I · Sem 1 & 2)', icon: 'user-check' },
+      { value: 'advisors_year2', label: 'Year 2 Class Advisors (Year II · Sem 3 & 4)', icon: 'user-check' },
+      { value: 'advisors_year3', label: 'Year 3 Class Advisors (Year III · Sem 5 & 6)', icon: 'user-check' },
+      { value: 'advisors_year4', label: 'Year 4 Class Advisors (Year IV · Sem 7 & 8)', icon: 'user-check' },
     ],
   },
   {
     group: 'By Academic Year (Years I – IV)',
     options: [
-      { value: 'year1', label: 'Year 1 Students (Freshman · Sem 1 & 2)', icon: 'calendar' },
-      { value: 'year2', label: 'Year 2 Students (Sophomore · Sem 3 & 4)', icon: 'calendar' },
-      { value: 'year3', label: 'Year 3 Students (Junior · Sem 5 & 6)', icon: 'calendar' },
-      { value: 'year4', label: 'Year 4 Students (Senior · Sem 7 & 8)', icon: 'calendar' },
+      { value: 'year1', label: 'Year 1 Students (Year I · Sem 1 & 2)', icon: 'calendar' },
+      { value: 'year2', label: 'Year 2 Students (Year II · Sem 3 & 4)', icon: 'calendar' },
+      { value: 'year3', label: 'Year 3 Students (Year III · Sem 5 & 6)', icon: 'calendar' },
+      { value: 'year4', label: 'Year 4 Students (Year IV · Sem 7 & 8)', icon: 'calendar' },
     ],
   },
   {

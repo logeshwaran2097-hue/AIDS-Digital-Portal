@@ -202,10 +202,10 @@ export function FacultyEventsView({
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
             {[
               { key: 'ALL', label: 'All Years' },
-              { key: 'year1', label: 'Year 1 (Freshman)' },
-              { key: 'year2', label: 'Year 2 (Sophomore)' },
-              { key: 'year3', label: 'Year 3 (Junior)' },
-              { key: 'year4', label: 'Year 4 (Senior)' },
+              { key: 'year1', label: 'Year 1' },
+              { key: 'year2', label: 'Year 2' },
+              { key: 'year3', label: 'Year 3' },
+              { key: 'year4', label: 'Year 4' },
             ].map((y) => (
               <button
                 key={y.key}

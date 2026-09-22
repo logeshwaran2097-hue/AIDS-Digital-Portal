@@ -86,28 +86,28 @@ export function AdminSettingsView() {
   const [yearConfigs, setYearConfigs] = useState<YearCohortConfig[]>([
     {
       yearNumber: 1,
-      yearLabel: 'Year I (Freshman)',
+      yearLabel: 'Year I',
       batch: '2025 - 2029',
       activeSemester: 2,
       semesterType: 'EVEN',
     },
     {
       yearNumber: 2,
-      yearLabel: 'Year II (Sophomore)',
+      yearLabel: 'Year II',
       batch: '2024 - 2028',
       activeSemester: 4,
       semesterType: 'EVEN',
     },
     {
       yearNumber: 3,
-      yearLabel: 'Year III (Junior)',
+      yearLabel: 'Year III',
       batch: '2023 - 2027',
       activeSemester: 6,
       semesterType: 'EVEN',
     },
     {
       yearNumber: 4,
-      yearLabel: 'Year IV (Senior)',
+      yearLabel: 'Year IV',
       batch: '2022 - 2026',
       activeSemester: 8,
       semesterType: 'EVEN',

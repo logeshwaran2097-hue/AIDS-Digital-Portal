@@ -56,13 +56,13 @@ export function AdminQuestionPapersView({ initialPapers }: { initialPapers: QPRe
 
   // 8 Semesters Definition
   const allSemesters = [
-    { sem: 1, year: 1, yearName: 'Year I', label: 'Semester 1', tag: 'Freshman - Odd' },
-    { sem: 2, year: 1, yearName: 'Year I', label: 'Semester 2', tag: 'Freshman - Even' },
-    { sem: 3, year: 2, yearName: 'Year II', label: 'Semester 3', tag: 'Sophomore - Odd' },
-    { sem: 4, year: 2, yearName: 'Year II', label: 'Semester 4', tag: 'Sophomore - Even' },
-    { sem: 5, year: 3, yearName: 'Year III', label: 'Semester 5', tag: 'Junior - Odd' },
-    { sem: 6, year: 3, yearName: 'Year III', label: 'Semester 6', tag: 'Junior - Even' },
-    { sem: 7, year: 4, yearName: 'Year IV', label: 'Semester 7', tag: 'Senior - Odd' },
+    { sem: 1, year: 1, yearName: 'Year I', label: 'Semester 1', tag: 'Year I - Odd' },
+    { sem: 2, year: 1, yearName: 'Year I', label: 'Semester 2', tag: 'Year I - Even' },
+    { sem: 3, year: 2, yearName: 'Year II', label: 'Semester 3', tag: 'Year II - Odd' },
+    { sem: 4, year: 2, yearName: 'Year II', label: 'Semester 4', tag: 'Year II - Even' },
+    { sem: 5, year: 3, yearName: 'Year III', label: 'Semester 5', tag: 'Year III - Odd' },
+    { sem: 6, year: 3, yearName: 'Year III', label: 'Semester 6', tag: 'Year III - Even' },
+    { sem: 7, year: 4, yearName: 'Year IV', label: 'Semester 7', tag: 'Year IV - Odd' },
     { sem: 8, year: 4, yearName: 'Year IV', label: 'Semester 8', tag: 'Final Year - Capstone' },
   ]
 
@@ -259,10 +259,10 @@ export function AdminQuestionPapersView({ initialPapers }: { initialPapers: QPRe
             </button>
 
             {[
-              { year: 1, name: 'Year I', label: '1st Year (Freshman)', sems: [1, 2] },
-              { year: 2, name: 'Year II', label: '2nd Year (Sophomore)', sems: [3, 4] },
-              { year: 3, name: 'Year III', label: '3rd Year (Junior)', sems: [5, 6] },
-              { year: 4, name: 'Year IV', label: '4th Year (Senior)', sems: [7, 8] },
+              { year: 1, name: 'Year I', label: '1st Year', sems: [1, 2] },
+              { year: 2, name: 'Year II', label: '2nd Year', sems: [3, 4] },
+              { year: 3, name: 'Year III', label: '3rd Year', sems: [5, 6] },
+              { year: 4, name: 'Year IV', label: '4th Year', sems: [7, 8] },
             ].map((y) => {
               const isSelected = selectedYear === y.year
               const yCount = papers.filter((p) => (p.year || Math.ceil(p.semester / 2)) === y.year).length
@@ -419,10 +419,10 @@ export function AdminQuestionPapersView({ initialPapers }: { initialPapers: QPRe
               className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
             >
               <option value="ALL">All Years (I - IV)</option>
-              <option value={1}>Year I (Freshman)</option>
-              <option value={2}>Year II (Sophomore)</option>
-              <option value={3}>Year III (Junior)</option>
-              <option value={4}>Year IV (Senior)</option>
+              <option value={1}>Year I</option>
+              <option value={2}>Year II</option>
+              <option value={3}>Year III</option>
+              <option value={4}>Year IV</option>
             </select>
           </div>
 
