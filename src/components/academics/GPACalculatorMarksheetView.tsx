@@ -56,59 +56,18 @@ export interface MarksheetItem {
   verified: boolean
 }
 
-// Regulation 2023 / 2021 Presets for B.Tech AI & DS
-const AI_DS_SEMESTER_PRESETS: Record<number, { code: string; name: string; credits: number; courseType: 'Theory' | 'Laboratory' | 'Theory cum Laboratory' }[]> = {
-  1: [
-    { code: 'HS3151', name: 'Professional English - I', credits: 3, courseType: 'Theory' },
-    { code: 'MA3151', name: 'Matrices and Calculus', credits: 4, courseType: 'Theory' },
-    { code: 'PH3151', name: 'Engineering Physics', credits: 3, courseType: 'Theory' },
-    { code: 'CY3151', name: 'Engineering Chemistry', credits: 3, courseType: 'Theory' },
-    { code: 'GE3151', name: 'Problem Solving and Python Programming', credits: 3, courseType: 'Theory' },
-    { code: 'GE3171', name: 'Problem Solving and Python Programming Laboratory', credits: 2, courseType: 'Laboratory' },
-    { code: 'BS3171', name: 'Physics and Chemistry Laboratory', credits: 2, courseType: 'Laboratory' }
-  ],
-  2: [
-    { code: 'HS3251', name: 'Professional English - II', credits: 2, courseType: 'Theory' },
-    { code: 'MA3251', name: 'Statistics and Numerical Methods', credits: 4, courseType: 'Theory' },
-    { code: 'PH3256', name: 'Physics for Information Science', credits: 3, courseType: 'Theory' },
-    { code: 'BE3251', name: 'Basic Electrical and Electronics Engineering', credits: 3, courseType: 'Theory' },
-    { code: 'GE3251', name: 'Engineering Graphics', credits: 4, courseType: 'Theory' },
-    { code: 'CS3251', name: 'Programming in C', credits: 3, courseType: 'Theory' },
-    { code: 'GE3271', name: 'Engineering Practices Laboratory', credits: 2, courseType: 'Laboratory' },
-    { code: 'CS3271', name: 'Programming in C Laboratory', credits: 1.5, courseType: 'Laboratory' }
-  ],
-  3: [
-    { code: 'MA3354', name: 'Discrete Mathematics', credits: 4, courseType: 'Theory' },
-    { code: 'CS3351', name: 'Digital Principles and Computer Organization', credits: 4, courseType: 'Theory' },
-    { code: 'AD3301', name: 'Data Exploration and Visualization', credits: 4, courseType: 'Theory cum Laboratory' },
-    { code: 'AD3351', name: 'Design and Analysis of Algorithms', credits: 4, courseType: 'Theory' },
-    { code: 'AD3381', name: 'Database Design and Management', credits: 3, courseType: 'Theory' },
-    { code: 'AL3391', name: 'Artificial Intelligence', credits: 4, courseType: 'Theory' },
-    { code: 'AD3311', name: 'Database Design and Management Laboratory', credits: 1.5, courseType: 'Laboratory' },
-    { code: 'AD3361', name: 'Data Science & Exploration Laboratory', credits: 1.5, courseType: 'Laboratory' }
-  ],
-  4: [
-    { code: 'MA3391', name: 'Probability and Statistics', credits: 4, courseType: 'Theory' },
-    { code: 'AL3452', name: 'Operating Systems', credits: 3, courseType: 'Theory' },
-    { code: 'AL3451', name: 'Machine Learning', credits: 4, courseType: 'Theory cum Laboratory' },
-    { code: 'AD3491', name: 'Fundamentals of Data Science', credits: 3, courseType: 'Theory' },
-    { code: 'CS3491', name: 'Software Engineering', credits: 3, courseType: 'Theory' },
-    { code: 'AD3411', name: 'Data Science and Machine Learning Laboratory', credits: 2, courseType: 'Laboratory' },
-    { code: 'AL3461', name: 'Operating Systems Laboratory', credits: 1.5, courseType: 'Laboratory' }
-  ],
-  5: [
-    { code: 'AD3501', name: 'Deep Learning', credits: 4, courseType: 'Theory cum Laboratory' },
-    { code: 'CW3551', name: 'Data and Information Security', credits: 3, courseType: 'Theory' },
-    { code: 'CS3591', name: 'Computer Networks', credits: 4, courseType: 'Theory' },
-    { code: 'AD3511', name: 'Deep Learning Laboratory', credits: 2, courseType: 'Laboratory' },
-    { code: 'AD3512', name: 'Professional Development', credits: 1, courseType: 'Laboratory' }
-  ],
-  6: [
-    { code: 'AD3601', name: 'Natural Language Processing', credits: 4, courseType: 'Theory cum Laboratory' },
-    { code: 'AD3611', name: 'Big Data Analytics', credits: 4, courseType: 'Theory' },
-    { code: 'IT3601', name: 'Cloud Computing and Virtualization', credits: 3, courseType: 'Theory' },
-    { code: 'AD3681', name: 'Mini Project / Capstone Lab', credits: 2, courseType: 'Laboratory' }
-  ]
+// Dynamic DB Subject Record
+export interface DbSubject {
+  id: string
+  code: string
+  name: string
+  credits: number
+  category?: string
+  facultyInCharge?: string
+  courseType?: 'Theory' | 'Laboratory' | 'Theory cum Laboratory'
+  semester: number
+  year?: number
+  description?: string | null
 }
 
 const DEFAULT_SEMESTER_CREDITS: Record<number, number> = {
@@ -121,15 +80,6 @@ const DEFAULT_SEMESTER_CREDITS: Record<number, number> = {
   7: 20,
   8: 16
 }
-
-// Slide 13 Example Data
-const SLIDE_13_EXAMPLE_COURSES: SubjectGradeRow[] = [
-  { id: 'ex-1', code: 'MA101', name: 'Mathematics', credits: 4, courseType: 'Theory', grade: 'A+' },
-  { id: 'ex-2', code: 'CS101', name: 'Programming', credits: 3, courseType: 'Theory', grade: 'A' },
-  { id: 'ex-3', code: 'PH101', name: 'Physics', credits: 4, courseType: 'Theory', grade: 'B+' },
-  { id: 'ex-4', code: 'EN101', name: 'English', credits: 2, courseType: 'Theory', grade: 'S' },
-  { id: 'ex-5', code: 'LB101', name: 'Lab', credits: 2, courseType: 'Laboratory', grade: 'A+' }
-]
 
 interface GPACalculatorMarksheetViewProps {
   studentName?: string
@@ -154,6 +104,8 @@ export default function GPACalculatorMarksheetView({
   )
 
   const [selectedSemester, setSelectedSemester] = useState<number>(currentSemester || 3)
+  const [dbSubjects, setDbSubjects] = useState<DbSubject[]>([])
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState<boolean>(true)
 
   // Grade point mapping based on selected grading system
   const currentGradePoints = useMemo<Record<string, number>>(() => {
@@ -185,18 +137,50 @@ export default function GPACalculatorMarksheetView({
     }
   }, [gradingSystem])
 
-  // Subject rows for GPA calculator (real presets from curriculum)
-  const [subjects, setSubjects] = useState<SubjectGradeRow[]>(() => {
-    const preset = AI_DS_SEMESTER_PRESETS[selectedSemester] || AI_DS_SEMESTER_PRESETS[3] || []
-    return preset.map((item, idx) => ({
-      id: `subj-${idx}`,
-      code: item.code,
-      name: item.name,
-      credits: item.credits,
-      courseType: item.courseType,
-      grade: ''
-    }))
-  })
+  // Subject rows for GPA calculator (dynamically populated from database or empty)
+  const [subjects, setSubjects] = useState<SubjectGradeRow[]>([])
+
+  // Fetch live subjects configured by Admin
+  useEffect(() => {
+    let isMounted = true
+    async function fetchSubjects() {
+      try {
+        setIsLoadingSubjects(true)
+        const res = await fetch('/api/admin/academics')
+        const data = await res.json()
+        if (data.success && Array.isArray(data.subjects) && isMounted) {
+          setDbSubjects(data.subjects)
+        }
+      } catch (err) {
+        console.error('Failed to load curriculum subjects:', err)
+      } finally {
+        if (isMounted) setIsLoadingSubjects(false)
+      }
+    }
+    fetchSubjects()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Sync subjects when dbSubjects or selectedSemester changes
+  useEffect(() => {
+    const semSubjects = dbSubjects.filter(s => s.semester === selectedSemester)
+    if (semSubjects.length > 0) {
+      setSubjects(
+        semSubjects.map((s, idx) => ({
+          id: s.id || `subj-${selectedSemester}-${idx}`,
+          code: s.code,
+          name: s.name,
+          credits: Number(s.credits) || 3,
+          courseType: (s.courseType as any) || 'Theory',
+          grade: ''
+        }))
+      )
+    } else {
+      setSubjects([])
+    }
+  }, [dbSubjects, selectedSemester])
 
   // Real Cumulative Semester GPAs state (zero placeholder/fake numbers)
   const storageKey = `aids_student_semester_gpas_${registerNumber}`
@@ -257,16 +241,20 @@ export default function GPACalculatorMarksheetView({
   // Switch semester preset
   const handleSemesterChange = (sem: number) => {
     setSelectedSemester(sem)
-    const preset = AI_DS_SEMESTER_PRESETS[sem] || []
-    setSubjects(preset.map((item, idx) => ({
-      id: `subj-${sem}-${idx}`,
-      code: item.code,
-      name: item.name,
-      credits: item.credits,
-      courseType: item.courseType,
-      grade: ''
-    })))
-    toast.success(`Loaded Regulation 2023 curriculum for Semester ${sem}!`)
+    const semSubjects = dbSubjects.filter(s => s.semester === sem)
+    if (semSubjects.length > 0) {
+      setSubjects(semSubjects.map((item, idx) => ({
+        id: item.id || `subj-${sem}-${idx}`,
+        code: item.code,
+        name: item.name,
+        credits: Number(item.credits) || 3,
+        courseType: (item.courseType as any) || 'Theory',
+        grade: ''
+      })))
+      toast.success(`Loaded ${semSubjects.length} approved courses for Semester ${sem}!`)
+    } else {
+      setSubjects([])
+    }
   }
 
   // Clear all course grades
@@ -275,36 +263,14 @@ export default function GPACalculatorMarksheetView({
     toast.success('Course grades cleared. Select your grades to calculate SGPA.')
   }
 
-  // Load Slide 13 Example
-  const handleLoadSlide13Example = () => {
-    setGradingSystem('absolute_ii_year')
-    setSubjects(SLIDE_13_EXAMPLE_COURSES)
-    toast.success('Loaded Official Example: Total Credits=15, Points=126, SGPA=8.40!', { icon: '📊' })
-  }
-
-  // Load Slide 14 Example
-  const handleLoadSlide14Example = () => {
-    setSemesterGPAs({
-      1: { gpa: 8.50, credits: 20 },
-      2: { gpa: 8.80, credits: 22 },
-      3: { gpa: 9.10, credits: 21 },
-      4: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[4] },
-      5: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[5] },
-      6: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[6] },
-      7: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[7] },
-      8: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[8] }
-    })
-    toast.success('Loaded Official Example: Sem 1(20@8.50), Sem 2(22@8.80), Sem 3(21@9.10) => CGPA = 8.81!', { icon: '🎓' })
-  }
-
   // Add custom subject
   const handleAddSubject = () => {
     const newId = `custom-${Date.now()}`
     setSubjects(prev => [
       ...prev,
-      { id: newId, code: 'AD3099', name: 'Professional Elective / Special Course', credits: 3, courseType: 'Theory', grade: '' }
+      { id: newId, code: `CS${selectedSemester}0${prev.length + 1}`, name: 'New Course / Elective', credits: 4, courseType: 'Theory', grade: '' }
     ])
-    toast.success('Custom elective added to calculator!')
+    toast.success('Custom subject row added to calculator!')
   }
 
   // Remove subject
@@ -312,8 +278,8 @@ export default function GPACalculatorMarksheetView({
     setSubjects(prev => prev.filter(s => s.id !== id))
   }
 
-  // Update grade or credits
-  const handleUpdateSubject = (id: string, field: 'grade' | 'credits' | 'courseType', value: any) => {
+  // Update grade, credits, code, or name
+  const handleUpdateSubject = (id: string, field: 'grade' | 'credits' | 'courseType' | 'code' | 'name', value: any) => {
     setSubjects(prev => prev.map(s => {
       if (s.id === id) {
         return { ...s, [field]: value }
@@ -666,14 +632,29 @@ export default function GPACalculatorMarksheetView({
               </div>
             </div>
 
-            {/* Quick Action Preset from Slide 13 */}
+            {/* Action Bar & Grading Scheme Toggle */}
             <div className="flex flex-col gap-2.5 w-full md:w-auto shrink-0">
               <button
-                onClick={handleLoadSlide13Example}
-                className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+                onClick={() => {
+                  const semSubjects = dbSubjects.filter(s => s.semester === selectedSemester)
+                  if (semSubjects.length > 0) {
+                    setSubjects(semSubjects.map((item, idx) => ({
+                      id: item.id || `subj-${selectedSemester}-${idx}`,
+                      code: item.code,
+                      name: item.name,
+                      credits: Number(item.credits) || 3,
+                      courseType: (item.courseType as any) || 'Theory',
+                      grade: ''
+                    })))
+                    toast.success(`Refreshed ${semSubjects.length} courses from curriculum database!`)
+                  } else {
+                    toast('No subjects currently stored in database for this semester. Click "+ Add Custom Course" below.', { icon: 'ℹ️' })
+                  }
+                }}
+                className="px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] border border-blue-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
               >
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Load Example (SGPA = 8.40)</span>
+                <RefreshCw className="w-4 h-4 text-[#1455D9]" />
+                <span>Sync Official Courses</span>
               </button>
 
               {/* Grading Scheme Toggle */}
@@ -702,23 +683,27 @@ export default function GPACalculatorMarksheetView({
             </div>
           </div>
 
-          {/* Main Interactive Table matching Slide 13 Table */}
+          {/* Main Interactive Table matching Curricular Scheme */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8 space-y-4">
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm">Semester Course Work Table</h4>
-                    <p className="text-xs text-slate-500">Select course grades to calculate real credit-weighted semester SGPA</p>
+                    <p className="text-xs text-slate-500">
+                      {subjects.length > 0
+                        ? `Official subjects & credit scores loaded from department database for Semester ${selectedSemester}`
+                        : `No courses in database for Semester ${selectedSemester}. Click "+ Add Custom Course" to add subjects.`}
+                    </p>
                   </div>
 
-                  {/* Semester selector */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                    {[1, 2, 3, 4, 5, 6].map((sem) => (
+                  {/* Semester selector for all 8 semesters */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                       <button
                         key={sem}
                         onClick={() => handleSemesterChange(sem)}
-                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                           selectedSemester === sem
                             ? 'bg-blue-600 text-white shadow-sm'
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -742,71 +727,114 @@ export default function GPACalculatorMarksheetView({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {subjects.map((subj) => {
-                        const hasGrade = Boolean(subj.grade && currentGradePoints[subj.grade] !== undefined)
-                        const pt = hasGrade ? currentGradePoints[subj.grade] : null
-                        const ciGi = hasGrade && pt !== null ? (pt * subj.credits) : null
-                        return (
-                          <tr key={subj.id} className="hover:bg-slate-50/70 transition-colors">
-                            <td className="py-3 px-4">
-                              <span className="font-bold text-slate-800 block">{subj.name}</span>
-                              <span className="text-slate-400 font-mono text-[10px]">{subj.code} · {subj.courseType}</span>
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <input
-                                type="number"
-                                step="0.5"
-                                min="1"
-                                max="6"
-                                value={subj.credits}
-                                onChange={(e) => handleUpdateSubject(subj.id, 'credits', parseFloat(e.target.value) || 0)}
-                                className="w-16 p-1.5 rounded-lg border border-slate-200 text-center font-bold text-slate-800 bg-slate-50"
-                              />
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <select
-                                value={subj.grade}
-                                onChange={(e) => handleUpdateSubject(subj.id, 'grade', e.target.value)}
-                                className={`w-full p-1.5 rounded-lg border font-bold text-xs bg-white transition-colors ${
-                                  subj.grade ? 'border-blue-300 text-blue-700 bg-blue-50/30' : 'border-slate-200 text-slate-400'
-                                }`}
-                              >
-                                <option value="">— Select Grade —</option>
-                                {gradeOptions.map((opt) => (
-                                  <option key={opt.grade} value={opt.grade} className="text-slate-800 font-medium">
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </td>
-                            <td className="py-3 px-4 text-center font-mono font-bold text-slate-800 text-sm">
-                              {ciGi !== null ? ciGi : <span className="text-slate-300 font-normal">—</span>}
-                            </td>
-                            <td className="py-3 px-3 text-center">
-                              <button
-                                onClick={() => handleRemoveSubject(subj.id)}
-                                className="p-1 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                                title="Remove Course"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                      {subjects.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-10 text-center text-slate-400">
+                            <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                            <p className="font-bold text-slate-700 text-xs">No courses registered for Semester {selectedSemester} yet</p>
+                            <p className="text-[11px] text-slate-400 max-w-md mx-auto mt-1 mb-4">
+                              Official subjects are added by administrators in the <strong>Academics</strong> module. You can also add custom courses and credit scores directly below.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleAddSubject}
+                              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> + Add Custom Subject
+                            </button>
+                          </td>
+                        </tr>
+                      ) : (
+                        subjects.map((subj) => {
+                          const hasGrade = Boolean(subj.grade && currentGradePoints[subj.grade] !== undefined)
+                          const pt = hasGrade ? currentGradePoints[subj.grade] : null
+                          const ciGi = hasGrade && pt !== null ? (pt * subj.credits) : null
+                          const isCustom = subj.id.startsWith('custom-')
+                          return (
+                            <tr key={subj.id} className="hover:bg-slate-50/70 transition-colors">
+                              <td className="py-3 px-4">
+                                {isCustom ? (
+                                  <div className="space-y-1">
+                                    <input
+                                      type="text"
+                                      value={subj.name}
+                                      onChange={(e) => handleUpdateSubject(subj.id, 'name', e.target.value)}
+                                      placeholder="Course Name"
+                                      className="w-full p-1.5 rounded-lg border border-slate-200 font-bold text-slate-800 text-xs focus:bg-white"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={subj.code}
+                                      onChange={(e) => handleUpdateSubject(subj.id, 'code', e.target.value.toUpperCase())}
+                                      placeholder="Code e.g. CS3401"
+                                      className="w-32 p-1 rounded-md border border-slate-200 font-mono text-[10px] text-[#1455D9]"
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <span className="font-bold text-slate-800 block">{subj.name}</span>
+                                    <span className="text-slate-400 font-mono text-[10px]">{subj.code} · {subj.courseType}</span>
+                                  </>
+                                )}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <input
+                                  type="number"
+                                  step="0.5"
+                                  min="0.5"
+                                  max="20"
+                                  value={subj.credits}
+                                  onChange={(e) => handleUpdateSubject(subj.id, 'credits', parseFloat(e.target.value) || 0)}
+                                  className="w-16 p-1.5 rounded-lg border border-slate-200 text-center font-bold text-slate-800 bg-slate-50"
+                                />
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <select
+                                  value={subj.grade}
+                                  onChange={(e) => handleUpdateSubject(subj.id, 'grade', e.target.value)}
+                                  className={`w-full p-1.5 rounded-lg border font-bold text-xs bg-white transition-colors ${
+                                    subj.grade ? 'border-blue-300 text-blue-700 bg-blue-50/30' : 'border-slate-200 text-slate-400'
+                                  }`}
+                                >
+                                  <option value="">— Select Grade —</option>
+                                  {gradeOptions.map((opt) => (
+                                    <option key={opt.grade} value={opt.grade} className="text-slate-800 font-medium">
+                                      {opt.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="py-3 px-4 text-center font-mono font-bold text-slate-800 text-sm">
+                                {ciGi !== null ? ciGi : <span className="text-slate-300 font-normal">—</span>}
+                              </td>
+                              <td className="py-3 px-3 text-center">
+                                <button
+                                  onClick={() => handleRemoveSubject(subj.id)}
+                                  className="p-1 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
+                                  title="Remove Course"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
 
                       {/* Total Row */}
-                      <tr className="bg-slate-100/80 font-bold text-slate-900 border-t-2 border-slate-300">
-                        <td className="py-3 px-4 font-black uppercase text-xs">Total</td>
-                        <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
-                          {currentSemesterCredits}
-                        </td>
-                        <td className="py-3 px-4 text-center text-slate-400 text-[11px]">—</td>
-                        <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
-                          {hasAnyGrade ? totalWeightedPoints : '—'}
-                        </td>
-                        <td className="py-3 px-3"></td>
-                      </tr>
+                      {subjects.length > 0 && (
+                        <tr className="bg-slate-100/80 font-bold text-slate-900 border-t-2 border-slate-300">
+                          <td className="py-3 px-4 font-black uppercase text-xs">Total</td>
+                          <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
+                            {currentSemesterCredits}
+                          </td>
+                          <td className="py-3 px-4 text-center text-slate-400 text-[11px]">—</td>
+                          <td className="py-3 px-4 text-center font-black text-sm font-mono text-blue-700">
+                            {hasAnyGrade ? totalWeightedPoints : '—'}
+                          </td>
+                          <td className="py-3 px-3"></td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

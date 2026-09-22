@@ -5,13 +5,55 @@ import { validateBody, adminAcademicsSchema } from '@/lib/validations/apiValidat
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const subjects = await prisma.subject.findMany({
+    const { searchParams } = new URL(request.url)
+    const semParam = searchParams.get('semester')
+
+    const dbSubjects = await prisma.subject.findMany({
       orderBy: { code: 'asc' },
     })
 
-    return NextResponse.json({ success: true, subjects })
+    const subjects = dbSubjects.map((s) => {
+      let sem = 1
+      let category = 'Professional Core (PC)'
+      let facultyInCharge = ''
+      let courseType: 'Theory' | 'Laboratory' | 'Theory cum Laboratory' = 'Theory'
+      let exactCredits = Number(s.credits)
+
+      if (s.description && s.description.startsWith('{')) {
+        try {
+          const meta = JSON.parse(s.description)
+          if (meta.semester) sem = Number(meta.semester)
+          if (meta.category) category = meta.category
+          if (meta.facultyInCharge) facultyInCharge = meta.facultyInCharge
+          if (meta.courseType) courseType = meta.courseType
+          if (meta.exactCredits !== undefined) exactCredits = Number(meta.exactCredits)
+        } catch {}
+      } else {
+        const match = s.code.match(/[A-Za-z]+[0-9]([1-8])/)
+        sem = match ? parseInt(match[1], 10) : 1
+      }
+
+      return {
+        id: s.id,
+        code: s.code,
+        name: s.name,
+        credits: exactCredits,
+        category,
+        facultyInCharge,
+        courseType,
+        semester: sem,
+        year: Math.ceil(sem / 2),
+        description: s.description,
+      }
+    })
+
+    const filtered = semParam && semParam !== 'ALL'
+      ? subjects.filter((s) => s.semester === Number(semParam))
+      : subjects
+
+    return NextResponse.json({ success: true, subjects: filtered })
   } catch (error: any) {
     console.error('Fetch subjects error:', error)
     return NextResponse.json(
@@ -30,12 +72,30 @@ export async function POST(request: Request) {
       return validation.response
     }
     const body = validation.data
-    const { code, name, credits = 4, category = 'Professional Core (PC)', description = '', semester = 1 } = body
+    const {
+      code,
+      name,
+      credits = 4,
+      courseType = 'Theory',
+      category = 'Professional Core (PC)',
+      facultyInCharge = '',
+      description = '',
+      semester = 1,
+    } = body
 
     const currentYear = await prisma.academicYear.findFirst({
       where: { isCurrent: true },
     })
     const academicYearId = currentYear?.id || 'cmtmnsw30000apv1wxafyfv59'
+
+    const metaDescription = JSON.stringify({
+      semester: Number(semester),
+      category,
+      facultyInCharge,
+      courseType,
+      exactCredits: Number(credits),
+      notes: description,
+    })
 
     // Upsert or create subject
     const subject = await prisma.subject.upsert({
@@ -47,14 +107,14 @@ export async function POST(request: Request) {
       },
       update: {
         name: name.trim(),
-        credits: Number(credits),
-        description: description || `Regulation 2021 curriculum course (Sem ${semester}) - ${category}`,
+        credits: Math.round(Number(credits)),
+        description: metaDescription,
       },
       create: {
         code: code.toUpperCase().trim(),
         name: name.trim(),
-        credits: Number(credits),
-        description: description || `Regulation 2021 curriculum course (Sem ${semester}) - ${category}`,
+        credits: Math.round(Number(credits)),
+        description: metaDescription,
         academicYearId,
       },
     })
@@ -72,7 +132,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      subject,
+      subject: {
+        id: subject.id,
+        code: subject.code,
+        name: subject.name,
+        credits: Number(credits),
+        courseType,
+        category,
+        facultyInCharge,
+        semester: Number(semester),
+        description: metaDescription,
+      },
       message: `Course ${subject.code} saved successfully`,
     })
   } catch (error: any) {

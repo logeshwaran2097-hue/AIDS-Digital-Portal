@@ -22,6 +22,7 @@ export interface SubjectItem {
   credits: number
   category: string
   facultyInCharge: string
+  courseType?: 'Theory' | 'Laboratory' | 'Theory cum Laboratory'
   semester: number
   year?: number
   description?: string | null
@@ -48,6 +49,7 @@ export function AdminAcademicsView({
     code: '',
     name: '',
     credits: 4,
+    courseType: 'Theory' as 'Theory' | 'Laboratory' | 'Theory cum Laboratory',
     category: 'Professional Core (PC)',
     facultyInCharge: '',
     semester: 1,
@@ -660,18 +662,31 @@ export function AdminAcademicsView({
                   className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Credits</label>
-                  <select
+                  <label className="block font-bold text-[#071A3D] mb-1">Credit Score *</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    min="0.5"
+                    max="20"
+                    required
+                    placeholder="e.g. 4 or 1.5"
                     value={formData.credits}
-                    onChange={(e) => setFormData({ ...formData, credits: Number(e.target.value) })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    onChange={(e) => setFormData({ ...formData, credits: parseFloat(e.target.value) || 0 })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-mono font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#071A3D] mb-1">Course Type</label>
+                  <select
+                    value={formData.courseType}
+                    onChange={(e) => setFormData({ ...formData, courseType: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 font-semibold focus:outline-none focus:border-[#1455D9]"
                   >
-                    <option value={4}>4 Credits (Theory + Lab)</option>
-                    <option value={3}>3 Credits (Theory)</option>
-                    <option value={2}>2 Credits (Practical Lab)</option>
-                    <option value={10}>10 Credits (Capstone Project)</option>
+                    <option value="Theory">Theory</option>
+                    <option value="Laboratory">Laboratory</option>
+                    <option value="Theory cum Laboratory">Theory cum Lab</option>
                   </select>
                 </div>
                 <div>

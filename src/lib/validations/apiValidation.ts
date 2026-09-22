@@ -743,14 +743,16 @@ export const createHodSchema = z
 
 export const adminAcademicsSchema = z
   .object({
-    code: z.string().min(2).max(20),
-    name: z.string().min(2).max(150),
-    credits: z.union([z.number().min(0).max(10), z.string()]).optional(),
+    code: z.string().min(2).max(30),
+    name: z.string().min(2).max(200),
+    credits: z.union([z.number().min(0).max(30), z.string()]).optional(),
+    courseType: z.string().max(100).optional(),
     category: z.string().max(100).optional(),
-    description: z.string().max(500).optional(),
+    description: z.string().max(1000).optional(),
+    facultyInCharge: z.string().max(150).optional(),
     semester: z.union([z.number().min(1).max(10), z.string()]).optional(),
   })
-  .strict()
+  .passthrough()
 
 export const adminRolesSchema = z
   .object({
