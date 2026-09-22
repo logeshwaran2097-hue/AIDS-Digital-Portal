@@ -58,6 +58,55 @@ export function AdminActivityLogsView({ initialLogs }: { initialLogs: LogRecord[
   const [logToDelete, setLogToDelete] = useState<LogRecord | null>(null)
   const [isExporting, setIsExporting] = useState(false)
   const [notification, setNotification] = useState('')
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState(false)
+  const [aiResponse, setAiResponse] = useState<string | null>(null)
+
+  React.useEffect(() => {
+    setAiResponse(null)
+  }, [selectedLog])
+
+  // Helper to format details string
+  const formatDetails = (detailsStr: string | null | undefined) => {
+    if (!detailsStr) return 'Standard system transaction executed';
+    try {
+      const parsed = JSON.parse(detailsStr);
+      if (parsed && typeof parsed === 'object') {
+        return Object.entries(parsed).map(([k, v]) => `${k}: ${v}`).join(' | ');
+      }
+    } catch (e) {
+      // Not JSON
+    }
+    return detailsStr;
+  }
+
+  const handleAnalyzeError = async (log: LogRecord) => {
+    setIsAiAnalyzing(true)
+    setAiResponse(null)
+    try {
+      const prompt = `Analyze this system error log and provide a very brief explanation of what went wrong and how to fix it:
+Action: ${log.action}
+Module: ${log.module}
+User: ${log.userName}
+Details: ${log.details}
+Status: ${log.status}`
+
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt, sessionId: 'admin-log-analysis' })
+      })
+      const data = await res.json()
+      if (data.success && data.answer) {
+        setAiResponse(data.answer)
+      } else {
+        setAiResponse('Unable to generate analysis. Please try again.')
+      }
+    } catch {
+      setAiResponse('Network error connecting to AI service.')
+    } finally {
+      setIsAiAnalyzing(false)
+    }
+  }
 
   // Enhanced Filter Logic
   const filteredLogs = useMemo(() => {
@@ -188,7 +237,7 @@ export function AdminActivityLogsView({ initialLogs }: { initialLogs: LogRecord[
         l.action.toUpperCase(),
         l.module.toUpperCase(),
         l.status.toUpperCase(),
-        l.details || 'Standard system action',
+        formatDetails(l.details),
       ]),
     ]
     const csvContent =
@@ -543,8 +592,8 @@ export function AdminActivityLogsView({ initialLogs }: { initialLogs: LogRecord[
                       </td>
 
                       {/* Details */}
-                      <td className="px-5 py-3.5 text-gray-700 font-mono text-[11px] max-w-sm truncate group-hover:text-[#1455D9] transition-colors">
-                        {l.details || 'Standard system transaction executed'}
+                      <td className="px-5 py-3.5 text-gray-700 font-mono text-[11px] max-w-sm truncate group-hover:text-[#1455D9] transition-colors" title={l.details || ''}>
+                        {formatDetails(l.details)}
                       </td>
 
                       {/* Timestamp */}
@@ -738,17 +787,60 @@ export function AdminActivityLogsView({ initialLogs }: { initialLogs: LogRecord[
                   Full Payload &amp; Event Details
                 </span>
                 <div className="bg-slate-900 text-slate-100 p-4 rounded-2xl font-mono text-[11px] leading-relaxed break-words">
-                  {selectedLog.details || 'Standard system transaction executed without extended metadata payload.'}
+                  {formatDetails(selectedLog.details)}
                 </div>
+                {selectedLog.details && selectedLog.details.startsWith('{') && (
+                  <div className="mt-2 text-[10px] text-gray-500 font-mono break-words">
+                    Raw: {selectedLog.details}
+                  </div>
+                )}
               </div>
+
+              {selectedLog.status.toLowerCase() !== 'success' && (
+                <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-bold text-rose-800 flex items-center gap-1.5">
+                      <Bot className="w-4 h-4" /> AI Error Analysis
+                    </h4>
+                    <button
+                      onClick={() => handleAnalyzeError(selectedLog)}
+                      disabled={isAiAnalyzing}
+                      className="px-3 py-1.5 bg-white border border-rose-200 text-rose-600 rounded-lg text-[10px] font-bold shadow-xs hover:bg-rose-100 transition-colors flex items-center gap-1"
+                    >
+                      {isAiAnalyzing ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                      {aiResponse ? 'Re-Analyze' : 'Analyze Error'}
+                    </button>
+                  </div>
+                  {isAiAnalyzing && <p className="text-[11px] text-rose-600 animate-pulse">AI Agent is analyzing the log...</p>}
+                  {aiResponse && (
+                    <div className="mt-2 text-[11px] text-gray-800 font-medium whitespace-pre-wrap leading-relaxed bg-white/50 p-3 rounded-xl border border-rose-100">
+                      {aiResponse}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                 <span className="text-[11px] text-gray-500 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Status:{' '}
-                  <strong className="text-emerald-700 font-bold uppercase">{selectedLog.status}</strong>
+                  <strong className={selectedLog.status.toLowerCase() === 'success' ? "text-emerald-700 font-bold uppercase" : "text-rose-700 font-bold uppercase"}>
+                    {selectedLog.status}
+                  </strong>
                 </span>
 
                 <div className="flex items-center gap-2">
+                  {selectedLog.status.toLowerCase() !== 'success' && (
+                    <button
+                      onClick={() => {
+                        const log = selectedLog
+                        setSelectedLog(null)
+                        handleDeleteSingle(log)
+                      }}
+                      className="px-3 py-2 rounded-xl bg-green-50 text-green-700 hover:bg-green-100 font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Clear Error
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       const log = selectedLog

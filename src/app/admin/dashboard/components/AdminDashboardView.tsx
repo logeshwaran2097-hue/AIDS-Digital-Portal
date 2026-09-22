@@ -47,6 +47,7 @@ export interface AdminDashboardData {
   announcementCount: number
   achievementCount: number
   odProofCount?: number
+  birthdayStudents?: { name: string; registerNumber: string; profileImage: string | null }[]
 }
 
 export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
@@ -165,6 +166,38 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           </button>
         </div>
       </div>
+
+      {/* Birthday Banner */}
+      {data.birthdayStudents && data.birthdayStudents.length > 0 && (
+        <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-blue-500/10 border border-pink-200/50 rounded-3xl p-6 shadow-xs animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500 to-purple-500 text-white flex items-center justify-center shrink-0 shadow-md">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-black text-[#071A3D]">Today's Birthdays 🎉</h2>
+              <p className="text-xs text-gray-500 font-medium mt-0.5">Wish these students a happy birthday!</p>
+            </div>
+            <div className="flex flex-wrap gap-3 mt-4 sm:mt-0">
+              {data.birthdayStudents.map((student, idx) => (
+                <div key={idx} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-xs border border-gray-100">
+                  {student.profileImage ? (
+                    <img src={student.profileImage} alt={student.name} className="w-8 h-8 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center text-xs font-bold">
+                      {student.name.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs font-bold text-[#071A3D] line-clamp-1">{student.name}</p>
+                    <p className="text-[10px] text-gray-400 font-mono">{student.registerNumber}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* System Infrastructure Health Strip - Clickable boxes */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

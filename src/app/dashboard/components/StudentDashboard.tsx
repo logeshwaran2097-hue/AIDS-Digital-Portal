@@ -138,6 +138,22 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
   const userId = currentUser.id || ''
   const isInitialNeedsOnboarding = Boolean(data.user?.mustChangePassword)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+  const [showBirthdayPopup, setShowBirthdayPopup] = useState(false)
+
+  // Check for birthday
+  useEffect(() => {
+    if (data.student?.dateOfBirth) {
+      const dob = new Date(data.student.dateOfBirth)
+      const today = new Date()
+      if (dob.getMonth() === today.getMonth() && dob.getDate() === today.getDate()) {
+        const hasSeenPopup = sessionStorage.getItem(`birthday_popup_seen_${data.student.registerNumber}`)
+        if (!hasSeenPopup) {
+          setShowBirthdayPopup(true)
+          sessionStorage.setItem(`birthday_popup_seen_${data.student.registerNumber}`, 'true')
+        }
+      }
+    }
+  }, [data.student])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -255,6 +271,33 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
           profileImage: currentUser.profileImage || undefined,
         }}
       />
+
+      {/* Birthday Popup */}
+      {showBirthdayPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3D]/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center border-4 border-[#22C7E8]">
+            <button 
+              onClick={() => setShowBirthdayPopup(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            <div className="w-24 h-24 mx-auto bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white rounded-full flex items-center justify-center mb-6 shadow-lg animate-bounce ring-4 ring-[#22C7E8]/30">
+              <Sparkles className="w-12 h-12" />
+            </div>
+            <h2 className="text-2xl font-black text-[#071A3D] mb-3 uppercase tracking-wider">Happy Birthday!</h2>
+            <p className="text-gray-600 font-medium mb-8 text-sm">
+              Dear <span className="font-bold text-[#1455D9]">{currentUser.name}</span>, wishing you a fantastic birthday and a successful year ahead! 🎉
+            </p>
+            <button 
+              onClick={() => setShowBirthdayPopup(false)}
+              className="w-full py-3 px-4 bg-gradient-to-r from-[#071A3D] to-[#1455D9] hover:from-[#051330] hover:to-[#0A2A5E] text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:scale-[1.02]"
+            >
+              Thank You!
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Hero Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#051330] via-[#071A3D] to-[#1455D9] p-4 sm:p-8 text-white shadow-2xl border border-white/10">
