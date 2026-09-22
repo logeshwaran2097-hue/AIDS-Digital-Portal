@@ -1572,6 +1572,7 @@ export function ODApplicationsDashboardView({
           isOpen={Boolean(selectedODModal)}
           onClose={() => setSelectedODModal(null)}
           application={selectedODModal}
+          viewRole={viewRole}
           notification={{
             id: selectedODModal.id,
             title: `[OD Application] ${selectedODModal.studentName} (${selectedODModal.registerNumber})`,
