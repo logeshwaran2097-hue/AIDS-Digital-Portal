@@ -30,7 +30,7 @@ import {
   CheckSquare,
   Square,
   AlertCircle,
-} from 'lucide-react'
+    Bot,} from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
 export interface LogRecord {
