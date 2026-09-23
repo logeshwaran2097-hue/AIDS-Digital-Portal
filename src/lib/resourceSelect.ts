@@ -7,12 +7,6 @@ export const resourceSelectOptions = {
   fileSize: true,
   // NO fileUrl to save bandwidth
   subjectId: true,
-  subject: {
-    select: {
-      name: true,
-      code: true,
-    }
-  },
   uploadedById: true,
   uploadedByName: true,
   status: true,
