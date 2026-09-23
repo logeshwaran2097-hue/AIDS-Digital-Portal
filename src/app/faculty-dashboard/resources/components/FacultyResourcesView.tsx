@@ -32,6 +32,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
+import toast from 'react-hot-toast'
 
 export interface ResourceItem {
   id: string
@@ -180,7 +181,7 @@ export function FacultyResourcesView({
         resourceType: r.resourceType,
         uploadedByName: r.uploadedByName || facultyName,
         semester: r.semester,
-        description: r.description || undefined,
+        description: r.description ?? undefined,
       })
       return
     }
