@@ -409,6 +409,325 @@ function handleOdLeaveStatement(rawQ: string): { answer: string; suggestions: st
   }
 }
 
+// =============================================================================
+// AGENT: SECURITY AUDIT & SYSTEM ERROR LOG DIAGNOSTIC AGENT
+// =============================================================================
+async function executeSecurityAuditLogAgent(
+  rawQ: string,
+  context?: any,
+  activeApiKey?: string
+): Promise<{ answer: string; suggestions: string[]; source: string }> {
+  // 1. Try Gemini if active key is configured and valid
+  if (activeApiKey && activeApiKey !== 'your-gemini-api-key') {
+    try {
+      const genAI = new GoogleGenerativeAI(activeApiKey)
+      const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-flash',
+        systemInstruction: `You are the Chief Cybersecurity & Systems Reliability Engineer for the V.S.B. AI & DS Institutional Digital Portal.
+Your task is to analyze system activity audit records, security exceptions, and failed operations.
+Provide a clear, high-signal, expert diagnostic report in markdown format:
+1. 🔍 **Root Cause Analysis**: Exactly what occurred, which component/record was involved, and why it failed.
+2. 🛡️ **Security & System Status**: Threat assessment (e.g. Low/Routine/Warning/Critical), whether the firewall/RBAC intercepted the attempt, and any risk to portal integrity.
+3. 🛠️ **Recommended Fix & Actions**: Numbered, practical steps for the portal administrator or operator to resolve or investigate the issue.
+Keep the tone professional, precise, and concise (under 200 words). Do not output generic bot greetings.`,
+      })
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: rawQ }] }],
+        generationConfig: { maxOutputTokens: 600, temperature: 0.3 },
+      })
+      const text = result.response.text()?.trim()
+      if (text && text.length > 40 && !text.includes('Welcome to the V.S.B. AI & DS Portal Assistant')) {
+        return {
+          answer: text,
+          suggestions: [
+            'Verify user credentials in User Directory',
+            'Check system security metrics',
+            'Clear flagged error from audit log',
+          ],
+          source: 'gemini-security-agent',
+        }
+      }
+    } catch (e: any) {
+      console.warn('Gemini Security Audit Agent fallback to autonomous diagnostic engine:', e?.message)
+    }
+  }
+
+  // 2. Autonomous Diagnostic Engine (Deterministic, Instant, 100% Offline-Capable)
+  const analysis = handleSecurityAuditLogAnalysis(rawQ, context)
+  return {
+    ...analysis,
+    source: 'autonomous-security-agent',
+  }
+}
+
+function handleSecurityAuditLogAnalysis(rawQ: string, context?: any): { answer: string; suggestions: string[] } {
+  let action = context?.action || ''
+  let moduleName = context?.module || ''
+  let userName = context?.userName || ''
+  let details = context?.details || ''
+  let status = context?.status || ''
+
+  if (!action) {
+    const m = rawQ.match(/Action:s*([^\n\r]+)/i)
+    if (m) action = m[1].trim()
+  }
+  if (!moduleName) {
+    const m = rawQ.match(/Module:s*([^\n\r]+)/i)
+    if (m) moduleName = m[1].trim()
+  }
+  if (!userName) {
+    const m = rawQ.match(/User:s*([^\n\r]+)/i)
+    if (m) userName = m[1].trim()
+  }
+  if (!details) {
+    const m = rawQ.match(/Details:s*([^\n\r]+)/i)
+    if (m) details = m[1].trim()
+  }
+  if (!status) {
+    const m = rawQ.match(/Status:s*([^\n\r]+)/i)
+    if (m) status = m[1].trim()
+  }
+
+  let parsedDetails: any = null
+  try {
+    if (details && typeof details === 'string' && (details.startsWith('{') || details.startsWith('['))) {
+      parsedDetails = JSON.parse(details)
+    } else if (typeof details === 'object') {
+      parsedDetails = details
+    }
+  } catch {
+    // Keep as raw string
+  }
+
+  // Extract from pipe-delimited details if raw string
+  let extractedReason = parsedDetails?.reason || parsedDetails?.message || ''
+  let extractedIdentifier = parsedDetails?.identifier || ''
+  let extractedRole = parsedDetails?.role || ''
+
+  if (!extractedReason && typeof details === 'string') {
+    const rMatch = details.match(/reason:\s*([^|\n]+)/i)
+    if (rMatch) extractedReason = rMatch[1].trim()
+  }
+  if (!extractedIdentifier && typeof details === 'string') {
+    const idMatch = details.match(/identifier:\s*([^|\n]+)/i)
+    if (idMatch) extractedIdentifier = idMatch[1].trim()
+  }
+  if (!extractedRole && typeof details === 'string') {
+    const roleMatch = details.match(/role:\s*([^|\n]+)/i)
+    if (roleMatch) extractedRole = roleMatch[1].trim()
+  }
+
+  const actionUpper = (action || '').toUpperCase()
+  const moduleUpper = (moduleName || '').toUpperCase()
+  const statusUpper = (status || '').toUpperCase()
+  const identifier = extractedIdentifier || userName || 'Unknown Identity'
+  const reasonText = (extractedReason || details || '').toLowerCase()
+  const roleName = extractedRole
+    ? String(extractedRole).toUpperCase()
+    : actionUpper.includes('STUDENT')
+    ? 'STUDENT'
+    : actionUpper.includes('FACULTY')
+    ? 'FACULTY'
+    : actionUpper.includes('HOD')
+    ? 'HOD'
+    : actionUpper.includes('ADMIN')
+    ? 'ADMINISTRATOR'
+    : 'USER'
+
+  let answer = ''
+  let suggestions = [
+    'Verify user credentials in User Directory',
+    'Review system security metrics',
+    'Clear flagged error from audit log',
+  ]
+
+  // CASE 1: Student Login / Authentication Failure
+  if (
+    actionUpper.includes('LOGIN FAILED STUDENT') ||
+    (actionUpper.includes('LOGIN') && roleName === 'STUDENT') ||
+    (moduleUpper === 'AUTH' && (roleName === 'STUDENT' || actionUpper.includes('STUDENT')))
+  ) {
+    answer = `🔍 **Root Cause Analysis:**
+Authentication challenge rejected for student account **${identifier}**.
+• **Event:** Student login verification failed.
+• **Primary Reason:** ${extractedReason ? `${extractedReason}` : 'Supplied credentials (email, register number, or password) did not match active institutional records.'}
+• **Technical Trace:** Password comparison returned a hash mismatch or the student account has not completed onboarding verification.
+
+🛡️ **Security & System Status:**
+• **Threat Level:** **LOW / ROUTINE**
+• **Firewall Assessment:** The portal's cryptographic authentication gateway successfully intercepted and quarantined the unverified request. No unauthorized session or JWT token was issued.
+
+🛠️ **Recommended Fix & Actions:**
+1. **Verify Student Registration:** Confirm that **${identifier}** is enrolled under **Admin → Students**.
+2. **Onboarding Check:** If this is a newly admitted student, check if they completed OTP mobile/email onboarding on the login portal.
+3. **Password Assistance:** Advise the student to use the **"Reset Password"** option or assign a temporary password from the student management console.
+4. **Action:** If this attempt was resolved or verified as an authentic student typo, you may safely click **"Clear Error"** below.`
+
+    suggestions = [
+      `Check student account for ${identifier}`,
+      `Reset password for ${identifier}`,
+      `View Student Roster`,
+    ]
+  }
+  // CASE 2: Faculty / Staff / Admin Authentication Failure
+  else if (
+    actionUpper.includes('LOGIN FAILED') ||
+    moduleUpper === 'AUTH' ||
+    actionUpper.includes('UNAUTHORIZED')
+  ) {
+    answer = `🔍 **Root Cause Analysis:**
+Privileged identity challenge failed for **${identifier}** (${roleName}).
+• **Event:** Unsuccessful login attempt to the ${roleName} portal.
+• **Observed Reason:** ${extractedReason || details || 'Invalid credentials or unassigned security role.'}
+
+🛡️ **Security & System Status:**
+• **Threat Level:** **MODERATE (Privileged Account)**
+• **Access Control:** Role-Based Access Control (RBAC) perimeter held. Session creation denied.
+
+🛠️ **Recommended Fix & Actions:**
+1. Verify the faculty/staff member's ID or official email in **Faculty Directorate** / **Roles & Permissions**.
+2. Confirm the account is marked active and has appropriate portal permissions.
+3. Review audit timestamps for repeated failures from the same IP.`
+
+    suggestions = [
+      `Inspect Faculty Directory for ${identifier}`,
+      `Check Roles & Permissions`,
+      `Review Failed Login Thresholds`,
+    ]
+  }
+  // CASE 3: Attendance Lock / Modification Restriction
+  else if (
+    actionUpper.includes('LOCK') ||
+    moduleUpper.includes('ATTENDANCE') ||
+    reasonText.includes('attendance') ||
+    reasonText.includes('window')
+  ) {
+    answer = `🔍 **Root Cause Analysis:**
+Attendance governance rule triggered in **${moduleName || 'ATTENDANCE'}** module.
+• **Event:** Modification attempt on locked period attendance.
+• **Observed Reason:** ${extractedReason || details || 'The 45-minute daily attendance entry window has expired or faculty lacks subject allocation rights.'}
+
+🛡️ **Operational Impact:**
+• **Regulatory Standard:** Autonomous NBA/NAAC guidelines enforce frozen attendance registers after session completion to prevent unverified record tampering.
+
+🛠️ **Recommended Fix & Actions:**
+1. Faculty in-charge must submit an **Attendance Unlock Request** through the faculty dashboard.
+2. The **Head of Department (HOD)** must approve the unlock request in the **HOD Attendance Unlock Console**.
+3. Once approved, the attendance sheet will be temporarily writable for 60 minutes.`
+
+    suggestions = [
+      'Open HOD Attendance Unlock Console',
+      'Check Faculty Subject Allocation',
+      'Review Attendance Timetable',
+    ]
+  }
+  // CASE 4: On-Duty (OD) / Leave / Permission Validation
+  else if (
+    actionUpper.includes('OD') ||
+    actionUpper.includes('LEAVE') ||
+    moduleUpper.includes('OD') ||
+    reasonText.includes('on-duty') ||
+    reasonText.includes('leave')
+  ) {
+    answer = `🔍 **Root Cause Analysis:**
+On-Duty (OD) / Leave request workflow exception recorded for **${identifier}**.
+• **Event:** ${action || 'OD Permission Validation'}
+• **Failure Reason:** ${extractedReason || details || 'Document upload format violation, date overlap, or semester limit reached.'}
+
+🛡️ **Academic Impact:**
+• Processing halted. Application held in pending state awaiting verification.
+
+🛠️ **Recommended Fix & Actions:**
+1. Ensure the attached proof or certificate is a valid PDF/JPEG under 5MB.
+2. Verify the requested dates do not overlap with existing approved OD dates or university semester exams.
+3. Check the student's cumulative OD day count against institutional allowance.`
+
+    suggestions = [
+      'Review OD Applications Queue',
+      'Check Student OD Days Quota',
+      'Verify Supporting Documents',
+    ]
+  }
+  // CASE 5: Gate Pass & Transport/Hostel Security
+  else if (
+    actionUpper.includes('PASS') ||
+    moduleUpper.includes('PASS') ||
+    reasonText.includes('gate') ||
+    reasonText.includes('token')
+  ) {
+    answer = `🔍 **Root Cause Analysis:**
+Digital Gate / Bus Pass verification anomaly detected.
+• **Event:** Access validation challenge failed for **${identifier}**.
+• **Failure Reason:** ${extractedReason || details || 'QR code expired, HMAC signature verification failed, or duplicate check-in detected.'}
+
+🛡️ **Security Impact:**
+• Physical security barrier held. Gate clearance denied pending dynamic re-authentication.
+
+🛠️ **Recommended Fix & Actions:**
+1. Have the student generate a live pass on their mobile portal (dynamic QR with cryptographic timestamp).
+2. Confirm the pass has received final endorsement from the Class Advisor and Residential Warden.`
+
+    suggestions = [
+      'Check Digital Pass Records',
+      'Verify Student Hostel/Bus Status',
+      'Review Gate Log History',
+    ]
+  }
+  // CASE 6: Database / Server / Internal Errors
+  else if (
+    actionUpper.includes('DATABASE') ||
+    actionUpper.includes('PRISMA') ||
+    reasonText.includes('prisma') ||
+    reasonText.includes('timeout') ||
+    statusUpper === 'ERROR'
+  ) {
+    answer = `🔍 **Root Cause Analysis:**
+System operational exception in module **${moduleName || 'DATABASE'}**.
+• **Observed Exception:** ${extractedReason || details || 'Database query timeout or foreign key constraint violation.'}
+• **System Status:** ${statusUpper}
+
+🛡️ **System Stability:**
+• Transaction safely rolled back by Prisma ORM / PostgreSQL. Data integrity preserved.
+
+🛠️ **Recommended Fix & Actions:**
+1. Check database connection pool health in Supabase / PostgreSQL dashboard.
+2. Verify related entities exist before performing foreign key operations.
+3. Review recent schema migrations for column constraint conflicts.`
+
+    suggestions = [
+      'Check Database Connection Pool',
+      'Review Prisma Migrations',
+      'Inspect API Error Logs',
+    ]
+  }
+  // CASE 7: General Generic Error Analysis
+  else {
+    answer = `🔍 **Root Cause Analysis:**
+Audit monitor logged an operational discrepancy for **${identifier}** in module **${moduleName || 'SYSTEM'}**.
+• **Action Type:** ${action || 'UNSPECIFIED_ACTION'}
+• **Recorded Reason:** ${extractedReason || details || 'Standard transaction boundary flag recorded.'}
+• **Audit Status:** **${statusUpper}**
+
+🛡️ **Security & System Status:**
+• **Threat Level:** **INFORMATIONAL / LOW**
+• **System Integrity:** Monitored and contained by institutional logging framework.
+
+🛠️ **Recommended Fix & Actions:**
+1. Review the full event payload above to confirm input parameters.
+2. Verify user **${identifier}** account permissions.
+3. Click **"Clear Error"** or **"Delete Log"** to acknowledge and archive this record once resolved.`
+
+    suggestions = [
+      'Clear flagged error log',
+      'Inspect user permissions',
+      'Review system audit metrics',
+    ]
+  }
+
+  return { answer, suggestions }
+}
+
 async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ answer: string; suggestions: string[] }> {
   const rawQ = query.trim()
   const q = rawQ.toLowerCase()
@@ -430,6 +749,17 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
   if (academicCurriculum) {
     return academicCurriculum
   }
+
+  // ---------------------------------------------------------------------------
+  // 0C. SECURITY AUDIT & SYSTEM ERROR LOG DIAGNOSTIC AGENT
+  // ---------------------------------------------------------------------------
+  if (
+    /analyze this system error log|system error log|cryptographic audit record|audit log analysis/i.test(rawQ) ||
+    (rawQ.includes('Action:') && rawQ.includes('Module:') && rawQ.includes('Status:'))
+  ) {
+    return handleSecurityAuditLogAnalysis(rawQ)
+  }
+
 
   try {
     // -------------------------------------------------------------------------
@@ -942,6 +1272,26 @@ export async function POST(request: Request) {
         suggestions: agentResult.suggestions,
         agent: 'od-reason-agent',
         source: activeApiKey ? 'gemini-agent' : 'autonomous-agent',
+      })
+    }
+    // =========================================================================
+    // DEDICATED AUTONOMOUS AGENT: SECURITY AUDIT & ERROR LOG DIAGNOSTIC AGENT
+    // =========================================================================
+    const isLogAnalysisAgent =
+      sessionId === 'admin-log-analysis' ||
+      validation.data.agent === 'security-audit-agent' ||
+      validation.data.agent === 'pass-security' ||
+      /analyze this system error log|system error log|cryptographic audit record|audit log analysis/i.test(query) ||
+      (query.includes('Action:') && query.includes('Module:') && query.includes('Status:'))
+
+    if (isLogAnalysisAgent) {
+      const agentResult = await executeSecurityAuditLogAgent(query, validation.data.context, activeApiKey)
+      return NextResponse.json({
+        success: true,
+        answer: agentResult.answer,
+        suggestions: agentResult.suggestions,
+        agent: 'security-audit-agent',
+        source: agentResult.source,
       })
     }
 

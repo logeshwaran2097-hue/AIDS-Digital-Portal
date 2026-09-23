@@ -93,7 +93,19 @@ Status: ${log.status}`
       const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt, sessionId: 'admin-log-analysis' })
+        body: JSON.stringify({
+          message: prompt,
+          sessionId: 'admin-log-analysis',
+          agent: 'security-audit-agent',
+          context: {
+            logId: log.id,
+            action: log.action,
+            module: log.module,
+            userName: log.userName,
+            details: log.details,
+            status: log.status,
+          }
+        })
       })
       const data = await res.json()
       if (data.success && data.answer) {
