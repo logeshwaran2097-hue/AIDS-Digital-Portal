@@ -2976,8 +2976,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </div>
         </div>
       )}
-        </div>
-      )}
+
 
       {/* MODAL: FULL SCREEN IMAGE */}
       {fullScreenImage && (
