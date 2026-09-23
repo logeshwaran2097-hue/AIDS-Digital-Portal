@@ -557,16 +557,17 @@ export const createEventSchema = z
 export const createAchievementSchema = z
   .object({
     title: z.string().min(3).max(200),
-    description: z.string().max(2000).optional(),
+    description: z.string().max(5000).optional(),
     category: z.string().max(100).optional(),
     recipientType: z.enum(['student', 'faculty']).optional(),
     recipientName: z.string().max(100).optional(),
     eventName: z.string().max(200).optional().nullable(),
     awardName: z.string().max(200).optional().nullable(),
-    certificateUrl: z.string().min(1).max(500),
+    certificateUrl: z.string().min(1).max(10000000), // supports base64 data URLs for PDF/image proof documents
     date: z.string().max(50).optional(),
   })
   .strict()
+
 
 // ==========================================
 // 8. Laboratory & Academic Settings
