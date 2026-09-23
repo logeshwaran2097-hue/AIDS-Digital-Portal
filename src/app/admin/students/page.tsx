@@ -51,7 +51,6 @@ export default async function AdminStudentsPage() {
 
   const studentsList: StudentRecord[] = joinedRows.map((s) => {
     const rawEmail = s.user_email || ''
-    const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
     // A student is ACTIVE ONLY if they have authenticated and logged into the website
     const hasLoggedInWebsite = Boolean(s.user_last_login) && s.user_status?.toLowerCase() === 'active'
     const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
@@ -61,7 +60,7 @@ export default async function AdminStudentsPage() {
       userId: s.userId,
       registerNumber: s.registerNumber,
       name: s.user_name || s.registerNumber,
-      email: cleanEmail,
+      email: rawEmail,
       phone: s.user_phone || '',
       parentPhone: s.parentPhone || '',
       dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth).toISOString().split('T')[0] : null,

@@ -452,7 +452,6 @@ export default function LoginPage() {
         const rawUserEmail = (data.user.email || '').trim()
         const isMockEmail =
           !rawUserEmail ||
-          rawUserEmail.endsWith('@student.vsb.edu.in') ||
           rawUserEmail.endsWith('@vsb.ac.in') ||
           rawUserEmail.endsWith('@vsb.edu.in') ||
           rawUserEmail.toLowerCase().includes('mock') ||

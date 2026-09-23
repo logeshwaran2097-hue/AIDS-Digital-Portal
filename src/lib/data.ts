@@ -68,7 +68,7 @@ async function fetchStudentDataDirect(userId: string) {
       user = {
         id: userId,
         name: student ? `Student (${student.registerNumber})` : 'Student Portal User',
-        email: student ? `${student.registerNumber.toLowerCase()}@student.vsb.edu.in` : 'student@vsb.edu.in',
+        email: student ? `${student.registerNumber.toLowerCase()}@gmail.com` : 'student@gmail.com',
         phone: null,
         role: 'student',
         status: 'active',

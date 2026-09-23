@@ -74,9 +74,12 @@ export async function POST(request: Request) {
             const studentName = String(st.name).trim()
 
             const isEmailCustom = Boolean(st.email && String(st.email).trim())
-            const finalEmail = isEmailCustom
-              ? String(st.email).trim().toLowerCase()
-              : `${regUpper.toLowerCase()}@student.vsb.edu.in`
+            if (!isEmailCustom || !String(st.email).trim().toLowerCase().endsWith('@gmail.com')) {
+              results.failed++
+              results.errors.push(`Row ${index + 1}: Valid @gmail.com email is required for Register Number "${st.registerNumber}".`)
+              return
+            }
+            const finalEmail = String(st.email).trim().toLowerCase()
 
             let passwordHash = defaultPasswordHash
             if (st.password && st.password.trim() && st.password.trim() !== defaultPassword) {

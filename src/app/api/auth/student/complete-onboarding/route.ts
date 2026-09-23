@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
     const { name, phone, parentPhone, dateOfBirth, email, otp, newPassword, skipEmailVerification, residencyStatus, bloodGroup, isParentWhatsapp, hostelBlock, roomNo, busNo, boardingPoint, profileImage } = body
 
-    const isCustomEmail = email && !email.endsWith('@student.vsb.edu.in') && email.includes('@')
+    const isCustomEmail = email && email.includes('@')
 
     // ─────────────────────────────────────────────────────────────────────
     // FAST PATH: Student confirms details only — no email/OTP/password required

@@ -73,9 +73,9 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
     ]
 
     const sampleRows = [
-      '922524104001,Aakash Kumar,922524104001@student.vsb.edu.in,Student@123,2,4,A,2024-2028,9876543210,9876543211,2006-05-14,O+',
-      '922524104002,Abirami Sundaram,922524104002@student.vsb.edu.in,Student@123,2,4,A,2024-2028,9876543212,9876543213,2006-08-22,B+',
-      '922523104001,Balaji Mani,922523104001@student.vsb.edu.in,Student@123,3,6,B,2023-2027,9876543214,9876543215,2005-03-10,A+',
+      '922524104001,Aakash Kumar,aakash.kumar@gmail.com,Student@123,2,4,A,2024-2028,9876543210,9876543211,2006-05-14,O+',
+      '922524104002,Abirami Sundaram,abirami.sundaram@gmail.com,Student@123,2,4,A,2024-2028,9876543212,9876543213,2006-08-22,B+',
+      '922523104001,Balaji Mani,balaji.mani@gmail.com,Student@123,3,6,B,2023-2027,9876543214,9876543215,2005-03-10,A+',
     ]
 
     const csvContent = [headers.join(','), ...sampleRows].join('\n')

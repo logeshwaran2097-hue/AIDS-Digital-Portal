@@ -72,7 +72,6 @@ export async function GET(request: Request) {
 
       const result = rows.map((s) => {
         const rawEmail = s.user_email || ''
-        const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
         // A student is ACTIVE ONLY if they have authenticated and logged into the website
         const hasLoggedInWebsite = Boolean(s.user_last_login) && s.user_status?.toLowerCase() === 'active'
         const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
@@ -82,7 +81,7 @@ export async function GET(request: Request) {
           userId: s.userId,
           registerNumber: s.registerNumber,
           name: s.user_name || s.registerNumber,
-          email: cleanEmail,
+          email: rawEmail,
           phone: s.user_phone || '',
           parentPhone: s.parentPhone || '',
           dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth).toISOString().split('T')[0] : null,
@@ -150,7 +149,6 @@ export async function GET(request: Request) {
     const result = students.map((s) => {
       const u = userMap.get(s.userId)
       const rawEmail = u?.email || ''
-      const cleanEmail = rawEmail.endsWith('@student.vsb.edu.in') ? '' : rawEmail
       // A student is ACTIVE ONLY if they have authenticated and logged into the website
       const hasLoggedInWebsite = Boolean(u?.lastLogin) && u?.status?.toLowerCase() === 'active'
       const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
@@ -170,7 +168,7 @@ export async function GET(request: Request) {
         userId: s.userId,
         registerNumber: s.registerNumber,
         name: u?.name || s.registerNumber,
-        email: cleanEmail,
+        email: rawEmail,
         phone: u?.phone || '',
         parentPhone: (s as any).parentPhone || '',
         dateOfBirth: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,
@@ -293,9 +291,9 @@ export async function POST(request: Request) {
       attendance,
     } = data
 
-    if (!registerNumber || !name || !password?.trim()) {
+    if (!registerNumber || !name || !password?.trim() || !email?.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Register Number, Full Name, and Temporary Password are required.' },
+        { success: false, message: 'Register Number, Full Name, Email, and Temporary Password are required.' },
         { status: 400 }
       )
     }
@@ -331,26 +329,21 @@ export async function POST(request: Request) {
       )
     }
 
-    const isEmailCustom = Boolean(email?.trim())
-    const finalEmail = isEmailCustom
-      ? email.trim().toLowerCase()
-      : `${regUpper.toLowerCase()}@student.vsb.edu.in`
+    const finalEmail = email.trim().toLowerCase()
 
-    // Validate personal email uniqueness if custom
-    if (isEmailCustom) {
-      if (!finalEmail.endsWith('@gmail.com') && !finalEmail.endsWith('@student.vsb.edu.in')) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: 'Personal email address must end with @gmail.com or @student.vsb.edu.in.',
-          },
-          { status: 400 }
-        )
-      }
+    if (!finalEmail.endsWith('@gmail.com')) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Personal email address must end with @gmail.com.',
+        },
+        { status: 400 }
+      )
+    }
 
-      const existingUserWithEmail = await prisma.user.findUnique({
-        where: { email: finalEmail },
-        select: { name: true, role: true },
+    const existingUserWithEmail = await prisma.user.findUnique({
+      where: { email: finalEmail },
+      select: { name: true, role: true },
       }).catch(() => null)
 
       if (existingUserWithEmail) {
@@ -362,7 +355,6 @@ export async function POST(request: Request) {
           { status: 409 }
         )
       }
-    }
 
     // Hash admin-typed temporary password
     const initialPassword = password.trim()
@@ -612,7 +604,7 @@ export async function PUT(request: Request) {
     }
 
     const isEmailCustom = Boolean(email?.trim())
-    if (isEmailCustom && !email.trim().toLowerCase().endsWith('@gmail.com') && !email.trim().toLowerCase().endsWith('@student.vsb.edu.in')) {
+    if (isEmailCustom && !email.trim().toLowerCase().endsWith('@gmail.com')) {
       return NextResponse.json({
         success: false,
         error: 'Only @gmail.com email addresses are permitted for student personal emails.',
@@ -636,9 +628,7 @@ export async function PUT(request: Request) {
         }
       }
 
-      const targetEmail = isEmailCustom
-        ? email.trim().toLowerCase()
-        : `${(regUpper || student.registerNumber).toLowerCase()}@student.vsb.edu.in`
+      const targetEmail = isEmailCustom ? email.trim().toLowerCase() : undefined
 
       const [updatedStudent, updatedUser] = await prisma.$transaction([
         prisma.student.update({
@@ -747,9 +737,15 @@ export async function PUT(request: Request) {
       })
     }
 
-    // Fallback: If student record was not yet in DB, create/upsert it seamlessly
+    if (!isEmailCustom) {
+      return NextResponse.json(
+        { success: false, message: 'A valid @gmail.com email is required for creating a new student.' },
+        { status: 400 }
+      )
+    }
+
     const finalRegNo = regUpper || id || `REG${Date.now()}`
-    const finalEmail = isEmailCustom ? email.trim().toLowerCase() : `${finalRegNo.toLowerCase()}@student.vsb.edu.in`
+    const finalEmail = email.trim().toLowerCase()
     const defaultPassHash = passwordHash || await bcrypt.hash('Student@123', 10)
 
     const user = await prisma.user.upsert({

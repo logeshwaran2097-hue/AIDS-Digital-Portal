@@ -346,7 +346,6 @@ export async function authenticateStudent(registerNumberOrEmail: string, passwor
           where: {
             role: 'student',
             OR: [
-              { email: `${student.registerNumber.toLowerCase()}@student.vsb.edu.in` },
               { email: { startsWith: student.registerNumber.toLowerCase() } },
             ],
           },

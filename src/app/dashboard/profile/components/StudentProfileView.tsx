@@ -141,7 +141,7 @@ export function StudentProfileView({
 }) {
   const regNo = initialStudent.registerNumber || initialUser.email?.split('@')[0].toUpperCase() || ''
   const storageKey = `vsb_student_profile_v2_${regNo}`
-  const verifiedPersonal = (initialUser as any).personalEmail || (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in') ? initialUser.email : '')
+  const verifiedPersonal = (initialUser as any).personalEmail || initialUser.email || ''
 
   const defaultProfile: StudentFullProfile = {
     name: initialUser.name || '',
@@ -245,11 +245,8 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
           if (parsed.profileImage && parsed.profileImage.startsWith('blob:')) {
             parsed.profileImage = null
           }
-          if (parsed.email && parsed.email.endsWith('@student.vsb.edu.in')) {
-            parsed.email = (parsed.personalEmail && !parsed.personalEmail.endsWith('@student.vsb.edu.in')) ? parsed.personalEmail : verifiedPersonal || ''
-          }
-          if (parsed.personalEmail && parsed.personalEmail.endsWith('@student.vsb.edu.in')) {
-            parsed.personalEmail = verifiedPersonal || ''
+          if (!parsed.email && parsed.personalEmail) {
+            parsed.email = parsed.personalEmail
           }
           delete parsed.institutionalEmail
           if (parsed.parentPhone === '6381366088' && !(initialStudent as any).parentPhone) {
@@ -281,11 +278,8 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
         if (d.profileImage && d.profileImage.startsWith('blob:')) {
           d.profileImage = null
         }
-        if (d.email && d.email.endsWith('@student.vsb.edu.in')) {
-          d.email = (d.personalEmail && !d.personalEmail.endsWith('@student.vsb.edu.in')) ? d.personalEmail : verifiedPersonal || ''
-        }
-        if (d.personalEmail && d.personalEmail.endsWith('@student.vsb.edu.in')) {
-          d.personalEmail = verifiedPersonal || ''
+        if (!d.email && d.personalEmail) {
+          d.email = d.personalEmail
         }
         delete d.institutionalEmail
         setProfile((prev) => ({ ...prev, ...d }))
@@ -432,11 +426,7 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
     e.preventDefault()
     setLoading(true)
 
-    const cleanPersonalEmail = (formData.personalEmail && !formData.personalEmail.endsWith('@student.vsb.edu.in'))
-      ? formData.personalEmail.trim()
-      : (formData.email && !formData.email.endsWith('@student.vsb.edu.in'))
-        ? formData.email.trim()
-        : ''
+    const cleanPersonalEmail = (formData.personalEmail || formData.email || '').trim()
 
     if (cleanPersonalEmail && !cleanPersonalEmail.toLowerCase().endsWith('@gmail.com')) {
       toast.error('Only @gmail.com email addresses are permitted (e.g. name@gmail.com).')
@@ -1059,7 +1049,7 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
                       </div>
                       <input
                         type="email"
-                        value={formData.personalEmail || (formData.email && !formData.email.endsWith('@student.vsb.edu.in') ? formData.email : '')}
+                        value={formData.personalEmail || formData.email || ''}
                         onChange={(e) => {
                           const val = e.target.value
                           setFormData({ ...formData, personalEmail: val, email: val })
@@ -1772,7 +1762,7 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
         }}
         initialData={{
           name: profile.name || initialUser.name,
-          email: (profile.personalEmail && !profile.personalEmail.endsWith('@student.vsb.edu.in')) ? profile.personalEmail : (profile.email && !profile.email.endsWith('@student.vsb.edu.in')) ? profile.email : (initialUser.email && !initialUser.email.endsWith('@student.vsb.edu.in')) ? initialUser.email : '',
+          email: profile.personalEmail || profile.email || initialUser.email || '',
           phone: profile.phone || initialUser.phone || '',
           registerNumber: regNo,
           department: profile.department,
