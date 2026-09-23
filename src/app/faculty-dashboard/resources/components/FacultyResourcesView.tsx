@@ -253,19 +253,48 @@ export function FacultyResourcesView({
 
       let res: Response
       if (selectedFile) {
-        const formData = new FormData()
-        formData.append('title', formTitle.trim())
-        formData.append('description', formDescription.trim())
-        formData.append('resourceType', finalResourceType)
-        if (formSubjectId) formData.append('subjectId', formSubjectId)
-        formData.append('semester', String(formSemester))
-        formData.append('academicYear', '2025-2026')
-        formData.append('uploadedByName', isAdvisor ? `${facultyName} (Class Advisor)` : facultyName)
-        formData.append('file', selectedFile)
+        // Step 1: Get signed URL
+        const signedUrlRes = await fetch('/api/upload/signed-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: selectedFile.name,
+            contentType: selectedFile.type || 'application/pdf'
+          })
+        })
+        
+        if (!signedUrlRes.ok) throw new Error('Failed to get upload authorization')
+        
+        const { signedUrl, path, publicUrl } = await signedUrlRes.json()
+        
+        // Step 2: Direct upload to Supabase Storage
+        const uploadRes = await fetch(signedUrl, {
+          method: 'PUT',
+          body: selectedFile,
+          headers: { 'Content-Type': selectedFile.type || 'application/pdf' }
+        })
+        
+        if (!uploadRes.ok) throw new Error('Failed to upload file to storage')
+
+        // Step 3: Save to Database
+        const payload = {
+          title: formTitle.trim(),
+          description: formDescription.trim(),
+          resourceType: finalResourceType,
+          subjectId: formSubjectId || null,
+          semester: formSemester,
+          academicYear: '2025-2026',
+          uploadedByName: isAdvisor ? `${facultyName} (Class Advisor)` : facultyName,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          fileType: selectedFile.type || 'application/pdf',
+          fileUrl: publicUrl
+        }
 
         res = await fetch('/api/resources', {
           method: 'POST',
-          body: formData,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         })
       } else {
         const payload = {
@@ -353,18 +382,47 @@ export function FacultyResourcesView({
 
       let res: Response
       if (editFile) {
-        const formData = new FormData()
-        formData.append('id', editingResource.id)
-        formData.append('title', editTitle.trim())
-        formData.append('description', editDescription.trim())
-        formData.append('resourceType', finalResourceType)
-        if (editSubjectId) formData.append('subjectId', editSubjectId)
-        formData.append('semester', String(editSemester))
-        formData.append('file', editFile)
+        // Step 1: Get signed URL
+        const signedUrlRes = await fetch('/api/upload/signed-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: editFile.name,
+            contentType: editFile.type || 'application/pdf'
+          })
+        })
+        
+        if (!signedUrlRes.ok) throw new Error('Failed to get upload authorization')
+        
+        const { signedUrl, path, publicUrl } = await signedUrlRes.json()
+        
+        // Step 2: Direct upload to Supabase Storage
+        const uploadRes = await fetch(signedUrl, {
+          method: 'PUT',
+          body: editFile,
+          headers: { 'Content-Type': editFile.type || 'application/pdf' }
+        })
+        
+        if (!uploadRes.ok) throw new Error('Failed to upload file to storage')
+
+        // Step 3: Save to Database
+        const payload = {
+          id: editingResource.id,
+          title: editTitle.trim(),
+          description: editDescription.trim(),
+          resourceType: finalResourceType,
+          subjectId: editSubjectId || null,
+          semester: editSemester,
+          fileName: editFile.name,
+          fileSize: editFile.size,
+          fileType: editFile.type || 'application/pdf',
+          fileUrl: publicUrl
+        }
 
         res = await fetch('/api/resources', {
           method: 'PUT',
-          body: formData,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         })
       } else {
         const payload = {

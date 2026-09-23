@@ -217,18 +217,47 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
 
       let res: Response
       if (selectedFile) {
-        const bodyFormData = new FormData()
-        bodyFormData.append('title', formData.name.trim())
-        bodyFormData.append('description', formData.description.trim())
-        bodyFormData.append('resourceType', finalResourceType)
-        bodyFormData.append('semester', String(formData.semester))
-        bodyFormData.append('academicYear', '2025-2026')
-        bodyFormData.append('uploadedByName', formData.uploadedByName || 'System Administrator')
-        bodyFormData.append('file', selectedFile)
+        // Step 1: Get signed URL
+        const signedUrlRes = await fetch('/api/upload/signed-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: selectedFile.name,
+            contentType: selectedFile.type || 'application/pdf'
+          })
+        })
+        
+        if (!signedUrlRes.ok) throw new Error('Failed to get upload authorization')
+        
+        const { signedUrl, path, publicUrl } = await signedUrlRes.json()
+        
+        // Step 2: Direct upload to Supabase Storage
+        const uploadRes = await fetch(signedUrl, {
+          method: 'PUT',
+          body: selectedFile,
+          headers: { 'Content-Type': selectedFile.type || 'application/pdf' }
+        })
+        
+        if (!uploadRes.ok) throw new Error('Failed to upload file to storage')
+
+        // Step 3: Save to Database
+        const payload = {
+          title: formData.name.trim(),
+          description: formData.description.trim(),
+          resourceType: finalResourceType,
+          semester: Number(formData.semester),
+          academicYear: '2025-2026',
+          uploadedByName: formData.uploadedByName || 'System Administrator',
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          fileType: selectedFile.type || 'application/pdf',
+          fileUrl: publicUrl
+        }
 
         res = await fetch('/api/resources', {
           method: 'POST',
-          body: bodyFormData,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
         })
       } else {
         const payload = {
