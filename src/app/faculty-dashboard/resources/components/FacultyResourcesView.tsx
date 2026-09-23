@@ -228,8 +228,8 @@ export function FacultyResourcesView({
   }
 
   const handleFilePicked = (file: File) => {
-    if (file.size > 4.3 * 1024 * 1024) {
-      toast.error('File size exceeds the 4.3 MB limit for Serverless deployments. Please compress the file first.')
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('File size exceeds the 50 MB limit. Please compress the file first.')
       return
     }
     setSelectedFile(file)
@@ -806,7 +806,7 @@ export function FacultyResourcesView({
                             Click to browse or drag &amp; drop PDF document
                           </p>
                           <p className="text-[10px] text-gray-400 mt-0.5">
-                            Standard PDF, Textbook, Lecture Notes, or E-Book (up to 4.3MB - Serverless Limit)
+                            Standard PDF, Textbook, Lecture Notes, or E-Book (up to 50 MB)
                           </p>
                         </div>
                       </div>
