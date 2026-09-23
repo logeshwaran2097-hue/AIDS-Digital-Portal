@@ -69,6 +69,7 @@ interface AdvisorODReviewModalProps {
   onClose: () => void
   notification?: ODNotificationData | any | null
   application?: any
+  viewRole?: 'student' | 'faculty' | 'advisor' | 'hod' | 'admin'
   onStatusUpdated?: (notifId: string, status: 'endorsed' | 'rejected') => void
 }
 
@@ -91,6 +92,7 @@ export function AdvisorODReviewModal({
   onClose,
   notification,
   application,
+  viewRole = 'advisor',
   onStatusUpdated,
 }: AdvisorODReviewModalProps) {
   const [loading, setLoading] = useState(false)
@@ -1216,6 +1218,8 @@ export function AdvisorODReviewModal({
               </div>
             )}
           </div>
+            </>
+          )}
         </div>
 
         {/* Modal Footer */}
