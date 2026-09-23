@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/portal/states'
 import { formatDate, formatFileSize } from '@/lib/utils'
+import { toast } from 'react-hot-toast'
 import {
   BookOpen,
   Download,
@@ -30,6 +31,7 @@ interface ResourceItem {
   fileSize: number
   fileUrl: string
   subjectId: string | null
+  subject?: { name: string; code: string } | null
   uploadedByName: string | null
   resourceType: string
   semester: number | null
@@ -65,6 +67,16 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
       return matchesType && matchesSearch
     })
   }, [resources, selectedType, query])
+
+  const groupedResources = useMemo(() => {
+    const groups: Record<string, ResourceItem[]> = {}
+    filtered.forEach((item) => {
+      const subjectName = item.subject?.name ? `${item.subject.code} - ${item.subject.name}` : 'General Resources'
+      if (!groups[subjectName]) groups[subjectName] = []
+      groups[subjectName].push(item)
+    })
+    return groups
+  }, [filtered])
 
   const handleDownloadResource = async (item: ResourceItem) => {
     let finalFileUrl = item.fileUrl;
@@ -171,64 +183,75 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
       {filtered.length === 0 ? (
         <EmptyState title="No resources found" description="Try adjusting your search query or category filter." icon="📚" />
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((item) => {
-            const style = TYPE_COLORS[item.resourceType] || { bg: 'bg-blue-50', text: 'text-[#1455D9]', border: 'border-blue-200' }
-            const isPlacement = item.resourceType === 'PLACEMENT_GUIDE'
+        <div className="space-y-10">
+          {Object.entries(groupedResources).map(([subjectName, items]) => (
+            <div key={subjectName}>
+              <h2 className="text-lg font-black text-[#071A3D] mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
+                <Layers className="w-5 h-5 text-[#1455D9]" />
+                {subjectName}
+              </h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                {items.map((item) => {
+                  const style = TYPE_COLORS[item.resourceType] || { bg: 'bg-blue-50', text: 'text-[#1455D9]', border: 'border-blue-200' }
+                  const isPlacement = item.resourceType === 'PLACEMENT_GUIDE'
 
-            return (
-              <Card
-                key={item.id}
-                className="rounded-3xl border-gray-200 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
-              >
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-bold border', style.bg, style.text, style.border)}>
-                      {item.resourceType.replace(/_/g, ' ')}
-                    </span>
-                    <span className="text-xs text-gray-400 font-semibold font-mono">
-                      {(item.fileSize / (1024 * 1024)).toFixed(1)} MB · PDF
-                    </span>
-                  </div>
-
-                  <div className="flex items-start gap-3.5">
-                    <div className={cn(
-                      'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs',
-                      isPlacement ? 'bg-amber-100 text-amber-800' : 'bg-[#1455D9]/10 text-[#1455D9]'
-                    )}>
-                      {isPlacement ? <Sparkles className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
-                    </div>
-
-                    <div className="min-w-0">
-                      <h3 className="font-black text-base text-[#071A3D] group-hover:text-[#1455D9] transition-colors leading-snug line-clamp-2">
-                        {item.name}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
-                    {item.description}
-                  </p>
-
-                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                    <span className="font-medium flex items-center gap-1.5 text-gray-700 truncate max-w-[170px]">
-                      <User className="w-3.5 h-3.5 text-[#1455D9]" />
-                      <span className="truncate">{item.uploadedByName || 'Department Faculty'}</span>
-                    </span>
-
-                    <button
-                      onClick={() => handleDownloadResource(item)}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
+                  return (
+                    <Card
+                      key={item.id}
+                      className="rounded-3xl border-gray-200 hover:shadow-xl transition-all duration-300 bg-white overflow-hidden group hover:border-[#1455D9]/40 flex flex-col justify-between"
                     >
-                      <Download className="w-3.5 h-3.5" /> Download PDF
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
+                      <CardContent className="p-6 space-y-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-bold border', style.bg, style.text, style.border)}>
+                            {item.resourceType.replace(/_/g, ' ')}
+                          </span>
+                          <span className="text-xs text-gray-400 font-semibold font-mono">
+                            {(item.fileSize / (1024 * 1024)).toFixed(1)} MB · PDF
+                          </span>
+                        </div>
+
+                        <div className="flex items-start gap-3.5">
+                          <div className={cn(
+                            'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs',
+                            isPlacement ? 'bg-amber-100 text-amber-800' : 'bg-[#1455D9]/10 text-[#1455D9]'
+                          )}>
+                            {isPlacement ? <Sparkles className="w-6 h-6" /> : <BookOpen className="w-6 h-6" />}
+                          </div>
+
+                          <div className="min-w-0">
+                            <h3 className="font-black text-base text-[#071A3D] group-hover:text-[#1455D9] transition-colors leading-snug line-clamp-2">
+                              {item.name}
+                            </h3>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
+                          {item.description}
+                        </p>
+
+                        <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                          <span className="font-medium flex items-center gap-1.5 text-gray-700 truncate max-w-[170px]">
+                            <User className="w-3.5 h-3.5 text-[#1455D9]" />
+                            <span className="truncate">{item.uploadedByName || 'Department Faculty'}</span>
+                          </span>
+
+                          <button
+                            onClick={() => handleDownloadResource(item)}
+                            className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download PDF
+                          </button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   )
 }
+

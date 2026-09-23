@@ -2503,7 +2503,7 @@ export interface DeptHeaderDownloadOptions {
 }
 
 export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions): Promise<void> {
-  const { fileUrl, fileName } = options
+  const { fileUrl, fileName, resourceType } = options
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
@@ -2566,11 +2566,18 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
       const pdfSrc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
       const numPages = pdfSrc.numPages
+      const isLabManual = resourceType === 'LAB_MANUAL'
+      
       for (let i = 1; i <= numPages; i++) {
         if (i > 1) {
           doc.addPage()
         }
-        renderHeader()
+        
+        const shouldRenderHeader = !isLabManual || i === 1
+        
+        if (shouldRenderHeader) {
+          renderHeader()
+        }
 
         const page = await pdfSrc.getPage(i)
         const viewport = page.getViewport({ scale: 2.0 })
@@ -2580,10 +2587,17 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
         await page.render({ canvasContext: ctx, viewport }).promise
         const imgData = canvas.toDataURL('image/jpeg', 0.92)
         
-        const a4W = 186; const a4H = 232 // contentW and available height below header
-        const ratio = Math.min(a4W / (viewport.width / 2), a4H / (viewport.height / 2))
-        const imgW = (viewport.width / 2) * ratio; const imgH = (viewport.height / 2) * ratio
-        doc.addImage(imgData, 'JPEG', 12 + (a4W - imgW) / 2, 50 + (a4H - imgH) / 2, imgW, imgH)
+        if (shouldRenderHeader) {
+          const a4W = 186; const a4H = 232 // contentW and available height below header
+          const ratio = Math.min(a4W / (viewport.width / 2), a4H / (viewport.height / 2))
+          const imgW = (viewport.width / 2) * ratio; const imgH = (viewport.height / 2) * ratio
+          doc.addImage(imgData, 'JPEG', 12 + (a4W - imgW) / 2, 50 + (a4H - imgH) / 2, imgW, imgH)
+        } else {
+          const a4W = 210; const a4H = 297
+          const ratio = Math.min(a4W / (viewport.width / 2), a4H / (viewport.height / 2))
+          const imgW = (viewport.width / 2) * ratio; const imgH = (viewport.height / 2) * ratio
+          doc.addImage(imgData, 'JPEG', (a4W - imgW) / 2, (a4H - imgH) / 2, imgW, imgH)
+        }
       }
     }
   } catch (err) {

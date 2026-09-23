@@ -41,7 +41,7 @@ export default async function FacultyResourcesPage() {
     }),
   ])
 
-  const mappedResources: ResourceItem[] = resourcesFromDb.map((r) => ({
+  const mappedResources: ResourceItem[] = resourcesFromDb.map((r: any) => ({
     id: r.id,
     name: r.name,
     description: r.description,
