@@ -38,6 +38,9 @@ import {
   List,
   Copy,
   PhoneCall,
+  Cake,
+  Gift,
+  PartyPopper,
 } from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { playNotificationChime } from '@/lib/notificationEngine'
@@ -1180,6 +1183,109 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         )}
       </div>
 
+      {/* Birthday Panel - Today & Tomorrow */}
+      {(todayBirthdays.length > 0 || tomorrowBirthdays.length > 0) && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-sm">
+                <Cake className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-black text-sm text-[#071A3D]">&#x1F382; Birthday Celebrations</h3>
+                <p className="text-[10px] text-gray-400 font-medium">
+                  {todayBirthdays.length} today &middot; {tomorrowBirthdays.length} tomorrow
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {(['ALL', 'TODAY', 'TOMORROW'] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setBirthdayFilter(f)}
+                  className={cn(
+                    'px-3 py-1 rounded-xl text-[11px] font-black border transition-colors cursor-pointer',
+                    birthdayFilter === f
+                      ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-rose-300 hover:text-rose-600'
+                  )}
+                >
+                  {f === 'ALL'
+                    ? 'Show All'
+                    : f === 'TODAY'
+                    ? 'Today (' + todayBirthdays.length + ')'
+                    : 'Tomorrow (' + tomorrowBirthdays.length + ')'}
+                </button>
+              ))}
+            </div>
+          </div>
+          {(birthdayFilter === 'ALL' || birthdayFilter === 'TODAY') && todayBirthdays.length > 0 && (
+            <div className="bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <PartyPopper className="w-4 h-4 text-rose-600" />
+                <span className="text-xs font-black text-rose-700 uppercase tracking-wide">Today's Birthdays &#x1F389;</span>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                {todayBirthdays.map((s) => (
+                  <div key={s.id} className="flex items-center gap-2 bg-white border border-rose-200 rounded-xl px-3 py-2 shadow-xs hover:shadow-sm transition-shadow">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center text-white font-black text-xs shrink-0">
+                      {s.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[#071A3D] leading-tight">{s.name}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">
+                        <>
+                          {s.registerNumber}
+                          {(s as any).turningAge ? <> &middot; Age {(s as any).turningAge}</> : null}
+                        </>
+                      </p>
+                    </div>
+                    {(s.phone || s.parentPhone) && (
+                      <button type="button" onClick={() => handleSendBirthdayWish(s, false)} title="Send WhatsApp Birthday Wish"
+                        className="ml-1 p-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors cursor-pointer">
+                        <span className="text-[13px]">&#x1F4AC;</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {(birthdayFilter === 'ALL' || birthdayFilter === 'TOMORROW') && tomorrowBirthdays.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Gift className="w-4 h-4 text-amber-600" />
+                <span className="text-xs font-black text-amber-700 uppercase tracking-wide">Tomorrow's Birthdays &#x1F381;</span>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                {tomorrowBirthdays.map((s) => (
+                  <div key={s.id} className="flex items-center gap-2 bg-white border border-amber-200 rounded-xl px-3 py-2 shadow-xs hover:shadow-sm transition-shadow">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white font-black text-xs shrink-0">
+                      {s.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-[#071A3D] leading-tight">{s.name}</p>
+                      <p className="text-[10px] text-gray-400 font-medium">
+                        <>
+                          {s.registerNumber}
+                          {(s as any).turningAge ? <> &middot; Age {(s as any).turningAge}</> : null}
+                        </>
+                      </p>
+                    </div>
+                    {(s.phone || s.parentPhone) && (
+                      <button type="button" onClick={() => handleSendBirthdayWish(s, true)} title="Send Advance Birthday Wish"
+                        className="ml-1 p-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-700 transition-colors cursor-pointer">
+                        <span className="text-[13px]">&#x1F4AC;</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* Filter & Search Bar */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
@@ -1397,6 +1503,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       CGPA {s.cgpa}
                     </span>
                   )}
+                  {(() => {
+                    const bd = getBirthdayStatus(s.dateOfBirth)
+                    if (bd === 'today') return (<span className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-700 font-bold border border-rose-300 flex items-center gap-1"><Cake className="w-3 h-3" /> Birthday!</span>)
+                    if (bd === 'tomorrow') return (<span className="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-700 font-bold border border-amber-300 flex items-center gap-1"><Gift className="w-3 h-3" /> Tomorrow</span>)
+                    return null
+                  })()}
                 </div>
 
                 {/* Class Advisor Highlight */}
