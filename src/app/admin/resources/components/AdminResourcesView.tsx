@@ -643,7 +643,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
                     <Eye className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(r.id)}
+                    onClick={() => handleDelete(r.id, r.name)}
                     className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                     title="Delete"
                   >
