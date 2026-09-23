@@ -150,6 +150,26 @@ export async function GET(request: Request) {
 
     const questionPapers = await prisma.questionPaper.findMany({
       where,
+      select: {
+        id: true,
+        subjectId: true,
+        examType: true,
+        academicYear: true,
+        year: true,
+        semester: true,
+        section: true,
+        classPercentage: true,
+        studentsAppeared: true,
+        studentsPassed: true,
+        fileName: true,
+        fileType: true,
+        fileSize: true,
+        uploadedById: true,
+        uploadedByName: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
       orderBy: { createdAt: 'desc' },
     })
 
