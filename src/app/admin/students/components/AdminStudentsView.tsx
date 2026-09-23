@@ -2976,6 +2976,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </div>
         </div>
       )}
+        </div>
+      )}
+
+      {/* MODAL: FULL SCREEN IMAGE */}
+      {fullScreenImage && (
+        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+          <button
+            onClick={() => setFullScreenImage(null)}
+            className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors cursor-pointer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img
+            src={fullScreenImage}
+            alt="Full screen view"
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+          />
+        </div>
+      )}
     </div>
   )
 }
