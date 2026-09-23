@@ -15,6 +15,7 @@ import {
   Award,
   ShieldCheck,
   QrCode,
+  Smartphone,
   Download,
   CheckCircle2,
   Sparkles,
@@ -652,6 +653,69 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
               <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 flex items-center justify-between">
                 <span className="font-bold text-[#1455D9]">Assigned Faculty Advisor:</span>
                 <span className="font-black text-[#071A3D]">{profile.advisor}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2. Personal & Contact Information */}
+        <Card className="rounded-3xl border-gray-200 shadow-xs hover:shadow-md transition-all relative group">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm text-[#071A3D]">Personal &amp; Contact Info</h3>
+                  <p className="text-[11px] text-gray-400">Your personal details and residency</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-1">
+                  <span className="font-bold text-gray-500 text-[10px] uppercase">Date of Birth</span>
+                  <span className="font-black text-[#071A3D] truncate">{profile.dateOfBirth || 'Not specified'}</span>
+                </div>
+                <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-1">
+                  <span className="font-bold text-gray-500 text-[10px] uppercase">Blood Group</span>
+                  <span className="font-black text-rose-600 truncate">{profile.bloodGroup || 'Not specified'}</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-gray-400" />
+                  <span className="font-bold text-gray-500">Contact:</span>
+                </div>
+                <span className="font-black text-[#071A3D]">{profile.phone || 'Not specified'}</span>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <span className="font-bold text-gray-500">Residency Status:</span>
+                  </div>
+                  <span className="font-black text-purple-700 max-w-[150px] truncate text-right">
+                    {profile.residencyStatus || 'Not specified'}
+                  </span>
+                </div>
+                {profile.address && (
+                  <p className="text-[10px] text-gray-500 mt-1 pl-6 leading-tight">
+                    {profile.address}
+                  </p>
+                )}
+              </div>
+
+              <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-100 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-500" />
+                  <span className="font-bold text-amber-700">Emergency / Parent:</span>
+                </div>
+                <span className="font-black text-[#071A3D]">{profile.parentPhone || 'Not specified'}</span>
               </div>
             </div>
           </CardContent>
