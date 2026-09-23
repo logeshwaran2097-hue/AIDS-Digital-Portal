@@ -2980,18 +2980,24 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
       {/* MODAL: FULL SCREEN IMAGE */}
       {fullScreenImage && (
-        <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <button
-            onClick={() => setFullScreenImage(null)}
-            className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full transition-colors cursor-pointer"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          <img
-            src={fullScreenImage}
-            alt="Full screen view"
-            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-          />
+        <div 
+          className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setFullScreenImage(null)}
+        >
+          <div className="relative flex flex-col items-end gap-3" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setFullScreenImage(null)}
+              className="p-2 bg-white/10 hover:bg-white/25 text-white rounded-full transition-colors cursor-pointer backdrop-blur-md ring-1 ring-white/20"
+              title="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img
+              src={fullScreenImage}
+              alt="Full screen view"
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl ring-1 ring-white/10"
+            />
+          </div>
         </div>
       )}
     </div>
