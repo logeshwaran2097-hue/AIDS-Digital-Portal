@@ -4,6 +4,7 @@ import { cachedDbQuery, invalidateCache } from '@/lib/dbCache'
 import { getSession } from '@/lib/auth'
 import { checkRateLimit, rateLimitResponse } from '@/lib/rateLimit'
 import { validateFileBuffer } from '@/lib/fileValidation'
+import { resourceSelectOptions } from '@/lib/resourceSelect'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -39,8 +40,9 @@ export async function GET(request: Request) {
       () =>
         prisma.resource.findMany({
           where,
+          select: resourceSelectOptions,
           orderBy: { createdAt: 'desc' },
-        }),
+        }) as any,
       8000,
       ['resources']
     )

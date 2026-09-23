@@ -3,6 +3,7 @@ import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { AdminResourcesView, ResourceRecord } from './components/AdminResourcesView'
+import { resourceSelectOptions } from '@/lib/resourceSelect'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,8 +11,9 @@ export default async function AdminResourcesPage() {
   const session = await requireRoleSession(['admin'])
 
   const dbResources = await prisma.resource.findMany({
+    select: resourceSelectOptions,
     orderBy: { createdAt: 'desc' },
-  })
+  }) as any[];
 
   const resourcesList: ResourceRecord[] = dbResources.map((r) => ({
     id: r.id,

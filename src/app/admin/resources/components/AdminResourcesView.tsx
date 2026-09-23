@@ -126,9 +126,27 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
   }
 
   const handleDownloadFile = async (res: ResourceRecord) => {
-    if (res.fileUrl && (res.fileUrl.startsWith('/uploads/') || res.fileUrl.startsWith('data:') || res.fileUrl.startsWith('http'))) {
+    let finalFileUrl = res.fileUrl;
+
+    if (!finalFileUrl) {
+      toast.loading('Fetching document...', { id: 'fetch_doc' });
+      try {
+        const response = await fetch(`/api/resources/${res.id}/download`);
+        const data = await response.json();
+        if (data.success && data.fileUrl) {
+          finalFileUrl = data.fileUrl;
+        }
+        toast.dismiss('fetch_doc');
+      } catch (err) {
+        toast.dismiss('fetch_doc');
+        toast.error('Failed to fetch document.');
+        return;
+      }
+    }
+
+    if (finalFileUrl && (finalFileUrl.startsWith('/uploads/') || finalFileUrl.startsWith('data:') || finalFileUrl.startsWith('http'))) {
       await downloadWithDeptHeader({
-        fileUrl: res.fileUrl,
+        fileUrl: finalFileUrl,
         fileName: res.fileName,
         title: res.name,
         resourceType: res.resourceType,

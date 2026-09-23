@@ -67,9 +67,27 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
   }, [resources, selectedType, query])
 
   const handleDownloadResource = async (item: ResourceItem) => {
-    if (item.fileUrl && (item.fileUrl.startsWith('/uploads/') || item.fileUrl.startsWith('data:') || item.fileUrl.startsWith('http'))) {
+    let finalFileUrl = item.fileUrl;
+
+    if (!finalFileUrl) {
+      toast.loading('Fetching document...', { id: 'fetch_doc' });
+      try {
+        const res = await fetch(`/api/resources/${item.id}/download`);
+        const data = await res.json();
+        if (data.success && data.fileUrl) {
+          finalFileUrl = data.fileUrl;
+        }
+        toast.dismiss('fetch_doc');
+      } catch (err) {
+        toast.dismiss('fetch_doc');
+        toast.error('Failed to fetch document.');
+        return;
+      }
+    }
+
+    if (finalFileUrl && (finalFileUrl.startsWith('/uploads/') || finalFileUrl.startsWith('data:') || finalFileUrl.startsWith('http'))) {
       await downloadWithDeptHeader({
-        fileUrl: item.fileUrl,
+        fileUrl: finalFileUrl,
         fileName: item.fileName,
         title: item.name,
         resourceType: item.resourceType,

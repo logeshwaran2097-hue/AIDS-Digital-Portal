@@ -31,7 +31,7 @@ import {
   FileCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
 
 export interface ResourceItem {
   id: string
@@ -153,15 +153,35 @@ export function FacultyResourcesView({
     })
   }, [resources, searchQuery, selectedType, advisorSem, subjectMap])
 
-  const handleDownloadPDF = (r: ResourceItem) => {
-    if (r.fileUrl && (r.fileUrl.startsWith('/uploads/') || r.fileUrl.startsWith('data:') || r.fileUrl.startsWith('http'))) {
-      const link = document.createElement('a')
-      link.href = r.fileUrl
-      link.download = r.fileName || 'Resource_Document.pdf'
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+  const handleDownloadPDF = async (r: ResourceItem) => {
+    let finalFileUrl = r.fileUrl;
+
+    if (!finalFileUrl) {
+      toast.loading('Fetching document...', { id: 'fetch_doc' });
+      try {
+        const response = await fetch(`/api/resources/${r.id}/download`);
+        const data = await response.json();
+        if (data.success && data.fileUrl) {
+          finalFileUrl = data.fileUrl;
+        }
+        toast.dismiss('fetch_doc');
+      } catch (err) {
+        toast.dismiss('fetch_doc');
+        toast.error('Failed to fetch document.');
+        return;
+      }
+    }
+
+    if (finalFileUrl && (finalFileUrl.startsWith('/uploads/') || finalFileUrl.startsWith('data:') || finalFileUrl.startsWith('http'))) {
+      await downloadWithDeptHeader({
+        fileUrl: finalFileUrl,
+        fileName: r.fileName,
+        title: r.name,
+        resourceType: r.resourceType,
+        uploadedByName: r.uploadedByName || facultyName,
+        semester: r.semester,
+        description: r.description || undefined,
+      })
       return
     }
     const subj = r.subjectId ? subjectMap[r.subjectId] : null

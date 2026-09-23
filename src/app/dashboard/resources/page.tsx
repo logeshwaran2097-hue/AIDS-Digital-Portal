@@ -3,6 +3,7 @@ import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { StudentResourcesView } from './components/StudentResourcesView'
+import { resourceSelectOptions } from '@/lib/resourceSelect'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,8 +11,9 @@ export default async function ResourcesPage() {
   const session = await requireRoleSession(['student'])
 
   const resources = await prisma.resource.findMany({
+    select: resourceSelectOptions,
     orderBy: { createdAt: 'desc' },
-  })
+  }) as any;
 
   const user = await prisma.user.findUnique({ where: { id: session.userId } })
 

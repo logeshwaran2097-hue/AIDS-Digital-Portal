@@ -4,6 +4,7 @@ import { requireRoleSession, resolveFacultyAdvisorStatus } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { FacultyResourcesView, ResourceItem } from './components/FacultyResourcesView'
+import { resourceSelectOptions } from '@/lib/resourceSelect'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,8 +32,9 @@ export default async function FacultyResourcesPage() {
 
   const [resourcesFromDb, subjectsFromDb] = await Promise.all([
     prisma.resource.findMany({
+      select: resourceSelectOptions,
       orderBy: { createdAt: 'desc' },
-    }),
+    }) as any,
     prisma.subject.findMany({
       orderBy: { code: 'asc' },
       select: { id: true, code: true, name: true },
