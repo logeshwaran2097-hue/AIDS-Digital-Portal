@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -1229,8 +1229,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="flex flex-wrap gap-2.5">
                 {todayBirthdays.map((s) => (
                   <div key={s.id} className="flex items-center gap-2 bg-white border border-rose-200 rounded-xl px-3 py-2 shadow-xs hover:shadow-sm transition-shadow">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center text-white font-black text-xs shrink-0">
-                      {s.name.charAt(0)}
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center text-white font-black text-xs shrink-0 overflow-hidden">
+                      {s.profileImage ? (
+                        <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
+                      ) : (
+                        s.name.charAt(0)
+                      )}
                     </div>
                     <div>
                       <p className="text-xs font-black text-[#071A3D] leading-tight">{s.name}</p>
@@ -1261,8 +1265,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="flex flex-wrap gap-2.5">
                 {tomorrowBirthdays.map((s) => (
                   <div key={s.id} className="flex items-center gap-2 bg-white border border-amber-200 rounded-xl px-3 py-2 shadow-xs hover:shadow-sm transition-shadow">
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white font-black text-xs shrink-0">
-                      {s.name.charAt(0)}
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-white font-black text-xs shrink-0 overflow-hidden">
+                      {s.profileImage ? (
+                        <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
+                      ) : (
+                        s.name.charAt(0)
+                      )}
                     </div>
                     <div>
                       <p className="text-xs font-black text-[#071A3D] leading-tight">{s.name}</p>
