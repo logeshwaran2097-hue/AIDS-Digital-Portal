@@ -734,7 +734,7 @@ export function FacultyResourcesView({
                 {/* ── Document Upload Box ──────────────────────────────── */}
                 <div>
                   <label className="font-bold text-gray-700 block mb-1">
-                    Upload PDF / Document File <span className="text-rose-500">*</span>
+                    Upload Resource File <span className="text-rose-500">*</span>
                   </label>
                   
                   <div
@@ -762,7 +762,7 @@ export function FacultyResourcesView({
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept=".pdf,.doc,.docx,.ppt,.pptx,application/pdf"
+                      accept="*/*"
                       className="hidden"
                       onChange={(e) => {
                         const file = e.target.files?.[0]
@@ -803,10 +803,10 @@ export function FacultyResourcesView({
                         </div>
                         <div>
                           <p className="text-xs font-bold text-[#071A3D]">
-                            Click to browse or drag &amp; drop PDF document
+                            Click to browse or drag &amp; drop your resource file
                           </p>
                           <p className="text-[10px] text-gray-400 mt-0.5">
-                            Standard PDF, Textbook, Lecture Notes, or E-Book (up to 50 MB)
+                            All file types supported (up to 50 MB)
                           </p>
                         </div>
                       </div>

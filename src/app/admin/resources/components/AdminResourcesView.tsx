@@ -723,14 +723,14 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
               {/* Interactive File Dropzone */}
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1.5 flex items-center justify-between">
-                  <span>Upload Study Material / PDF File</span>
-                  <span className="text-[10px] font-normal text-gray-400">PDF, DOCX, PPTX, EPUB (Up to 50MB)</span>
+                  <span>Upload Study Material / Resource File</span>
+                  <span className="text-[10px] font-normal text-gray-400">All file types supported (Up to 50MB)</span>
                 </label>
 
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.epub,.txt"
+                  accept="*/*"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
