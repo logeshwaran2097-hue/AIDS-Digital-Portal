@@ -2503,62 +2503,61 @@ export interface DeptHeaderDownloadOptions {
 }
 
 export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions): Promise<void> {
-  const { fileUrl, fileName, title, resourceType, uploadedByName, semester, description } = options
+  const { fileUrl, fileName } = options
 
-  // 1. Build the branded cover page (same header as existing PDFs)
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
-  const marginX = 12
-  const contentW = pageWidth - marginX * 2
 
-  // Frame
-  doc.setDrawColor(215, 226, 242); doc.setLineWidth(0.4)
-  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
-  doc.setDrawColor(238, 243, 250); doc.setLineWidth(0.2)
-  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+  const renderHeader = () => {
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const marginX = 12
+    const contentW = pageWidth - marginX * 2
 
-  // Header tint
-  doc.setFillColor(250, 252, 255)
-  doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
+    // Frame
+    doc.setDrawColor(215, 226, 242); doc.setLineWidth(0.4)
+    doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+    doc.setDrawColor(238, 243, 250); doc.setLineWidth(0.2)
+    doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
 
-  // Logo
-  const logoX = marginX + 2; const logoY = marginX + 3; const logoSize = 24
-  doc.setFillColor(255, 255, 255)
-  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
-  doc.setDrawColor(231, 185, 62); doc.setLineWidth(0.6)
-  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
-  try { doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4) } catch {}
+    // Header tint
+    doc.setFillColor(250, 252, 255)
+    doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
 
-  // College name & dept
-  const hCX = marginX + logoSize + (contentW - logoSize) / 2
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(14.5); doc.setTextColor(7, 26, 61)
-  doc.text('V.S.B. ENGINEERING COLLEGE', hCX, marginX + 6.5, { align: 'center' })
-  doc.setFillColor(231, 185, 62)
-  doc.roundedRect(hCX - 22, marginX + 8.5, 44, 4, 1, 1, 'F')
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(7, 26, 61)
-  doc.text('AN AUTONOMOUS INSTITUTION', hCX, marginX + 11.3, { align: 'center' })
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(21, 87, 192)
-  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', hCX, marginX + 17.5, { align: 'center' })
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(75, 85, 105)
-  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', hCX, marginX + 22.5, { align: 'center' })
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(100, 115, 135)
-  doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', hCX, marginX + 27, { align: 'center' })
+    // Logo
+    const logoX = marginX + 2; const logoY = marginX + 3; const logoSize = 24
+    doc.setFillColor(255, 255, 255)
+    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+    doc.setDrawColor(231, 185, 62); doc.setLineWidth(0.6)
+    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
+    try { doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4) } catch {}
 
-  // Separator beam
-  const beamY = marginX + 34
-  doc.setFillColor(21, 87, 192); doc.rect(marginX, beamY, contentW, 1.4, 'F')
-  doc.setFillColor(231, 185, 62); doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
-  doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
-  doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
+    // College name & dept
+    const hCX = marginX + logoSize + (contentW - logoSize) / 2
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14.5); doc.setTextColor(7, 26, 61)
+    doc.text('V.S.B. ENGINEERING COLLEGE', hCX, marginX + 6.5, { align: 'center' })
+    doc.setFillColor(231, 185, 62)
+    doc.roundedRect(hCX - 22, marginX + 8.5, 44, 4, 1, 1, 'F')
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(7, 26, 61)
+    doc.text('AN AUTONOMOUS INSTITUTION', hCX, marginX + 11.3, { align: 'center' })
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(21, 87, 192)
+    doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', hCX, marginX + 17.5, { align: 'center' })
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(75, 85, 105)
+    doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', hCX, marginX + 22.5, { align: 'center' })
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(100, 115, 135)
+    doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', hCX, marginX + 27, { align: 'center' })
 
+    // Separator beam
+    const beamY = marginX + 34
+    doc.setFillColor(21, 87, 192); doc.rect(marginX, beamY, contentW, 1.4, 'F')
+    doc.setFillColor(231, 185, 62); doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
+    doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
+    doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
 
+    // Footer on cover
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); doc.setTextColor(140, 155, 175)
+    doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL', pageWidth / 2, pageHeight - 5.5, { align: 'center' })
+  }
 
-  // Footer on cover
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); doc.setTextColor(140, 155, 175)
-  doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL', pageWidth / 2, pageHeight - 5.5, { align: 'center' })
-
-  // 2. Fetch and append original PDF pages via pdfjs-dist
   try {
     const resp = await fetch(fileUrl)
     if (resp.ok) {
@@ -2568,6 +2567,11 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
       const pdfSrc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
       const numPages = pdfSrc.numPages
       for (let i = 1; i <= numPages; i++) {
+        if (i > 1) {
+          doc.addPage()
+        }
+        renderHeader()
+
         const page = await pdfSrc.getPage(i)
         const viewport = page.getViewport({ scale: 2.0 })
         const canvas = document.createElement('canvas')
@@ -2575,11 +2579,11 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
         const ctx = canvas.getContext('2d')!
         await page.render({ canvasContext: ctx, viewport }).promise
         const imgData = canvas.toDataURL('image/jpeg', 0.92)
-        doc.addPage()
-        const a4W = 210; const a4H = 297
+        
+        const a4W = 186; const a4H = 232 // contentW and available height below header
         const ratio = Math.min(a4W / (viewport.width / 2), a4H / (viewport.height / 2))
         const imgW = (viewport.width / 2) * ratio; const imgH = (viewport.height / 2) * ratio
-        doc.addImage(imgData, 'JPEG', (a4W - imgW) / 2, (a4H - imgH) / 2, imgW, imgH)
+        doc.addImage(imgData, 'JPEG', 12 + (a4W - imgW) / 2, 50 + (a4H - imgH) / 2, imgW, imgH)
       }
     }
   } catch (err) {
