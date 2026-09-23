@@ -24,7 +24,7 @@ import {
   FileUp,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
 
 export interface ResourceRecord {
   id: string
@@ -125,18 +125,19 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
     })
   }
 
-  const handleDownloadFile = (res: ResourceRecord) => {
+  const handleDownloadFile = async (res: ResourceRecord) => {
     if (res.fileUrl && (res.fileUrl.startsWith('/uploads/') || res.fileUrl.startsWith('data:') || res.fileUrl.startsWith('http'))) {
-      const link = document.createElement('a')
-      link.href = res.fileUrl
-      link.download = res.fileName || 'Resource_Document.pdf'
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      await downloadWithDeptHeader({
+        fileUrl: res.fileUrl,
+        fileName: res.fileName,
+        title: res.name,
+        resourceType: res.resourceType,
+        uploadedByName: res.uploadedByName || 'System Administrator',
+        semester: res.semester,
+        description: res.description || undefined,
+      })
       return
     }
-
     generateAndDownloadPDF({
       title: res.name.toUpperCase(),
       subtitle: 'V.S.B. Engineering College · Department of AI & DS · Academic Library',

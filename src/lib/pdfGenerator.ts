@@ -2484,3 +2484,168 @@ export function generateAndDownloadHostelGatePassPDF(data: HostelGatePassPDFData
 }
 
 
+
+
+/**
+ * downloadWithDeptHeader
+ * Downloads the original uploaded file (PDF) with the VSB department header cover
+ * page prepended. Uses pdfjs-dist to render original PDF pages as canvas images
+ * and inserts them after the branded cover page in a new jsPDF document.
+ */
+export interface DeptHeaderDownloadOptions {
+  fileUrl: string
+  fileName: string
+  title: string
+  resourceType?: string
+  uploadedByName?: string
+  semester?: number | null
+  description?: string
+}
+
+export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions): Promise<void> {
+  const { fileUrl, fileName, title, resourceType, uploadedByName, semester, description } = options
+
+  // 1. Build the branded cover page (same header as existing PDFs)
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const marginX = 12
+  const contentW = pageWidth - marginX * 2
+
+  // Frame
+  doc.setDrawColor(215, 226, 242); doc.setLineWidth(0.4)
+  doc.rect(marginX - 4, marginX - 4, contentW + 8, pageHeight - (marginX - 4) * 2, 'S')
+  doc.setDrawColor(238, 243, 250); doc.setLineWidth(0.2)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
+
+  // Header tint
+  doc.setFillColor(250, 252, 255)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, 38, 'F')
+
+  // Logo
+  const logoX = marginX + 2; const logoY = marginX + 3; const logoSize = 24
+  doc.setFillColor(255, 255, 255)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'F')
+  doc.setDrawColor(231, 185, 62); doc.setLineWidth(0.6)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 1, 'S')
+  try { doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 2, logoY + 2, logoSize - 4, logoSize - 4) } catch {}
+
+  // College name & dept
+  const hCX = marginX + logoSize + (contentW - logoSize) / 2
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(14.5); doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', hCX, marginX + 6.5, { align: 'center' })
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(hCX - 22, marginX + 8.5, 44, 4, 1, 1, 'F')
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION', hCX, marginX + 11.3, { align: 'center' })
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(21, 87, 192)
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', hCX, marginX + 17.5, { align: 'center' })
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(75, 85, 105)
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', hCX, marginX + 22.5, { align: 'center' })
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.8); doc.setTextColor(100, 115, 135)
+  doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', hCX, marginX + 27, { align: 'center' })
+
+  // Separator beam
+  const beamY = marginX + 34
+  doc.setFillColor(21, 87, 192); doc.rect(marginX, beamY, contentW, 1.4, 'F')
+  doc.setFillColor(231, 185, 62); doc.rect(marginX, beamY + 1.4, contentW, 0.7, 'F')
+  doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
+  doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
+
+  let currentY = beamY + 9
+  doc.setTextColor(7, 26, 61); doc.setFont('helvetica', 'bold'); doc.setFontSize(13)
+  doc.text(title.toUpperCase().substring(0, 70), marginX, currentY)
+  currentY += 5
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(90, 105, 125)
+  doc.text('V.S.B. Engineering College · Department of AI & DS · Academic Library', marginX, currentY)
+  currentY += 7
+
+  // Metadata box
+  const mbH = 14
+  doc.setFillColor(248, 250, 254); doc.roundedRect(marginX, currentY, contentW, mbH, 2, 2, 'F')
+  doc.setDrawColor(215, 226, 242); doc.setLineWidth(0.3); doc.roundedRect(marginX, currentY, contentW, mbH, 2, 2, 'S')
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(21, 87, 192)
+  doc.text('DOCUMENT CATEGORY:', marginX + 4, currentY + 5)
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(7, 26, 61)
+  doc.text((resourceType || 'LECTURE_NOTES').replace(/_/g, ' '), marginX + 40, currentY + 5)
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(21, 87, 192)
+  doc.text('TIMESTAMP:', marginX + contentW / 2 + 4, currentY + 5)
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(7, 26, 61)
+  doc.text(dateStr + ' · ' + timeStr, marginX + contentW / 2 + 26, currentY + 5)
+  doc.setDrawColor(228, 235, 245); doc.line(marginX + 2, currentY + 7, marginX + contentW - 2, currentY + 7)
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(21, 87, 192)
+  doc.text('ISSUING AUTHORITY:', marginX + 4, currentY + 11)
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(7, 26, 61)
+  doc.text(uploadedByName || 'System Administrator', marginX + 40, currentY + 11)
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(21, 87, 192)
+  doc.text('VERIFICATION CODE:', marginX + contentW / 2 + 4, currentY + 11)
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(16, 185, 129)
+  doc.text('VSB-' + new Date().getFullYear() + '-AI-DS-' + Math.random().toString(36).substring(2,8).toUpperCase(), marginX + contentW / 2 + 37, currentY + 11)
+  currentY += mbH + 8
+
+  // Overview box
+  doc.setFillColor(243, 246, 255); doc.roundedRect(marginX, currentY, contentW, 40, 2, 2, 'F')
+  doc.setDrawColor(200, 215, 245); doc.setLineWidth(0.3); doc.roundedRect(marginX, currentY, contentW, 40, 2, 2, 'S')
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(21, 87, 192)
+  doc.text('DIGITAL ASSET OVERVIEW & DESCRIPTION', marginX + 4, currentY + 6)
+  doc.setFillColor(16, 185, 129); doc.roundedRect(marginX + contentW - 38, currentY + 2, 34, 6, 1.5, 1.5, 'F')
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(255, 255, 255)
+  doc.text('VERIFIED RECORD', marginX + contentW - 36, currentY + 5.8)
+  const infoLines = [
+    description || 'Standard academic reference material for undergraduate AI & DS curriculum.',
+    'File Name: ' + fileName,
+    'Asset Type: ' + (resourceType || 'LECTURE_NOTES').replace(/_/g, ' '),
+    'Semester Alignment: Semester ' + (semester || 1) + ' (Year ' + Math.ceil((semester || 1) / 2) + ')',
+    'Verified By: ' + (uploadedByName || 'System Administrator'),
+  ]
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(30, 41, 59)
+  let lY = currentY + 12
+  for (const l of infoLines) { doc.text('• ' + l, marginX + 4, lY); lY += 5.5 }
+  currentY += 40 + 8
+
+  // Authenticity notice
+  doc.setFillColor(239, 246, 255); doc.roundedRect(marginX, currentY, contentW, 22, 2, 2, 'F')
+  doc.setDrawColor(191, 219, 254); doc.setLineWidth(0.3); doc.roundedRect(marginX, currentY, contentW, 22, 2, 2, 'S')
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(29, 78, 216)
+  doc.text('DIGITAL PORTAL DOCUMENT · AUTHENTICATED ELECTRONIC COPY', marginX + 4, currentY + 6)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(71, 85, 105)
+  const notice = 'This is an official system-generated academic document issued by V.S.B. Engineering College (Autonomous). The following pages contain the original uploaded material content.'
+  doc.text(doc.splitTextToSize(notice, contentW - 8), marginX + 4, currentY + 11)
+
+  // Footer on cover
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); doc.setTextColor(140, 155, 175)
+  doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL', pageWidth / 2, pageHeight - 5.5, { align: 'center' })
+
+  // 2. Fetch and append original PDF pages via pdfjs-dist
+  try {
+    const resp = await fetch(fileUrl)
+    if (resp.ok) {
+      const arrayBuffer = await resp.arrayBuffer()
+      const pdfjsLib = await import('pdfjs-dist')
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
+      const pdfSrc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
+      const numPages = pdfSrc.numPages
+      for (let i = 1; i <= numPages; i++) {
+        const page = await pdfSrc.getPage(i)
+        const viewport = page.getViewport({ scale: 2.0 })
+        const canvas = document.createElement('canvas')
+        canvas.width = viewport.width; canvas.height = viewport.height
+        const ctx = canvas.getContext('2d')!
+        await page.render({ canvasContext: ctx, viewport }).promise
+        const imgData = canvas.toDataURL('image/jpeg', 0.92)
+        doc.addPage()
+        const a4W = 210; const a4H = 297
+        const ratio = Math.min(a4W / (viewport.width / 2), a4H / (viewport.height / 2))
+        const imgW = (viewport.width / 2) * ratio; const imgH = (viewport.height / 2) * ratio
+        doc.addImage(imgData, 'JPEG', (a4W - imgW) / 2, (a4H - imgH) / 2, imgW, imgH)
+      }
+    }
+  } catch (err) {
+    console.warn('downloadWithDeptHeader: could not embed original pages:', err)
+  }
+
+  doc.save('VSB_' + fileName.replace(/\.[^/.]+$/, '') + '.pdf')
+}

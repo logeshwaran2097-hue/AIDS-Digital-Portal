@@ -19,7 +19,7 @@ import {
   FolderDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
 
 interface ResourceItem {
   id: string
@@ -66,15 +66,16 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
     })
   }, [resources, selectedType, query])
 
-  const handleDownloadResource = (item: ResourceItem) => {
+  const handleDownloadResource = async (item: ResourceItem) => {
     if (item.fileUrl && (item.fileUrl.startsWith('/uploads/') || item.fileUrl.startsWith('data:') || item.fileUrl.startsWith('http'))) {
-      const link = document.createElement('a')
-      link.href = item.fileUrl
-      link.download = item.fileName || item.name + '.pdf'
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      await downloadWithDeptHeader({
+        fileUrl: item.fileUrl,
+        fileName: item.fileName,
+        title: item.name,
+        resourceType: item.resourceType,
+        uploadedByName: item.uploadedByName || 'V.S.B. Department Faculty',
+        description: item.description || undefined,
+      })
       return
     }
     generateAndDownloadPDF({
