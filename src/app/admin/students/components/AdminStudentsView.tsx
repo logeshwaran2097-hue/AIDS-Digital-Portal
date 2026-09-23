@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -1445,8 +1445,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 {/* Card Top: Avatar, Name, Reg Number, Status */}
                 <div className="flex items-start justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0">
-                      {s.name.charAt(0) || 'S'}
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-extrabold text-sm shadow-xs shrink-0 overflow-hidden">
+                      {s.profileImage ? (
+                        <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
+                      ) : (
+                        s.name.charAt(0) || 'S'
+                      )}
                     </div>
                     <div className="min-w-0">
                       <h4 className="font-bold text-[#071A3D] text-sm truncate leading-snug">
@@ -1614,6 +1618,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <thead className="bg-[#071A3D] text-white uppercase text-[9.5px] font-black tracking-wider">
                 <tr>
                   <th className="px-2 py-3 text-center w-7">#</th>
+                  <th className="px-2 py-3 text-center w-10">Photo</th>
                   <th className="px-2 py-3">Register No</th>
                   <th className="px-2 py-3">Name</th>
                   <th className="px-1.5 py-3 text-center">DOB</th>
@@ -1633,7 +1638,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <tbody className="divide-y divide-gray-100 font-medium">
                 {filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan={15} className="text-center py-10 text-gray-400">
+                    <td colSpan={16} className="text-center py-10 text-gray-400">
                       No matching student records found.
                     </td>
                   </tr>
@@ -1642,6 +1647,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <tr key={s.id} className="hover:bg-blue-50/40 transition-colors group">
                       {/* # */}
                       <td className="px-2 py-2 text-gray-400 font-mono text-[10.5px] text-center">{idx + 1}</td>
+                      {/* Photo */}
+                      <td className="px-2 py-2 text-center">
+                        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-[10px] mx-auto overflow-hidden shrink-0 shadow-xs">
+                          {s.profileImage ? (
+                            <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
+                          ) : (
+                            s.name.charAt(0) || 'S'
+                          )}
+                        </div>
+                      </td>
                       {/* Register Number */}
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-1">
