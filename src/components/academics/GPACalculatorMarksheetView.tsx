@@ -355,15 +355,6 @@ export default function GPACalculatorMarksheetView({
     toast.success('Loaded Slide 14 example records (CGPA: 8.81)')
   }
 
-  const handleResetAllSemesters = () => {
-    const initial: Record<number, { gpa: number; credits: number }> = {}
-    for (let sem = 1; sem <= 8; sem++) {
-      initial[sem] = { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[sem] || 20 }
-    }
-    setSemesterGPAs(initial)
-    toast.success('Reset all semester records')
-  }
-
   // Required GPA for target (calculated against real remaining credits)
   const requiredRemainingGPA = useMemo(() => {
     let earnedPoints = 0
