@@ -694,14 +694,50 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="font-bold text-gray-500">Residency Status:</span>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span className="font-bold text-gray-500">Residency Status:</span>
+                    </div>
+                    <span className="font-black text-purple-700 text-right">
+                      {profile.residencyStatus || 'Not specified'}
+                    </span>
                   </div>
-                  <span className="font-black text-purple-700 max-w-[150px] truncate text-right">
-                    {profile.residencyStatus || 'Not specified'}
-                  </span>
+                  
+                  {/* Additional Onboarding Details */}
+                  <div className="pl-6 space-y-1 mt-1">
+                    {profile.hostelBlock && (
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-gray-500 font-medium">Hostel Block:</span>
+                        <span className="font-bold text-gray-700">{profile.hostelBlock}</span>
+                      </div>
+                    )}
+                    {profile.roomNo && (
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-gray-500 font-medium">Room No:</span>
+                        <span className="font-bold text-gray-700">{profile.roomNo}</span>
+                      </div>
+                    )}
+                    {profile.busNo && (
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-gray-500 font-medium">College Bus No:</span>
+                        <span className="font-bold text-gray-700">{profile.busNo}</span>
+                      </div>
+                    )}
+                    {profile.outBusMode && (
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-gray-500 font-medium">Transport Mode:</span>
+                        <span className="font-bold text-gray-700">{profile.outBusMode}</span>
+                      </div>
+                    )}
+                    {profile.boardingPoint && (
+                      <div className="flex justify-between text-[10px]">
+                        <span className="text-gray-500 font-medium">Boarding Point:</span>
+                        <span className="font-bold text-gray-700">{profile.boardingPoint}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {profile.address && (
                   <p className="text-[10px] text-gray-500 mt-1 pl-6 leading-tight">
