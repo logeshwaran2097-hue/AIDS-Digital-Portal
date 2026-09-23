@@ -189,6 +189,7 @@ export async function GET(request: Request) {
         address: s.address || null,
         cgpa: (s as any).cgpa,
         attendance: (s as any).attendance,
+        profileImage: (u as any)?.profileImage || null,
       }
     })
 
