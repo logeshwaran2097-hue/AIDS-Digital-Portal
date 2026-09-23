@@ -842,8 +842,14 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
                   >
                     <option value="REFERENCE_BOOK">Reference Textbook</option>
                     <option value="LECTURE_NOTES">Lecture Notes</option>
+                    <option value="HANDBOOK">Handbook / Study Material</option>
                     <option value="LAB_MANUAL">Lab Manual</option>
                     <option value="PLACEMENT_GUIDE">Placement Guide / Handbook</option>
+                    <option value="PREVIOUS_YEAR_QUESTIONS">Previous Year Questions</option>
+                    <option value="SYLLABUS">Syllabus</option>
+                    <option value="ASSIGNMENT">Assignment / Tutorial</option>
+                    <option value="RESEARCH_PAPER">Research Paper</option>
+                    <option value="OTHER">Other Resource</option>
                   </select>
                 </div>
               </div>

@@ -86,7 +86,7 @@ export function FacultyResourcesView({
 
   // Upload Form State
   const [formTitle, setFormTitle] = useState('')
-  const [formResourceType, setFormResourceType] = useState('textbook')
+  const [formResourceType, setFormResourceType] = useState('REFERENCE_BOOK')
   const [formSubjectId, setFormSubjectId] = useState(subjects[0]?.id || '')
   const [formSemester, setFormSemester] = useState<number>(advisorSem || 3)
   const [formDescription, setFormDescription] = useState('')
@@ -98,7 +98,7 @@ export function FacultyResourcesView({
   const [editSuccess, setEditSuccess] = useState(false)
   const [editError, setEditError] = useState('')
   const [editTitle, setEditTitle] = useState('')
-  const [editResourceType, setEditResourceType] = useState('textbook')
+  const [editResourceType, setEditResourceType] = useState('REFERENCE_BOOK')
   const [editSubjectId, setEditSubjectId] = useState('')
   const [editSemester, setEditSemester] = useState<number>(3)
   const [editDescription, setEditDescription] = useState('')
@@ -834,10 +834,16 @@ export function FacultyResourcesView({
                       onChange={(e) => setFormResourceType(e.target.value)}
                       className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold focus:bg-white"
                     >
-                      <option value="textbook">Standard Textbook</option>
-                      <option value="handbook">Course Handbook / Notes</option>
-                      <option value="lab_manual">Laboratory Manual</option>
-                      <option value="placement_guide">Placement Interview Kit</option>
+                      <option value="REFERENCE_BOOK">Reference Textbook</option>
+                      <option value="LECTURE_NOTES">Lecture Notes</option>
+                      <option value="HANDBOOK">Handbook / Study Material</option>
+                      <option value="LAB_MANUAL">Lab Manual</option>
+                      <option value="PLACEMENT_GUIDE">Placement Guide / Handbook</option>
+                      <option value="PREVIOUS_YEAR_QUESTIONS">Previous Year Questions</option>
+                      <option value="SYLLABUS">Syllabus</option>
+                      <option value="ASSIGNMENT">Assignment / Tutorial</option>
+                      <option value="RESEARCH_PAPER">Research Paper</option>
+                      <option value="OTHER">Other Resource</option>
                     </select>
                   </div>
 
@@ -1066,10 +1072,16 @@ export function FacultyResourcesView({
                       onChange={(e) => setEditResourceType(e.target.value)}
                       className="w-full bg-gray-50 border rounded-xl px-3 py-2 text-xs font-bold focus:bg-white"
                     >
-                      <option value="textbook">Standard Textbook</option>
-                      <option value="handbook">Course Handbook / Notes</option>
-                      <option value="lab_manual">Laboratory Manual</option>
-                      <option value="placement_guide">Placement Interview Kit</option>
+                      <option value="REFERENCE_BOOK">Reference Textbook</option>
+                      <option value="LECTURE_NOTES">Lecture Notes</option>
+                      <option value="HANDBOOK">Handbook / Study Material</option>
+                      <option value="LAB_MANUAL">Lab Manual</option>
+                      <option value="PLACEMENT_GUIDE">Placement Guide / Handbook</option>
+                      <option value="PREVIOUS_YEAR_QUESTIONS">Previous Year Questions</option>
+                      <option value="SYLLABUS">Syllabus</option>
+                      <option value="ASSIGNMENT">Assignment / Tutorial</option>
+                      <option value="RESEARCH_PAPER">Research Paper</option>
+                      <option value="OTHER">Other Resource</option>
                     </select>
                   </div>
 
