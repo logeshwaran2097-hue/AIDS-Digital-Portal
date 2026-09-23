@@ -685,12 +685,23 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-gray-400" />
-                  <span className="font-bold text-gray-500">Contact:</span>
+              <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-gray-400" />
+                    <span className="font-bold text-gray-500">Mobile No:</span>
+                  </div>
+                  <span className="font-black text-[#071A3D]">{profile.phone || 'Not specified'}</span>
                 </div>
-                <span className="font-black text-[#071A3D]">{profile.phone || 'Not specified'}</span>
+                <div className="flex items-center justify-between gap-2 border-t border-gray-200/60 pt-2 mt-0.5">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span className="font-bold text-gray-500">Email ID:</span>
+                  </div>
+                  <span className="font-black text-[#071A3D] truncate max-w-[150px] sm:max-w-none">
+                    {profile.personalEmail || profile.email || 'Not specified'}
+                  </span>
+                </div>
               </div>
 
               <div className="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex flex-col gap-1.5">
