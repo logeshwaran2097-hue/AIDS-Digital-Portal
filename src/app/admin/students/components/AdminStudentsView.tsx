@@ -73,6 +73,44 @@ export interface StudentRecord {
   profileImage?: string | null
 }
 
+function parseBirthDate(dobStr: string | null | undefined): { month: number; day: number; year?: number } | null {
+  if (!dobStr) return null
+  const str = String(dobStr).trim()
+  if (!str) return null
+
+  // Format YYYY-MM-DD
+  const ymdMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/)
+  if (ymdMatch) {
+    return {
+      year: parseInt(ymdMatch[1], 10),
+      month: parseInt(ymdMatch[2], 10),
+      day: parseInt(ymdMatch[3], 10),
+    }
+  }
+
+  // Format DD-MM-YYYY or DD/MM/YYYY
+  const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/)
+  if (dmyMatch) {
+    return {
+      year: parseInt(dmyMatch[3], 10),
+      month: parseInt(dmyMatch[2], 10),
+      day: parseInt(dmyMatch[1], 10),
+    }
+  }
+
+  // Date object / ISO string fallback
+  const d = new Date(str)
+  if (!isNaN(d.getTime())) {
+    return {
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth() + 1,
+      day: d.getUTCDate(),
+    }
+  }
+
+  return null
+}
+
 export function AdminStudentsView({ initialStudents }: { initialStudents: StudentRecord[] }) {
   const [students, setStudents] = useState<StudentRecord[]>(initialStudents)
   const [searchQuery, setSearchQuery] = useState('')
@@ -80,6 +118,63 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [semFilter, setSemFilter] = useState('ALL')
   const [sectionFilter, setSectionFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
+  const [birthdayFilter, setBirthdayFilter] = useState<'ALL' | 'TODAY' | 'TOMORROW' | 'BOTH'>('ALL')
+
+  // Compute today's and tomorrow's birthdays
+  const { todayBirthdays, tomorrowBirthdays } = React.useMemo(() => {
+    const today = new Date()
+    const tm = today.getMonth() + 1
+    const td = today.getDate()
+
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
+    const tomm = tomorrow.getMonth() + 1
+    const tomd = tomorrow.getDate()
+
+    const tday: (StudentRecord & { turningAge?: number })[] = []
+    const tmrw: (StudentRecord & { turningAge?: number })[] = []
+
+    students.forEach((s) => {
+      const p = parseBirthDate(s.dateOfBirth)
+      if (!p) return
+
+      const age = p.year ? today.getFullYear() - p.year : undefined
+
+      if (p.month === tm && p.day === td) {
+        tday.push({ ...s, turningAge: age })
+      } else if (p.month === tomm && p.day === tomd) {
+        tmrw.push({ ...s, turningAge: age })
+      }
+    })
+
+    return { todayBirthdays: tday, tomorrowBirthdays: tmrw }
+  }, [students])
+
+  const getBirthdayStatus = (dob?: string | null): 'today' | 'tomorrow' | null => {
+    const p = parseBirthDate(dob)
+    if (!p) return null
+    const now = new Date()
+    if (p.month === now.getMonth() + 1 && p.day === now.getDate()) return 'today'
+    const tom = new Date()
+    tom.setDate(tom.getDate() + 1)
+    if (p.month === tom.getMonth() + 1 && p.day === tom.getDate()) return 'tomorrow'
+    return null
+  }
+
+  const handleSendBirthdayWish = (s: StudentRecord, isTomorrow: boolean = false) => {
+    const phone = s.phone || s.parentPhone
+    if (!phone) {
+      toast.error(`No phone number on record for ${s.name}`)
+      return
+    }
+    const cleanPhone = phone.replace(/\D/g, '')
+    const intlPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone
+    const greeting = isTomorrow
+      ? `🎉 Advance Happy Birthday, ${s.name}! 🎂✨ The Department of AI & DS, V.S.B. Engineering College wishes you a fantastic birthday tomorrow and great academic success in the year ahead! 🎓🌟`
+      : `🎉 Wishing you a very Happy Birthday, ${s.name}! 🎂✨ The Department of AI & DS, V.S.B. Engineering College wishes you joy, good health, and wonderful achievements in your academics! 🎓🌟`
+    const url = `https://wa.me/${intlPhone}?text=${encodeURIComponent(greeting)}`
+    window.open(url, '_blank')
+  }
   const [isLoading, setIsLoading] = useState(false)
 
   // Mobile / Desktop View Mode: Defaults to 'cards' on mobile screens, 'table' on desktop
@@ -190,6 +285,27 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     setAiAgentResponse(null)
 
     const lowerQ = q.toLowerCase()
+    if (lowerQ.includes('birthday') || lowerQ.includes('bday') || lowerQ.includes('birth day')) {
+      let bdaySummary = `🎂 **Department Birthday Intelligence (Today & Tomorrow):**\n\n`
+      if (todayBirthdays.length > 0) {
+        bdaySummary += `🎉 **Today's Birthday Celebrations (${todayBirthdays.length}):**\n` +
+          todayBirthdays.map(s => `• **${s.name}** (${s.registerNumber}) — Year ${s.year}, Sec ${s.section}${s.turningAge ? ` · Turning ${s.turningAge} Today!` : ''} | Phone: ${s.phone || 'N/A'}`).join('\n') + '\n\n'
+      } else {
+        bdaySummary += `• **Today:** No birthdays scheduled today.\n\n`
+      }
+
+      if (tomorrowBirthdays.length > 0) {
+        bdaySummary += `🎁 **Tomorrow's Birthday Celebrations (${tomorrowBirthdays.length}):**\n` +
+          tomorrowBirthdays.map(s => `• **${s.name}** (${s.registerNumber}) — Year ${s.year}, Sec ${s.section}${s.turningAge ? ` · Turning ${s.turningAge} Tomorrow!` : ''} | Phone: ${s.phone || 'N/A'}`).join('\n')
+      } else {
+        bdaySummary += `• **Tomorrow:** No birthdays scheduled tomorrow.`
+      }
+
+      setAiAgentResponse(bdaySummary)
+      setIsAiQuerying(false)
+      return
+    }
+
     if (lowerQ.includes('low attendance') || lowerQ.includes('< 75') || lowerQ.includes('below 75') || lowerQ.includes('shortage')) {
       const lowAtt = students.filter(s => {
         const att = parseFloat(s.attendance || '100')
@@ -987,6 +1103,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] uppercase font-bold text-cyan-200 mr-1">Quick Insights:</span>
               {[
+                { l: '🎂 Today & Tomorrow Birthdays', q: 'Show students with birthdays today or tomorrow' },
                 { l: '⚠️ Low Attendance (<75%)', q: 'Show students with low attendance below 75' },
                 { l: '🏆 Top CGPA Rankers', q: 'Top highest cgpa students' },
                 { l: '🚌 Day Scholars vs Hostellers', q: 'How many students are day scholars vs hostellers?' },
