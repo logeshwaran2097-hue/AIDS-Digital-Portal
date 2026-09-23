@@ -126,6 +126,17 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
   }
 
   const handleDownloadFile = (res: ResourceRecord) => {
+    if (res.fileUrl && (res.fileUrl.startsWith('/uploads/') || res.fileUrl.startsWith('data:') || res.fileUrl.startsWith('http'))) {
+      const link = document.createElement('a')
+      link.href = res.fileUrl
+      link.download = res.fileName || 'Resource_Document.pdf'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
+
     generateAndDownloadPDF({
       title: res.name.toUpperCase(),
       subtitle: 'V.S.B. Engineering College · Department of AI & DS · Academic Library',

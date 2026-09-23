@@ -154,6 +154,16 @@ export function FacultyResourcesView({
   }, [resources, searchQuery, selectedType, advisorSem, subjectMap])
 
   const handleDownloadPDF = (r: ResourceItem) => {
+    if (r.fileUrl && (r.fileUrl.startsWith('/uploads/') || r.fileUrl.startsWith('data:') || r.fileUrl.startsWith('http'))) {
+      const link = document.createElement('a')
+      link.href = r.fileUrl
+      link.download = r.fileName || 'Resource_Document.pdf'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
     const subj = r.subjectId ? subjectMap[r.subjectId] : null
     generateAndDownloadPDF({
       title: r.name.toUpperCase(),

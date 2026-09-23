@@ -67,6 +67,16 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
   }, [resources, selectedType, query])
 
   const handleDownloadResource = (item: ResourceItem) => {
+    if (item.fileUrl && (item.fileUrl.startsWith('/uploads/') || item.fileUrl.startsWith('data:') || item.fileUrl.startsWith('http'))) {
+      const link = document.createElement('a')
+      link.href = item.fileUrl
+      link.download = item.fileName || item.name + '.pdf'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
     generateAndDownloadPDF({
       title: item.name,
       subtitle: `Department Digital Library · ${item.resourceType.replace(/_/g, ' ')}`,

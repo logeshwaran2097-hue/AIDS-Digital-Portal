@@ -118,7 +118,25 @@ export async function POST(request: Request) {
         fileName = val.safeFileName || `${Date.now()}_doc.pdf`
         fileSize = buf.length
         fileType = val.detectedMime || 'application/pdf'
-        fileUrl = `/uploads/${fileName}`
+        
+        try {
+          const fs = require('fs/promises')
+          const path = require('path')
+          const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'resources')
+          await fs.mkdir(uploadDir, { recursive: true })
+          const filePath = path.join(uploadDir, fileName)
+          await fs.writeFile(filePath, buf)
+          fileUrl = `/uploads/resources/${fileName}`
+        } catch (e) {
+          console.warn('File write failed, using base64 fallback')
+        }
+
+        if (!fileUrl && buf.length < 4.5 * 1024 * 1024) {
+          fileUrl = `data:${fileType};base64,${buf.toString('base64')}`
+        }
+        if (!fileUrl) {
+          fileUrl = `/uploads/resources/${fileName}` // Last resort
+        }
       } else {
         fileName = `${Date.now()}-${title.replace(/[^a-zA-Z0-9.]/g, '-')}.pdf`
         fileSize = 1024 * 1024 * 4

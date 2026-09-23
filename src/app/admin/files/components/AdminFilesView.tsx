@@ -99,6 +99,16 @@ export function AdminFilesView({ initialFiles }: { initialFiles: FileItem[] }) {
   }
 
   const handleDownloadFile = (f: FileItem) => {
+    if (f.fileUrl && (f.fileUrl.startsWith('/uploads/') || f.fileUrl.startsWith('data:') || f.fileUrl.startsWith('http'))) {
+      const link = document.createElement('a')
+      link.href = f.fileUrl
+      link.download = f.fileName || f.originalName || 'Document.pdf'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
     generateAndDownloadPDF({
       title: f.originalName.toUpperCase(),
       subtitle: `V.S.B. Engineering College · Department of AI & DS · Cloud Document Vault`,

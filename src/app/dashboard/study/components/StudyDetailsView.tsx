@@ -266,6 +266,16 @@ ANSWER: [Comprehensive model answer with formulas/points/pseudocode]`
   // 2. Download Lecture Note PDF
   const handleDownloadNote = (n: Note) => {
     if (!current) return
+    if ((n as any).fileUrl && ((n as any).fileUrl.startsWith('/uploads/') || (n as any).fileUrl.startsWith('data:') || (n as any).fileUrl.startsWith('http'))) {
+      const link = document.createElement('a')
+      link.href = (n as any).fileUrl
+      link.download = (n as any).fileName || n.title + '.pdf'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
     generateAndDownloadPDF({
       title: n.title,
       subtitle: `${current.code} - ${current.name} · Lecture Handout`,
@@ -280,6 +290,16 @@ ANSWER: [Comprehensive model answer with formulas/points/pseudocode]`
   // 3. Download Lab Manual PDF
   const handleDownloadLab = (l: LabManual) => {
     if (!current) return
+    if ((l as any).fileUrl && ((l as any).fileUrl.startsWith('/uploads/') || (l as any).fileUrl.startsWith('data:') || (l as any).fileUrl.startsWith('http'))) {
+      const link = document.createElement('a')
+      link.href = (l as any).fileUrl
+      link.download = (l as any).fileName || l.title + '.pdf'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
     generateAndDownloadPDF({
       title: `Experiment ${l.experimentNumber}: ${l.experimentName || l.title}`,
       subtitle: `${current.code} - ${current.name} · Laboratory Practical Manual`,
