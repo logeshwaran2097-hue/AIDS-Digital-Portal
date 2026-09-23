@@ -460,6 +460,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [addFormError, setAddFormError] = useState<string | null>(null)
   const [editFormError, setEditFormError] = useState<string | null>(null)
@@ -2756,16 +2757,34 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               <div className="flex items-center gap-4">
                 <div className="relative group shrink-0">
                   {selectedStudent.profileImage ? (
-                    <img src={selectedStudent.profileImage} alt={selectedStudent.name} className="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-200" />
+                    <img src={selectedStudent.profileImage} alt={selectedStudent.name} className="w-24 h-24 rounded-2xl object-cover shadow-sm border border-gray-200" />
                   ) : (
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white font-black flex items-center justify-center text-xl shadow-sm">
+                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-[#071A3D] to-[#1455D9] text-white font-black flex items-center justify-center text-3xl shadow-sm">
                       {selectedStudent.name.charAt(0)}
                     </div>
                   )}
-                  <label className={`absolute inset-0 bg-black/50 text-white rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer ${isUploadingPhoto ? 'opacity-100' : ''}`}>
-                    {isUploadingPhoto ? <RotateCcw className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4" />}
-                    <input type="file" className="hidden" accept="image/jpeg,image/png" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
-                  </label>
+                  <div className={`absolute inset-0 bg-black/60 text-white rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity ${isUploadingPhoto ? 'opacity-100' : ''}`}>
+                    {isUploadingPhoto ? (
+                      <RotateCcw className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <div className="flex gap-2">
+                        {selectedStudent.profileImage && (
+                          <button
+                            type="button"
+                            onClick={() => setFullScreenImage(selectedStudent.profileImage!)}
+                            className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+                            title="View Photo"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        )}
+                        <label className="p-1.5 hover:bg-white/20 rounded-lg cursor-pointer transition-colors" title="Upload Photo">
+                          <UploadCloud className="w-4 h-4" />
+                          <input type="file" className="hidden" accept="image/jpeg,image/png" onChange={handlePhotoUpload} disabled={isUploadingPhoto} />
+                        </label>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <span className="font-mono text-xs font-black text-[#1455D9] px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200">
