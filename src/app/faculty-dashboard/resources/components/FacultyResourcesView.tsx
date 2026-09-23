@@ -178,7 +178,7 @@ export function FacultyResourcesView({
         fileUrl: finalFileUrl,
         fileName: r.fileName,
         title: r.name,
-        resourceType: r.resourceType,
+        resourceType: r.resourceType ?? undefined,
         uploadedByName: r.uploadedByName || facultyName,
         semester: r.semester,
         description: r.description ?? undefined,

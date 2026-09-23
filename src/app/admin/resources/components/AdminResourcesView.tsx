@@ -149,7 +149,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
         fileUrl: finalFileUrl,
         fileName: res.fileName,
         title: res.name,
-        resourceType: res.resourceType,
+        resourceType: res.resourceType ?? undefined,
         uploadedByName: res.uploadedByName || 'System Administrator',
         semester: res.semester,
         description: res.description ?? undefined,
