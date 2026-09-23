@@ -733,6 +733,16 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
   const q = rawQ.toLowerCase()
 
   // ---------------------------------------------------------------------------
+  // 00. CAREER MENTOR AGENT (Bypass for Student Profile AI Assistant)
+  // ---------------------------------------------------------------------------
+  if (rawQ.includes('Year IV Academic & Career Advisor')) {
+    return {
+      answer: `**Mentor Advisory & Action Plan**\n\nBased on your query, here is an action plan for your placement preparation:\n\n* **Core CS Fundamentals:** Strengthen Data Structures & Algorithms, OS, DBMS, and Computer Networks.\n* **AI/ML Portfolio:** Build 2-3 end-to-end projects (e.g., NLP chatbots, Computer Vision pipelines) and host them on GitHub.\n* **Certifications:** Consider AWS/Azure AI fundamentals or specialized Coursera/Fast.ai certificates.\n* **Academics:** Maintain your CGPA and clear all papers in current semesters to meet top product company cutoffs.\n\n*(Note: This is an autonomous fallback response. Connect a valid Gemini API key for dynamic, personalized guidance).*`,
+      suggestions: ['Recommended Certifications', 'Portfolio Project Ideas', 'CGPA & Exam Strategy']
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // 0A. OD & LEAVE APPLICATION FORMAL STATEMENT AGENT (TOP PRIORITY FOR PERMISSIONS)
   // ---------------------------------------------------------------------------
   if (
@@ -745,9 +755,11 @@ async function getDynamicKnowledgeBase(query: string, session?: any): Promise<{ 
   // ---------------------------------------------------------------------------
   // 0B. ANNA UNIVERSITY R-2021 ACADEMIC INTELLIGENCE ENGINE
   // ---------------------------------------------------------------------------
-  const academicCurriculum = handleAcademicCurriculumQuery(rawQ)
-  if (academicCurriculum) {
-    return academicCurriculum
+  if (!rawQ.includes('Year IV Academic & Career Advisor')) {
+    const academicCurriculum = handleAcademicCurriculumQuery(rawQ)
+    if (academicCurriculum) {
+      return academicCurriculum
+    }
   }
 
   // ---------------------------------------------------------------------------
