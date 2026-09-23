@@ -49,6 +49,7 @@ import {
   ArrowRight,
   Info,
   Plus,
+  Trash2,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import { Badge } from '@/components/ui/Badge'
