@@ -178,6 +178,10 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
   }
 
   const handleFilePicked = (file: File) => {
+    if (file.size > 4.3 * 1024 * 1024) {
+      toast.error('File size exceeds the 4.3 MB limit for Serverless deployments. Please compress the file first.')
+      return
+    }
     setSelectedFile(file)
     setUploadError(null)
     if (!formData.name.trim()) {
@@ -720,7 +724,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
               <div>
                 <label className="block font-bold text-[#071A3D] mb-1.5 flex items-center justify-between">
                   <span>Upload Study Material / PDF File</span>
-                  <span className="text-[10px] font-normal text-gray-400">PDF, DOCX, PPTX, EPUB (Up to 50MB)</span>
+                  <span className="text-[10px] font-normal text-gray-400">PDF, DOCX, PPTX, EPUB (Up to 4.3MB - Serverless Limit)</span>
                 </label>
 
                 <input
