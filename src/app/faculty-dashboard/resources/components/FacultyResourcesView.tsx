@@ -90,6 +90,7 @@ export function FacultyResourcesView({
   const [formSubjectId, setFormSubjectId] = useState(subjects[0]?.id || '')
   const [formSemester, setFormSemester] = useState<number>(advisorSem || 3)
   const [formDescription, setFormDescription] = useState('')
+  const [formCustomResourceType, setFormCustomResourceType] = useState('')
 
   // Edit Modal State
   const [editingResource, setEditingResource] = useState<ResourceItem | null>(null)
@@ -102,6 +103,7 @@ export function FacultyResourcesView({
   const [editSubjectId, setEditSubjectId] = useState('')
   const [editSemester, setEditSemester] = useState<number>(3)
   const [editDescription, setEditDescription] = useState('')
+  const [editCustomResourceType, setEditCustomResourceType] = useState('')
   const [editFile, setEditFile] = useState<File | null>(null)
   const [isEditDragging, setIsEditDragging] = useState(false)
   const editFileInputRef = useRef<HTMLInputElement>(null)
@@ -245,12 +247,16 @@ export function FacultyResourcesView({
     setErrorMessage('')
 
     try {
+      const finalResourceType = formResourceType === 'OTHER' && formCustomResourceType.trim()
+        ? formCustomResourceType.trim()
+        : formResourceType;
+
       let res: Response
       if (selectedFile) {
         const formData = new FormData()
         formData.append('title', formTitle.trim())
         formData.append('description', formDescription.trim())
-        formData.append('resourceType', formResourceType)
+        formData.append('resourceType', finalResourceType)
         if (formSubjectId) formData.append('subjectId', formSubjectId)
         formData.append('semester', String(formSemester))
         formData.append('academicYear', '2025-2026')
@@ -265,7 +271,7 @@ export function FacultyResourcesView({
         const payload = {
           title: formTitle.trim(),
           description: formDescription.trim(),
-          resourceType: formResourceType,
+          resourceType: finalResourceType,
           subjectId: formSubjectId || null,
           semester: formSemester,
           academicYear: '2025-2026',
@@ -341,13 +347,17 @@ export function FacultyResourcesView({
     setEditError('')
 
     try {
+      const finalResourceType = editResourceType === 'OTHER' && editCustomResourceType.trim()
+        ? editCustomResourceType.trim()
+        : editResourceType;
+
       let res: Response
       if (editFile) {
         const formData = new FormData()
         formData.append('id', editingResource.id)
         formData.append('title', editTitle.trim())
         formData.append('description', editDescription.trim())
-        formData.append('resourceType', editResourceType)
+        formData.append('resourceType', finalResourceType)
         if (editSubjectId) formData.append('subjectId', editSubjectId)
         formData.append('semester', String(editSemester))
         formData.append('file', editFile)
@@ -361,7 +371,7 @@ export function FacultyResourcesView({
           id: editingResource.id,
           title: editTitle.trim(),
           description: editDescription.trim(),
-          resourceType: editResourceType,
+          resourceType: finalResourceType,
           subjectId: editSubjectId || null,
           semester: editSemester,
         }
@@ -845,6 +855,17 @@ export function FacultyResourcesView({
                       <option value="RESEARCH_PAPER">Research Paper</option>
                       <option value="OTHER">Other Resource</option>
                     </select>
+                    
+                    {formResourceType === 'OTHER' && (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter custom resource type..."
+                        value={formCustomResourceType}
+                        onChange={(e) => setFormCustomResourceType(e.target.value)}
+                        className="w-full mt-2 bg-gray-50 border rounded-xl px-3 py-2 text-xs font-medium focus:bg-white focus:ring-2 focus:ring-[#1455D9]/20"
+                      />
+                    )}
                   </div>
 
                   <div>
@@ -1083,6 +1104,17 @@ export function FacultyResourcesView({
                       <option value="RESEARCH_PAPER">Research Paper</option>
                       <option value="OTHER">Other Resource</option>
                     </select>
+                    
+                    {editResourceType === 'OTHER' && (
+                      <input
+                        type="text"
+                        required
+                        placeholder="Enter custom resource type..."
+                        value={editCustomResourceType}
+                        onChange={(e) => setEditCustomResourceType(e.target.value)}
+                        className="w-full mt-2 bg-gray-50 border rounded-xl px-3 py-2 text-xs font-medium focus:bg-white focus:ring-2 focus:ring-[#1455D9]/20"
+                      />
+                    )}
                   </div>
 
                   <div>

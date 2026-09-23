@@ -62,6 +62,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
     description: '',
     fileName: '',
     resourceType: 'REFERENCE_BOOK',
+    customResourceType: '',
     semester: 1,
     uploadedByName: 'System Administrator',
   })
@@ -210,12 +211,16 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
     setUploadError(null)
 
     try {
+      const finalResourceType = formData.resourceType === 'OTHER' && formData.customResourceType.trim()
+        ? formData.customResourceType.trim()
+        : formData.resourceType;
+
       let res: Response
       if (selectedFile) {
         const bodyFormData = new FormData()
         bodyFormData.append('title', formData.name.trim())
         bodyFormData.append('description', formData.description.trim())
-        bodyFormData.append('resourceType', formData.resourceType)
+        bodyFormData.append('resourceType', finalResourceType)
         bodyFormData.append('semester', String(formData.semester))
         bodyFormData.append('academicYear', '2025-2026')
         bodyFormData.append('uploadedByName', formData.uploadedByName || 'System Administrator')
@@ -229,7 +234,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
         const payload = {
           title: formData.name.trim(),
           description: formData.description.trim(),
-          resourceType: formData.resourceType,
+          resourceType: finalResourceType,
           semester: Number(formData.semester),
           academicYear: '2025-2026',
           uploadedByName: formData.uploadedByName || 'System Administrator',
@@ -268,6 +273,7 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
           description: '',
           fileName: '',
           resourceType: 'REFERENCE_BOOK',
+          customResourceType: '',
           semester: 1,
           uploadedByName: 'System Administrator',
         })
@@ -851,6 +857,17 @@ export function AdminResourcesView({ initialResources }: { initialResources: Res
                     <option value="RESEARCH_PAPER">Research Paper</option>
                     <option value="OTHER">Other Resource</option>
                   </select>
+                  
+                  {formData.resourceType === 'OTHER' && (
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter custom resource type..."
+                      value={formData.customResourceType}
+                      onChange={(e) => setFormData({ ...formData, customResourceType: e.target.value })}
+                      className="w-full mt-2 p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-medium text-xs"
+                    />
+                  )}
                 </div>
               </div>
 
