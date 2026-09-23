@@ -63,7 +63,8 @@ export async function GET(request: Request) {
           u.phone as user_phone,
           u.status as user_status,
           u."lastLogin" as user_last_login,
-          u."emailVerified" as user_email_verified
+          u."emailVerified" as user_email_verified,
+          u."profileImage" as user_profile_image
         FROM "Student" s
         LEFT JOIN "User" u ON s."userId" = u.id
         ORDER BY s."registerNumber" ASC
@@ -102,6 +103,7 @@ export async function GET(request: Request) {
           address: s.address || null,
           cgpa: s.cgpa,
           attendance: s.attendance,
+          profileImage: s.user_profile_image || null,
         }
       })
 
