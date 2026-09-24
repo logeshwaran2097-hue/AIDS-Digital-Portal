@@ -73,6 +73,14 @@ export async function GET(request: Request) {
 
       const result = rows.map((s) => {
         const rawEmail = s.user_email || ''
+        const isPlaceholderEmail = Boolean(
+          rawEmail && (
+            rawEmail.endsWith('@vsb.student.edu') ||
+            rawEmail.endsWith('@student.vsb.edu.in') ||
+            rawEmail.toLowerCase().startsWith(s.registerNumber.toLowerCase())
+          )
+        )
+        const displayEmail = isPlaceholderEmail ? '' : rawEmail
         // A student is ACTIVE ONLY if they have authenticated and logged into the website
         const hasLoggedInWebsite = Boolean(s.user_last_login) && s.user_status?.toLowerCase() === 'active'
         const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
@@ -82,7 +90,7 @@ export async function GET(request: Request) {
           userId: s.userId,
           registerNumber: s.registerNumber,
           name: s.user_name || s.registerNumber,
-          email: rawEmail,
+          email: displayEmail,
           phone: s.user_phone || '',
           parentPhone: s.parentPhone || '',
           dateOfBirth: s.dateOfBirth ? new Date(s.dateOfBirth).toISOString().split('T')[0] : null,
@@ -150,6 +158,14 @@ export async function GET(request: Request) {
     const result = students.map((s) => {
       const u = userMap.get(s.userId)
       const rawEmail = u?.email || ''
+      const isPlaceholderEmail = Boolean(
+        rawEmail && (
+          rawEmail.endsWith('@vsb.student.edu') ||
+          rawEmail.endsWith('@student.vsb.edu.in') ||
+          rawEmail.toLowerCase().startsWith(s.registerNumber.toLowerCase())
+        )
+      )
+      const displayEmail = isPlaceholderEmail ? '' : rawEmail
       // A student is ACTIVE ONLY if they have authenticated and logged into the website
       const hasLoggedInWebsite = Boolean(u?.lastLogin) && u?.status?.toLowerCase() === 'active'
       const effectiveStatus = hasLoggedInWebsite ? 'active' : 'inactive'
@@ -169,7 +185,7 @@ export async function GET(request: Request) {
         userId: s.userId,
         registerNumber: s.registerNumber,
         name: u?.name || s.registerNumber,
-        email: rawEmail,
+        email: displayEmail,
         phone: u?.phone || '',
         parentPhone: (s as any).parentPhone || '',
         dateOfBirth: s.dateOfBirth ? s.dateOfBirth.toISOString().split('T')[0] : null,

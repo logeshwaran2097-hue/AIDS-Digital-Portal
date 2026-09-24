@@ -786,7 +786,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   }
 
   const openEditModal = (s: StudentRecord) => {
-    const cleanEmail = s.email || ''
+    const isPlaceholder = !s.email || s.email.endsWith('@vsb.student.edu') || s.email.endsWith('@student.vsb.edu.in') || (s.registerNumber && s.email.toLowerCase().startsWith(s.registerNumber.toLowerCase()))
+    const cleanEmail = isPlaceholder ? '' : s.email
     setSelectedStudent(s)
     const isHostel = (s.residencyStatus || '').toLowerCase().includes('hostel')
     const isDay = (s.residencyStatus || '').toLowerCase().includes('day scholar') || (s.residencyStatus || '').toLowerCase().includes('dayscholar')
@@ -1635,7 +1636,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       <span className="text-[10px] text-gray-400 font-normal">(Parent)</span>
                     </a>
                   )}
-                  {s.email && (
+                  {s.email && !s.email.endsWith('@vsb.student.edu') && !s.email.endsWith('@student.vsb.edu.in') && (
                     <a
                       href={`mailto:${s.email}`}
                       className="flex items-center gap-2 text-slate-700 hover:text-[#1455D9] transition-colors py-0.5 truncate"
@@ -1762,12 +1763,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       {/* Contact */}
                       <td className="px-2 py-2">
                         <div className="flex flex-col gap-0.5 text-[9.5px] max-w-[145px]">
-                          {s.email ? (
+                          {s.email && !s.email.endsWith('@vsb.student.edu') && !s.email.endsWith('@student.vsb.edu.in') ? (
                             <span className="text-[#1455D9] font-medium truncate" title={s.email}>
-                              ✉ {s.email.split('@')[0]}
+                              ✉ {s.email}
                             </span>
                           ) : (
-                            <span className="text-amber-500 italic text-[9px]">✉ Not verified</span>
+                            <span className="text-gray-400 italic text-[9px]">✉ Not registered</span>
                           )}
                           <div className="flex items-center gap-1.5 text-gray-600 font-mono">
                             {s.phone ? (
@@ -3002,15 +3003,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
               </div>
 
               <div className="space-y-2">
-                {selectedStudent.email ? (
+                {selectedStudent.email && !selectedStudent.email.endsWith('@vsb.student.edu') && !selectedStudent.email.endsWith('@student.vsb.edu.in') ? (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-4 h-4 text-[#1455D9]" />
                     <span className="font-semibold">{selectedStudent.email}</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-amber-500">
-                    <Mail className="w-4 h-4" />
-                    <span className="italic text-xs">Email not verified yet</span>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span className="italic text-xs">Email not registered</span>
                   </div>
                 )}
                 {selectedStudent.phone && (
