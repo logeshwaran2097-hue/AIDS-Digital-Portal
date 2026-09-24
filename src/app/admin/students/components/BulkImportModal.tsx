@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import { playNotificationChime } from '@/lib/notificationEngine'
+import { getDefaultBatchForYear } from '@/lib/academicBatch'
 
 interface ParsedStudent {
   registerNumber: string
@@ -73,9 +74,10 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
     ]
 
     const sampleRows = [
-      '922524104001,Aakash Kumar,aakash.kumar@gmail.com,Student@123,2,4,A,2024-2028,9876543210,9876543211,2006-05-14,O+',
-      '922524104002,Abirami Sundaram,abirami.sundaram@gmail.com,Student@123,2,4,A,2024-2028,9876543212,9876543213,2006-08-22,B+',
-      '922523104001,Balaji Mani,balaji.mani@gmail.com,Student@123,3,6,B,2023-2027,9876543214,9876543215,2005-03-10,A+',
+      '922526104001,Aakash Kumar,aakash.kumar@gmail.com,Student@123,1,1,A,2026-2030,9876543210,9876543211,2007-05-14,O+',
+      '922525104001,Abirami Sundaram,abirami.sundaram@gmail.com,Student@123,2,3,A,2025-2029,9876543212,9876543213,2006-08-22,B+',
+      '922524104001,Balaji Mani,balaji.mani@gmail.com,Student@123,3,5,B,2024-2028,9876543214,9876543215,2005-03-10,A+',
+      '922523104001,Chandran Raj,chandran.raj@gmail.com,Student@123,4,7,A,2023-2027,9876543216,9876543217,2004-11-05,O+',
     ]
 
     const csvContent = [headers.join(','), ...sampleRows].join('\n')
@@ -153,7 +155,8 @@ export function BulkImportModal({ isOpen, onClose, onSuccess }: BulkImportModalP
       const year = yearIdx >= 0 && !isNaN(Number(row[yearIdx])) ? Number(row[yearIdx]) : 1
       const semester = semIdx >= 0 && !isNaN(Number(row[semIdx])) ? Number(row[semIdx]) : (year * 2)
       const section = secIdx >= 0 && row[secIdx] ? row[secIdx].toUpperCase() : 'A'
-      const batch = batchIdx >= 0 ? row[batchIdx] : ''
+      const rawBatch = batchIdx >= 0 && row[batchIdx] ? row[batchIdx].trim() : ''
+      const batch = rawBatch || getDefaultBatchForYear(year)
       const phone = phoneIdx >= 0 ? row[phoneIdx] : ''
       const parentPhone = parentPhoneIdx >= 0 ? row[parentPhoneIdx] : ''
       const bloodGroup = bloodIdx >= 0 ? row[bloodIdx] : 'O+'

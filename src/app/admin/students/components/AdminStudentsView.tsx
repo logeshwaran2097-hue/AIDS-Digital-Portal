@@ -46,6 +46,14 @@ import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { playNotificationChime } from '@/lib/notificationEngine'
 import { toast } from '@/components/ui/Toast'
 import { BulkImportModal } from './BulkImportModal'
+import {
+  YEAR_TO_DEFAULT_BATCH,
+  ACADEMIC_COHORTS,
+  getDefaultBatchForYear,
+  getYearFromBatch,
+  getYearFromSemester,
+  getSemesterForYear,
+} from '@/lib/academicBatch'
 import { cn } from '@/lib/utils'
 
 export interface StudentRecord {
@@ -465,6 +473,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [addFormError, setAddFormError] = useState<string | null>(null)
   const [editFormError, setEditFormError] = useState<string | null>(null)
 
+  // Academic Cohort & Batch States
+  const [batchFilter, setBatchFilter] = useState('ALL')
+  const [isBatchSyncModalOpen, setIsBatchSyncModalOpen] = useState(false)
+  const [isSyncingBatches, setIsSyncingBatches] = useState(false)
+  const [syncTargetYear, setSyncTargetYear] = useState('ALL')
+  const [syncSemestersOption, setSyncSemestersOption] = useState(false)
+
   // Form state
   const [formData, setFormData] = useState({
     registerNumber: '',
@@ -484,7 +499,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     address: '',
     year: 1,
     semester: 1,
-    batch: '',
+    batch: getDefaultBatchForYear(1),
     section: 'A',
     advisorName: '',
     status: 'active',
@@ -516,8 +531,12 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
     const matchesSection = sectionFilter === 'ALL' || student.section.toUpperCase() === sectionFilter.toUpperCase()
     const matchesStatus =
       statusFilter === 'ALL' || student.status.toLowerCase() === statusFilter.toLowerCase()
+    const matchesBatch =
+      batchFilter === 'ALL' ||
+      student.batch === batchFilter ||
+      (student.batch ? student.batch.includes(batchFilter) : false)
 
-    return matchesSearch && matchesYear && matchesSem && matchesSection && matchesStatus
+    return matchesSearch && matchesYear && matchesSem && matchesSection && matchesStatus && matchesBatch
   }).sort((a, b) => a.registerNumber.localeCompare(b.registerNumber, undefined, { numeric: true }))
 
   const getSemCount = (semNumber: number) => {
@@ -788,7 +807,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       address: s.address || '',
       year: s.year || 1,
       semester: s.semester || 1,
-      batch: s.batch || '',
+      batch: s.batch || getDefaultBatchForYear(s.year || 1),
       section: s.section || 'A',
       advisorName: s.advisorName || '',
       status: s.status || 'active',
@@ -821,6 +840,13 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
 
         <div className="flex items-center flex-wrap gap-3 shrink-0">
           <button
+            onClick={() => setIsBatchSyncModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-2 transition-all border border-white/20 shadow-sm cursor-pointer hover:scale-105"
+            title="Standardize and auto-update student batches year-wise"
+          >
+            <RotateCcw className="w-4 h-4 text-cyan-300" /> Auto-Sync Batches
+          </button>
+          <button
             onClick={handleExportPDF}
             className="px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-2 transition-all border border-white/20 shadow-sm cursor-pointer hover:scale-105"
           >
@@ -830,6 +856,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
             onClick={() => {
               const defaultYear = yearFilter !== 'ALL' ? Number(yearFilter) : 1
               const defaultSem = semFilter !== 'ALL' ? Number(semFilter) : ((defaultYear - 1) * 2 + 1)
+              const defaultBatch = getDefaultBatchForYear(defaultYear)
               setFormData({
                 registerNumber: '',
                 name: '',
@@ -848,7 +875,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 address: '',
                 year: defaultYear,
                 semester: defaultSem,
-                batch: '',
+                batch: defaultBatch,
                 section: sectionFilter !== 'ALL' ? sectionFilter : 'A',
                 advisorName: '',
                 status: 'active',
@@ -934,12 +961,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   </span>
                 </button>
 
-                {[
-                  { year: 1, name: 'Year I', label: '1st Year' },
-                  { year: 2, name: 'Year II', label: '2nd Year' },
-                  { year: 3, name: 'Year III', label: '3rd Year' },
-                  { year: 4, name: 'Year IV', label: '4th Year' },
-                ].map((y) => {
+                {ACADEMIC_COHORTS.map((y) => {
                   const isSelected = yearFilter === String(y.year)
                   const yCount = students.filter((s) => s.year === y.year).length
                   return (
@@ -955,13 +977,20 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           : 'bg-white hover:bg-blue-50/50 border-gray-200 text-gray-700'
                       }`}
                     >
-                      <span className="text-[10px] font-extrabold uppercase block opacity-80">{y.name}</span>
-                      <p className="text-xs font-black mt-0.5">{y.label}</p>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-md mt-1 inline-block ${
-                        isSelected ? 'bg-white/20 text-white' : 'bg-blue-50 text-[#1455D9]'
-                      }`}>
-                        {yCount} Students
-                      </span>
+                      <span className="text-[10px] font-extrabold uppercase block opacity-80">{y.yearName}</span>
+                      <p className="text-xs font-black mt-0.5">{y.year === 1 ? '1st Year' : y.year === 2 ? '2nd Year' : y.year === 3 ? '3rd Year' : '4th Year'}</p>
+                      <div className="flex items-center justify-center gap-1 mt-1 flex-wrap">
+                        <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md ${
+                          isSelected ? 'bg-white/25 text-white' : 'bg-blue-50 text-[#1455D9] border border-blue-200'
+                        }`}>
+                          {y.batch}
+                        </span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
+                          isSelected ? 'bg-white/15 text-white' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {yCount}
+                        </span>
+                      </div>
                     </button>
                   )
                 })}
@@ -1310,6 +1339,32 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5 w-full sm:w-auto">
+          {/* Batch Cohort Filter */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-gray-400">Batch:</span>
+            <select
+              value={batchFilter}
+              onChange={(e) => {
+                const val = e.target.value
+                setBatchFilter(val)
+                if (val !== 'ALL') {
+                  const y = getYearFromBatch(val)
+                  if (y) {
+                    setYearFilter(String(y))
+                    setSemFilter('ALL')
+                  }
+                }
+              }}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
+            >
+              <option value="ALL">All Cohort Batches</option>
+              <option value="2026-2030">2026-2030 (1st Year)</option>
+              <option value="2025-2029">2025-2029 (2nd Year)</option>
+              <option value="2024-2028">2024-2028 (3rd Year)</option>
+              <option value="2023-2027">2023-2027 (4th Year)</option>
+            </select>
+          </div>
+
           {/* Step 1: Academic Year Dropdown */}
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-black uppercase text-gray-400">Year:</span>
@@ -1319,14 +1374,19 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                 const val = e.target.value
                 setYearFilter(val)
                 setSemFilter('ALL')
+                if (val !== 'ALL') {
+                  setBatchFilter(getDefaultBatchForYear(Number(val)))
+                } else {
+                  setBatchFilter('ALL')
+                }
               }}
               className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9]"
             >
               <option value="ALL">All Years (I - IV)</option>
-              <option value="1">Year I</option>
-              <option value="2">Year II</option>
-              <option value="3">Year III</option>
-              <option value="4">Year IV</option>
+              <option value="1">Year I · 2026-2030</option>
+              <option value="2">Year II · 2025-2029</option>
+              <option value="3">Year III · 2024-2028</option>
+              <option value="4">Year IV · 2023-2027</option>
             </select>
           </div>
 
@@ -2234,26 +2294,38 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     value={formData.year}
                     onChange={(e) => {
                       const newYear = Number(e.target.value)
-                      const validSems = allSemesters.filter((s) => s.year === newYear).map((s) => s.sem)
+                      const newSem = getSemesterForYear(newYear, formData.semester)
+                      const newBatch = getDefaultBatchForYear(newYear)
                       setFormData({
                         ...formData,
                         year: newYear,
-                        semester: validSems.includes(formData.semester) ? formData.semester : validSems[0],
+                        semester: newSem,
+                        batch: newBatch,
                       })
                     }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
                   >
-                    <option value={1}>Year 1</option>
-                    <option value={2}>Year 2</option>
-                    <option value={3}>Year 3</option>
-                    <option value={4}>Year 4</option>
+                    <option value={1}>Year 1 (2026-2030)</option>
+                    <option value={2}>Year 2 (2025-2029)</option>
+                    <option value={3}>Year 3 (2024-2028)</option>
+                    <option value={4}>Year 4 (2023-2027)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Semester *</label>
                   <select
                     value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const newSem = Number(e.target.value)
+                      const newYear = getYearFromSemester(newSem)
+                      const newBatch = getDefaultBatchForYear(newYear)
+                      setFormData({
+                        ...formData,
+                        semester: newSem,
+                        year: newYear,
+                        batch: newBatch,
+                      })
+                    }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {allSemesters
@@ -2279,16 +2351,57 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-[#071A3D]">Batch *</label>
+                    <span className="text-[9px] font-bold text-[#1455D9] bg-blue-50 px-1.5 py-0.2 rounded">
+                      Auto
+                    </span>
+                  </div>
                   <input
                     type="text"
                     autoComplete="off"
-                    placeholder="e.g. 2024-2028"
+                    placeholder="e.g. 2025-2029"
                     value={formData.batch}
-                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    onChange={(e) => {
+                      const val = e.target.value
+                      const matchedYear = getYearFromBatch(val)
+                      if (matchedYear) {
+                        const newSem = getSemesterForYear(matchedYear, formData.semester)
+                        setFormData({ ...formData, batch: val, year: matchedYear, semester: newSem })
+                      } else {
+                        setFormData({ ...formData, batch: val })
+                      }
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
                   />
                 </div>
+              </div>
+
+              {/* Quick Batch Selector Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap -mt-1 mb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Default Batches:</span>
+                {ACADEMIC_COHORTS.map((c) => (
+                  <button
+                    key={c.batch}
+                    type="button"
+                    onClick={() => {
+                      const newSem = getSemesterForYear(c.year, formData.semester)
+                      setFormData({
+                        ...formData,
+                        batch: c.batch,
+                        year: c.year,
+                        semester: newSem,
+                      })
+                    }}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                      formData.year === c.year && formData.batch === c.batch
+                        ? 'bg-[#1455D9] text-white border-[#1455D9]'
+                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                    }`}
+                  >
+                    Yr {c.year}: {c.batch}
+                  </button>
+                ))}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -2647,26 +2760,38 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     value={formData.year}
                     onChange={(e) => {
                       const newYear = Number(e.target.value)
-                      const validSems = allSemesters.filter((s) => s.year === newYear).map((s) => s.sem)
+                      const newSem = getSemesterForYear(newYear, formData.semester)
+                      const newBatch = getDefaultBatchForYear(newYear)
                       setFormData({
                         ...formData,
                         year: newYear,
-                        semester: validSems.includes(formData.semester) ? formData.semester : validSems[0],
+                        semester: newSem,
+                        batch: newBatch,
                       })
                     }}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
                   >
-                    <option value={1}>Year 1</option>
-                    <option value={2}>Year 2</option>
-                    <option value={3}>Year 3</option>
-                    <option value={4}>Year 4</option>
+                    <option value={1}>Year 1 (2026-2030)</option>
+                    <option value={2}>Year 2 (2025-2029)</option>
+                    <option value={3}>Year 3 (2024-2028)</option>
+                    <option value={4}>Year 4 (2023-2027)</option>
                   </select>
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
                   <select
                     value={formData.semester}
-                    onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
+                    onChange={(e) => {
+                      const newSem = Number(e.target.value)
+                      const newYear = getYearFromSemester(newSem)
+                      const newBatch = getDefaultBatchForYear(newYear)
+                      setFormData({
+                        ...formData,
+                        semester: newSem,
+                        year: newYear,
+                        batch: newBatch,
+                      })
+                    }}
                     className="w-full p-2.5 rounded-xl border border-gray-200 font-bold text-[#1455D9] focus:outline-none focus:border-[#1455D9]"
                   >
                     {allSemesters
@@ -2677,16 +2802,6 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         </option>
                       ))}
                   </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Batch (Cohort)</label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    value={formData.batch}
-                    onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
                 </div>
                 <div>
                   <label className="block font-bold text-[#071A3D] mb-1">Section</label>
@@ -2701,6 +2816,58 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                     <option value="D">Sec D</option>
                   </select>
                 </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-[#071A3D]">Batch (Cohort)</label>
+                    <span className="text-[9px] font-bold text-[#1455D9] bg-blue-50 px-1.5 py-0.2 rounded">
+                      Auto
+                    </span>
+                  </div>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    value={formData.batch}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      const matchedYear = getYearFromBatch(val)
+                      if (matchedYear) {
+                        const newSem = getSemesterForYear(matchedYear, formData.semester)
+                        setFormData({ ...formData, batch: val, year: matchedYear, semester: newSem })
+                      } else {
+                        setFormData({ ...formData, batch: val })
+                      }
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
+                    placeholder="e.g. 2025-2029"
+                  />
+                </div>
+              </div>
+
+              {/* Quick Batch Selector Chips in Edit Modal */}
+              <div className="flex items-center gap-1.5 flex-wrap -mt-1 mb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Default Batches:</span>
+                {ACADEMIC_COHORTS.map((c) => (
+                  <button
+                    key={c.batch}
+                    type="button"
+                    onClick={() => {
+                      const newSem = getSemesterForYear(c.year, formData.semester)
+                      setFormData({
+                        ...formData,
+                        batch: c.batch,
+                        year: c.year,
+                        semester: newSem,
+                      })
+                    }}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                      formData.year === c.year && formData.batch === c.batch
+                        ? 'bg-[#1455D9] text-white border-[#1455D9]'
+                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                    }`}
+                  >
+                    Yr {c.year}: {c.batch}
+                  </button>
+                ))}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -3001,6 +3168,133 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           </div>
         </div>
       )}
+      {/* MODAL: BATCH SYNCHRONIZATION & AUTO-UPDATE */}
+      {isBatchSyncModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-5 animate-in fade-in-50 zoom-in-95">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#1455D9] flex items-center justify-center font-bold">
+                  <RotateCcw className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-[#071A3D]">Batch &amp; Semester Progression</h3>
+                  <p className="text-[11px] text-gray-500">Auto-update student records to official default cohorts</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsBatchSyncModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Official Cohorts Reference Cards */}
+            <div className="space-y-2">
+              <p className="text-xs font-black uppercase text-gray-400 tracking-wider">Official Department Standards:</p>
+              <div className="grid grid-cols-2 gap-2">
+                {ACADEMIC_COHORTS.map((c) => (
+                  <div key={c.batch} className="p-2.5 rounded-xl border border-blue-100 bg-blue-50/50">
+                    <p className="text-xs font-black text-[#071A3D]">{c.label.split('·')[0].trim()}</p>
+                    <p className="text-xs font-black text-[#1455D9]">{c.batch}</p>
+                    <p className="text-[10px] text-gray-500">Semesters {c.semesters[0]} &amp; {c.semesters[1]}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Target Scope */}
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-[#071A3D] mb-1">Target Academic Year</label>
+                <select
+                  value={syncTargetYear}
+                  onChange={(e) => setSyncTargetYear(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
+                >
+                  <option value="ALL">All Academic Years (1 - 4)</option>
+                  <option value="1">1st Year Only (-> Batch 2026-2030)</option>
+                  <option value="2">2nd Year Only (-> Batch 2025-2029)</option>
+                  <option value="3">3rd Year Only (-> Batch 2024-2028)</option>
+                  <option value="4">4th Year Only (-> Batch 2023-2027)</option>
+                </select>
+              </div>
+
+              <label className="flex items-start gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={syncSemestersOption}
+                  onChange={(e) => setSyncSemestersOption(e.target.checked)}
+                  className="mt-0.5 rounded border-gray-300 text-[#1455D9] focus:ring-[#1455D9]"
+                />
+                <div>
+                  <span className="text-xs font-bold text-[#071A3D] block">Also synchronize Semesters automatically</span>
+                  <span className="text-[11px] text-gray-500">
+                    Ensures odd/even semester numbers match each student's academic year range.
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t">
+              <button
+                type="button"
+                onClick={() => setIsBatchSyncModalOpen(false)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSyncingBatches}
+                onClick={async () => {
+                  setIsSyncingBatches(true)
+                  try {
+                    const res = await fetch('/api/students/batch-sync', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        targetYear: syncTargetYear,
+                        syncSemesters: syncSemestersOption,
+                        forceAll: true,
+                      }),
+                    })
+                    const data = await res.json()
+                    if (res.ok && data.success) {
+                      toast.success(data.message || 'Batches synchronized successfully!')
+                      playNotificationChime()
+                      fetchStudents()
+                      setIsBatchSyncModalOpen(false)
+                    } else {
+                      alert(data.message || 'Failed to sync batches')
+                    }
+                  } catch (err: any) {
+                    alert('Error syncing batches: ' + err.message)
+                  } finally {
+                    setIsSyncingBatches(false)
+                  }
+                }}
+                className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white text-xs font-black shadow-md flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isSyncingBatches ? (
+                  <>
+                    <RotateCcw className="w-4 h-4 animate-spin" />
+                    <span>Synchronizing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Run Auto-Sync Now</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+

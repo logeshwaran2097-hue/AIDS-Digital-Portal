@@ -5,6 +5,14 @@ import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
 import {
+  YEAR_TO_DEFAULT_BATCH,
+  getDefaultBatchForYear,
+  getYearFromBatch,
+  getYearFromSemester,
+  getSemesterForYear,
+  ACADEMIC_COHORTS,
+} from '@/lib/academicBatch'
+import {
   User,
   Mail,
   Phone,
@@ -164,7 +172,7 @@ export function StudentProfileView({
     department: initialStudent.department || 'Artificial Intelligence & Data Science',
     degreeProgram: 'B.Tech Artificial Intelligence & Data Science',
     regulation: 'R-2021 (Autonomous System)',
-    batch: initialStudent.batch || '',
+    batch: initialStudent.batch || getDefaultBatchForYear(initialStudent.year || 1),
     year: initialStudent.year || 1,
     semester: initialStudent.semester || 1,
     section: initialStudent.section || 'A',
@@ -1521,36 +1529,76 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Academic Batch</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-bold text-[#071A3D]">Academic Batch (Cohort)</label>
+                        <span className="text-[10px] font-bold text-[#1455D9] bg-blue-50 px-2 py-0.5 rounded-md">
+                          Year {formData.year} Standard: {getDefaultBatchForYear(formData.year)}
+                        </span>
+                      </div>
                       <input
                         type="text"
                         value={formData.batch}
-                        onChange={(e) => setFormData({ ...formData, batch: e.target.value })}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                        placeholder="2023 - 2027 (4 Year Program)"
+                        onChange={(e) => {
+                          const val = e.target.value
+                          const matchedYear = getYearFromBatch(val)
+                          if (matchedYear) {
+                            const newSem = getSemesterForYear(matchedYear, formData.semester)
+                            setFormData({ ...formData, batch: val, year: matchedYear, semester: newSem })
+                          } else {
+                            setFormData({ ...formData, batch: val })
+                          }
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-bold text-[#071A3D]"
+                        placeholder="e.g. 2025-2029"
                       />
+                      {/* Quick Cohort Select Chips */}
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {ACADEMIC_COHORTS.map((c) => {
+                          const isCurrent = formData.batch === c.batch && formData.year === c.year
+                          return (
+                            <button
+                              key={c.batch}
+                              type="button"
+                              onClick={() => {
+                                const newSem = getSemesterForYear(c.year, formData.semester)
+                                setFormData({
+                                  ...formData,
+                                  batch: c.batch,
+                                  year: c.year,
+                                  semester: newSem,
+                                })
+                              }}
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all cursor-pointer ${
+                                isCurrent
+                                  ? 'bg-[#1455D9] text-white border-[#1455D9] shadow-xs'
+                                  : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                              }`}
+                            >
+                              {c.yearName}: {c.batch}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <label className="block font-bold text-[#071A3D] mb-1">Year</label>
+                      <label className="block font-bold text-[#071A3D] mb-1">Academic Year</label>
                       <select
                         value={formData.year}
                         onChange={(e) => {
                           const y = Number(e.target.value)
-                          const minS = (y - 1) * 2 + 1
-                          const maxS = y * 2
-                          const currentSem = formData.semester
-                          const newSem = (currentSem >= minS && currentSem <= maxS) ? currentSem : minS
-                          setFormData({ ...formData, year: y, semester: newSem })
+                          const newSem = getSemesterForYear(y, formData.semester)
+                          const newBatch = getDefaultBatchForYear(y)
+                          setFormData({ ...formData, year: y, semester: newSem, batch: newBatch })
                         }}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold text-[#071A3D]"
                       >
-                        <option value={1}>Year 1</option>
-                        <option value={2}>Year 2</option>
-                        <option value={3}>Year 3</option>
-                        <option value={4}>Year 4</option>
+                        <option value={1}>1st Year (2026-2030)</option>
+                        <option value={2}>2nd Year (2025-2029)</option>
+                        <option value={3}>3rd Year (2024-2028)</option>
+                        <option value={4}>4th Year (2023-2027)</option>
                       </select>
                     </div>
 
@@ -1558,8 +1606,13 @@ Provide concise, highly actionable, industry-relevant guidance (recommended tool
                       <label className="block font-bold text-[#071A3D] mb-1">Semester</label>
                       <select
                         value={formData.semester}
-                        onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold"
+                        onChange={(e) => {
+                          const s = Number(e.target.value)
+                          const newYear = getYearFromSemester(s)
+                          const newBatch = getDefaultBatchForYear(newYear)
+                          setFormData({ ...formData, semester: s, year: newYear, batch: newBatch })
+                        }}
+                        className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] bg-white font-bold text-[#1455D9]"
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8]
                           .filter((s) => Math.ceil(s / 2) === formData.year)

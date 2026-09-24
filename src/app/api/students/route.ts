@@ -6,6 +6,7 @@ import { parseSafeDateOfBirth } from '@/lib/utils'
 import { getSession } from '@/lib/auth'
 import { validateBody, adminCreateStudentSchema, studentSelfUpdateSchema, adminUpdateStudentSchema } from '@/lib/validations/apiValidation'
 import { invalidateDbCache } from '@/lib/dbCache'
+import { getDefaultBatchForYear, getSemesterForYear } from '@/lib/academicBatch'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -88,7 +89,7 @@ export async function GET(request: Request) {
           department: s.department || 'Artificial Intelligence & Data Science',
           year: s.year,
           semester: s.semester,
-          batch: s.batch || '',
+          batch: s.batch || getDefaultBatchForYear(s.year),
           section: s.section,
           advisorName: s.advisorName || '',
           status: effectiveStatus,
@@ -175,7 +176,7 @@ export async function GET(request: Request) {
         department: s.department || 'Artificial Intelligence & Data Science',
         year: s.year,
         semester: s.semester,
-        batch: (s as any).batch || '',
+        batch: (s as any).batch || getDefaultBatchForYear(s.year),
         section: s.section,
         advisorName: resolvedAdvisor,
         status: effectiveStatus,
@@ -421,7 +422,7 @@ export async function POST(request: Request) {
           department: department || 'Artificial Intelligence & Data Science',
           year: Number(year) || 1,
           semester: Number(semester) || 1,
-          batch: batch ? String(batch).trim() : null,
+          batch: (batch && String(batch).trim()) ? String(batch).trim() : getDefaultBatchForYear(year),
           section: section || 'A',
           advisorName: advisorName ? String(advisorName).trim() : null,
           parentPhone: parentPhone ? String(parentPhone).trim() : null,
@@ -661,7 +662,11 @@ export async function PUT(request: Request) {
             ...(isAdmin && department ? { department: department.trim() } : {}),
             ...(isAdmin && year !== undefined ? { year: Number(year) } : {}),
             ...(isAdmin && semester !== undefined ? { semester: Number(semester) } : {}),
-            ...(isAdmin && batch !== undefined ? { batch: String(batch).trim() } : {}),
+            ...(isAdmin && batch !== undefined && String(batch).trim() !== ''
+              ? { batch: String(batch).trim() }
+              : (isAdmin && year !== undefined && !batch)
+              ? { batch: getDefaultBatchForYear(Number(year)) }
+              : {}),
             ...(isAdmin && section !== undefined ? { section: section.trim() } : {}),
             ...(isAdmin && advisorName !== undefined ? { advisorName: String(advisorName).trim() } : {}),
             ...(parentPhone !== undefined ? { parentPhone: parentPhone ? String(parentPhone).trim() : null } : {}),
