@@ -274,27 +274,44 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
 
       {/* Birthday Popup */}
       {showBirthdayPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3D]/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center border-4 border-[#22C7E8]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#071A3D]/90 backdrop-blur-md animate-in fade-in duration-500">
+          <div className="relative w-full max-w-lg bg-white/10 backdrop-blur-xl rounded-[2.5rem] shadow-[0_0_60px_rgba(34,199,232,0.3)] border border-white/20 p-10 text-center overflow-hidden transform transition-all animate-in zoom-in-95 duration-500">
+            {/* Animated glowing orbs in background */}
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full blur-[80px] opacity-50 mix-blend-screen animate-pulse" />
+            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#1455D9] to-[#22C7E8] rounded-full blur-[80px] opacity-50 mix-blend-screen animate-pulse" style={{ animationDelay: '1s' }} />
+            
+            {/* Close button */}
             <button 
               onClick={() => setShowBirthdayPopup(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+              className="absolute top-6 right-6 p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all z-10"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
-            <div className="w-24 h-24 mx-auto bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white rounded-full flex items-center justify-center mb-6 shadow-lg animate-bounce ring-4 ring-[#22C7E8]/30">
-              <Sparkles className="w-12 h-12" />
+
+            {/* Icon */}
+            <div className="relative z-10 mx-auto w-32 h-32 mb-6 group">
+              <div className="absolute inset-0 bg-gradient-to-tr from-pink-500 via-purple-500 to-[#22C7E8] rounded-full animate-[spin_4s_linear_infinite] blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
+              <div className="relative h-full w-full bg-[#071A3D] rounded-full flex items-center justify-center border-2 border-white/20 shadow-inner">
+                 <span className="text-6xl animate-bounce drop-shadow-xl" style={{ animationDuration: '2s' }}>🎂</span>
+              </div>
             </div>
-            <h2 className="text-2xl font-black text-[#071A3D] mb-3 uppercase tracking-wider">Happy Birthday!</h2>
-            <p className="text-gray-600 font-medium mb-8 text-sm">
-              Dear <span className="font-bold text-[#1455D9]">{currentUser.name}</span>, wishing you a fantastic birthday and a successful year ahead! 🎉
-            </p>
-            <button 
-              onClick={() => setShowBirthdayPopup(false)}
-              className="w-full py-3 px-4 bg-gradient-to-r from-[#071A3D] to-[#1455D9] hover:from-[#051330] hover:to-[#0A2A5E] text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:scale-[1.02]"
-            >
-              Thank You!
-            </button>
+
+            {/* Text */}
+            <div className="relative z-10">
+              <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-[#22C7E8] mb-4 tracking-tight drop-shadow-sm">
+                HAPPY BIRTHDAY!
+              </h2>
+              <p className="text-white/90 font-medium mb-8 text-lg leading-relaxed px-4">
+                Dear <span className="font-bold text-white text-xl">{currentUser.name}</span>,<br/>wishing you a day filled with joy, laughter, and a successful year ahead! ✨
+              </p>
+              
+              <button 
+                onClick={() => setShowBirthdayPopup(false)}
+                className="w-full sm:w-2/3 mx-auto py-4 px-6 bg-gradient-to-r from-white to-gray-50 hover:to-white text-[#071A3D] rounded-2xl font-black text-lg transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2"
+              >
+                Let's Celebrate! 🎉
+              </button>
+            </div>
           </div>
         </div>
       )}
