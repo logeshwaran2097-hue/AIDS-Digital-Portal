@@ -2628,7 +2628,7 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
 
       // Save and Download
       const mergedPdfBytes = await mergedPdf.save()
-      const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' })
+      const blob = new Blob([mergedPdfBytes as any], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
 
       const a = document.createElement('a')
