@@ -354,9 +354,20 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
               <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-[#22C7E8] mb-4 tracking-tight drop-shadow-sm">
                 HAPPY BIRTHDAY!
               </h2>
-              <p className="text-white/90 font-medium mb-8 text-lg leading-relaxed px-4">
-                Dear <span className="font-bold text-white text-xl">Birthday Girl / Admin</span>,<br/>wishing you a day filled with joy, laughter, and a successful year ahead! ✨
-              </p>
+              <div className="text-white/90 font-medium mb-8 text-sm sm:text-base leading-relaxed px-2 space-y-4">
+                <p>
+                  Dear <span className="font-bold text-white text-lg">Birthday Girl / Admin</span>,
+                </p>
+                <p>
+                  On this special day, we wish you immense joy, boundless laughter, and extraordinary success in all your future endeavors! ✨
+                </p>
+                <p>
+                  May this year bring you closer to your dreams and aspirations. Keep shining bright and making us proud!
+                </p>
+                <p className="pt-2 text-[#22C7E8] font-semibold italic">
+                  — With warm wishes from the Digital Portal of AI&amp;DS
+                </p>
+              </div>
               
               <button 
                 onClick={() => setShowTestPopup(false)}
