@@ -50,6 +50,7 @@ export async function GET() {
       from: `"Digital Portal of AI&DS" <${smtpUser}>`,
       to: targetEmail,
       subject: `🎉 Happy Birthday, ${userName}! (Live Test)`,
+      html: `
         <div style="background-color: #F7F2F0; padding: 40px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
           <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #EAE0DF; border-top: 5px solid #C07C88; padding: 50px 40px; text-align: center; box-shadow: 0 15px 35px rgba(192, 124, 136, 0.1); border-radius: 8px;">
             <h1 style="color: #C07C88; font-size: 38px; font-family: 'Georgia', serif; font-weight: normal; letter-spacing: 3px; margin-bottom: 25px; text-transform: uppercase;">Happy Birthday</h1>
