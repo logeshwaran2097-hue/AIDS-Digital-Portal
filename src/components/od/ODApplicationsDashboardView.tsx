@@ -179,22 +179,6 @@ export function ODApplicationsDashboardView({
   const [selectedODModal, setSelectedODModal] = useState<any | null>(null)
   const [editApplicationData, setEditApplicationData] = useState<any | null>(null)
 
-  const handleDeleteApplication = async (appId: string) => {
-    if (!confirm('Are you sure you want to withdraw and delete this application?')) return
-    
-    try {
-      const res = await fetch(`/api/od-applications?id=${appId}`, { method: 'DELETE' })
-      if (res.ok) {
-        toast.success('Application deleted successfully')
-        fetchApplications(true)
-      } else {
-        const data = await res.json()
-        toast.error(data.message || 'Failed to delete application')
-      }
-    } catch (e) {
-      toast.error('Network error')
-    }
-  }
 
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null)
@@ -334,7 +318,7 @@ export function ODApplicationsDashboardView({
     
     setActionLoadingId(id);
     try {
-      const res = await fetch(/api/od-applications?id=, {
+      const res = await fetch(`/api/od-applications?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
       const data = await res.json();
