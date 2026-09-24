@@ -105,20 +105,29 @@ export async function GET(req: Request) {
         to: user.email,
         subject: `🎉 Happy Birthday, ${user.name}!`,
         html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-w-md; margin: 0 auto; background-color: #071A3D; color: #ffffff; padding: 40px; border-radius: 20px; text-align: center; border: 4px solid #22C7E8;">
-            <h1 style="color: #22C7E8; font-size: 32px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">Happy Birthday!</h1>
-            <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px; color: #e2e8f0;">
-              Dear <strong>${user.name}</strong>,
-            </p>
-            <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px; color: #e2e8f0;">
-              On this special day, we wish you immense joy, boundless laughter, and extraordinary success in all your future endeavors! ✨
-            </p>
-            <p style="font-size: 18px; line-height: 1.6; margin-bottom: 30px; color: #e2e8f0;">
-              May this year bring you closer to your dreams and aspirations. Keep shining bright and making us proud!
-            </p>
-            <p style="font-size: 16px; font-weight: bold; font-style: italic; color: #22C7E8;">
-              — With warm wishes from the Digital Portal of AI&amp;DS
-            </p>
+          <div style="background-color: #0B0E14; padding: 40px 20px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #121826; border: 1px solid #2A3441; border-top: 4px solid #D4AF37; padding: 50px 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+              <h1 style="color: #D4AF37; font-size: 36px; font-family: 'Georgia', serif; font-weight: normal; letter-spacing: 4px; margin-bottom: 30px; text-transform: uppercase;">Happy Birthday</h1>
+              
+              <p style="font-size: 20px; color: #FFFFFF; font-weight: 300; letter-spacing: 1px; margin-bottom: 25px;">
+                Dear <strong style="font-weight: 600; color: #D4AF37;">${user.name}</strong>,
+              </p>
+              
+              <div style="height: 1px; width: 60px; background-color: #D4AF37; margin: 0 auto 30px auto;"></div>
+              
+              <p style="font-size: 16px; line-height: 1.8; color: #A0ABC0; margin-bottom: 25px;">
+                On this special day, we wish you immense joy, boundless laughter, and extraordinary success in all your future endeavors. 
+              </p>
+              
+              <p style="font-size: 16px; line-height: 1.8; color: #A0ABC0; margin-bottom: 40px;">
+                May this year bring you closer to your dreams and aspirations. Keep shining bright and making us exceptionally proud.
+              </p>
+              
+              <p style="font-size: 14px; font-style: italic; color: #718096; letter-spacing: 1px;">
+                Warmest wishes,<br>
+                <span style="color: #D4AF37; font-weight: bold; display: inline-block; margin-top: 10px;">DIGITAL PORTAL OF AI&DS</span>
+              </p>
+            </div>
           </div>
         `
       }
