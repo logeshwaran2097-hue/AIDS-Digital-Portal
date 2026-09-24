@@ -103,6 +103,7 @@ export const adminNavItems: NavItem[] = [
   { label: 'Reports', href: '/admin/reports', icon: <BarChart3 className="h-4 w-4" /> },
   { label: 'Activity Logs', href: '/admin/activity-logs', icon: <Newspaper className="h-4 w-4" /> },
   { label: 'File Management', href: '/admin/files', icon: <FileText className="h-4 w-4" /> },
+  { label: 'AI Agents', href: '/admin/ai', icon: <Bot className="h-4 w-4" /> },
   { label: 'System Settings', href: '/admin/settings', icon: <Settings className="h-4 w-4" /> },
   { label: 'Profile', href: '/admin/profile', icon: <User className="h-4 w-4" /> },
   { label: 'About Portal', href: '/admin/about', icon: <Info className="h-4 w-4" /> },
