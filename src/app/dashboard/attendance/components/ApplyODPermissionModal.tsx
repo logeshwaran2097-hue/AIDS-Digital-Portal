@@ -561,10 +561,13 @@ export function ApplyODPermissionModal({
         registrationProofName: registrationProofName || undefined,
         abstractOrLetter: abstractOrLetter || undefined,
         abstractOrLetterName: abstractOrLetterName || undefined,
+        ...(editData?.id && { auditLogId: editData.id }),
       }
 
+      const method = editData?.id ? 'PUT' : 'POST';
+
       const res = await fetch('/api/od-applications', {
-        method: 'POST',
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })

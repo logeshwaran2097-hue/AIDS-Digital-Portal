@@ -329,6 +329,28 @@ export function ODApplicationsDashboardView({
   }
 
   // Submit Decline
+  const handleDeleteApplication = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this OD application?')) return;
+    
+    setActionLoadingId(id);
+    try {
+      const res = await fetch(/api/od-applications?id=, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'Application deleted successfully.');
+        fetchApplications(true);
+      } else {
+        toast.error(data.message || 'Failed to delete application.');
+      }
+    } catch (err) {
+      toast.error('Network error deleting application.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const handleConfirmDecline = async () => {
     if (!declineTarget) return
     if (!declineRemarks.trim()) {
@@ -1272,6 +1294,31 @@ export function ODApplicationsDashboardView({
 
                     {/* Workflow Actions */}
                     <div className="flex items-center gap-2 flex-wrap">
+                      {/* Student Controls */}
+                      {viewRole === 'student' && app.status === 'pending_advisor_approval' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditApplicationData(app);
+                              setIsApplyModalOpen(true);
+                            }}
+                            className="px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteApplication(app.id)}
+                            className="px-3.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </>
+                      )}
+
                       {/* Advisor Controls */}
                       {(viewRole === 'advisor' || viewRole === 'admin') && isAdvisorPending && (
                         <>
