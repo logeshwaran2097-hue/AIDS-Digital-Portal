@@ -80,6 +80,7 @@ export function StudentAchievementsView({
     title: '',
     description: '',
     category: 'Hackathon & Coding',
+    customCategory: '',
     awardName: '',
     eventName: '',
     date: new Date().toISOString().split('T')[0],
@@ -161,6 +162,7 @@ export function StudentAchievementsView({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          category: formData.category === 'Other' ? (formData.customCategory || 'Other') : formData.category,
           certificateUrl: proofFile.dataUrl,
           recipientName: userName,
           recipientType: 'student',
@@ -183,6 +185,7 @@ export function StudentAchievementsView({
           title: '',
           description: '',
           category: 'Hackathon & Coding',
+          customCategory: '',
           awardName: '',
           eventName: '',
           date: new Date().toISOString().split('T')[0],
@@ -416,17 +419,40 @@ export function StudentAchievementsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-gray-700 mb-1">Category *</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="Hackathon & Coding">Hackathon &amp; Coding</option>
-                    <option value="Research & Publications">Research &amp; Publications</option>
-                    <option value="Paper Presentations">Paper Presentations</option>
-                    <option value="Symposium & Competitions">Symposium &amp; Competitions</option>
-                    <option value="Certifications & Honors">Certifications &amp; Honors</option>
-                  </select>
+                  {formData.category === 'Other' ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        required
+                        placeholder="Type your category..."
+                        value={formData.customCategory}
+                        onChange={(e) => setFormData({ ...formData, customCategory: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, category: 'Hackathon & Coding', customCategory: '' })}
+                        className="px-3 py-2 bg-gray-100 text-gray-500 rounded-xl hover:bg-gray-200 font-bold"
+                        title="Cancel custom category"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value, customCategory: '' })}
+                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    >
+                      <option value="Hackathon & Coding">Hackathon &amp; Coding</option>
+                      <option value="Research & Publications">Research &amp; Publications</option>
+                      <option value="Paper Presentations">Paper Presentations</option>
+                      <option value="Symposium & Competitions">Symposium &amp; Competitions</option>
+                      <option value="Certifications & Honors">Certifications &amp; Honors</option>
+                      <option value="Other">Other (Type Custom Category)</option>
+                    </select>
+                  )}
                 </div>
 
                 <div>
