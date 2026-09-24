@@ -88,6 +88,7 @@ export const adminNavItems: NavItem[] = [
   { label: 'HOD', href: '/admin/hod', icon: <Users className="h-4 w-4" /> },
   { label: 'Admins', href: '/admin/admins', icon: <User className="h-4 w-4" /> },
   { label: 'Roles & Permissions', href: '/admin/roles', icon: <ShieldCheck className="h-4 w-4" /> },
+  { label: 'Subjects', href: '/admin/subjects', icon: <BookOpen className="h-4 w-4" /> },
   { label: 'Academics', href: '/admin/academics', icon: <BookOpen className="h-4 w-4" /> },
   { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" /> },
   { label: 'GPA & Marksheets', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" /> },
