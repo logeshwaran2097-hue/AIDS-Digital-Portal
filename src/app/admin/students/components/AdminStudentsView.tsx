@@ -3215,10 +3215,10 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   className="w-full p-2.5 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9]"
                 >
                   <option value="ALL">All Academic Years (1 - 4)</option>
-                  <option value="1">1st Year Only (-> Batch 2026-2030)</option>
-                  <option value="2">2nd Year Only (-> Batch 2025-2029)</option>
-                  <option value="3">3rd Year Only (-> Batch 2024-2028)</option>
-                  <option value="4">4th Year Only (-> Batch 2023-2027)</option>
+                  <option value="1">1st Year Only (→ Batch 2026-2030)</option>
+                  <option value="2">2nd Year Only (→ Batch 2025-2029)</option>
+                  <option value="3">3rd Year Only (→ Batch 2024-2028)</option>
+                  <option value="4">4th Year Only (→ Batch 2023-2027)</option>
                 </select>
               </div>
 
