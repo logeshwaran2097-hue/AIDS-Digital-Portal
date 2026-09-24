@@ -205,3 +205,78 @@ export async function DELETE(request: Request) {
     )
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const session = await requireRoleSession(['admin', 'hod'])
+    const body = await request.json()
+    
+    if (!body.id) {
+      return NextResponse.json({ success: false, message: 'Subject ID is required for update' }, { status: 400 })
+    }
+
+    const {
+      id,
+      code,
+      name,
+      credits = 4,
+      courseType = 'Theory',
+      category = 'Professional Core (PC)',
+      facultyInCharge = '',
+      description = '',
+      semester = 1,
+    } = body
+
+    const metaDescription = JSON.stringify({
+      semester: Number(semester),
+      category,
+      facultyInCharge,
+      courseType,
+      exactCredits: Number(credits),
+      notes: description,
+    })
+
+    const subject = await prisma.subject.update({
+      where: { id },
+      data: {
+        code: code.toUpperCase().trim(),
+        name: name.trim(),
+        credits: Math.round(Number(credits)),
+        description: metaDescription,
+      },
+    })
+
+    await prisma.auditLog.create({
+      data: {
+        userName: session.name || 'System Administrator',
+        action: 'UPDATE_SUBJECT',
+        module: 'Curriculum',
+        details: `Updated course: ${subject.code} - ${subject.name}`,
+        status: 'success',
+      },
+    }).catch(() => {})
+
+    return NextResponse.json({
+      success: true,
+      subject: {
+        id: subject.id,
+        code: subject.code,
+        name: subject.name,
+        credits: Number(credits),
+        courseType,
+        category,
+        facultyInCharge,
+        semester: Number(semester),
+        description: metaDescription,
+      },
+      message: `Course ${subject.code} updated successfully`,
+    })
+  } catch (error: any) {
+    console.error('Update subject error:', error)
+    return NextResponse.json(
+      { success: false, message: error.message || 'Failed to update subject' },
+      { status: 500 }
+    )
+  }
+}
+

@@ -7,6 +7,7 @@ import {
   Trash2,
   X,
   Search,
+  Edit2,
 } from 'lucide-react'
 
 export interface SubjectItem {
@@ -31,6 +32,7 @@ export function AdminSubjectsView({
   const [subjects, setSubjects] = useState<SubjectItem[]>(initialSubjects)
   const [searchQuery, setSearchQuery] = useState('')
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     code: '',
@@ -59,17 +61,21 @@ export function AdminSubjectsView({
     }
 
     try {
-      const res = await fetch('/api/admin/academics', {
-        method: 'POST',
+      const url = '/api/admin/academics'
+      const method = editingId ? 'PUT' : 'POST'
+      const payload = editingId ? { ...formData, id: editingId } : formData
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Failed to save subject')
+        throw new Error(data.message || `Failed to ${editingId ? 'update' : 'save'} subject`)
       }
 
-      const newSub: SubjectItem = {
+      const updatedSub: SubjectItem = {
         id: data.subject.id,
         code: data.subject.code,
         name: data.subject.name,
@@ -82,8 +88,15 @@ export function AdminSubjectsView({
         description: data.subject.description,
         units: data.subject.units || [],
       }
-      setSubjects([...subjects.filter(s => s.id !== newSub.id && s.code !== newSub.code), newSub])
+
+      if (editingId) {
+        setSubjects(subjects.map(s => (s.id === updatedSub.id ? updatedSub : s)))
+      } else {
+        setSubjects([...subjects.filter(s => s.id !== updatedSub.id && s.code !== updatedSub.code), updatedSub])
+      }
+
       setIsAddModalOpen(false)
+      setEditingId(null)
       setFormData({
         code: '',
         name: '',
@@ -95,8 +108,23 @@ export function AdminSubjectsView({
         description: '',
       })
     } catch (err: any) {
-      alert(err.message || 'Failed to add subject')
+      alert(err.message || `Failed to ${editingId ? 'update' : 'add'} subject`)
     }
+  }
+
+  const handleEditClick = (sub: SubjectItem) => {
+    setEditingId(sub.id)
+    setFormData({
+      code: sub.code,
+      name: sub.name,
+      credits: sub.credits,
+      courseType: sub.courseType || 'Theory',
+      category: sub.category,
+      facultyInCharge: sub.facultyInCharge,
+      semester: sub.semester,
+      description: sub.description || '',
+    })
+    setIsAddModalOpen(true)
   }
 
   const handleDelete = async (id: string) => {
@@ -136,7 +164,20 @@ export function AdminSubjectsView({
 
         <div className="flex items-center flex-wrap gap-2.5">
           <button
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setEditingId(null)
+              setFormData({
+                code: '',
+                name: '',
+                credits: 4,
+                courseType: 'Theory',
+                category: 'Professional Core (PC)',
+                facultyInCharge: '',
+                semester: 1,
+                description: '',
+              })
+              setIsAddModalOpen(true)
+            }}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105"
           >
             <Plus className="w-4 h-4" /> + Add New Subject
@@ -185,7 +226,14 @@ export function AdminSubjectsView({
                     <td className="px-6 py-4 font-bold text-[#071A3D]">{sub.name}</td>
                     <td className="px-6 py-4 text-gray-500">Sem {sub.semester}</td>
                     <td className="px-6 py-4 text-center font-bold">{sub.credits}</td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        onClick={() => handleEditClick(sub)}
+                        className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors cursor-pointer inline-flex items-center justify-center"
+                        title="Edit Subject"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => handleDelete(sub.id)}
                         className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer inline-flex items-center justify-center"
@@ -213,7 +261,7 @@ export function AdminSubjectsView({
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-lg font-black text-[#071A3D]">Add New Subject</h3>
+              <h3 className="text-lg font-black text-[#071A3D]">{editingId ? 'Edit Subject' : 'Add New Subject'}</h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
                 className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
@@ -298,7 +346,7 @@ export function AdminSubjectsView({
                   type="submit"
                   className="px-5 py-2.5 rounded-xl bg-[#1455D9] hover:bg-[#0f44b0] text-white font-bold cursor-pointer shadow-md"
                 >
-                  Save Subject
+                  {editingId ? 'Update Subject' : 'Save Subject'}
                 </button>
               </div>
             </form>
