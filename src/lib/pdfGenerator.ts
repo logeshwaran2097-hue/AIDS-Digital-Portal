@@ -2553,6 +2553,44 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
     doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
     doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
 
+    // Document Title
+    const currentY = beamY + 15
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(7, 26, 61)
+    doc.text(options.title || 'Official Academic Resource', pageWidth / 2, currentY, { align: 'center' })
+    
+    if (options.resourceType) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(21, 87, 192)
+      doc.text(options.resourceType.replace(/_/g, ' ').toUpperCase(), pageWidth / 2, currentY + 7, { align: 'center' })
+    }
+
+    if (options.semester) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 115, 135)
+      doc.text(`Semester ${options.semester}`, pageWidth / 2, currentY + 13, { align: 'center' })
+    }
+
+    if (options.uploadedByName) {
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100, 115, 135)
+      doc.text(`Uploaded by: ${options.uploadedByName}`, pageWidth / 2, currentY + 19, { align: 'center' })
+    }
+
+    if (options.description) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(75, 85, 105)
+      const splitDesc = doc.splitTextToSize(options.description, contentW - 20)
+      doc.text(splitDesc, pageWidth / 2, currentY + 29, { align: 'center' })
+    }
+
+    drawDigitalPortalDocumentNotice(doc, {
+      y: pageHeight - 35,
+      contentW,
+      marginX,
+      recordType: options.resourceType || 'ACADEMIC RECORD',
+      verificationCode: 'VSB-DIGITAL-PORTAL-E-RECORD',
+      repositoryName: 'Centralized Autonomous ERP Ledger',
+      issuingAuthority: 'Office of HOD (AI & DS)',
+      boxHeight: 24,
+      isCompact: false,
+    })
+
     // Footer on cover
     doc.setFont('helvetica', 'normal'); doc.setFontSize(5.6); doc.setTextColor(140, 155, 175)
     doc.text('DIGITAL PORTAL DOCUMENT · V.S.B. ENGINEERING COLLEGE (AUTONOMOUS) · AI & DS PORTAL', pageWidth / 2, pageHeight - 5.5, { align: 'center' })
@@ -2561,48 +2599,57 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
   try {
     const resp = await fetch(fileUrl)
     if (resp.ok) {
-      const arrayBuffer = await resp.arrayBuffer()
-      const pdfjsLib = await import('pdfjs-dist')
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
-      const pdfSrc = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise
-      const numPages = pdfSrc.numPages
-      const isLabManual = resourceType === 'LAB_MANUAL'
+      const originalPdfBytes = await resp.arrayBuffer()
       
-      for (let i = 1; i <= numPages; i++) {
-        if (i > 1) {
-          doc.addPage()
-        }
-        
-        const shouldRenderHeader = !isLabManual || i === 1
-        
-        if (shouldRenderHeader) {
-          renderHeader()
-        }
+      // Render Cover Page
+      renderHeader()
+      const coverPdfBytes = doc.output('arraybuffer')
 
-        const page = await pdfSrc.getPage(i)
-        const viewport = page.getViewport({ scale: 2.0 })
-        const canvas = document.createElement('canvas')
-        canvas.width = viewport.width; canvas.height = viewport.height
-        const ctx = canvas.getContext('2d')!
-        await page.render({ canvasContext: ctx, viewport }).promise
-        const imgData = canvas.toDataURL('image/jpeg', 0.92)
-        
-        if (shouldRenderHeader) {
-          const a4W = 186; const a4H = 232 // contentW and available height below header
-          const ratio = Math.min(a4W / (viewport.width / 2), a4H / (viewport.height / 2))
-          const imgW = (viewport.width / 2) * ratio; const imgH = (viewport.height / 2) * ratio
-          doc.addImage(imgData, 'JPEG', 12 + (a4W - imgW) / 2, 50 + (a4H - imgH) / 2, imgW, imgH)
-        } else {
-          const a4W = 210; const a4H = 297
-          const ratio = Math.min(a4W / (viewport.width / 2), a4H / (viewport.height / 2))
-          const imgW = (viewport.width / 2) * ratio; const imgH = (viewport.height / 2) * ratio
-          doc.addImage(imgData, 'JPEG', (a4W - imgW) / 2, (a4H - imgH) / 2, imgW, imgH)
-        }
+      // Dynamically import pdf-lib to avoid SSR issues
+      const { PDFDocument } = await import('pdf-lib')
+
+      // Load both PDFs
+      const originalDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true })
+      const coverDoc = await PDFDocument.load(coverPdfBytes)
+
+      // Create new merged PDF
+      const mergedPdf = await PDFDocument.create()
+
+      // Copy cover page
+      const [coverPage] = await mergedPdf.copyPages(coverDoc, [0])
+      mergedPdf.addPage(coverPage)
+
+      // Copy all original pages
+      const pageIndices = Array.from({ length: originalDoc.getPageCount() }, (_, i) => i)
+      const originalPages = await mergedPdf.copyPages(originalDoc, pageIndices)
+      for (const page of originalPages) {
+        mergedPdf.addPage(page)
       }
+
+      // Save and Download
+      const mergedPdfBytes = await mergedPdf.save()
+      const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } else {
+      throw new Error('Failed to fetch the original resource file.')
     }
   } catch (err) {
-    console.warn('downloadWithDeptHeader: could not embed original pages:', err)
+    console.error('Error generating PDF with cover:', err)
+    // Fallback to direct download if PDF merge fails
+    const a = document.createElement('a')
+    a.href = fileUrl
+    a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
+    a.target = '_blank'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
-
-  doc.save('VSB_' + fileName.replace(/\.[^/.]+$/, '') + '.pdf')
 }
