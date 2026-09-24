@@ -272,38 +272,38 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
         }}
       />
 
-      {/* Birthday Popup */}
+      {/* Birthday Popup - Pearl White & Rose Gold Theme */}
       {showBirthdayPopup && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#071A3D]/90 backdrop-blur-md animate-in fade-in duration-500">
-          <div className="relative w-full max-w-lg bg-white/10 backdrop-blur-xl rounded-[2.5rem] shadow-[0_0_60px_rgba(34,199,232,0.3)] border border-white/20 p-10 text-center overflow-hidden transform transition-all animate-in zoom-in-95 duration-500">
-            {/* Animated glowing orbs in background */}
-            <div className="absolute -top-20 -left-20 w-64 h-64 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full blur-[80px] opacity-50 mix-blend-screen animate-pulse" />
-            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-gradient-to-br from-[#1455D9] to-[#22C7E8] rounded-full blur-[80px] opacity-50 mix-blend-screen animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-500">
+          <div className="relative w-full max-w-lg bg-[#F7F2F0] rounded-2xl shadow-2xl border-t-[6px] border-[#C07C88] p-10 text-center overflow-hidden transform transition-all animate-in zoom-in-95 duration-500">
+            {/* Elegant Background Accents */}
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#FFFFFF] to-transparent opacity-80" />
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#EAE0DF] rounded-full blur-3xl opacity-60 animate-pulse" />
             
             {/* Close button */}
             <button 
               onClick={() => setShowBirthdayPopup(false)}
-              className="absolute top-6 right-6 p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all z-10"
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-[#C07C88] hover:bg-white rounded-full transition-all z-10 shadow-sm"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
 
             {/* Icon */}
-            <div className="relative z-10 mx-auto w-32 h-32 mb-6 group">
-              <div className="absolute inset-0 bg-gradient-to-tr from-pink-500 via-purple-500 to-[#22C7E8] rounded-full animate-[spin_4s_linear_infinite] blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
-              <div className="relative h-full w-full bg-[#071A3D] rounded-full flex items-center justify-center border-2 border-white/20 shadow-inner">
-                 <span className="text-6xl animate-bounce drop-shadow-xl" style={{ animationDuration: '2s' }}>🎂</span>
+            <div className="relative z-10 mx-auto w-24 h-24 mb-6">
+              <div className="absolute inset-0 bg-[#FFFFFF] rounded-full animate-pulse blur-sm opacity-50 shadow-lg" />
+              <div className="relative h-full w-full bg-white rounded-full flex items-center justify-center border border-[#EAE0DF] shadow-md">
+                 <span className="text-5xl drop-shadow-md animate-bounce" style={{ animationDuration: '2s' }}>🎉</span>
               </div>
             </div>
 
             {/* Text */}
             <div className="relative z-10">
-              <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-[#22C7E8] mb-4 tracking-tight drop-shadow-sm animate-pulse" style={{ animationDuration: '3s' }}>
-                HAPPY BIRTHDAY!
+              <h2 className="text-3xl font-serif text-[#C07C88] mb-4 tracking-wider uppercase drop-shadow-sm">
+                Happy Birthday
               </h2>
-              <div className="text-white/90 font-medium mb-8 text-sm sm:text-base leading-relaxed px-2 space-y-4">
+              <div className="text-gray-700 font-medium mb-8 text-sm sm:text-base leading-relaxed px-2 space-y-4 font-sans">
                 <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-150 fill-mode-both">
-                  Dear <span className="font-bold text-white text-lg">{currentUser.name}</span>,
+                  Dear <strong className="font-bold text-[#C07C88] text-lg">{currentUser.name}</strong>,
                 </p>
                 <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-300 fill-mode-both">
                   On this special day, we wish you immense joy, boundless laughter, and extraordinary success in all your future endeavors! ✨
@@ -311,16 +311,16 @@ export default function StudentDashboard({ data }: { data: DashboardData }) {
                 <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-500 fill-mode-both">
                   May this year bring you closer to your dreams and aspirations. Keep shining bright and making us proud!
                 </p>
-                <p className="pt-2 text-[#22C7E8] font-semibold italic animate-in slide-in-from-bottom-4 fade-in duration-700 delay-700 fill-mode-both">
+                <p className="pt-4 text-[#8C6B71] text-sm italic font-serif animate-in slide-in-from-bottom-4 fade-in duration-700 delay-700 fill-mode-both">
                   — With warm wishes from the Digital Portal of AI&amp;DS
                 </p>
               </div>
               
               <button 
                 onClick={() => setShowBirthdayPopup(false)}
-                className="w-full sm:w-2/3 mx-auto py-4 px-6 bg-gradient-to-r from-white to-gray-50 hover:to-white text-[#071A3D] rounded-2xl font-black text-lg transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-1000 fill-mode-both"
+                className="w-full sm:w-2/3 mx-auto py-3 px-6 bg-[#C07C88] hover:bg-[#A86470] text-white rounded-lg font-semibold tracking-wide transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-1000 fill-mode-both"
               >
-                Let's Celebrate! 🎉
+                Thank You! ✨
               </button>
             </div>
           </div>
