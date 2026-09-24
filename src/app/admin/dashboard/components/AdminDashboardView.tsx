@@ -53,6 +53,7 @@ export interface AdminDashboardData {
 export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
   const router = useRouter()
   const [stats, setStats] = useState<AdminDashboardData>(data)
+  const [showTestPopup, setShowTestPopup] = useState(false)
 
   React.useEffect(() => {
     setStats(data)
@@ -158,6 +159,12 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5 shrink-0">
+          <button
+            onClick={() => setShowTestPopup(true)}
+            className="px-4 py-2.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
+          >
+            <Sparkles className="w-4 h-4" /> Test Birthday Popup
+          </button>
           <button
             onClick={handleDownloadSystemReport}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-black flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 shrink-0"
@@ -317,6 +324,33 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
           ))}
         </div>
       </div>
+
+      {/* Test Birthday Popup */}
+      {showTestPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#071A3D]/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative text-center border-4 border-[#22C7E8]">
+            <button 
+              onClick={() => setShowTestPopup(false)}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            <div className="w-24 h-24 mx-auto bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white rounded-full flex items-center justify-center mb-6 shadow-lg animate-bounce ring-4 ring-[#22C7E8]/30">
+              <Sparkles className="w-12 h-12" />
+            </div>
+            <h2 className="text-2xl font-black text-[#071A3D] mb-3 uppercase tracking-wider">Happy Birthday!</h2>
+            <p className="text-gray-600 font-medium mb-8 text-sm">
+              Dear <span className="font-bold text-[#1455D9]">Birthday Girl / Admin</span>, wishing you a fantastic birthday and a successful year ahead! 🎉
+            </p>
+            <button 
+              onClick={() => setShowTestPopup(false)}
+              className="w-full py-3 px-4 bg-gradient-to-r from-[#071A3D] to-[#1455D9] hover:from-[#051330] hover:to-[#0A2A5E] text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg hover:scale-[1.02]"
+            >
+              Thank You!
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

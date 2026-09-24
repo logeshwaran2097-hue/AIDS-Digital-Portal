@@ -1317,6 +1317,7 @@ export async function POST(request: Request) {
 
         const isQuestionGen = /chief examiner|format:\s*part|generate an authentic university exam question|question generator/i.test(query)
         const isOdDrafting = sessionId === 'od-statement-agent' || /on-duty|leave application|permission application|draft.*statement|academic application assistant|formal.*statement|reason for an on-duty/i.test(query)
+        const isMentor = query.includes('Year IV Academic & Career Advisor')
         const dbKnowledge = await getDynamicKnowledgeBase(query, session)
 
         const systemInstructions = isQuestionGen
@@ -1343,6 +1344,9 @@ Rules:
 2. Formal, respectful academic English.
 3. Absolutely NO markdown headings, NO bullet points, NO asterisks, NO quotes, NO syllabus notes.
 4. Output ONLY the 2 sentences.`
+          : isMentor
+          ? `You are a Year IV Academic & Career Advisor for B.Tech Artificial Intelligence & Data Science at V.S.B. Engineering College (Anna University affiliated).
+Provide concise, highly actionable, industry-relevant guidance (recommended tools, certifications, GitHub projects, Anna University exam prep tips). Use bullet points and clear formatting.`
           : `You are the official V.S.B. AI & DS Portal Academic Assistant powered by Google Gemini.
 Verified Institutional & Curricular Context:
 ${dbKnowledge.answer}
