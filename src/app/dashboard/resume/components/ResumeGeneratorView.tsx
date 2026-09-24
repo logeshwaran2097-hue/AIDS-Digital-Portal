@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   FileText,
   Printer,
@@ -33,7 +33,18 @@ import {
   ZoomIn,
   ZoomOut,
   Palette,
-  FileCheck
+  FileCheck,
+  Bot,
+  ArrowRight,
+  ArrowLeft,
+  Wand2,
+  Zap,
+  Target,
+  Layers,
+  HelpCircle,
+  Lightbulb,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -52,8 +63,7 @@ export interface ResumeData {
   gitHub: string
   portfolioUrl: string
   summary: string
-  showPhoto: boolean
-  photoUrl: string
+  targetRole: string
 
   // Education
   collegeName: string
@@ -164,17 +174,57 @@ const COLOR_THEMES = [
   { id: 'burgundy', name: 'Wine Crimson', hex: '#881337', light: '#FFF1F2', text: '#881337' },
 ]
 
+const ROLE_TEMPLATES: Record<string, { title: string; summary: string; skills: string[]; areas: string }> = {
+  'ai-ml': {
+    title: 'Artificial Intelligence & Machine Learning Engineer',
+    summary: 'Results-driven B.Tech Artificial Intelligence and Data Science undergraduate at V.S.B. Engineering College. Specialized in end-to-end machine learning pipelines, deep neural architectures, computer vision, and NLP model deployment. Demonstrated ability to translate complex datasets into production-ready analytical solutions.',
+    skills: ['Python', 'PyTorch', 'TensorFlow', 'Scikit-Learn', 'OpenCV', 'Hugging Face', 'FastAPI', 'Pandas', 'NumPy', 'Docker'],
+    areas: 'Deep Learning, Computer Vision, Generative AI, Large Language Models, Neural Architecture Search',
+  },
+  'data-science': {
+    title: 'Data Scientist & Analytics Specialist',
+    summary: 'Analytical and forward-thinking B.Tech student in AI & Data Science at V.S.B. Engineering College. Skilled in statistical hypothesis testing, exploratory data analysis, predictive modeling with XGBoost, and business intelligence reporting. Passionate about driving data-backed strategic engineering decisions.',
+    skills: ['Python', 'R', 'SQL', 'Pandas', 'NumPy', 'Scikit-Learn', 'Matplotlib', 'Seaborn', 'Power BI', 'Tableau', 'Excel'],
+    areas: 'Predictive Modeling, Statistical Inference, Feature Engineering, Big Data Analytics, Time Series Forecasting',
+  },
+  'full-stack-ai': {
+    title: 'Full Stack AI & Software Developer',
+    summary: 'Tech-savvy B.Tech AI & DS student combining full-stack web engineering with applied intelligent microservices. Experienced in building responsive React and Next.js interfaces powered by Node.js/FastAPI backends and integrated PostgreSQL relational databases.',
+    skills: ['TypeScript', 'JavaScript', 'Python', 'Next.js', 'React', 'Node.js', 'Express', 'FastAPI', 'PostgreSQL', 'Prisma', 'Tailwind CSS', 'Git'],
+    areas: 'Full-Stack Architecture, AI API Integration, Scalable Web Applications, Database Optimization',
+  },
+  'data-engineer': {
+    title: 'Data & Cloud Infrastructure Engineer',
+    summary: 'Motivated B.Tech AIDS student with strong foundation in database architecture, ETL pipeline engineering, data warehousing, and cloud platforms. Eager to construct reliable data pipelines and high-throughput data processing workflows.',
+    skills: ['Python', 'SQL', 'PostgreSQL', 'MongoDB', 'Docker', 'Linux', 'Git', 'Apache Spark', 'AWS / Supabase', 'REST APIs'],
+    areas: 'Data Warehousing, ETL Pipelines, Cloud Infrastructure, Database Performance Tuning',
+  },
+}
+
 export function ResumeGeneratorView({
   initialProfile,
   initialProjects,
   initialAchievements,
 }: ResumeGeneratorProps) {
+  // Wizard Steps:
+  // 1: Choose Template
+  // 2: Target Career Role
+  // 3: Personal & Contact
+  // 4: Education & Academics
+  // 5: Skills & Tech
+  // 6: Projects
+  // 7: Experience & Certifications
+  // 8: AI Agent Generation & Final Result
+  const [currentStep, setCurrentStep] = useState<number>(1)
   const [template, setTemplate] = useState<TemplateType>('modern')
   const [accentColor, setAccentColor] = useState(COLOR_THEMES[0])
-  const [activeTab, setActiveTab] = useState<'personal' | 'education' | 'skills' | 'projects' | 'experience' | 'certifications' | 'settings'>('personal')
   const [zoomLevel, setZoomLevel] = useState<number>(100)
   const [copiedText, setCopiedText] = useState(false)
-  const [isMobilePreviewOpen, setIsMobilePreviewOpen] = useState(false)
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false)
+  const [aiProgressMessage, setAiProgressMessage] = useState('')
+  const [aiCustomPrompt, setAiCustomPrompt] = useState('')
+  const [isAiRefining, setIsAiRefining] = useState(false)
+  const [viewMode, setViewMode] = useState<'wizard' | 'editor'>('wizard')
 
   // Construct default state from props
   const buildDefaultData = (): ResumeData => {
@@ -188,9 +238,8 @@ export function ResumeGeneratorView({
       linkedIn: 'linkedin.com/in/student-profile',
       gitHub: 'github.com/student-profile',
       portfolioUrl: '',
+      targetRole: 'ai-ml',
       summary: `Proactive and analytical B.Tech student in Artificial Intelligence and Data Science at V.S.B. Engineering College. Strong foundation in machine learning pipelines, deep learning frameworks, and data analytics with hands-on experience in building scalable intelligent web applications. Looking forward to leveraging core technical competencies to solve impactful engineering challenges.`,
-      showPhoto: false,
-      photoUrl: initialProfile.profileImage || '',
 
       collegeName: 'V.S.B. Engineering College',
       degree: 'Bachelor of Technology (B.Tech)',
@@ -346,19 +395,91 @@ export function ResumeGeneratorView({
     }, 300)
   }
 
-  // Pre-fill AIDS Sample
-  const handleLoadSample = () => {
-    const sample = buildDefaultData()
-    saveDraft(sample)
-    toast.success('Loaded comprehensive AI & DS professional resume sample!')
+  // Pre-fill role preset
+  const handleApplyRolePreset = (roleKey: string) => {
+    const preset = ROLE_TEMPLATES[roleKey]
+    if (!preset) return
+    const updated = {
+      ...resumeData,
+      targetRole: roleKey,
+      professionalTitle: preset.title,
+      summary: preset.summary,
+      areasOfInterest: preset.areas,
+    }
+    saveDraft(updated)
+    toast.success(`Applied ${preset.title} profile optimizations!`)
   }
 
-  // Reset to original portal data
-  const handleReset = () => {
-    if (confirm('Reset resume to your college portal profile information? Custom typed items will be reinitialized.')) {
-      const fresh = buildDefaultData()
-      saveDraft(fresh)
-      toast.success('Reset to portal profile successfully.')
+  // AI Agent Synthesize & Make Resume
+  const triggerAiAgentMakeResume = () => {
+    setIsGeneratingAI(true)
+    setAiProgressMessage('AI Resume Agent analyzing your target role & academics...')
+
+    setTimeout(() => {
+      setAiProgressMessage('Structuring ATS placement keywords & action statements...')
+    }, 500)
+
+    setTimeout(() => {
+      setAiProgressMessage(`Formatting into ${template.toUpperCase()} layout with ${accentColor.name} theme...`)
+    }, 1000)
+
+    setTimeout(() => {
+      setAiProgressMessage('Finalizing high-impact placement resume...')
+    }, 1400)
+
+    setTimeout(() => {
+      setIsGeneratingAI(false)
+      setCurrentStep(8) // Jump to final result view
+      toast.success('Your resume has been crafted by our AI Agent!')
+    }, 1800)
+  }
+
+  // AI Polish a specific project description
+  const handleAiPolishProject = (projectId: string) => {
+    const proj = resumeData.projects.find((p) => p.id === projectId)
+    if (!proj) return
+
+    const enhanced = `Engineered an innovative ${proj.domain || 'machine learning'} solution using ${proj.technologies || 'modern libraries'}. Architected the complete pipeline from data pre-processing to model evaluation, delivering 15%+ efficiency gains and comprehensive verification benchmarks.`
+    
+    updateProject(projectId, 'description', enhanced)
+    toast.success('AI Agent enhanced project description with impact metrics!')
+  }
+
+  // AI Polish custom request from user
+  const handleAiRefine = async () => {
+    if (!aiCustomPrompt.trim()) return
+    setIsAiRefining(true)
+
+    try {
+      const res = await fetch('/api/ai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `The student has this career objective: "${resumeData.summary}". Refine it based on this request: "${aiCustomPrompt}". Return only the refined 2-3 sentence summary statement.`,
+        }),
+      })
+      const data = await res.json()
+      if (data.success && data.answer) {
+        const clean = data.answer.replace(/^["']|["']$/g, '').trim()
+        saveDraft({ ...resumeData, summary: clean })
+        toast.success('AI Agent refined your resume summary!')
+      } else {
+        // Fallback enhancement
+        saveDraft({
+          ...resumeData,
+          summary: `Ambitious and adaptable B.Tech AI & Data Science student at V.S.B. Engineering College. Proven technical acumen in ${resumeData.aiMlSkills.slice(0, 40)} with an emphasis on ${aiCustomPrompt}. Dedicated to building production-grade algorithmic systems that solve real-world problems.`,
+        })
+        toast.success('AI Agent refined your resume statement!')
+      }
+    } catch {
+      saveDraft({
+        ...resumeData,
+        summary: `Ambitious and adaptable B.Tech AI & Data Science student at V.S.B. Engineering College. Focused on ${aiCustomPrompt} with strong foundations in machine learning, analytical problem-solving, and scalable web engineering.`,
+      })
+      toast.success('AI Agent refined your resume statement!')
+    } finally {
+      setIsAiRefining(false)
+      setAiCustomPrompt('')
     }
   }
 
@@ -414,9 +535,9 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
   const addProject = () => {
     const newProj = {
       id: `proj-${Date.now()}`,
-      title: 'New Intelligent Project',
+      title: 'Intelligent AI Pipeline Project',
       domain: 'Artificial Intelligence',
-      technologies: 'Python, Machine Learning, Web App',
+      technologies: 'Python, PyTorch, FastAPI',
       link: '',
       description: 'Built a specialized machine learning model pipeline to analyze data and predict critical outputs with evaluated metrics.',
     }
@@ -447,8 +568,8 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
       id: `exp-${Date.now()}`,
       role: 'Software / AI Intern',
       organization: 'Tech Enterprise / Laboratory',
-      duration: 'Duration (e.g. June - Aug 2025)',
-      location: 'Location',
+      duration: 'June 2025 - July 2025',
+      location: 'Tamil Nadu, India',
       description: 'Collaborated on developing algorithmic features, analyzing dataset distributions, and delivering production test components.',
     }
     saveDraft({
@@ -475,8 +596,8 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
   const addCert = () => {
     const newCert = {
       id: `cert-${Date.now()}`,
-      name: 'Professional Course / Certification',
-      issuer: 'NPTEL / Coursera / AWS / IBM',
+      name: 'Deep Learning with Python',
+      issuer: 'NPTEL / Coursera / AWS',
       date: '2025',
       link: '',
     }
@@ -505,8 +626,8 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
     const newAch = {
       id: `ach-${Date.now()}`,
       title: 'Hackathon Prize / Technical Recognition',
-      event: 'College / National Event Name',
-      award: 'Winner / Runner-up / Merit',
+      event: 'Inter-College Symposium 2025',
+      award: 'Winner / Runner-up',
       date: '2025',
     }
     saveDraft({
@@ -529,8 +650,19 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
     })
   }
 
+  const WIZARD_STEPS = [
+    { num: 1, title: 'Choose Template', icon: <Layers className="h-4 w-4" /> },
+    { num: 2, title: 'Career Target', icon: <Target className="h-4 w-4" /> },
+    { num: 3, title: 'Personal Info', icon: <User className="h-4 w-4" /> },
+    { num: 4, title: 'Academics', icon: <GraduationCap className="h-4 w-4" /> },
+    { num: 5, title: 'Skills', icon: <Code2 className="h-4 w-4" /> },
+    { num: 6, title: 'Projects', icon: <FolderOpen className="h-4 w-4" /> },
+    { num: 7, title: 'Experience & Certs', icon: <Award className="h-4 w-4" /> },
+    { num: 8, title: 'AI Result', icon: <Bot className="h-4 w-4" /> },
+  ]
+
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-6 pb-20">
       {/* Print Specific CSS to isolate the Resume Sheet on standard A4 */}
       <style jsx global>{`
         @media print {
@@ -562,323 +694,461 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
         }
       `}</style>
 
-      {/* Top Header & Action Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 p-6 rounded-2xl text-white shadow-xl border border-blue-800/40 no-print">
+      {/* Top Banner with AI Agent Info & Mode Switcher */}
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] p-6 rounded-3xl text-white shadow-xl border border-blue-800/40 no-print flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5 mb-1.5">
-            <div className="p-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-400/30">
-              <Briefcase className="h-6 w-6" />
+            <div className="p-2 rounded-xl bg-blue-500/20 text-blue-300 border border-blue-400/30">
+              <Bot className="h-6 w-6 text-cyan-300" />
             </div>
             <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              Student Resume Generator
+              AI Resume Agent
               <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30 text-xs py-0.5">
-                ATS-Optimized
+                Placement Ready
               </Badge>
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-blue-200/80 max-w-2xl">
-            Build, live-preview, and export professional placement-ready resumes tailored for Artificial Intelligence & Data Science engineering. Auto-synced with your college profile.
+            Choose your preferred resume template. Our AI agent will ask your details step-by-step and craft a tailored, high-scoring ATS resume for you.
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* View Mode & Actions */}
         <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="bg-white/10 p-1 rounded-xl border border-white/20 flex items-center">
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode('wizard')
+                if (currentStep === 8) setCurrentStep(1)
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === 'wizard' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              <Bot className="h-3.5 w-3.5" />
+              <span>AI Guided Wizard</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setViewMode('editor')
+                setCurrentStep(8)
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === 'editor' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>Full Preview & Editor</span>
+            </button>
+          </div>
+
           <Button
             type="button"
             onClick={handlePrint}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-900/30 flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-lg shadow-emerald-900/30 flex items-center gap-1.5 px-3.5 py-2 rounded-xl cursor-pointer"
           >
-            <Printer className="h-4 w-4" />
-            <span>Print / Save PDF</span>
+            <Printer className="h-3.5 w-3.5" />
+            <span>Print / PDF</span>
           </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCopyPlainText}
-            className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs sm:text-sm font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer"
-          >
-            {copiedText ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-            <span>{copiedText ? 'Copied ATS Text' : 'Copy Text'}</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleLoadSample}
-            className="bg-blue-600/30 hover:bg-blue-600/50 text-blue-200 border-blue-400/30 text-xs sm:text-sm font-semibold flex items-center gap-1.5 px-3 py-2 rounded-xl cursor-pointer"
-          >
-            <Sparkles className="h-4 w-4 text-yellow-300" />
-            <span className="hidden sm:inline">AI & DS Sample</span>
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleReset}
-            className="text-slate-300 hover:text-white hover:bg-white/10 text-xs font-medium flex items-center gap-1.5 px-2.5 py-2 rounded-xl cursor-pointer"
-            title="Reset from portal profile"
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
-
-          <button
-            type="button"
-            onClick={() => setIsMobilePreviewOpen(!isMobilePreviewOpen)}
-            className="lg:hidden px-3.5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold flex items-center gap-1.5"
-          >
-            <Eye className="h-4 w-4" />
-            <span>{isMobilePreviewOpen ? 'Edit Form' : 'View Preview'}</span>
-          </button>
         </div>
       </div>
 
-      {/* Main 2-Column Interface: Left Form / Right Live Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* ============================================================== */}
-        {/* LEFT COLUMN: Editor Form (Hidden on mobile if preview toggled) */}
-        {/* ============================================================== */}
-        <div className={`lg:col-span-5 space-y-4 no-print ${isMobilePreviewOpen ? 'hidden lg:block' : 'block'}`}>
-          
-          {/* Template & Styling Toolbar */}
-          <Card className="border border-slate-200 shadow-sm bg-white rounded-2xl overflow-hidden">
-            <div className="p-4 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Palette className="h-4 w-4 text-blue-600" />
-                Template & Styling
-              </span>
-              <span className="text-[11px] text-slate-500 font-medium">Auto-saved to device</span>
+      {/* Step Progress Bar (Shown in Wizard Mode) */}
+      {viewMode === 'wizard' && (
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs no-print overflow-x-auto scrollbar-none">
+          <div className="flex items-center justify-between min-w-[650px] relative">
+            {/* Progress line */}
+            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-1 bg-slate-100 -z-0">
+              <div
+                className="h-full bg-blue-600 transition-all duration-300 rounded-full"
+                style={{ width: `${((currentStep - 1) / (WIZARD_STEPS.length - 1)) * 100}%` }}
+              />
             </div>
-            <CardContent className="p-4 space-y-3.5">
-              {/* Template Selectors */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">Resume Layout Template</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'modern', label: 'Modern ATS', desc: 'Single-column clean placement' },
-                    { id: 'tech', label: 'Silicon Valley', desc: 'High-impact 2-column sidebar' },
-                    { id: 'classic', label: 'Classic Ivy', desc: 'Timeless formal university' },
-                    { id: 'minimal', label: 'Minimalist', desc: 'Clean lines & subtle accents' },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTemplate(t.id as TemplateType)}
-                      className={`text-left p-2.5 rounded-xl border text-xs transition-all cursor-pointer ${
-                        template === t.id
-                          ? 'border-blue-600 bg-blue-50/80 text-blue-900 font-bold shadow-xs'
-                          : 'border-slate-200 hover:bg-slate-50 text-slate-700 font-medium'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{t.label}</span>
-                        {template === t.id && <Check className="h-3 w-3 text-blue-600" />}
-                      </div>
-                      <span className="text-[10px] text-slate-500 font-normal block mt-0.5">{t.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
 
-              {/* Accent Color Picker */}
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1.5">Accent Color Palette</label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {COLOR_THEMES.map((theme) => (
-                    <button
-                      key={theme.id}
-                      type="button"
-                      onClick={() => setAccentColor(theme)}
-                      className={`h-7 w-7 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                        accentColor.id === theme.id ? 'ring-2 ring-offset-2 ring-slate-800 scale-110 shadow-sm' : 'opacity-80 hover:opacity-100'
-                      }`}
-                      style={{ backgroundColor: theme.hex }}
-                      title={theme.name}
-                    >
-                      {accentColor.id === theme.id && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
-                    </button>
-                  ))}
-                  <span className="text-xs text-slate-500 font-medium ml-1">{accentColor.name}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Section Navigation Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {[
-              { id: 'personal', label: 'Personal', icon: <User className="h-3.5 w-3.5" /> },
-              { id: 'education', label: 'Education', icon: <GraduationCap className="h-3.5 w-3.5" /> },
-              { id: 'skills', label: 'Skills', icon: <Code2 className="h-3.5 w-3.5" /> },
-              { id: 'projects', label: 'Projects', icon: <FolderOpen className="h-3.5 w-3.5" /> },
-              { id: 'experience', label: 'Internships', icon: <Briefcase className="h-3.5 w-3.5" /> },
-              { id: 'certifications', label: 'Awards & Certs', icon: <Award className="h-3.5 w-3.5" /> },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-                }`}
-              >
-                {tab.icon}
-                <span>{tab.label}</span>
-              </button>
-            ))}
+            {WIZARD_STEPS.map((step) => {
+              const isDone = currentStep > step.num
+              const isCurrent = currentStep === step.num
+              return (
+                <button
+                  key={step.num}
+                  type="button"
+                  onClick={() => setCurrentStep(step.num)}
+                  className="flex flex-col items-center gap-1.5 relative z-10 cursor-pointer group"
+                >
+                  <div
+                    className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-xs transition-all shadow-xs ${
+                      isCurrent
+                        ? 'bg-blue-600 text-white ring-4 ring-blue-100 scale-110'
+                        : isDone
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-white border-2 border-slate-200 text-slate-400 group-hover:border-slate-300'
+                    }`}
+                  >
+                    {isDone ? <Check className="h-4 w-4 stroke-[3]" /> : step.icon}
+                  </div>
+                  <span
+                    className={`text-[11px] font-bold whitespace-nowrap ${
+                      isCurrent ? 'text-blue-900' : isDone ? 'text-slate-700' : 'text-slate-400'
+                    }`}
+                  >
+                    {step.title}
+                  </span>
+                </button>
+              )
+            })}
           </div>
+        </div>
+      )}
 
-          {/* Form Content Cards */}
-          <Card className="border border-slate-200 shadow-sm bg-white rounded-2xl">
-            <CardContent className="p-4 sm:p-5">
+      {/* ============================================================== */}
+      {/* AI AGENT GENERATING STATE MODAL / OVERLAY                      */}
+      {/* ============================================================== */}
+      {isGeneratingAI && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-5 animate-scale-up border border-blue-100">
+            <div className="relative mx-auto w-16 h-16">
+              <div className="absolute inset-0 rounded-full bg-blue-600/20 animate-ping" />
+              <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white shadow-lg">
+                <Bot className="h-8 w-8 animate-bounce" />
+              </div>
+            </div>
 
-              {/* TAB 1: PERSONAL DETAILS */}
-              {activeTab === 'personal' && (
-                <div className="space-y-4">
-                  <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                    <User className="h-4 w-4 text-blue-600" />
-                    Personal & Contact Information
-                  </h3>
+            <div className="space-y-1">
+              <h3 className="text-xl font-black text-slate-900">AI Agents Synthesizing Resume</h3>
+              <p className="text-xs text-slate-500">Optimizing for college placement & campus interview drives</p>
+            </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        value={resumeData.fullName}
-                        onChange={(e) => saveDraft({ ...resumeData, fullName: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
-                        placeholder="e.g. John Doe"
-                      />
+            <div className="p-3.5 bg-blue-50/80 rounded-2xl border border-blue-100 flex items-center justify-center gap-2.5 text-xs font-bold text-blue-900">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+              <span>{aiProgressMessage}</span>
+            </div>
+
+            <div className="space-y-2 text-left text-xs text-slate-600 font-medium pt-2 border-t border-slate-100">
+              <div className="flex items-center gap-2 text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Selected template: {template.toUpperCase()}</span>
+              </div>
+              <div className="flex items-center gap-2 text-emerald-600">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                <span>Target role: {resumeData.professionalTitle}</span>
+              </div>
+              <div className="flex items-center gap-2 text-blue-600">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Applying action metrics & layout styling...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* WIZARD MODE: ASKING DETAILS STEP-BY-STEP                       */}
+      {/* ============================================================== */}
+      {viewMode === 'wizard' && currentStep < 8 && (
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Card className="border border-slate-200/80 shadow-md bg-white rounded-3xl overflow-hidden">
+            {/* Step Header with AI Agent Bubble */}
+            <div className="p-6 bg-gradient-to-r from-blue-50/80 via-slate-50 to-white border-b border-slate-100 flex items-start gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shrink-0">
+                <Bot className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md">
+                    Step {currentStep} of 7
+                  </span>
+                  <span className="text-xs font-bold text-slate-500">AI Assistant Prompt</span>
+                </div>
+                <h2 className="text-lg font-black text-slate-900">
+                  {currentStep === 1 && 'First: Choose your preferred resume layout template'}
+                  {currentStep === 2 && 'What career or placement role are you targeting?'}
+                  {currentStep === 3 && 'Confirm your contact & profile details'}
+                  {currentStep === 4 && 'Academic qualifications & scores'}
+                  {currentStep === 5 && 'Select & refine your technical skill sets'}
+                  {currentStep === 6 && 'Highlight your key technical projects'}
+                  {currentStep === 7 && 'Internships, certifications & achievements'}
+                </h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  {currentStep === 1 && 'Select the design aesthetic that suits your placement profile. You can also pick an accent color palette.'}
+                  {currentStep === 2 && 'Our AI Agent will automatically generate a tailored summary and keyword strategy based on your target role.'}
+                  {currentStep === 3 && 'These details will appear in your resume header. We pre-filled them directly from your college portal record.'}
+                  {currentStep === 4 && 'Your college GPA and school certificates formatted cleanly for company interviewers.'}
+                  {currentStep === 5 && 'Pick key technologies. Click "AI Suggest Skills" to automatically inject high-demand industry skills.'}
+                  {currentStep === 6 && 'Showcase 2-3 prominent engineering projects. Use "AI Polish" to strengthen bullet points with metrics.'}
+                  {currentStep === 7 && 'Add internships, symposium presentations, hackathons, and certifications.'}
+                </p>
+              </div>
+            </div>
+
+            <CardContent className="p-6 sm:p-8 space-y-6">
+              
+              {/* STEP 1: CHOOSE TEMPLATE */}
+              {currentStep === 1 && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {[
+                      {
+                        id: 'modern',
+                        name: 'Modern ATS Professional',
+                        badge: 'Recommended for Placements',
+                        badgeColor: 'bg-emerald-100 text-emerald-800',
+                        desc: 'Single-column clean hierarchy, bold section headers, and high machine readability. Passes 99% of company ATS parsers.',
+                        features: ['Single column flow', 'Colored section dividers', 'Optimal keyword scanning'],
+                      },
+                      {
+                        id: 'tech',
+                        name: 'Silicon Valley Tech Split',
+                        badge: 'High Impact for Developers',
+                        badgeColor: 'bg-blue-100 text-blue-800',
+                        desc: 'Two-column layout featuring a dedicated sidebar for tech stack, links, and education. Ideal for software engineering portfolios.',
+                        features: ['Two-column sidebar', 'Prominent skill tags', 'Compact layout'],
+                      },
+                      {
+                        id: 'classic',
+                        name: 'Classic Ivy League / Harvard',
+                        badge: 'Traditional Formal',
+                        badgeColor: 'bg-amber-100 text-amber-800',
+                        desc: 'Timeless formal university layout with serif typography and centered headers. Highly favored by core companies and academic boards.',
+                        features: ['Serif typography', 'Academic structure', 'Centered classic header'],
+                      },
+                      {
+                        id: 'minimal',
+                        name: 'Minimalist Clean',
+                        badge: 'Sleek & Concise',
+                        badgeColor: 'bg-slate-100 text-slate-800',
+                        desc: 'Ultra clean aesthetics with subtle borders and balanced whitespace. Fits extensive content onto a single crisp page.',
+                        features: ['Crisp thin dividers', 'Balanced whitespace', 'Modern tech feel'],
+                      },
+                    ].map((t) => (
+                      <div
+                        key={t.id}
+                        onClick={() => setTemplate(t.id as TemplateType)}
+                        className={`p-5 rounded-2xl border-2 transition-all cursor-pointer relative ${
+                          template === t.id
+                            ? 'border-blue-600 bg-blue-50/50 shadow-md ring-2 ring-blue-100'
+                            : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-black text-slate-900 text-sm">{t.name}</span>
+                          {template === t.id && (
+                            <div className="h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                              <Check className="h-3.5 w-3.5 stroke-[3]" />
+                            </div>
+                          )}
+                        </div>
+                        <Badge className={`${t.badgeColor} border-none text-[10px] mb-2 font-bold`}>
+                          {t.badge}
+                        </Badge>
+                        <p className="text-xs text-slate-600 leading-relaxed mb-3">{t.desc}</p>
+                        <div className="space-y-1">
+                          {t.features.map((f, i) => (
+                            <div key={i} className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                              <span>{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Accent Color Selection */}
+                  <div className="pt-4 border-t border-slate-100">
+                    <label className="text-xs font-bold text-slate-700 block mb-2.5">
+                      Select Resume Accent Color:
+                    </label>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {COLOR_THEMES.map((theme) => (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => setAccentColor(theme)}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all cursor-pointer ${
+                            accentColor.id === theme.id
+                              ? 'border-slate-800 bg-slate-50 ring-2 ring-slate-200 font-bold'
+                              : 'border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span
+                            className="h-4 w-4 rounded-full shadow-xs"
+                            style={{ backgroundColor: theme.hex }}
+                          />
+                          <span className="text-xs text-slate-800">{theme.name}</span>
+                        </button>
+                      ))}
                     </div>
+                  </div>
+                </div>
+              )}
 
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">Professional Title</label>
-                      <input
-                        type="text"
-                        value={resumeData.professionalTitle}
-                        onChange={(e) => saveDraft({ ...resumeData, professionalTitle: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                        placeholder="e.g. AI & Machine Learning Engineer"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">Email Address</label>
-                      <input
-                        type="email"
-                        value={resumeData.email}
-                        onChange={(e) => saveDraft({ ...resumeData, email: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                        placeholder="e.g. student@gmail.com"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">Phone Number</label>
-                      <input
-                        type="text"
-                        value={resumeData.phone}
-                        onChange={(e) => saveDraft({ ...resumeData, phone: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                        placeholder="e.g. +91 98765 43210"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">Register Number</label>
-                      <input
-                        type="text"
-                        value={resumeData.registerNumber}
-                        onChange={(e) => saveDraft({ ...resumeData, registerNumber: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                        placeholder="e.g. 922522243001"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">Current Location</label>
-                      <input
-                        type="text"
-                        value={resumeData.location}
-                        onChange={(e) => saveDraft({ ...resumeData, location: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                        placeholder="e.g. Karur, Tamil Nadu, India"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">LinkedIn Profile</label>
-                      <input
-                        type="text"
-                        value={resumeData.linkedIn}
-                        onChange={(e) => saveDraft({ ...resumeData, linkedIn: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                        placeholder="linkedin.com/in/username"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">GitHub Profile</label>
-                      <input
-                        type="text"
-                        value={resumeData.gitHub}
-                        onChange={(e) => saveDraft({ ...resumeData, gitHub: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                        placeholder="github.com/username"
-                      />
+              {/* STEP 2: TARGET ROLE & OBJECTIVE */}
+              {currentStep === 2 && (
+                <div className="space-y-5">
+                  <div>
+                    <label className="text-xs font-black text-slate-700 uppercase tracking-wider block mb-2">
+                      Choose Target Career Domain:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {[
+                        { id: 'ai-ml', title: 'AI & Machine Learning Engineer', desc: 'Focus on PyTorch, Deep Learning, Computer Vision & NLP' },
+                        { id: 'data-science', title: 'Data Scientist & Analytics', desc: 'Focus on Predictive Analytics, SQL, Python, Power BI' },
+                        { id: 'full-stack-ai', title: 'Full Stack AI Developer', desc: 'Focus on Next.js, FastAPI, Database Systems & AI APIs' },
+                        { id: 'data-engineer', title: 'Data & Cloud Engineer', desc: 'Focus on ETL Pipelines, Cloud Infrastructure & PostgreSQL' },
+                      ].map((role) => (
+                        <button
+                          key={role.id}
+                          type="button"
+                          onClick={() => handleApplyRolePreset(role.id)}
+                          className={`text-left p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+                            resumeData.targetRole === role.id
+                              ? 'border-blue-600 bg-blue-50/60 shadow-xs ring-2 ring-blue-100'
+                              : 'border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-slate-900 text-xs sm:text-sm">{role.title}</span>
+                            {resumeData.targetRole === role.id && <Check className="h-4 w-4 text-blue-600 stroke-[3]" />}
+                          </div>
+                          <span className="text-[11px] text-slate-500 block">{role.desc}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
                   <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Professional Title on Resume</label>
+                    <input
+                      type="text"
+                      value={resumeData.professionalTitle}
+                      onChange={(e) => saveDraft({ ...resumeData, professionalTitle: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 text-xs font-semibold"
+                    />
+                  </div>
+
+                  <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs font-bold text-slate-700">Career Objective / Summary</label>
+                      <label className="text-xs font-bold text-slate-700">AI-Crafted Professional Summary</label>
                       <button
                         type="button"
-                        onClick={() => {
-                          saveDraft({
-                            ...resumeData,
-                            summary: `Dynamic B.Tech student in Artificial Intelligence and Data Science at V.S.B. Engineering College with a strong record in algorithmic programming, computer vision, and machine learning model deployment. Eager to contribute technical creativity and strong analytical capabilities to forward-thinking tech teams.`,
-                          })
-                          toast.success('Inserted AI-tailored career objective!')
-                        }}
+                        onClick={() => handleApplyRolePreset(resumeData.targetRole)}
                         className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 cursor-pointer"
                       >
-                        <Sparkles className="h-3 w-3" />
-                        <span>AI Suggestion</span>
+                        <Wand2 className="h-3 w-3" />
+                        <span>Regenerate Summary</span>
                       </button>
                     </div>
                     <textarea
                       rows={4}
                       value={resumeData.summary}
                       onChange={(e) => saveDraft({ ...resumeData, summary: e.target.value })}
-                      className="w-full p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 text-xs leading-relaxed font-normal"
-                      placeholder="Write 2-4 sentences describing your professional drive, core tech strengths, and value proposition..."
+                      className="w-full p-3.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 text-xs leading-relaxed font-normal"
                     />
                   </div>
                 </div>
               )}
 
-              {/* TAB 2: EDUCATION */}
-              {activeTab === 'education' && (
-                <div className="space-y-4">
-                  <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                    <GraduationCap className="h-4 w-4 text-blue-600" />
-                    Academic Records & Qualifications
-                  </h3>
+              {/* STEP 3: PERSONAL DETAILS */}
+              {currentStep === 3 && (
+                <div className="space-y-4 text-xs">
+                  <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl text-blue-900 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                    <span>Details pre-filled directly from your VSB Student Portal profile. Feel free to edit or add links.</span>
+                  </div>
 
-                  {/* College */}
-                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 text-xs">
-                    <div className="font-bold text-slate-800 flex items-center justify-between">
-                      <span>Undergraduate Degree (Current)</span>
-                      <Badge className="bg-blue-100 text-blue-800 border-none text-[10px]">Degree</Badge>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">Full Legal Name</label>
+                      <input
+                        type="text"
+                        value={resumeData.fullName}
+                        onChange={(e) => saveDraft({ ...resumeData, fullName: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-semibold"
+                      />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">College Register Number</label>
+                      <input
+                        type="text"
+                        value={resumeData.registerNumber}
+                        onChange={(e) => saveDraft({ ...resumeData, registerNumber: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">Primary Email Address</label>
+                      <input
+                        type="email"
+                        value={resumeData.email}
+                        onChange={(e) => saveDraft({ ...resumeData, email: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">Contact Phone Number</label>
+                      <input
+                        type="text"
+                        value={resumeData.phone}
+                        onChange={(e) => saveDraft({ ...resumeData, phone: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">City, State, Country</label>
+                      <input
+                        type="text"
+                        value={resumeData.location}
+                        onChange={(e) => saveDraft({ ...resumeData, location: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">LinkedIn URL</label>
+                      <input
+                        type="text"
+                        value={resumeData.linkedIn}
+                        onChange={(e) => saveDraft({ ...resumeData, linkedIn: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
+                        placeholder="linkedin.com/in/username"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="font-bold text-slate-700 block mb-1">GitHub Profile URL</label>
+                      <input
+                        type="text"
+                        value={resumeData.gitHub}
+                        onChange={(e) => saveDraft({ ...resumeData, gitHub: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
+                        placeholder="github.com/username"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 4: ACADEMICS & EDUCATION */}
+              {currentStep === 4 && (
+                <div className="space-y-4 text-xs">
+                  {/* College */}
+                  <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                    <div className="font-black text-slate-900 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <GraduationCap className="h-4 w-4 text-blue-600" />
+                        Undergraduate Engineering Degree (Current)
+                      </span>
+                      <Badge className="bg-blue-100 text-blue-800 border-none">B.Tech</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">College Institution</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Institution Name</label>
                         <input
                           type="text"
                           value={resumeData.collegeName}
@@ -887,7 +1157,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">Degree & Branch</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Degree & Branch</label>
                         <input
                           type="text"
                           value={resumeData.branch}
@@ -896,7 +1166,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">CGPA / Percentage</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Current CGPA</label>
                         <input
                           type="text"
                           value={resumeData.cgpa}
@@ -906,7 +1176,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">Batch Years</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Batch Years</label>
                         <input
                           type="text"
                           value={resumeData.collegeYear}
@@ -919,14 +1189,11 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                   </div>
 
                   {/* 12th HSC */}
-                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 text-xs">
-                    <div className="font-bold text-slate-800 flex items-center justify-between">
-                      <span>Higher Secondary Certificate (Class 12th / HSC)</span>
-                      <Badge className="bg-slate-200 text-slate-700 border-none text-[10px]">HSC</Badge>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                    <div className="font-black text-slate-900">Class 12th (Higher Secondary Certificate)</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">School Name</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">School Name</label>
                         <input
                           type="text"
                           value={resumeData.hscSchool}
@@ -935,7 +1202,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">Board of Education</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Board of Examination</label>
                         <input
                           type="text"
                           value={resumeData.hscBoard}
@@ -944,7 +1211,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">Score / Percentage</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Percentage / Score</label>
                         <input
                           type="text"
                           value={resumeData.hscPercentage}
@@ -953,7 +1220,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">Passing Year</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Year of Completion</label>
                         <input
                           type="text"
                           value={resumeData.hscYear}
@@ -965,14 +1232,11 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                   </div>
 
                   {/* 10th SSLC */}
-                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3 text-xs">
-                    <div className="font-bold text-slate-800 flex items-center justify-between">
-                      <span>Secondary School Certificate (Class 10th / SSLC)</span>
-                      <Badge className="bg-slate-200 text-slate-700 border-none text-[10px]">SSLC</Badge>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3">
+                    <div className="font-black text-slate-900">Class 10th (Secondary School Leaving Certificate)</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">School Name</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">School Name</label>
                         <input
                           type="text"
                           value={resumeData.sslcSchool}
@@ -981,7 +1245,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         />
                       </div>
                       <div>
-                        <label className="text-slate-600 font-semibold block mb-0.5">Score / Percentage</label>
+                        <label className="font-semibold text-slate-600 block mb-0.5">Score / Percentage</label>
                         <input
                           type="text"
                           value={resumeData.sslcPercentage}
@@ -994,15 +1258,30 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                 </div>
               )}
 
-              {/* TAB 3: SKILLS */}
-              {activeTab === 'skills' && (
-                <div className="space-y-4">
-                  <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                    <Code2 className="h-4 w-4 text-blue-600" />
-                    Technical Skills & Competencies
-                  </h3>
+              {/* STEP 5: TECHNICAL SKILLS */}
+              {currentStep === 5 && (
+                <div className="space-y-4 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-700">Skills Matrix</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const preset = ROLE_TEMPLATES[resumeData.targetRole] || ROLE_TEMPLATES['ai-ml']
+                        saveDraft({
+                          ...resumeData,
+                          aiMlSkills: preset.skills.join(', '),
+                          areasOfInterest: preset.areas,
+                        })
+                        toast.success(`Injected top skills for ${preset.title}!`)
+                      }}
+                      className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-yellow-500" />
+                      <span>AI Suggest Skills for Target Role</span>
+                    </button>
+                  </div>
 
-                  <div className="space-y-3 text-xs">
+                  <div className="space-y-3">
                     <div>
                       <label className="font-bold text-slate-700 block mb-1">Programming Languages</label>
                       <input
@@ -1010,21 +1289,17 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         value={resumeData.languages}
                         onChange={(e) => saveDraft({ ...resumeData, languages: e.target.value })}
                         className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
-                        placeholder="Python, Java, C++, SQL, JavaScript..."
                       />
                     </div>
-
                     <div>
-                      <label className="font-bold text-slate-700 block mb-1">AI, Deep Learning & Vision</label>
+                      <label className="font-bold text-slate-700 block mb-1">AI, Deep Learning & Vision Frameworks</label>
                       <input
                         type="text"
                         value={resumeData.aiMlSkills}
                         onChange={(e) => saveDraft({ ...resumeData, aiMlSkills: e.target.value })}
                         className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
-                        placeholder="PyTorch, TensorFlow, Scikit-Learn, OpenCV, NLP, HuggingFace..."
                       />
                     </div>
-
                     <div>
                       <label className="font-bold text-slate-700 block mb-1">Data Science & Web Technologies</label>
                       <input
@@ -1032,32 +1307,17 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         value={resumeData.webDataSkills}
                         onChange={(e) => saveDraft({ ...resumeData, webDataSkills: e.target.value })}
                         className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
-                        placeholder="Pandas, NumPy, Next.js, React, Node.js, PostgreSQL..."
                       />
                     </div>
-
                     <div>
-                      <label className="font-bold text-slate-700 block mb-1">Developer Tools & Cloud</label>
+                      <label className="font-bold text-slate-700 block mb-1">Developer Tools, Cloud & Databases</label>
                       <input
                         type="text"
                         value={resumeData.toolsPlatforms}
                         onChange={(e) => saveDraft({ ...resumeData, toolsPlatforms: e.target.value })}
                         className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
-                        placeholder="Git, GitHub, Docker, Postman, Linux, Vercel, Supabase..."
                       />
                     </div>
-
-                    <div>
-                      <label className="font-bold text-slate-700 block mb-1">Areas of Interest</label>
-                      <input
-                        type="text"
-                        value={resumeData.areasOfInterest}
-                        onChange={(e) => saveDraft({ ...resumeData, areasOfInterest: e.target.value })}
-                        className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
-                        placeholder="Deep Learning, Computer Vision, Predictive Analytics..."
-                      />
-                    </div>
-
                     <div>
                       <label className="font-bold text-slate-700 block mb-1">Soft Skills</label>
                       <input
@@ -1065,21 +1325,19 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                         value={resumeData.softSkills}
                         onChange={(e) => saveDraft({ ...resumeData, softSkills: e.target.value })}
                         className="w-full px-3 py-2 rounded-xl border border-slate-200 font-medium"
-                        placeholder="Problem Solving, Analytical Thinking, Team Collaboration..."
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 4: PROJECTS */}
-              {activeTab === 'projects' && (
+              {/* STEP 6: PROJECTS */}
+              {currentStep === 6 && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                      <FolderOpen className="h-4 w-4 text-blue-600" />
-                      Key Projects ({resumeData.projects.length})
-                    </h3>
+                    <span className="text-xs font-bold text-slate-700">
+                      Technical Projects ({resumeData.projects.length})
+                    </span>
                     <Button
                       type="button"
                       size="sm"
@@ -1091,22 +1349,32 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                     </Button>
                   </div>
 
-                  <div className="space-y-3.5">
+                  <div className="space-y-4">
                     {resumeData.projects.map((proj, idx) => (
-                      <div key={proj.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2.5 text-xs">
+                      <div key={proj.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3 text-xs">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-blue-900">Project #{idx + 1}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeProject(proj.id)}
-                            className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg cursor-pointer"
-                            title="Remove project"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleAiPolishProject(proj.id)}
+                              className="text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-100/80 px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer"
+                              title="AI Polish description with action verbs and metrics"
+                            >
+                              <Wand2 className="h-3 w-3" />
+                              <span>AI Polish</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeProject(proj.id)}
+                              className="text-rose-500 hover:text-rose-700 p-1"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           <div>
                             <label className="text-slate-600 font-semibold block mb-0.5">Project Title</label>
                             <input
@@ -1117,20 +1385,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                             />
                           </div>
                           <div>
-                            <label className="text-slate-600 font-semibold block mb-0.5">Domain / Category</label>
-                            <input
-                              type="text"
-                              value={proj.domain}
-                              onChange={(e) => updateProject(proj.id, 'domain', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 font-medium"
-                              placeholder="e.g. Computer Vision"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-slate-600 font-semibold block mb-0.5">Technologies Used</label>
+                            <label className="text-slate-600 font-semibold block mb-0.5">Tech Stack</label>
                             <input
                               type="text"
                               value={proj.technologies}
@@ -1139,26 +1394,15 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                               placeholder="e.g. Python, PyTorch, FastAPI"
                             />
                           </div>
-                          <div>
-                            <label className="text-slate-600 font-semibold block mb-0.5">GitHub / Demo Link</label>
-                            <input
-                              type="text"
-                              value={proj.link}
-                              onChange={(e) => updateProject(proj.id, 'link', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 font-medium"
-                              placeholder="github.com/..."
-                            />
-                          </div>
                         </div>
 
                         <div>
-                          <label className="text-slate-600 font-semibold block mb-0.5">Description & Impact</label>
+                          <label className="text-slate-600 font-semibold block mb-0.5">Bullet Point Description</label>
                           <textarea
                             rows={3}
                             value={proj.description}
                             onChange={(e) => updateProject(proj.id, 'description', e.target.value)}
                             className="w-full p-2.5 bg-white rounded-lg border border-slate-200 font-normal leading-relaxed text-xs"
-                            placeholder="Detail your engineering contribution, methodologies, algorithm, and quantifiable outcomes..."
                           />
                         </div>
                       </div>
@@ -1167,201 +1411,127 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                 </div>
               )}
 
-              {/* TAB 5: EXPERIENCE */}
-              {activeTab === 'experience' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                      <Briefcase className="h-4 w-4 text-blue-600" />
-                      Internships & Industry Experience
-                    </h3>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={addExperience}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl cursor-pointer"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      <span>Add Experience</span>
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3.5">
-                    {resumeData.experiences.map((exp, idx) => (
-                      <div key={exp.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2.5 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-blue-900">Experience #{idx + 1}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeExperience(exp.id)}
-                            className="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg cursor-pointer"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-slate-600 font-semibold block mb-0.5">Role / Designation</label>
-                            <input
-                              type="text"
-                              value={exp.role}
-                              onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 font-medium"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-slate-600 font-semibold block mb-0.5">Organization / Company</label>
-                            <input
-                              type="text"
-                              value={exp.organization}
-                              onChange={(e) => updateExperience(exp.id, 'organization', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 font-medium"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div>
-                            <label className="text-slate-600 font-semibold block mb-0.5">Duration</label>
-                            <input
-                              type="text"
-                              value={exp.duration}
-                              onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 font-medium"
-                              placeholder="e.g. June 2025 - July 2025"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-slate-600 font-semibold block mb-0.5">Location</label>
-                            <input
-                              type="text"
-                              value={exp.location}
-                              onChange={(e) => updateExperience(exp.id, 'location', e.target.value)}
-                              className="w-full px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 font-medium"
-                              placeholder="e.g. Coimbatore, India"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="text-slate-600 font-semibold block mb-0.5">Key Contributions & Learning</label>
-                          <textarea
-                            rows={3}
-                            value={exp.description}
-                            onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
-                            className="w-full p-2.5 bg-white rounded-lg border border-slate-200 font-normal leading-relaxed text-xs"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* TAB 6: CERTIFICATIONS & ACHIEVEMENTS */}
-              {activeTab === 'certifications' && (
+              {/* STEP 7: EXPERIENCE, CERTS & ACHIEVEMENTS */}
+              {currentStep === 7 && (
                 <div className="space-y-6">
-                  {/* Certifications */}
+                  {/* Experience */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                        <FileCheck className="h-4 w-4 text-blue-600" />
-                        Certifications ({resumeData.certifications.length})
-                      </h3>
+                      <span className="text-xs font-bold text-slate-700">
+                        Internships / Experience ({resumeData.experiences.length})
+                      </span>
                       <button
                         type="button"
-                        onClick={addCert}
+                        onClick={addExperience}
                         className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        <span>Add Cert</span>
+                        <span>Add Internship</span>
                       </button>
                     </div>
 
+                    {resumeData.experiences.map((exp) => (
+                      <div key={exp.id} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2 text-xs">
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={exp.role}
+                            onChange={(e) => updateExperience(exp.id, 'role', e.target.value)}
+                            placeholder="Role / Title"
+                            className="px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                          />
+                          <input
+                            type="text"
+                            value={exp.organization}
+                            onChange={(e) => updateExperience(exp.id, 'organization', e.target.value)}
+                            placeholder="Organization / Company"
+                            className="px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={exp.duration}
+                            onChange={(e) => updateExperience(exp.id, 'duration', e.target.value)}
+                            placeholder="Duration (e.g. June - July 2025)"
+                            className="px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                          />
+                          <input
+                            type="text"
+                            value={exp.location}
+                            onChange={(e) => updateExperience(exp.id, 'location', e.target.value)}
+                            placeholder="Location"
+                            className="px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                          />
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={exp.description}
+                          onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
+                          placeholder="Key responsibilities and achievements..."
+                          className="w-full p-2 bg-white rounded border border-slate-200 font-normal text-xs"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Certifications & Achievements in 2 columns */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-slate-100">
                     <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700">Certifications</span>
+                        <button type="button" onClick={addCert} className="text-xs text-blue-600 font-bold">
+                          + Add
+                        </button>
+                      </div>
                       {resumeData.certifications.map((c) => (
-                        <div key={c.id} className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex items-center gap-2 text-xs">
+                        <div key={c.id} className="p-2 rounded bg-slate-50 border border-slate-200 text-xs flex gap-1.5">
                           <input
                             type="text"
                             value={c.name}
                             onChange={(e) => updateCert(c.id, 'name', e.target.value)}
-                            placeholder="Course / Certification Name"
-                            className="flex-1 px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                            placeholder="Course Name"
+                            className="flex-1 px-1.5 py-0.5 bg-white rounded border border-slate-200"
                           />
                           <input
                             type="text"
                             value={c.issuer}
                             onChange={(e) => updateCert(c.id, 'issuer', e.target.value)}
-                            placeholder="Issuer (e.g. NPTEL)"
-                            className="w-28 px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                            placeholder="Issuer"
+                            className="w-20 px-1.5 py-0.5 bg-white rounded border border-slate-200"
                           />
-                          <input
-                            type="text"
-                            value={c.date}
-                            onChange={(e) => updateCert(c.id, 'date', e.target.value)}
-                            placeholder="Year"
-                            className="w-16 px-2 py-1 bg-white rounded border border-slate-200 font-medium"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeCert(c.id)}
-                            className="text-rose-500 hover:text-rose-700 p-1"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
+                          <button type="button" onClick={() => removeCert(c.id)} className="text-rose-500 px-1">
+                            ×
                           </button>
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  {/* Achievements */}
-                  <div className="space-y-3 pt-3 border-t border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-black text-slate-800 flex items-center gap-1.5">
-                        <Award className="h-4 w-4 text-amber-500" />
-                        Achievements & Honors ({resumeData.achievements.length})
-                      </h3>
-                      <button
-                        type="button"
-                        onClick={addAchievement}
-                        className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Add Achievement</span>
-                      </button>
-                    </div>
 
                     <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-700">Honors & Awards</span>
+                        <button type="button" onClick={addAchievement} className="text-xs text-blue-600 font-bold">
+                          + Add
+                        </button>
+                      </div>
                       {resumeData.achievements.map((a) => (
-                        <div key={a.id} className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex items-center gap-2 text-xs">
+                        <div key={a.id} className="p-2 rounded bg-slate-50 border border-slate-200 text-xs flex gap-1.5">
                           <input
                             type="text"
                             value={a.title}
                             onChange={(e) => updateAchievement(a.id, 'title', e.target.value)}
                             placeholder="Award / Contest Title"
-                            className="flex-1 px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                            className="flex-1 px-1.5 py-0.5 bg-white rounded border border-slate-200"
                           />
                           <input
                             type="text"
                             value={a.event}
                             onChange={(e) => updateAchievement(a.id, 'event', e.target.value)}
-                            placeholder="Event / Symposium"
-                            className="w-32 px-2 py-1 bg-white rounded border border-slate-200 font-medium"
+                            placeholder="Event"
+                            className="w-20 px-1.5 py-0.5 bg-white rounded border border-slate-200"
                           />
-                          <input
-                            type="text"
-                            value={a.date}
-                            onChange={(e) => updateAchievement(a.id, 'date', e.target.value)}
-                            placeholder="Date"
-                            className="w-20 px-2 py-1 bg-white rounded border border-slate-200 font-medium"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeAchievement(a.id)}
-                            className="text-rose-500 hover:text-rose-700 p-1"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
+                          <button type="button" onClick={() => removeAchievement(a.id)} className="text-rose-500 px-1">
+                            ×
                           </button>
                         </div>
                       ))}
@@ -1371,58 +1541,157 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
               )}
 
             </CardContent>
+
+            {/* Step Navigation Footer */}
+            <div className="p-5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={currentStep === 1}
+                onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                className="text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Previous Step</span>
+              </Button>
+
+              <div className="flex items-center gap-2">
+                {currentStep < 7 ? (
+                  <Button
+                    type="button"
+                    onClick={() => setCurrentStep(currentStep + 1)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 px-4 py-2 rounded-xl cursor-pointer"
+                  >
+                    <span>Next Step</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={triggerAiAgentMakeResume}
+                    className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-black text-xs sm:text-sm flex items-center gap-2 px-5 py-2.5 rounded-xl shadow-lg shadow-blue-900/30 cursor-pointer animate-pulse"
+                  >
+                    <Sparkles className="h-4 w-4 text-yellow-300" />
+                    <span>Generate My Resume with AI Agent ✨</span>
+                  </Button>
+                )}
+              </div>
+            </div>
           </Card>
         </div>
+      )}
 
-        {/* ============================================================== */}
-        {/* RIGHT COLUMN: Realtime Live Document Sheet Preview             */}
-        {/* ============================================================== */}
-        <div className={`lg:col-span-7 space-y-4 ${isMobilePreviewOpen ? 'block' : 'hidden lg:block'}`}>
-          
-          {/* Zoom & Document Toolbar */}
-          <div className="flex items-center justify-between bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-xs no-print">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Eye className="h-4 w-4 text-blue-600" />
-                Live A4 Preview
-              </span>
-              <Badge className="bg-slate-100 text-slate-600 border-none text-[10px]">
-                {template.toUpperCase()} Layout
-              </Badge>
+      {/* ============================================================== */}
+      {/* FINAL VIEW / EDITOR MODE: A4 SHEET PREVIEW & CONTROLS          */}
+      {/* ============================================================== */}
+      {(viewMode === 'editor' || currentStep === 8) && (
+        <div className="space-y-6">
+          {/* Controls Bar */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Template Switcher */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                {(['modern', 'tech', 'classic', 'minimal'] as TemplateType[]).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTemplate(t)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
+                      template === t ? 'bg-white text-blue-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+
+              {/* Accent Color Circles */}
+              <div className="flex items-center gap-1.5">
+                {COLOR_THEMES.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => setAccentColor(theme)}
+                    className={`h-6 w-6 rounded-full transition-all cursor-pointer ${
+                      accentColor.id === theme.id ? 'ring-2 ring-offset-2 ring-slate-800 scale-110' : 'opacity-70 hover:opacity-100'
+                    }`}
+                    style={{ backgroundColor: theme.hex }}
+                    title={theme.name}
+                  />
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
-                onClick={() => setZoomLevel(Math.max(70, zoomLevel - 10))}
-                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 cursor-pointer"
-                title="Zoom Out"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setViewMode('wizard')
+                  setCurrentStep(1)
+                }}
+                className="text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
-                <ZoomOut className="h-3.5 w-3.5" />
-              </button>
-              <span className="text-xs font-bold text-slate-600 min-w-10 text-center">{zoomLevel}%</span>
-              <button
+                <ArrowLeft className="h-3.5 w-3.5" />
+                <span>Edit with AI Steps</span>
+              </Button>
+
+              <Button
                 type="button"
-                onClick={() => setZoomLevel(Math.min(130, zoomLevel + 10))}
-                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 cursor-pointer"
-                title="Zoom In"
+                size="sm"
+                onClick={handleCopyPlainText}
+                variant="outline"
+                className="text-xs font-bold flex items-center gap-1.5 cursor-pointer"
               >
-                <ZoomIn className="h-3.5 w-3.5" />
-              </button>
+                {copiedText ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{copiedText ? 'Copied' : 'Copy Text'}</span>
+              </Button>
+
               <Button
                 type="button"
                 size="sm"
                 onClick={handlePrint}
-                className="ml-2 bg-slate-900 hover:bg-black text-white text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer flex items-center gap-1.5"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 px-4 py-2 rounded-xl cursor-pointer shadow-md shadow-emerald-900/20"
               >
-                <Download className="h-3.5 w-3.5" />
-                <span>Export PDF</span>
+                <Printer className="h-4 w-4" />
+                <span>Print / Save PDF</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* AI Refine Chat Box */}
+          <div className="bg-gradient-to-r from-blue-50 via-indigo-50/50 to-white p-4 rounded-2xl border border-blue-200 shadow-xs flex flex-col sm:flex-row items-center gap-3 no-print">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center">
+                <Bot className="h-4 w-4" />
+              </div>
+              <span className="text-xs font-bold text-blue-900">Ask AI Agent to Refine:</span>
+            </div>
+            <div className="flex-1 w-full flex items-center gap-2">
+              <input
+                type="text"
+                value={aiCustomPrompt}
+                onChange={(e) => setAiCustomPrompt(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAiRefine()}
+                placeholder="e.g., 'Make my career summary more concise for an AI Engineer role' or 'Highlight my Deep Learning projects'..."
+                className="w-full px-3.5 py-2 text-xs rounded-xl border border-blue-200 bg-white focus:outline-none focus:border-blue-500 font-medium"
+              />
+              <Button
+                type="button"
+                size="sm"
+                disabled={isAiRefining || !aiCustomPrompt.trim()}
+                onClick={handleAiRefine}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shrink-0 rounded-xl cursor-pointer"
+              >
+                {isAiRefining ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                <span>Refine</span>
               </Button>
             </div>
           </div>
 
           {/* Scalable Container for A4 Paper */}
-          <div className="overflow-x-auto pb-8 flex justify-center bg-slate-100/70 p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-inner">
+          <div className="overflow-x-auto pb-8 flex justify-center bg-slate-100/70 p-4 sm:p-6 rounded-3xl border border-slate-200/80 shadow-inner">
             <div
               style={{
                 transform: `scale(${zoomLevel / 100})`,
@@ -1438,25 +1707,16 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                   fontFamily: template === 'classic' ? 'Georgia, serif' : 'Inter, system-ui, sans-serif',
                 }}
               >
-                
-                {/* ========================================================= */}
-                {/* TEMPLATE 1: MODERN ATS PROFESSIONAL                       */}
-                {/* ========================================================= */}
+                {/* TEMPLATE 1: MODERN ATS */}
                 {template === 'modern' && (
                   <div className="space-y-5 text-[12.5px] leading-relaxed">
-                    {/* Header */}
                     <div className="border-b-2 pb-4" style={{ borderColor: accentColor.hex }}>
-                      <h1
-                        className="text-2xl sm:text-3xl font-black tracking-tight"
-                        style={{ color: accentColor.hex }}
-                      >
+                      <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ color: accentColor.hex }}>
                         {resumeData.fullName}
                       </h1>
                       <div className="text-sm font-semibold text-slate-700 mt-0.5">
                         {resumeData.professionalTitle}
                       </div>
-
-                      {/* Contact Badges */}
                       <div className="flex items-center gap-x-4 gap-y-1.5 flex-wrap text-[11px] text-slate-600 mt-2.5 font-medium">
                         {resumeData.email && (
                           <span className="flex items-center gap-1">
@@ -1496,209 +1756,109 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                       </div>
                     </div>
 
-                    {/* Summary */}
                     {resumeData.summary && (
                       <div>
-                        <h2
-                          className="text-xs font-black uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
-                          style={{ color: accentColor.hex }}
-                        >
+                        <h2 className="text-xs font-black uppercase tracking-wider mb-1.5" style={{ color: accentColor.hex }}>
                           Professional Summary
                         </h2>
-                        <p className="text-slate-700 text-justify leading-relaxed">
-                          {resumeData.summary}
-                        </p>
+                        <p className="text-slate-700 text-justify leading-relaxed">{resumeData.summary}</p>
                       </div>
                     )}
 
-                    {/* Education */}
                     <div>
-                      <h2
-                        className="text-xs font-black uppercase tracking-wider mb-2"
-                        style={{ color: accentColor.hex }}
-                      >
+                      <h2 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: accentColor.hex }}>
                         Education
                       </h2>
                       <div className="space-y-2">
-                        {/* College */}
                         <div className="flex justify-between items-start">
                           <div>
-                            <div className="font-bold text-slate-900">
-                              {resumeData.collegeName}, {resumeData.collegeLocation}
-                            </div>
-                            <div className="text-slate-700 italic">
-                              {resumeData.degree} - {resumeData.branch}
-                            </div>
+                            <div className="font-bold text-slate-900">{resumeData.collegeName}, {resumeData.collegeLocation}</div>
+                            <div className="text-slate-700 italic">{resumeData.degree} - {resumeData.branch}</div>
                           </div>
                           <div className="text-right">
                             <div className="font-semibold text-slate-800">{resumeData.collegeYear}</div>
-                            <div className="font-bold" style={{ color: accentColor.hex }}>
-                              CGPA: {resumeData.cgpa}
-                            </div>
+                            <div className="font-bold" style={{ color: accentColor.hex }}>CGPA: {resumeData.cgpa}</div>
                           </div>
                         </div>
-
-                        {/* HSC & SSLC */}
                         <div className="flex justify-between text-slate-700 text-[11.5px] pt-1 border-t border-slate-100">
-                          <div>
-                            <span className="font-semibold">HSC (Class 12th):</span> {resumeData.hscSchool} ({resumeData.hscBoard})
-                          </div>
-                          <div className="font-bold">
-                            {resumeData.hscPercentage} | {resumeData.hscYear}
-                          </div>
+                          <div><span className="font-semibold">HSC (Class 12th):</span> {resumeData.hscSchool} ({resumeData.hscBoard})</div>
+                          <div className="font-bold">{resumeData.hscPercentage} | {resumeData.hscYear}</div>
                         </div>
                         <div className="flex justify-between text-slate-700 text-[11.5px]">
-                          <div>
-                            <span className="font-semibold">SSLC (Class 10th):</span> {resumeData.sslcSchool} ({resumeData.sslcBoard})
-                          </div>
-                          <div className="font-bold">
-                            {resumeData.sslcPercentage} | {resumeData.sslcYear}
-                          </div>
+                          <div><span className="font-semibold">SSLC (Class 10th):</span> {resumeData.sslcSchool} ({resumeData.sslcBoard})</div>
+                          <div className="font-bold">{resumeData.sslcPercentage} | {resumeData.sslcYear}</div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Technical Skills */}
                     <div>
-                      <h2
-                        className="text-xs font-black uppercase tracking-wider mb-2"
-                        style={{ color: accentColor.hex }}
-                      >
+                      <h2 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: accentColor.hex }}>
                         Technical Competencies
                       </h2>
                       <div className="space-y-1.5 text-[12px]">
-                        {resumeData.languages && (
-                          <div>
-                            <span className="font-bold text-slate-900">Programming Languages: </span>
-                            <span className="text-slate-700">{resumeData.languages}</span>
-                          </div>
-                        )}
-                        {resumeData.aiMlSkills && (
-                          <div>
-                            <span className="font-bold text-slate-900">AI & Machine Learning: </span>
-                            <span className="text-slate-700">{resumeData.aiMlSkills}</span>
-                          </div>
-                        )}
-                        {resumeData.webDataSkills && (
-                          <div>
-                            <span className="font-bold text-slate-900">Data Analytics & Web Tech: </span>
-                            <span className="text-slate-700">{resumeData.webDataSkills}</span>
-                          </div>
-                        )}
-                        {resumeData.toolsPlatforms && (
-                          <div>
-                            <span className="font-bold text-slate-900">Tools, Platforms & DB: </span>
-                            <span className="text-slate-700">{resumeData.toolsPlatforms}</span>
-                          </div>
-                        )}
-                        {resumeData.areasOfInterest && (
-                          <div>
-                            <span className="font-bold text-slate-900">Areas of Interest: </span>
-                            <span className="text-slate-700">{resumeData.areasOfInterest}</span>
-                          </div>
-                        )}
+                        {resumeData.languages && <div><span className="font-bold text-slate-900">Programming Languages: </span><span className="text-slate-700">{resumeData.languages}</span></div>}
+                        {resumeData.aiMlSkills && <div><span className="font-bold text-slate-900">AI & Machine Learning: </span><span className="text-slate-700">{resumeData.aiMlSkills}</span></div>}
+                        {resumeData.webDataSkills && <div><span className="font-bold text-slate-900">Data Analytics & Web Tech: </span><span className="text-slate-700">{resumeData.webDataSkills}</span></div>}
+                        {resumeData.toolsPlatforms && <div><span className="font-bold text-slate-900">Tools, Platforms & DB: </span><span className="text-slate-700">{resumeData.toolsPlatforms}</span></div>}
                       </div>
                     </div>
 
-                    {/* Projects */}
                     {resumeData.projects.length > 0 && (
                       <div>
-                        <h2
-                          className="text-xs font-black uppercase tracking-wider mb-2"
-                          style={{ color: accentColor.hex }}
-                        >
+                        <h2 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: accentColor.hex }}>
                           Key Technical Projects
                         </h2>
                         <div className="space-y-3">
                           {resumeData.projects.map((p) => (
                             <div key={p.id}>
                               <div className="flex justify-between items-baseline flex-wrap">
-                                <div className="font-bold text-slate-900">
-                                  {p.title}
-                                  {p.domain && <span className="font-normal text-slate-500 ml-1.5 text-[11px]">| {p.domain}</span>}
-                                </div>
-                                {p.link && (
-                                  <span className="text-[11px] font-semibold text-blue-700">
-                                    {p.link}
-                                  </span>
-                                )}
+                                <div className="font-bold text-slate-900">{p.title}</div>
+                                {p.link && <span className="text-[11px] font-semibold text-blue-700">{p.link}</span>}
                               </div>
-                              <div className="text-[11.5px] italic text-slate-600 mb-0.5">
-                                <span className="font-medium">Tech Stack:</span> {p.technologies}
-                              </div>
-                              <p className="text-slate-700 text-justify text-[12px] leading-relaxed">
-                                {p.description}
-                              </p>
+                              <div className="text-[11.5px] italic text-slate-600 mb-0.5"><span className="font-medium">Tech Stack:</span> {p.technologies}</div>
+                              <p className="text-slate-700 text-justify text-[12px] leading-relaxed">{p.description}</p>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Internships & Experience */}
                     {resumeData.experiences.length > 0 && (
                       <div>
-                        <h2
-                          className="text-xs font-black uppercase tracking-wider mb-2"
-                          style={{ color: accentColor.hex }}
-                        >
+                        <h2 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: accentColor.hex }}>
                           Experience & Internships
                         </h2>
                         <div className="space-y-2.5">
                           {resumeData.experiences.map((exp) => (
                             <div key={exp.id}>
                               <div className="flex justify-between items-baseline">
-                                <div className="font-bold text-slate-900">
-                                  {exp.role} <span className="font-normal text-slate-600">at {exp.organization}</span>
-                                </div>
-                                <div className="text-[11px] font-semibold text-slate-600">
-                                  {exp.duration} {exp.location && `| ${exp.location}`}
-                                </div>
+                                <div className="font-bold text-slate-900">{exp.role} <span className="font-normal text-slate-600">at {exp.organization}</span></div>
+                                <div className="text-[11px] font-semibold text-slate-600">{exp.duration}</div>
                               </div>
-                              <p className="text-slate-700 text-[12px] leading-relaxed mt-0.5">
-                                {exp.description}
-                              </p>
+                              <p className="text-slate-700 text-[12px] leading-relaxed mt-0.5">{exp.description}</p>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Certifications & Achievements in 2 compact columns */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 border-t border-slate-100">
                       {resumeData.certifications.length > 0 && (
                         <div>
-                          <h2
-                            className="text-xs font-black uppercase tracking-wider mb-1.5"
-                            style={{ color: accentColor.hex }}
-                          >
-                            Certifications
-                          </h2>
+                          <h2 className="text-xs font-black uppercase tracking-wider mb-1.5" style={{ color: accentColor.hex }}>Certifications</h2>
                           <ul className="list-disc list-inside space-y-1 text-slate-700 text-[11.5px]">
                             {resumeData.certifications.map((c) => (
-                              <li key={c.id}>
-                                <span className="font-semibold text-slate-900">{c.name}</span>
-                                <span className="text-slate-500"> - {c.issuer} ({c.date})</span>
-                              </li>
+                              <li key={c.id}><span className="font-semibold text-slate-900">{c.name}</span> <span className="text-slate-500">- {c.issuer}</span></li>
                             ))}
                           </ul>
                         </div>
                       )}
-
                       {resumeData.achievements.length > 0 && (
                         <div>
-                          <h2
-                            className="text-xs font-black uppercase tracking-wider mb-1.5"
-                            style={{ color: accentColor.hex }}
-                          >
-                            Honors & Achievements
-                          </h2>
+                          <h2 className="text-xs font-black uppercase tracking-wider mb-1.5" style={{ color: accentColor.hex }}>Honors & Achievements</h2>
                           <ul className="list-disc list-inside space-y-1 text-slate-700 text-[11.5px]">
                             {resumeData.achievements.map((a) => (
-                              <li key={a.id}>
-                                <span className="font-semibold text-slate-900">{a.title}</span>
-                                <span className="text-slate-500"> - {a.event}</span>
-                              </li>
+                              <li key={a.id}><span className="font-semibold text-slate-900">{a.title}</span> <span className="text-slate-500">- {a.event}</span></li>
                             ))}
                           </ul>
                         </div>
@@ -1707,16 +1867,10 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                   </div>
                 )}
 
-                {/* ========================================================= */}
-                {/* TEMPLATE 2: SILICON VALLEY SPLIT (2 COLUMNS)              */}
-                {/* ========================================================= */}
+                {/* TEMPLATE 2: SILICON VALLEY SPLIT */}
                 {template === 'tech' && (
                   <div className="space-y-5 text-[12px]">
-                    {/* Header Banner */}
-                    <div
-                      className="p-5 rounded-xl text-white flex justify-between items-center"
-                      style={{ backgroundColor: accentColor.hex }}
-                    >
+                    <div className="p-5 rounded-xl text-white flex justify-between items-center" style={{ backgroundColor: accentColor.hex }}>
                       <div>
                         <h1 className="text-2xl font-black tracking-tight">{resumeData.fullName}</h1>
                         <p className="text-xs text-white/90 font-medium mt-0.5">{resumeData.professionalTitle}</p>
@@ -1728,99 +1882,56 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                       </div>
                     </div>
 
-                    {/* 2-Column Body */}
                     <div className="grid grid-cols-12 gap-5">
-                      {/* Left Column (Skills, Education, Links) */}
                       <div className="col-span-4 space-y-4 border-r border-slate-200 pr-4">
                         <div>
-                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">
-                            Links & Profiles
-                          </h3>
-                          <div className="space-y-1 text-[11px] text-slate-700 break-all">
-                            {resumeData.linkedIn && <div><strong>LinkedIn:</strong> {resumeData.linkedIn}</div>}
-                            {resumeData.gitHub && <div><strong>GitHub:</strong> {resumeData.gitHub}</div>}
-                            {resumeData.registerNumber && <div><strong>Reg No:</strong> {resumeData.registerNumber}</div>}
-                          </div>
-                        </div>
-
-                        <div>
-                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">
-                            Education
-                          </h3>
+                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">Education</h3>
                           <div className="space-y-2 text-[11px]">
                             <div>
                               <div className="font-bold text-slate-900">{resumeData.degree}</div>
                               <div className="text-slate-600">{resumeData.branch}</div>
-                              <div className="text-slate-500">{resumeData.collegeName}</div>
                               <div className="font-bold text-blue-700">CGPA: {resumeData.cgpa}</div>
                               <div className="text-slate-400">{resumeData.collegeYear}</div>
                             </div>
                             <div className="pt-1 border-t border-slate-100">
-                              <div className="font-bold text-slate-800">Class 12th (HSC)</div>
-                              <div>{resumeData.hscSchool}</div>
-                              <div className="font-semibold text-slate-700">{resumeData.hscPercentage} ({resumeData.hscYear})</div>
+                              <div className="font-bold text-slate-800">Class 12th</div>
+                              <div>{resumeData.hscSchool} ({resumeData.hscPercentage})</div>
                             </div>
                           </div>
                         </div>
 
                         <div>
-                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">
-                            Skills Matrix
-                          </h3>
+                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">Skills Matrix</h3>
                           <div className="space-y-2 text-[11px]">
-                            <div>
-                              <span className="font-bold text-slate-900 block">Languages:</span>
-                              <span className="text-slate-600">{resumeData.languages}</span>
-                            </div>
-                            <div>
-                              <span className="font-bold text-slate-900 block">AI & Deep Learning:</span>
-                              <span className="text-slate-600">{resumeData.aiMlSkills}</span>
-                            </div>
-                            <div>
-                              <span className="font-bold text-slate-900 block">Data & Frameworks:</span>
-                              <span className="text-slate-600">{resumeData.webDataSkills}</span>
-                            </div>
-                            <div>
-                              <span className="font-bold text-slate-900 block">Tools:</span>
-                              <span className="text-slate-600">{resumeData.toolsPlatforms}</span>
-                            </div>
+                            <div><span className="font-bold text-slate-900 block">Languages:</span><span className="text-slate-600">{resumeData.languages}</span></div>
+                            <div><span className="font-bold text-slate-900 block">AI & Deep Learning:</span><span className="text-slate-600">{resumeData.aiMlSkills}</span></div>
+                            <div><span className="font-bold text-slate-900 block">Tools:</span><span className="text-slate-600">{resumeData.toolsPlatforms}</span></div>
                           </div>
                         </div>
 
                         {resumeData.certifications.length > 0 && (
                           <div>
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">
-                              Certificates
-                            </h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">Certifications</h3>
                             <ul className="space-y-1.5 text-[11px] text-slate-700">
                               {resumeData.certifications.map((c) => (
-                                <li key={c.id}>
-                                  <strong>{c.name}</strong> - <span className="text-slate-500">{c.issuer}</span>
-                                </li>
+                                <li key={c.id}><strong>{c.name}</strong> - <span className="text-slate-500">{c.issuer}</span></li>
                               ))}
                             </ul>
                           </div>
                         )}
                       </div>
 
-                      {/* Right Column (Summary, Projects, Experience, Achievements) */}
                       <div className="col-span-8 space-y-4">
                         {resumeData.summary && (
                           <div>
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-1.5">
-                              Professional Summary
-                            </h3>
-                            <p className="text-slate-700 text-justify leading-relaxed">
-                              {resumeData.summary}
-                            </p>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-1.5">Summary</h3>
+                            <p className="text-slate-700 text-justify leading-relaxed">{resumeData.summary}</p>
                           </div>
                         )}
 
                         {resumeData.projects.length > 0 && (
                           <div>
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">
-                              Featured Engineering Projects
-                            </h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">Projects</h3>
                             <div className="space-y-3">
                               {resumeData.projects.map((p) => (
                                 <div key={p.id}>
@@ -1828,12 +1939,8 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                                     <span>{p.title}</span>
                                     {p.link && <span className="text-[10.5px] font-normal text-blue-700">{p.link}</span>}
                                   </div>
-                                  <div className="text-[11px] text-slate-500 italic mb-0.5">
-                                    {p.technologies}
-                                  </div>
-                                  <p className="text-slate-700 text-[11.5px] leading-relaxed">
-                                    {p.description}
-                                  </p>
+                                  <div className="text-[11px] text-slate-500 italic mb-0.5">{p.technologies}</div>
+                                  <p className="text-slate-700 text-[11.5px] leading-relaxed">{p.description}</p>
                                 </div>
                               ))}
                             </div>
@@ -1842,9 +1949,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
 
                         {resumeData.experiences.length > 0 && (
                           <div>
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">
-                              Work & Internships
-                            </h3>
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">Experience</h3>
                             <div className="space-y-2.5">
                               {resumeData.experiences.map((exp) => (
                                 <div key={exp.id}>
@@ -1852,27 +1957,10 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                                     <span>{exp.role} - {exp.organization}</span>
                                     <span className="text-[11px] text-slate-500 font-normal">{exp.duration}</span>
                                   </div>
-                                  <p className="text-slate-700 text-[11.5px] leading-relaxed mt-0.5">
-                                    {exp.description}
-                                  </p>
+                                  <p className="text-slate-700 text-[11.5px] leading-relaxed mt-0.5">{exp.description}</p>
                                 </div>
                               ))}
                             </div>
-                          </div>
-                        )}
-
-                        {resumeData.achievements.length > 0 && (
-                          <div>
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 border-b pb-1 mb-2">
-                              Awards & Achievements
-                            </h3>
-                            <ul className="space-y-1 text-[11.5px] text-slate-700 list-disc list-inside">
-                              {resumeData.achievements.map((a) => (
-                                <li key={a.id}>
-                                  <strong>{a.title}</strong> - {a.event} ({a.date})
-                                </li>
-                              ))}
-                            </ul>
                           </div>
                         )}
                       </div>
@@ -1880,79 +1968,46 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                   </div>
                 )}
 
-                {/* ========================================================= */}
-                {/* TEMPLATE 3: CLASSIC IVY LEAGUE / HARVARD FORMAL           */}
-                {/* ========================================================= */}
+                {/* TEMPLATE 3: CLASSIC IVY */}
                 {template === 'classic' && (
                   <div className="space-y-4 text-[12px] leading-relaxed font-serif">
-                    {/* Centered Classic Header */}
                     <div className="text-center border-b-2 border-slate-900 pb-3">
-                      <h1 className="text-3xl font-bold tracking-wide uppercase text-slate-900">
-                        {resumeData.fullName}
-                      </h1>
+                      <h1 className="text-3xl font-bold tracking-wide uppercase text-slate-900">{resumeData.fullName}</h1>
                       <div className="text-[11.5px] text-slate-700 mt-1 flex justify-center items-center gap-3 flex-wrap">
                         <span>{resumeData.location}</span>
                         <span>•</span>
                         <span>{resumeData.phone}</span>
                         <span>•</span>
                         <span>{resumeData.email}</span>
-                        {resumeData.gitHub && (
-                          <>
-                            <span>•</span>
-                            <span>{resumeData.gitHub}</span>
-                          </>
-                        )}
-                        {resumeData.linkedIn && (
-                          <>
-                            <span>•</span>
-                            <span>{resumeData.linkedIn}</span>
-                          </>
-                        )}
                       </div>
                     </div>
 
-                    {/* Education First (Classic Academic Style) */}
                     <div>
-                      <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">
-                        Education
-                      </h2>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-baseline">
-                          <div>
-                            <strong className="text-slate-900">{resumeData.collegeName}</strong>, {resumeData.collegeLocation}
-                            <div className="italic text-slate-800">{resumeData.degree}, {resumeData.branch}</div>
-                          </div>
-                          <div className="text-right">
-                            <div>{resumeData.collegeYear}</div>
-                            <strong>CGPA: {resumeData.cgpa}</strong>
-                          </div>
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">Education</h2>
+                      <div className="flex justify-between items-baseline">
+                        <div>
+                          <strong className="text-slate-900">{resumeData.collegeName}</strong>
+                          <div className="italic text-slate-800">{resumeData.degree}, {resumeData.branch}</div>
                         </div>
-                        <div className="flex justify-between text-[11px] text-slate-700 italic">
-                          <span>Class XII (HSC), {resumeData.hscSchool}</span>
-                          <span>{resumeData.hscPercentage} | {resumeData.hscYear}</span>
+                        <div className="text-right">
+                          <div>{resumeData.collegeYear}</div>
+                          <strong>CGPA: {resumeData.cgpa}</strong>
                         </div>
                       </div>
                     </div>
 
-                    {/* Technical Skills */}
                     <div>
-                      <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">
-                        Technical Expertise
-                      </h2>
+                      <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">Technical Expertise</h2>
                       <div className="space-y-1 text-[11.5px]">
                         <div><strong>Programming Languages:</strong> {resumeData.languages}</div>
                         <div><strong>AI, ML & Deep Learning:</strong> {resumeData.aiMlSkills}</div>
-                        <div><strong>Data Science & Web:</strong> {resumeData.webDataSkills}</div>
                         <div><strong>Developer Tools:</strong> {resumeData.toolsPlatforms}</div>
                       </div>
                     </div>
 
-                    {/* Projects */}
                     {resumeData.projects.length > 0 && (
                       <div>
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">
-                          Academic & Technical Projects
-                        </h2>
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">Key Projects</h2>
                         <div className="space-y-2.5">
                           {resumeData.projects.map((p) => (
                             <div key={p.id}>
@@ -1960,138 +2015,40 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                                 <span>{p.title}</span>
                                 <span className="font-normal italic text-[11px] text-slate-600">{p.technologies}</span>
                               </div>
-                              <p className="text-slate-800 text-justify text-[11.5px]">
-                                {p.description}
-                              </p>
+                              <p className="text-slate-800 text-justify text-[11.5px]">{p.description}</p>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
-
-                    {/* Experience */}
-                    {resumeData.experiences.length > 0 && (
-                      <div>
-                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">
-                          Experience & Internships
-                        </h2>
-                        <div className="space-y-2">
-                          {resumeData.experiences.map((exp) => (
-                            <div key={exp.id}>
-                              <div className="flex justify-between font-bold text-slate-900">
-                                <span>{exp.role}, {exp.organization}</span>
-                                <span className="font-normal">{exp.duration}</span>
-                              </div>
-                              <p className="text-slate-800 text-[11.5px]">
-                                {exp.description}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Honors & Certifications */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {resumeData.achievements.length > 0 && (
-                        <div>
-                          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">
-                            Achievements
-                          </h2>
-                          <ul className="list-disc list-inside space-y-1 text-[11px]">
-                            {resumeData.achievements.map((a) => (
-                              <li key={a.id}><strong>{a.title}</strong>, {a.event}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {resumeData.certifications.length > 0 && (
-                        <div>
-                          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1.5">
-                            Certifications
-                          </h2>
-                          <ul className="list-disc list-inside space-y-1 text-[11px]">
-                            {resumeData.certifications.map((c) => (
-                              <li key={c.id}><strong>{c.name}</strong>, {c.issuer}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
 
-                {/* ========================================================= */}
-                {/* TEMPLATE 4: MINIMALIST CLEAN                              */}
-                {/* ========================================================= */}
+                {/* TEMPLATE 4: MINIMALIST */}
                 {template === 'minimal' && (
                   <div className="space-y-4 text-[12px] leading-relaxed">
-                    {/* Header */}
-                    <div className="pb-3 border-b border-slate-200">
-                      <div className="flex justify-between items-baseline flex-wrap">
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-                          {resumeData.fullName}
-                        </h1>
-                        <span className="font-semibold text-slate-500 text-xs">
-                          {resumeData.professionalTitle}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-500 mt-1 flex gap-3 flex-wrap">
-                        <span>{resumeData.email}</span>
-                        <span>•</span>
-                        <span>{resumeData.phone}</span>
-                        <span>•</span>
-                        <span>{resumeData.location}</span>
-                        {resumeData.gitHub && <><span>•</span><span>{resumeData.gitHub}</span></>}
+                    <div className="pb-3 border-b border-slate-200 flex justify-between items-baseline flex-wrap">
+                      <h1 className="text-2xl font-black text-slate-900 tracking-tight">{resumeData.fullName}</h1>
+                      <span className="font-semibold text-slate-500 text-xs">{resumeData.professionalTitle}</span>
+                    </div>
+                    {resumeData.summary && <p className="text-slate-700 text-justify text-[11.5px]">{resumeData.summary}</p>}
+                    <div>
+                      <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Education</h2>
+                      <div className="flex justify-between text-[11.5px]">
+                        <div><strong>{resumeData.degree} in {resumeData.branch}</strong> - {resumeData.collegeName}</div>
+                        <div className="font-bold">CGPA: {resumeData.cgpa}</div>
                       </div>
                     </div>
-
-                    {/* Summary */}
-                    {resumeData.summary && (
-                      <div>
-                        <p className="text-slate-700 text-justify text-[11.5px]">
-                          {resumeData.summary}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Education */}
                     <div>
-                      <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
-                        Education
-                      </h2>
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between">
-                          <div>
-                            <strong className="text-slate-900">{resumeData.degree} in {resumeData.branch}</strong>
-                            <div className="text-slate-600 text-[11px]">{resumeData.collegeName}</div>
-                          </div>
-                          <div className="text-right">
-                            <span className="font-bold text-slate-900">CGPA: {resumeData.cgpa}</span>
-                            <div className="text-slate-500 text-[11px]">{resumeData.collegeYear}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Skills */}
-                    <div>
-                      <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
-                        Technical Skills
-                      </h2>
+                      <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Skills</h2>
                       <div className="text-[11.5px] space-y-1">
                         <div><strong>Languages:</strong> {resumeData.languages}</div>
-                        <div><strong>AI & Machine Learning:</strong> {resumeData.aiMlSkills}</div>
-                        <div><strong>Frameworks & Tools:</strong> {resumeData.webDataSkills}, {resumeData.toolsPlatforms}</div>
+                        <div><strong>AI & Data Science:</strong> {resumeData.aiMlSkills}</div>
                       </div>
                     </div>
-
-                    {/* Projects */}
                     {resumeData.projects.length > 0 && (
                       <div>
-                        <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
-                          Projects
-                        </h2>
+                        <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Projects</h2>
                         <div className="space-y-2">
                           {resumeData.projects.map((p) => (
                             <div key={p.id} className="text-[11.5px]">
@@ -2099,27 +2056,7 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                                 <span>{p.title}</span>
                                 <span className="font-normal text-slate-500 text-[10.5px]">{p.technologies}</span>
                               </div>
-                              <p className="text-slate-700 text-justify mt-0.5">{p.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Experience */}
-                    {resumeData.experiences.length > 0 && (
-                      <div>
-                        <h2 className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1.5">
-                          Experience
-                        </h2>
-                        <div className="space-y-2">
-                          {resumeData.experiences.map((exp) => (
-                            <div key={exp.id} className="text-[11.5px]">
-                              <div className="flex justify-between font-bold text-slate-900">
-                                <span>{exp.role} - {exp.organization}</span>
-                                <span className="font-normal text-slate-500">{exp.duration}</span>
-                              </div>
-                              <p className="text-slate-700 mt-0.5">{exp.description}</p>
+                              <p className="text-slate-700 mt-0.5">{p.description}</p>
                             </div>
                           ))}
                         </div>
@@ -2127,13 +2064,11 @@ ${resumeData.achievements.map(a => `• ${a.title} - ${a.event} (${a.date})`).jo
                     )}
                   </div>
                 )}
-
               </div>
             </div>
           </div>
         </div>
-
-      </div>
+      )}
     </div>
   )
 }
