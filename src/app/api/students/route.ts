@@ -607,10 +607,10 @@ export async function PUT(request: Request) {
     }
 
     const isEmailCustom = Boolean(email?.trim())
-    if (isEmailCustom && !email.trim().toLowerCase().endsWith('@gmail.com')) {
+    if (isEmailCustom && !isAdmin && !email.trim().toLowerCase().endsWith('@gmail.com')) {
       return NextResponse.json({
         success: false,
-        error: 'Only @gmail.com email addresses are permitted for student personal emails.',
+        message: 'Only @gmail.com email addresses are permitted for student personal emails.',
       }, { status: 400 })
     }
 
@@ -633,6 +633,26 @@ export async function PUT(request: Request) {
 
       const targetEmail = isEmailCustom ? email.trim().toLowerCase() : undefined
 
+      if (targetEmail) {
+        const emailClash = await prisma.user.findFirst({
+          where: {
+            email: targetEmail,
+            NOT: { id: student.userId },
+          },
+        }).catch(() => null)
+        if (emailClash) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Email address "${targetEmail}" is already registered to another user (${emailClash.name}).`,
+            },
+            { status: 409 }
+          )
+        }
+      }
+
+      const parsedDob = dateOfBirth ? parseSafeDateOfBirth(dateOfBirth) : null
+
       const [updatedStudent, updatedUser] = await prisma.$transaction([
         prisma.student.update({
           where: { id: student.id },
@@ -645,7 +665,7 @@ export async function PUT(request: Request) {
             ...(isAdmin && section !== undefined ? { section: section.trim() } : {}),
             ...(isAdmin && advisorName !== undefined ? { advisorName: String(advisorName).trim() } : {}),
             ...(parentPhone !== undefined ? { parentPhone: parentPhone ? String(parentPhone).trim() : null } : {}),
-            ...(dateOfBirth !== undefined ? { dateOfBirth: parseSafeDateOfBirth(dateOfBirth) } : {}),
+            ...(parsedDob ? { dateOfBirth: parsedDob } : {}),
             ...(bloodGroup !== undefined ? { bloodGroup } : {}),
             ...(residencyStatus !== undefined ? { residencyStatus } : {}),
             ...(residencyStatus && String(residencyStatus).toLowerCase().includes('hostel')

@@ -694,6 +694,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         body: JSON.stringify({
           id: selectedStudent.id,
           ...formData,
+          password: formData.password?.trim() ? formData.password.trim() : undefined,
           email: formData.email.trim() || undefined,
           phone: formData.phone.trim() || undefined,
           parentPhone: ((formData as any).parentPhone || '').trim() || undefined,

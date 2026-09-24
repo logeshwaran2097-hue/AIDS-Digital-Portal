@@ -220,8 +220,10 @@ export const studentSelfUpdateSchema = z
     registerNumber: z.string().max(30).optional(),
     name: z.string().min(2).max(100).optional(),
     email: optionalEmailSchema,
-    personalEmail: optionalEmailSchema,
-    password: z.string().min(6).max(100).optional(),
+    password: z.preprocess(
+      (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+      z.string().min(6).max(100).optional()
+    ),
     phone: z.string().max(100).optional().nullable(),
     parentPhone: z.string().max(100).optional().nullable(),
     isParentWhatsapp: z.boolean().optional(),
