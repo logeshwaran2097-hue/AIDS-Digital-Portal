@@ -2601,6 +2601,21 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
     if (resp.ok) {
       const originalPdfBytes = await resp.arrayBuffer()
       
+      // If file is larger than 5MB, skip merging to prevent browser freeze and out-of-memory errors
+      if (originalPdfBytes.byteLength > 5 * 1024 * 1024) {
+        console.warn('File exceeds 5MB, skipping cover page merging to prevent UI freeze.')
+        const blob = new Blob([originalPdfBytes], { type: 'application/pdf' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        return
+      }
+      
       // Render Cover Page
       renderHeader()
       const coverPdfBytes = doc.output('arraybuffer')
