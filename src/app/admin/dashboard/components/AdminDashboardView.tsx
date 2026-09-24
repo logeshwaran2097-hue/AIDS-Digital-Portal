@@ -351,27 +351,27 @@ export function AdminDashboardView({ data }: { data: AdminDashboardData }) {
 
             {/* Text */}
             <div className="relative z-10">
-              <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-[#22C7E8] mb-4 tracking-tight drop-shadow-sm">
+              <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-purple-400 to-[#22C7E8] mb-4 tracking-tight drop-shadow-sm animate-pulse" style={{ animationDuration: '3s' }}>
                 HAPPY BIRTHDAY!
               </h2>
               <div className="text-white/90 font-medium mb-8 text-sm sm:text-base leading-relaxed px-2 space-y-4">
-                <p>
+                <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-150 fill-mode-both">
                   Dear <span className="font-bold text-white text-lg">Birthday Girl / Admin</span>,
                 </p>
-                <p>
+                <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-300 fill-mode-both">
                   On this special day, we wish you immense joy, boundless laughter, and extraordinary success in all your future endeavors! ✨
                 </p>
-                <p>
+                <p className="animate-in slide-in-from-bottom-4 fade-in duration-700 delay-500 fill-mode-both">
                   May this year bring you closer to your dreams and aspirations. Keep shining bright and making us proud!
                 </p>
-                <p className="pt-2 text-[#22C7E8] font-semibold italic">
+                <p className="pt-2 text-[#22C7E8] font-semibold italic animate-in slide-in-from-bottom-4 fade-in duration-700 delay-700 fill-mode-both">
                   — With warm wishes from the Digital Portal of AI&amp;DS
                 </p>
               </div>
               
               <button 
                 onClick={() => setShowTestPopup(false)}
-                className="w-full sm:w-2/3 mx-auto py-4 px-6 bg-gradient-to-r from-white to-gray-50 hover:to-white text-[#071A3D] rounded-2xl font-black text-lg transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2"
+                className="w-full sm:w-2/3 mx-auto py-4 px-6 bg-gradient-to-r from-white to-gray-50 hover:to-white text-[#071A3D] rounded-2xl font-black text-lg transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_35px_rgba(255,255,255,0.6)] hover:-translate-y-1 active:translate-y-0 flex items-center justify-center gap-2 animate-in slide-in-from-bottom-6 fade-in duration-700 delay-1000 fill-mode-both"
               >
                 Let's Celebrate! 🎉
               </button>
