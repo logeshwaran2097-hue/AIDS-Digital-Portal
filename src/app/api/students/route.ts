@@ -291,9 +291,9 @@ export async function POST(request: Request) {
       attendance,
     } = data
 
-    if (!registerNumber || !name || !password?.trim() || !email?.trim()) {
+    if (!registerNumber || !name || !password?.trim()) {
       return NextResponse.json(
-        { success: false, message: 'Register Number, Full Name, Email, and Temporary Password are required.' },
+        { success: false, message: 'Register Number, Full Name, and Temporary Password are required.' },
         { status: 400 }
       )
     }
@@ -329,9 +329,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const finalEmail = email.trim().toLowerCase()
+    const isEmailCustom = Boolean(email?.trim())
+    const finalEmail = isEmailCustom ? email.trim().toLowerCase() : `${regUpper.toLowerCase()}@vsb.student.edu`
 
-    if (!finalEmail.endsWith('@gmail.com')) {
+    if (isEmailCustom && !finalEmail.endsWith('@gmail.com')) {
       return NextResponse.json(
         {
           success: false,
@@ -341,9 +342,10 @@ export async function POST(request: Request) {
       )
     }
 
-    const existingUserWithEmail = await prisma.user.findUnique({
-      where: { email: finalEmail },
-      select: { name: true, role: true },
+    if (isEmailCustom) {
+      const existingUserWithEmail = await prisma.user.findUnique({
+        where: { email: finalEmail },
+        select: { name: true, role: true },
       }).catch(() => null)
 
       if (existingUserWithEmail) {
@@ -355,6 +357,7 @@ export async function POST(request: Request) {
           { status: 409 }
         )
       }
+    }
 
     // Hash admin-typed temporary password
     const initialPassword = password.trim()
