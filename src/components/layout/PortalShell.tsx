@@ -11,6 +11,7 @@ const studentNav = [
   { name: 'Subjects', href: '/dashboard/subjects' },
   { name: 'Question Papers', href: '/dashboard/question-papers' },
   { name: 'Projects', href: '/dashboard/projects' },
+  { name: 'Resume Generator', href: '/dashboard/resume' },
   { name: 'Faculty', href: '/dashboard/faculty' },
   { name: 'Events', href: '/dashboard/events' },
   { name: 'Announcements', href: '/dashboard/announcements' },

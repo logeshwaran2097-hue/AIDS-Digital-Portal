@@ -22,7 +22,8 @@ import {
   ShieldCheck,
   FlaskConical,
   Bus,
-  Calculator
+  Calculator,
+  Briefcase
 } from 'lucide-react'
 import type { NavItem } from './PortalLayout'
 
@@ -33,6 +34,7 @@ export const studentNavItems: NavItem[] = [
   { label: 'Event Proofs', href: '/dashboard/od-proofs', icon: <ShieldCheck className="h-4 w-4" /> },
   { label: 'Bus & Hostel Pass', href: '/dashboard/digital-pass', icon: <Bus className="h-4 w-4" /> },
   { label: 'GPA & Marksheets', href: '/dashboard/gpa-calculator', icon: <Calculator className="h-4 w-4" /> },
+  { label: 'Resume Generator', href: '/dashboard/resume', icon: <Briefcase className="h-4 w-4" /> },
   { label: 'Study Details', href: '/dashboard/study', icon: <BookOpen className="h-4 w-4" /> },
   { label: 'Subjects', href: '/dashboard/subjects', icon: <GraduationCap className="h-4 w-4" /> },
   { label: 'Question Papers', href: '/dashboard/question-papers', icon: <FileQuestion className="h-4 w-4" /> },

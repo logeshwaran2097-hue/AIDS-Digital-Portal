@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   TrendingUp,
   Percent,
+  Briefcase,
 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -81,6 +82,7 @@ const quickAccess = [
   { label: 'Projects', href: '/dashboard/projects', icon: <FolderOpen className="h-5 w-5" />, bg: 'bg-[#2878E8]/10 text-[#2878E8] hover:bg-[#2878E8]/20 border-[#2878E8]/20' },
   { label: 'Events', href: '/dashboard/events', icon: <CalendarDays className="h-5 w-5" />, bg: 'bg-[#FF6B6B]/10 text-[#ee5253] hover:bg-[#FF6B6B]/20 border-[#FF6B6B]/20' },
   { label: 'Resources', href: '/dashboard/resources', icon: <Database className="h-5 w-5" />, bg: 'bg-[#2878E8]/10 text-[#2878E8] hover:bg-[#2878E8]/20 border-[#2878E8]/20' },
+  { label: 'Resume Generator', href: '/dashboard/resume', icon: <Briefcase className="h-5 w-5" />, bg: 'bg-[#10B981]/10 text-[#059669] hover:bg-[#10B981]/20 border-[#10B981]/20' },
   { label: 'Achievements', href: '/dashboard/achievements', icon: <Trophy className="h-5 w-5" />, bg: 'bg-[#F4C430]/15 text-[#b8860b] hover:bg-[#F4C430]/25 border-[#F4C430]/30' },
 ]
 
