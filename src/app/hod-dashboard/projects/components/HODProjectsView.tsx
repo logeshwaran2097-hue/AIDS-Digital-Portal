@@ -93,8 +93,10 @@ export function HODProjectsView({ projects: initialProjects }: { projects: Proje
       const matchesSection = (() => {
         if (selectedSection === 'ALL') return true
         const secLetter = selectedSection.toLowerCase()
-        const rawContent = `${p.teamMembers} ${p.title} ${p.description || ''}`.toLowerCase()
+        const rawContent = `${p.teamMembers} ${p.title} ${p.description || ''} ${(p as any).section || ''}`.toLowerCase()
+        const projectSection = (p as any).section ? String((p as any).section).toLowerCase() : ''
         return (
+          projectSection === secLetter ||
           rawContent.includes(`sec ${secLetter}`) ||
           rawContent.includes(`section ${secLetter}`) ||
           rawContent.includes(`sec-${secLetter}`) ||
@@ -313,9 +315,10 @@ export function HODProjectsView({ projects: initialProjects }: { projects: Proje
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
               {[
                 { label: 'All Sections', value: 'ALL' },
-                { label: 'Section A (Sec A)', value: 'A' },
-                { label: 'Section B (Sec B)', value: 'B' },
-                { label: 'Section C (Sec C)', value: 'C' },
+                { label: 'Section A', value: 'A' },
+                { label: 'Section B', value: 'B' },
+                { label: 'Section C', value: 'C' },
+                { label: 'Section D', value: 'D' },
               ].map((sec) => (
                 <button
                   key={sec.value}
@@ -578,6 +581,7 @@ export function HODProjectsView({ projects: initialProjects }: { projects: Proje
                     <option value="A">Section A</option>
                     <option value="B">Section B</option>
                     <option value="C">Section C</option>
+                    <option value="D">Section D</option>
                   </select>
                 </div>
               </div>
