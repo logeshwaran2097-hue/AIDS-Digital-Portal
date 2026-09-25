@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/Badge'
 import Link from 'next/link'
 import { BookOpen, ArrowRight, Sparkles } from 'lucide-react'
 import { EmptyState } from '@/components/portal/states'
+import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
+import { getCurriculumBySemester, type CurriculumCourse } from '@/lib/assessmentR2023'
 
 interface Subject {
   id: string
@@ -15,23 +17,33 @@ interface Subject {
 }
 
 export default function SubjectsList({ subjects }: { subjects: Subject[] }) {
+  const displaySubjects: Subject[] = subjects.length > 0 ? subjects : getCurriculumBySemester(3).map((c: CurriculumCourse, i: number) => ({
+    id: `official-3-${i}`,
+    code: c.code,
+    name: c.name,
+    credits: c.credits,
+    description: null,
+  }))
+
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-100">
-        <div>
-          <h1 className="text-2xl font-black text-[#071A3D] tracking-tight">Curriculum &amp; Course Subjects</h1>
-          <p className="text-xs text-gray-500 mt-1">Official subjects registered for your current academic semester</p>
-        </div>
-        <span className="text-xs font-bold text-[#1455D9] px-3 py-1 bg-blue-50 border border-blue-200 rounded-xl self-start sm:self-auto">
-          {subjects.length} Enrolled Courses
-        </span>
-      </div>
+      {/* Universal Institutional Study Navigation Header */}
+      <StudyNavigationHeader
+        title="Curriculum &amp; Course Subjects"
+        subtitle="Official courses and credit allocations registered for your academic semester."
+        badgeText="Department of AI &amp; DS"
+        stats={[
+          { label: 'Enrolled Courses', value: displaySubjects.length },
+          { label: 'Degree Track', value: 'B.Tech AI & DS' },
+        ]}
+      />
 
-      {subjects.length === 0 ? (
+
+      {displaySubjects.length === 0 ? (
         <EmptyState title="No subjects available" description="Subjects will appear once published by the department." icon="📚" />
       ) : (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-          {subjects.map((s) => (
+          {displaySubjects.map((s) => (
             <Link
               key={s.id}
               href="/dashboard/study"

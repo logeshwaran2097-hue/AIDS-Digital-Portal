@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { EmptyState } from '@/components/portal/states'
 import { formatDate, formatFileSize } from '@/lib/utils'
-import { FileQuestion, Eye, Download, Search, Sparkles, BookOpen, Layers } from 'lucide-react'
+import { FileQuestion, Eye, Download, Search, Sparkles, BookOpen, Layers, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
+import { instantDirectDownload } from '@/lib/fastDocumentFetcher'
 
 interface QP {
   id: string
@@ -59,7 +61,7 @@ export default function QuestionPapersList({ questionPapers, subjects }: { quest
 
   const handleDownloadQP = (q: QP) => {
     if (q.fileUrl && (q.fileUrl.startsWith('http') || q.fileUrl.startsWith('/'))) {
-      window.open(q.fileUrl, '_blank')
+      instantDirectDownload(q.fileUrl, q.fileName || 'Question_Paper.pdf')
       return
     }
 
@@ -112,25 +114,15 @@ export default function QuestionPapersList({ questionPapers, subjects }: { quest
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Examination Bank
-            </span>
-            <span className="text-xs text-gray-300">· Anna University &amp; Autonomous</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Question Paper Archive</h1>
-          <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Internal assessment tests, model exams &amp; Anna University past question papers
-          </p>
-        </div>
-
-        <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
-          <p className="text-[10px] text-gray-300 uppercase font-bold">Total Papers</p>
-          <p className="text-base font-black text-[#F4C430]">{questionPapers.length} Question Sets</p>
-        </div>
-      </div>
+      <StudyNavigationHeader
+        title="Question Paper Archive"
+        subtitle="Internal assessment tests, model exams & Anna University past question papers."
+        badgeText="Examination Directorate"
+        stats={[
+          { label: 'Total Papers', value: `${questionPapers.length} Sets` },
+          { label: 'Curriculum Year', value: '2025-2026' },
+        ]}
+      />
 
       {/* Filter Toolbar */}
       <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col md:flex-row gap-3">

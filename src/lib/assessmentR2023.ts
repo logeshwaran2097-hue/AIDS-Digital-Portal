@@ -229,3 +229,7 @@ export function getAbsoluteGradeIIYear(totalMarks: number): GradeDefinition {
   }
   return ABSOLUTE_GRADING_II_YEAR[ABSOLUTE_GRADING_II_YEAR.length - 1]
 }
+
+// Re-export official curriculum courses data
+export * from './curriculumData'
+

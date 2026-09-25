@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   GraduationCap,
   Calculator,
@@ -34,6 +34,8 @@ import {
   calculateTheoryCumLabMarks,
   getAbsoluteGradeIIYear
 } from '@/lib/assessmentR2023'
+import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
+import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 
 interface SubjectGradeRow {
   id: string
@@ -70,23 +72,13 @@ export interface DbSubject {
   description?: string | null
 }
 
-const DEFAULT_SEMESTER_CREDITS: Record<number, number> = {
-  1: 20,
-  2: 23.5,
-  3: 26,
-  4: 22.5,
-  5: 22,
-  6: 22,
-  7: 20,
-  8: 16
-}
-
 interface GPACalculatorMarksheetViewProps {
   studentName?: string
   registerNumber?: string
   studentYear?: number
   currentSemester?: number
   initialCgpa?: number | null
+  adminSubjects?: DbSubject[]
 }
 
 export default function GPACalculatorMarksheetView({
@@ -94,7 +86,8 @@ export default function GPACalculatorMarksheetView({
   registerNumber = '',
   studentYear = 2,
   currentSemester = 3,
-  initialCgpa = null
+  initialCgpa = null,
+  adminSubjects = []
 }: GPACalculatorMarksheetViewProps) {
   const [activeTab, setActiveTab] = useState<'calculator' | 'cgpa_predictor' | 'marks_calculator' | 'r2023_guidelines' | 'marksheet_locker'>('calculator')
 
@@ -104,8 +97,14 @@ export default function GPACalculatorMarksheetView({
   )
 
   const [selectedSemester, setSelectedSemester] = useState<number>(currentSemester || 3)
-  const [dbSubjects, setDbSubjects] = useState<DbSubject[]>([])
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState<boolean>(true)
+  const [dbSubjects, setDbSubjects] = useState<DbSubject[]>(() => adminSubjects || [])
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState<boolean>(!adminSubjects || adminSubjects.length === 0)
+
+  // Real credit total dynamically computed from subjects added by Admin for a given semester
+  const getSemesterCreditTotal = useCallback((sem: number) => {
+    const semSubs = dbSubjects.filter(s => s.semester === sem)
+    return semSubs.reduce((acc, s) => acc + (Number(s.credits) || 0), 0)
+  }, [dbSubjects])
 
   // Grade point mapping based on selected grading system
   const currentGradePoints = useMemo<Record<string, number>>(() => {
@@ -137,8 +136,19 @@ export default function GPACalculatorMarksheetView({
     }
   }, [gradingSystem])
 
-  // Subject rows for GPA calculator (dynamically populated from database or empty)
-  const [subjects, setSubjects] = useState<SubjectGradeRow[]>([])
+  // Subject rows for GPA calculator loaded from subjects added by Admin
+  const [subjects, setSubjects] = useState<SubjectGradeRow[]>(() => {
+    const sem = currentSemester || 3
+    const semSubjects = (adminSubjects || []).filter(s => s.semester === sem)
+    return semSubjects.map((s, idx) => ({
+      id: s.id || `admin-${sem}-${idx}`,
+      code: s.code,
+      name: s.name,
+      credits: Number(s.credits) || 3,
+      courseType: s.courseType || 'Theory',
+      grade: ''
+    }))
+  })
 
   // Fetch live subjects configured by Admin
   useEffect(() => {
@@ -163,26 +173,22 @@ export default function GPACalculatorMarksheetView({
     }
   }, [])
 
-  // Sync subjects when dbSubjects or selectedSemester changes
+  // Sync subjects when dbSubjects or selectedSemester changes (strictly use subjects added by admin)
   useEffect(() => {
     const semSubjects = dbSubjects.filter(s => s.semester === selectedSemester)
-    if (semSubjects.length > 0) {
-      setSubjects(
-        semSubjects.map((s, idx) => ({
-          id: s.id || `subj-${selectedSemester}-${idx}`,
-          code: s.code,
-          name: s.name,
-          credits: Number(s.credits) || 3,
-          courseType: (s.courseType as any) || 'Theory',
-          grade: ''
-        }))
-      )
-    } else {
-      setSubjects([])
-    }
+    setSubjects(
+      semSubjects.map((s, idx) => ({
+        id: s.id || `subj-${selectedSemester}-${idx}`,
+        code: s.code,
+        name: s.name,
+        credits: Number(s.credits) || 3,
+        courseType: (s.courseType as any) || 'Theory',
+        grade: ''
+      }))
+    )
   }, [dbSubjects, selectedSemester])
 
-  // Real Cumulative Semester GPAs state (zero placeholder/fake numbers)
+  // Real Cumulative Semester GPAs state (zero placeholder / clean real records)
   const storageKey = `aids_student_semester_gpas_${registerNumber}`
   const [semesterGPAs, setSemesterGPAs] = useState<Record<number, { gpa: number; credits: number }>>(() => {
     if (typeof window !== 'undefined') {
@@ -190,21 +196,37 @@ export default function GPACalculatorMarksheetView({
       if (saved) {
         try {
           return JSON.parse(saved)
-        } catch {
-          // fallback
-        }
+        } catch {}
       }
     }
-    // Initialize clean with 0 (real data entered by student)
+    // Clean initial state with 0 - real data entered by student
     const initial: Record<number, { gpa: number; credits: number }> = {}
     for (let sem = 1; sem <= 8; sem++) {
-      initial[sem] = { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[sem] || 20 }
-    }
-    if (initialCgpa && initialCgpa > 0) {
-      initial[1] = { gpa: initialCgpa, credits: DEFAULT_SEMESTER_CREDITS[1] }
+      const semSubs = (adminSubjects || []).filter(s => s.semester === sem)
+      const creds = semSubs.reduce((sum, s) => sum + (Number(s.credits) || 0), 0)
+      initial[sem] = { gpa: 0, credits: creds }
     }
     return initial
   })
+
+  // Sync semester credits when dbSubjects changes if semester has 0 credits
+  useEffect(() => {
+    if (dbSubjects.length > 0) {
+      setSemesterGPAs(prev => {
+        let changed = false
+        const next = { ...prev }
+        for (let sem = 1; sem <= 8; sem++) {
+          const semSubs = dbSubjects.filter(s => s.semester === sem)
+          const creds = semSubs.reduce((sum, s) => sum + (Number(s.credits) || 0), 0)
+          if (creds > 0 && (!next[sem] || next[sem].credits === 0)) {
+            next[sem] = { gpa: next[sem]?.gpa || 0, credits: creds }
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
+    }
+  }, [dbSubjects])
 
   // Save to localStorage when semesterGPAs change
   useEffect(() => {
@@ -238,24 +260,83 @@ export default function GPACalculatorMarksheetView({
     }
   }, [marksheets, marksheetStorageKey])
 
-  // Switch semester preset
+  // Switch semester preset (strictly loads subjects added by Admin)
   const handleSemesterChange = (sem: number) => {
     setSelectedSemester(sem)
     const semSubjects = dbSubjects.filter(s => s.semester === sem)
+    setSubjects(semSubjects.map((item, idx) => ({
+      id: item.id || `subj-${sem}-${idx}`,
+      code: item.code,
+      name: item.name,
+      credits: Number(item.credits) || 3,
+      courseType: (item.courseType as any) || 'Theory',
+      grade: ''
+    })))
     if (semSubjects.length > 0) {
-      setSubjects(semSubjects.map((item, idx) => ({
-        id: item.id || `subj-${sem}-${idx}`,
-        code: item.code,
-        name: item.name,
-        credits: Number(item.credits) || 3,
-        courseType: (item.courseType as any) || 'Theory',
-        grade: ''
-      })))
-      toast.success(`Loaded ${semSubjects.length} approved courses for Semester ${sem}!`)
+      toast.success(`Loaded ${semSubjects.length} subjects added by Admin for Semester ${sem}!`)
     } else {
-      setSubjects([])
+      toast(`No courses registered by Admin for Semester ${sem} yet.`, { icon: 'ℹ️' })
     }
   }
+
+  // Quick simulated grades
+  const handleFillGrades = (targetGrade: string) => {
+    setSubjects(prev => prev.map(s => ({ ...s, grade: targetGrade })))
+    toast.success(`Simulated all courses with Grade ${targetGrade}!`)
+  }
+
+  // Download official semester marksheet PDF
+  const handleDownloadSemesterMarksheetPDF = () => {
+    const rows = subjects.map((s, idx) => {
+      const pt = s.grade && currentGradePoints[s.grade] !== undefined ? currentGradePoints[s.grade] : 0
+      const ciGi = pt * s.credits
+      return `${idx + 1}. [${s.code}] ${s.name} | Credits: ${s.credits} | Grade: ${s.grade || 'Awaiting'} | Grade Point: ${pt} | Score: ${ciGi.toFixed(1)}`
+    })
+
+    const honors = calculatedSemesterGPA >= 8.5
+      ? 'FIRST CLASS WITH DISTINCTION'
+      : calculatedSemesterGPA >= 6.5
+      ? 'FIRST CLASS'
+      : 'SECOND CLASS'
+
+    generateAndDownloadPDF({
+      title: 'DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE',
+      subtitle: `Official Semester ${selectedSemester} Grade Statement & Marksheet · Academic Year 2025-2026`,
+      subjectCode: `SEMESTER-${selectedSemester}-RESULTS`,
+      author: 'Office of the Controller of Examinations',
+      category: 'Autonomous Semester Grade Sheet',
+      sections: [
+        {
+          heading: 'STUDENT ACADEMIC CREDENTIALS',
+          body: [
+            `Student Name: ${studentName || 'Student'}`,
+            `Register Number: ${registerNumber || '922522AD001'}`,
+            `Degree / Branch: B.Tech. Artificial Intelligence & Data Science`,
+            `Regulation: Autonomous Regulation 2023 (R2023)`,
+            `Semester / Academic Year: Semester ${selectedSemester} (Year ${Math.ceil(selectedSemester / 2)}) · 2025-2026`,
+            `Grading System Applied: ${gradingSystem === 'absolute_ii_year' ? 'Absolute Grading System (10-Point Scale)' : 'Relative Grading System (10-Point Scale)'}`,
+          ],
+        },
+        {
+          heading: `SEMESTER ${selectedSemester} COURSE-WISE GRADE POINT PERFORMANCE`,
+          body: rows,
+        },
+        {
+          heading: 'SEMESTER CUMULATIVE SUMMARY & RESULT CLASSIFICATION',
+          body: [
+            `Total Registered Credits (∑Ci): ${currentSemesterCredits} Credits`,
+            `Total Earned Credit-Points (∑Ci × Gi): ${totalWeightedPoints} Points`,
+            `Calculated Semester Grade Point Average (SGPA): ${hasAnyGrade ? calculatedSemesterGPA.toFixed(2) : 'Awaiting Input'} / 10.00`,
+            `Official Academic Standing: ${hasAnyGrade ? honors : 'Awaiting Examination Results'}`,
+            `Declaration: Verified and validated against V.S.B. Autonomous ERP academic ledgers.`,
+          ],
+        },
+      ],
+      fileName: `VSB_AIDS_Sem${selectedSemester}_Official_GradeSheet_${registerNumber || 'Student'}`,
+    })
+    toast.success(`Downloaded Semester ${selectedSemester} Marksheet PDF!`)
+  }
+
 
   // Clear all course grades
   const handleClearGrades = () => {
@@ -340,21 +421,6 @@ export default function GPACalculatorMarksheetView({
     }
   }, [semesterGPAs])
 
-  // Quick Example & Reset Actions for Cumulative Records
-  const handleLoadSlide14Example = () => {
-    setSemesterGPAs({
-      1: { gpa: 8.75, credits: DEFAULT_SEMESTER_CREDITS[1] || 20 },
-      2: { gpa: 8.60, credits: DEFAULT_SEMESTER_CREDITS[2] || 23.5 },
-      3: { gpa: 9.10, credits: DEFAULT_SEMESTER_CREDITS[3] || 26 },
-      4: { gpa: 8.80, credits: DEFAULT_SEMESTER_CREDITS[4] || 22.5 },
-      5: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[5] || 22 },
-      6: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[6] || 22 },
-      7: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[7] || 20 },
-      8: { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[8] || 16 },
-    })
-    toast.success('Loaded Slide 14 example records (CGPA: 8.81)')
-  }
-
   // Required GPA for target (calculated against real remaining credits)
   const requiredRemainingGPA = useMemo(() => {
     let earnedPoints = 0
@@ -384,23 +450,23 @@ export default function GPACalculatorMarksheetView({
   // ==========================================
   const [courseCategory, setCourseCategory] = useState<'Theory' | 'Laboratory' | 'Theory cum Laboratory'>('Theory')
   const [theoryInputs, setTheoryInputs] = useState({
-    test1: 76,
-    test2: 80,
-    assign1: 90,
-    assign2: 90,
-    external: 90
+    test1: 0,
+    test2: 0,
+    assign1: 0,
+    assign2: 0,
+    external: 0
   })
   const [labInputs, setLabInputs] = useState({
-    record: 70,
-    test: 22,
-    external: 85
+    record: 0,
+    test: 0,
+    external: 0
   })
   const [theoryLabInputs, setTheoryLabInputs] = useState({
-    assignment: 85,
-    writtenTest: 78,
-    labRecord: 68,
-    labTest: 23,
-    external: 85
+    assignment: 0,
+    writtenTest: 0,
+    labRecord: 0,
+    labTest: 0,
+    external: 0
   })
 
   // Computed marks for current category
@@ -442,7 +508,7 @@ export default function GPACalculatorMarksheetView({
     semester: selectedSemester,
     academicYear: 'Nov / Dec 2024',
     gpa: '',
-    totalCredits: DEFAULT_SEMESTER_CREDITS[selectedSemester] || 24,
+    totalCredits: getSemesterCreditTotal(selectedSemester),
     result: 'PASS' as 'PASS' | 'DISTINCTION' | 'WITHHELD',
     fileName: ''
   })
@@ -478,7 +544,7 @@ export default function GPACalculatorMarksheetView({
       semester: selectedSemester,
       academicYear: 'Nov / Dec 2024',
       gpa: '',
-      totalCredits: DEFAULT_SEMESTER_CREDITS[selectedSemester] || 24,
+      totalCredits: getSemesterCreditTotal(selectedSemester),
       result: 'PASS',
       fileName: ''
     })
@@ -490,7 +556,7 @@ export default function GPACalculatorMarksheetView({
     if (confirm('Are you sure you want to clear all entered semester GPA data?')) {
       const resetMap: Record<number, { gpa: number; credits: number }> = {}
       for (let sem = 1; sem <= 8; sem++) {
-        resetMap[sem] = { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[sem] || 20 }
+        resetMap[sem] = { gpa: 0, credits: getSemesterCreditTotal(sem) }
       }
       setSemesterGPAs(resetMap)
       setMarksheets([])
@@ -504,48 +570,41 @@ export default function GPACalculatorMarksheetView({
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0E2C66] to-[#1455D9] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      {/* Universal Institutional Study & Academic Header */}
+      <StudyNavigationHeader
+        title="SGPA & CGPA Examination Calculation Suite"
+        subtitle="Official credit-weighted formulae for SGPA and CGPA directly aligned with Autonomous R2023 presentation rubrics."
+        badgeText="Autonomous Regulation 2023 (R2023)"
+        stats={[
+          { label: 'Current CGPA', value: currentCGPA > 0 ? currentCGPA.toFixed(2) : '—' },
+          { label: 'Earned Credits', value: `${completedCredits} / 165` },
+          { label: 'Completed Sems', value: `${totalCompletedSemesters} / 8` },
+        ]}
+      />
+
+      {/* Hero Tab Switcher Bar */}
+      <div className="bg-gradient-to-r from-[#071A3D] via-[#0E2C66] to-[#1455D9] rounded-3xl p-6 sm:p-7 text-white shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-cyan-200">
-              <GraduationCap className="w-4 h-4 text-cyan-400" />
-              <span>V.S.B. Autonomous Regulation 2023 (R2023) Official Academic Formulae</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-              SGPA &amp; CGPA Examination Calculation Suite
-            </h1>
-            <p className="text-sm text-cyan-100/80 max-w-2xl leading-relaxed">
-              Official credit-weighted formulae for SGPA (&sum;C<sub>i</sub>G<sub>i</sub> / &sum;C<sub>i</sub>) and CGPA (&sum;Credits &times; SGPA / &sum;Credits) directly aligned with Autonomous R2023 presentation rubrics.
-            </p>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider block">
+              Student Academic Suite · {studentName || 'Student'} ({registerNumber || '922522AD001'})
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black">
+              Regulation 2023 Academic Performance &amp; Predictor Engine
+            </h2>
           </div>
-
-          {/* Real Statistics Card */}
-          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-white/20">
-            <div className="text-center">
-              <span className="text-[10px] text-cyan-200 uppercase font-bold block">Current CGPA</span>
-              <span className="text-2xl sm:text-3xl font-black text-white">
-                {currentCGPA > 0 ? currentCGPA.toFixed(2) : '—'}
-              </span>
-            </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div className="text-center">
-              <span className="text-[10px] text-cyan-200 uppercase font-bold block">Earned Credits</span>
-              <span className="text-2xl sm:text-3xl font-black text-cyan-300">
-                {completedCredits} <span className="text-xs text-white/60">/ 165</span>
-              </span>
-            </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div className="text-center">
-              <span className="text-[10px] text-cyan-200 uppercase font-bold block">Completed Sems</span>
-              <span className="text-2xl sm:text-3xl font-black text-emerald-300">
-                {totalCompletedSemesters} <span className="text-xs text-white/60">/ 8</span>
-              </span>
-            </div>
-          </div>
+          
+          <button
+            onClick={handleDownloadSemesterMarksheetPDF}
+            className="px-4 py-2.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] font-extrabold text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download Sem {selectedSemester} Marksheet PDF</span>
+          </button>
         </div>
+
 
         {/* Tab Switcher */}
         <div className="mt-8 flex flex-wrap gap-2 border-t border-white/10 pt-4">
@@ -650,26 +709,35 @@ export default function GPACalculatorMarksheetView({
             {/* Action Bar & Grading Scheme Toggle */}
             <div className="flex flex-col gap-2.5 w-full md:w-auto shrink-0">
               <button
-                onClick={() => {
-                  const semSubjects = dbSubjects.filter(s => s.semester === selectedSemester)
-                  if (semSubjects.length > 0) {
-                    setSubjects(semSubjects.map((item, idx) => ({
-                      id: item.id || `subj-${selectedSemester}-${idx}`,
-                      code: item.code,
-                      name: item.name,
-                      credits: Number(item.credits) || 3,
-                      courseType: (item.courseType as any) || 'Theory',
-                      grade: ''
-                    })))
-                    toast.success(`Refreshed ${semSubjects.length} courses from curriculum database!`)
-                  } else {
-                    toast('No subjects currently stored in database for this semester. Click "+ Add Custom Course" below.', { icon: 'ℹ️' })
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/admin/academics')
+                    const data = await res.json()
+                    if (data.success && Array.isArray(data.subjects)) {
+                      setDbSubjects(data.subjects)
+                      const semSubjects = data.subjects.filter((s: DbSubject) => s.semester === selectedSemester)
+                      setSubjects(semSubjects.map((item: DbSubject, idx: number) => ({
+                        id: item.id || `subj-${selectedSemester}-${idx}`,
+                        code: item.code,
+                        name: item.name,
+                        credits: Number(item.credits) || 3,
+                        courseType: (item.courseType as any) || 'Theory',
+                        grade: ''
+                      })))
+                      if (semSubjects.length > 0) {
+                        toast.success(`Synchronized ${semSubjects.length} subjects added by Admin for Semester ${selectedSemester}!`)
+                      } else {
+                        toast(`No subjects registered by Admin for Semester ${selectedSemester} yet.`, { icon: 'ℹ️' })
+                      }
+                    }
+                  } catch (e) {
+                    toast.error('Failed to sync subjects from Admin database.')
                   }
                 }}
                 className="px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#1455D9] border border-blue-200 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
               >
                 <RefreshCw className="w-4 h-4 text-[#1455D9]" />
-                <span>Sync Official Courses</span>
+                <span>Sync Admin Courses</span>
               </button>
 
               {/* Grading Scheme Toggle */}
@@ -727,6 +795,44 @@ export default function GPACalculatorMarksheetView({
                         Sem {sem}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Quick Grade Simulator Toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-blue-50/60 p-2.5 rounded-2xl border border-blue-100">
+                  <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Quick Grade Simulations:</span>
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleFillGrades('S')}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                    >
+                      Fill All S (10.0)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFillGrades('A+')}
+                      className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                    >
+                      Fill All A+ (9.0)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFillGrades('A')}
+                      className="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                    >
+                      Fill All A (8.0)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearGrades}
+                      className="px-2.5 py-1 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 text-[11px] font-bold transition-colors cursor-pointer"
+                    >
+                      Clear
+                    </button>
                   </div>
                 </div>
 
@@ -1042,31 +1148,23 @@ export default function GPACalculatorMarksheetView({
             {/* Quick Action Button */}
             <div className="flex flex-col gap-2 w-full md:w-auto shrink-0">
               <button
-                onClick={handleLoadSlide14Example}
-                className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
-              >
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Load Example (CGPA = 8.81)</span>
-              </button>
-
-              <button
                 onClick={handleResetAllSemesters}
-                className="px-4 py-2 rounded-xl text-red-600 hover:bg-red-50 border border-red-200 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-red-600 hover:bg-red-50 border border-red-200 text-xs font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset All Real Semesters</span>
+                <span>Clear Cumulative GPAs</span>
               </button>
             </div>
           </div>
 
-          {/* Example Table matching Slide 14 Table */}
+          {/* Real Semester-by-Semester CGPA Table */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8 space-y-4">
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm">Semester-by-Semester Cumulative Records</h4>
-                    <p className="text-xs text-slate-500">Enter real semester SGPA scores below or load example</p>
+                    <p className="text-xs text-slate-500">Calculated from course grades or entered manually for completed semesters</p>
                   </div>
                   <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-xl border border-emerald-200">
                     {totalCompletedSemesters} Completed / 8
@@ -1078,7 +1176,7 @@ export default function GPACalculatorMarksheetView({
                     <thead>
                       <tr className="border-b border-slate-200 text-slate-500 font-bold bg-slate-50">
                         <th className="py-3 px-4">Semester</th>
-                        <th className="py-3 px-4 text-center w-32">Total Credits</th>
+                        <th className="py-3 px-4 text-center w-32">Credits (Admin Courses)</th>
                         <th className="py-3 px-4 text-center w-32">SGPA</th>
                         <th className="py-3 px-4 text-center w-36 font-mono">Credits &times; SGPA</th>
                         <th className="py-3 px-3 text-center w-24">Status</th>
@@ -1087,7 +1185,9 @@ export default function GPACalculatorMarksheetView({
                     <tbody className="divide-y divide-slate-100">
                       {Array.from({ length: 8 }, (_, i) => i + 1).map((sem) => {
                         const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'][sem - 1]
-                        const data = semesterGPAs[sem] || { gpa: 0, credits: DEFAULT_SEMESTER_CREDITS[sem] || 20 }
+                        const semSubs = dbSubjects.filter(s => s.semester === sem)
+                        const adminCredits = semSubs.reduce((acc, s) => acc + (Number(s.credits) || 0), 0)
+                        const data = semesterGPAs[sem] || { gpa: 0, credits: adminCredits }
                         const isEntered = data.gpa > 0
                         const creditsTimesSGPA = isEntered ? parseFloat((data.credits * data.gpa).toFixed(2)) : 0
 
@@ -1095,7 +1195,9 @@ export default function GPACalculatorMarksheetView({
                           <tr key={sem} className={isEntered ? 'hover:bg-slate-50/70' : 'bg-slate-50/30'}>
                             <td className="py-3 px-4">
                               <span className="font-bold text-slate-800 text-sm">Semester {roman}</span>
-                              <span className="text-slate-400 text-[10px] block">Sem {sem}</span>
+                              <span className="text-slate-400 text-[10px] block">
+                                {semSubs.length > 0 ? `${semSubs.length} Admin Courses` : `Sem ${sem}`}
+                              </span>
                             </td>
                             <td className="py-3 px-4 text-center">
                               <input
@@ -1142,7 +1244,7 @@ export default function GPACalculatorMarksheetView({
                                 </span>
                               ) : (
                                 <span className="text-[10px] font-medium text-slate-400">
-                                  Upcoming
+                                  Pending
                                 </span>
                               )}
                             </td>
@@ -1150,7 +1252,7 @@ export default function GPACalculatorMarksheetView({
                         )
                       })}
 
-                      {/* Total Row matching Slide 14 Total */}
+                      {/* Total Row */}
                       <tr className="bg-emerald-50/70 font-bold text-slate-900 border-t-2 border-emerald-300">
                         <td className="py-3 px-4 font-black uppercase text-xs">Total</td>
                         <td className="py-3 px-4 text-center font-black text-sm font-mono text-emerald-800">
@@ -1166,22 +1268,28 @@ export default function GPACalculatorMarksheetView({
                   </table>
                 </div>
 
-                {/* Step-by-Step Fraction Display matching Slide 14 */}
+                {/* Step-by-Step Fraction Display */}
                 <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-col sm:flex-row items-center justify-between gap-4 font-serif">
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-slate-800 text-sm">Calculation:</span>
-                    <span className="font-bold text-base text-slate-900">CGPA =</span>
-                    <div className="inline-flex flex-col items-center text-sm font-bold">
-                      <span className="border-b-2 border-slate-800 px-3 pb-0.5 text-emerald-900">
-                        {totalCreditPointsCGPA.toFixed(2)}
+                  {completedCredits > 0 ? (
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-slate-800 text-sm">Calculation:</span>
+                      <span className="font-bold text-base text-slate-900">CGPA =</span>
+                      <div className="inline-flex flex-col items-center text-sm font-bold">
+                        <span className="border-b-2 border-slate-800 px-3 pb-0.5 text-emerald-900">
+                          {totalCreditPointsCGPA.toFixed(2)}
+                        </span>
+                        <span className="pt-0.5 text-slate-800">{completedCredits}</span>
+                      </div>
+                      <span className="font-bold text-base text-slate-900">=</span>
+                      <span className="text-xl font-black text-emerald-900">
+                        {currentCGPA > 0 ? currentCGPA.toFixed(2) : '0.00'}
                       </span>
-                      <span className="pt-0.5 text-slate-800">{completedCredits}</span>
                     </div>
-                    <span className="font-bold text-base text-slate-900">=</span>
-                    <span className="text-xl font-black text-emerald-900">
-                      {currentCGPA > 0 ? currentCGPA.toFixed(2) : '0.00'}
-                    </span>
-                  </div>
+                  ) : (
+                    <div className="text-xs font-sans text-slate-600 font-medium">
+                      ℹ️ Enter your completed semester GPAs above or calculate from courses to compute cumulative CGPA.
+                    </div>
+                  )}
 
                   <div className="font-sans">
                     <span className="text-xs text-slate-500 font-bold block">Final Cumulative Result:</span>
@@ -1916,11 +2024,14 @@ export default function GPACalculatorMarksheetView({
                 <label className="block font-bold text-slate-700 mb-1">Semester Number (1 to 8):</label>
                 <select
                   value={newMarksheet.semester}
-                  onChange={(e) => setNewMarksheet(p => ({
-                    ...p,
-                    semester: Number(e.target.value),
-                    totalCredits: DEFAULT_SEMESTER_CREDITS[Number(e.target.value)] || 24
-                  }))}
+                  onChange={(e) => {
+                    const semNum = Number(e.target.value)
+                    setNewMarksheet(p => ({
+                      ...p,
+                      semester: semNum,
+                      totalCredits: getSemesterCreditTotal(semNum)
+                    }))
+                  }}
                   className="w-full p-2.5 rounded-xl border border-slate-200 font-bold bg-white text-slate-800"
                 >
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (

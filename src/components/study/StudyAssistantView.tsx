@@ -38,6 +38,7 @@ import {
 import toast from 'react-hot-toast'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
+import { StudyNavigationHeader } from './StudyNavigationHeader'
 
 import {
   STUDY_DATABASE,
@@ -367,7 +368,17 @@ ANSWER: [Detailed model answer here]`
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16">
-      {/* Header Banner */}
+      <StudyNavigationHeader
+        title="AI-Powered Study Assistant & Question Generator"
+        subtitle="Generate university standard Part A (2-mark), Part B (8-mark), and Part C (16-mark) questions with model answers, quick revision flashcards, and live AI tutor chat."
+        badgeText="Anna University R-2021 Exam Intelligence"
+        stats={[
+          { label: 'Active Course', value: currentSubject.code },
+          { label: 'Selected Unit', value: `Unit ${currentUnit.unitNo}` },
+        ]}
+      />
+
+      {/* Course Unit Workspace Banner */}
       <div className="bg-gradient-to-r from-[#071A3D] via-[#0E2C66] to-[#1455D9] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

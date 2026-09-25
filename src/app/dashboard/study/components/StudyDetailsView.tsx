@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -31,6 +31,8 @@ import { EmptyState } from '@/components/portal/states'
 import { cn } from '@/lib/utils'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
 import { STUDY_DATABASE } from '@/data/studyDatabase'
+import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
+import { getCurriculumBySemester, type CurriculumCourse } from '@/lib/assessmentR2023'
 
 interface Subject {
   id: string
@@ -93,7 +95,19 @@ export default function StudyDetailsView({
   importantQuestions: ImportantQuestion[]
   syllabi: Syllabus[]
 }) {
-  const [selected, setSelected] = useState(subjects[0]?.id || 'none')
+  const activeSubjects: Subject[] = useMemo(() => {
+    if (subjects && subjects.length > 0) return subjects
+    const fallback = getCurriculumBySemester(student.semester || 3)
+    return fallback.map((f: CurriculumCourse, idx: number) => ({
+      id: `official-${student.semester || 3}-${idx}`,
+      code: f.code,
+      name: f.name,
+      credits: f.credits,
+      description: null,
+    }))
+  }, [subjects, student.semester])
+
+  const [selected, setSelected] = useState(() => subjects[0]?.id || activeSubjects[0]?.id || 'none')
   const [iqFilter, setIqFilter] = useState<'ALL' | 2 | 8 | 16>('ALL')
   const [copiedQ, setCopiedQ] = useState<string | null>(null)
 
@@ -111,12 +125,13 @@ export default function StudyDetailsView({
     unitTitle: string
   }[]>([])
 
-  const current = subjects.find((s) => s.id === selected)
+  const current = activeSubjects.find((s) => s.id === selected) || activeSubjects[0]
   const subjectUnits = units.filter((u) => u.subjectId === selected)
   const subjectNotes = notes.filter((n) => n.subjectId === selected)
   const subjectLabs = labManuals.filter((l) => l.subjectId === selected)
   const subjectIQ = importantQuestions.filter((i) => i.subjectId === selected)
   const subjectSyllabus = syllabi.find((s) => s.subjectId === selected)
+
 
   // Combine DB questions and AI generated questions
   const allAvailableIQ = [
@@ -312,38 +327,32 @@ ANSWER: [Comprehensive model answer with formulas/points/pseudocode]`
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Academic Curriculum
-            </span>
-            <span className="text-xs text-gray-300 font-medium">· Regulation 2021</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Course Study Details &amp; Materials</h1>
-          <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Year {student.year} · Semester {student.semester} · Section {student.section} · {subjects.length} Enrolled Courses
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
+      {/* Universal Institutional Study Navigation Header */}
+      <StudyNavigationHeader
+        title="Course Study Details & Materials"
+        subtitle={`Year ${student.year} · Semester ${student.semester} · Section ${student.section} · Official curriculum, 5-unit breakdowns, lecture notes & lab manuals.`}
+        badgeText="Academic Curriculum"
+        stats={[
+          { label: 'Enrolled Courses', value: activeSubjects.length },
+          { label: 'Active Semester', value: `Sem ${student.semester}` },
+        ]}
+        actions={
           <button
             onClick={handleDownloadCoursePack}
             className="px-4 py-2.5 rounded-xl bg-[#22C7E8] hover:bg-[#1bb5d4] text-[#071A3D] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-md shrink-0 cursor-pointer"
           >
             <Download className="w-4 h-4" /> Download Course Pack
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Modern Interactive Subject Selector Cards */}
-      {subjects.length > 0 ? (
+      {activeSubjects.length > 0 ? (
         <div className="space-y-2">
           <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Select Course to View Materials:</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'thin' }}>
-            {subjects.map((s) => {
+            {activeSubjects.map((s) => {
               const isSelected = selected === s.id
               return (
                 <button

@@ -23,7 +23,14 @@ export async function GET(
       return NextResponse.json({ success: false, message: 'File not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true, fileUrl: resource.fileUrl })
+    return NextResponse.json(
+      { success: true, fileUrl: resource.fileUrl },
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=3600, stale-while-revalidate=86400',
+        },
+      }
+    )
   } catch (error) {
     console.error('Error fetching file URL:', error)
     return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 })

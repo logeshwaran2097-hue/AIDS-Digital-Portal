@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { EmptyState } from '@/components/portal/states'
@@ -18,9 +18,19 @@ import {
   Layers,
   FileCheck,
   FolderDown,
+  Zap,
+  Eye,
+  X,
+  CheckCircle2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { generateAndDownloadPDF, downloadWithDeptHeader } from '@/lib/pdfGenerator'
+import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { StudyNavigationHeader } from '@/components/study/StudyNavigationHeader'
+import {
+  getFastDocumentUrl,
+  prefetchDocumentUrls,
+  instantDirectDownload,
+} from '@/lib/fastDocumentFetcher'
 
 interface ResourceItem {
   id: string
@@ -49,6 +59,15 @@ const TYPE_COLORS: Record<string, { bg: string; text: string; border: string }> 
 export function StudentResourcesView({ resources }: { resources: ResourceItem[] }) {
   const [query, setQuery] = useState('')
   const [selectedType, setSelectedType] = useState('ALL')
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [previewItem, setPreviewItem] = useState<{ item: ResourceItem; url: string } | null>(null)
+
+  // Background prefetch document URLs so downloads are instantaneous
+  useEffect(() => {
+    if (resources && resources.length > 0) {
+      prefetchDocumentUrls(resources.map((r) => r.id))
+    }
+  }, [resources])
 
   const types = useMemo(() => {
     const set = new Set(resources.map((r) => r.resourceType))
@@ -78,70 +97,71 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
     return groups
   }, [filtered])
 
-  const handleDownloadResource = async (item: ResourceItem) => {
-    let finalFileUrl = item.fileUrl;
+  // Fast document downloading with instant streaming
+  const handleFastDownload = async (item: ResourceItem) => {
+    setDownloadingId(item.id)
+    try {
+      let finalFileUrl = item.fileUrl
 
-    if (!finalFileUrl) {
-      toast.loading('Fetching document...', { id: 'fetch_doc' });
-      try {
-        const res = await fetch(`/api/resources/${item.id}/download`);
-        const data = await res.json();
-        if (data.success && data.fileUrl) {
-          finalFileUrl = data.fileUrl;
-        }
-        toast.dismiss('fetch_doc');
-      } catch (err) {
-        toast.dismiss('fetch_doc');
-        toast.error('Failed to fetch document.');
-        return;
+      if (!finalFileUrl) {
+        finalFileUrl = (await getFastDocumentUrl(item.id)) || ''
       }
-    }
 
-    if (finalFileUrl && (finalFileUrl.startsWith('/uploads/') || finalFileUrl.startsWith('data:') || finalFileUrl.startsWith('http'))) {
-      await downloadWithDeptHeader({
-        fileUrl: finalFileUrl,
-        fileName: item.fileName,
+      if (finalFileUrl && (finalFileUrl.startsWith('/uploads/') || finalFileUrl.startsWith('data:') || finalFileUrl.startsWith('http') || finalFileUrl.startsWith('blob:'))) {
+        instantDirectDownload(finalFileUrl, item.fileName)
+        toast.success(`Fast download started: ${item.fileName}`)
+        return
+      }
+
+      // Instant fallback PDF generation
+      generateAndDownloadPDF({
         title: item.name,
-        resourceType: item.resourceType,
-        uploadedByName: item.uploadedByName || 'V.S.B. Department Faculty',
-        description: item.description || undefined,
+        subtitle: `Department Digital Library · ${item.resourceType.replace(/_/g, ' ')}`,
+        author: item.uploadedByName || 'V.S.B. Department Faculty',
+        category: item.resourceType.replace(/_/g, ' '),
+        content: `RESOURCE OVERVIEW & METADATA\n\nTitle: ${item.name}\nResource Type: ${item.resourceType.replace(/_/g, ' ')}\nAuthor / Uploader: ${item.uploadedByName || 'Department Faculty'}\nRegulation: Autonomous R-2021\nDepartment: Artificial Intelligence & Data Science\n\nABSTRACT & HIGHLIGHTS:\n${item.description || 'Comprehensive curriculum study material and reference textbook guide.'}\n\nCURRICULUM INCLUSIONS:\n• Full thematic unit breakdowns and mathematical formulations\n• Solved analytical derivations and university past question reviews\n• Python, C++, and SQL code implementations with benchmark cases\n• Reference problem sets and placement practice questions`,
+        fileName: item.fileName.replace(/\.pdf$/i, ''),
       })
-      return
+      toast.success(`Generated official PDF: ${item.fileName}`)
+    } catch (err) {
+      console.error('Download error:', err)
+      toast.error('Failed to download document.')
+    } finally {
+      setDownloadingId(null)
     }
-    generateAndDownloadPDF({
-      title: item.name,
-      subtitle: `Department Digital Library · ${item.resourceType.replace(/_/g, ' ')}`,
-      author: item.uploadedByName || 'V.S.B. Department Faculty',
-      category: item.resourceType.replace(/_/g, ' '),
-      content: `RESOURCE OVERVIEW & METADATA\n\nTitle: ${item.name}\nResource Type: ${item.resourceType.replace(/_/g, ' ')}\nAuthor / Uploader: ${item.uploadedByName || 'Department Faculty'}\nRegulation: Autonomous R-2021\nDepartment: Artificial Intelligence & Data Science\n\nABSTRACT & HIGHLIGHTS:\n${item.description || 'Comprehensive curriculum study material and reference textbook guide.'}\n\nCURRICULUM INCLUSIONS:\n• Full thematic unit breakdowns and mathematical formulations\n• Solved analytical derivations and university past question reviews\n• Python, C++, and SQL code implementations with benchmark cases\n• Reference problem sets and placement practice questions`,
-      fileName: item.fileName.replace(/\.pdf$/i, ''),
-    })
+  }
+
+  // Fast preview modal opener
+  const handleQuickPreview = async (item: ResourceItem) => {
+    setDownloadingId(item.id)
+    try {
+      let url = item.fileUrl || (await getFastDocumentUrl(item.id))
+      if (url) {
+        setPreviewItem({ item, url })
+      } else {
+        // Generate on-the-fly and preview
+        handleFastDownload(item)
+      }
+    } catch {
+      handleFastDownload(item)
+    } finally {
+      setDownloadingId(null)
+    }
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
-              Digital Library
-            </span>
-            <span className="text-xs text-gray-300">· V.S.B. Engineering College</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black">Study Resources &amp; Digital Textbooks</h1>
-          <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Standard reference textbooks, lecture handbooks, cheatsheets &amp; placement interview guides
-          </p>
-        </div>
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
+      {/* Universal Institutional Study Navigation Header */}
+      <StudyNavigationHeader
+        title="Study Resources &amp; Digital Textbooks"
+        subtitle="Standard reference textbooks, lecture handbooks, cheatsheets &amp; placement interview guides."
+        badgeText="Digital Library &amp; Document Vault"
+        stats={[
+          { label: 'Total E-Books', value: `${resources.length} Volumes` },
+          { label: 'Download Speed', value: 'High Speed CDN' },
+        ]}
+      />
 
-        <div className="flex items-center gap-3">
-          <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
-            <p className="text-[10px] text-gray-300 uppercase font-bold">Total E-Books</p>
-            <p className="text-base font-black text-[#F4C430]">{resources.length} Volumes</p>
-          </div>
-        </div>
-      </div>
 
       {/* Filter Toolbar */}
       <div className="bg-white p-4 rounded-3xl border border-gray-200 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -230,17 +250,32 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
                         </p>
 
                         <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                          <span className="font-medium flex items-center gap-1.5 text-gray-700 truncate max-w-[170px]">
+                          <span className="font-medium flex items-center gap-1.5 text-gray-700 truncate max-w-[140px]">
                             <User className="w-3.5 h-3.5 text-[#1455D9]" />
                             <span className="truncate">{item.uploadedByName || 'Department Faculty'}</span>
                           </span>
 
-                          <button
-                            onClick={() => handleDownloadResource(item)}
-                            className="px-3.5 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs shrink-0 cursor-pointer"
-                          >
-                            <Download className="w-3.5 h-3.5" /> Download PDF
-                          </button>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleQuickPreview(item)}
+                              disabled={downloadingId === item.id}
+                              className="px-2.5 py-1.5 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                              title="Quick in-portal document preview"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-[#1455D9]" /> Preview
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleFastDownload(item)}
+                              disabled={downloadingId === item.id}
+                              className="px-3 py-1.5 rounded-xl bg-[#1455D9] hover:bg-[#0e44b5] text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                              title="Instant stream & fast download"
+                            >
+                              <Zap className="w-3.5 h-3.5 text-amber-300" />
+                              <span>{downloadingId === item.id ? 'Fetching...' : 'Download'}</span>
+                            </button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -251,7 +286,58 @@ export function StudentResourcesView({ resources }: { resources: ResourceItem[] 
           ))}
         </div>
       )}
+
+      {/* Fast Document Preview Modal */}
+      {previewItem && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-4xl h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-gray-200">
+            <div className="p-4 bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <span className="text-[10px] font-bold text-cyan-300 uppercase tracking-wider block">
+                  Quick Document Preview · Fast Fetch
+                </span>
+                <h3 className="font-black text-sm sm:text-base truncate text-white">{previewItem.item.name}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleFastDownload(previewItem.item)}
+                  className="px-3 py-1.5 rounded-xl bg-[#F4C430] hover:bg-[#e0b028] text-[#071A3D] text-xs font-extrabold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download
+                </button>
+                <button
+                  onClick={() => setPreviewItem(null)}
+                  className="p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 bg-slate-100 p-2 overflow-hidden flex items-center justify-center">
+              {previewItem.url ? (
+                <iframe
+                  src={previewItem.url}
+                  className="w-full h-full rounded-2xl border border-gray-200 bg-white"
+                  title={previewItem.item.name}
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <p className="text-xs text-gray-500 mb-3">Preview loading...</p>
+                  <button
+                    onClick={() => handleFastDownload(previewItem.item)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs"
+                  >
+                    Open Document Directly
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
 
