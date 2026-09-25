@@ -592,7 +592,7 @@ export function HODAnnouncementsView({
                       <option value="Administrative">Administrative</option>
                       <option value="Disciplinary">Disciplinary</option>
                       <option value="Symposium">Symposium &amp; Event</option>
-                      <option value="Others">Others</option>
+                      <option value="Others">✍️ Other Option (Type your own topic)...</option>
                     </select>
                   </div>
 
@@ -611,20 +611,39 @@ export function HODAnnouncementsView({
 
                 {/* Custom Category input field when Others is selected */}
                 {category === 'Others' && (
-                  <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200">
-                    <label className="font-bold text-indigo-900 block mb-1 text-xs flex items-center justify-between">
-                      <span>Type Custom Category Name <span className="text-rose-500">*</span></span>
-                      <span className="text-[10px] text-gray-500 font-medium">e.g. Workshop, Cultural, Sports, Hackathon</span>
-                    </label>
+                  <div className="p-3.5 bg-amber-50/80 border-2 border-amber-300 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-200 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-black text-amber-950 block text-xs flex items-center gap-1.5">
+                        <span>✍️</span>
+                        <span>Type Circular Topic Name <span className="text-rose-500">*</span></span>
+                      </label>
+                      <span className="text-[10px] font-extrabold text-amber-800 bg-amber-200 px-2 py-0.5 rounded-full">
+                        Topic Mandatory
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-amber-900/80">
+                      You selected <strong>Other Option</strong>. Please type the specific topic name for this circular:
+                    </p>
                     <input
                       type="text"
                       value={customCategory}
                       onChange={(e) => setCustomCategory(e.target.value)}
-                      placeholder="Type your category name (e.g. Workshop)..."
-                      className="w-full bg-white border-2 border-indigo-300 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9] focus:outline-none placeholder:font-normal placeholder:text-gray-400 shadow-2xs"
+                      placeholder="Type your circular topic (e.g. Workshop, Cultural Fest, Sports Meet)..."
+                      className="w-full bg-white border-2 border-amber-400 rounded-xl px-3 py-2 text-xs font-bold text-[#071A3D] focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 focus:outline-none placeholder:font-normal placeholder:text-gray-400 shadow-2xs"
                       required
                       autoFocus
                     />
+                    {customCategory.trim() ? (
+                      <p className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                        <span>✓</span>
+                        <span>Topic set to: <strong>&ldquo;{customCategory.trim()}&rdquo;</strong></span>
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-rose-600 font-bold flex items-center gap-1">
+                        <span>⚠️</span>
+                        <span>Topic name is required before broadcasting this circular.</span>
+                      </p>
+                    )}
                   </div>
                 )}
 

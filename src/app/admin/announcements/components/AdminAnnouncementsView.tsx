@@ -118,7 +118,7 @@ export const CIRCULAR_CATEGORIES = [
   {
     group: 'Other & Custom Topic',
     options: [
-      { value: 'OTHER', label: '✍️ Other Topic / Custom Category (Type your own)...', badge: 'bg-amber-50 text-amber-800 border-amber-300' },
+      { value: 'OTHER', label: '✍️ Other Option (Type your own topic)...', badge: 'bg-amber-50 text-amber-800 border-amber-300' },
     ],
   },
 ]
@@ -297,9 +297,14 @@ export function AdminAnnouncementsView({
       return
     }
 
+    if (formData.category === 'OTHER' && !customCategory.trim()) {
+      toast.error('Please type the custom topic name before publishing')
+      return
+    }
+
     setIsLoading(true)
     try {
-      const finalCategory = formData.category === 'OTHER' ? (customCategory.trim() || 'General') : formData.category
+      const finalCategory = formData.category === 'OTHER' ? customCategory.trim() : formData.category
       const submitPayload = {
         ...formData,
         category: finalCategory,
@@ -683,20 +688,39 @@ export function AdminAnnouncementsView({
 
                 {/* Custom Category Input Field when "OTHER" is selected */}
                 {formData.category === 'OTHER' && (
-                  <div className="p-3.5 rounded-2xl bg-amber-50/70 border-2 border-amber-300 space-y-1.5 animate-in fade-in duration-200">
-                    <label className="block font-bold text-amber-950 text-xs flex items-center justify-between">
-                      <span>Type Custom Topic / Category *</span>
-                      <span className="text-[10px] text-amber-700 font-semibold">Custom Topic Required</span>
-                    </label>
+                  <div className="p-4 rounded-2xl bg-amber-50/90 border-2 border-amber-400 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <label className="font-black text-amber-950 text-xs flex items-center gap-1.5">
+                        <span className="text-base">✍️</span>
+                        <span>Type Circular Topic Name <span className="text-rose-600">*</span></span>
+                      </label>
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 border border-amber-300">
+                        Topic Mandatory
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-amber-900/80 font-medium">
+                      You selected <strong>Other Option</strong>. Please type the specific topic name for this circular below:
+                    </p>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Cultural Fest, Sports Meet, Alumni Interaction, Symposium..."
+                      placeholder="Type circular topic here (e.g. Workshop, Cultural Fest, Sports Meet, Hackathon)..."
                       value={customCategory}
                       onChange={(e) => setCustomCategory(e.target.value)}
-                      className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] text-xs shadow-xs"
+                      className="w-full p-3 rounded-xl border-2 border-amber-400 bg-white font-bold text-[#071A3D] text-xs focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 shadow-xs placeholder:font-normal placeholder:text-gray-400"
                       autoFocus
                     />
+                    {customCategory.trim() ? (
+                      <p className="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
+                        <span>✓</span>
+                        <span>Circular will be published under topic: <strong>&ldquo;{customCategory.trim()}&rdquo;</strong></span>
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-rose-600 font-bold flex items-center gap-1">
+                        <span>⚠️</span>
+                        <span>Topic name is required. Please type your topic name above.</span>
+                      </p>
+                    )}
                   </div>
                 )}
 
