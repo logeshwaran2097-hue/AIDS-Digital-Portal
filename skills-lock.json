@@ -18,6 +18,26 @@
       "sourceType": "github",
       "skillPath": "skills/supabase-server/SKILL.md",
       "computedHash": "de3068fa3b606fa50a661992ab7e3a8570d310d793b7b8a7e6ddb1a9b716b1a6"
+    },
+    "gsd-core": {
+      "source": "local/workspace",
+      "sourceType": "workspace",
+      "skillPath": "skills/gsd-core/SKILL.md"
+    },
+    "roo-code": {
+      "source": "local/workspace",
+      "sourceType": "workspace",
+      "skillPath": "skills/roo-code/SKILL.md"
+    },
+    "ralph-loop": {
+      "source": "local/workspace",
+      "sourceType": "workspace",
+      "skillPath": "skills/ralph-loop/SKILL.md"
+    },
+    "coderabbit": {
+      "source": "local/workspace",
+      "sourceType": "workspace",
+      "skillPath": "skills/coderabbit/SKILL.md"
     }
   }
 }
