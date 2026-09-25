@@ -128,8 +128,8 @@ export async function POST(request: Request) {
       )
     }
 
-    const fid = facultyId?.trim().toUpperCase() || 'FAC' + Math.floor(1000 + Math.random() * 9000)
-    const institutionalEmail = (email && email.trim()) ? email.trim().toLowerCase() : `${fid.toLowerCase()}@vsb.edu.in`
+    const fid = (typeof facultyId === 'string' && facultyId.trim()) ? facultyId.trim().toUpperCase() : 'FAC' + Math.floor(1000 + Math.random() * 9000)
+    const institutionalEmail = (typeof email === 'string' && email.trim()) ? email.trim().toLowerCase() : `${fid.toLowerCase()}@vsb.edu.in`
 
     // Check if faculty or user already exists
     const existingFaculty = await prisma.faculty.findUnique({

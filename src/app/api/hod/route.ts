@@ -102,10 +102,7 @@ export async function POST(request: Request) {
     }
 
     // Keep provided email or clean institutional fallback
-    let finalEmail = email?.trim().toLowerCase()
-    if (!finalEmail) {
-      finalEmail = `${fid.toLowerCase()}@vsb.edu.in`
-    }
+    let finalEmail = (typeof email === 'string' && email.trim()) ? email.trim().toLowerCase() : `${fid.toLowerCase()}@vsb.edu.in`
 
     // Hash temporary password if provided
     let passwordHash: string | undefined = undefined
