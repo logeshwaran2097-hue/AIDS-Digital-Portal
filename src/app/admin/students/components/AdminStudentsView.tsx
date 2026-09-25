@@ -470,6 +470,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  const [showEditPassword, setShowEditPassword] = useState(false)
   const [addFormError, setAddFormError] = useState<string | null>(null)
   const [editFormError, setEditFormError] = useState<string | null>(null)
 
@@ -839,6 +840,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
       attendance: s.attendance || '',
       password: '',
     })
+    setShowEditPassword(false)
     setEditFormError(null)
     setIsEditModalOpen(true)
   }
@@ -2271,8 +2273,20 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                       placeholder="e.g. Student@123 or your choice"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="w-full p-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#1455D9] font-mono font-medium text-[#071A3D]"
+                      className="w-full p-2.5 pr-10 rounded-xl border border-gray-300 bg-white focus:outline-none focus:border-[#1455D9] font-mono font-medium text-[#071A3D]"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-[#1455D9] transition-colors cursor-pointer"
+                      title={showPassword ? 'Hide password' : 'View password'}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                   <p className="text-[10px] text-gray-500 mt-1">
                     You can decide any password. The student will use this to log in immediately.
@@ -2579,15 +2593,47 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-[#071A3D] mb-1">Reset Password (Optional)</label>
-                  <input
-                    type="password"
-                    autoComplete="new-password"
-                    name="student_password_edit"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full p-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9]"
-                  />
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-[#071A3D]">Reset Password (Optional)</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowEditPassword(!showEditPassword)}
+                      className="text-[11px] text-[#1455D9] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      {showEditPassword ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" /> Hide
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3.5 h-3.5" /> View
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showEditPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      name="student_password_edit"
+                      placeholder="Leave blank to keep existing password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full p-2.5 pr-10 rounded-xl border border-gray-200 focus:outline-none focus:border-[#1455D9] font-mono text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEditPassword(!showEditPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-[#1455D9] transition-colors cursor-pointer"
+                      title={showEditPassword ? 'Hide password' : 'View password'}
+                    >
+                      {showEditPassword ? (
+                        <EyeOff className="w-4 h-4 text-blue-600" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
