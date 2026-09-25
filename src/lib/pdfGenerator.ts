@@ -87,17 +87,12 @@ export function drawDigitalPortalDocumentNotice(
   doc.setFillColor(20, 85, 217)
   doc.roundedRect(marginX, boxY, 2.5, boxH, 0.8, 0.8, 'F')
 
-  // 3. Top Row Header: Document Title & Verification Badge
+  // 3. Top Row Header: Document Title
   const topTextY = boxY + 4.8
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(6.2)
   doc.setTextColor(15, 23, 42)
   doc.text('DIGITAL PORTAL DOCUMENT · AUTHENTICATED ELECTRONIC COPY', marginX + 5.5, topTextY)
-
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(5.2)
-  doc.setTextColor(5, 122, 85)
-  doc.text('Authenticated E-Record · Valid without Signature (IT Act)', marginX + contentW - 5.5, topTextY, { align: 'right' })
 
   // 4. Clean, Simple & Professional Attestation Note
   const bodyY = boxY + 9.0
@@ -2196,56 +2191,9 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     currentY += rowHeight
   })
 
-  currentY += 6
+  currentY += 8
 
-  // 7. Official Endorsement Signatures (Digital Attestations)
-  doc.setDrawColor(215, 226, 242)
-  doc.setLineWidth(0.3)
-  doc.line(marginX, currentY, marginX + contentW, currentY)
-
-  currentY += 5
-
-  const signColW = contentW / 3
-
-  // Signatory 1
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text('CLASS ADVISORS COMMITTEE', marginX + 4, currentY)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(5.8)
-  doc.setTextColor(100, 115, 135)
-  doc.text('Morning Roll-Call Verified', marginX + 4, currentY + 3.5)
-  doc.setTextColor(16, 185, 129)
-  doc.text('[Digitally Recorded by Class Advisor]', marginX + 4, currentY + 7.5)
-
-  // Signatory 2
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text('DEPARTMENT ACADEMIC CELL', marginX + signColW + 4, currentY)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(5.8)
-  doc.setTextColor(100, 115, 135)
-  doc.text('Regulation 2021 Monitoring', marginX + signColW + 4, currentY + 3.5)
-  doc.setTextColor(16, 185, 129)
-  doc.text('[Electronically Audited & Synced]', marginX + signColW + 4, currentY + 7.5)
-
-  // Signatory 3: HOD
-  const hodX = marginX + signColW * 2 + 4
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(6.8)
-  doc.setTextColor(7, 26, 61)
-  doc.text('HEAD OF DEPARTMENT (HOD)', hodX, currentY)
-  doc.setFont('helvetica', 'normal')
-  doc.setFontSize(5.8)
-  doc.setTextColor(100, 115, 135)
-  doc.text(`Prof. ${options.hodName || 'Head of Department'} · AI & DS`, hodX, currentY + 3.5)
-  doc.setTextColor(20, 85, 217)
-  doc.text('[Sanctioned by HOD]', hodX, currentY + 7.5)
-
-  currentY += 12
-
+  // Official Institutional Attestation & Compliance Notice
   drawDigitalPortalDocumentNotice(doc, {
     y: currentY,
     contentW,
@@ -2254,7 +2202,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     verificationCode: `VSB-ATT-ROLL-${printDate.replace(/[^0-9]/g, '')}`,
     repositoryName: 'Daily Roll-Call Central Database',
     issuingAuthority: 'Academic Attendance Cell & HOD Office',
-    boxHeight: 24,
+    boxHeight: 23,
     isCompact: true,
   })
 
