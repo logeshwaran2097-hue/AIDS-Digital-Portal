@@ -115,6 +115,12 @@ export const CIRCULAR_CATEGORIES = [
       { value: 'GENERAL', label: 'General Institutional Circular / Holiday', badge: 'bg-blue-50 text-[#071A3D] border-gray-200' },
     ],
   },
+  {
+    group: 'Other & Custom Topic',
+    options: [
+      { value: 'OTHER', label: '✍️ Other Topic / Custom Category (Type your own)...', badge: 'bg-amber-50 text-amber-800 border-amber-300' },
+    ],
+  },
 ]
 
 export function AdminAnnouncementsView({
@@ -141,6 +147,7 @@ export function AdminAnnouncementsView({
     target: 'ALL',
     targetSpecific: '',
   })
+  const [customCategory, setCustomCategory] = useState('')
 
   // Live real-time sync for announcements from database
   useEffect(() => {
@@ -193,6 +200,9 @@ export function AdminAnnouncementsView({
   }
 
   const getCategoryLabel = (category: string): string => {
+    if (category === 'OTHER') {
+      return customCategory.trim() ? customCategory.trim() : 'Custom Topic'
+    }
     for (const grp of CIRCULAR_CATEGORIES) {
       const found = grp.options.find((o) => o.value === category || o.value.toLowerCase() === category.toLowerCase())
       if (found) return found.label
@@ -201,6 +211,9 @@ export function AdminAnnouncementsView({
   }
 
   const getCategoryBadgeStyle = (category: string) => {
+    if (category === 'OTHER') {
+      return 'bg-amber-50 text-amber-800 border-amber-300'
+    }
     for (const grp of CIRCULAR_CATEGORIES) {
       const found = grp.options.find((o) => o.value === category || o.value.toLowerCase() === category.toLowerCase())
       if (found) return found.badge
@@ -286,10 +299,15 @@ export function AdminAnnouncementsView({
 
     setIsLoading(true)
     try {
+      const finalCategory = formData.category === 'OTHER' ? (customCategory.trim() || 'General') : formData.category
+      const submitPayload = {
+        ...formData,
+        category: finalCategory,
+      }
       const res = await fetch('/api/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitPayload),
       })
       const result = await res.json()
 
@@ -315,6 +333,7 @@ export function AdminAnnouncementsView({
           target: 'ALL',
           targetSpecific: '',
         })
+        setCustomCategory('')
         toast.success('Circular broadcast successfully to database!')
       } else {
         toast.error(result.message || 'Failed to issue circular')
@@ -602,6 +621,10 @@ export function AdminAnnouncementsView({
                     toast.error('Please provide Title and Content')
                     return
                   }
+                  if (formData.category === 'OTHER' && !customCategory.trim()) {
+                    toast.error('Please type your custom topic / category')
+                    return
+                  }
                   setModalMode('preview')
                 }}
                 className="space-y-4 text-xs"
@@ -657,6 +680,25 @@ export function AdminAnnouncementsView({
                     </select>
                   </div>
                 </div>
+
+                {/* Custom Category Input Field when "OTHER" is selected */}
+                {formData.category === 'OTHER' && (
+                  <div className="p-3.5 rounded-2xl bg-amber-50/70 border-2 border-amber-300 space-y-1.5 animate-in fade-in duration-200">
+                    <label className="block font-bold text-amber-950 text-xs flex items-center justify-between">
+                      <span>Type Custom Topic / Category *</span>
+                      <span className="text-[10px] text-amber-700 font-semibold">Custom Topic Required</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Cultural Fest, Sports Meet, Alumni Interaction, Symposium..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-amber-300 bg-white font-bold text-[#071A3D] focus:outline-none focus:border-[#1455D9] text-xs shadow-xs"
+                      autoFocus
+                    />
+                  </div>
+                )}
 
                 {/* Target & Category Summary Preview */}
                 <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-[#1455D9] flex items-center justify-between text-[11px] font-bold">
