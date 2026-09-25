@@ -7,6 +7,7 @@ import { PortalLayout } from '@/components/layout/PortalLayout'
 import { HODOnboardingWrapper } from './components/HODOnboardingWrapper'
 import { HODAttendanceApprovals } from './notifications/components/HODAttendanceApprovals'
 import { DepartmentAttendanceAnalytics } from './components/DepartmentAttendanceAnalytics'
+import { getDepartmentClassAttendance } from '@/lib/attendanceService'
 import { HODAdvisorODApprovalsMonitor } from './components/HODAdvisorODApprovalsMonitor'
 import {
   Users,
@@ -41,6 +42,7 @@ export default async function HODDashboardPage() {
     pendingODProofs,
     user,
     hodRec,
+    initialAttendanceClasses,
   ] = await cachedDbQuery(
     `hod_dashboard_kpis_${session.userId}`,
     () => Promise.all([
@@ -57,6 +59,7 @@ export default async function HODDashboardPage() {
       prisma.oDProof.count({ where: { status: { in: ['advisor_approved', 'under_review'] } } }).catch(() => 0),
       prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null),
       prisma.hOD.findFirst({ where: { OR: [{ userId: session.userId }, { facultyId: session.facultyId || '' }] } }).catch(() => null),
+      getDepartmentClassAttendance().catch(() => []),
     ]),
     8000,
     ['hod', 'students', 'faculty', 'resources', 'projects', 'od_proofs']
@@ -209,7 +212,7 @@ export default async function HODDashboardPage() {
 
         {/* Department Attendance Analytics: Class-wise Average & Class Breakdown */}
         <section aria-label="Department Attendance Analytics">
-          <DepartmentAttendanceAnalytics />
+          <DepartmentAttendanceAnalytics initialData={initialAttendanceClasses} />
         </section>
 
         {/* Advisor OD Verification & Student Proofs Monitoring */}

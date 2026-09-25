@@ -38,10 +38,10 @@ export interface ClassAttendanceStat {
 }
 
 export const DEFAULT_DEPARTMENT_CLASSES: ClassAttendanceStat[] = [
-  { className: 'II AIDS A', year: 2, section: 'A', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'II AIDS B', year: 2, section: 'B', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'II AIDS C', year: 2, section: 'C', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
-  { className: 'II AIDS D', year: 2, section: 'D', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
+  { className: 'II AIDS A', year: 2, section: 'A', totalStudents: 7, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: 'Not Allocated' },
+  { className: 'II AIDS B', year: 2, section: 'B', totalStudents: 63, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: 'Prof. Rajendiran M' },
+  { className: 'II AIDS C', year: 2, section: 'C', totalStudents: 60, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: 'Not Allocated' },
+  { className: 'II AIDS D', year: 2, section: 'D', totalStudents: 63, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: 'Not Allocated' },
   { className: 'III AIDS A', year: 3, section: 'A', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
   { className: 'III AIDS B', year: 3, section: 'B', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
   { className: 'III AIDS C', year: 3, section: 'C', totalStudents: 0, presentAvg: 0, absentCount: 0, attendancePct: 0.0, statusNote: 'Register Pending', advisorName: null },
@@ -83,8 +83,13 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
 
   useEffect(() => {
     fetchLiveAttendance()
-    const interval = setInterval(fetchLiveAttendance, 25000)
-    return () => clearInterval(interval)
+    const interval = setInterval(fetchLiveAttendance, 6000)
+    const onFocus = () => fetchLiveAttendance()
+    window.addEventListener('focus', onFocus)
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+    }
   }, [fetchLiveAttendance])
 
   const [showOnlyEnrolled, setShowOnlyEnrolled] = useState<boolean>(true)
@@ -132,11 +137,27 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
   }, [filteredData])
 
   // Export Official Advisor Attendance Report (PDF)
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     try {
       setIsExporting(true)
+      let exportClasses = filteredData
+      // Fresh live fetch to guarantee 100% database sync before generating PDF
+      try {
+        const res = await fetch('/api/hod/class-attendance', { cache: 'no-store' })
+        const json = await res.json()
+        if (json.success && Array.isArray(json.classes) && json.classes.length > 0) {
+          setData(json.classes)
+          setLastSyncTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+          exportClasses = showOnlyEnrolled && json.classes.some((c: ClassAttendanceStat) => c.totalStudents > 0)
+            ? json.classes.filter((c: ClassAttendanceStat) => c.totalStudents > 0)
+            : json.classes
+        }
+      } catch (err) {
+        console.warn('Using existing state for PDF export:', err)
+      }
+
       generateAdvisorMorningAttendancePDF({
-        classes: filteredData,
+        classes: exportClasses,
         date: new Date().toISOString().split('T')[0],
         fileName: `Advisor_Morning_Attendance_Report_${new Date().toISOString().split('T')[0]}.pdf`,
       })
@@ -165,7 +186,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
       `"${c.className}"`,
       c.year,
       `"${c.section}"`,
-      `"${c.advisorName || 'Class Advisor'}"`,
+      `"${c.advisorName || 'Not Allocated'}"`,
       c.totalStudents,
       c.presentAvg,
       c.absentCount !== undefined ? c.absentCount : (c.attendancePct > 0 ? Math.max(0, c.totalStudents - c.presentAvg) : 0),
@@ -209,6 +230,15 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
 
         {/* Action Controls & Filters */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* Live DB Sync Status Badge */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-xs font-semibold text-white shadow-xs">
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isRefreshing ? 'bg-amber-400' : 'bg-emerald-400'} opacity-75`}></span>
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${isRefreshing ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+            </span>
+            <span>{isRefreshing ? 'Syncing...' : lastSyncTime ? `Live ${lastSyncTime}` : 'DB Connected'}</span>
+          </div>
+
           <button
             onClick={handleExportPDF}
             disabled={isExporting}
@@ -232,7 +262,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
             onClick={fetchLiveAttendance}
             disabled={isRefreshing}
             className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold flex items-center justify-center transition-all cursor-pointer text-white shadow-xs disabled:opacity-50"
-            title="Sync Latest Advisor Attendance"
+            title="Sync Latest Advisor Attendance from DB"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#F4C430]' : ''}`} />
           </button>
@@ -542,7 +572,7 @@ export function DepartmentAttendanceAnalytics({ initialData }: Props) {
                     </td>
 
                     <td className="py-4 px-4 text-slate-700 text-sm">
-                      <span className="font-semibold text-slate-900">{row.advisorName || 'Faculty Advisor'}</span>
+                      <span className="font-semibold text-slate-900">{row.advisorName || 'Not Allocated'}</span>
                     </td>
 
                     <td className="py-4 px-4 text-center text-slate-700 font-mono text-sm font-semibold">

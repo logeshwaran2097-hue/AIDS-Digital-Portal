@@ -1912,11 +1912,16 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   currentY += 8
 
   // 4. Metrics Summary Strip
-  const totalEnrolled = options.classes.reduce((acc, c) => acc + c.totalStudents, 0)
-  const totalPresent = options.classes.reduce((acc, c) => acc + c.presentAvg, 0)
+  // Filter to active classes with enrolled students so real cohorts are accurately reflected
+  const activeClasses = options.classes.some((c) => c.totalStudents > 0)
+    ? options.classes.filter((c) => c.totalStudents > 0)
+    : options.classes
+
+  const totalEnrolled = activeClasses.reduce((acc, c) => acc + c.totalStudents, 0)
+  const totalPresent = activeClasses.reduce((acc, c) => acc + c.presentAvg, 0)
   const avgPct = totalEnrolled > 0 ? Math.round((totalPresent / totalEnrolled) * 10000) / 100 : 0
-  const compliantCount = options.classes.filter((c) => c.attendancePct >= 75).length
-  const shortageCount = options.classes.filter((c) => c.attendancePct < 75).length
+  const compliantCount = activeClasses.filter((c) => c.attendancePct >= 75).length
+  const shortageCount = activeClasses.filter((c) => c.attendancePct < 75).length
 
   doc.setFillColor(246, 249, 254)
   doc.roundedRect(marginX, currentY, contentW, 11, 2, 2, 'F')
@@ -1989,9 +1994,9 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   const chartInnerY = currentY + 9.5
   const chartInnerW = contentW - 24
   const chartInnerH = 23
-  const barCount = options.classes.length
+  const barCount = activeClasses.length
   const barSlotW = chartInnerW / barCount
-  const barActualW = Math.min(16, barSlotW * 0.55)
+  const barActualW = Math.min(22, barSlotW * 0.55)
 
   // Gridline: 100% Upper Limit
   doc.setDrawColor(230, 237, 247)
@@ -2025,7 +2030,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   doc.setTextColor(140, 155, 175)
   doc.text('0%', chartInnerX - 1.5, chartInnerY + chartInnerH + 1.2, { align: 'right' })
 
-  options.classes.forEach((cls, idx) => {
+  activeClasses.forEach((cls, idx) => {
     const bx = chartInnerX + idx * barSlotW + (barSlotW - barActualW) / 2
     const h = (cls.attendancePct / 100) * chartInnerH
     const by = chartInnerY + chartInnerH - h
@@ -2109,7 +2114,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   currentY += rowHeight
 
   // Table Rows
-  options.classes.forEach((cls, idx) => {
+  activeClasses.forEach((cls, idx) => {
     const isEven = idx % 2 === 0
     if (isEven) {
       doc.setFillColor(250, 252, 255)
@@ -2140,7 +2145,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(6.8)
     doc.setTextColor(40, 50, 70)
-    doc.text(cls.advisorName || 'Faculty Advisor', tdX + 2, currentY + 4.2)
+    doc.text(cls.advisorName || 'Not Allocated', tdX + 2, currentY + 4.2)
     tdX += 38
 
     // 4. Enrolled
