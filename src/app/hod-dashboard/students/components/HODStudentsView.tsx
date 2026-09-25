@@ -942,11 +942,6 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                                   <div>
                                     <div className="flex items-center gap-1.5">
                                       <span className="font-bold text-[#071A3D]">{s.name}</span>
-                                      {s.isDbVerified && (
-                                        <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold text-[9px] border border-emerald-300">
-                                          Admin Enrolled
-                                        </span>
-                                      )}
                                     </div>
                                     <p className="text-[11px] text-gray-500 font-mono">{s.email}</p>
                                   </div>
@@ -1147,15 +1142,9 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg sm:text-xl font-black text-white tracking-tight truncate max-w-[280px]">
+                    <h3 className="text-lg sm:text-xl font-black text-white tracking-tight truncate max-w-[360px]">
                       {activeStudentModal.name}
                     </h3>
-                    {activeStudentModal.isDbVerified && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-400/30 backdrop-blur-xs shadow-xs">
-                        <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
-                        Admin Enrolled
-                      </span>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-blue-200/90 font-mono tracking-wider font-semibold">
