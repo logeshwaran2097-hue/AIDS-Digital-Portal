@@ -5,6 +5,10 @@
 
 const GRAPH_API_BASE = 'https://graph.facebook.com/v19.0'
 
+const FALLBACK_PHONE_ID = '1353917354472660'
+const FALLBACK_ACCESS_TOKEN =
+  'EAAPuVsoV7TsBSiSdBtLy3z8N1eBWhGNQlhi979RvmO4UVVd40FauDMyXZCGoEZAwuWeg009ZBYUGKz78PZAqHKEFEtHNHbmwdZBJcrhaPlzZBUcqLdZCX4eoHp4hWkr9XQNt922ZBtoJCUZCO5zxjh4K1gdWn0ZAEOZAjBwFsADYdGUmYq0knQdU0BG557gCGAZChECOEyHRzQfE8PZCtOqTujQUZBBantDfdkVjJ2bnVXXibl1TnihuWMHzCtQD1gMWCjDF4QlAHHPcDvNfUWZATXX5PzaXHcV'
+
 export interface WhatsAppButtonOption {
   id: string
   title: string
@@ -14,8 +18,8 @@ export interface WhatsAppButtonOption {
  * Send a clean text message to a WhatsApp recipient
  */
 export async function sendWhatsAppText(to: string, message: string): Promise<boolean> {
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID
-  const token = process.env.WHATSAPP_ACCESS_TOKEN
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || FALLBACK_PHONE_ID
+  const token = process.env.WHATSAPP_ACCESS_TOKEN || FALLBACK_ACCESS_TOKEN
 
   if (!phoneId || !token) {
     console.warn('[WhatsApp Bot] Missing WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_ACCESS_TOKEN environment variables.')
@@ -66,8 +70,8 @@ export async function sendWhatsAppButtons(
   headerText?: string,
   footerText?: string
 ): Promise<boolean> {
-  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID
-  const token = process.env.WHATSAPP_ACCESS_TOKEN
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || FALLBACK_PHONE_ID
+  const token = process.env.WHATSAPP_ACCESS_TOKEN || FALLBACK_ACCESS_TOKEN
 
   if (!phoneId || !token) {
     console.warn('[WhatsApp Bot] Missing WHATSAPP_PHONE_NUMBER_ID or WHATSAPP_ACCESS_TOKEN.')

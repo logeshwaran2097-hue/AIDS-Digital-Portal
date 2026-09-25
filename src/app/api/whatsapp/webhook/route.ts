@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
  */
 async function handleInboundQuery(sender: string, input: string, buttonId: string) {
   // Check authorization (if HOD_PHONE_NUMBER is configured)
-  const allowedNumbers = (process.env.HOD_PHONE_NUMBERS || '')
+  const allowedNumbers = (process.env.HOD_PHONE_NUMBERS || '916381366088')
     .split(',')
     .map((n) => n.replace(/\D/g, ''))
     .filter(Boolean)
