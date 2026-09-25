@@ -341,7 +341,7 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
     { id: 'roles', label: 'Governance & RBAC Matrix', shortLabel: 'Role Matrix', icon: <Users className="w-4 h-4" />, badge: '4 Tiers' },
     { id: 'schedule', label: 'Master Bell Schedule & Regulations', shortLabel: 'Timetable & Rules', icon: <Clock className="w-4 h-4" />, badge: '8 Periods' },
     { id: 'tech', label: 'Architecture & Cloud Stack', shortLabel: 'Architecture', icon: <Cpu className="w-4 h-4" />, badge: 'Cloud' },
-    { id: 'architect', label: 'Engineering Directorate & Architect', shortLabel: 'Lead Architect', icon: <Sparkles className="w-4 h-4 text-amber-300" />, badge: 'Creator' },
+    { id: 'architect', label: 'Engineering Directorate & System Architects', shortLabel: 'Architects', icon: <Sparkles className="w-4 h-4 text-amber-300" />, badge: 'Creators' },
   ]
 
   const filteredModules = useMemo(() => {
@@ -1832,40 +1832,74 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
             <div className="absolute -right-16 -top-16 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -left-16 -bottom-16 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 pb-8 border-b border-slate-100">
-              {/* Profile Avatar & Details */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="relative z-10 pb-8 border-b border-slate-100 grid grid-cols-1 lg:grid-cols-2 gap-8 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+              {/* Profile 1: Logeshwaran G */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
                 {/* Official Monogram Avatar with Emerald Radar Beacon */}
                 <div className="relative shrink-0 group">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-[#061A3D] via-[#0A295C] to-[#1455D9] p-1.5 shadow-xl group-hover:scale-105 transition-transform">
-                    <div className="w-full h-full rounded-[20px] bg-gradient-to-b from-[#071A3D] to-[#0A2540] flex items-center justify-center font-black text-3xl sm:text-4xl text-amber-300 tracking-wider shadow-inner">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#061A3D] via-[#0A295C] to-[#1455D9] p-1.5 shadow-xl group-hover:scale-105 transition-transform">
+                    <div className="w-full h-full rounded-[18px] bg-gradient-to-b from-[#071A3D] to-[#0A2540] flex items-center justify-center font-black text-2xl sm:text-3xl text-amber-300 tracking-wider shadow-inner">
                       LG
                     </div>
                   </div>
                   {/* Live Active Beacon */}
-                  <span className="absolute -bottom-1 -right-1 flex h-6 w-6">
+                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-6 w-6 bg-emerald-500 ring-4 ring-white" />
+                    <span className="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 ring-4 ring-white" />
                   </span>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-black uppercase tracking-wider">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Lead System Architect &amp; Full-Stack Engineer</span>
+                <div className="space-y-1.5">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-black uppercase tracking-wider">
+                    <Sparkles className="w-3 h-3 text-amber-600" />
+                    <span>Lead System Architect</span>
                   </div>
-                  <h3 className="text-3xl sm:text-4xl font-black text-[#071A3D] tracking-tight">
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#071A3D] tracking-tight">
                     Logeshwaran G
                   </h3>
-                  <div className="flex flex-wrap items-center gap-2.5 text-xs sm:text-sm font-semibold text-slate-600">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 text-royal font-black">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-royal font-black text-[11px]">
                       Department of AI &amp; DS
                     </span>
                     <span>•</span>
                     <span className="text-slate-700 font-bold">Class of 2025 – 2029 (Second Year)</span>
-                    <span>•</span>
-                    <span className="text-royal font-bold">V.S.B. Engineering College (Autonomous)</span>
                   </div>
+                  <p className="text-[11px] text-royal font-bold">V.S.B. Engineering College (Autonomous)</p>
+                </div>
+              </div>
+
+              {/* Profile 2: Mohan Kumar D */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pt-6 lg:pt-0 lg:pl-8">
+                {/* Official Monogram Avatar with Emerald Radar Beacon */}
+                <div className="relative shrink-0 group">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-[#061A3D] via-[#0A295C] to-[#1455D9] p-1.5 shadow-xl group-hover:scale-105 transition-transform">
+                    <div className="w-full h-full rounded-[18px] bg-gradient-to-b from-[#071A3D] to-[#0A2540] flex items-center justify-center font-black text-2xl sm:text-3xl text-emerald-300 tracking-wider shadow-inner">
+                      MK
+                    </div>
+                  </div>
+                  {/* Live Active Beacon */}
+                  <span className="absolute -bottom-1 -right-1 flex h-5 w-5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-5 w-5 bg-emerald-500 ring-4 ring-white" />
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-black uppercase tracking-wider">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    <span>System Architect &amp; Developer</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-black text-[#071A3D] tracking-tight">
+                    Mohan Kumar D
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-royal font-black text-[11px]">
+                      Department of AI &amp; DS
+                    </span>
+                    <span>•</span>
+                    <span className="text-slate-700 font-bold">Class of 2025 – 2029 (Second Year)</span>
+                  </div>
+                  <p className="text-[11px] text-royal font-bold">V.S.B. Engineering College (Autonomous)</p>
                 </div>
               </div>
             </div>
@@ -1920,9 +1954,9 @@ export function AboutPortalView({ role = 'public' }: AboutPortalViewProps) {
         </p>
 
         <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 font-semibold">
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
             <span>Engineered &amp; Maintained by</span>
-            <span className="font-black text-royal">Logeshwaran G</span>
+            <span className="font-black text-royal">Logeshwaran G &amp; Mohan Kumar D</span>
             <span>(Second Year, AI &amp; DS)</span>
           </div>
           <div>
