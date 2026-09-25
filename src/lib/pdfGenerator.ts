@@ -97,7 +97,7 @@ export function drawDigitalPortalDocumentNotice(
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(5.2)
   doc.setTextColor(5, 122, 85)
-  doc.text('✓ Authenticated E-Record · Valid without Signature (IT Act)', marginX + contentW - 5.5, topTextY, { align: 'right' })
+  doc.text('Authenticated E-Record · Valid without Signature (IT Act)', marginX + contentW - 5.5, topTextY, { align: 'right' })
 
   // 4. Clean, Simple & Professional Attestation Note
   const bodyY = boxY + 9.0
@@ -1953,57 +1953,126 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
 
   currentY += 15
 
-  // 5. Visual Bar Graph
-  const chartH = 45
-  doc.setFillColor(17, 17, 17) // Sleek dark matching dark mode aesthetics
-  doc.roundedRect(marginX, currentY, contentW, chartH, 2, 2, 'F')
+  // 5. Visual Bar Graph - Executive Academic Benchmark Card
+  const chartH = 46
+  doc.setFillColor(248, 250, 254) // Soft, clean institutional paper card background
+  doc.setDrawColor(218, 228, 243)
+  doc.setLineWidth(0.35)
+  doc.roundedRect(marginX, currentY, contentW, chartH, 2, 2, 'FD')
 
+  // Top header with Title & Color Legend
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(7.5)
-  doc.setTextColor(244, 196, 48)
-  doc.text('Class-wise Average Attendance (%)', marginX + 5, currentY + 5.5)
+  doc.setFontSize(7.6)
+  doc.setTextColor(7, 26, 61)
+  doc.text('CLASS-WISE MORNING ATTENDANCE BENCHMARK (%)', marginX + 6, currentY + 5.5)
+
+  // Legend badges on top-right of chart
+  const legRightX = marginX + contentW - 6
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(5.2)
+
+  // Pending
+  doc.setTextColor(110, 125, 145)
+  doc.text('Roll-Call Pending', legRightX, currentY + 5.5, { align: 'right' })
+  doc.setFillColor(203, 213, 225)
+  doc.circle(legRightX - 22, currentY + 4.6, 1.2, 'F')
+
+  // Shortage
+  doc.setTextColor(190, 25, 45)
+  doc.text('Shortage (<75%)', legRightX - 26, currentY + 5.5, { align: 'right' })
+  doc.setFillColor(225, 29, 72)
+  doc.circle(legRightX - 48, currentY + 4.6, 1.2, 'F')
+
+  // Eligible
+  doc.setTextColor(20, 85, 217)
+  doc.text('Eligible (>=75%)', legRightX - 52, currentY + 5.5, { align: 'right' })
+  doc.setFillColor(20, 85, 217)
+  doc.circle(legRightX - 74, currentY + 4.6, 1.2, 'F')
 
   // Chart axes area
-  const chartInnerX = marginX + 10
-  const chartInnerY = currentY + 9
-  const chartInnerW = contentW - 14
-  const chartInnerH = 26
+  const chartInnerX = marginX + 16
+  const chartInnerY = currentY + 9.5
+  const chartInnerW = contentW - 24
+  const chartInnerH = 23
   const barCount = options.classes.length
   const barSlotW = chartInnerW / barCount
-  const barActualW = Math.min(10, barSlotW * 0.65)
+  const barActualW = Math.min(16, barSlotW * 0.55)
+
+  // Gridline: 100% Upper Limit
+  doc.setDrawColor(230, 237, 247)
+  doc.setLineWidth(0.2)
+  doc.line(chartInnerX, chartInnerY, chartInnerX + chartInnerW, chartInnerY)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(4.8)
+  doc.setTextColor(140, 155, 175)
+  doc.text('100%', chartInnerX - 1.5, chartInnerY + 1.2, { align: 'right' })
+
+  // Gridline: 75% Regulatory Threshold
+  const y75 = chartInnerY + chartInnerH - (0.75 * chartInnerH)
+  doc.setDrawColor(185, 208, 242)
+  doc.setLineWidth(0.3)
+  doc.setLineDashPattern([1.5, 1], 0)
+  doc.line(chartInnerX, y75, chartInnerX + chartInnerW, y75)
+  doc.setLineDashPattern([], 0)
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(4.6)
+  doc.setTextColor(20, 85, 217)
+  doc.text('75% Regulation Benchmark', chartInnerX + chartInnerW - 1, y75 - 1, { align: 'right' })
+  doc.text('75%', chartInnerX - 1.5, y75 + 1.2, { align: 'right' })
+
+  // Baseline 0%
+  doc.setDrawColor(203, 213, 225)
+  doc.setLineWidth(0.35)
+  doc.line(chartInnerX, chartInnerY + chartInnerH, chartInnerX + chartInnerW, chartInnerY + chartInnerH)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(4.8)
+  doc.setTextColor(140, 155, 175)
+  doc.text('0%', chartInnerX - 1.5, chartInnerY + chartInnerH + 1.2, { align: 'right' })
 
   options.classes.forEach((cls, idx) => {
     const bx = chartInnerX + idx * barSlotW + (barSlotW - barActualW) / 2
     const h = (cls.attendancePct / 100) * chartInnerH
     const by = chartInnerY + chartInnerH - h
 
-    // Bar column
+    // Track Background (Clean full slot)
+    doc.setFillColor(241, 245, 250)
+    doc.roundedRect(bx, chartInnerY, barActualW, chartInnerH, 1, 1, 'F')
+
+    // Filled Bar Column
     if (cls.attendancePct === 0) {
-      doc.setFillColor(55, 65, 81) // dark gray for pending
+      doc.setFillColor(203, 213, 225) // Soft neutral slate
+      doc.roundedRect(bx, chartInnerY + chartInnerH - 1.5, barActualW, 1.5, 0.5, 0.5, 'F')
     } else if (cls.attendancePct >= 75) {
-      doc.setFillColor(79, 131, 240) // royal blue
+      doc.setFillColor(20, 85, 217) // Royal VSB Blue
+      doc.roundedRect(bx, by, barActualW, h, 1, 1, 'F')
     } else {
-      doc.setFillColor(239, 68, 68) // red for low
+      doc.setFillColor(225, 29, 72) // Shortage Red
+      doc.roundedRect(bx, by, barActualW, h, 1, 1, 'F')
     }
-    doc.rect(bx, by, barActualW, Math.max(0.5, h), 'F')
 
-    // Percentage text above bar
+    // Percentage Label above Bar
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(5.5)
-    doc.setTextColor(255, 255, 255)
-    doc.text(
-      cls.attendancePct === 0 ? '0%' : `${cls.attendancePct}%`,
-      bx + barActualW / 2,
-      Math.max(chartInnerY + 2, by - 1),
-      { align: 'center' }
-    )
+    doc.setFontSize(6.2)
+    if (cls.attendancePct === 0) {
+      doc.setTextColor(140, 155, 175)
+      doc.text('0%', bx + barActualW / 2, chartInnerY + chartInnerH - 2.8, { align: 'center' })
+    } else {
+      doc.setTextColor(7, 26, 61)
+      doc.text(`${cls.attendancePct}%`, bx + barActualW / 2, Math.max(chartInnerY - 1, by - 1.5), { align: 'center' })
+    }
 
-    // Angled or short x-label
+    // Class Name X-Label below Bar
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(5.5)
-    doc.setTextColor(200, 210, 225)
-    const shortName = cls.className.replace(' AIDS', '')
-    doc.text(shortName, bx + barActualW / 2, chartInnerY + chartInnerH + 4, { align: 'center' })
+    doc.setFontSize(6.2)
+    doc.setTextColor(15, 23, 42)
+    doc.text(cls.className, bx + barActualW / 2, chartInnerY + chartInnerH + 4.2, { align: 'center' })
+
+    // Enrolled Headcount Sub-label
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(5.0)
+    doc.setTextColor(100, 116, 139)
+    doc.text(`${cls.totalStudents} Enrolled`, bx + barActualW / 2, chartInnerY + chartInnerH + 7.4, { align: 'center' })
   })
 
   currentY += chartH + 5
@@ -2148,7 +2217,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   doc.setTextColor(100, 115, 135)
   doc.text('Morning Roll-Call Verified', marginX + 4, currentY + 3.5)
   doc.setTextColor(16, 185, 129)
-  doc.text('✓ Digitally Recorded by Class Advisor', marginX + 4, currentY + 7.5)
+  doc.text('[Digitally Recorded by Class Advisor]', marginX + 4, currentY + 7.5)
 
   // Signatory 2
   doc.setFont('helvetica', 'bold')
@@ -2160,7 +2229,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   doc.setTextColor(100, 115, 135)
   doc.text('Regulation 2021 Monitoring', marginX + signColW + 4, currentY + 3.5)
   doc.setTextColor(16, 185, 129)
-  doc.text('✓ Electronically Audited & Synced', marginX + signColW + 4, currentY + 7.5)
+  doc.text('[Electronically Audited & Synced]', marginX + signColW + 4, currentY + 7.5)
 
   // Signatory 3: HOD
   const hodX = marginX + signColW * 2 + 4
@@ -2173,7 +2242,7 @@ export function generateAdvisorMorningAttendancePDF(options: AdvisorAttendancePD
   doc.setTextColor(100, 115, 135)
   doc.text(`Prof. ${options.hodName || 'Head of Department'} · AI & DS`, hodX, currentY + 3.5)
   doc.setTextColor(20, 85, 217)
-  doc.text('✓ Sanctioned by HOD', hodX, currentY + 7.5)
+  doc.text('[Sanctioned by HOD]', hodX, currentY + 7.5)
 
   currentY += 12
 
