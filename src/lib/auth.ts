@@ -1543,6 +1543,8 @@ export async function checkEmailAvailability(
     userId?: string
     registerNumber?: string
     facultyId?: string
+    currentEmail?: string
+    role?: string
   }
 ): Promise<{ available: boolean; message?: string }> {
   if (!email || typeof email !== 'string' || !email.includes('@')) {
@@ -1552,6 +1554,11 @@ export async function checkEmailAvailability(
   const normalizedEmail = email.trim().toLowerCase()
   if (!normalizedEmail || !normalizedEmail.includes('@')) {
     return { available: false, message: 'Please enter a valid email address.' }
+  }
+
+  // 1. If the email being checked matches the user's current account email, it is immediately available
+  if (options?.currentEmail && normalizedEmail === options.currentEmail.trim().toLowerCase()) {
+    return { available: true }
   }
 
   try {
@@ -1565,12 +1572,12 @@ export async function checkEmailAvailability(
       return { available: true }
     }
 
-    // If it's the exact same user ID
+    // 2. If it's the exact same user ID
     if (options?.userId && existingUser.id === options.userId) {
       return { available: true }
     }
 
-    // Check if matching student by register number
+    // 3. Check if matching student by register number
     const targetReg = options?.registerNumber?.trim().toUpperCase()
     if (targetReg) {
       const student = await prisma.student.findFirst({
@@ -1581,7 +1588,7 @@ export async function checkEmailAvailability(
       }
     }
 
-    // Check if matching faculty by faculty ID
+    // 4. Check if matching faculty or HOD by faculty ID
     const targetFacId = options?.facultyId?.trim().toUpperCase()
     if (targetFacId) {
       const faculty = await prisma.faculty.findFirst({
@@ -1590,9 +1597,16 @@ export async function checkEmailAvailability(
       if (faculty && faculty.userId === existingUser.id) {
         return { available: true }
       }
+
+      const hod = await prisma.hOD.findFirst({
+        where: { facultyId: { equals: targetFacId, mode: 'insensitive' } },
+      })
+      if (hod && hod.userId === existingUser.id) {
+        return { available: true }
+      }
     }
 
-    // Check linked profiles to determine if it's the same person or an orphan
+    // 5. Check linked profiles to determine if it's the same person or an orphan
     const [linkedStudent, linkedFaculty, linkedHod, linkedAdmin] = await Promise.all([
       prisma.student.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
       prisma.faculty.findUnique({ where: { userId: existingUser.id } }).catch(() => null),
@@ -1602,9 +1616,13 @@ export async function checkEmailAvailability(
 
     const isSameStudent = Boolean(linkedStudent && targetReg && linkedStudent.registerNumber.toUpperCase() === targetReg)
     const isSameFaculty = Boolean(linkedFaculty && targetFacId && linkedFaculty.facultyId.toUpperCase() === targetFacId)
+    const isSameHod = Boolean(
+      (linkedHod && (options?.role === 'hod' || (targetFacId && linkedHod.facultyId.toUpperCase() === targetFacId))) ||
+      (options?.role === 'hod' && existingUser.role === 'hod')
+    )
     const isOrphan = !linkedStudent && !linkedFaculty && !linkedHod && !linkedAdmin
 
-    if (isSameStudent || isSameFaculty || isOrphan) {
+    if (isSameStudent || isSameFaculty || isSameHod || isOrphan) {
       return { available: true }
     }
 

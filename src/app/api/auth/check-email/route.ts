@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ available: true })
     }
-    const { email, userId, registerNumber, facultyId } = parsed.data
+    const { email, userId, registerNumber, facultyId, currentEmail, role } = parsed.data as any
 
     const normalized = (email || '').trim().toLowerCase()
     if (!normalized || !normalized.includes('@') || !normalized.includes('.')) {
@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
       userId,
       registerNumber,
       facultyId,
+      currentEmail,
+      role,
     })
 
     return NextResponse.json(result)

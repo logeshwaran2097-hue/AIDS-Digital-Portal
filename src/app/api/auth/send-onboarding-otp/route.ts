@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
       userId,
       registerNumber,
       facultyId,
+      currentEmail: (rawJson as any)?.currentEmail,
+      role,
     })
 
     if (!availability.available) {

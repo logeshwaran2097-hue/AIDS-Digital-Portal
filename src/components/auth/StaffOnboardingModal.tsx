@@ -259,6 +259,12 @@ export function StaffOnboardingModal({
       return
     }
 
+    // If the email being entered is the user's current account email assigned by admin, it is 100% available!
+    if (initialData?.email && rawEmail === initialData.email.trim().toLowerCase()) {
+      setEmailCheckStatus({ checking: false, available: true, message: null })
+      return
+    }
+
     setEmailCheckStatus((prev) => ({ ...prev, checking: true }))
 
     const timer = setTimeout(async () => {
@@ -269,6 +275,8 @@ export function StaffOnboardingModal({
           body: JSON.stringify({
             email: rawEmail,
             facultyId: initialData?.facultyId,
+            currentEmail: initialData?.email,
+            role,
           }),
         })
         const data = await res.json()
@@ -284,7 +292,7 @@ export function StaffOnboardingModal({
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [isOpen, form.email, initialData?.facultyId])
+  }, [isOpen, form.email, initialData?.facultyId, initialData?.email, role])
 
   // Photo upload and compression to base64
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -411,6 +419,7 @@ export function StaffOnboardingModal({
           name: form.name || initialData.name,
           facultyId: initialData.facultyId,
           role,
+          currentEmail: initialData.email,
           subjectName: parsedSubjectsText || initialData.subjects || '',
           department: initialData.department || 'B.Tech Artificial Intelligence & Data Science',
           advisorYear: initialData.advisorYear,
