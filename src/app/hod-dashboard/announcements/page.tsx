@@ -52,7 +52,7 @@ export default async function HODAnnouncementsPage() {
     return {
       id: f.id,
       facultyId: f.facultyId,
-      name: u?.name || `Faculty ${f.facultyId}`,
+      name: u?.name || 'Faculty Member',
       designation: f.designation,
     }
   })

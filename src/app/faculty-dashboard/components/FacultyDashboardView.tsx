@@ -196,7 +196,7 @@ export function FacultyDashboardView({ data }: { data: FacultyData }) {
               </div>
               <h1 className="text-2xl sm:text-3xl font-black mt-1 tracking-tight text-white">{data?.user?.name || 'Faculty Member'}</h1>
               <p className="text-xs sm:text-sm text-slate-300 font-mono mt-0.5">
-                {data?.faculty?.designation || 'Faculty'} {data?.faculty?.qualification ? `· ${data.faculty.qualification}` : ''} {data?.faculty?.facultyId ? `· ID: ${data.faculty.facultyId}` : ''}
+                {data?.faculty?.designation || 'Faculty'} {data?.faculty?.qualification ? `· ${data.faculty.qualification}` : ''}
               </p>
             </div>
           </div>

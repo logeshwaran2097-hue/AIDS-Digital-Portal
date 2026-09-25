@@ -403,9 +403,6 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                               {formatNameWithDegree(hod.name, hod.qualification)}
                             </span>
                             <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="px-1.5 py-0.2 rounded-md bg-blue-50 text-[#1455D9] border border-blue-200 text-[9px] font-black font-mono">
-                                {hod.facultyId}
-                              </span>
                               <span className="px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold">
                                 {hod.status?.toUpperCase() || 'ACTIVE'}
                               </span>
@@ -533,9 +530,6 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-black text-base text-[#071A3D]">{formatNameWithDegree(hod.name, hod.qualification)}</h3>
-                          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black font-mono">
-                            {hod.facultyId}
-                          </span>
                           <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black">
                             {hod.status?.toUpperCase() || 'ACTIVE'}
                           </span>
@@ -852,8 +846,8 @@ export function AdminHODView({ initialHOD }: AdminHODViewProps) {
                     <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] border border-blue-200 text-[10px] font-black uppercase tracking-wider">
                       Directorate Administration
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold font-mono">
-                      {selectedHOD.facultyId}
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                      {selectedHOD.status?.toUpperCase() || 'ACTIVE'}
                     </span>
                   </div>
                   <h3 className="text-xl font-black text-[#071A3D] mt-0.5">

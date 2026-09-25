@@ -38,7 +38,7 @@ export default async function AdminFacultyPage() {
     return {
       id: f.id,
       facultyId: f.facultyId,
-      name: user?.name || f.facultyId,
+      name: user?.name || 'Faculty Member',
       email: user?.email || '',
       phone: user?.phone || null,
       dateOfBirth: dobString,

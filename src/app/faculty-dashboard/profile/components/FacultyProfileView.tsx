@@ -199,7 +199,7 @@ export function FacultyProfileView({ data: initialData }: { data: FacultyProfile
                 ],
         },
       ],
-      fileName: `${data.facultyId}_${data.name.replace(/[^a-zA-Z0-9]/g, '_')}_Dossier`,
+      fileName: `${data.name.replace(/[^a-zA-Z0-9]/g, '_')}_Dossier`,
     })
   }
 

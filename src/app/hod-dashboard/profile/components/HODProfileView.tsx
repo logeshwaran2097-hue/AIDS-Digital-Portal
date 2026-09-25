@@ -197,7 +197,6 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
           body: [
             `Full Name: ${profile.name}`,
             `Official Designation: ${profile.designation}`,
-            `Faculty Employee ID: ${profile.facultyId}`,
             `Department Directorate: ${profile.department}`,
             `Institution: V.S.B. Engineering College (Autonomous), Karur`,
             `Official Email: ${profile.email}`,
@@ -275,7 +274,6 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Head of Department
               </span>
-              <span className="text-xs text-blue-200 font-mono">· {profile.facultyId}</span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-bold">
                 Executive Admin
               </span>
@@ -371,8 +369,8 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">
-                <span className="text-gray-500 font-medium">Faculty / Employee ID:</span>
-                <span className="font-bold text-[#1455D9] font-mono">{profile.facultyId || 'Not Assigned'}</span>
+                <span className="text-gray-500 font-medium">Academic Department:</span>
+                <span className="font-bold text-[#1455D9]">{profile.department || 'Department of AI & DS'}</span>
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 border border-gray-100">

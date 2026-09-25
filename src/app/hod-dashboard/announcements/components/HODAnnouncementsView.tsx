@@ -197,7 +197,7 @@ export function HODAnnouncementsView({
       finalTarget = 'Year 4 Class Advisors'
     } else if (targetType === 'PARTICULAR_FACULTY') {
       const f = facultyList.find((fac) => fac.facultyId === selectedFacultyId)
-      finalTarget = f ? `Faculty: ${f.name} (${f.facultyId})` : `Faculty (${selectedFacultyId})`
+      finalTarget = f ? `Faculty: ${f.name}` : `Faculty: Selected Staff`
     } else if (targetType === 'PARTICULAR_STUDENT') {
       const s = studentList.find((stu) => stu.registerNumber === selectedStudentReg)
       finalTarget = s ? `Student: ${s.name} (${s.registerNumber})` : `Student (${selectedStudentReg})`
@@ -672,7 +672,7 @@ export function HODAnnouncementsView({
                       >
                         {facultyList.map((f) => (
                           <option key={f.id} value={f.facultyId}>
-                            {f.name} ({f.facultyId} - {f.designation})
+                            {f.name} ({f.designation})
                           </option>
                         ))}
                       </select>

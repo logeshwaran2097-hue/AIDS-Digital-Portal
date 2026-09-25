@@ -386,8 +386,8 @@ export function AdminNotificationsView({
                   >
                     <option value="">-- Choose Faculty --</option>
                     {facultyList.map((f) => (
-                      <option key={f.id} value={`${f.name} (${f.facultyId})`}>
-                        {f.name} ({f.facultyId})
+                      <option key={f.id} value={f.name}>
+                        {f.name}
                       </option>
                     ))}
                   </select>

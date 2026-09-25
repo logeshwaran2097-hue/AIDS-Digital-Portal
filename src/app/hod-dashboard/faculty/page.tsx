@@ -70,7 +70,6 @@ export default async function HODFacultyPage() {
                   <div>
                     <h3 className="font-bold text-sm text-[#071A3D]">{f.name}</h3>
                     <p className="text-xs font-semibold text-[#1455D9]">{f.designation}</p>
-                    <p className="text-[10px] font-mono text-gray-400 mt-0.5">{f.facultyId}</p>
                   </div>
                   <span className="px-2 py-0.5 rounded-full bg-blue-50 text-[#1455D9] text-[10px] font-bold">
                     {f.experience} Yrs Exp

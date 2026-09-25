@@ -1384,7 +1384,7 @@ export function StaffOnboardingModal({
               <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 flex items-start gap-2 text-amber-900 text-[11px]">
                 <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <p>
-                  Official institutional records (Staff ID, designation, allocated batch/subjects) are centrally locked. Future changes require approval from the Department Administrator.
+                  Official institutional records (designation, allocated batch/subjects) are centrally locked. Future changes require approval from the Department Administrator.
                 </p>
               </div>
 
