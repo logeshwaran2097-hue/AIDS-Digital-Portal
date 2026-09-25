@@ -902,10 +902,7 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
   // Filtered lists for Class Advisors / In-charges
   const advisorsList = useMemo(() => {
     return facultyList.filter((f) => {
-      const isAdvisor =
-        Boolean(f.advisorBatch || (f.advisorYear && f.advisorSec)) ||
-        f.facultyType === 'advisor' ||
-        f.facultyType === 'both'
+      const isAdvisor = Boolean(f.advisorBatch || (f.advisorYear && f.advisorSec))
 
       if (!isAdvisor) return false
 
@@ -2470,7 +2467,9 @@ export function AdminFacultyView({ initialFaculty }: { initialFaculty: FacultyRe
                       <span className="px-3 py-1 rounded-xl bg-purple-50 text-purple-700 font-bold border border-purple-200 inline-flex items-center gap-1.5">
                         <GraduationCap className="w-3.5 h-3.5" />
                         {advisor.advisorBatch ||
-                          `Year ${advisor.advisorYear || 2} · Sem ${advisor.advisorSem || 3} (Sec ${advisor.advisorSec || 'A'})`}
+                          (advisor.advisorYear && advisor.advisorSec
+                            ? `Year ${advisor.advisorYear} · Sem ${advisor.advisorSem || 3} (Sec ${advisor.advisorSec})`
+                            : 'Unassigned Batch')}
                       </span>
                     </td>
 
