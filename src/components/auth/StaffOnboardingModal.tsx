@@ -600,7 +600,10 @@ export function StaffOnboardingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[99999] bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+    <div 
+      onClick={() => onClose?.()}
+      className="fixed inset-0 z-[99999] bg-[#071A41]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+    >
       <div 
         onClick={(e) => e.stopPropagation()}
         className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 shadow-2xl space-y-4 border border-gray-100 max-h-[94vh] overflow-y-auto animate-in zoom-in-95 duration-200"
@@ -615,6 +618,16 @@ export function StaffOnboardingModal({
                 ? 'CLASS ADVISOR VERIFICATION & SECURITY SETUP'
                 : 'FACULTY APPOINTMENT VERIFICATION & SECURITY SETUP'}
             </span>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                title="Close and continue to dashboard"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
@@ -1022,9 +1035,20 @@ export function StaffOnboardingModal({
 
             {/* Action Buttons */}
             <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium order-2 sm:order-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#1557C0]" />
-                <span>Step 1 of 3: Verification &amp; Attestation</span>
+              <div className="flex items-center gap-3 order-2 sm:order-1">
+                {onClose && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Skip to Dashboard
+                  </button>
+                )}
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1557C0]" />
+                  <span>Step 1 of 3: Verification &amp; Attestation</span>
+                </div>
               </div>
 
               <button

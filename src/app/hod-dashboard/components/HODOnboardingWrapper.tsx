@@ -45,19 +45,12 @@ export function HODOnboardingWrapper({
 
     setIsCompleted(Boolean(isMarkedDone && hasCompletedDbProfile))
 
-    // 1. Check if triggered via query param: ?onboarding=1 or ?onboarding=true
+    // Only launch if explicitly triggered via query param: ?onboarding=1 or ?onboarding=true
     const queryTrigger = searchParams?.get('onboarding')
     if (queryTrigger === '1' || queryTrigger === 'true' || queryTrigger === 'hod') {
       setIsOpen(true)
-      return
     }
-
-    // 2. Automatically launch if profile is incomplete or password reset required
-    const isDismissedThisSession = sessionStorage.getItem(`vsb_staff_onboarding_dismissed_${hodKey}`) === 'true'
-    if ((!hasCompletedDbProfile || initialMustChangePassword) && !isDismissedThisSession) {
-      setIsOpen(true)
-    }
-  }, [hodKey, initialMustChangePassword, searchParams, hodData.qualification, hodData.phone])
+  }, [hodKey, searchParams, hodData.qualification, hodData.phone])
 
   useEffect(() => {
     const handleOpen = () => setIsOpen(true)
