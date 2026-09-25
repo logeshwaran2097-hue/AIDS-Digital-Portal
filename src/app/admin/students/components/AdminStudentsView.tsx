@@ -1708,25 +1708,25 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
         /* Desktop Table View — Full Compact Admin Overview with ALL Fields */
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#071A3D] text-white uppercase text-[9.5px] font-black tracking-wider">
+            <table className="w-full min-w-[1580px] text-left text-xs">
+              <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
                 <tr>
-                  <th className="px-2 py-3 text-center w-7">#</th>
-                  <th className="px-2 py-3 text-center w-10">Photo</th>
-                  <th className="px-2 py-3">Register No</th>
-                  <th className="px-2 py-3">Name</th>
-                  <th className="px-1.5 py-3 text-center">DOB</th>
-                  <th className="px-1.5 py-3 text-center">Blood</th>
-                  <th className="px-2 py-3">Contact</th>
-                  <th className="px-2 py-3">Advisor</th>
-                  <th className="px-1.5 py-3 text-center">Yr/Sem</th>
-                  <th className="px-1 py-3 text-center">Sec</th>
-                  <th className="px-1.5 py-3 text-center">Batch</th>
-                  <th className="px-2 py-3">Residency & Transit</th>
-                  <th className="px-1.5 py-3 text-center">CGPA</th>
-                  <th className="px-1.5 py-3 text-center">Attend.</th>
-                  <th className="px-2 py-3 text-center">Status</th>
-                  <th className="px-2 py-3 text-right">Actions</th>
+                  <th className="py-3.5 px-2 text-center w-10 whitespace-nowrap">#</th>
+                  <th className="py-3.5 px-2 text-center w-14 whitespace-nowrap">Photo</th>
+                  <th className="py-3.5 px-3 text-left w-36 whitespace-nowrap">Register No</th>
+                  <th className="py-3.5 px-3 text-left w-48 whitespace-nowrap">Name</th>
+                  <th className="py-3.5 px-2.5 text-center w-28 whitespace-nowrap">DOB</th>
+                  <th className="py-3.5 px-2 text-center w-20 whitespace-nowrap">Blood</th>
+                  <th className="py-3.5 px-3 text-left w-56 whitespace-nowrap">Contact</th>
+                  <th className="py-3.5 px-3 text-left w-40 whitespace-nowrap">Advisor</th>
+                  <th className="py-3.5 px-2 text-center w-24 whitespace-nowrap">Yr/Sem</th>
+                  <th className="py-3.5 px-2 text-center w-16 whitespace-nowrap">Sec</th>
+                  <th className="py-3.5 px-2 text-center w-28 whitespace-nowrap">Batch</th>
+                  <th className="py-3.5 px-3 text-left w-48 whitespace-nowrap">Residency &amp; Transit</th>
+                  <th className="py-3.5 px-2 text-center w-20 whitespace-nowrap">CGPA</th>
+                  <th className="py-3.5 px-2 text-center w-24 whitespace-nowrap">Attend.</th>
+                  <th className="py-3.5 px-3 text-center w-28 whitespace-nowrap">Status</th>
+                  <th className="py-3.5 px-3 text-center w-24 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 font-medium">
@@ -1740,9 +1740,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   filteredStudents.map((s, idx) => (
                     <tr key={s.id} className="hover:bg-blue-50/40 transition-colors group">
                       {/* # */}
-                      <td className="px-2 py-2 text-gray-400 font-mono text-[10.5px] text-center">{idx + 1}</td>
+                      <td className="py-3.5 px-2 text-gray-400 font-mono text-[10.5px] text-center whitespace-nowrap">{idx + 1}</td>
                       {/* Photo */}
-                      <td className="px-2 py-2 text-center">
+                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-[10px] mx-auto overflow-hidden shrink-0 shadow-xs">
                           {s.profileImage ? (
                             <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
@@ -1752,7 +1752,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         </div>
                       </td>
                       {/* Register Number */}
-                      <td className="px-2 py-2">
+                      <td className="py-3.5 px-3 whitespace-nowrap">
                         <div className="flex items-center gap-1">
                           <span className="font-mono font-bold text-[#1455D9] text-[11px] whitespace-nowrap">{s.registerNumber}</span>
                           <button
@@ -1766,15 +1766,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         </div>
                       </td>
                       {/* Student Name */}
-                      <td className="px-2 py-2 font-bold text-[#071A3D] text-[11px] max-w-[130px] truncate" title={s.name}>
+                      <td className="py-3.5 px-3 font-bold text-[#071A3D] text-[11px] whitespace-nowrap" title={s.name}>
                         {s.name}
                       </td>
                       {/* Date of Birth */}
-                      <td className="px-1.5 py-2 text-center text-gray-500 font-mono text-[9.5px] whitespace-nowrap">
+                      <td className="py-3.5 px-2.5 text-center text-gray-500 font-mono text-[9.5px] whitespace-nowrap">
                         {s.dateOfBirth || <span className="text-gray-300 italic">—</span>}
                       </td>
                       {/* Blood Group */}
-                      <td className="px-1.5 py-2 text-center">
+                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
                         {s.bloodGroup ? (
                           <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-800 text-[9.5px] font-bold border border-red-200 whitespace-nowrap">
                             {s.bloodGroup}
@@ -1784,16 +1784,16 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         )}
                       </td>
                       {/* Contact */}
-                      <td className="px-2 py-2">
-                        <div className="flex flex-col gap-0.5 text-[9.5px] max-w-[145px]">
+                      <td className="py-3.5 px-3 whitespace-nowrap">
+                        <div className="flex flex-col gap-0.5 text-[9.5px]">
                           {s.email && !s.email.endsWith('@vsb.student.edu') && !s.email.endsWith('@student.vsb.edu.in') ? (
-                            <span className="text-[#1455D9] font-medium truncate" title={s.email}>
+                            <span className="text-[#1455D9] font-medium whitespace-nowrap" title={s.email}>
                               ✉ {s.email}
                             </span>
                           ) : (
-                            <span className="text-gray-400 italic text-[9px]">✉ Not registered</span>
+                            <span className="text-gray-400 italic text-[9px] whitespace-nowrap">✉ Not registered</span>
                           )}
-                          <div className="flex items-center gap-1.5 text-gray-600 font-mono">
+                          <div className="flex items-center gap-1.5 text-gray-600 font-mono whitespace-nowrap">
                             {s.phone ? (
                               <span title={`Student: ${s.phone}`}>📱 {s.phone}</span>
                             ) : s.parentPhone ? (
@@ -1805,7 +1805,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         </div>
                       </td>
                       {/* Advisor */}
-                      <td className="px-2 py-2 text-[10.5px] max-w-[100px] truncate" title={s.advisorName || 'Not Assigned'}>
+                      <td className="py-3.5 px-3 text-[10.5px] whitespace-nowrap" title={s.advisorName || 'Not Assigned'}>
                         {s.advisorName ? (
                           <span className="text-[#071A3D] font-semibold">{s.advisorName}</span>
                         ) : (
@@ -1813,15 +1813,15 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         )}
                       </td>
                       {/* Year / Semester */}
-                      <td className="px-1.5 py-2 text-center">
+                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
                         <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[9.5px] whitespace-nowrap">
                           Y{s.year}/S{s.semester}
                         </span>
                       </td>
                       {/* Section */}
-                      <td className="px-1 py-2 text-center font-bold text-[#071A3D] text-[10.5px]">{s.section}</td>
+                      <td className="py-3.5 px-2 text-center font-bold text-[#071A3D] text-[10.5px] whitespace-nowrap">{s.section}</td>
                       {/* Batch */}
-                      <td className="px-1.5 py-2 text-center">
+                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
                         {s.batch ? (
                           <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
                             {s.batch}
@@ -1831,9 +1831,9 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         )}
                       </td>
                       {/* Residency & Transport */}
-                      <td className="px-2 py-2">
+                      <td className="py-3.5 px-3 whitespace-nowrap">
                         {s.residencyStatus ? (
-                          <div className="flex flex-col gap-0.5 text-[9.5px] max-w-[135px]">
+                          <div className="flex flex-col gap-0.5 text-[9.5px]">
                             <span className={`font-bold px-1.5 py-0.5 rounded border whitespace-nowrap inline-flex items-center gap-1 w-fit text-[9.5px] ${
                               s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock
                                 ? 'text-amber-800 bg-amber-50 border-amber-200'
@@ -1856,7 +1856,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         )}
                       </td>
                       {/* CGPA */}
-                      <td className="px-1.5 py-2 text-center">
+                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
                         {s.cgpa ? (
                           <span className="font-mono font-bold text-[10px] text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                             {s.cgpa}
@@ -1866,7 +1866,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         )}
                       </td>
                       {/* Attendance */}
-                      <td className="px-1.5 py-2 text-center">
+                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
                         {s.attendance ? (
                           <span className={`font-mono font-bold text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap ${
                             parseFloat(s.attendance) >= 75
@@ -1880,7 +1880,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         )}
                       </td>
                       {/* Status */}
-                      <td className="px-2 py-2 text-center">
+                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
                         <span
                           className={`px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider inline-flex items-center gap-1 whitespace-nowrap ${
                             s.status.toLowerCase() === 'active'
@@ -1893,8 +1893,8 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                         </span>
                       </td>
                       {/* Actions */}
-                      <td className="px-2 py-2 text-right">
-                        <div className="flex items-center justify-end gap-0.5">
+                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => {
                               setSelectedStudent(s)
