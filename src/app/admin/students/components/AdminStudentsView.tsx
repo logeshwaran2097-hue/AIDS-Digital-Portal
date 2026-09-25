@@ -1705,34 +1705,27 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
           ))}
         </div>
       ) : (
-        /* Desktop Table View — Full Compact Admin Overview with ALL Fields */
+        /* Desktop Table View — Executive Consolidated Admin View with Sticky Header */
         <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1580px] text-left text-xs">
-              <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
+          <div className="overflow-x-auto max-h-[75vh] overflow-y-auto scrollbar-thin">
+            <table className="w-full min-w-[1150px] text-left text-xs border-collapse">
+              <thead className="sticky top-0 z-20 bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider shadow-xs">
                 <tr>
-                  <th className="py-3.5 px-2 text-center w-10 whitespace-nowrap">#</th>
-                  <th className="py-3.5 px-2 text-center w-14 whitespace-nowrap">Photo</th>
-                  <th className="py-3.5 px-3 text-left w-36 whitespace-nowrap">Register No</th>
-                  <th className="py-3.5 px-3 text-left w-48 whitespace-nowrap">Name</th>
-                  <th className="py-3.5 px-2.5 text-center w-28 whitespace-nowrap">DOB</th>
-                  <th className="py-3.5 px-2 text-center w-20 whitespace-nowrap">Blood</th>
-                  <th className="py-3.5 px-3 text-left w-56 whitespace-nowrap">Contact</th>
-                  <th className="py-3.5 px-3 text-left w-40 whitespace-nowrap">Advisor</th>
-                  <th className="py-3.5 px-2 text-center w-24 whitespace-nowrap">Yr/Sem</th>
-                  <th className="py-3.5 px-2 text-center w-16 whitespace-nowrap">Sec</th>
-                  <th className="py-3.5 px-2 text-center w-28 whitespace-nowrap">Batch</th>
-                  <th className="py-3.5 px-3 text-left w-48 whitespace-nowrap">Residency &amp; Transit</th>
-                  <th className="py-3.5 px-2 text-center w-20 whitespace-nowrap">CGPA</th>
-                  <th className="py-3.5 px-2 text-center w-24 whitespace-nowrap">Attend.</th>
-                  <th className="py-3.5 px-3 text-center w-28 whitespace-nowrap">Status</th>
-                  <th className="py-3.5 px-3 text-center w-24 whitespace-nowrap">Actions</th>
+                  <th className="py-3.5 px-3 text-center w-12 whitespace-nowrap">#</th>
+                  <th className="py-3.5 px-3 text-left w-52 whitespace-nowrap">Student Candidate</th>
+                  <th className="py-3.5 px-3 text-left w-48 whitespace-nowrap">Class &amp; Advisor</th>
+                  <th className="py-3.5 px-3 text-left w-36 whitespace-nowrap">Batch &amp; Bio</th>
+                  <th className="py-3.5 px-3 text-left w-52 whitespace-nowrap">Contact Details</th>
+                  <th className="py-3.5 px-3 text-left w-48 whitespace-nowrap">Residency / Transit</th>
+                  <th className="py-3.5 px-3 text-center w-28 whitespace-nowrap">Standing</th>
+                  <th className="py-3.5 px-3 text-center w-24 whitespace-nowrap">Status</th>
+                  <th className="py-3.5 px-3 text-center w-28 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 font-medium">
                 {filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="text-center py-10 text-gray-400">
+                    <td colSpan={9} className="text-center py-12 text-gray-400">
                       No matching student records found.
                     </td>
                   </tr>
@@ -1740,60 +1733,86 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                   filteredStudents.map((s, idx) => (
                     <tr key={s.id} className="hover:bg-blue-50/40 transition-colors group">
                       {/* # */}
-                      <td className="py-3.5 px-2 text-gray-400 font-mono text-[10.5px] text-center whitespace-nowrap">{idx + 1}</td>
-                      {/* Photo */}
-                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-[10px] mx-auto overflow-hidden shrink-0 shadow-xs">
-                          {s.profileImage ? (
-                            <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
-                          ) : (
-                            s.name.charAt(0) || 'S'
-                          )}
-                        </div>
+                      <td className="py-3.5 px-3 text-gray-400 font-mono text-[11px] text-center whitespace-nowrap">
+                        {idx + 1}
                       </td>
-                      {/* Register Number */}
+
+                      {/* Student Candidate: Avatar + Name + Reg No */}
                       <td className="py-3.5 px-3 whitespace-nowrap">
-                        <div className="flex items-center gap-1">
-                          <span className="font-mono font-bold text-[#1455D9] text-[11px] whitespace-nowrap">{s.registerNumber}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyReg(s.registerNumber)}
-                            className="p-0.5 rounded text-gray-300 hover:text-[#1455D9] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                            title="Copy Register Number"
-                          >
-                            {copiedReg === s.registerNumber ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          </button>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#1455D9] to-[#22C7E8] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs overflow-hidden">
+                            {s.profileImage ? (
+                              <img src={s.profileImage} alt={s.name} className="w-full h-full object-cover" />
+                            ) : (
+                              s.name.charAt(0) || 'S'
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-bold text-[#071A3D] text-xs block truncate max-w-[180px]" title={s.name}>
+                              {s.name}
+                            </span>
+                            <div className="flex items-center gap-1 font-mono text-[11px] text-[#1455D9] font-bold">
+                              <span>{s.registerNumber}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyReg(s.registerNumber)}
+                                className="p-0.5 rounded text-gray-300 hover:text-[#1455D9] opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                                title="Copy Register Number"
+                              >
+                                {copiedReg === s.registerNumber ? (
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </td>
-                      {/* Student Name */}
-                      <td className="py-3.5 px-3 font-bold text-[#071A3D] text-[11px] whitespace-nowrap" title={s.name}>
-                        {s.name}
-                      </td>
-                      {/* Date of Birth */}
-                      <td className="py-3.5 px-2.5 text-center text-gray-500 font-mono text-[9.5px] whitespace-nowrap">
-                        {s.dateOfBirth || <span className="text-gray-300 italic">—</span>}
-                      </td>
-                      {/* Blood Group */}
-                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
-                        {s.bloodGroup ? (
-                          <span className="px-1.5 py-0.5 rounded bg-red-50 text-red-800 text-[9.5px] font-bold border border-red-200 whitespace-nowrap">
-                            {s.bloodGroup}
+
+                      {/* Class & Advisor */}
+                      <td className="py-3.5 px-3 whitespace-nowrap">
+                        <div>
+                          <span className="px-2 py-0.5 rounded-md bg-blue-50 text-[#1455D9] font-bold text-[11px] border border-blue-100 whitespace-nowrap inline-block">
+                            {s.year === 2 ? 'II' : s.year === 3 ? 'III' : 'IV'} AIDS {s.section} · Sem {s.semester}
                           </span>
-                        ) : (
-                          <span className="text-gray-300 text-[10px]">—</span>
-                        )}
+                          <p className="text-[10.5px] text-gray-500 mt-1 truncate max-w-[170px]" title={s.advisorName || 'Unassigned'}>
+                            Adv: <span className="font-semibold text-gray-700">{s.advisorName || 'Unassigned'}</span>
+                          </p>
+                        </div>
                       </td>
-                      {/* Contact */}
+
+                      {/* Batch & Bio */}
                       <td className="py-3.5 px-3 whitespace-nowrap">
-                        <div className="flex flex-col gap-0.5 text-[9.5px]">
-                          {s.email && !s.email.endsWith('@vsb.student.edu') && !s.email.endsWith('@student.vsb.edu.in') ? (
-                            <span className="text-[#1455D9] font-medium whitespace-nowrap" title={s.email}>
-                              ✉ {s.email}
+                        <div>
+                          {s.batch ? (
+                            <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 whitespace-nowrap inline-block">
+                              {s.batch}
                             </span>
                           ) : (
-                            <span className="text-gray-400 italic text-[9px] whitespace-nowrap">✉ Not registered</span>
+                            <span className="text-gray-400 text-[10px]">—</span>
                           )}
-                          <div className="flex items-center gap-1.5 text-gray-600 font-mono whitespace-nowrap">
+                          <p className="text-[10px] text-gray-400 font-mono mt-1">
+                            {s.dateOfBirth || 'DOB: —'} {s.bloodGroup ? `· ${s.bloodGroup}` : ''}
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* Contact Details */}
+                      <td className="py-3.5 px-3 whitespace-nowrap">
+                        <div className="flex flex-col gap-0.5 text-[10.5px]">
+                          {s.email && !s.email.endsWith('@vsb.student.edu') && !s.email.endsWith('@student.vsb.edu.in') ? (
+                            <a
+                              href={`mailto:${s.email}`}
+                              className="text-[#1455D9] font-medium whitespace-nowrap hover:underline block truncate max-w-[190px]"
+                              title={s.email}
+                            >
+                              ✉ {s.email}
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 italic text-[9.5px]">✉ Not registered</span>
+                          )}
+                          <div className="flex items-center gap-1.5 text-gray-600 font-mono">
                             {s.phone ? (
                               <span title={`Student: ${s.phone}`}>📱 {s.phone}</span>
                             ) : s.parentPhone ? (
@@ -1804,85 +1823,65 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           </div>
                         </div>
                       </td>
-                      {/* Advisor */}
-                      <td className="py-3.5 px-3 text-[10.5px] whitespace-nowrap" title={s.advisorName || 'Not Assigned'}>
-                        {s.advisorName ? (
-                          <span className="text-[#071A3D] font-semibold">{s.advisorName}</span>
-                        ) : (
-                          <span className="text-gray-300 italic text-[9.5px]">Unassigned</span>
-                        )}
-                      </td>
-                      {/* Year / Semester */}
-                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
-                        <span className="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[9.5px] whitespace-nowrap">
-                          Y{s.year}/S{s.semester}
-                        </span>
-                      </td>
-                      {/* Section */}
-                      <td className="py-3.5 px-2 text-center font-bold text-[#071A3D] text-[10.5px] whitespace-nowrap">{s.section}</td>
-                      {/* Batch */}
-                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
-                        {s.batch ? (
-                          <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200 whitespace-nowrap">
-                            {s.batch}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300 text-[9.5px]">—</span>
-                        )}
-                      </td>
+
                       {/* Residency & Transport */}
                       <td className="py-3.5 px-3 whitespace-nowrap">
                         {s.residencyStatus ? (
-                          <div className="flex flex-col gap-0.5 text-[9.5px]">
-                            <span className={`font-bold px-1.5 py-0.5 rounded border whitespace-nowrap inline-flex items-center gap-1 w-fit text-[9.5px] ${
-                              s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock
-                                ? 'text-amber-800 bg-amber-50 border-amber-200'
-                                : 'text-blue-700 bg-blue-50 border-blue-200'
-                            }`}>
+                          <div className="flex flex-col gap-0.5 text-[10px]">
+                            <span
+                              className={`font-bold px-1.5 py-0.5 rounded border whitespace-nowrap inline-flex items-center gap-1 w-fit ${
+                                s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock
+                                  ? 'text-amber-800 bg-amber-50 border-amber-200'
+                                  : 'text-blue-700 bg-blue-50 border-blue-200'
+                              }`}
+                            >
                               {s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock ? (
-                                <>🏢 {s.hostelBlock ? `Blk ${s.hostelBlock}` : 'Hostel'}{s.roomNo ? ` · R${s.roomNo}` : ''}</>
+                                <>🏢 {s.hostelBlock ? `Blk ${s.hostelBlock.replace(/^block\s*/i, '')}` : 'Hostel'}{s.roomNo ? ` · R${s.roomNo.replace(/^room\s*/i, '')}` : ''}</>
                               ) : (
                                 <>🚌 {s.busNo ? `Bus ${s.busNo.replace(/^#\s*/, '')}` : 'Day Scholar'}</>
                               )}
                             </span>
                             {!(s.residencyStatus.toLowerCase().includes('hostel') || s.hostelBlock) && s.boardingPoint && (
-                              <span className="text-gray-500 text-[8.5px] truncate" title={s.boardingPoint}>
+                              <span className="text-gray-500 text-[9px] truncate max-w-[160px]" title={s.boardingPoint}>
                                 📍 {s.boardingPoint}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-300 text-[9.5px] italic">—</span>
+                          <span className="text-gray-300 text-[10px] italic">—</span>
                         )}
                       </td>
-                      {/* CGPA */}
-                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
-                        {s.cgpa ? (
-                          <span className="font-mono font-bold text-[10px] text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                            {s.cgpa}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300 text-[10px]">—</span>
-                        )}
+
+                      {/* Standing (CGPA & Attendance) */}
+                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                        <div className="flex flex-col items-center gap-0.5">
+                          {s.cgpa ? (
+                            <span className="font-mono font-bold text-[10.5px] text-[#071A3D]">
+                              CGPA {s.cgpa}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 text-[10px]">—</span>
+                          )}
+                          {s.attendance ? (
+                            <span
+                              className={`font-mono font-bold text-[9.5px] px-1.5 py-0.2 rounded border whitespace-nowrap ${
+                                parseFloat(s.attendance) >= 75
+                                  ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                                  : 'text-red-800 bg-red-50 border-red-200'
+                              }`}
+                            >
+                              {s.attendance}% Att.
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 text-[9px]">Att: —</span>
+                          )}
+                        </div>
                       </td>
-                      {/* Attendance */}
-                      <td className="py-3.5 px-2 text-center whitespace-nowrap">
-                        {s.attendance ? (
-                          <span className={`font-mono font-bold text-[10px] px-1.5 py-0.5 rounded border whitespace-nowrap ${
-                            parseFloat(s.attendance) >= 75
-                              ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
-                              : 'text-red-800 bg-red-50 border-red-200'
-                          }`}>
-                            {s.attendance}%
-                          </span>
-                        ) : (
-                          <span className="text-gray-300 text-[10px]">—</span>
-                        )}
-                      </td>
+
                       {/* Status */}
                       <td className="py-3.5 px-3 text-center whitespace-nowrap">
                         <span
-                          className={`px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider inline-flex items-center gap-1 whitespace-nowrap ${
+                          className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider inline-flex items-center gap-1 whitespace-nowrap ${
                             s.status.toLowerCase() === 'active'
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs'
                               : 'bg-slate-100 text-slate-600 border border-slate-200'
@@ -1892,6 +1891,7 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                           {s.status.toLowerCase() === 'active' ? 'ACTIVE' : 'INACTIVE'}
                         </span>
                       </td>
+
                       {/* Actions */}
                       <td className="py-3.5 px-3 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1">
@@ -1900,21 +1900,21 @@ export function AdminStudentsView({ initialStudents }: { initialStudents: Studen
                               setSelectedStudent(s)
                               setIsViewModalOpen(true)
                             }}
-                            className="p-1 rounded-md text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
                             title="View Student Dossier"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => openEditModal(s)}
-                            className="p-1 rounded-md text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-gray-500 hover:text-[#1455D9] hover:bg-blue-50 transition-colors cursor-pointer"
                             title="Edit Record"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleDelete(s.id, s.name, s.registerNumber)}
-                            className="p-1 rounded-md text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                             title="Delete Student Record"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
