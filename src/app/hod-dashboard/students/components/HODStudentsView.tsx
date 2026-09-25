@@ -27,6 +27,9 @@ import {
   TrendingUp,
   ShieldCheck,
   MessageSquare,
+  UserCheck,
+  Info,
+  Building2,
 } from 'lucide-react'
 
 export interface DBStudent {
@@ -1127,30 +1130,53 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
 
       {/* Student Profile Drawer / Modal */}
       {activeStudentModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-[#071A3D] to-[#1455D9] text-white p-6 relative">
+            <div className="bg-gradient-to-br from-[#071A3D] via-[#0B2559] to-[#1455D9] text-white p-6 relative">
               <button
                 onClick={() => setActiveStudentModal(null)}
-                className="absolute right-4 top-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition"
+                className="absolute right-4 top-4 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/90 hover:text-white transition"
+                aria-label="Close dialog"
               >
                 <X className="w-4 h-4" />
               </button>
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 text-white flex items-center justify-center font-black text-2xl shadow-inner">
+              <div className="flex items-center gap-3.5 pr-8">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/20 backdrop-blur-md text-white flex items-center justify-center font-black text-2xl shadow-lg ring-2 ring-white/10 shrink-0">
                   {activeStudentModal.name.charAt(0)}
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-black">{activeStudentModal.name}</h3>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg sm:text-xl font-black text-white tracking-tight truncate max-w-[280px]">
+                      {activeStudentModal.name}
+                    </h3>
                     {activeStudentModal.isDbVerified && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-900 font-black text-[10px] border border-emerald-300">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-400/30 backdrop-blur-xs shadow-xs">
+                        <ShieldCheck className="w-3 h-3 text-emerald-400 shrink-0" />
                         Admin Enrolled
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-blue-200 font-mono mt-0.5">{activeStudentModal.registerNumber}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-blue-200/90 font-mono tracking-wider font-semibold">
+                      {activeStudentModal.registerNumber}
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(activeStudentModal.registerNumber)
+                        setCopiedReg(activeStudentModal.registerNumber)
+                        setTimeout(() => setCopiedReg(null), 2000)
+                      }}
+                      title="Copy Register No."
+                      className="text-blue-300/80 hover:text-white transition p-0.5 rounded hover:bg-white/10"
+                    >
+                      {copiedReg === activeStudentModal.registerNumber ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1158,103 +1184,156 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
             {/* Modal Body */}
             <div className="p-6 space-y-4 text-xs">
               {/* Class & Section Highlight */}
-              <div className="grid grid-cols-3 gap-2.5 p-3.5 bg-gray-50 rounded-2xl border border-gray-200/80 text-center">
-                <div>
-                  <span className="text-[10px] text-gray-500 font-bold uppercase">Class</span>
-                  <p className="text-sm font-black text-[#071A3D] mt-0.5">
-                    {activeStudentModal.year === 2 ? 'II' : activeStudentModal.year === 3 ? 'III' : 'IV'} AIDS {activeStudentModal.section}
-                  </p>
-                </div>
-                <div className="border-x border-gray-200">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase">Semester</span>
-                  <p className="text-sm font-black text-[#071A3D] mt-0.5">Sem {activeStudentModal.semester}</p>
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-500 font-bold uppercase">Attendance</span>
-                  <p
-                    className={`text-sm font-black mt-0.5 ${
-                      (activeStudentModal.attendancePct ?? 0) >= 75 ? 'text-emerald-700' : 'text-rose-600'
-                    }`}
-                  >
-                    {activeStudentModal.attendancePct ?? 0}%
-                  </p>
-                </div>
-              </div>
+              {(() => {
+                const hasAttendanceRecords = (activeStudentModal.totalDays ?? 0) > 0
+                const attPct = activeStudentModal.attendancePct ?? 0
+
+                return (
+                  <div className="grid grid-cols-3 gap-2.5 p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/80 text-center divide-x divide-slate-200 shadow-xs">
+                    <div className="px-1">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Class</span>
+                      <p className="text-sm font-black text-[#071A3D] mt-0.5">
+                        {activeStudentModal.year === 2 ? 'II' : activeStudentModal.year === 3 ? 'III' : 'IV'} AIDS {activeStudentModal.section}
+                      </p>
+                    </div>
+                    <div className="px-1">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Semester</span>
+                      <p className="text-sm font-black text-[#071A3D] mt-0.5">Sem {activeStudentModal.semester}</p>
+                    </div>
+                    <div className="px-1">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Attendance</span>
+                      {hasAttendanceRecords ? (
+                        <p
+                          className={`text-sm font-black mt-0.5 ${
+                            attPct >= 75 ? 'text-emerald-700' : 'text-rose-600'
+                          }`}
+                        >
+                          {attPct}%
+                        </p>
+                      ) : (
+                        <p className="text-xs font-bold text-slate-400 mt-1">Pending</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
 
               {/* Information Rows */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Class Advisor:</span>
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                  <span className="text-slate-500 font-medium flex items-center gap-2">
+                    <UserCheck className="w-3.5 h-3.5 text-slate-400" />
+                    Class Advisor:
+                  </span>
                   <span className="font-bold text-[#071A3D]">{activeStudentModal.advisorName || 'Assigned Faculty'}</span>
                 </div>
 
-                <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Student Email:</span>
-                  <span className="font-mono text-gray-800">{activeStudentModal.email}</span>
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                  <span className="text-slate-500 font-medium flex items-center gap-2 shrink-0">
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    Student Email:
+                  </span>
+                  <a
+                    href={`mailto:${activeStudentModal.email}`}
+                    title={activeStudentModal.email}
+                    className="font-mono text-slate-700 hover:text-blue-600 transition truncate max-w-[240px] text-right font-medium"
+                  >
+                    {activeStudentModal.email}
+                  </a>
                 </div>
 
-                <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Parent Contact:</span>
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                  <span className="text-slate-500 font-medium flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    Parent Contact:
+                  </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-gray-800">{activeStudentModal.parentPhone || 'Not Set'}</span>
+                    <span className="font-mono font-bold text-slate-800">
+                      {activeStudentModal.parentPhone || 'Not Set'}
+                    </span>
                     {activeStudentModal.parentPhone && (
                       <a
                         href={`https://wa.me/91${activeStudentModal.parentPhone.replace(/[^0-9]/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-emerald-600 hover:text-emerald-700 p-1 bg-emerald-50 rounded"
+                        className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-800 px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 rounded-md border border-emerald-200 transition font-medium text-[10px]"
+                        title="Chat on WhatsApp"
                       >
-                        <MessageSquare className="w-3.5 h-3.5" />
+                        <MessageSquare className="w-3 h-3 text-emerald-600" />
+                        <span>Chat</span>
                       </a>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-gray-500 font-medium">Residency:</span>
-                  <span className="font-semibold text-gray-800">{activeStudentModal.residencyStatus || 'Day Scholar'}</span>
+                <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                  <span className="text-slate-500 font-medium flex items-center gap-2">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                    Residency:
+                  </span>
+                  <span className="font-semibold text-slate-800">{activeStudentModal.residencyStatus || 'Day Scholar'}</span>
                 </div>
 
                 {(() => {
                   const resStatus = (activeStudentModal.residencyStatus || '').toLowerCase().trim()
-                  const isHosteller = resStatus.includes('hostel') || (!resStatus && Boolean(activeStudentModal.hostelBlock || activeStudentModal.roomNo))
-                  const isDayScholar = !isHosteller && (resStatus.includes('day scholar') || resStatus.includes('dayscholar') || Boolean(activeStudentModal.busNo || activeStudentModal.boardingPoint))
+                  const isHosteller =
+                    resStatus.includes('hostel') || (!resStatus && Boolean(activeStudentModal.hostelBlock || activeStudentModal.roomNo))
+                  const isDayScholar =
+                    !isHosteller &&
+                    (resStatus.includes('day scholar') ||
+                      resStatus.includes('dayscholar') ||
+                      Boolean(activeStudentModal.busNo || activeStudentModal.boardingPoint))
+
+                  const cleanHostelBlock = (activeStudentModal.hostelBlock || '').replace(/^block\s*/i, '').trim() || 'Campus Hostel'
+                  const cleanRoomNo = (activeStudentModal.roomNo || '').replace(/^room\s*/i, '').trim() || 'Assigned Room'
+                  const cleanBusNo = (activeStudentModal.busNo || '').replace(/^(bus\s*|#\s*)/i, '').trim() || 'College Transit'
+                  const cleanBoarding = (activeStudentModal.boardingPoint || '').trim() || 'Main Bus Stop'
 
                   return (
                     <>
                       {isDayScholar && !isHosteller && (
-                        <div className="p-2.5 bg-blue-50/80 border border-blue-200/80 rounded-xl space-y-1.5 text-xs">
-                          <div className="flex items-center gap-1.5 font-bold text-[#1455D9]">
-                            <Bus className="w-3.5 h-3.5 text-[#1455D9]" />
-                            <span>College Transit / Bus Details</span>
+                        <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-2xl space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 font-bold text-[#1455D9]">
+                              <Bus className="w-3.5 h-3.5 text-[#1455D9]" />
+                              <span>College Transit / Transport Details</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider bg-blue-100/70 px-2 py-0.5 rounded-md">
+                              Day Scholar
+                            </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px]">
+                          <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px] bg-white/80 p-2.5 rounded-xl border border-blue-100">
                             <div>
-                              <span className="text-gray-400 text-[10px] block font-semibold uppercase tracking-wider">Bus No.</span>
-                              <span className="font-bold text-[#071A3D]">{activeStudentModal.busNo ? `Bus ${activeStudentModal.busNo.replace(/^#\s*/, '')}` : 'College Transit'}</span>
+                              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">Bus Route</span>
+                              <span className="font-bold text-[#071A3D]">Bus {cleanBusNo}</span>
                             </div>
                             <div>
-                              <span className="text-gray-400 text-[10px] block">Boarding Point</span>
-                              <span className="font-bold text-[#071A3D]">{activeStudentModal.boardingPoint || 'Main Bus Stop'}</span>
+                              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">Boarding Point</span>
+                              <span className="font-bold text-[#071A3D]">{cleanBoarding}</span>
                             </div>
                           </div>
                         </div>
                       )}
 
                       {isHosteller && (
-                        <div className="p-2.5 bg-amber-50/80 border border-amber-200/80 rounded-xl space-y-1.5 text-xs">
-                          <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                            <Home className="w-3.5 h-3.5 text-amber-700" />
-                            <span>Campus Hostel Accommodation</span>
+                        <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                              <Home className="w-3.5 h-3.5 text-amber-700" />
+                              <span>Campus Hostel Accommodation</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider bg-amber-100/80 px-2 py-0.5 rounded-md">
+                              Hostel Resident
+                            </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px]">
+                          <div className="grid grid-cols-2 gap-2 text-gray-700 text-[11px] bg-white/80 p-2.5 rounded-xl border border-amber-100">
                             <div>
-                              <span className="text-gray-400 text-[10px] block">Hostel Block</span>
-                              <span className="font-bold text-[#071A3D]">{activeStudentModal.hostelBlock ? `Block ${activeStudentModal.hostelBlock}` : 'Campus Hostel'}</span>
+                              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">Hostel Block</span>
+                              <span className="font-bold text-[#071A3D]">Block {cleanHostelBlock}</span>
                             </div>
                             <div>
-                              <span className="text-gray-400 text-[10px] block">Room Number</span>
-                              <span className="font-bold text-[#071A3D] font-mono">{activeStudentModal.roomNo ? `Room ${activeStudentModal.roomNo}` : 'Assigned Room'}</span>
+                              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">Room Number</span>
+                              <span className="font-bold text-[#071A3D] font-mono">Room {cleanRoomNo}</span>
                             </div>
                           </div>
                         </div>
@@ -1264,44 +1343,57 @@ export function HODStudentsView({ initialStudents, facultyAdvisors, departmentCl
                 })()}
 
                 {activeStudentModal.cgpa && (
-                  <div className="flex items-center justify-between py-1.5 border-b border-gray-100">
-                    <span className="text-gray-500 font-medium">Cumulative CGPA:</span>
+                  <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50/60 border border-slate-100">
+                    <span className="text-slate-500 font-medium">Cumulative CGPA:</span>
                     <span className="font-bold text-blue-700">{activeStudentModal.cgpa} / 10.0</span>
                   </div>
                 )}
               </div>
 
               {/* Attendance Status Alert */}
-              <div
-                className={`p-3 rounded-2xl flex items-center gap-2.5 ${
-                  (activeStudentModal.attendancePct ?? 0) >= 75
-                    ? 'bg-green-50 text-green-900 border border-green-200'
-                    : 'bg-rose-50 text-rose-900 border border-rose-200'
-                }`}
-              >
-                {(activeStudentModal.attendancePct ?? 0) >= 75 ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
-                    <span className="text-[11px] font-medium">
-                      Attendance criteria fulfilled (≥75%). Eligible for end-semester examinations.
-                    </span>
-                  </>
-                ) : (
-                  <>
+              {(() => {
+                const hasAttendanceRecords = (activeStudentModal.totalDays ?? 0) > 0
+                const attPct = activeStudentModal.attendancePct ?? 0
+
+                if (!hasAttendanceRecords) {
+                  return (
+                    <div className="p-3 rounded-2xl flex items-center gap-2.5 bg-slate-50 text-slate-600 border border-slate-200">
+                      <Info className="w-4 h-4 text-slate-500 shrink-0" />
+                      <span className="text-[11px] font-medium leading-relaxed">
+                        Attendance tracking pending: Roll-call sessions for this term have not been finalized yet.
+                      </span>
+                    </div>
+                  )
+                }
+
+                if (attPct >= 75) {
+                  return (
+                    <div className="p-3 rounded-2xl flex items-center gap-2.5 bg-emerald-50 text-emerald-900 border border-emerald-200">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span className="text-[11px] font-medium leading-relaxed">
+                        Attendance criteria fulfilled ({attPct}% ≥ 75%). Eligible for end-semester examinations.
+                      </span>
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="p-3 rounded-2xl flex items-center gap-2.5 bg-rose-50 text-rose-900 border border-rose-200">
                     <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span className="text-[11px] font-medium">
-                      Attendance shortage (&lt;75%). Class advisor counseling and parent notification recommended.
+                    <span className="text-[11px] font-medium leading-relaxed">
+                      Attendance shortage ({attPct}% &lt; 75%). Class advisor counseling and parent notification recommended.
                     </span>
-                  </>
-                )}
-              </div>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-2">
+            <div className="p-4 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 font-medium">Department of AI & DS • V.S.B.E.C.</span>
               <button
                 onClick={() => setActiveStudentModal(null)}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-xl font-bold text-xs transition"
+                className="px-5 py-2 bg-[#071A3D] hover:bg-[#1455D9] text-white rounded-xl font-bold text-xs shadow-sm hover:shadow transition-all duration-150"
               >
                 Close
               </button>
