@@ -642,9 +642,9 @@ Status: ${log.status}`
       </div>
 
       {/* Proper Audit Logs Table with Aligned Columns and Sticky Header */}
-      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto relative w-full max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-          <table className="w-full text-left text-xs border-collapse min-w-[1050px]">
+      <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden w-full">
+        <div className="overflow-x-auto relative w-full max-h-[72vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          <table className="w-full text-left text-xs border-collapse min-w-full">
             <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider sticky top-0 z-20 shadow-xs">
               <tr>
                 <th className="px-3 py-3.5 w-12 text-center shrink-0">
@@ -663,10 +663,10 @@ Status: ${log.status}`
                 <th className="px-4 py-3.5 w-[200px] shrink-0">User / Operator</th>
                 <th className="px-3 py-3.5 w-[140px] shrink-0">Action</th>
                 <th className="px-3 py-3.5 w-[90px] text-center shrink-0">Module</th>
-                <th className="px-4 py-3.5 min-w-[260px] max-w-[420px]">Event Details</th>
+                <th className="px-4 py-3.5 min-w-[260px]">Event Details</th>
                 <th className="px-4 py-3.5 w-[140px] text-center whitespace-nowrap shrink-0">Timestamp</th>
                 <th className="px-4 py-3.5 w-[110px] text-center whitespace-nowrap shrink-0">Status</th>
-                <th className="px-4 py-3.5 w-[90px] text-right whitespace-nowrap shrink-0 pr-5">Actions</th>
+                <th className="px-4 py-3.5 w-[100px] text-right whitespace-nowrap shrink-0 pr-4">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium">
@@ -730,7 +730,7 @@ Status: ${log.status}`
                       </td>
 
                       {/* Details */}
-                      <td className="px-4 py-3 min-w-[260px] max-w-[420px] text-gray-700 font-mono text-[11px] truncate group-hover:text-[#1455D9] transition-colors" title={l.details || ''}>
+                      <td className="px-4 py-3 min-w-[260px] text-gray-700 font-mono text-[11px] truncate group-hover:text-[#1455D9] transition-colors" title={l.details || ''}>
                         {formatDetails(l.details)}
                       </td>
 
@@ -761,7 +761,7 @@ Status: ${log.status}`
                       </td>
 
                       {/* Delete & Inspect Action Buttons */}
-                      <td className="px-4 py-3 w-[90px] shrink-0 text-right pr-5 whitespace-nowrap">
+                      <td className="px-4 py-3 w-[100px] shrink-0 text-right pr-4 whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           {/* Inspect View */}
                           <button

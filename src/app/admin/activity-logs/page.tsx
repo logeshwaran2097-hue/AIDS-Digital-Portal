@@ -32,8 +32,8 @@ export default async function AdminActivityLogsPage() {
   const adminUser = await prisma.user.findUnique({ where: { id: session.userId } }).catch(() => null)
 
   return (
-    <PortalLayout role="admin" userName={adminUser?.name || session.name || 'Administrator'}>
-      <div className="py-2 animate-fade-in">
+    <PortalLayout role="admin" userName={adminUser?.name || session.name || 'Administrator'} fullWidth>
+      <div className="py-2 animate-fade-in w-full">
         <AdminActivityLogsView initialLogs={logsList} />
       </div>
     </PortalLayout>

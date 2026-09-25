@@ -67,6 +67,7 @@ interface PortalLayoutProps {
   roleBadgeLabel?: string
   isAdvisor?: boolean
   residencyStatus?: string
+  fullWidth?: boolean
   children: React.ReactNode
 }
 
@@ -106,6 +107,7 @@ export function PortalLayout({
   roleBadgeLabel,
   isAdvisor,
   residencyStatus,
+  fullWidth,
   children,
 }: PortalLayoutProps) {
   const [studentResidency, setStudentResidency] = useState<string | null>(() => {
@@ -1618,7 +1620,10 @@ export function PortalLayout({
         'lg:pl-72 pb-28 lg:pb-8 min-h-[calc(100vh-64px)] transition-opacity duration-150',
         isNavigating && 'opacity-80'
       )}>
-        <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-6">{children}</div>
+        <div className={cn(
+          "px-3 sm:px-6 lg:px-8 py-4 sm:py-6",
+          fullWidth ? "w-full max-w-none" : "mx-auto max-w-7xl"
+        )}>{children}</div>
       </main>
 
       {/* Mobile Bottom 5-Tab Navigation Bar */}
