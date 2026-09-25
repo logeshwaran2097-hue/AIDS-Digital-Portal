@@ -13,7 +13,7 @@ export const DEFAULT_HOD_SETTINGS = {
   academicYear: '2025-2026',
   departmentCode: 'AI & DS',
   departmentName: 'Artificial Intelligence and Data Science',
-  hodContactEmail: 'hod.aids@vsb.ac.in',
+  hodContactEmail: 'manivannan.vsbec@gmail.com',
   smsDefaulters: true,
   emailQPUploads: true,
   weeklyDigest: true,
@@ -34,6 +34,10 @@ export async function GET() {
     }).catch(() => null)
 
     let settings = { ...DEFAULT_HOD_SETTINGS }
+    if (session.email) {
+      settings.hodContactEmail = session.email
+    }
+
     if (saved?.value) {
       try {
         const parsed = JSON.parse(saved.value)
@@ -41,6 +45,10 @@ export async function GET() {
       } catch (err) {
         console.error('Failed to parse hod_department_settings JSON:', err)
       }
+    }
+
+    if (settings.hodContactEmail === 'hod.aids@vsb.ac.in' && session.email) {
+      settings.hodContactEmail = session.email
     }
 
     return NextResponse.json({
@@ -76,7 +84,7 @@ export async function POST(request: NextRequest) {
       academicYear: String(body.academicYear || '2025-2026'),
       departmentCode: String(body.departmentCode || 'AI & DS'),
       departmentName: String(body.departmentName || 'Artificial Intelligence and Data Science'),
-      hodContactEmail: String(body.hodContactEmail || 'hod.aids@vsb.ac.in'),
+      hodContactEmail: String(body.hodContactEmail || session.email || 'manivannan.vsbec@gmail.com'),
       smsDefaulters: Boolean(body.smsDefaulters ?? true),
       emailQPUploads: Boolean(body.emailQPUploads ?? true),
       weeklyDigest: Boolean(body.weeklyDigest ?? true),

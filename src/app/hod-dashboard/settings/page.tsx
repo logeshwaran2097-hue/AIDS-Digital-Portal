@@ -23,6 +23,11 @@ export default async function HODSettingsPage() {
     console.error('Error loading initial HOD department settings:', error)
   }
 
+  // Ensure active HOD email is accurately bound to session / DB record
+  if (!initialSettings.hodContactEmail || initialSettings.hodContactEmail === 'hod.aids@vsb.ac.in') {
+    initialSettings.hodContactEmail = session.email || 'manivannan.vsbec@gmail.com'
+  }
+
   return (
     <PortalLayout role="hod" userName={session.name || 'Head of Department'}>
       <div className="py-2 animate-fade-in">

@@ -74,7 +74,9 @@ export function HODSettingsView({ initialSettings }: SettingsProps) {
     initialSettings?.departmentName ?? 'Artificial Intelligence and Data Science'
   )
   const [hodContactEmail, setHodContactEmail] = useState<string>(
-    initialSettings?.hodContactEmail ?? 'hod.aids@vsb.ac.in'
+    initialSettings?.hodContactEmail && initialSettings.hodContactEmail !== 'hod.aids@vsb.ac.in'
+      ? initialSettings.hodContactEmail
+      : 'manivannan.vsbec@gmail.com'
   )
 
   // Alert & Automation Preferences
@@ -156,7 +158,11 @@ export function HODSettingsView({ initialSettings }: SettingsProps) {
     setAcademicYear(initialSettings?.academicYear ?? '2025-2026')
     setDepartmentCode(initialSettings?.departmentCode ?? 'AI & DS')
     setDepartmentName(initialSettings?.departmentName ?? 'Artificial Intelligence and Data Science')
-    setHodContactEmail(initialSettings?.hodContactEmail ?? 'hod.aids@vsb.ac.in')
+    setHodContactEmail(
+      initialSettings?.hodContactEmail && initialSettings.hodContactEmail !== 'hod.aids@vsb.ac.in'
+        ? initialSettings.hodContactEmail
+        : 'manivannan.vsbec@gmail.com'
+    )
     setSmsDefaulters(initialSettings?.smsDefaulters ?? true)
     setEmailQPUploads(initialSettings?.emailQPUploads ?? true)
     setWeeklyDigest(initialSettings?.weeklyDigest ?? true)
@@ -374,13 +380,18 @@ export function HODSettingsView({ initialSettings }: SettingsProps) {
               </div>
 
               <div className="p-3.5 rounded-2xl bg-gray-50/60 border border-gray-100">
-                <label className="font-semibold text-gray-700 block mb-1">HOD Dispatch Email</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="font-semibold text-gray-700 block">HOD Dispatch Email</label>
+                  <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                    Official Mailbox
+                  </span>
+                </div>
                 <input
                   type="email"
                   value={hodContactEmail}
                   onChange={(e) => setHodContactEmail(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-[#071A3D]"
-                  placeholder="e.g. hod.aids@vsb.ac.in"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-[#071A3D] focus:ring-2 focus:ring-[#1455D9]/20"
+                  placeholder="e.g. manivannan.vsbec@gmail.com"
                 />
               </div>
             </div>
