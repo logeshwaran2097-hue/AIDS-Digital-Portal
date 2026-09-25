@@ -141,6 +141,42 @@ export function drawDigitalPortalDocumentNotice(
 }
 
 /**
+ * Renders an official V.S.B. Department running header at the top of subsequent pages (pages 2+)
+ */
+export function drawRunningPageHeader(doc: jsPDF, marginX: number, contentW: number): number {
+  // Top Header Tint
+  doc.setFillColor(250, 252, 255)
+  doc.rect(marginX - 2, marginX - 2, contentW + 4, 15, 'F')
+
+  // Small Logo
+  const logoSize = 10
+  try {
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', marginX + 1, marginX, logoSize, logoSize)
+  } catch {}
+
+  // College & Department running line
+  const hCX = marginX + logoSize + (contentW - logoSize) / 2
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE (AUTONOMOUS)', hCX, marginX + 3.8, { align: 'center' })
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.8)
+  doc.setTextColor(21, 87, 192)
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE · OFFICIAL ACADEMIC DOSSIER', hCX, marginX + 7.8, { align: 'center' })
+
+  // Thin separator rule
+  const beamY = marginX + 12
+  doc.setFillColor(21, 87, 192)
+  doc.rect(marginX, beamY, contentW, 0.8, 'F')
+  doc.setFillColor(231, 185, 62)
+  doc.rect(marginX, beamY + 0.8, contentW, 0.4, 'F')
+
+  return marginX + 17
+}
+
+/**
  * Universal Ultra-Luxury Institutional Table Drawer
  * Renders executive academic tables with dark navy/gold headers, alternating rows,
  * repeat-headers on page break, column dividers, and micro status pills.
@@ -224,7 +260,7 @@ export function drawLuxuryTable(
       doc.setLineWidth(0.2)
       doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
 
-      currentY = 16
+      currentY = drawRunningPageHeader(doc, marginX, contentW)
       drawHeader(currentY)
       currentY += 7.5
     }
@@ -692,7 +728,7 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
         doc.setDrawColor(238, 243, 250)
         doc.setLineWidth(0.2)
         doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
-        currentY = 16
+        currentY = drawRunningPageHeader(doc, marginX, contentW)
       }
 
       // Section Header Ribbon with Royal Navy & Sapphire Accents
@@ -791,7 +827,7 @@ export function generateAndDownloadPDF(options: PDFDocOptions) {
             doc.setDrawColor(238, 243, 250)
             doc.setLineWidth(0.2)
             doc.rect(marginX - 2, marginX - 2, contentW + 4, pageHeight - (marginX - 2) * 2, 'S')
-            currentY = 16
+            currentY = drawRunningPageHeader(doc, marginX, contentW)
           }
 
           const rawLine = sec.body[rIdx]
@@ -2983,8 +3019,91 @@ export interface DeptHeaderDownloadOptions {
 }
 
 /**
+ * buildDeptHeaderBannerDoc
+ * Creates the official V.S.B. Department Letterhead Banner matching the institutional format.
+ */
+export function buildDeptHeaderBannerDoc(widthMm: number = 210, heightMm: number = 34): jsPDF {
+  const isLandscape = widthMm > 250
+  const doc = new jsPDF({
+    orientation: isLandscape ? 'landscape' : 'portrait',
+    unit: 'mm',
+    format: [widthMm, heightMm],
+  })
+
+  const marginX = 8
+  const contentW = widthMm - marginX * 2
+
+  // Background tint
+  doc.setFillColor(252, 253, 255)
+  doc.rect(0, 0, widthMm, heightMm, 'F')
+
+  // Top accent border (thin gold bar)
+  doc.setFillColor(231, 185, 62)
+  doc.rect(0, 0, widthMm, 0.7, 'F')
+
+  // Logo
+  const logoX = marginX + 1
+  const logoY = 2.5
+  const logoSize = 22
+  doc.setFillColor(255, 255, 255)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 0.8, 'F')
+  doc.setDrawColor(231, 185, 62)
+  doc.setLineWidth(0.5)
+  doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 0.8, 'S')
+  try {
+    doc.addImage(VSB_LOGO_BASE64, 'PNG', logoX + 1.5, logoY + 1.5, logoSize - 3, logoSize - 3)
+  } catch {}
+
+  // College name & dept
+  const hCX = marginX + logoSize + (contentW - logoSize) / 2
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(13.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('V.S.B. ENGINEERING COLLEGE', hCX, 6.2, { align: 'center' })
+
+  // Autonomous badge
+  doc.setFillColor(231, 185, 62)
+  doc.roundedRect(hCX - 21, 8.2, 42, 3.8, 0.8, 0.8, 'F')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(7, 26, 61)
+  doc.text('AN AUTONOMOUS INSTITUTION', hCX, 10.9, { align: 'center' })
+
+  // Department
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.setTextColor(21, 87, 192)
+  doc.text('DEPARTMENT OF ARTIFICIAL INTELLIGENCE & DATA SCIENCE', hCX, 16.5, { align: 'center' })
+
+  // AICTE & Anna Univ
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(6.8)
+  doc.setTextColor(75, 85, 105)
+  doc.text('Approved by AICTE, New Delhi & Affiliated to Anna University, Chennai · Karur - 639 111, Tamil Nadu', hCX, 21.2, { align: 'center' })
+
+  // Accreditation
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(6.5)
+  doc.setTextColor(100, 115, 135)
+  doc.text('Accredited by NAAC with "A" Grade  ·  NBA Accredited Programs  ·  ISO 9001:2015 Certified', hCX, 25.5, { align: 'center' })
+
+  // Separator beam
+  const beamY = 30
+  doc.setFillColor(21, 87, 192)
+  doc.rect(marginX, beamY, contentW, 1.3, 'F')
+  doc.setFillColor(231, 185, 62)
+  doc.rect(marginX, beamY + 1.3, contentW, 0.6, 'F')
+  doc.setFillColor(231, 185, 62)
+  doc.circle(marginX + contentW / 2, beamY + 0.9, 1.6, 'F')
+  doc.setFillColor(7, 26, 61)
+  doc.circle(marginX + contentW / 2, beamY + 0.9, 0.8, 'F')
+
+  return doc
+}
+
+/**
  * buildDeptHeaderCoverDoc
- * Creates a branded official V.S.B. Department Letterhead cover page jsPDF document.
+ * Creates a branded official V.S.B. Department Letterhead sheet jsPDF document for preview.
  */
 export function buildDeptHeaderCoverDoc(options: DeptHeaderDownloadOptions): jsPDF {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
@@ -3033,47 +3152,30 @@ export function buildDeptHeaderCoverDoc(options: DeptHeaderDownloadOptions): jsP
   doc.setFillColor(231, 185, 62); doc.circle(marginX + contentW / 2, beamY + 1, 1.8, 'F')
   doc.setFillColor(7, 26, 61); doc.circle(marginX + contentW / 2, beamY + 1, 0.9, 'F')
 
-  // Subject Pill / Banner
-  let curY = beamY + 14
-  if (options.subjectCode || options.subjectName) {
-    const fullSubj = `${options.subjectCode ? `[${options.subjectCode}] ` : ''}${options.subjectName || ''}`.trim()
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20, 85, 217)
-    doc.text(fullSubj, pageWidth / 2, curY, { align: 'center' })
-    curY += 8
-  }
+  // Clean, official institutional document overview card
+  let curY = beamY + 12
+  doc.setFillColor(248, 250, 254)
+  doc.roundedRect(marginX + 10, curY, contentW - 20, 48, 3, 3, 'F')
+  doc.setDrawColor(215, 226, 242)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(marginX + 10, curY, contentW - 20, 48, 3, 3, 'S')
 
-  // Document Title
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(7, 26, 61)
-  const splitTitle = doc.splitTextToSize(options.title || 'Official Academic Study Resource', contentW - 10)
-  doc.text(splitTitle, pageWidth / 2, curY, { align: 'center' })
-  curY += (splitTitle.length * 6) + 4
-  
-  if (options.resourceType) {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(21, 87, 192)
-    doc.text(options.resourceType.replace(/_/g, ' ').toUpperCase(), pageWidth / 2, curY, { align: 'center' })
-    curY += 6
-  }
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(7, 26, 61)
+  const fullSubj = `${options.subjectCode ? `[${options.subjectCode}] ` : ''}${options.subjectName || options.title || 'Official Academic Study Resource'}`.trim()
+  doc.text(fullSubj, pageWidth / 2, curY + 10, { align: 'center' })
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(21, 87, 192)
+  doc.text((options.resourceType || 'ACADEMIC REPOSITORY RECORD').replace(/_/g, ' ').toUpperCase(), pageWidth / 2, curY + 18, { align: 'center' })
 
   const metaParts: string[] = []
   if (options.semester) metaParts.push(`Semester ${options.semester}`)
   if (options.academicYear) metaParts.push(`Academic Year: ${options.academicYear}`)
   metaParts.push('Regulation: R-2021 Autonomous')
-  
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(100, 115, 135)
-  doc.text(metaParts.join('  ·  '), pageWidth / 2, curY, { align: 'center' })
-  curY += 6
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(100, 115, 135)
+  doc.text(metaParts.join('  ·  '), pageWidth / 2, curY + 26, { align: 'center' })
 
-  if (options.uploadedByName) {
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105)
-    doc.text(`Authorized by: ${options.uploadedByName}`, pageWidth / 2, curY, { align: 'center' })
-    curY += 7
-  }
-
-  if (options.description) {
-    doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(80, 95, 115)
-    const splitDesc = doc.splitTextToSize(options.description, contentW - 20)
-    doc.text(splitDesc, pageWidth / 2, curY, { align: 'center' })
-  }
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(71, 85, 105)
+  doc.text(`Authenticated Document · Department of AI & DS · Centralized Academic Repository`, pageWidth / 2, curY + 34, { align: 'center' })
 
   drawDigitalPortalDocumentNotice(doc, {
     y: pageHeight - 35,
@@ -3107,54 +3209,17 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
 
   try {
     const resp = await fetch(fileUrl)
-    if (resp.ok) {
-      const originalPdfBytes = await resp.arrayBuffer()
-      
-      // If file is larger than 40MB, fallback to direct download to prevent browser OOM
-      if (originalPdfBytes.byteLength > 40 * 1024 * 1024) {
-        console.warn('File exceeds 40MB, downloading original file directly.')
-        const blob = new Blob([originalPdfBytes], { type: 'application/pdf' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-        return
-      }
-      
-      // Render Cover Page
-      const doc = buildDeptHeaderCoverDoc(options)
-      const coverPdfBytes = doc.output('arraybuffer')
+    if (!resp.ok) {
+      throw new Error('Failed to fetch the original resource file.')
+    }
 
-      // Dynamically import pdf-lib to avoid SSR issues
-      const { PDFDocument } = await import('pdf-lib')
-
-      // Load both PDFs
-      const originalDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true })
-      const coverDoc = await PDFDocument.load(coverPdfBytes)
-
-      // Create new merged PDF
-      const mergedPdf = await PDFDocument.create()
-
-      // Copy cover page
-      const [coverPage] = await mergedPdf.copyPages(coverDoc, [0])
-      mergedPdf.addPage(coverPage)
-
-      // Copy all original pages
-      const pageIndices = Array.from({ length: originalDoc.getPageCount() }, (_, i) => i)
-      const originalPages = await mergedPdf.copyPages(originalDoc, pageIndices)
-      for (const page of originalPages) {
-        mergedPdf.addPage(page)
-      }
-
-      // Save and Download
-      const mergedPdfBytes = await mergedPdf.save()
-      const blob = new Blob([mergedPdfBytes as any], { type: 'application/pdf' })
+    const originalPdfBytes = await resp.arrayBuffer()
+    
+    // If file is larger than 40MB, fallback to direct download to prevent browser OOM
+    if (originalPdfBytes.byteLength > 40 * 1024 * 1024) {
+      console.warn('File exceeds 40MB, downloading original file directly.')
+      const blob = new Blob([originalPdfBytes], { type: 'application/pdf' })
       const url = URL.createObjectURL(blob)
-
       const a = document.createElement('a')
       a.href = url
       a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
@@ -3162,12 +3227,81 @@ export async function downloadWithDeptHeader(options: DeptHeaderDownloadOptions)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } else {
-      throw new Error('Failed to fetch the original resource file.')
+      return
     }
+
+    // Dynamically import pdf-lib to avoid SSR issues
+    const { PDFDocument } = await import('pdf-lib')
+
+    // Load original PDF
+    const originalDoc = await PDFDocument.load(originalPdfBytes, { ignoreEncryption: true })
+    const pageCount = originalDoc.getPageCount()
+    if (pageCount === 0) {
+      throw new Error('PDF document has no pages.')
+    }
+
+    // Get primary page width from the first page
+    const firstPage = originalDoc.getPage(0)
+    const { width: firstW } = firstPage.getSize()
+    const widthMm = (firstW * 25.4) / 72
+    const headerHeightMm = 34
+
+    // Build the official V.S.B. Department Letterhead Banner
+    const headerDoc = buildDeptHeaderBannerDoc(widthMm, headerHeightMm)
+    const headerPdfBytes = headerDoc.output('arraybuffer')
+
+    const loadedHeaderDoc = await PDFDocument.load(headerPdfBytes)
+    const mergedPdf = await PDFDocument.create()
+    const embeddedHeader = await mergedPdf.embedPage(loadedHeaderDoc.getPage(0))
+
+    // Copy all original pages (NO separate blank cover page prepended)
+    const pageIndices = Array.from({ length: pageCount }, (_, i) => i)
+    const copiedPages = await mergedPdf.copyPages(originalDoc, pageIndices)
+
+    const headerHeightPt = (headerHeightMm * 72) / 25.4
+
+    // Apply official header to ALL pages of the PDF
+    for (let i = 0; i < copiedPages.length; i++) {
+      const page = copiedPages[i]
+      mergedPdf.addPage(page)
+      const { width, height } = page.getSize()
+
+      // Scale content slightly and offset downwards to comfortably accommodate the header without obscuring content
+      const scale = 0.88
+      const offsetX = (width * (1 - scale)) / 2
+      const offsetY = 12
+
+      try {
+        page.scaleContent(scale, scale)
+        page.translateContent(offsetX / scale, offsetY / scale)
+      } catch (scaleErr) {
+        console.warn('Could not transform page content, drawing header directly:', scaleErr)
+      }
+
+      // Draw official header banner across the top of this page
+      page.drawPage(embeddedHeader, {
+        x: 0,
+        y: height - headerHeightPt,
+        width: width,
+        height: headerHeightPt,
+      })
+    }
+
+    // Save and download merged PDF
+    const mergedPdfBytes = await mergedPdf.save()
+    const blob = new Blob([mergedPdfBytes as any], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   } catch (err) {
-    console.error('Error generating PDF with cover:', err)
-    // Fallback to direct download if PDF merge fails
+    console.error('Error applying header to all PDF pages:', err)
+    // Fallback to direct download if PDF merge/stamp fails
     const a = document.createElement('a')
     a.href = fileUrl
     a.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`
