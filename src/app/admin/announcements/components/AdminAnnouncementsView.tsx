@@ -48,42 +48,29 @@ export const TARGET_AUDIENCE_OPTIONS = [
     group: 'General Broad Audience',
     options: [
       { value: 'ALL', label: 'All Students & Faculty', icon: 'users' },
-      { value: 'students', label: 'All Students (Years 1 to 4)', icon: 'graduation' },
+      { value: 'students', label: 'All Students', icon: 'graduation' },
       { value: 'faculty', label: 'All Faculty & Instructors', icon: 'briefcase' },
       { value: 'hod', label: 'Head of Department (HOD)', icon: 'award' },
-      { value: 'all_advisors', label: '⭐ All Class Advisors (Years 1 to 4)', icon: 'user-check' },
+      { value: 'all_advisors', label: 'All Class Advisors', icon: 'user-check' },
       { value: 'lab_handlers', label: 'Lab Instructors & Subject Handlers', icon: 'flask' },
     ],
   },
   {
-    group: 'Class Advisors (Year-Wise)',
+    group: 'Class Advisors',
     options: [
-      { value: 'advisors_year1', label: 'Year 1 Class Advisors (Year I · Sem 1 & 2)', icon: 'user-check' },
-      { value: 'advisors_year2', label: 'Year 2 Class Advisors (Year II · Sem 3 & 4)', icon: 'user-check' },
-      { value: 'advisors_year3', label: 'Year 3 Class Advisors (Year III · Sem 5 & 6)', icon: 'user-check' },
-      { value: 'advisors_year4', label: 'Year 4 Class Advisors (Year IV · Sem 7 & 8)', icon: 'user-check' },
+      { value: 'advisors_year1', label: 'Year 1 Class Advisors', icon: 'user-check' },
+      { value: 'advisors_year2', label: 'Year 2 Class Advisors', icon: 'user-check' },
+      { value: 'advisors_year3', label: 'Year 3 Class Advisors', icon: 'user-check' },
+      { value: 'advisors_year4', label: 'Year 4 Class Advisors', icon: 'user-check' },
     ],
   },
   {
-    group: 'By Academic Year (Years I – IV)',
+    group: 'By Academic Year',
     options: [
-      { value: 'year1', label: 'Year 1 Students (Year I · Sem 1 & 2)', icon: 'calendar' },
-      { value: 'year2', label: 'Year 2 Students (Year II · Sem 3 & 4)', icon: 'calendar' },
-      { value: 'year3', label: 'Year 3 Students (Year III · Sem 5 & 6)', icon: 'calendar' },
-      { value: 'year4', label: 'Year 4 Students (Year IV · Sem 7 & 8)', icon: 'calendar' },
-    ],
-  },
-  {
-    group: 'By Individual Semester (Semesters 1 – 8)',
-    options: [
-      { value: 'sem1', label: 'Semester 1 Students (Year 1 - Odd)', icon: 'layers' },
-      { value: 'sem2', label: 'Semester 2 Students (Year 1 - Even)', icon: 'layers' },
-      { value: 'sem3', label: 'Semester 3 Students (Year 2 - Odd)', icon: 'layers' },
-      { value: 'sem4', label: 'Semester 4 Students (Year 2 - Even)', icon: 'layers' },
-      { value: 'sem5', label: 'Semester 5 Students (Year 3 - Odd)', icon: 'layers' },
-      { value: 'sem6', label: 'Semester 6 Students (Year 3 - Even)', icon: 'layers' },
-      { value: 'sem7', label: 'Semester 7 Students (Year 4 - Odd)', icon: 'layers' },
-      { value: 'sem8', label: 'Semester 8 Students (Year 4 - Even)', icon: 'layers' },
+      { value: 'year1', label: 'Year 1 Students', icon: 'calendar' },
+      { value: 'year2', label: 'Year 2 Students', icon: 'calendar' },
+      { value: 'year3', label: 'Year 3 Students', icon: 'calendar' },
+      { value: 'year4', label: 'Year 4 Students', icon: 'calendar' },
     ],
   },
 ]
@@ -365,11 +352,11 @@ export function AdminAnnouncementsView({
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Department Communications
             </span>
-            <span className="text-xs text-gray-300 font-medium">· Multi-Target Broadcast across 8 Semesters</span>
+            <span className="text-xs text-gray-300 font-medium">· Multi-Target Broadcast across Academic Years</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">Official Circulars &amp; Notices</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
-            Broadcast official notices to all students, faculty, HOD, specific academic years (1 - 4), or individual semesters (1 - 8)
+            Broadcast official notices to all students, faculty, HOD, or specific academic years (1 - 4)
           </p>
         </div>
 
@@ -457,7 +444,7 @@ export function AdminAnnouncementsView({
           <Megaphone className="w-12 h-12 text-amber-400 mx-auto mb-3" />
           <h3 className="font-bold text-base text-[#071A3D] mb-1">No Announcements Published Yet</h3>
           <p className="text-xs text-gray-500 max-w-md mx-auto mb-6">
-            Click &ldquo;+ Issue New Circular&rdquo; to publish notices and instructions to any of the 8 semesters or target groups.
+            Click &ldquo;+ Issue New Circular&rdquo; to publish notices and instructions to academic years or target groups.
           </p>
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -532,7 +519,7 @@ export function AdminAnnouncementsView({
                   {modalMode === 'preview' ? 'Verify & Confirm Official Circular' : 'Issue Official Department Circular'}
                 </h3>
                 <p className="text-xs text-gray-500">
-                  {modalMode === 'preview' ? 'Review before dispatching to student and staff portals' : 'Instant multi-target broadcast across all 8 semesters'}
+                  {modalMode === 'preview' ? 'Review before dispatching to student and staff portals' : 'Instant multi-target broadcast across department & academic years'}
                 </p>
               </div>
               <button
