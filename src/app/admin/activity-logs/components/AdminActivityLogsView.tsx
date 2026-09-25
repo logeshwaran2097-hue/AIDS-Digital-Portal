@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -30,8 +30,12 @@ import {
   CheckSquare,
   Square,
   AlertCircle,
-    Bot,} from 'lucide-react'
+  Bot,
+  Zap,
+  Radio,
+} from 'lucide-react'
 import { generateAndDownloadPDF } from '@/lib/pdfGenerator'
+import { subscribeToRealtimeChannel } from '@/lib/realtime'
 
 export interface LogRecord {
   id: string
@@ -60,8 +64,58 @@ export function AdminActivityLogsView({ initialLogs }: { initialLogs: LogRecord[
   const [notification, setNotification] = useState('')
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false)
   const [aiResponse, setAiResponse] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date())
+  const [syncLatencyMs, setSyncLatencyMs] = useState<number | null>(null)
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true)
+  const [fetchLimit, setFetchLimit] = useState(100)
 
-  React.useEffect(() => {
+  // High-performance direct DB sync
+  const fetchLogs = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setIsSyncing(true)
+    const t0 = performance.now()
+    try {
+      const res = await fetch(`/api/admin/activity-logs?limit=${fetchLimit}&_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { Pragma: 'no-cache' },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && Array.isArray(data.logs)) {
+          setLogs(data.logs)
+          setLastSyncedAt(new Date())
+          setSyncLatencyMs(Math.round(performance.now() - t0))
+        }
+      }
+    } catch (err) {
+      console.error('Fast DB Sync failed:', err)
+    } finally {
+      if (showSpinner) setIsSyncing(false)
+    }
+  }, [fetchLimit])
+
+  // Auto-sync polling every 5 seconds when window is active
+  useEffect(() => {
+    if (!autoSyncEnabled) return
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        fetchLogs(false)
+      }
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [autoSyncEnabled, fetchLogs])
+
+  // Realtime Supabase broadcast subscription
+  useEffect(() => {
+    const unsub = subscribeToRealtimeChannel('activity_logs_realtime', 'new_log', () => {
+      fetchLogs(false)
+    })
+    return () => {
+      if (typeof unsub === 'function') unsub()
+    }
+  }, [fetchLogs])
+
+  useEffect(() => {
     setAiResponse(null)
   }, [selectedLog])
 
@@ -304,17 +358,24 @@ Status: ${log.status}`
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
+    <div className="w-full space-y-6 animate-fade-in">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-[#071A3D] via-[#0A2A5E] to-[#1455D9] text-white rounded-3xl p-6 sm:p-8 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-full bg-[#F4C430] text-[#071A3D] text-[10px] font-black uppercase tracking-wider">
               Security Audit Trails
             </span>
             <span className="text-xs text-gray-300 font-medium flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Live Telemetry Active
+              <span className={`w-2 h-2 rounded-full ${autoSyncEnabled ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+              {autoSyncEnabled ? 'Real-Time DB Sync Active' : 'Auto-Sync Paused'}
             </span>
+            {syncLatencyMs !== null && (
+              <span className="px-2 py-0.5 rounded-full bg-white/10 text-emerald-300 font-mono text-[10px] font-bold border border-white/10 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-emerald-400" />
+                {syncLatencyMs}ms DB Sync
+              </span>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">System Activity &amp; Audit Logs</h1>
           <p className="text-xs sm:text-sm text-gray-300 mt-1">
@@ -323,6 +384,18 @@ Status: ${log.status}`
         </div>
 
         <div className="flex items-center flex-wrap gap-2.5 shrink-0">
+          {/* Real-time DB Sync Button */}
+          <button
+            type="button"
+            onClick={() => fetchLogs(true)}
+            disabled={isSyncing}
+            className="px-3.5 py-2.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/40 text-blue-100 hover:text-white border border-blue-400/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-105 active:scale-95 disabled:opacity-50"
+            title="Fetch newest audit logs directly from PostgreSQL database"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-white' : ''}`} />
+            <span>{isSyncing ? 'Syncing...' : 'Sync DB Now'}</span>
+          </button>
+
           {/* Delete All Option */}
           {logs.length > 0 && (
             <button
@@ -418,21 +491,30 @@ Status: ${log.status}`
 
       {/* Modern Filter & Search Toolbar */}
       <div className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
           {/* Search Input */}
-          <div className="relative w-full md:w-96">
+          <div className="relative w-full lg:w-80 shrink-0">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               placeholder="Search user, action, module, OTP, details..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-gray-200 text-xs font-medium text-[#071A3D] bg-gray-50/50 focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all"
+              className="w-full pl-10 pr-8 py-2.5 rounded-2xl border border-gray-200 text-xs font-medium text-[#071A3D] bg-gray-50/50 focus:outline-none focus:border-[#1455D9] focus:bg-white transition-all"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Quick Filters */}
-          <div className="flex items-center flex-wrap gap-2.5 w-full md:w-auto">
+          {/* Quick Filters + Real-time Controls */}
+          <div className="flex items-center flex-wrap gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
             {/* Action Filter */}
             <select
               value={actionFilter}
@@ -471,6 +553,46 @@ Status: ${log.status}`
               <option value="FAILED">🚨 Failed / Flagged</option>
             </select>
 
+            {/* DB Rows Limit Selector */}
+            <select
+              value={fetchLimit}
+              onChange={(e) => setFetchLimit(Number(e.target.value))}
+              className="px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-[#071A3D] bg-white focus:outline-none focus:border-[#1455D9] shadow-2xs"
+              title="Number of records to fetch from DB"
+            >
+              <option value={50}>Limit: 50</option>
+              <option value={100}>Limit: 100</option>
+              <option value={250}>Limit: 250</option>
+              <option value={500}>Limit: 500</option>
+            </select>
+
+            {/* Auto-Sync Toggle */}
+            <button
+              type="button"
+              onClick={() => setAutoSyncEnabled(!autoSyncEnabled)}
+              className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer ${
+                autoSyncEnabled
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                  : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+              }`}
+              title={autoSyncEnabled ? 'Auto-sync active (every 5 seconds)' : 'Auto-sync paused'}
+            >
+              <Radio className={`w-3.5 h-3.5 ${autoSyncEnabled ? 'text-emerald-600 animate-pulse' : 'text-gray-400'}`} />
+              <span>Auto-Sync {autoSyncEnabled ? 'ON' : 'OFF'}</span>
+            </button>
+
+            {/* Quick DB Sync */}
+            <button
+              type="button"
+              onClick={() => fetchLogs(true)}
+              disabled={isSyncing}
+              className="px-3 py-2 rounded-xl bg-blue-50 text-[#1455D9] hover:bg-blue-100 border border-blue-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+              title="Instantly query database for latest audit records"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync DB'}</span>
+            </button>
+
             {(searchQuery || actionFilter !== 'ALL' || moduleFilter !== 'ALL' || statusFilter !== 'ALL') && (
               <button
                 onClick={() => {
@@ -489,10 +611,14 @@ Status: ${log.status}`
 
         {/* Counter Bar & Bulk Delete Action */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100 text-xs text-gray-500 font-medium">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <span>
               Showing <strong className="text-[#071A3D]">{filteredLogs.length}</strong> of{' '}
               <strong className="text-[#071A3D]">{logs.length}</strong> recorded audit events
+            </span>
+            <span className="text-[11px] text-gray-400">
+              • Last synced: {lastSyncedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              {syncLatencyMs !== null && ` (${syncLatencyMs}ms)`}
             </span>
 
             {selectedIds.length > 0 && (
@@ -515,13 +641,13 @@ Status: ${log.status}`
         </div>
       </div>
 
-      {/* Proper Audit Logs Table with Delete Icons */}
+      {/* Proper Audit Logs Table with Aligned Columns and Sticky Header */}
       <div className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider">
+        <div className="overflow-x-auto relative w-full max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          <table className="w-full text-left text-xs border-collapse min-w-[1050px]">
+            <thead className="bg-[#071A3D] text-white uppercase text-[10px] font-black tracking-wider sticky top-0 z-20 shadow-xs">
               <tr>
-                <th className="px-4 py-4 w-10 text-center">
+                <th className="px-3 py-3.5 w-12 text-center shrink-0">
                   <button
                     onClick={toggleSelectAll}
                     className="cursor-pointer text-white/70 hover:text-white transition-colors"
@@ -534,13 +660,13 @@ Status: ${log.status}`
                     )}
                   </button>
                 </th>
-                <th className="px-4 py-4">User / Operator</th>
-                <th className="px-4 py-4">Action</th>
-                <th className="px-4 py-4">Module</th>
-                <th className="px-5 py-4">Event Details</th>
-                <th className="px-4 py-4 text-center">Timestamp</th>
-                <th className="px-4 py-4 text-center">Status</th>
-                <th className="px-4 py-4 text-right">Actions</th>
+                <th className="px-4 py-3.5 w-[200px] shrink-0">User / Operator</th>
+                <th className="px-3 py-3.5 w-[140px] shrink-0">Action</th>
+                <th className="px-3 py-3.5 w-[90px] text-center shrink-0">Module</th>
+                <th className="px-4 py-3.5 min-w-[260px] max-w-[420px]">Event Details</th>
+                <th className="px-4 py-3.5 w-[140px] text-center whitespace-nowrap shrink-0">Timestamp</th>
+                <th className="px-4 py-3.5 w-[110px] text-center whitespace-nowrap shrink-0">Status</th>
+                <th className="px-4 py-3.5 w-[90px] text-right whitespace-nowrap shrink-0 pr-5">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 font-medium">
@@ -566,7 +692,7 @@ Status: ${log.status}`
                       }`}
                     >
                       {/* Select Checkbox */}
-                      <td className="px-4 py-3.5 text-center" onClick={(e) => toggleSelect(l.id, e)}>
+                      <td className="px-3 py-3 text-center w-12 shrink-0" onClick={(e) => toggleSelect(l.id, e)}>
                         <button className="cursor-pointer text-gray-400 hover:text-[#1455D9]">
                           {isSelected ? (
                             <CheckSquare className="w-4 h-4 text-[#1455D9]" />
@@ -577,44 +703,44 @@ Status: ${log.status}`
                       </td>
 
                       {/* User */}
-                      <td className="px-4 py-3.5 font-bold text-[#071A3D]">
+                      <td className="px-4 py-3 w-[200px] shrink-0 font-bold text-[#071A3D]">
                         <div className="flex items-center gap-2.5">
                           <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 text-[#1455D9] flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
                             {l.userName.charAt(0)}
                           </div>
-                          <div>
-                            <p className="leading-tight">{l.userName}</p>
+                          <div className="truncate">
+                            <p className="leading-tight truncate" title={l.userName}>{l.userName}</p>
                             <span className="text-[10px] text-gray-400 font-normal">Operator</span>
                           </div>
                         </div>
                       </td>
 
                       {/* Action */}
-                      <td className="px-4 py-3.5">
-                        <span className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 font-mono font-bold uppercase text-[10px] border border-purple-200/80 shadow-2xs">
+                      <td className="px-3 py-3 w-[140px] shrink-0">
+                        <span className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 font-mono font-bold uppercase text-[10px] border border-purple-200/80 shadow-2xs inline-block truncate max-w-[130px]" title={l.action}>
                           {l.action}
                         </span>
                       </td>
 
                       {/* Module */}
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 py-3 w-[90px] text-center shrink-0">
                         <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 font-mono text-[11px] font-semibold">
                           {l.module}
                         </span>
                       </td>
 
                       {/* Details */}
-                      <td className="px-5 py-3.5 text-gray-700 font-mono text-[11px] max-w-sm truncate group-hover:text-[#1455D9] transition-colors" title={l.details || ''}>
+                      <td className="px-4 py-3 min-w-[260px] max-w-[420px] text-gray-700 font-mono text-[11px] truncate group-hover:text-[#1455D9] transition-colors" title={l.details || ''}>
                         {formatDetails(l.details)}
                       </td>
 
                       {/* Timestamp */}
-                      <td className="px-4 py-3.5 text-center font-mono text-gray-400 text-[11px] whitespace-nowrap">
+                      <td className="px-4 py-3 w-[140px] shrink-0 text-center font-mono text-gray-400 text-[11px] whitespace-nowrap">
                         {l.createdAt}
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="px-4 py-3 w-[110px] shrink-0 text-center whitespace-nowrap">
                         <span
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase inline-flex items-center gap-1 ${
                             l.status.toLowerCase() === 'success'
@@ -635,7 +761,7 @@ Status: ${log.status}`
                       </td>
 
                       {/* Delete & Inspect Action Buttons */}
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-4 py-3 w-[90px] shrink-0 text-right pr-5 whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           {/* Inspect View */}
                           <button

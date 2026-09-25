@@ -10,7 +10,7 @@ export default async function AdminActivityLogsPage() {
 
   const dbLogs = await prisma.auditLog.findMany({
     orderBy: { createdAt: 'desc' },
-    take: 50,
+    take: 100,
   }).catch(() => [])
 
   const logsList: LogRecord[] = dbLogs.map((l) => ({
