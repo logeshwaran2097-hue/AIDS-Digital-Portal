@@ -522,29 +522,7 @@ export function HODProfileView({ initialProfile }: { initialProfile: HODProfileD
         </Card>
       </div>
 
-      {/* Recent Executive Actions Trail */}
-      {profile.recentLogs && profile.recentLogs.length > 0 && (
-        <Card className="rounded-3xl border-gray-200 shadow-xs bg-white">
-          <CardContent className="p-6 space-y-4">
-            <h3 className="text-xs font-black text-[#071A3D] uppercase tracking-wider flex items-center gap-1.5 border-b border-gray-100 pb-3">
-              <Activity className="w-4 h-4 text-[#1455D9]" />
-              Recent Executive Activity Audit Trail
-            </h3>
 
-            <div className="divide-y divide-gray-100 text-xs">
-              {profile.recentLogs.map((log) => (
-                <div key={log.id} className="py-2.5 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-bold text-[#071A3D] capitalize">{log.action.replace(/_/g, ' ')}</p>
-                    <p className="text-gray-500 text-[11px] truncate max-w-lg">{log.details || log.module}</p>
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-mono shrink-0">{log.createdAt}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* EDIT PROFILE MODAL */}
       {isEditModalOpen && (
