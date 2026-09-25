@@ -14,7 +14,6 @@ import {
   Smartphone,
   FileSpreadsheet,
   Download,
-  School,
   AlertTriangle,
   Loader2,
   RotateCcw,
@@ -546,7 +545,7 @@ export function HODSettingsView({ initialSettings }: SettingsProps) {
               </Badge>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3 text-xs">
+            <div className="grid gap-4 sm:grid-cols-2 text-xs">
               {/* Export Student Roll */}
               <button
                 type="button"
@@ -575,21 +574,6 @@ export function HODSettingsView({ initialSettings }: SettingsProps) {
                 <div>
                   <p className="font-bold text-[#071A3D] group-hover:text-purple-700 transition-colors">Attendance Reports</p>
                   <p className="text-[10px] text-gray-500 mt-0.5">Official University Analytics</p>
-                </div>
-              </button>
-
-              {/* Curriculum Archive */}
-              <button
-                type="button"
-                onClick={() => router.push('/hod-dashboard/academics')}
-                className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 hover:bg-emerald-100/70 text-left transition-all flex items-center gap-3.5 cursor-pointer group shadow-2xs hover:shadow-xs active:scale-[0.99]"
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <School className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-[#071A3D] group-hover:text-emerald-700 transition-colors">Curriculum Archive</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">Regulation 2021 Courses</p>
                 </div>
               </button>
             </div>
