@@ -26,14 +26,10 @@ export default async function StudyPage() {
   const semesters = await prisma.semester.findMany({ where: { number: student.semester }, select: { id: true } }).catch(() => [])
   const semesterIds = semesters.map((s) => s.id)
 
-  let subjects = await prisma.subject.findMany({
+  const subjects = await prisma.subject.findMany({
     where: semesterIds.length > 0 ? { semesterId: { in: semesterIds } } : undefined,
     orderBy: { code: 'asc' },
   }).catch(() => [])
-
-  if (subjects.length === 0) {
-    subjects = await prisma.subject.findMany({ take: 10, orderBy: { code: 'asc' } }).catch(() => [])
-  }
 
   const subjectIds = subjects.map((s) => s.id)
 

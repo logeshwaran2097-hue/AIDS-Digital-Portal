@@ -39,9 +39,6 @@ export async function GET(request: Request) {
       const cachedData = await cachedDbQuery(
         cacheKey,
         async () => {
-          // Auto-sync any sanctioned OD applications from Attendance/HOD approval into Event Proofs
-          await syncSanctionedODsForStudent(activeRegNo, student)
-
           const proofs = await prisma.oDProof.findMany({
             where: {
               registerNumber: activeRegNo,
@@ -56,8 +53,8 @@ export async function GET(request: Request) {
 
           return { proofs, sanctionedProofs }
         },
-        4000,
-        ['od_proofs', 'attendance']
+        5000,
+        ['od_proofs']
       )
 
       return NextResponse.json({
@@ -801,7 +798,24 @@ export async function POST(request: Request) {
       })
     }
 
-    // 8. SUPER ADMIN: DELETE RECORD
+    // 8. ON-DEMAND MANUAL SYNC: Pull newly sanctioned ODs only when explicitly requested
+    if (action === 'SYNC_SANCTIONED_ODS') {
+      const activeRegNo = (session.registerNumber || '').trim().toUpperCase()
+      if (!activeRegNo) {
+        return NextResponse.json({ success: false, message: 'Student register number required' }, { status: 400 })
+      }
+      const student = await prisma.student.findFirst({ where: { registerNumber: activeRegNo } }).catch(() => null)
+      const synced = await syncSanctionedODsForStudent(activeRegNo, student)
+      invalidateCache('od_proofs')
+      invalidateCache(`student_proofs_${activeRegNo}_ALL`)
+      return NextResponse.json({
+        success: true,
+        message: 'OD records synchronized successfully.',
+        count: synced.length,
+      })
+    }
+
+    // 9. SUPER ADMIN: DELETE RECORD
     if (action === 'ADMIN_DELETE') {
       if (session.role !== 'admin' && session.role !== 'super_admin') {
         return NextResponse.json({ success: false, message: 'Admin authorization required' }, { status: 403 })
@@ -816,7 +830,7 @@ export async function POST(request: Request) {
 
       await prisma.auditLog.create({
         data: {
-          userName: session.name || 'System Administrator',
+          userName: `${deleted.registerNumber} - Admin (${session.name || 'Admin'})`,
           action: 'od_proof_deleted',
           module: 'admin_portal',
           details: `Deleted OD Proof record ${id} for ${deleted.studentName} (${deleted.registerNumber}).`,
@@ -824,6 +838,7 @@ export async function POST(request: Request) {
         },
       }).catch(() => {})
 
+      invalidateCache('od_proofs')
       return NextResponse.json({
         success: true,
         message: 'OD Proof record successfully deleted by administrator.',
@@ -850,7 +865,7 @@ export async function DELETE(request: Request) {
     const deleteAll = searchParams.get('all') === 'true'
     const activeRegNo = (session.registerNumber || '').trim().toUpperCase()
 
-    // 1. Bulk Delete All for student
+    // 1. Bulk Delete All for student (Fast, non-blocking DB batch)
     if (deleteAll) {
       if (session.role === 'student' && !activeRegNo) {
         return NextResponse.json({ success: false, message: 'Student register number missing' }, { status: 400 })
@@ -860,27 +875,56 @@ export async function DELETE(request: Request) {
         ? { registerNumber: activeRegNo }
         : {}
 
-      const proofsToDelete = await prisma.oDProof.findMany({ where: whereClause })
-      for (const p of proofsToDelete) {
-        await prisma.auditLog.create({
-          data: {
-            userName: session.name || 'Student / Admin',
-            action: 'od_proof_deleted',
-            module: 'attendance_portal',
-            details: `OD Proof deleted permanently [ID: ${p.id} | ReqId: ${p.odRequestId || 'N/A'} | Date: ${p.eventDate}] for ${p.studentName} (${p.registerNumber}). Event: ${p.eventName}`,
-            status: 'success',
-          },
-        }).catch(() => {})
+      const proofsToDelete = await prisma.oDProof.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          odRequestId: true,
+          eventName: true,
+          eventDate: true,
+          studentName: true,
+          registerNumber: true,
+        },
+      })
+
+      // Batch create audit logs in a single fast query
+      const auditEntries: any[] = proofsToDelete.map((p) => ({
+        userName: `${p.registerNumber} - ${session.name || 'Student'}`,
+        action: 'od_proof_deleted',
+        module: 'attendance_portal',
+        details: `OD Proof deleted permanently [ID: ${p.id} | ReqId: ${p.odRequestId || 'N/A'} | Date: ${p.eventDate}] for ${p.studentName} (${p.registerNumber}). Event: ${p.eventName}`,
+        status: 'success',
+      }))
+
+      // Explicit marker preventing any future background resurrection
+      if (activeRegNo) {
+        auditEntries.push({
+          userName: `${activeRegNo} - ${session.name || 'Student'}`,
+          action: 'od_proof_deleted_all',
+          module: 'attendance_portal',
+          details: `All OD Proofs cleared permanently by student (${activeRegNo}). Count: ${proofsToDelete.length}`,
+          status: 'success',
+        })
       }
 
+      if (auditEntries.length > 0) {
+        await prisma.auditLog.createMany({ data: auditEntries }).catch(() => {})
+      }
+
+      // Fast atomic bulk delete
       await prisma.oDProof.deleteMany({ where: whereClause })
 
+      // Instant cache purge across all scopes
       invalidateCache('od_proofs')
       invalidateCache('attendance')
       invalidateCache('student_data')
       if (activeRegNo) {
         invalidateCache(`sync_sanctioned_ods_${activeRegNo}`)
         invalidateCache(`student_proofs_${activeRegNo}_ALL`)
+        invalidateCache(`student_proofs_${activeRegNo}_SANCTIONED`)
+        invalidateCache(`student_proofs_${activeRegNo}_PENDING_GEO`)
+        invalidateCache(`student_proofs_${activeRegNo}_PENDING_CERT`)
+        invalidateCache(`student_proofs_${activeRegNo}_CREDITED`)
       }
 
       return NextResponse.json({
@@ -904,10 +948,11 @@ export async function DELETE(request: Request) {
     }
 
     const deleted = await prisma.oDProof.delete({ where: { id } })
+    const regUpper = deleted.registerNumber.toUpperCase()
 
     await prisma.auditLog.create({
       data: {
-        userName: session.name || 'Student / Admin',
+        userName: `${regUpper} - ${session.name || 'Student'}`,
         action: 'od_proof_deleted',
         module: 'attendance_portal',
         details: `OD Proof deleted permanently [ID: ${id} | ReqId: ${deleted.odRequestId || 'N/A'} | Date: ${deleted.eventDate}] for ${deleted.studentName} (${deleted.registerNumber}). Event: ${deleted.eventName}`,
@@ -918,9 +963,12 @@ export async function DELETE(request: Request) {
     invalidateCache('od_proofs')
     invalidateCache('attendance')
     invalidateCache('student_data')
-    const regUpper = deleted.registerNumber.toUpperCase()
     invalidateCache(`sync_sanctioned_ods_${regUpper}`)
     invalidateCache(`student_proofs_${regUpper}_ALL`)
+    invalidateCache(`student_proofs_${regUpper}_SANCTIONED`)
+    invalidateCache(`student_proofs_${regUpper}_PENDING_GEO`)
+    invalidateCache(`student_proofs_${regUpper}_PENDING_CERT`)
+    invalidateCache(`student_proofs_${regUpper}_CREDITED`)
 
     return NextResponse.json({
       success: true,

@@ -469,6 +469,7 @@ export const odProofActionSchema = z
       'ADMIN_APPROVE',
       'ADMIN_REJECT',
       'ADMIN_DELETE',
+      'SYNC_SANCTIONED_ODS',
     ]),
     id: z.string().max(100).optional(),
     eventName: z.string().max(200).optional(),

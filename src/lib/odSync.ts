@@ -32,19 +32,34 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
     } catch {}
   }
 
-  // 2. Fetch deleted records audit logs to ensure deleted proofs are NEVER resurrected!
-  const deletedLogs = await prisma.auditLog.findMany({
-    where: {
-      action: 'od_proof_deleted',
-      OR: [
-        { userName: { contains: activeReg } },
-        { details: { contains: activeReg } },
-      ],
-    },
-    select: { id: true, details: true },
-    orderBy: { createdAt: 'desc' },
-    take: 100,
-  }).catch(() => [])
+  // 2. Fetch bulk-delete and single-delete audit logs to ensure deleted proofs are NEVER resurrected!
+  const [deleteAllLog, deletedLogs] = await Promise.all([
+    prisma.auditLog.findFirst({
+      where: {
+        action: 'od_proof_deleted_all',
+        OR: [
+          { userName: { contains: activeReg } },
+          { details: { contains: activeReg } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true },
+    }).catch(() => null),
+    prisma.auditLog.findMany({
+      where: {
+        action: 'od_proof_deleted',
+        OR: [
+          { userName: { contains: activeReg } },
+          { details: { contains: activeReg } },
+        ],
+      },
+      select: { id: true, details: true },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+    }).catch(() => []),
+  ])
+
+  const deleteAllTimestamp = deleteAllLog ? new Date(deleteAllLog.createdAt).getTime() : 0
 
   // Build sets of permanently deleted request IDs, event names, and dates
   const deletedOdRequestIds = new Set<string>()
@@ -97,7 +112,6 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
           },
           {
             OR: [
-              { action: 'od_application_submitted' },
               { action: 'od_proof_hod_sanctioned' },
               { action: 'od_proof_admin_sanctioned' },
               { details: { contains: 'HOD granted executive sanction' } },
@@ -108,14 +122,6 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
       },
       orderBy: { createdAt: 'desc' },
       take: 30,
-    }).catch(() => []),
-    prisma.attendanceRecord.findMany({
-      where: {
-        registerNumber: activeReg,
-        status: 'OD',
-      },
-      take: 30,
-      orderBy: { createdAt: 'desc' },
     }).catch(() => []),
     prisma.oDProof.findMany({
       where: { registerNumber: activeReg },
@@ -205,6 +211,7 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
 
     // Check if proof was intentionally deleted by student or admin - NEVER resurrect deleted proofs!
     if (
+      (deleteAllTimestamp > 0 && new Date(log.createdAt).getTime() <= deleteAllTimestamp) ||
       deletedOdRequestIds.has(log.id) ||
       deletedEventNames.has(eventName.toLowerCase()) ||
       (fromDate && deletedEventDates.has(fromDate)) ||
@@ -296,44 +303,6 @@ async function syncSanctionedODsDirect(activeReg: string, studentInfo?: any) {
         applicationType: category,
         sanctionedBy: 'Head of Department',
       }).catch(() => {})
-    }
-  }
-
-  // 6. Sync from attendance records with status 'OD'
-  for (const att of odAttendance) {
-    const attDateStr = new Date(att.createdAt).toISOString().split('T')[0]
-    // Skip if user or admin intentionally removed proofs for this date or event
-    if (
-      deletedEventNames.has('sanctioned on-duty attendance') ||
-      deletedEventDates.has(attDateStr)
-    ) {
-      continue
-    }
-
-    const alreadyExists = existingProofs.find((p) => p.eventDate === attDateStr)
-    if (!alreadyExists) {
-      try {
-        const created = await prisma.oDProof.create({
-          data: {
-            studentId: student?.id || null,
-            registerNumber: activeReg,
-            studentName: studentUserName,
-            year: student?.year || 2,
-            section: student?.section || 'B',
-            semester: student?.semester || 3,
-            eventName: 'Sanctioned On-Duty Attendance',
-            category: 'Academic Event',
-            eventDate: attDateStr,
-            venueCollege: 'Official College / External Venue',
-            status: 'verified',
-            advisorRemarks: 'Attendance Record: On-Duty (OD) attendance officially credited on attendance roll.',
-            attendanceCredited: true,
-            verifiedByName: 'Class Advisor',
-            verifiedAt: new Date(),
-          },
-        })
-        existingProofs.unshift(created)
-      } catch {}
     }
   }
 
@@ -575,13 +544,25 @@ export async function allocateSanctionedAttendance(params: AllocateSanctionedAtt
       // Check if user previously deleted this event proof
       const isDeleted = await prisma.auditLog.findFirst({
         where: {
-          action: 'od_proof_deleted',
           OR: [
-            { userName: { contains: regUpper } },
-            { details: { contains: regUpper } },
+            {
+              action: 'od_proof_deleted_all',
+              OR: [
+                { userName: { contains: regUpper } },
+                { details: { contains: regUpper } },
+              ],
+            },
+            {
+              action: 'od_proof_deleted',
+              OR: [
+                { userName: { contains: regUpper } },
+                { details: { contains: regUpper } },
+              ],
+              details: { contains: eventName || 'OD' },
+            },
           ],
-          details: { contains: eventName || 'OD' },
         },
+        orderBy: { createdAt: 'desc' },
       }).catch(() => null)
 
       if (!isDeleted) {

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import {
@@ -28,6 +29,7 @@ import {
   Download,
   Edit3,
   Trash2,
+  RotateCw,
 } from 'lucide-react'
 import { toast } from '@/components/ui/Toast'
 import {
@@ -81,6 +83,7 @@ interface StudentODProofsViewProps {
 }
 
 export function StudentODProofsView({ initialProofs, studentInfo }: StudentODProofsViewProps) {
+  const router = useRouter()
   const [proofs, setProofs] = useState<ODProofItem[]>(initialProofs)
   const [loading, setLoading] = useState(false)
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'SANCTIONED' | 'PENDING_GEO' | 'PENDING_CERT' | 'CREDITED'>('ALL')
@@ -314,6 +317,7 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       if (res.ok && result.success) {
         toast.success(result.message || 'Event removed successfully.')
         setProofs((prev) => prev.filter((item) => item.id !== p.id))
+        router.refresh()
       } else {
         toast.error(result.message || 'Failed to remove event.')
       }
@@ -339,11 +343,39 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
       if (res.ok && result.success) {
         toast.success(result.message || 'All OD events permanently removed.')
         setProofs([])
+        router.refresh()
       } else {
         toast.error(result.message || 'Failed to remove events.')
       }
     } catch {
       toast.error('Network error removing events.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 2e. MANUAL ON-DEMAND SYNC SANCTIONED ODS
+  const handleSyncSanctionedODs = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/od-proofs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'SYNC_SANCTIONED_ODS' }),
+      })
+      const result = await res.json()
+      if (res.ok && result.success) {
+        toast.success(result.message || 'Sanctioned OD events synchronized.')
+        const fresh = await fetch('/api/od-proofs').then((r) => r.json())
+        if (fresh && fresh.success && Array.isArray(fresh.proofs)) {
+          setProofs(fresh.proofs)
+        }
+        router.refresh()
+      } else {
+        toast.error(result.message || 'Sync failed.')
+      }
+    } catch {
+      toast.error('Network error during sync.')
     } finally {
       setLoading(false)
     }
@@ -575,8 +607,17 @@ export function StudentODProofsView({ initialProofs, studentInfo }: StudentODPro
           <h2 className="text-base sm:text-lg font-black text-[#071A3D] flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-[#1455D9]" /> My Registered &amp; Sanctioned OD Events
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <span className="text-xs text-gray-500 font-medium">{filteredProofs.length} of {proofs.length} Events</span>
+            <button
+              type="button"
+              onClick={handleSyncSanctionedODs}
+              disabled={loading}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 hover:text-blue-800 transition-all cursor-pointer shadow-2xs"
+              title="Sync newly approved OD applications"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Sync Sanctioned ODs
+            </button>
             {proofs.length > 0 && (
               <button
                 type="button"

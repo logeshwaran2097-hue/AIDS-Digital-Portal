@@ -16,6 +16,26 @@ export default function Error({
   useEffect(() => {
     // Log sanitized error info
     console.error('[CLIENT_ERROR_BOUNDARY]', error?.message || 'Unknown runtime error', error)
+
+    // Detect ChunkLoadError / Loading chunk failed (caused by new Vercel deployment asset hash changes)
+    const isChunkError =
+      Boolean(error?.message) &&
+      (error.message.includes('Loading chunk') ||
+        error.message.includes('ChunkLoadError') ||
+        error.message.includes('Failed to fetch dynamically imported module'))
+
+    if (isChunkError && typeof window !== 'undefined') {
+      const storageKey = 'last_chunk_reload_' + window.location.pathname
+      const lastReload = sessionStorage.getItem(storageKey)
+      const now = Date.now()
+      // Reload once automatically to grab the newly deployed assets
+      if (!lastReload || now - Number(lastReload) > 10000) {
+        sessionStorage.setItem(storageKey, String(now))
+        window.location.reload()
+        return
+      }
+    }
+
     if (typeof window !== 'undefined') {
       const role = localStorage.getItem('portal_login_role') || ''
       const path = window.location.pathname
@@ -66,7 +86,18 @@ export default function Error({
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
-            onClick={() => reset()}
+            onClick={() => {
+              if (
+                error?.message &&
+                (error.message.includes('Loading chunk') ||
+                  error.message.includes('ChunkLoadError') ||
+                  error.message.includes('Failed to fetch dynamically imported module'))
+              ) {
+                window.location.reload()
+              } else {
+                reset()
+              }
+            }}
             className="px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm transition-colors cursor-pointer"
           >
             Try Again

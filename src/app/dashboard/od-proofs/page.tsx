@@ -2,7 +2,6 @@ import { requireRoleSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { PortalLayout } from '@/components/layout/PortalLayout'
 import { StudentODProofsView } from './components/StudentODProofsView'
-import { syncSanctionedODsForStudent } from '@/lib/odSync'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,8 +31,14 @@ export default async function StudentODProofsPage() {
       batch: '2024-2028',
     }
 
-  // Auto-sync any sanctioned ODs from HOD/Advisor approvals
-  const proofs = await syncSanctionedODsForStudent(student.registerNumber, student)
+  // Fetch OD proofs directly from the database (fast indexed query, never resurrects deleted proofs)
+  const activeReg = (student.registerNumber || userReg || '').trim().toUpperCase()
+  const proofs = activeReg
+    ? await prisma.oDProof.findMany({
+        where: { registerNumber: activeReg },
+        orderBy: { createdAt: 'desc' },
+      })
+    : []
 
   return (
     <PortalLayout
