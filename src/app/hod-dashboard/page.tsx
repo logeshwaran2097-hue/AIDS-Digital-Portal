@@ -12,10 +12,7 @@ import { HODAdvisorODApprovalsMonitor } from './components/HODAdvisorODApprovals
 import {
   Users,
   GraduationCap,
-  BookOpen,
   FolderOpen,
-  Database,
-  FileQuestion,
   CalendarDays,
   AlertCircle,
   BarChart3,
@@ -31,10 +28,7 @@ export default async function HODDashboardPage() {
   const [
     studentCount,
     facultyCount,
-    subjectCount,
     projectCount,
-    resourceCount,
-    questionPaperCount,
     upcomingEvents,
     pendingResources,
     pendingQP,
@@ -48,10 +42,7 @@ export default async function HODDashboardPage() {
     () => Promise.all([
       prisma.student.count().catch(() => 0),
       prisma.faculty.count().catch(() => 0),
-      prisma.subject.count().catch(() => 0),
       prisma.project.count().catch(() => 0),
-      prisma.resource.count({ where: { status: 'published' } }).catch(() => 0),
-      prisma.questionPaper.count({ where: { status: 'published' } }).catch(() => 0),
       prisma.event.count({ where: { isPublished: true } }).catch(() => 0),
       prisma.resource.count({ where: { status: 'pending' } }).catch(() => 0),
       prisma.questionPaper.count({ where: { status: 'pending' } }).catch(() => 0),
@@ -120,7 +111,7 @@ export default async function HODDashboardPage() {
         </div>
 
         {/* Executive Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(20,85,217,0.12)] hover:border-blue-200/90 hover:-translate-y-1 transition-all duration-300 group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Students</span>
@@ -143,17 +134,6 @@ export default async function HODDashboardPage() {
             <p className="text-[11px] text-slate-400 font-semibold mt-1">Teaching Members</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(245,158,11,0.12)] hover:border-amber-200/90 hover:-translate-y-1 transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Subjects</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-white flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
-                <BookOpen className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-3xl font-black text-[#071A3D]">{subjectCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Curriculum Courses</p>
-          </div>
-
           <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(6,182,212,0.12)] hover:border-cyan-200/90 hover:-translate-y-1 transition-all duration-300 group">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Student Projects</span>
@@ -165,27 +145,6 @@ export default async function HODDashboardPage() {
             <p className="text-[11px] text-slate-400 font-semibold mt-1">Ongoing &amp; Final Year</p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(20,85,217,0.12)] hover:border-blue-200/90 hover:-translate-y-1 transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Study Resources</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <Database className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-3xl font-black text-[#071A3D]">{resourceCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Notes &amp; Manuals</p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(7,26,61,0.05)] hover:shadow-[0_12px_28px_-4px_rgba(16,185,129,0.12)] hover:border-emerald-200/90 hover:-translate-y-1 transition-all duration-300 group">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Question Papers</span>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-                <FileQuestion className="w-5 h-5" />
-              </div>
-            </div>
-            <p className="text-3xl font-black text-[#071A3D]">{questionPaperCount}</p>
-            <p className="text-[11px] text-slate-400 font-semibold mt-1">Internal &amp; University</p>
-          </div>
 
           <div className="p-5 rounded-2xl bg-gradient-to-br from-white via-slate-50/60 to-white border border-slate-200/80 shadow-[0_4px_20px_-2px_rgba(244,63,94,0.12)] hover:border-rose-200/90 hover:-translate-y-1 transition-all duration-300 group">
             <div className="flex items-center justify-between mb-2">
