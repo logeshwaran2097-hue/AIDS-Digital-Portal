@@ -9,6 +9,7 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const semParam = searchParams.get('semester')
+    const onlyAdminParam = searchParams.get('onlyAdmin') === 'true'
 
     const dbSubjects = await prisma.subject.findMany({
       orderBy: { code: 'asc' },
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
       let facultyInCharge = ''
       let courseType: 'Theory' | 'Laboratory' | 'Theory cum Laboratory' = 'Theory'
       let exactCredits = Number(s.credits)
+      let addedByAdmin = false
 
       if (s.description && s.description.startsWith('{')) {
         try {
@@ -29,6 +31,7 @@ export async function GET(request: Request) {
           if (meta.facultyInCharge) facultyInCharge = meta.facultyInCharge
           if (meta.courseType) courseType = meta.courseType
           if (meta.exactCredits !== undefined) exactCredits = Number(meta.exactCredits)
+          if (meta.addedByAdmin) addedByAdmin = true
         } catch {}
       } else {
         const match = s.code.match(/[A-Za-z]+[0-9]([1-8])/)
@@ -45,13 +48,18 @@ export async function GET(request: Request) {
         courseType,
         semester: sem,
         year: Math.ceil(sem / 2),
+        addedByAdmin,
         description: s.description,
       }
     })
 
-    const filtered = semParam && semParam !== 'ALL'
-      ? subjects.filter((s) => s.semester === Number(semParam))
-      : subjects
+    let filtered = subjects
+    if (onlyAdminParam) {
+      filtered = filtered.filter((s) => s.addedByAdmin === true)
+    }
+    if (semParam && semParam !== 'ALL') {
+      filtered = filtered.filter((s) => s.semester === Number(semParam))
+    }
 
     return NextResponse.json({ success: true, subjects: filtered })
   } catch (error: any) {
@@ -94,6 +102,7 @@ export async function POST(request: Request) {
       facultyInCharge,
       courseType,
       exactCredits: Number(credits),
+      addedByAdmin: true,
       notes: description,
     })
 

@@ -69,6 +69,7 @@ export interface DbSubject {
   courseType?: 'Theory' | 'Laboratory' | 'Theory cum Laboratory'
   semester: number
   year?: number
+  addedByAdmin?: boolean
   description?: string | null
 }
 
@@ -96,13 +97,15 @@ export default function GPACalculatorMarksheetView({
     studentYear === 2 ? 'absolute_ii_year' : 'relative_iii_iv_year'
   )
 
-  const [selectedSemester, setSelectedSemester] = useState<number>(currentSemester || 3)
-  const [dbSubjects, setDbSubjects] = useState<DbSubject[]>(() => adminSubjects || [])
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState<boolean>(!adminSubjects || adminSubjects.length === 0)
+  const [selectedSemester, setSelectedSemester] = useState<number>(currentSemester || 1)
+  const [dbSubjects, setDbSubjects] = useState<DbSubject[]>(() => {
+    return (adminSubjects || []).filter(s => s.addedByAdmin === true)
+  })
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState<boolean>(false)
 
-  // Real credit total dynamically computed from subjects added by Admin for a given semester
+  // Real credit total dynamically computed strictly from subjects added by Admin for a given semester
   const getSemesterCreditTotal = useCallback((sem: number) => {
-    const semSubs = dbSubjects.filter(s => s.semester === sem)
+    const semSubs = dbSubjects.filter(s => s.semester === sem && s.addedByAdmin === true)
     return semSubs.reduce((acc, s) => acc + (Number(s.credits) || 0), 0)
   }, [dbSubjects])
 
@@ -136,10 +139,10 @@ export default function GPACalculatorMarksheetView({
     }
   }, [gradingSystem])
 
-  // Subject rows for GPA calculator loaded from subjects added by Admin
+  // Subject rows for GPA calculator loaded strictly from subjects added by Admin
   const [subjects, setSubjects] = useState<SubjectGradeRow[]>(() => {
-    const sem = currentSemester || 3
-    const semSubjects = (adminSubjects || []).filter(s => s.semester === sem)
+    const sem = currentSemester || 1
+    const semSubjects = (adminSubjects || []).filter(s => s.semester === sem && s.addedByAdmin === true)
     return semSubjects.map((s, idx) => ({
       id: s.id || `admin-${sem}-${idx}`,
       code: s.code,
@@ -156,10 +159,11 @@ export default function GPACalculatorMarksheetView({
     async function fetchSubjects() {
       try {
         setIsLoadingSubjects(true)
-        const res = await fetch('/api/admin/academics')
+        const res = await fetch('/api/admin/academics?onlyAdmin=true')
         const data = await res.json()
         if (data.success && Array.isArray(data.subjects) && isMounted) {
-          setDbSubjects(data.subjects)
+          const onlyAdmin = data.subjects.filter((s: any) => s.addedByAdmin === true)
+          setDbSubjects(onlyAdmin)
         }
       } catch (err) {
         console.error('Failed to load curriculum subjects:', err)
@@ -175,7 +179,7 @@ export default function GPACalculatorMarksheetView({
 
   // Sync subjects when dbSubjects or selectedSemester changes (strictly use subjects added by admin)
   useEffect(() => {
-    const semSubjects = dbSubjects.filter(s => s.semester === selectedSemester)
+    const semSubjects = dbSubjects.filter(s => s.semester === selectedSemester && s.addedByAdmin === true)
     setSubjects(
       semSubjects.map((s, idx) => ({
         id: s.id || `subj-${selectedSemester}-${idx}`,
@@ -202,7 +206,7 @@ export default function GPACalculatorMarksheetView({
     // Clean initial state with 0 - real data entered by student
     const initial: Record<number, { gpa: number; credits: number }> = {}
     for (let sem = 1; sem <= 8; sem++) {
-      const semSubs = (adminSubjects || []).filter(s => s.semester === sem)
+      const semSubs = (adminSubjects || []).filter(s => s.semester === sem && s.addedByAdmin === true)
       const creds = semSubs.reduce((sum, s) => sum + (Number(s.credits) || 0), 0)
       initial[sem] = { gpa: 0, credits: creds }
     }
@@ -216,7 +220,7 @@ export default function GPACalculatorMarksheetView({
         let changed = false
         const next = { ...prev }
         for (let sem = 1; sem <= 8; sem++) {
-          const semSubs = dbSubjects.filter(s => s.semester === sem)
+          const semSubs = dbSubjects.filter(s => s.semester === sem && s.addedByAdmin === true)
           const creds = semSubs.reduce((sum, s) => sum + (Number(s.credits) || 0), 0)
           if (creds > 0 && (!next[sem] || next[sem].credits === 0)) {
             next[sem] = { gpa: next[sem]?.gpa || 0, credits: creds }
@@ -263,7 +267,7 @@ export default function GPACalculatorMarksheetView({
   // Switch semester preset (strictly loads subjects added by Admin)
   const handleSemesterChange = (sem: number) => {
     setSelectedSemester(sem)
-    const semSubjects = dbSubjects.filter(s => s.semester === sem)
+    const semSubjects = dbSubjects.filter(s => s.semester === sem && s.addedByAdmin === true)
     setSubjects(semSubjects.map((item, idx) => ({
       id: item.id || `subj-${sem}-${idx}`,
       code: item.code,
@@ -274,8 +278,6 @@ export default function GPACalculatorMarksheetView({
     })))
     if (semSubjects.length > 0) {
       toast.success(`Loaded ${semSubjects.length} subjects added by Admin for Semester ${sem}!`)
-    } else {
-      toast(`No courses registered by Admin for Semester ${sem} yet.`, { icon: 'ℹ️' })
     }
   }
 
@@ -775,8 +777,8 @@ export default function GPACalculatorMarksheetView({
                     <h4 className="font-bold text-slate-800 text-sm">Semester Course Work Table</h4>
                     <p className="text-xs text-slate-500">
                       {subjects.length > 0
-                        ? `Official subjects & credit scores loaded from department database for Semester ${selectedSemester}`
-                        : `No courses in database for Semester ${selectedSemester}. Click "+ Add Custom Course" to add subjects.`}
+                        ? `Official subjects configured by Administrator for Semester ${selectedSemester}`
+                        : `No courses registered by Admin for Semester ${selectedSemester} yet.`}
                     </p>
                   </div>
 
@@ -833,6 +835,13 @@ export default function GPACalculatorMarksheetView({
                     >
                       Clear
                     </button>
+                    <button
+                      type="button"
+                      onClick={handleAddSubject}
+                      className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> + Add Course
+                    </button>
                   </div>
                 </div>
 
@@ -850,18 +859,20 @@ export default function GPACalculatorMarksheetView({
                     <tbody className="divide-y divide-slate-100">
                       {subjects.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="py-10 text-center text-slate-400">
-                            <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                            <p className="font-bold text-slate-700 text-xs">No courses registered for Semester {selectedSemester} yet</p>
-                            <p className="text-[11px] text-slate-400 max-w-md mx-auto mt-1 mb-4">
-                              Official subjects are added by administrators in the <strong>Academics</strong> module. You can also add custom courses and credit scores directly below.
+                          <td colSpan={5} className="py-12 text-center text-slate-400">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3">
+                              <BookOpen className="w-6 h-6" />
+                            </div>
+                            <p className="font-bold text-slate-700 text-sm">No courses added by Administrator for Semester {selectedSemester} yet</p>
+                            <p className="text-xs text-slate-400 max-w-md mx-auto mt-1 mb-4 leading-relaxed">
+                              When the department administrator publishes subjects in <strong>Academics &amp; Courses</strong>, they will display here automatically. You can also add custom courses below.
                             </p>
                             <button
                               type="button"
                               onClick={handleAddSubject}
                               className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
                             >
-                              <Plus className="w-3.5 h-3.5" /> + Add Custom Subject
+                              <Plus className="w-3.5 h-3.5" /> + Add Custom Course
                             </button>
                           </td>
                         </tr>
